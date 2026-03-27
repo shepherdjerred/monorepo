@@ -1,0 +1,130 @@
+{
+  "questionId": "7",
+  "questionFrontendId": "7",
+  "title": "Reverse Integer",
+  "titleSlug": "reverse-integer",
+  "difficulty": "Medium",
+  "content": "<p>Given a signed 32-bit integer <code>x</code>, return <code>x</code><em> with its digits reversed</em>. If reversing <code>x</code> causes the value to go outside the signed 32-bit integer range <code>[-2<sup>31</sup>, 2<sup>31</sup> - 1]</code>, then return <code>0</code>.</p>\n\n<p><strong>Assume the environment does not allow you to store 64-bit integers (signed or unsigned).</strong></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> x = 123\n<strong>Output:</strong> 321\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> x = -123\n<strong>Output:</strong> -321\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> x = 120\n<strong>Output:</strong> 21\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>-2<sup>31</sup> &lt;= x &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"reverse\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"x\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"4.9M\", \"totalSubmission\": \"15.4M\", \"totalAcceptedRaw\": 4892795, \"totalSubmissionRaw\": 15449687, \"acRate\": \"31.7%\"}",
+  "likes": 15458,
+  "dislikes": 14005,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"String to Integer (atoi)\", \"titleSlug\": \"string-to-integer-atoi\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Reverse Bits\", \"titleSlug\": \"reverse-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"A Number After a Double Reversal\", \"titleSlug\": \"a-number-after-a-double-reversal\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count Number of Distinct Integers After Reverse Operations\", \"titleSlug\": \"count-number-of-distinct-integers-after-reverse-operations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "123",
+    "-123",
+    "120"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 20, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 9, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 4, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 4, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 3, \"slug\": \"epam-systems\", \"name\": \"EPAM Systems\"}, {\"timesEncountered\": 3, \"slug\": \"wipro\", \"name\": \"Wipro\"}, {\"timesEncountered\": 3, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 3, \"slug\": \"cognizant\", \"name\": \"Cognizant\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int reverse(int x) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int reverse(int x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def reverse(self, x: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def reverse(self, x):\n        \"\"\"\n        :type x: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} x\n * @return {number}\n */\nvar reverse = function(x) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function reverse(x: number): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int Reverse(int x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int reverse(int x){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func reverse(x int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun reverse(x: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func reverse(_ x: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn reverse(x: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} x\n# @return {Integer}\ndef reverse(x)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $x\n     * @return Integer\n     */\n    function reverse($x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int reverse(int x) {\n\n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def reverse(x: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec reverse(x :: integer) :: integer\n  def reverse(x) do\n\n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec reverse(X :: integer()) -> integer().\nreverse(X) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (reverse x)\n  (-> exact-integer? exact-integer?)\n\n  )"
+    }
+  ],
+  "solution": {
+    "id": "485",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/832735103\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Approach 1: Pop and Push Digits & Check before Overflow\n\n**Intuition**\n\nWe can build up the reverse integer one digit at a time.\nWhile doing so, we can check beforehand whether or not appending another digit would cause overflow.\n\n**Algorithm**\n\nReversing an integer can be done similarly to reversing a string.\n\nWe want to repeatedly \"pop\" the last digit off of $$x$$ and \"push\" it to the back of the $$\\text{rev}$$. In the end, $$\\text{rev}$$ will be the reverse of the $$x$$.\n\nTo \"pop\" and \"push\" digits without the help of some auxiliary stack/array, we can use math.\n\n```cpp\n// pop operation:\npop = x % 10;\nx /= 10;\n\n// push operation:\ntemp = rev * 10 + pop;\nrev = temp;\n```\n\nHowever, this approach is dangerous, because the statement $$\\text{temp} = \\text{rev} \\cdot 10 + \\text{pop}$$ can cause overflow.\n\nLuckily, it is easy to check beforehand whether or this statement would cause an overflow.\n\nTo explain, lets assume that $$\\text{rev}$$ is positive.\n\n1. If $$temp = \\text{rev} \\cdot 10 + \\text{pop}$$ causes overflow, then it must be that $$\\text{rev} \\geq \\frac{INTMAX}{10}$$\n2. If $$\\text{rev} > \\frac{INTMAX}{10}$$, then $$temp = \\text{rev} \\cdot 10 + \\text{pop}$$ is guaranteed to overflow.\n3. If $$\\text{rev} == \\frac{INTMAX}{10}$$, then $$temp = \\text{rev} \\cdot 10 + \\text{pop}$$ will overflow if and only if $$\\text{pop} > 7$$\n\nSimilar logic can be applied when $$\\text{rev}$$ is negative.\n\n<iframe src=\"https://leetcode.com/playground/fm5j6WLP/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"fm5j6WLP\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(\\log(x))$$. There are roughly $$\\log_{10}(x)$$ digits in $$x$$.\n* Space Complexity: $$O(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

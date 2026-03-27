@@ -1,0 +1,141 @@
+{
+  "questionId": "875",
+  "questionFrontendId": "845",
+  "title": "Longest Mountain in Array",
+  "titleSlug": "longest-mountain-in-array",
+  "difficulty": "Medium",
+  "content": "<p>You may recall that an array <code>arr</code> is a <strong>mountain array</strong> if and only if:</p>\n\n<ul>\n\t<li><code>arr.length &gt;= 3</code></li>\n\t<li>There exists some index <code>i</code> (<strong>0-indexed</strong>) with <code>0 &lt; i &lt; arr.length - 1</code> such that:\n\t<ul>\n\t\t<li><code>arr[0] &lt; arr[1] &lt; ... &lt; arr[i - 1] &lt; arr[i]</code></li>\n\t\t<li><code>arr[i] &gt; arr[i + 1] &gt; ... &gt; arr[arr.length - 1]</code></li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>Given an integer array <code>arr</code>, return <em>the length of the longest subarray, which is a mountain</em>. Return <code>0</code> if there is no mountain subarray.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [2,1,4,7,3,2,5]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The largest mountain is [1,4,7,3,2] which has length 5.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [2,2,2]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> There is no mountain.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= arr[i] &lt;= 10<sup>4</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong></p>\n\n<ul>\n\t<li>Can you solve it using only one pass?</li>\n\t<li>Can you solve it in <code>O(1)</code> space?</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"longestMountain\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"197.4K\", \"totalSubmission\": \"470.1K\", \"totalAcceptedRaw\": 197376, \"totalSubmissionRaw\": 470139, \"acRate\": \"42.0%\"}",
+  "likes": 3042,
+  "dislikes": 92,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Number of Removals to Make Mountain Array\", \"titleSlug\": \"minimum-number-of-removals-to-make-mountain-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find Good Days to Rob the Bank\", \"titleSlug\": \"find-good-days-to-rob-the-bank\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,1,4,7,3,2,5]",
+    "[2,2,2]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"sofi\", \"name\": \"SoFi\"}, {\"timesEncountered\": 3, \"slug\": \"databricks\", \"name\": \"Databricks\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"faire\", \"name\": \"Faire\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int longestMountain(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int longestMountain(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestMountain(self, arr: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestMountain(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {number}\n */\nvar longestMountain = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestMountain(arr: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LongestMountain(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int longestMountain(int* arr, int arrSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestMountain(arr []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestMountain(arr: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestMountain(_ arr: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_mountain(arr: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Integer}\ndef longest_mountain(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Integer\n     */\n    function longestMountain($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int longestMountain(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestMountain(arr: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_mountain(arr :: [integer]) :: integer\n  def longest_mountain(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_mountain(Arr :: [integer()]) -> integer().\nlongest_mountain(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-mountain arr)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "478",
+    "content": "[TOC]\n\n---\n### Approach #1: Two Pointer [Accepted]\n\n**Intuition**\n\nWithout loss of generality, a mountain can only start after the previous one ends.\n\nThis is because if it starts before the peak, it will be smaller than a mountain starting previous; and it is impossible to start after the peak.\n\n**Algorithm**\n\nFor a starting index `base`, let's calculate the length of the longest mountain `A[base], A[base+1], ..., A[end]`.\n\nIf such a mountain existed, the next possible mountain will start at `base = end`; if it didn't, then either we reached the end, or we have `A[base] >= A[base+1]` and we can start at `base + 1`.\n\n**Example**\n\nHere is a worked example on the array `A = [1, 2, 3, 2, 1, 0, 2, 3, 1]`:\n\n<center>\n    <img src=\"../Figures/845/diagram1.png\" alt=\"Worked example of A = [1,2,3,2,1,0,2,3,1]\" style=\"height: 150px\"/>\n</center>\n\n<br>\n\n`base` starts at `0`, and `end` travels using the first while loop to `end = 2` (`A[end] = 3`), the potential peak of this mountain.  After, it travels to `end = 5` (`A[end] = 0`) during the second while loop, and a candidate answer of 6 `(base = 0, end = 5)` is recorded.\n\nAfterwards, base is set to `5` and the process starts over again, with `end = 7` the peak of the mountain, and `end = 8` the right boundary, and the candidate answer of 4 `(base = 5, end = 8)` being recorded.\n\n<iframe src=\"https://leetcode.com/playground/8NNCFqJG/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8NNCFqJG\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `A`.\n\n* Space Complexity:  $$O(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

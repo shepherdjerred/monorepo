@@ -1,0 +1,130 @@
+{
+  "questionId": "879",
+  "questionFrontendId": "849",
+  "title": "Maximize Distance to Closest Person",
+  "titleSlug": "maximize-distance-to-closest-person",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array representing a row of <code>seats</code> where <code>seats[i] = 1</code> represents a person sitting in the <code>i<sup>th</sup></code> seat, and <code>seats[i] = 0</code> represents that the <code>i<sup>th</sup></code> seat is empty <strong>(0-indexed)</strong>.</p>\n\n<p>There is at least one empty seat, and at least one person sitting.</p>\n\n<p>Alex wants to sit in the seat such that the distance between him and the closest person to him is maximized.&nbsp;</p>\n\n<p>Return <em>that maximum distance to the closest person</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/10/distance.jpg\" style=\"width: 650px; height: 257px;\" />\n<pre>\n<strong>Input:</strong> seats = [1,0,0,0,1,0,1]\n<strong>Output:</strong> 2\n<strong>Explanation: </strong>\nIf Alex sits in the second open seat (i.e. seats[2]), then the closest person has distance 2.\nIf Alex sits in any other open seat, the closest person has distance 1.\nThus, the maximum distance to the closest person is 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> seats = [1,0,0,0]\n<strong>Output:</strong> 3\n<strong>Explanation: </strong>\nIf Alex sits in the last seat (i.e. seats[3]), the closest person is 3 seats away.\nThis is the maximum distance possible, so the answer is 3.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> seats = [0,1]\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= seats.length &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>seats[i]</code>&nbsp;is <code>0</code> or&nbsp;<code>1</code>.</li>\n\t<li>At least one seat is <strong>empty</strong>.</li>\n\t<li>At least one seat is <strong>occupied</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"maxDistToClosest\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"seats\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"283.2K\", \"totalSubmission\": \"570.1K\", \"totalAcceptedRaw\": 283173, \"totalSubmissionRaw\": 570067, \"acRate\": \"49.7%\"}",
+  "likes": 3338,
+  "dislikes": 202,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Exam Room\", \"titleSlug\": \"exam-room\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Task Scheduler II\", \"titleSlug\": \"task-scheduler-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,0,0,0,1,0,1]",
+    "[1,0,0,0]",
+    "[0,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}], \"more_than_six_months\": [{\"timesEncountered\": 18, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 8, \"slug\": \"vk\", \"name\": \"VK\"}, {\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"samsung\", \"name\": \"Samsung\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxDistToClosest(vector<int>& seats) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxDistToClosest(int[] seats) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxDistToClosest(self, seats: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxDistToClosest(self, seats):\n        \"\"\"\n        :type seats: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} seats\n * @return {number}\n */\nvar maxDistToClosest = function(seats) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxDistToClosest(seats: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxDistToClosest(int[] seats) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxDistToClosest(int* seats, int seatsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxDistToClosest(seats []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxDistToClosest(seats: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxDistToClosest(_ seats: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_dist_to_closest(seats: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} seats\n# @return {Integer}\ndef max_dist_to_closest(seats)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $seats\n     * @return Integer\n     */\n    function maxDistToClosest($seats) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxDistToClosest(List<int> seats) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxDistToClosest(seats: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_dist_to_closest(seats :: [integer]) :: integer\n  def max_dist_to_closest(seats) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_dist_to_closest(Seats :: [integer()]) -> integer().\nmax_dist_to_closest(Seats) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-dist-to-closest seats)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "481",
+    "content": "[TOC]\n\n---\n### Approach #1: Next Array [Accepted]\n\n**Intuition**\n\nLet `left[i]` be the distance from seat `i` to the closest person sitting to the left of `i`.  Similarly, let `right[i]` be the distance to the closest person sitting to the right of `i`.  This is motivated by the idea that the closest person in seat `i` sits a distance `min(left[i], right[i])` away.\n\n**Algorithm**\n\nTo construct `left[i]`, notice it is either `left[i-1] + 1` if the seat is empty, or `0` if it is full.  `right[i]` is constructed in a similar way.\n\n<iframe src=\"https://leetcode.com/playground/6XidR9wx/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"6XidR9wx\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `seats`.\n\n* Space Complexity:  $$O(N)$$, the space used by `left` and `right`.\n\n\n---\n### Approach #2: Two Pointer [Accepted]\n\n**Intuition**\n\nAs we iterate through seats, we'll update the closest person sitting to our left, and closest person sitting to our right.\n\n**Algorithm**\n\nKeep track of `prev`, the filled seat at or to the left of `i`, and `future`, the filled seat at or to the right of `i`.\n\nThen at seat `i`, the closest person is `min(i - prev, future - i)`, with one exception.  `i - prev` should be considered infinite if there is no person to the left of seat `i`, and similarly `future - i` is infinite if there is no one to the right of seat `i`.\n\n<iframe src=\"https://leetcode.com/playground/mVHbkNFV/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"mVHbkNFV\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `seats`.\n\n* Space Complexity:  $$O(1)$$.\n\n\n\n---\n### Approach #3: Group by Zero [Accepted]\n\n**Intuition**\n\nIn a group of `K` adjacent empty seats between two people, the answer is `(K+1) / 2`.\n\n**Algorithm**\n\nFor each group of `K` empty seats between two people, we can take into account the candidate answer `(K+1) / 2`.\n\nFor groups of empty seats between the edge of the row and one other person, the answer is `K`, and we should take into account those answers too.\n\n<iframe src=\"https://leetcode.com/playground/UEoNSFkp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UEoNSFkp\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `seats`.\n\n* Space Complexity:  $$O(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

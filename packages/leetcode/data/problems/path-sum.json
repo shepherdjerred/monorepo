@@ -1,0 +1,142 @@
+{
+  "questionId": "112",
+  "questionFrontendId": "112",
+  "title": "Path Sum",
+  "titleSlug": "path-sum",
+  "difficulty": "Easy",
+  "content": "<p>Given the <code>root</code> of a binary tree and an integer <code>targetSum</code>, return <code>true</code> if the tree has a <strong>root-to-leaf</strong> path such that adding up all the values along the path equals <code>targetSum</code>.</p>\n\n<p>A <strong>leaf</strong> is a node with no children.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/01/18/pathsum1.jpg\" style=\"width: 500px; height: 356px;\" />\n<pre>\n<strong>Input:</strong> root = [5,4,8,11,null,13,4,7,2,null,null,null,1], targetSum = 22\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The root-to-leaf path with the target sum is shown.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/01/18/pathsum2.jpg\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3], targetSum = 5\n<strong>Output:</strong> false\n<strong>Explanation:</strong> There are two root-to-leaf paths in the tree:\n(1 --&gt; 2): The sum is 3.\n(1 --&gt; 3): The sum is 4.\nThere is no root-to-leaf path with sum = 5.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [], targetSum = 0\n<strong>Output:</strong> false\n<strong>Explanation:</strong> Since the tree is empty, there are no root-to-leaf paths.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[0, 5000]</code>.</li>\n\t<li><code>-1000 &lt;= Node.val &lt;= 1000</code></li>\n\t<li><code>-1000 &lt;= targetSum &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"hasPathSum\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"name\": \"targetSum\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"2.1M\", \"totalSubmission\": \"3.9M\", \"totalAcceptedRaw\": 2104840, \"totalSubmissionRaw\": 3854312, \"acRate\": \"54.6%\"}",
+  "likes": 10710,
+  "dislikes": 1216,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Path Sum II\", \"titleSlug\": \"path-sum-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Binary Tree Maximum Path Sum\", \"titleSlug\": \"binary-tree-maximum-path-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Sum Root to Leaf Numbers\", \"titleSlug\": \"sum-root-to-leaf-numbers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Path Sum III\", \"titleSlug\": \"path-sum-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Path Sum IV\", \"titleSlug\": \"path-sum-iv\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,4,8,11,null,13,4,7,2,null,null,null,1]\n22",
+    "[1,2,3]\n5",
+    "[]\n0"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"palo-alto-networks\", \"name\": \"Palo Alto Networks\"}, {\"timesEncountered\": 2, \"slug\": \"datadog\", \"name\": \"Datadog\"}]}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    bool hasPathSum(TreeNode* root, int targetSum) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public boolean hasPathSum(TreeNode root, int targetSum) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def hasPathSum(self, root: Optional[TreeNode], targetSum: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def hasPathSum(self, root, targetSum):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type targetSum: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {number} targetSum\n * @return {boolean}\n */\nvar hasPathSum = function(root, targetSum) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction hasPathSum(root: TreeNode | null, targetSum: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public bool HasPathSum(TreeNode root, int targetSum) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nbool hasPathSum(struct TreeNode* root, int targetSum) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc hasPathSum(root *TreeNode, targetSum int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun hasPathSum(root: TreeNode?, targetSum: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func hasPathSum(_ root: TreeNode?, _ targetSum: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn has_path_sum(root: Option<Rc<RefCell<TreeNode>>>, target_sum: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @param {Integer} target_sum\n# @return {Boolean}\ndef has_path_sum(root, target_sum)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @param Integer $targetSum\n     * @return Boolean\n     */\n    function hasPathSum($root, $targetSum) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  bool hasPathSum(TreeNode? root, int targetSum) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def hasPathSum(root: TreeNode, targetSum: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec has_path_sum(root :: TreeNode.t | nil, target_sum :: integer) :: boolean\n  def has_path_sum(root, target_sum) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec has_path_sum(Root :: #tree_node{} | null, TargetSum :: integer()) -> boolean().\nhas_path_sum(Root, TargetSum) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (has-path-sum root targetSum)\n  (-> (or/c tree-node? #f) exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "616",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Binary tree definition\n\nFirst of all, here is the definition of the ```TreeNode``` which we would use in the following implementation.\n\n<iframe src=\"https://leetcode.com/playground/XJfppTQT/shared\" frameBorder=\"0\" width=\"100%\" height=\"225\" name=\"XJfppTQT\"></iframe>\n<br />\n<br />\n\n\n---\n### Approach 1: Recursion\n\nThe most intuitive way is to use recursion here. One is going through the tree by considering at each step the node itself and its children. If node *is not* a leaf, one calls recursively `hasPathSum` method for its children with a sum decreased by the current node value. If node *is* a leaf, one check if the current sum is zero, *i.e.* if the initial sum was discovered.\n\n<iframe src=\"https://leetcode.com/playground/2h6vUwHY/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"2h6vUwHY\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : we visit each node exactly once, thus the time complexity is $$\\mathcal{O}(N)$$, where $$N$$ is the number of nodes.\n* Space complexity : in the worst case, the tree is completely unbalanced, *e.g.* each node has only one child node, the recursion call would occur $$N$$ times (the height of the tree), therefore the storage to keep the call stack would be $$\\mathcal{O}(N)$$. But in the best case (the tree is completely balanced), the height of the tree would be $$\\log(N)$$. Therefore, the space complexity in this case would be $$\\mathcal{O}(\\log(N))$$.\n<br />\n<br />\n\n\n---\n### Approach 2: Iterations\n\n**Algorithm**\n\nWe could also convert the above recursion into iteration, with the help of stack. DFS would be better than BFS here since it works faster except in the worst case. In the worst case the path `root->leaf` with the given sum is the last considered one and in this case, DFS results in the same productivity as BFS. \n\n>The idea is to visit each node with the DFS strategy while updating the remaining sum to cumulate at each visit.\n\nSo we start from a stack that contains the root node and the corresponding remaining sum which is ```sum - root.val```. Then we proceed to the iterations: pop the current node out of the stack and return ```True``` if the remaining sum is `0` and we're on the leaf node. If the remaining sum is not zero or we're not on the leaf yet then we push the child nodes and corresponding remaining sums into the stack.  \n\n<!--![LIS](../Figures/112/112_tr.gif)-->\n!?!../Documents/112_LIS.json:1000,543!?!\n\n<iframe src=\"https://leetcode.com/playground/cus6e5Ju/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"cus6e5Ju\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: the same as the recursion approach $$\\mathcal{O}(N)$$.\n* Space complexity: $$\\mathcal{O}(N)$$ since in the worst case, when the tree is completely unbalanced, *e.g.* each node has only one child node, we would keep all $$N$$ nodes in the stack. But in the best case (the tree is balanced), the height of the tree would be $$\\log(N)$$. Therefore, the space complexity in this case would be $$\\mathcal{O}(\\log(N))$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

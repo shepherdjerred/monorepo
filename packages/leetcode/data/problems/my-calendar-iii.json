@@ -1,0 +1,146 @@
+{
+  "questionId": "732",
+  "questionFrontendId": "732",
+  "title": "My Calendar III",
+  "titleSlug": "my-calendar-iii",
+  "difficulty": "Hard",
+  "content": "<p>A <code>k</code>-booking happens when <code>k</code> events have some non-empty intersection (i.e., there is some time that is common to all <code>k</code> events.)</p>\n\n<p>You are given some events <code>[startTime, endTime)</code>, after each given event, return an integer <code>k</code> representing the maximum <code>k</code>-booking between all the previous events.</p>\n\n<p>Implement the <code>MyCalendarThree</code> class:</p>\n\n<ul>\n\t<li><code>MyCalendarThree()</code> Initializes the object.</li>\n\t<li><code>int book(int startTime, int endTime)</code> Returns an integer <code>k</code> representing the largest integer such that there exists a <code>k</code>-booking in the calendar.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;MyCalendarThree&quot;, &quot;book&quot;, &quot;book&quot;, &quot;book&quot;, &quot;book&quot;, &quot;book&quot;, &quot;book&quot;]\n[[], [10, 20], [50, 60], [10, 40], [5, 15], [5, 10], [25, 55]]\n<strong>Output</strong>\n[null, 1, 1, 2, 3, 3, 3]\n\n<strong>Explanation</strong>\nMyCalendarThree myCalendarThree = new MyCalendarThree();\nmyCalendarThree.book(10, 20); // return 1\nmyCalendarThree.book(50, 60); // return 1\nmyCalendarThree.book(10, 40); // return 2\nmyCalendarThree.book(5, 15); // return 3\nmyCalendarThree.book(5, 10); // return 3\nmyCalendarThree.book(25, 55); // return 3\n\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= startTime &lt; endTime &lt;= 10<sup>9</sup></code></li>\n\t<li>At most <code>400</code> calls will be made to <code>book</code>.</li>\n</ul>\n",
+  "hints": [
+    "Treat each interval [start, end) as two events \"start\" and \"end\", and process them in sorted order."
+  ],
+  "metaData": "{\n  \"classname\": \"MyCalendarThree\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"name\": \"book\",\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"startTime\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"endTime\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"systemdesign\": true,\n  \"params\": [\n    {\n      \"name\": \"starts\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"ends\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<boolean>\",\n    \"dealloc\": true\n  }\n}",
+  "stats": "{\"totalAccepted\": \"111.1K\", \"totalSubmission\": \"155.2K\", \"totalAcceptedRaw\": 111069, \"totalSubmissionRaw\": 155164, \"acRate\": \"71.6%\"}",
+  "likes": 2088,
+  "dislikes": 275,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"My Calendar I\", \"titleSlug\": \"my-calendar-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"My Calendar II\", \"titleSlug\": \"my-calendar-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Integers in Intervals\", \"titleSlug\": \"count-integers-in-intervals\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"MyCalendarThree\",\"book\",\"book\",\"book\",\"book\",\"book\",\"book\"]\n[[],[10,20],[50,60],[10,40],[5,15],[5,10],[25,55]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class MyCalendarThree {\npublic:\n    MyCalendarThree() {\n        \n    }\n    \n    int book(int startTime, int endTime) {\n        \n    }\n};\n\n/**\n * Your MyCalendarThree object will be instantiated and called as such:\n * MyCalendarThree* obj = new MyCalendarThree();\n * int param_1 = obj->book(startTime,endTime);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class MyCalendarThree {\n\n    public MyCalendarThree() {\n        \n    }\n    \n    public int book(int startTime, int endTime) {\n        \n    }\n}\n\n/**\n * Your MyCalendarThree object will be instantiated and called as such:\n * MyCalendarThree obj = new MyCalendarThree();\n * int param_1 = obj.book(startTime,endTime);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class MyCalendarThree:\n\n    def __init__(self):\n        \n\n    def book(self, startTime: int, endTime: int) -> int:\n        \n\n\n# Your MyCalendarThree object will be instantiated and called as such:\n# obj = MyCalendarThree()\n# param_1 = obj.book(startTime,endTime)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class MyCalendarThree(object):\n\n    def __init__(self):\n        \n\n    def book(self, startTime, endTime):\n        \"\"\"\n        :type startTime: int\n        :type endTime: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your MyCalendarThree object will be instantiated and called as such:\n# obj = MyCalendarThree()\n# param_1 = obj.book(startTime,endTime)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar MyCalendarThree = function() {\n    \n};\n\n/** \n * @param {number} startTime \n * @param {number} endTime\n * @return {number}\n */\nMyCalendarThree.prototype.book = function(startTime, endTime) {\n    \n};\n\n/** \n * Your MyCalendarThree object will be instantiated and called as such:\n * var obj = new MyCalendarThree()\n * var param_1 = obj.book(startTime,endTime)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class MyCalendarThree {\n    constructor() {\n        \n    }\n\n    book(startTime: number, endTime: number): number {\n        \n    }\n}\n\n/**\n * Your MyCalendarThree object will be instantiated and called as such:\n * var obj = new MyCalendarThree()\n * var param_1 = obj.book(startTime,endTime)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class MyCalendarThree {\n\n    public MyCalendarThree() {\n        \n    }\n    \n    public int Book(int startTime, int endTime) {\n        \n    }\n}\n\n/**\n * Your MyCalendarThree object will be instantiated and called as such:\n * MyCalendarThree obj = new MyCalendarThree();\n * int param_1 = obj.Book(startTime,endTime);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} MyCalendarThree;\n\n\nMyCalendarThree* myCalendarThreeCreate() {\n    \n}\n\nint myCalendarThreeBook(MyCalendarThree* obj, int startTime, int endTime) {\n    \n}\n\nvoid myCalendarThreeFree(MyCalendarThree* obj) {\n    \n}\n\n/**\n * Your MyCalendarThree struct will be instantiated and called as such:\n * MyCalendarThree* obj = myCalendarThreeCreate();\n * int param_1 = myCalendarThreeBook(obj, startTime, endTime);\n \n * myCalendarThreeFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type MyCalendarThree struct {\n    \n}\n\n\nfunc Constructor() MyCalendarThree {\n    \n}\n\n\nfunc (this *MyCalendarThree) Book(startTime int, endTime int) int {\n    \n}\n\n\n/**\n * Your MyCalendarThree object will be instantiated and called as such:\n * obj := Constructor();\n * param_1 := obj.Book(startTime,endTime);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class MyCalendarThree() {\n\n    fun book(startTime: Int, endTime: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your MyCalendarThree object will be instantiated and called as such:\n * var obj = MyCalendarThree()\n * var param_1 = obj.book(startTime,endTime)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass MyCalendarThree {\n\n    init() {\n        \n    }\n    \n    func book(_ startTime: Int, _ endTime: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your MyCalendarThree object will be instantiated and called as such:\n * let obj = MyCalendarThree()\n * let ret_1: Int = obj.book(startTime, endTime)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct MyCalendarThree {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl MyCalendarThree {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn book(&self, start_time: i32, end_time: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your MyCalendarThree object will be instantiated and called as such:\n * let obj = MyCalendarThree::new();\n * let ret_1: i32 = obj.book(startTime, endTime);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class MyCalendarThree\n    def initialize()\n        \n    end\n\n\n=begin\n    :type start_time: Integer\n    :type end_time: Integer\n    :rtype: Integer\n=end\n    def book(start_time, end_time)\n        \n    end\n\n\nend\n\n# Your MyCalendarThree object will be instantiated and called as such:\n# obj = MyCalendarThree.new()\n# param_1 = obj.book(start_time, end_time)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class MyCalendarThree {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $startTime\n     * @param Integer $endTime\n     * @return Integer\n     */\n    function book($startTime, $endTime) {\n        \n    }\n}\n\n/**\n * Your MyCalendarThree object will be instantiated and called as such:\n * $obj = MyCalendarThree();\n * $ret_1 = $obj->book($startTime, $endTime);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class MyCalendarThree {\n\n  MyCalendarThree() {\n    \n  }\n  \n  int book(int startTime, int endTime) {\n    \n  }\n}\n\n/**\n * Your MyCalendarThree object will be instantiated and called as such:\n * MyCalendarThree obj = MyCalendarThree();\n * int param1 = obj.book(startTime,endTime);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class MyCalendarThree() {\n\n    def book(startTime: Int, endTime: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your MyCalendarThree object will be instantiated and called as such:\n * val obj = new MyCalendarThree()\n * val param_1 = obj.book(startTime,endTime)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule MyCalendarThree do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec book(start_time :: integer, end_time :: integer) :: integer\n  def book(start_time, end_time) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# MyCalendarThree.init_()\n# param_1 = MyCalendarThree.book(start_time, end_time)\n\n# MyCalendarThree.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec my_calendar_three_init_() -> any().\nmy_calendar_three_init_() ->\n  .\n\n-spec my_calendar_three_book(StartTime :: integer(), EndTime :: integer()) -> integer().\nmy_calendar_three_book(StartTime, EndTime) ->\n  .\n\n\n%% Your functions will be called as such:\n%% my_calendar_three_init_(),\n%% Param_1 = my_calendar_three_book(StartTime, EndTime),\n\n%% my_calendar_three_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define my-calendar-three%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; book : exact-integer? exact-integer? -> exact-integer?\n    (define/public (book start-time end-time)\n      )))\n\n;; Your my-calendar-three% object will be instantiated and called as such:\n;; (define obj (new my-calendar-three%))\n;; (define param_1 (send obj book start-time end-time))"
+    }
+  ],
+  "solution": {
+    "id": "1483",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThe problem asked for the maximum value of overlapped intervals at some points each time after adding a new interval. The main challenge here is to find an efficient way to maintain those added intervals and query how many intervals cover a single point quickly and dynamically.\n\nThis solution article provides three approaches with different performances. We will start from the most intuitive way, which is also mentioned in the solution to [731. My Calendar II](https://leetcode.com/problems/my-calendar-ii/solution/), and then generalize such kind of interval problems step by step to give two additional approaches.\n\n\n---\n\n### Approach 1: Sweep-line Algorithm\n\n#### Intuition\n\nIf we look at each time point separately, our task is to find out how many events are going on at this time point and find the time point of the max number of events. Every time we book a new event `[start, end)`, what we actually do is add 1 to the event counts to all time points in the range `[start, end)`. The final result of each `book` call is exactly the max count of a single time in the whole range of `[1, 1e9)`.\n\nFor such kind of problem that increases all counts in some ranges by some constant values several times and asks to obtain all counts for those time points,  we have a very classic solution called [**sweep-line algorithm**](https://en.wikipedia.org/wiki/Sweep_line_algorithm): instead of keeping all values of counts in a traditional way, we use a *differential array* to represent the change that occurs at each time point. In this problem, we will increase the count by 1 at point `start` and decrease the count by 1 at point `end`. After enumerating all booked events and updating the differential array, we can simulate scanning the *differential array* with a vertical sweep-line from the origin time point `0` to the maximum `1e9` and obtain the *prefix sum* at each time point `t`, which is also the event count of time `t`. All we need to do now is find the maximum value of such counts when we scan the array.\n\n#### Algorithm\n\n1. Initialize a HashMap `diff` as empty. We use a HashMap here instead of an array because the times given by the inputs are sparse as there are at most 400 calls of `book()` function, we don't have to create records for all numbers in `[1, 1e9)`. \n2. Each time we book a new event `[start, end)`\n   - Update the `diff[start]` by adding 1 while `diff[end]` by subtracting 1.\n   - Initialize an integer `cur = 0` to represent the number of intervals at the current time\n   - Enumerate all times that have records in `diff` in order, accumulate the corresponding value to `cur`, and record the max value of `cur` during our enumeration, which is the result of `book()` call.\n\n<iframe src=\"https://leetcode.com/playground/iZqZrQF7/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"iZqZrQF7\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $N$ be the number of events booked.\n\n* Time Complexity: $O(N^2)$. For each new event, we update the changes at two points in $O(\\log{N})$ because we keep the HashMap in sorted order. Then we traverse `diff` in $O(N)$ time.\n\n* Space Complexity: $O(N)$, the size of `diff`.\n\n---\n\n### Approach 2: Segment Tree\n\n#### Intuition\n\nIf we use an array `vals` with length `1e9` to represent how many events (intervals) covering a time `t`, each time a new event `[start, end)` is added, we just need to increase all values in the subarray of `vals` from index `start` to `end-1` by 1, and then return the max value in `val`.\n\nA segment tree with *lazy tags* is often used in this scenario to update scalar data (e.g., max, min, sum, etc.) of a subarray quickly. In this problem, we can use a `TreeNode` to store the max numbers of intervals in a time range `[L, R]`. A `TreeNode` has the following fields:\n\n- `L` and `R`: the end points of the interval represented by this `TreeNode`.\n- `val`: the max number of events at a time included in this range `[L, R]`\n- `lazy`: the number of events covering all times in the range. As all numbers that belong to this range will be added by some increment, we don't have to propagate the base increment to every time in the interval, all we need to do is putting the number in this `lazy` field. We only update `val` by adding `lazy` when requested to query the max numbers of intervals in `[L, R]`.\n- `left` and `right`: The left and right child nodes of this node, should represent the range `[L, M]` and `[M + 1, R]` respectively unless `left = right`, `M = (L + R) / 2` here.\n\n#### Algorithm\n\nEach time adding a new event `[start, end)`, we start from the root node, which represents the time interval `[0, C]`, where `C` is the largest possible time and equals to `1e9` in this problem, check if `[start, end - 1]` has any intersection with current range `[L, R]` (`[0, C]` for the root node), and update those nodes recursively:\n\n1. If `L > end - 1` or `R < start`, no elements in `[start, end - 1]` are included in current node, just return.\n2. If `start <= L` and `R <= end - 1`, the range represented by this node is completely contained in `[start, end - 1]`. All elements in the range will be added by 1, so we just need to increase its `lazy` and `val` by 1 and stop.\n3. Otherwise, only partial numbers in this range are coverd by `[start, end)`. We just go to the two child nodes and repeat the checking steps above to update them. After updating data in child nodes, don't forget to update `val` of our current node by `lazy + max(left.val, right.val)`, because the max numbers must come from either left or right half of the range, plus the number shared by all elements in the interval, which is stored in `lazy`.\n4. The `val` of the root node is exactly the answer we want.\n\n#### Implementation\n\nAs we discussed before, the input endpoints are sparse. We don't have to create TreeNode for all intervals in the beginning. We can create a node dynamically when needed. Besides, we don't need to define a `TreeNode` class, instead, we can represent them by hashmap with unique `idx`s as keys and specify values at key `2 * idx` and `2 * idx + 1` as its left and right child nodes for any `idx > 0`.\n\n<iframe src=\"https://leetcode.com/playground/5pGTu2uv/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5pGTu2uv\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of events booked and $C$ be the largest time (i.e., $10^9$ in this problem)\n\n* Time Complexity: $O(N \\log{C})$. The max possible depth of the segment tree is $\\log{C}$. At most $O(\\log{C})$ nodes will be visited in each `update` operation. Thus, the time complexity of booking $N$ new events is $O(N \\log{C})$.\n* Space Complexity: $O(N \\log{C})$. Instead of creating a segment tree of $4C$ at first, we create tree nodes dynamically when needed. Every time `update` is called, we create at most $O(\\log{C})$ nodes because the max depth of the segment tree is $\\log{C}$.\n\n\n---\n\n### Approach 3: Balanced Tree\n\n#### Intuition\n\nInspired by Approach 2, what if we keep all consecutive and disjoint intervals in a sorted container? We mark those intervals with the number of events occurring during it. When we are asked to book a new event `[start, end)`, find which intervals the two endpoints `start` and `end` are located in, and split the intervals by `start` and `end` to create new smaller intervals. After that, we can increase the number of events for those intervals within `start` and `end` by 1.\n\nFor example, assume we have a time interval `[0, 21)` in the beginning without any booked event. We mark the interval as 0. Then,\n\n1. Add a new event `[0, 11)`, then we split the interval into `[0,11)` and `[11,21)`, and mark `[0, 11)` as 1.\n2. Add another new event `[5, 16)`, then we split the interval `[0,11)` into `[0, 5)` and `[5, 11)`,  `[11, 21)` into `[11, 16)` and `[16, 21)`, then we increase the events in  `[5, 11)` and `[11, 16)` by 1. \n\nThe process is shown in the following picture:\n\n![](../Documents/732/732_odt.drawio.svg)\n\nWith the help of those sorted intervals, we can precisely locate those intervals contained in a given `[start, end)` and increase the events in them by 1. Now, it is much easier to know the events in different time slots and find the max one.\n\n\n#### Algorithm\n\nTo keep all intervals mentioned above sorted, we first use a **balanced tree** as a container initialized with the largest time range `[1, 1e9)`, which has no events, that is, we have `intervals = [[1, 1e9)]` at first. All intervals are stored in the array `intervals` in the form of `[left, right)`.\n\nWhen we need to book a new event `[start, end)`:\n\n1. Binary search all starting points in `intervals` to find the first interval `[L1, R1)` that has `L1 <= start`, then we split the interval into `[L1, start)` and `[start, R1)`, keep the events in them the same as the origin interval `[L1, R1)`, and put them back in `intervals` container.\n2. Similarly, perform a binary search to get the first `[L2, R2)` that satisfies `L2 <= end`, split it into`[L2, end)` and `[end, R2)` and inserting them into `intervals`.\n3. For all non-empty intervals between `[start, R1)` and `[end, R2)` inclusively in `intervals`, increase the events of them by 1 as we added a new event in time `[start, end)` just now. Because only the number of events in those intervals are updated, to get the max number of events now, we just need to compare the last max number of events with them.\n\n#### Implementation\n\nThe balanced tree container has different implementations in different languages. We use `map` in C++, `TreeMap` in java and `SortedList` in Python to mimic how a balanced tree behaves.\n\nAnd also, we can maintain only starting points of intervals without their end points, because all intervals are consecutive, the end point of an interval is also the starting point of the next one.\n\n<iframe src=\"https://leetcode.com/playground/Nvt8PExk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Nvt8PExk\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $N$ be the number of events booked.\n\n* Time Complexity: $O(N^2)$  in the worst case. For each new `[start, end)`, we find the intervals that contains point `start` and `end` in $O(\\log{N})$ time, split and add new intervals in $O(\\log{N})$ time. We increase at most 2 new intervals each time, so the size of `intervals`(or `starts`) is at most $2N+1$. Finally, we enumerate all intervals contained in `[start, end)` to get the max number of events, which takes $O(N)$ time. Therefore, the overall time complexity of booking $N$ events is $O(N^2)$.\n\nThough the time complexity looks not ideal in the worst case, if the given `[start, end)` is distributed uniformly, the time complexity is $O(N\\log\\log N)$ (See also: [Crate `chtholly_tree`](https://docs.rs/chtholly_tree/latest/chtholly_tree/)). The proof is not easy so we ignore it here.\n\n* Space Complexity: $O(N)$, the size of `intervals`(or `starts`) is at most $2N+1$ as we analyzed before.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

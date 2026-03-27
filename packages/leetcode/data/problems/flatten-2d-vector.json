@@ -1,0 +1,148 @@
+{
+  "questionId": "251",
+  "questionFrontendId": "251",
+  "title": "Flatten 2D Vector",
+  "titleSlug": "flatten-2d-vector",
+  "difficulty": "Medium",
+  "content": "<p>Design an iterator to flatten a 2D vector. It should support the <code>next</code> and <code>hasNext</code> operations.</p>\n\n<p>Implement the <code>Vector2D</code> class:</p>\n\n<ul>\n\t<li><code>Vector2D(int[][] vec)</code> initializes the object with the 2D vector <code>vec</code>.</li>\n\t<li><code>next()</code> returns the next element from the 2D vector and moves the pointer one step forward. You may assume that all the calls to <code>next</code> are valid.</li>\n\t<li><code>hasNext()</code> returns <code>true</code> if there are still some elements in the vector, and <code>false</code> otherwise.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;Vector2D&quot;, &quot;next&quot;, &quot;next&quot;, &quot;next&quot;, &quot;hasNext&quot;, &quot;hasNext&quot;, &quot;next&quot;, &quot;hasNext&quot;]\n[[[[1, 2], [3], [4]]], [], [], [], [], [], [], []]\n<strong>Output</strong>\n[null, 1, 2, 3, true, true, 4, false]\n\n<strong>Explanation</strong>\nVector2D vector2D = new Vector2D([[1, 2], [3], [4]]);\nvector2D.next();    // return 1\nvector2D.next();    // return 2\nvector2D.next();    // return 3\nvector2D.hasNext(); // return True\nvector2D.hasNext(); // return True\nvector2D.next();    // return 4\nvector2D.hasNext(); // return False\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= vec.length &lt;= 200</code></li>\n\t<li><code>0 &lt;= vec[i].length &lt;= 500</code></li>\n\t<li><code>-500 &lt;= vec[i][j] &lt;= 500</code></li>\n\t<li>At most <code>10<sup>5</sup></code> calls will be made to <code>next</code> and <code>hasNext</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> As an added challenge, try to code it using only <a href=\"http://www.cplusplus.com/reference/iterator/iterator/\" target=\"_blank\">iterators in C++</a> or <a href=\"http://docs.oracle.com/javase/7/docs/api/java/util/Iterator.html\" target=\"_blank\">iterators in Java</a>.</p>\n",
+  "hints": [
+    "How many variables do you need to keep track?",
+    "Two variables is all you need. Try with <code>x</code> and <code>y</code>.",
+    "Beware of empty rows. It could be the first few rows.",
+    "To write correct code, think about the <a href=\"https://en.wikipedia.org/wiki/Invariant_(computer_science)\" target=\"_blank\">invariant</a> to maintain. What is it?",
+    "The invariant is <code>x</code> and <code>y</code> must always point to a valid point in the 2d vector. Should you maintain your invariant <i>ahead of time</i> or <i>right when you need it</i>?",
+    "Not sure? Think about how you would implement <code>hasNext()</code>. Which is more complex?",
+    "Common logic in two different places should be refactored into a common method."
+  ],
+  "metaData": "{\n  \"classname\": \"Vector2D\",\n  \"maxbytesperline\": 200000,\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer[][]\",\n        \"name\": \"vec\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"name\": \"next\",\n      \"params\": [],\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    },\n    {\n      \"name\": \"hasNext\",\n      \"params\": [],\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    }\n  ],\n  \"systemdesign\": true,\n  \"params\": [\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\",\n    \"dealloc\": true\n  }\n}",
+  "stats": "{\"totalAccepted\": \"145.7K\", \"totalSubmission\": \"288.7K\", \"totalAcceptedRaw\": 145659, \"totalSubmissionRaw\": 288672, \"acRate\": \"50.5%\"}",
+  "likes": 739,
+  "dislikes": 418,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Binary Search Tree Iterator\", \"titleSlug\": \"binary-search-tree-iterator\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Zigzag Iterator\", \"titleSlug\": \"zigzag-iterator\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Peeking Iterator\", \"titleSlug\": \"peeking-iterator\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Flatten Nested List Iterator\", \"titleSlug\": \"flatten-nested-list-iterator\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"Vector2D\",\"next\",\"next\",\"next\",\"hasNext\",\"hasNext\",\"next\",\"hasNext\"]\n[[[[1,2],[3],[4]]],[],[],[],[],[],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 16, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}, {\"timesEncountered\": 2, \"slug\": \"zenefits\", \"name\": \"Zenefits\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Iterator",
+      "slug": "iterator"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Vector2D {\npublic:\n    Vector2D(vector<vector<int>>& vec) {\n        \n    }\n    \n    int next() {\n        \n    }\n    \n    bool hasNext() {\n        \n    }\n};\n\n/**\n * Your Vector2D object will be instantiated and called as such:\n * Vector2D* obj = new Vector2D(vec);\n * int param_1 = obj->next();\n * bool param_2 = obj->hasNext();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Vector2D {\n\n    public Vector2D(int[][] vec) {\n        \n    }\n    \n    public int next() {\n        \n    }\n    \n    public boolean hasNext() {\n        \n    }\n}\n\n/**\n * Your Vector2D object will be instantiated and called as such:\n * Vector2D obj = new Vector2D(vec);\n * int param_1 = obj.next();\n * boolean param_2 = obj.hasNext();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Vector2D:\n\n    def __init__(self, vec: List[List[int]]):\n        \n\n    def next(self) -> int:\n        \n\n    def hasNext(self) -> bool:\n        \n\n\n# Your Vector2D object will be instantiated and called as such:\n# obj = Vector2D(vec)\n# param_1 = obj.next()\n# param_2 = obj.hasNext()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Vector2D(object):\n\n    def __init__(self, vec):\n        \"\"\"\n        :type vec: List[List[int]]\n        \"\"\"\n        \n\n    def next(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def hasNext(self):\n        \"\"\"\n        :rtype: bool\n        \"\"\"\n        \n\n\n# Your Vector2D object will be instantiated and called as such:\n# obj = Vector2D(vec)\n# param_1 = obj.next()\n# param_2 = obj.hasNext()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} vec\n */\nvar Vector2D = function(vec) {\n    \n};\n\n/**\n * @return {number}\n */\nVector2D.prototype.next = function() {\n    \n};\n\n/**\n * @return {boolean}\n */\nVector2D.prototype.hasNext = function() {\n    \n};\n\n/** \n * Your Vector2D object will be instantiated and called as such:\n * var obj = new Vector2D(vec)\n * var param_1 = obj.next()\n * var param_2 = obj.hasNext()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Vector2D {\n    constructor(vec: number[][]) {\n        \n    }\n\n    next(): number {\n        \n    }\n\n    hasNext(): boolean {\n        \n    }\n}\n\n/**\n * Your Vector2D object will be instantiated and called as such:\n * var obj = new Vector2D(vec)\n * var param_1 = obj.next()\n * var param_2 = obj.hasNext()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Vector2D {\n\n    public Vector2D(int[][] vec) {\n        \n    }\n    \n    public int Next() {\n        \n    }\n    \n    public bool HasNext() {\n        \n    }\n}\n\n/**\n * Your Vector2D object will be instantiated and called as such:\n * Vector2D obj = new Vector2D(vec);\n * int param_1 = obj.Next();\n * bool param_2 = obj.HasNext();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Vector2D;\n\n\nVector2D* vector2DCreate(int** vec, int vecSize, int* vecColSize) {\n    \n}\n\nint vector2DNext(Vector2D* obj) {\n    \n}\n\nbool vector2DHasNext(Vector2D* obj) {\n    \n}\n\nvoid vector2DFree(Vector2D* obj) {\n    \n}\n\n/**\n * Your Vector2D struct will be instantiated and called as such:\n * Vector2D* obj = vector2DCreate(vec, vecSize, vecColSize);\n * int param_1 = vector2DNext(obj);\n \n * bool param_2 = vector2DHasNext(obj);\n \n * vector2DFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Vector2D struct {\n    \n}\n\n\nfunc Constructor(vec [][]int) Vector2D {\n    \n}\n\n\nfunc (this *Vector2D) Next() int {\n    \n}\n\n\nfunc (this *Vector2D) HasNext() bool {\n    \n}\n\n\n/**\n * Your Vector2D object will be instantiated and called as such:\n * obj := Constructor(vec);\n * param_1 := obj.Next();\n * param_2 := obj.HasNext();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Vector2D(vec: Array<IntArray>) {\n\n    fun next(): Int {\n        \n    }\n\n    fun hasNext(): Boolean {\n        \n    }\n\n}\n\n/**\n * Your Vector2D object will be instantiated and called as such:\n * var obj = Vector2D(vec)\n * var param_1 = obj.next()\n * var param_2 = obj.hasNext()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Vector2D {\n\n    init(_ vec: [[Int]]) {\n        \n    }\n    \n    func next() -> Int {\n        \n    }\n    \n    func hasNext() -> Bool {\n        \n    }\n}\n\n/**\n * Your Vector2D object will be instantiated and called as such:\n * let obj = Vector2D(vec)\n * let ret_1: Int = obj.next()\n * let ret_2: Bool = obj.hasNext()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Vector2D {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Vector2D {\n\n    fn new(vec: Vec<Vec<i32>>) -> Self {\n        \n    }\n    \n    fn next(&self) -> i32 {\n        \n    }\n    \n    fn has_next(&self) -> bool {\n        \n    }\n}\n\n/**\n * Your Vector2D object will be instantiated and called as such:\n * let obj = Vector2D::new(vec);\n * let ret_1: i32 = obj.next();\n * let ret_2: bool = obj.has_next();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Vector2D\n\n=begin\n    :type vec: Integer[][]\n=end\n    def initialize(vec)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def next()\n        \n    end\n\n\n=begin\n    :rtype: Boolean\n=end\n    def has_next()\n        \n    end\n\n\nend\n\n# Your Vector2D object will be instantiated and called as such:\n# obj = Vector2D.new(vec)\n# param_1 = obj.next()\n# param_2 = obj.has_next()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Vector2D {\n    /**\n     * @param Integer[][] $vec\n     */\n    function __construct($vec) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function next() {\n        \n    }\n  \n    /**\n     * @return Boolean\n     */\n    function hasNext() {\n        \n    }\n}\n\n/**\n * Your Vector2D object will be instantiated and called as such:\n * $obj = Vector2D($vec);\n * $ret_1 = $obj->next();\n * $ret_2 = $obj->hasNext();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Vector2D {\n\n  Vector2D(List<List<int>> vec) {\n    \n  }\n  \n  int next() {\n    \n  }\n  \n  bool hasNext() {\n    \n  }\n}\n\n/**\n * Your Vector2D object will be instantiated and called as such:\n * Vector2D obj = Vector2D(vec);\n * int param1 = obj.next();\n * bool param2 = obj.hasNext();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Vector2D(_vec: Array[Array[Int]]) {\n\n    def next(): Int = {\n        \n    }\n\n    def hasNext(): Boolean = {\n        \n    }\n\n}\n\n/**\n * Your Vector2D object will be instantiated and called as such:\n * val obj = new Vector2D(vec)\n * val param_1 = obj.next()\n * val param_2 = obj.hasNext()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Vector2D do\n  @spec init_(vec :: [[integer]]) :: any\n  def init_(vec) do\n    \n  end\n\n  @spec next() :: integer\n  def next() do\n    \n  end\n\n  @spec has_next() :: boolean\n  def has_next() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Vector2D.init_(vec)\n# param_1 = Vector2D.next()\n# param_2 = Vector2D.has_next()\n\n# Vector2D.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec vector2_d_init_(Vec :: [[integer()]]) -> any().\nvector2_d_init_(Vec) ->\n  .\n\n-spec vector2_d_next() -> integer().\nvector2_d_next() ->\n  .\n\n-spec vector2_d_has_next() -> boolean().\nvector2_d_has_next() ->\n  .\n\n\n%% Your functions will be called as such:\n%% vector2_d_init_(Vec),\n%% Param_1 = vector2_d_next(),\n%% Param_2 = vector2_d_has_next(),\n\n%% vector2_d_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define vector2-d%\n  (class object%\n    (super-new)\n    \n    ; vec : (listof (listof exact-integer?))\n    (init-field\n      vec)\n    \n    ; next : -> exact-integer?\n    (define/public (next)\n      )\n    ; has-next : -> boolean?\n    (define/public (has-next)\n      )))\n\n;; Your vector2-d% object will be instantiated and called as such:\n;; (define obj (new vector2-d% [vec vec]))\n;; (define param_1 (send obj next))\n;; (define param_2 (send obj has-next))"
+    }
+  ],
+  "solution": {
+    "id": "910",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThis question should be fairly straightforward if you're familiar with what an Iterator is. If you aren't at all familiar with Iterators though, then we suggest having a go at [Peeking Iterator](https://leetcode.com/problems/peeking-iterator/). Additionally, the [Solution Article for Peeking Iterator](https://leetcode.com/problems/peeking-iterator/solution/) has a special introduction section that introduces you to what Iterators are.\n\nNote that this question refers to something called a `Vector`. A `Vector` is simply another name for `Array`. To be consistent with the question, we've chosen to use the term `Vector`, rather than `Array` for this article (Sorry in advance for any confusion this causes, C++ programmers).\n\n<br/>\n\n---\n\n### Approach 1: Flatten List in Constructor\n\n**Intuition**\n\n_**This approach is a bad approach!** We've included it though, to show what it looks like, and to discuss why it's bad. This will help you to design **good** Iterators._\n\nIn the constructor, we can iterate over the 2D input vector, putting each integer into a `List`. Then, the problem simplifies to being a simple `List` Iterator. Note that the reason we use a `List` rather than an array (vector) is because we don't know in advance how many integers there might be in total.\n\nOur unpack algorithm would be as follows.\n\n```text\nnums = a new List\nfor each innerVector in the input 2D Vector:\n    for each number in innerVector:\n        append number to the end of nums\n```\n\nWe'll then need to save this `List` as a field of our Iterator class, seeing as the `next(...)` and `hasNext(...)` methods will need to access it repeatedly. By then also having a position field, we can keep track of where the Iterator is up to.\n\n**Algorithm**\n\nThe code shown here makes the `position` field point at the *next element that needs to be returned by `next`*. Therefore, the `hasNext()` method simply needs to check that `position` is a valid index of `nums`. A similar variant would be to make `position` point at the *previous* value that was returned. This would simplify the `next()` method, but complicate the `hasNext()` method.\n\n<iframe src=\"https://leetcode.com/playground/WgFFHDNR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WgFFHDNR\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of integers within the 2D Vector, and $$V$$ be the number of inner vectors.\n\n- Time complexity.\n\n    - **Constructor:** $$O(N + V)$$.\n\n        In total, we'll append $$N$$ integers to the `nums` list. Each of these appends is an $$O(1)$$ operation. This gives us $$O(N)$$.\n\n        Something to be cautious of is that inner vectors don't *have* to contain integers. Think of a test cases such as `[[], [2], [], [], []]`. For this test case, $$N = 1$$, because there's only one integer within it. *However*, the algorithm has to loop through all of the empty vectors. The cost of checking all the vectors is $$O(V)$$.\n\n        Therefore, we get a final time complexity of $$O(N + V)$$.\n\n\n    - **next():** $$O(1)$$.\n\n        All operations in this method, including getting the integer at a specific index of a list, are $$O(1)$$.\n\n    - **hasNext():** $$O(1)$$.\n\n        All operations in this method are $$O(1)$$.\n\n- Space complexity : $$O(N)$$.\n\n    We're making a new list that contains all of the integers from the 2D Vector. Notice that this is different from the time complexity; in the example of `[[], [2], [], [], []]`, we only store the `2`. All information about how many inner vectors there were is discarded.\n\n\n**Why is this implementation bad?**\n\nThis code works, it runs fast here on Leetcode, it seems pretty straightforward to implement.\n\nHowever, one of the main purposes of an Iterator is to *minimize* the use of auxiliary space. We should try to utilize the existing data structure as much as possible, only adding as much extra space as needed to keep track of the next value. In some situations, the data structure we want to iterate over is too large to even fit in memory anyway (think of file systems).\n\nIn the case of our above implementation, we might as well have just had a single function `List<Integer> getFlattenedVector(int[][] v)`, which would return a `List` of integers, that could then be iterated over using the `List` types own standard Iterator.\n\nAs a general rule, you should be very cautious of implementing Iterators with a high time complexity in the constructor, with a very low time complexity in the `next()` and `hasNext()` methods. If the code using the Iterator only wanted to access the first couple of elements in the iterated collection, then a lot of time (and probably space) has been wasted!\n\nAs a side note, modifying the input collection in any way is *bad* design too. Iterators are only allowed to look at, not change, the collection they've been asked to iterate over.\n\n<br/>\n\n---\n\n### Approach 2: Two Pointers\n\n**Intuition**\n\nLike we said above, Approach 1 is bad because it creates a new data structure instead of simply iterating over the given one. Instead, we should find a way to step through the integers one-by-one, keeping track of where we currently are in the 2D vector. The location of each number is represented with 2 indexes; the index of the inner vector, and the index of the integer within its inner vector. Here's an example 2D vector, with the indexes marked on it.\n\n![Diagram showing list with outer and inner indices](../Figures/251/double_indexed_number.png)\n\nSuppose we are at the following position:\n\n![Diagram showing list item with it's inner and outer index](../Figures/251/example_position.png)\n\nHow do we find the next position? Well the current integer has another integer after it, within the same inner vector. Therefore, we can just increment `inner` index by `1`. This gives the next position as shown below.\n\n![Diagram showing list item advanced to sibling](../Figures/251/example_advance_to_sibling.png)\n\nNow `inner` is at the end of the current inner vector. In order to get to the next integer we'll need to increment `outer` by `1`, and set `inner` to `0` (as `0` is first index of the new vector).\n\n![Diagram showing list item advanced to first element of next inner vector](../Figures/251/example_advance_to_next_inner_vector.png)\n\nThis time, it's a bit trickier, because we need to skip over empty vectors. To do that we repeatedly increment `outer` until we find an inner vector that is not empty (programmatically, this would be an `outer` where `inner = 0` is valid). Once we find one, we stop and set `inner` to `0` (the first integer of the inner vector).\n\n![Diagram showing list item advanced past empty lists to next position](../Figures/251/example_advance_past_empty_lists.png)\n\nNote that when `outer` becomes equal to the length of the 2D vector, this means there are no more inner vectors and so there are no more numbers left.\n\n**Algorithm**\n\nIn Approach 1, we used $$O(N)$$ auxiliary space and $$O(N + V)$$ time in the constructor. In this approach though, we perform the necessary work incrementally during calls to `hasNext()` and `next()`. This means that if the caller stops using the iterator before it's exhausted, we won't have done any unnecessary work.\n\nWe'll define an `advanceToNext()` helper method that checks if the current `inner` and `outer` values point to an integer, and if they don't, then it moves them forward until they point to an integer (in the way described above). If `outer == vector.length` becomes true, then the method terminates (because there's no integers left).\n\nIn order to ensure no unnecessary work is done, the *constructor* doesn't check whether or not `vector[0][0]` points to an integer. This is because there might be an arbitrary number of empty inner vectors at the start of the input vector; potentially costing up to $$O(V)$$ operations to skip past.\n\nBoth `hasNext()` and `next()` start by calling `advanceToNext()` to ensure that `inner` and `outer` point to an integer, **or** that `outer` is at its \"stop\" value of `outer = vector.length`.\n\n`next()` returns the integer at `vector[inner][outer]`, and then increments `inner` by `1`, so that the next call to `advanceToNext()` will start searching from after the integer we've just returned.\n\nIt is important to note that calling the `hasNext()` method will only cause the pointers to move if they don't point to an integer. Once they point to an integer, repeated calls to `hasNext()` will not move them further. Only `next()` is able to move them *off* a valid integer. This design ensures that the client code calling `hasNext()` multiple times will not have unusual side effects.\n\n<iframe src=\"https://leetcode.com/playground/dZYE36xD/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dZYE36xD\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of integers within the 2D Vector, and $$V$$ be the number of inner vectors.\n\n- Time complexity.\n\n    - **Constructor:** $$O(1)$$.\n\n        We're only storing a reference to the input vector—an $$O(1)$$ operation.\n\n    - **advanceToNext():** $$O(\\dfrac{V}{N})$$.\n\n        If the iterator is completely exhausted, then all calls to `advanceToNext()` will have performed $$O(N + V)$$ total operations. (Like in Approach 1, the $$V$$ comes from the fact that we go through all $$V$$ inner vectors, and the $$N$$ comes from the fact we perform one increment for each integer).\n\n        However, because we perform $$N$$ `advanceToNext()` operations in order to exhaust the iterator, the amortized cost of this operation is just $$\\dfrac{O(N + V)}{N} = O(\\dfrac{N}{N} + \\dfrac{V}{N}) = O(\\dfrac{V}{N})$$.  \n\n    - **next() / hasNext():** $$O(\\dfrac{V}{N})$$ or $$O(1)$$.\n\n        The cost of both these methods depends on how they are called. If we just got a value from `next()`, then the next call to either method will involve calling `advanceToNext()`. In this case the time complexity is $$O(\\dfrac{V}{N})$$.\n\n        However if we call `hasNext()`, then all successive calls to `hasNext()`, or the next call to `next()`, will be $$O(1)$$. This is because `advanceToNext()` will only perform an $$O(1)$$ check and immediately return.\n\n- Space complexity : $$O(1)$$.\n\n    We only use a fixed set of $$O(1)$$ fields (remember `vector` is a reference, not a copy!). So the space complexity is $$O(1)$$.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

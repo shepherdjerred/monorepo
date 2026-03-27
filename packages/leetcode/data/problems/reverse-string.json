@@ -1,0 +1,120 @@
+{
+  "questionId": "344",
+  "questionFrontendId": "344",
+  "title": "Reverse String",
+  "titleSlug": "reverse-string",
+  "difficulty": "Easy",
+  "content": "<p>Write a function that reverses a string. The input string is given as an array of characters <code>s</code>.</p>\n\n<p>You must do this by modifying the input array <a href=\"https://en.wikipedia.org/wiki/In-place_algorithm\" target=\"_blank\">in-place</a> with <code>O(1)</code> extra memory.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> s = [\"h\",\"e\",\"l\",\"l\",\"o\"]\n<strong>Output:</strong> [\"o\",\"l\",\"l\",\"e\",\"h\"]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> s = [\"H\",\"a\",\"n\",\"n\",\"a\",\"h\"]\n<strong>Output:</strong> [\"h\",\"a\",\"n\",\"n\",\"a\",\"H\"]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s[i]</code> is a <a href=\"https://en.wikipedia.org/wiki/ASCII#Printable_characters\" target=\"_blank\">printable ascii character</a>.</li>\n</ul>\n",
+  "hints": [
+    "The entire logic for reversing a string is based on using the opposite directional two-pointer approach!"
+  ],
+  "metaData": "{\n  \"name\": \"reverseString\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"character[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"void\"\n  },\n  \"output\": {\n    \"paramindex\": 0\n  }\n}",
+  "stats": "{\"totalAccepted\": \"3.8M\", \"totalSubmission\": \"4.7M\", \"totalAcceptedRaw\": 3761246, \"totalSubmissionRaw\": 4663456, \"acRate\": \"80.7%\"}",
+  "likes": 9556,
+  "dislikes": 1215,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Reverse Vowels of a String\", \"titleSlug\": \"reverse-vowels-of-a-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Reverse String II\", \"titleSlug\": \"reverse-string-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"h\",\"e\",\"l\",\"l\",\"o\"]",
+    "[\"H\",\"a\",\"n\",\"n\",\"a\",\"h\"]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 4, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 4, \"slug\": \"epam-systems\", \"name\": \"EPAM Systems\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"qualcomm\", \"name\": \"Qualcomm\"}, {\"timesEncountered\": 2, \"slug\": \"hcl\", \"name\": \"HCL\"}, {\"timesEncountered\": 2, \"slug\": \"garmin\", \"name\": \"Garmin\"}]}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    void reverseString(vector<char>& s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public void reverseString(char[] s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def reverseString(self, s: List[str]) -> None:\n        \"\"\"\n        Do not return anything, modify s in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def reverseString(self, s):\n        \"\"\"\n        :type s: List[str]\n        :rtype: None Do not return anything, modify s in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {character[]} s\n * @return {void} Do not return anything, modify s in-place instead.\n */\nvar reverseString = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n Do not return anything, modify s in-place instead.\n */\nfunction reverseString(s: string[]): void {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public void ReverseString(char[] s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "void reverseString(char* s, int sSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func reverseString(s []byte)  {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun reverseString(s: CharArray): Unit {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func reverseString(_ s: inout [Character]) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn reverse_string(s: &mut Vec<char>) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Character[]} s\n# @return {Void} Do not return anything, modify s in-place instead.\ndef reverse_string(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $s\n     * @return NULL\n     */\n    function reverseString(&$s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  void reverseString(List<String> s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def reverseString(s: Array[Char]): Unit = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "781",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/682181606\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n--- \n\n### Overview\n\n_Life is short, use Python._ (c) \n\n<iframe src=\"https://leetcode.com/playground/SxAYws7t/shared\" frameBorder=\"0\" width=\"100%\" height=\"106\" name=\"SxAYws7t\"></iframe>\n\nSpeaking seriously, let's use this problem to discuss two things:\n\n- Does _in-place_ mean constant space complexity?\n\n- Two pointers approach. \n<br /> \n<br />\n\n\n---\n### Approach 1: Recursion, In-Place, $$\\mathcal{O}(N)$$ Space\n\n**Does _in-place_ mean constant space complexity?**\n\nNo. [By definition](https://en.wikipedia.org/wiki/In-place_algorithm), an in-place algorithm is an algorithm that transforms input using no auxiliary data structure. \n\nThe tricky part is that space is used by many actors, not only by data structures. The classical example is to use a recursive function without any auxiliary data structures. \n\nIs it in place? Yes. \n\nIs it constant space? No, because of the recursion stack.\n\n![fig](../Figures/344/stack2.png) \n\n**Algorithm**\n\nHere is an example. Let's implement the recursive function `helper` which receives two pointers, left and right, as arguments. \n\n- Base case: if `left >= right`, do nothing.\n\n- Otherwise, swap `s[left]` and `s[right]` and call `helper(left + 1, right - 1)`.\n\nTo solve the problem, call the helper function passing the head and tail indexes as arguments: `return helper(0, len(s) - 1)`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/6aQgR4Za/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"6aQgR4Za\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(N)$$ time to perform $$N/2$$ swaps. \n\n* Space complexity : $$\\mathcal{O}(N)$$ to keep the recursion stack.\n<br /> \n<br />\n\n\n---\n### Approach 2: Two Pointers, Iteration, $$\\mathcal{O}(1)$$ Space\n\n**Two Pointers Approach**\n\nIn this approach, two pointers are used to process two array elements at the same time. Usual implementation is to set one pointer in the beginning and one at the end and then to move them until they both meet.  \n\nSometimes one needs to generalize this approach in order to use three-pointers, like for classical [Sort Colors problem](https://leetcode.com/articles/sort-colors/).\n\n**Algorithm**\n\n- Set the pointer left at index 0, and the pointer right at index `n - 1`, where n is the number of elements in the array.\n\n- While left < right:\n\n    - Swap `s[left]` and `s[right]`.\n    \n    - Move the left pointer one step right, and the right pointer one step left.\n    \n![fig](../Figures/344/two.png)    \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/LteeH4sn/shared\" frameBorder=\"0\" width=\"100%\" height=\"225\" name=\"LteeH4sn\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(N)$$ to swap $$N/2$$ element. \n\n* Space complexity : $$\\mathcal{O}(1)$$, it's a constant space solution.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

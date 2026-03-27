@@ -1,0 +1,141 @@
+{
+  "questionId": "124",
+  "questionFrontendId": "124",
+  "title": "Binary Tree Maximum Path Sum",
+  "titleSlug": "binary-tree-maximum-path-sum",
+  "difficulty": "Hard",
+  "content": "<p>A <strong>path</strong> in a binary tree is a sequence of nodes where each pair of adjacent nodes in the sequence has an edge connecting them. A node can only appear in the sequence <strong>at most once</strong>. Note that the path does not need to pass through the root.</p>\n\n<p>The <strong>path sum</strong> of a path is the sum of the node&#39;s values in the path.</p>\n\n<p>Given the <code>root</code> of a binary tree, return <em>the maximum <strong>path sum</strong> of any <strong>non-empty</strong> path</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/10/13/exx1.jpg\" style=\"width: 322px; height: 182px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> The optimal path is 2 -&gt; 1 -&gt; 3 with a path sum of 2 + 1 + 3 = 6.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/10/13/exx2.jpg\" />\n<pre>\n<strong>Input:</strong> root = [-10,9,20,null,null,15,7]\n<strong>Output:</strong> 42\n<strong>Explanation:</strong> The optimal path is 15 -&gt; 20 -&gt; 7 with a path sum of 15 + 20 + 7 = 42.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 3 * 10<sup>4</sup>]</code>.</li>\n\t<li><code>-1000 &lt;= Node.val &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"maxPathSum\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.9M\", \"totalSubmission\": \"4.4M\", \"totalAcceptedRaw\": 1866677, \"totalSubmissionRaw\": 4431376, \"acRate\": \"42.1%\"}",
+  "likes": 18424,
+  "dislikes": 790,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Path Sum\", \"titleSlug\": \"path-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum Root to Leaf Numbers\", \"titleSlug\": \"sum-root-to-leaf-numbers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Path Sum IV\", \"titleSlug\": \"path-sum-iv\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Univalue Path\", \"titleSlug\": \"longest-univalue-path\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Time Needed to Inform All Employees\", \"titleSlug\": \"time-needed-to-inform-all-employees\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Difference Between Maximum and Minimum Price Sum\", \"titleSlug\": \"difference-between-maximum-and-minimum-price-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3]",
+    "[-10,9,20,null,null,15,7]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 4, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 8, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 7, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 4, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 3, \"slug\": \"datadog\", \"name\": \"Datadog\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"wix\", \"name\": \"Wix\"}]}",
+  "topicTags": [
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int maxPathSum(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int maxPathSum(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def maxPathSum(self, root: Optional[TreeNode]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def maxPathSum(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number}\n */\nvar maxPathSum = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction maxPathSum(root: TreeNode | null): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int MaxPathSum(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint maxPathSum(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc maxPathSum(root *TreeNode) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun maxPathSum(root: TreeNode?): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func maxPathSum(_ root: TreeNode?) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn max_path_sum(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer}\ndef max_path_sum(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer\n     */\n    function maxPathSum($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int maxPathSum(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def maxPathSum(root: TreeNode): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec max_path_sum(root :: TreeNode.t | nil) :: integer\n  def max_path_sum(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec max_path_sum(Root :: #tree_node{} | null) -> integer().\nmax_path_sum(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (max-path-sum root)\n  (-> (or/c tree-node? #f) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1617",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nIn this problem, we are given the root of a binary tree. We want to find the maximum path sum of this tree.\n\nBefore we delve into the solution, let's first understand a few terms. A *path* is a continuous sequence of nodes connected to each other. There will always be at least one node in a path. In a path, except for the starting and ending nodes, every node is connected to two other nodes in the sequence. These two nodes could either be the node's children, or one of them could be a child, and the other could be the parent node. In other words, no node can have more than two connections in this sequence. Each node contains a value, which could be negative, zero, or positive.\n\n![Some examples of valid paths](../Figures/124/124_valid_path_examples.png)\n\n![Some examples of invalid paths](../Figures/124/124_invalid_path_examples.png)\n\nA *path sum* is the sum of the values of all the nodes in a path. Because the values could be negative or positive, a path sum could also be negative or positive. Every combination of two nodes in a tree can form a path by using the sequence of all nodes between them. In fact, every node in itself can also be considered a path (a path needs at least one node). We can see that the number of paths could be pretty large, and there would be as many path sums as the number of paths. In this problem, we need to find the maximum path sum.\n\n![An example of maximum path sum in a binary tree](../Figures/124/124_example.png)\n\nWe must traverse the entire tree to find the maximum path sum. We are interested in a set of nodes that form a continuous sequence (path). When traversing trees, we prefer DFS over BFS because it can examine each path before moving on to the next.\n\n---\n\n### Approach: Post Order DFS\n\n#### Intuition\n\nOne way to find the maximum path sum would be to look at all possible paths, calculate their path sums, and then find the maximum path sum. However, this would be a \"brute force\" approach. If there are $n$ nodes in the tree, creating all the paths and computing their path sums would take $O(n ^ 2)$ time. We can do better than this.\n\nConsider a scenario where the path with the highest sum passes through the tree's root.\n\nThere could be four possibilities.\n\n1. The path starts at the root and goes down through the root's left child. We don't know how long the path is, but it could extend to the bottom of the left subtree.\n2. The path starts at the root and goes down through the root's right child. Very similar to the previous case, but the direction is toward the right.\n3. The path involves both the left and the right child.\n4. The path doesn't involve any child. The root itself is the only element of the path with maximum sum.\n\n!?!../Documents/124/max-path-with-root-node.json:960,540!?!\n\nWe know that the path contains the root. Therefore, in the beginning, we can assume that the path sum is the root node's value. To find the maximum path sum, we determine if there is a viable path leading down through the left or the right subtree. Please remember that a node can have negative or positive values. So a path sum contributed by a subtree could also be negative or positive. It would make sense to consider a path sum contributed by a subtree only if it is positive. If not, we can safely ignore it. In other words, the path goes down the left or the right subtree only if we see a gain in the path sum.\n\nThis means we must first determine the gain in the path sum contributed by the left and the right subtree. Once we have both, we decide whether to include their contribution. We can see that we need to process the children before we process a node. This indicates that we need to perform a **post-order traversal** of the tree because, in post-order, children are processed before the parent.\n\nTo implement post-order traversal, we implement a recursive function. This function takes the root of the subtree as the input. The function returns the path sum gain contributed by the subtree. To calculate the path sum gain, the function calls itself recursively on the subtree's left and right child.\n\nWe have considered the scenario where the maximum sum path passes through the root. But what if it doesn't?\n\n![When root is not a part of the maximum path sum](../Figures/124/124_example_2.png)\n\n<br />\n\nWe slightly tweak our algorithm to include the case when the path sum doesn't pass through the root. Now, in addition to returning the path sum gain contributed by the subtree, the recursive function also keeps track of the maximum path sum. We update the maximum path sum whenever we find a new maximum.\n\nLet's put this formally now. Let's name our recursive function `gain_from_subtree`. It takes the root of a subtree as the input. The function has two responsibilities.\n\n1. The function returns the path sum gain contributed by the subtree.\n\n    The path sum gain contributed by the subtree can be derived from a path that includes at most one child of the root. You may wonder, why can't we include both children? If we include both children in the path, the path would have to make a fork at the root. The root is already connected to its parent. Now, if we include both children as well, with three connections, it wouldn't be a valid path anymore. Therefore, we can say that the path would consist of at most one child of the root.\n\n    The recursive function compares `left_gain` and `right_gain` and adds the maximum of the two to the value of the root. The sum, `gain_from_subtree` is then returned to the caller.\n\n    ```\n    left_gain = max(gain_from_left_subtree, 0)\n    right_gain = max(gain_from_right_subtree, 0)\n    gain_from_subtree = max(left_gain, right_gain) + root.val\n    ```\n\n    We use `max(gain_from_left_subtree, 0)` because we want to consider the gain only if it is positive. If it is negative, we ignore it or consider it as zero.\n\n2. The function keeps track of the maximum path sum.\n\n    Assuming that the maximum path sum passes through the root of the subtree, as explained earlier, we consider all four possibilities - (1) The path goes through the left subtree (2) The path goes through the right subtree (3) The path goes through both left and right subtrees (4) The path doesn't involve left or right subtrees. So we include the left and right gain if they are positive and the value of the root node. We compare this sum with the current maximum path sum and update it if necessary. The following code segment takes care of all four possibilities.\n\n    ```\n    max_path_sum = max(max_path_sum, left_gain + right_gain + root.val)\n    ```\n\n#### Algorithm\n\n##### Main function body\n\n1. Initialize a global variable `max_sum` to `-Infinity`.\n2. Call the function `gain_from_subtree` on the tree's root.\n3. Return the value of `max_sum`.\n\n##### Body of the recursive function `gain_from_subtree`. It accepts `root` of the subtree as the input.\n\n1. If the root is `null`, return `0`. This is the base case. If a node doesn't have a left or right child, then the path sum contributed by the respective subtree is `0`.\n2. Call the function recursively on the left and right child of the root. Store the results in `gain_from_left` and `gain_from_right`, respectively.\n3. If either is negative, set it to `0`. This is because we don't want to include a path sum contributed by a subtree if it is negative.\n4. Update the maximum path sum (`max_sum`) seen so far. To do so, compare `max_sum` with the sum of the following, and update it if it is smaller.\n    - The value of the root itself.\n    - `gain_from_left` (`0` if negative)\n    - `gain_from_right` (`0` if negative)\n5. Return the path sum gain contributed by the subtree. This is the maximum of the following two values.\n    - The value of the root plus `gain_from_left`.\n    - The value of the root plus `gain_from_right`.\n\n##### A note on the base case\n\nLet's say our recursive algorithm reaches a node with no left child. Because there is no left child, our path cannot go toward the left subtree. In other words, the gain from the left subtree is $0$. So, when the function is called on the non-existent child of the node, it returns $0$. This would be true for a non-existent right child as well. Therefore, we can safely say that the base case is when the root is `null`.\n\n!?!../Documents/124/124_full_simulation.json:960,540!?!\n\n<br />\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/EdgcdHU7/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"EdgcdHU7\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n* Time complexity: $O(n)$\n\n    Each node in the tree is visited only once. During a visit, we perform constant time operations, including two recursive calls and calculating the max path sum for the current node. So the time complexity is $O(n)$.\n\n* Space complexity: $O(n)$\n\n    We don't use any auxiliary data structure, but the recursive call stack can go as deep as the tree's height. In the worst case, the tree is a linked list, so the height is $n$. Therefore, the space complexity is $O(n)$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

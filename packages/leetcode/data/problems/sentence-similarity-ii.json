@@ -1,0 +1,152 @@
+{
+  "questionId": "737",
+  "questionFrontendId": "737",
+  "title": "Sentence Similarity II",
+  "titleSlug": "sentence-similarity-ii",
+  "difficulty": "Medium",
+  "content": "<p>We can represent a sentence as an array of words, for example, the sentence <code>&quot;I am happy with leetcode&quot;</code> can be represented as <code>arr = [&quot;I&quot;,&quot;am&quot;,happy&quot;,&quot;with&quot;,&quot;leetcode&quot;]</code>.</p>\n\n<p>Given two sentences <code>sentence1</code> and <code>sentence2</code> each represented as a string array and given an array of string pairs <code>similarPairs</code> where <code>similarPairs[i] = [x<sub>i</sub>, y<sub>i</sub>]</code> indicates that the two words <code>x<sub>i</sub></code> and <code>y<sub>i</sub></code> are similar.</p>\n\n<p>Return <code>true</code><em> if <code>sentence1</code> and <code>sentence2</code> are similar, or </em><code>false</code><em> if they are not similar</em>.</p>\n\n<p>Two sentences are similar if:</p>\n\n<ul>\n\t<li>They have <strong>the same length</strong> (i.e., the same number of words)</li>\n\t<li><code>sentence1[i]</code> and <code>sentence2[i]</code> are similar.</li>\n</ul>\n\n<p>Notice that a word is always similar to itself, also notice that the similarity relation is transitive. For example, if the words <code>a</code> and <code>b</code> are similar, and the words <code>b</code> and <code>c</code> are similar, then&nbsp;<code>a</code> and <code>c</code> are <strong>similar</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence1 = [&quot;great&quot;,&quot;acting&quot;,&quot;skills&quot;], sentence2 = [&quot;fine&quot;,&quot;drama&quot;,&quot;talent&quot;], similarPairs = [[&quot;great&quot;,&quot;good&quot;],[&quot;fine&quot;,&quot;good&quot;],[&quot;drama&quot;,&quot;acting&quot;],[&quot;skills&quot;,&quot;talent&quot;]]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The two sentences have the same length and each word i of sentence1 is also similar to the corresponding word in sentence2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence1 = [&quot;I&quot;,&quot;love&quot;,&quot;leetcode&quot;], sentence2 = [&quot;I&quot;,&quot;love&quot;,&quot;onepiece&quot;], similarPairs = [[&quot;manga&quot;,&quot;onepiece&quot;],[&quot;platform&quot;,&quot;anime&quot;],[&quot;leetcode&quot;,&quot;platform&quot;],[&quot;anime&quot;,&quot;manga&quot;]]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> &quot;leetcode&quot; --&gt; &quot;platform&quot; --&gt; &quot;anime&quot; --&gt; &quot;manga&quot; --&gt; &quot;onepiece&quot;.\nSince &quot;leetcode is similar to &quot;onepiece&quot; and the first two words are the same, the two sentences are similar.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence1 = [&quot;I&quot;,&quot;love&quot;,&quot;leetcode&quot;], sentence2 = [&quot;I&quot;,&quot;love&quot;,&quot;onepiece&quot;], similarPairs = [[&quot;manga&quot;,&quot;hunterXhunter&quot;],[&quot;platform&quot;,&quot;anime&quot;],[&quot;leetcode&quot;,&quot;platform&quot;],[&quot;anime&quot;,&quot;manga&quot;]]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> &quot;leetcode&quot; is not similar to &quot;onepiece&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= sentence1.length, sentence2.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= sentence1[i].length, sentence2[i].length &lt;= 20</code></li>\n\t<li><code>sentence1[i]</code> and <code>sentence2[i]</code> consist of lower-case and upper-case English letters.</li>\n\t<li><code>0 &lt;= similarPairs.length &lt;= 2000</code></li>\n\t<li><code>similarPairs[i].length == 2</code></li>\n\t<li><code>1 &lt;= x<sub>i</sub>.length, y<sub>i</sub>.length &lt;= 20</code></li>\n\t<li><code>x<sub>i</sub></code> and <code>y<sub>i</sub></code> consist of English letters.</li>\n</ul>\n",
+  "hints": [
+    "Consider the graphs where each pair in \"pairs\" is an edge.  Two words are similar if they are the same, or are in the same connected component of this graph."
+  ],
+  "metaData": "{\n  \"name\": \"areSentencesSimilarTwo\",\n  \"params\": [\n    {\n      \"name\": \"sentence1\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"name\": \"sentence2\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"name\": \"similarPairs\",\n      \"type\": \"list<list<string>>\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"78.9K\", \"totalSubmission\": \"154.1K\", \"totalAcceptedRaw\": 78875, \"totalSubmissionRaw\": 154098, \"acRate\": \"51.2%\"}",
+  "likes": 854,
+  "dislikes": 43,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Number of Provinces\", \"titleSlug\": \"number-of-provinces\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Accounts Merge\", \"titleSlug\": \"accounts-merge\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sentence Similarity\", \"titleSlug\": \"sentence-similarity\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"great\",\"acting\",\"skills\"]\n[\"fine\",\"drama\",\"talent\"]\n[[\"great\",\"good\"],[\"fine\",\"good\"],[\"drama\",\"acting\"],[\"skills\",\"talent\"]]",
+    "[\"I\",\"love\",\"leetcode\"]\n[\"I\",\"love\",\"onepiece\"]\n[[\"manga\",\"onepiece\"],[\"platform\",\"anime\"],[\"leetcode\",\"platform\"],[\"anime\",\"manga\"]]",
+    "[\"I\",\"love\",\"leetcode\"]\n[\"I\",\"love\",\"onepiece\"]\n[[\"manga\",\"hunterXhunter\"],[\"platform\",\"anime\"],[\"leetcode\",\"platform\"],[\"anime\",\"manga\"]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"rippling\", \"name\": \"Rippling\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool areSentencesSimilarTwo(vector<string>& sentence1, vector<string>& sentence2, vector<vector<string>>& similarPairs) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean areSentencesSimilarTwo(String[] sentence1, String[] sentence2, List<List<String>> similarPairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def areSentencesSimilarTwo(self, sentence1: List[str], sentence2: List[str], similarPairs: List[List[str]]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def areSentencesSimilarTwo(self, sentence1, sentence2, similarPairs):\n        \"\"\"\n        :type sentence1: List[str]\n        :type sentence2: List[str]\n        :type similarPairs: List[List[str]]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} sentence1\n * @param {string[]} sentence2\n * @param {string[][]} similarPairs\n * @return {boolean}\n */\nvar areSentencesSimilarTwo = function(sentence1, sentence2, similarPairs) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function areSentencesSimilarTwo(sentence1: string[], sentence2: string[], similarPairs: string[][]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool AreSentencesSimilarTwo(string[] sentence1, string[] sentence2, IList<IList<string>> similarPairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool areSentencesSimilarTwo(char** sentence1, int sentence1Size, char** sentence2, int sentence2Size, char*** similarPairs, int similarPairsSize, int* similarPairsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func areSentencesSimilarTwo(sentence1 []string, sentence2 []string, similarPairs [][]string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun areSentencesSimilarTwo(sentence1: Array<String>, sentence2: Array<String>, similarPairs: List<List<String>>): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func areSentencesSimilarTwo(_ sentence1: [String], _ sentence2: [String], _ similarPairs: [[String]]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn are_sentences_similar_two(sentence1: Vec<String>, sentence2: Vec<String>, similar_pairs: Vec<Vec<String>>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} sentence1\n# @param {String[]} sentence2\n# @param {String[][]} similar_pairs\n# @return {Boolean}\ndef are_sentences_similar_two(sentence1, sentence2, similar_pairs)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $sentence1\n     * @param String[] $sentence2\n     * @param String[][] $similarPairs\n     * @return Boolean\n     */\n    function areSentencesSimilarTwo($sentence1, $sentence2, $similarPairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool areSentencesSimilarTwo(List<String> sentence1, List<String> sentence2, List<List<String>> similarPairs) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def areSentencesSimilarTwo(sentence1: Array[String], sentence2: Array[String], similarPairs: List[List[String]]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec are_sentences_similar_two(sentence1 :: [String.t], sentence2 :: [String.t], similar_pairs :: [[String.t]]) :: boolean\n  def are_sentences_similar_two(sentence1, sentence2, similar_pairs) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec are_sentences_similar_two(Sentence1 :: [unicode:unicode_binary()], Sentence2 :: [unicode:unicode_binary()], SimilarPairs :: [[unicode:unicode_binary()]]) -> boolean().\nare_sentences_similar_two(Sentence1, Sentence2, SimilarPairs) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (are-sentences-similar-two sentence1 sentence2 similarPairs)\n  (-> (listof string?) (listof string?) (listof (listof string?)) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1665",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given two sentences, `sentence1` and `sentence2` which are each represented as a string array. We are also given an array of string pairs, `similarPairs` where `similarPairs[i] = [xi, yi]` indicates that the two words `xi` and `yi` are similar.\n\nThe problem describes two sentences are similar if:\n\n1. They have the same length (i.e., the same number of words).\n2. `sentence1[i]` and `sentence2[i]` are similar (words corresponding to each index are similar).\n\nIt is also mentioned that if the words `a` and `b` are similar, and the words `b` and `c` are similar, then `a` and `c` are similar. The similarity relation is transitive.\n\nOur task is to determine whether `sentence1` is similar to `sentence2` or not.\n\n---\n\n### Approach 1: Depth First Search\n\n#### Intuition\n\nTo check whether `sentence1` is similar to `sentence2`, we would first check the number of words in both sentences. If the number of words in both of the sentences is not equal, the sentences cannot be similar, so we return `false` in such a case.\n\nIf the number of words in both sentences is equal, we need to check if all the words corresponding to each index of the sentences are similar, i.e., whether `sentence1[i]` and `sentence2[i]` are similar.\n\nTwo words are similar if they are the same word, or if there is a way for the words to reach each other using pairs in `similarPairs` (similarity is transitive).\n\nLet's go through the second example of the problem description, where `similarPairs = [[\"manga\",\"onepiece\"], [\"platform\",\"anime\"], [\"leetcode\",\"platform\"], [\"anime\",\"manga\"]]`. We need to check whether the words `\"leetcode\"` and `\"onepiece\"` are similar. Since, there is a path from `\"leetcode\"` to `\"anime\"` using pairs in `similarPairs`, i.e., `\"leetcode\" --> \"platform\" --> \"anime\" --> \"manga\" --> \"onepiece\"` the words `\"leetcode\"` and `\"anime\"` are similar. This leads us to consider the problem in terms of a graph.\n\nWe can form a graph to find such a path using `similarPairs`. Each word in `similarPairs` can be thought of as a node in the graph. For every similar pair $[x_i, y_i]$, we add an undirected edge between the nodes corresponding to $x_i$ and $y_i$. Now, if there is a path from words `A` to `B` in this graph, then `A` and `B` are similar words. Since the graph is undirected, it also means `A` and `B` are similar if and only if they belong to the same component of the graph.\n\nTo create the graph, we use a hash map `adj` with string as the key and hash set of strings as the value to map the words to a set of words. For every similar pair $[x_i, y_i]$, we add $y_i$ to the `adj[$x_i$]` set and $x_i$ to the `adj[$y_i$]` set. This forms our graph.\n\nTo check whether `sentence1` and `sentence2` are similar, we iterate over every word at index `i` of the given sentences. We check if the words are the same, i.e., `sentence1[i] = sentence2[i]` or if the words form a similar pair, i.e., there is a path from `sentence1[i]` to `sentence2[i]` in the graph. To check if there is a path from a node to any other node, we use the depth first search (DFS) algorithm in this approach. If there is a path from `sentence1[i]` to `sentence2[i]`, we move on to check the next word. Otherwise, if there is no path from `sentence1[i]` to `sentence2[i]`, the words and given sentences are not similar. So, we return `false` as the answer.\n\nIf you are new to Depth First Search, please see our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/619/depth-first-search-in-graph/3882/) for more information on it!\n\nWe use the `dfs` method, which takes `source, visit, adj, dest` as parameters. The parameter `source` is the word from which we start our path. `visit` is used to keep track of visited words. `adj` is the adjacency list. `dest` is the word where we want to reach. The method returns a boolean to indicate if there is path from `source` to `dest`.\n\nIn the `dfs` method, we mark `source` as visited. We then check if `source = dest` in which case we return `true`. Otherwise, we iterate over all the neighbors of `source` and recursively check if there is a path from any neighbor to reach `dest`. If there is a path to reach `dest`, we return `false`. Otherwise, if we cannot reach `dest` using any neighbor we return `false`.\n\nRefer to the following slides as an example:\n\n!?!../Documents/737_sentence_similarity_II.json:601,301!?!\n\n<br>\n\n#### Algorithm\n\n1. Check if the number of words in `sentence1` and `sentence2` is equal. If the number of words is not equal, return `false`.\n2. Create a hash map, say `adj` with string as the key and hash set of strings as the value such that `adj[x]` contains all the similar words corresponding to the word `x`.\n3. For each `pair` in `similarPairs`:\n    - Add the first word `pair[0]` in `adj[pair[1]]` and add the second word `pair[1]` in `adj[pair[0]]`.\n4. For every word at index `i` of `sentence1`:\n    - If the words are equal, i.e., `sentence1[i] == sentence2[i]`, continue to check the next word.\n    - Otherwise, we perform a DFS traversal with the parameters `(sentence[i], adj, visit, sentence2[i])` to see if `sentence1[i]` and `sentence2[i]` are similar. If the words are similar, `dfs` would return `true`, in which case we move to check the next word. Otherwise, if `dfs` returns `false`, the words and sentences are not similar, so we return `false` as the answer.\n5. Because we were able to match all the corresponding words of both sentences, we return `true`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/HSz26SLE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HSz26SLE\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the number of words in `sentence1` and `sentence2` and $k$ is the number of similar pairs. Let $m$ be the average length of words in `sentence1`, `sentence2` as well as in `similarPairs.`\n\n* Time complexity: $O(n \\cdot k \\cdot m)$\n\n    - We iterate over all the elements of `similarPairs` and insert a pair twice into `adj`. To hash each word of length $m$, we need $O(m)$ time, and to put the same length word in the hash set, we need $O(m)$ time again. Because there are $k$ pairs of words, there can be at most $2 \\cdot k$ words that can be hashed and added to the set. As a result, we require $O(k \\cdot m)$ time.\n    - We iterate over all of `sentence1`'s words to see if the corresponding words are equal or similar. If the words are not equal, we perform a DFS traversal over the graph with $O(k)$ nodes and edges. As we know, a single DFS traversal takes $O(V + E)$ time to traverse a graph with `V` nodes and `E`  edges. In our case, we have $O(k)$ edges and nodes, and each node is a string with an average size of $m$, so a single traversal would take $O(k \\cdot m)$ time. For $n$ traversals, it would take $O(n \\cdot k \\cdot m)$.\n    - The total amount of time required is $O(n \\cdot k \\cdot m + k \\cdot m) = O(n \\cdot k \\cdot m)$.\n\n* Space complexity: $O(k \\cdot m)$\n\n    - Because we use `similarPairs` to create the graph, the number of nodes and edges can be $O(k)$. To map $O(k)$ words of size $m$, `adj` uses $O(k \\cdot m)$ space.\n    - The recursion call stack used by `dfs` can have no more than $O(k)$ elements. It would take up $O(k)$ space in that case.\n    - We also use a set `visit`, which requires $O(k \\cdot m)$ space because it could contain $O(k)$ words in the worst case.\n\n---\n\n### Approach 2: Breadth First Search\n\n#### Intuition\n\nWe can also use a breadth first search (BFS) algorithm to find if there is a path from one word to another.\n\nA breadth-first search (BFS) is an algorithm for traversing or searching a graph. It traverses in a level-wise manner, i.e., all the nodes at the present level (say `l`) are explored before moving on to the nodes at the next level (`l + 1`), where a level's number is the distance from a starting node. BFS is implemented with a queue.\n\nIf you are not familiar with BFS traversal, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/).\n\nWe create the graph in the same way as the above approach. The difference between this approach and the previous one is that instead of using DFS to determine if there is a path from one word to another, we would use BFS.\n\nWe use the `bfs` method, which takes `source, adj, dest` as parameters. The parameter `source` is the word from which we start our path. `adj` is the adjacency list. `dest` is the word we want to reach. The method returns a boolean to indicate if there is a path from `node` to `dest`.\n\nIn the method, we initialize a queue `q` and a set of strings `visit`. We push `source` into `q` and also in `visit`. We perform the BFS traversal until `q` is empty. We pop the first word `node` out of the queue. We iterate over all the neighbors of `node`. For each `neighbor`, we then check if `neighbor = dest` in which case we return `true`. Otherwise, if `neighbor` is not visited, we push it into `q` and mark it as visited. If the queue is empty, it means we cannot reach `dest` starting from `source`, we return `false`.\n\n#### Algorithm\n\n1. Check if the number of words in `sentence1` and `sentence2` is equal. If the number of words is not equal, return `false`.\n2. Create a hash map, say `adj` with string as the key and hash set of strings as the value such that `adj[x]` contains all the similar words corresponding to the word `x`.\n3. For each `pair` in `similarPairs`:\n    - Add the first word `pair[0]` in `adj[pair[1]]` and add the second word `pair[1]` in `adj[pair[0]]`.\n4. For every word at index `i` of `sentence1`:\n    - If the words are equal, i.e., `sentence1[i] == sentence2[i]`, continue to check the next word.\n    - Otherwise, we perform a BFS traversal with the parameters `(sentence[i], adj, sentence2[i])` to see if `sentence1[i]` and `sentence2[i]` are similar. If the words are similar, `bfs` would return `true`, in which case we move to check the next word. Otherwise, if `bfs` returns `false`, the words and sentences are not similar, so we return `false` as the answer.\n5. Because we were able to match all the corresponding words of both sentences, we return `true`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/6wNxkCE5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6wNxkCE5\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the number of words in `sentence1` and `sentence2` and $k$ is the number of similar pairs. Let $m$ be the average length of words in `sentence1`, `sentence2` as well as in `similarPairs.`\n\n* Time complexity: $O(n \\cdot k \\cdot m)$\n\n    - We iterate over all the elements of `similarPairs` and insert a pair twice into `adj`. To hash each word of length $m$, we need $O(m)$ time, and to put the same length word in the hash set, we need $O(m)$ time again. Because there are $k$ pairs of words, there can be at most $2 \\cdot k$ words that can be hashed and added to the set. As a result, we require $O(k \\cdot m)$ time.\n    - We iterate over all of `sentence1`'s words to see if the corresponding words are equal or similar. If the words are not equal, we perform a BFS traversal over the graph with $O(k)$ nodes and edges. As we know, a single BFS traversal takes $O(V + E)$ time to traverse a graph with `V` nodes and `E`  edges. In our case, we have $O(k)$ edges and nodes, and each node is a string with an average size of $m$, so a single traversal would take $O(k \\cdot m)$ time. For $n$ traversals, it would take $O(n \\cdot k \\cdot m)$.\n    - The total amount of time required is $O(n \\cdot k \\cdot m + k \\cdot m) = O(n \\cdot k \\cdot m)$.\n\n* Space complexity: $O(k \\cdot m)$\n\n    - Because we use `similarPairs` to create the graph, the number of nodes and edges can be $O(k)$. To map $O(k)$ words of size $m$, `adj` uses $O(k \\cdot m)$ space.\n    - In the worst case, the queue can grow to a size linear with $k$. It would need $O(k \\cdot m)$ space since each element is of length $m$.\n    - We also use a set `visit`, which requires $O(k \\cdot m)$ space because it could contain $O(k)$ words in the worst case.\n\n---\n\n### Approach 3: Union Find\n\n#### Intuition\n\nAs discussed above, for every $i^{th}$ similar pair $[x_i, y_i]$, our task is to determine whether $x_i = y_i$ or if there exists a path from $x_i$ to $y_i$ in an undirected graph formed by using pairs in `similarPairs`. It means our task is to figure out whether $x_i$ and $y_i$ belong to the same connected component in the graph. This problem can be efficiently solved by using a union-find data structure.\n\nA disjoint-set data structure, also called a union–find data structure or merge–find set, is a data structure that stores a collection of disjoint (non-overlapping) sets. Equivalently, it stores a partition of a set into disjoint subsets. It provides operations for adding new sets, merging sets (replacing them by their union), and finding a representative member of a set. It implements two useful operations:\n\na) `Find`: Determine which subset a particular element is in. This can be used to determine if two elements are in the same subset.\nb) `Union`: Join two subsets into a single subset.\n\nIf you are new to Union-Find, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/learn/card/graph/618/disjoint-set/3881/). We will not talk about implementation details in this article, but only about the interface to the data structure.\n\nIn our union–find data structure, we also add two methods: `addWords` and `isWordPresent`. The method `addWords(x)` adds a new set with the word `x`, if `x` is not already present in the data structure. The method `isWordPresent(x)` returns a boolean indicating if the word `x` is present in the data structure.\n\nWe initialize an instance of `UnionFind`, say `dsu`. We iterate over `similarPairs` and for every $i^{th}$ pair, $[x_i, y_i]$, we add $x_i$ and $y_i$ to `dsu` using the `addWords` method. We then perform the `union` of $x_i$ and $y_i$ to move them to the same set.\n\nTo check whether `sentence1` and `sentence2` are similar, we iterate over every word at index `i` of the given sentences. We check if the words are the same, i.e., `sentence1[i] = sentence2[i]` or if the words form a similar pair. The words are similar if both of them belong to the same set. The set of a word can be found by using the `find` operation on the word. If the words are similar, we continue to the next word. Otherwise, the words and the given sentences are not similar, so we return `false` as the answer.\n\n#### Algorithm\n\n1. Check if the number of words in `sentence1` and `sentence2` is equal. If the number of words is not equal, return `false`.\n2. Create an instance of `UnionFind`, say `dsu`.\n3. For every `pair` in `similarPairs`:\n    - Add the first word `pair[0]` to `dsu`.\n    - Add the second word `pair[1]` to `dsu`.\n    - Perform `union` of `pair[0` and `pair[1]`.\n6. For every word at index `i` of `sentence1`:\n    - If the words are equal, i.e., `sentence1[i] == sentence2[i]`, continue to check the next word.\n    - Otherwise, use the `find` operation to find the set of both words. If the words are in the same set, `dsu.find(entence1[i]) == dsu.find(sentence2[i])`, it means they are similar. In this case, we proceed to the next word. Otherwise, if they belong to different sets, the words and sentences are not similar, so we return `false` as the answer.\n7. Because we were able to match all the corresponding words of both sentences, we return `true`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/NXAaSg5W/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"NXAaSg5W\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the number of words in `sentence1` and `sentence2` and $k$ is the number of similar pairs. Let $m$ be the average length of words in `sentence1`, `sentence2` as well as in `similarPairs.`\n\n* Time complexity: $O((n + k) \\cdot m)$\n\n    - For $T$ operations, the amortized time complexity of the union-find algorithm (using path compression with union by rank) is $O(alpha(T))$. Here, $\\alpha(T)$ is the inverse Ackermann function that grows so slowly, that it doesn't exceed $4$ for all reasonable $T$ (approximately $ T < 10^{600}$). You can read more about the complexity of union-find [here](https://en.wikipedia.org/wiki/Disjoint-set_data_structure#Time_complexity).  Because the function grows so slowly, we consider it to be $O(1)$. Since, we are performing `union` and `find` of strings with average length $m$, we consider it to be $O(m)$.\n    -  We iterate over all the elements of `similarPairs` and add both the words in `pair` to `dsu` which takes $O(m)$ each. We then perform `union` which also takes $O(m)$ time per operation. Because there are $k$ pairs, this step will take $O(k \\cdot m)$ time for all the pairs. \n    - We iterate over all of `sentence1`'s words to see if the words are equal. Because each word is of $m$ length, this would take $O(m)$ time for each word. It will take $O(n \\cdot m)$ time in total because there are $n$ words. If the words are not equal, we perform a `find` operation that takes $O(m)$ per find operation. It would take $O(n \\cdot m)$ time for $n$ words.\n    - As a result, the total time would be $O((n + k) \\cdot m + k \\cdot m) = O((n + k) \\cdot m)$.\n\n* Space complexity: $O(k \\cdot m)$\n\n    - Because there can be $k$ similar pairs, there are $O(k)$ words that are inserted in `dsu`. Since each word has average length $m$, `parent` and `rank` maps would take up $O(k \\cdot m)$ space.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

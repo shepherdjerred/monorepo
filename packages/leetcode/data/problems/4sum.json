@@ -1,0 +1,137 @@
+{
+  "questionId": "18",
+  "questionFrontendId": "18",
+  "title": "4Sum",
+  "titleSlug": "4sum",
+  "difficulty": "Medium",
+  "content": "<p>Given an array <code>nums</code> of <code>n</code> integers, return <em>an array of all the <strong>unique</strong> quadruplets</em> <code>[nums[a], nums[b], nums[c], nums[d]]</code> such that:</p>\n\n<ul>\n\t<li><code>0 &lt;= a, b, c, d&nbsp;&lt; n</code></li>\n\t<li><code>a</code>, <code>b</code>, <code>c</code>, and <code>d</code> are <strong>distinct</strong>.</li>\n\t<li><code>nums[a] + nums[b] + nums[c] + nums[d] == target</code></li>\n</ul>\n\n<p>You may return the answer in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,0,-1,0,-2,2], target = 0\n<strong>Output:</strong> [[-2,-1,1,2],[-2,0,0,2],[-1,0,0,1]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,2,2,2,2], target = 8\n<strong>Output:</strong> [[2,2,2,2]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 200</code></li>\n\t<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= target &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"fourSum\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"target\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<list<integer>>\",\r\n    \"colsize\": 4,\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.6M\", \"totalSubmission\": \"4.1M\", \"totalAcceptedRaw\": 1641901, \"totalSubmissionRaw\": 4079229, \"acRate\": \"40.3%\"}",
+  "likes": 12835,
+  "dislikes": 1536,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Two Sum\", \"titleSlug\": \"two-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"3Sum\", \"titleSlug\": \"3sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"4Sum II\", \"titleSlug\": \"4sum-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Special Quadruplets\", \"titleSlug\": \"count-special-quadruplets\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,0,-1,0,-2,2]\n0",
+    "[2,2,2,2,2]\n8"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"cloudflare\", \"name\": \"Cloudflare\"}, {\"timesEncountered\": 5, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 4, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 4, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 3, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 2, \"slug\": \"rubrik\", \"name\": \"Rubrik\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> fourSum(vector<int>& nums, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> fourSum(int[] nums, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def fourSum(self, nums: List[int], target: int) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def fourSum(self, nums, target):\n        \"\"\"\n        :type nums: List[int]\n        :type target: int\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} target\n * @return {number[][]}\n */\nvar fourSum = function(nums, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function fourSum(nums: number[], target: number): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> FourSum(int[] nums, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** fourSum(int* nums, int numsSize, int target, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func fourSum(nums []int, target int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun fourSum(nums: IntArray, target: Int): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func fourSum(_ nums: [Int], _ target: Int) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn four_sum(nums: Vec<i32>, target: i32) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} target\n# @return {Integer[][]}\ndef four_sum(nums, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $target\n     * @return Integer[][]\n     */\n    function fourSum($nums, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> fourSum(List<int> nums, int target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def fourSum(nums: Array[Int], target: Int): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec four_sum(nums :: [integer], target :: integer) :: [[integer]]\n  def four_sum(nums, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec four_sum(Nums :: [integer()], Target :: integer()) -> [[integer()]].\nfour_sum(Nums, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (four-sum nums target)\n  (-> (listof exact-integer?) exact-integer? (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "959",
+    "content": "[TOC]\n\n## Solution\n\nThis problem is a follow-up of [3Sum](https://leetcode.com/articles/3sum/), so take a look at that problem first if you haven't. 4Sum and 3Sum are very similar; the difference is that we are looking for unique quadruplets instead of triplets.\n\nAs you see, 3Sum just wraps Two Sum in an outer loop. As it iterates through each value `v`, it finds all pairs whose sum is equal to `target - v` using one of these approaches:\n\n1. [Two Sum](https://leetcode.com/articles/two-sum/) uses a hash set to check for a matching value.\n2. [Two Sum II](https://leetcode.com/articles/two-sum-ii-input-array-is-sorted/) uses the two pointers pattern in a sorted array.\n\nFollowing a similar logic, we can implement 4Sum by wrapping 3Sum in another loop. But wait - there is a catch. If an interviewer asks you to solve 4Sum, they can follow-up with 5Sum, 6Sum, and so on. What they are really expecting at this point is a kSum solution. Therefore, we will focus on a generalized implementation here.\n\n---\n\n### Approach 1: Two Pointers\n\n**Intuition**\n\nThe two pointers pattern requires the array to be sorted, so we do that first.  Also, it's easier to deal with duplicates if the array is sorted: repeated values are next to each other and easy to skip.\n\nFor 3Sum, we enumerate each value in a single loop, and use the two pointers pattern for the rest of the array. For kSum, we will have `k - 2` nested loops to enumerate all combinations of `k - 2` values.\n\n!?!../Documents/18_4Sum.json:1200,440!?!\n\n**Algorithm**\n\nWe can implement `k - 2` loops using a recursion. We will pass the starting point and `k` as the parameters. When `k == 2`, we will call `twoSum`, terminating the recursion.\n\n1. For the main function:\n    - Sort the input array `nums`.\n    - Call `kSum` with `start = 0`, `k = 4`, and `target`, and return the result.\n\n2. For `kSum` function:\n    - At the start of the `kSum` function, we will check three conditions:\n      1. Have we run out of numbers to choose from?\n      2. Is the smallest number remaining greater than `target / k`? <br>If so, then any `k` numbers we choose will be too large.\n      3. Is the largest number remaining smaller than `target / k`? <br>If so, then any `k` numbers we choose will be too small.\n      - If any of these conditions is true, there is no need to continue as no combination of the remaining elements can sum to `target`.\n    - If `k` equals `2`, call `twoSum` and return the result.\n    - Iterate `i` through the array from `start`:\n        - If the current value is the same as the one before, skip it.\n        - Recursively call `kSum` with `start = i + 1`, `k = k - 1`, and `target - nums[i]`.\n        - For each returned `subset` of values:\n            - Include the current value `nums[i]` into `subset`.\n            - Add `subset` to the result `res`.\n    - Return the result `res`.\n\n3. For `twoSum` function:\n    - Set the low pointer `lo` to `start`, and high pointer `hi` to the last index.\n    - While low pointer is smaller than high:\n        - If the sum of `nums[lo]` and `nums[hi]` is less than `target`, increment `lo`.\n            - Also increment `lo` if the value is the same as for `lo - 1`.\n        - If the sum is greater than `target`, decrement `hi`.\n            - Also decrement `hi` if the value is the same as for `hi + 1`.\n        - Otherwise, we found a pair:\n            - Add it to the result `res`.\n            - Decrement `hi` and increment `lo`.\n    - Return the result `res`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/mQdTCUXD/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"mQdTCUXD\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity: $$O(n^{k - 1})$$, or $$O(n^3)$$ for 4Sum. We have $$k - 2$$ loops, and `twoSum` is $$O(n)$$.\n\n    Note that for $$k > 2$$, sorting the array does not change the overall time complexity.\n\n- Space Complexity: $$O(n)$$. We need $$O(k)$$ space for the recursion. $$k$$ can be the same as $$n$$ in the worst case for the generalized algorithm.\n\n    Note that, for the purpose of complexity analysis, we ignore the memory required for the output.\n\n---\n\n### Approach 2: Hash Set\n    \n**Intuition**\n\nSince elements must sum up to the exact target value, we can also use the [Two Sum: One-pass Hash Table](https://leetcode.com/articles/two-sum/#approach-3-one-pass-hash-table) approach.\n\nIn [3Sum: Hash Set](https://leetcode.com/articles/3sum/#approach-2-hash-set), we solved the problem without sorting the array. To do that, we needed to sort values within triplets, and track them in a hash set. Doing the same for k values could be impractical.\n\nSo, for this approach, we will also sort the array and skip duplicates the same way as in the Two Pointers approach above. Thus, the code will only differ in the `twoSum` implementation.\n\n**Algorithm**\n\n`twoSum` implementation here is almost the same as in [Two Sum: One-pass Hash Table](https://leetcode.com/articles/two-sum/#approach-3-one-pass-hash-table). The only difference is the check to avoid duplicates. Since the array is sorted, we can just compare the found pair with the last one in the result `res`.\n    \n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/oAq3g56d/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"oAq3g56d\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity: $$O(n^{k - 1})$$, or $$O(n^3)$$ for 4Sum. We have $$k - 2$$ loops iterating over $$n$$ elements, and `twoSum` is $$O(n)$$.\n\n    Note that for $$k > 2$$, sorting the array does not change the overall time complexity.\n\n- Space Complexity: $$O(n)$$ for the hash set. The space needed for the recursion will not exceed $$O(n)$$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

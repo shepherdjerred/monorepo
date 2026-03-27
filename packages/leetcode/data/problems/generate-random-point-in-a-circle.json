@@ -1,0 +1,140 @@
+{
+  "questionId": "915",
+  "questionFrontendId": "478",
+  "title": "Generate Random Point in a Circle",
+  "titleSlug": "generate-random-point-in-a-circle",
+  "difficulty": "Medium",
+  "content": "<p>Given the radius and the position of the center of a circle, implement the function <code>randPoint</code> which generates a uniform random point inside the circle.</p>\n\n<p>Implement the <code>Solution</code> class:</p>\n\n<ul>\n\t<li><code>Solution(double radius, double x_center, double y_center)</code> initializes the object with the radius of the circle <code>radius</code> and the position of the center <code>(x_center, y_center)</code>.</li>\n\t<li><code>randPoint()</code> returns a random point inside the circle. A point on the circumference of the circle is considered to be in the circle. The answer is returned as an array <code>[x, y]</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;Solution&quot;, &quot;randPoint&quot;, &quot;randPoint&quot;, &quot;randPoint&quot;]\n[[1.0, 0.0, 0.0], [], [], []]\n<strong>Output</strong>\n[null, [-0.02493, -0.38077], [0.82314, 0.38945], [0.36572, 0.17248]]\n\n<strong>Explanation</strong>\nSolution solution = new Solution(1.0, 0.0, 0.0);\nsolution.randPoint(); // return [-0.02493, -0.38077]\nsolution.randPoint(); // return [0.82314, 0.38945]\nsolution.randPoint(); // return [0.36572, 0.17248]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;&nbsp;radius &lt;= 10<sup>8</sup></code></li>\n\t<li><code>-10<sup>7</sup> &lt;= x_center, y_center &lt;= 10<sup>7</sup></code></li>\n\t<li>At most <code>3 * 10<sup>4</sup></code> calls will be made to <code>randPoint</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n    \"classname\": \"Solution\",\r\n    \"maxbytesperline\": 200000,\r\n    \"constructor\": {\r\n        \"params\": [\r\n            {\r\n                \"name\": \"radius\",\r\n                \"type\": \"double\"\r\n            },\r\n            {\r\n                \"name\": \"x_center\",\r\n                \"type\": \"double\"\r\n            },\r\n            {\r\n                \"name\": \"y_center\",\r\n                \"type\": \"double\"\r\n            }\r\n        ]\r\n    },\r\n    \"methods\": [\r\n        {\r\n            \"name\" : \"randPoint\",\r\n            \"params\": [\r\n            ],\r\n            \"return\": {\r\n                \"type\": \"double[]\"\r\n            }\r\n        }\r\n    ],\r\n    \"systemdesign\": true,\r\n    \"params\": [\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        },\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        }\r\n    ],\r\n    \"return\": {\r\n        \"type\": \"list<String>\",\r\n        \"dealloc\": true\r\n    }\r\n}",
+  "stats": "{\"totalAccepted\": \"53.7K\", \"totalSubmission\": \"126K\", \"totalAcceptedRaw\": 53699, \"totalSubmissionRaw\": 125967, \"acRate\": \"42.6%\"}",
+  "likes": 481,
+  "dislikes": 783,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Random Point in Non-overlapping Rectangles\", \"titleSlug\": \"random-point-in-non-overlapping-rectangles\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"Solution\",\"randPoint\",\"randPoint\",\"randPoint\"]\n[[1.0,0.0,0.0],[],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"leap-motion\", \"name\": \"Ultraleap\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Geometry",
+      "slug": "geometry"
+    },
+    {
+      "name": "Rejection Sampling",
+      "slug": "rejection-sampling"
+    },
+    {
+      "name": "Randomized",
+      "slug": "randomized"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    Solution(double radius, double x_center, double y_center) {\n        \n    }\n    \n    vector<double> randPoint() {\n        \n    }\n};\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution* obj = new Solution(radius, x_center, y_center);\n * vector<double> param_1 = obj->randPoint();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n\n    public Solution(double radius, double x_center, double y_center) {\n        \n    }\n    \n    public double[] randPoint() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = new Solution(radius, x_center, y_center);\n * double[] param_1 = obj.randPoint();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n\n    def __init__(self, radius: float, x_center: float, y_center: float):\n        \n\n    def randPoint(self) -> List[float]:\n        \n\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution(radius, x_center, y_center)\n# param_1 = obj.randPoint()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n\n    def __init__(self, radius, x_center, y_center):\n        \"\"\"\n        :type radius: float\n        :type x_center: float\n        :type y_center: float\n        \"\"\"\n        \n\n    def randPoint(self):\n        \"\"\"\n        :rtype: List[float]\n        \"\"\"\n        \n\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution(radius, x_center, y_center)\n# param_1 = obj.randPoint()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} radius\n * @param {number} x_center\n * @param {number} y_center\n */\nvar Solution = function(radius, x_center, y_center) {\n    \n};\n\n/**\n * @return {number[]}\n */\nSolution.prototype.randPoint = function() {\n    \n};\n\n/** \n * Your Solution object will be instantiated and called as such:\n * var obj = new Solution(radius, x_center, y_center)\n * var param_1 = obj.randPoint()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Solution {\n    constructor(radius: number, x_center: number, y_center: number) {\n        \n    }\n\n    randPoint(): number[] {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * var obj = new Solution(radius, x_center, y_center)\n * var param_1 = obj.randPoint()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n\n    public Solution(double radius, double x_center, double y_center) {\n        \n    }\n    \n    public double[] RandPoint() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = new Solution(radius, x_center, y_center);\n * double[] param_1 = obj.RandPoint();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Solution;\n\n\nSolution* solutionCreate(double radius, double x_center, double y_center) {\n    \n}\n\ndouble* solutionRandPoint(Solution* obj, int* retSize) {\n    \n}\n\nvoid solutionFree(Solution* obj) {\n    \n}\n\n/**\n * Your Solution struct will be instantiated and called as such:\n * Solution* obj = solutionCreate(radius, x_center, y_center);\n * double* param_1 = solutionRandPoint(obj, retSize);\n \n * solutionFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Solution struct {\n    \n}\n\n\nfunc Constructor(radius float64, x_center float64, y_center float64) Solution {\n    \n}\n\n\nfunc (this *Solution) RandPoint() []float64 {\n    \n}\n\n\n/**\n * Your Solution object will be instantiated and called as such:\n * obj := Constructor(radius, x_center, y_center);\n * param_1 := obj.RandPoint();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution(radius: Double, x_center: Double, y_center: Double) {\n\n    fun randPoint(): DoubleArray {\n        \n    }\n\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * var obj = Solution(radius, x_center, y_center)\n * var param_1 = obj.randPoint()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Solution {\n\n    init(_ radius: Double, _ x_center: Double, _ y_center: Double) {\n        \n    }\n    \n    func randPoint() -> [Double] {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * let obj = Solution(radius, x_center, y_center)\n * let ret_1: [Double] = obj.randPoint()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Solution {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Solution {\n\n    fn new(radius: f64, x_center: f64, y_center: f64) -> Self {\n        \n    }\n    \n    fn rand_point(&self) -> Vec<f64> {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * let obj = Solution::new(radius, x_center, y_center);\n * let ret_1: Vec<f64> = obj.rand_point();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Solution\n\n=begin\n    :type radius: Float\n    :type x_center: Float\n    :type y_center: Float\n=end\n    def initialize(radius, x_center, y_center)\n        \n    end\n\n\n=begin\n    :rtype: Float[]\n=end\n    def rand_point()\n        \n    end\n\n\nend\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution.new(radius, x_center, y_center)\n# param_1 = obj.rand_point()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n    /**\n     * @param Float $radius\n     * @param Float $x_center\n     * @param Float $y_center\n     */\n    function __construct($radius, $x_center, $y_center) {\n        \n    }\n  \n    /**\n     * @return Float[]\n     */\n    function randPoint() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * $obj = Solution($radius, $x_center, $y_center);\n * $ret_1 = $obj->randPoint();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n\n  Solution(double radius, double x_center, double y_center) {\n    \n  }\n  \n  List<double> randPoint() {\n    \n  }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = Solution(radius, x_center, y_center);\n * List<double> param1 = obj.randPoint();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Solution(_radius: Double, _x_center: Double, _y_center: Double) {\n\n    def randPoint(): Array[Double] = {\n        \n    }\n\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * val obj = new Solution(radius, x_center, y_center)\n * val param_1 = obj.randPoint()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec init_(radius :: float, x_center :: float, y_center :: float) :: any\n  def init_(radius, x_center, y_center) do\n    \n  end\n\n  @spec rand_point() :: [float]\n  def rand_point() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Solution.init_(radius, x_center, y_center)\n# param_1 = Solution.rand_point()\n\n# Solution.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec solution_init_(Radius :: float(), X_center :: float(), Y_center :: float()) -> any().\nsolution_init_(Radius, X_center, Y_center) ->\n  .\n\n-spec solution_rand_point() -> [float()].\nsolution_rand_point() ->\n  .\n\n\n%% Your functions will be called as such:\n%% solution_init_(Radius, X_center, Y_center),\n%% Param_1 = solution_rand_point(),\n\n%% solution_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define solution%\n  (class object%\n    (super-new)\n    \n    ; radius : flonum?\n    ; x_center : flonum?\n    ; y_center : flonum?\n    (init-field\n      radius\n      x_center\n      y_center)\n    \n    ; rand-point : -> (listof flonum?)\n    (define/public (rand-point)\n      )))\n\n;; Your solution% object will be instantiated and called as such:\n;; (define obj (new solution% [radius radius] [x_center x_center] [y_center y_center]))\n;; (define param_1 (send obj rand-point))"
+    }
+  ],
+  "solution": {
+    "id": "516",
+    "content": "[TOC]\n\n## Solution\n---\n\n### Approach 1: Rejection Sampling\n\n**Intuition**\n\nIt is easy to generate a random point in a square. Could we use randomly generated points in a square to get random points in a circle? Which generated points could we use, and which ones would we need to toss away? How often would we generate points that we could use?\n\n**Algorithm**\n\n<p align=\"center\">\n    <img src=\"../Figures/883/squareCircleOverlay.png\" alt=\"Square_Circle_Overlay\" style=\"height: 300px;\"/>\n\nA square of size length 2R overlaid with a circle of radius R.\n\n</p>\n\nTo get uniform random points in a circle $$C$$ of radius $$R$$, we can generate uniform random points in the square $$S$$ of side length $$2R$$, keeping all of the points which are at most [euclidean distance](https://en.wikipedia.org/wiki/Euclidean_distance) $$R$$ from the center, and rejecting all which are farther away than that. This technique is called [rejection sampling](https://en.wikipedia.org/wiki/Rejection_sampling). Each possible location on the circle has the same probability of being generated, so the sampling of points will be uniformly distributed.\n\nThe area of the square is $$(2R)^2 = 4R^2$$ and the area of the circle is $$\\pi R^2 \\approx  3.14R^2$$. $$\\dfrac{3.14R^2}{4R^2} = \\dfrac{3.14}{4} = .785$$. Therefore, we will get a usable sample approximately $$78.5\\%$$ of the time and the expected number of times that we will need to sample until we get a usable sample is $$\\dfrac{1}{.785} \\approx 1.274$$ times.\n\n<iframe src=\"https://leetcode.com/playground/Xj2VY2sF/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"Xj2VY2sF\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(1)$$ on average. $$O(\\infty)$$ worst case. (per $$\\text{randPoint}$$ call)\n* Space Complexity: $$O(1)$$.\n\n<br/>\n\n---\n\n### Approach 2: Inverse Transform Sampling (Math)\n\n**Disclaimer**\n\nThis solution relies on advanced math which is not expected knowledge for a coding interview. It is presented here only for educational purposes.\n\n**Algorithm**\n\nAssume that we are given a circle $$C$$ of radius $$1$$ that is centered at the [origin](https://en.wikipedia.org/wiki/Origin_(mathematics)), and our task is to sample uniform random points on this circle.\n\nLets imagine another circle $$B$$ of radius $$\\frac{1}{2}$$ which is also centered at the origin.\n\nThe circumference of $$C$$ is twice the circumference of $$B$$, because the circumference of a circle is [directly proportional](https://en.wikipedia.org/wiki/Proportionality_(mathematics)#Direct_proportionality) to the radius. Also, the probability of sampling a point from a subregion in circle $$C$$ is directly proportional to the area of the subregion. Therefore, the probability of sampling a point on the perimeter of $$C$$ is twice that of sampling a point on the perimeter of $$B$$.\n\nMore generally, what is implied is that the sampling probability is directly proportional to the distance from the origin, from $$0$$ up to $$R$$. This can be modeled as a [probability density function](https://en.wikipedia.org/wiki/Probability_density_function) $$f$$, where $$x$$ is the distance from the origin and $$f(x)$$ is the relative sampling probability at $$x$$.\n\nThe area under any probability density function curve must be $$1$$. Therefore, the equation must be $$f(x) = 2x$$.\n\nUsing our probability density function $$f$$, we can compute the [cumulative distribution function](https://en.wikipedia.org/wiki/Cumulative_distribution_function) $$F$$, where $$F(x)$$ is the probability of sampling a point within a distance of $$x$$ from the origin.\n\nThe cumulative distribution function is the integral of the probability density function.\n\n$$\nF(x) = \\int{f(x)} = \\int{2x} = x^2\n$$\n\nLastly, we can use our cumulative distribution function $$F$$ to compute the inverse cumulative distribution function $$F^{-1}$$, which accepts uniform random value between $$0$$ and $$1$$ and returns a random distance from origin in accordance with $$f$$. $$^{[\\dagger]}$$\n\n$$\n\\begin{aligned}\n& F^{-1}(F(x)) = x \\\\\n& F^{-1}(x^2) = x \\\\\n& F^{-1}(x) = \\sqrt{x}\n\\end{aligned}\n$$\n\nNow, to generate a uniform random point on $$C$$, we just need to compute a random distance $$D$$ from origin using $$F^{-1}$$ and a uniform random angle $$\\theta$$ over the range $$[0, 2 \\cdot PI)$$.\n\nThe points will be generated as [polar coordinates](https://en.wikipedia.org/wiki/Polar_coordinate_system). To convert to [cartesian coordinates](https://en.wikipedia.org/wiki/Cartesian_coordinate_system), we can use the following formulas.\n\n$$\nX = D \\cdot \\cos(\\theta) \\\\\nY = D \\cdot \\sin(\\theta)\n$$\n\n<iframe src=\"https://leetcode.com/playground/Ae3bSgmM/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"Ae3bSgmM\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(1)$$ per $$\\text{randPoint}$$ call.\n* Space Complexity: $$O(1)$$\n\n**Footnotes**\n\n* 　$$^{[\\dagger]}$$ This technique of using the inverse cumulative distribution function to sample numbers at random from the corresponding probability distribution is called [inverse transform sampling](https://en.wikipedia.org/wiki/Inverse_transform_sampling).\n* This solution is inspired by  [this](https://stackoverflow.com/a/50746409) answer on Stack Overflow.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

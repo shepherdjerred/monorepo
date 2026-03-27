@@ -1,0 +1,137 @@
+{
+  "questionId": "531",
+  "questionFrontendId": "531",
+  "title": "Lonely Pixel I",
+  "titleSlug": "lonely-pixel-i",
+  "difficulty": "Medium",
+  "content": "<p>Given an <code>m x n</code> <code>picture</code> consisting of black <code>&#39;B&#39;</code> and white <code>&#39;W&#39;</code> pixels, return <em>the number of <b>black</b> lonely pixels</em>.</p>\n\n<p>A black lonely pixel is a character <code>&#39;B&#39;</code> that located at a specific position where the same row and same column don&#39;t have <strong>any other</strong> black pixels.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/11/11/pixel1.jpg\" style=\"width: 242px; height: 242px;\" />\n<pre>\n<strong>Input:</strong> picture = [[&quot;W&quot;,&quot;W&quot;,&quot;B&quot;],[&quot;W&quot;,&quot;B&quot;,&quot;W&quot;],[&quot;B&quot;,&quot;W&quot;,&quot;W&quot;]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> All the three &#39;B&#39;s are black lonely pixels.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/11/11/pixel2.jpg\" style=\"width: 242px; height: 242px;\" />\n<pre>\n<strong>Input:</strong> picture = [[&quot;B&quot;,&quot;B&quot;,&quot;B&quot;],[&quot;B&quot;,&quot;B&quot;,&quot;W&quot;],[&quot;B&quot;,&quot;B&quot;,&quot;B&quot;]]\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m ==&nbsp;picture.length</code></li>\n\t<li><code>n ==&nbsp;picture[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 500</code></li>\n\t<li><code>picture[i][j]</code> is <code>&#39;W&#39;</code> or <code>&#39;B&#39;</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findLonelyPixel\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"picture\",\r\n      \"type\": \"character[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"48K\", \"totalSubmission\": \"76.6K\", \"totalAcceptedRaw\": 48000, \"totalSubmissionRaw\": 76591, \"acRate\": \"62.7%\"}",
+  "likes": 451,
+  "dislikes": 41,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Lonely Pixel II\", \"titleSlug\": \"lonely-pixel-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[\"W\",\"W\",\"B\"],[\"W\",\"B\",\"W\"],[\"B\",\"W\",\"W\"]]",
+    "[[\"B\",\"B\",\"B\"],[\"B\",\"B\",\"W\"],[\"B\",\"B\",\"B\"]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findLonelyPixel(vector<vector<char>>& picture) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findLonelyPixel(char[][] picture) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findLonelyPixel(self, picture: List[List[str]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findLonelyPixel(self, picture):\n        \"\"\"\n        :type picture: List[List[str]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {character[][]} picture\n * @return {number}\n */\nvar findLonelyPixel = function(picture) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findLonelyPixel(picture: string[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindLonelyPixel(char[][] picture) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findLonelyPixel(char** picture, int pictureSize, int* pictureColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findLonelyPixel(picture [][]byte) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findLonelyPixel(picture: Array<CharArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findLonelyPixel(_ picture: [[Character]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_lonely_pixel(picture: Vec<Vec<char>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Character[][]} picture\n# @return {Integer}\ndef find_lonely_pixel(picture)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[][] $picture\n     * @return Integer\n     */\n    function findLonelyPixel($picture) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findLonelyPixel(List<List<String>> picture) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findLonelyPixel(picture: Array[Array[Char]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_lonely_pixel(picture :: [[char]]) :: integer\n  def find_lonely_pixel(picture) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_lonely_pixel(Picture :: [[char()]]) -> integer().\nfind_lonely_pixel(Picture) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-lonely-pixel picture)\n  (-> (listof (listof char?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1544",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n <div>\n    <div class=\"video-container\">\n      <iframe src=\"https://player.vimeo.com/video/868867925?texttrack=en-x-autogenerated\" frameborder=\"0\"\n        allow=\"autoplay; fullscreen\"></iframe>\n    </div>\n</div>\n\n\n\n\n## Solution\n\n--- \n\n### Approach 1: Counting with Arrays\n\n#### Intuition\n\nWe are given a character matrix of size $M * N$ consisting of black `B` and white `W` pixels. We need to return the count of such black cells that are located in a row and column with no other black cells.\n\nEssentially we need to have the count of black cells in each row and column. We have $$M$$ rows and $$N$$ columns, hence we need an array `rowCount` of size $$M$$ to store the count of black cells in the rows and an array `columnCount` of size $$N$$ to store the count of black cells in the columns. We can do this by iterating over the cells in the matrix and for each black cell at `(x, y)` we will increment the count at `rowCount[x]` and `columnCount[y]` by `1`.\n\nThen we can just iterate over the cells once again and for each cell at `(x, y)` we will check, if the count in the array `rowCount[x]` and `columnCount[y]` is `1` or not. If it is, we will increment the count `answer` by `1`.\n\n![fig](../Figures/531/531A.png)\n\n#### Algorithm\n\n1. Iterate over the cells in the matrix `picture`, for each black cell at `(x, y)`:\n\n    - Increment `rowCount[x]` and `colCount[y]` by `1`.\n2. Iterate over the cells in the matrix and for each black cell at `(x, y)` check if the value of `rowCount[x]` and `colCount[y]` is `1`. If both values are `1`, increment the variable `answer` by `1`.\n3. Return `answer`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/gBfkQu9Q/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"gBfkQu9Q\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $M$ is the number of rows in the given matrix `picture`, and $N$ is the number of columns in it.\n\n* Time complexity: $O(M *  N)$\n\n  We are iterating over the cells in the matrix twice, the first time to find the values in the arrays `rowCount` and `columnCount` and the second time for counting the lonely cells, hence the number of operations will be $2 * M * N$. Therefore, the total time complexity will be $O(M * N)$.\n\n* Space complexity: $O(M + N)$\n\n   We need two arrays, one `rowCount` of size $M$ to store the black cell count for rows and another array of size $N$ to store the count of black cell count for columns. Hence the total space complexity is equal to $O(M + N)$.\n\n---\n\n### Approach 2: Space Optimized Counting\n\n#### Intuition\n\nIn the previous approach, we used two arrays to store the count of black cells in the rows and columns. Can we somehow avoid this space overhead? \n\nInstead of using two arrays separately, we can use the matrix itself to store the black cell count. We can use the first row to store the count of black cells in each column and similarly we can use the first column to store the count of black cells in each row. But what about the lonely cells in the first row or first column itself? We can handle the first row and column separately and keep the answer for them beforehand.\n\nHence, we will first find the lonely cells in the first row and column and then use them to store the black cell count for the row and column as we did in the previous approach using two separate arrays.\n\n> Interview Tip:\n>\n> Here we are modifying the input to save the space complexity. \n> However, in the real interview, some interviewers dislike modifying the input.\n> Be sure to ask your interviewer for clarification \n> on whether you are allowed to modify the input or not.\n\n#### Algorithm\n\n1. Find the lonely cells in the first row and column:\n\n    - Iterate over the cells in the first row. For each cell `(x, y)`, call the `check()` function to find the number of black cells in the first row and column. `check()` returns true if the cell `(x, y)` is the only black cell in the first row and column. If it returns a true increment the value at `answer`\n\n    - Similarly, find the lonely cells in the first column by iterating over each cell in it and then calling the `check()` function.\n\n2. Iterate over the first row and replace `B` cells with `1` and `W` cells with `0`. Similarly in the first column replace `B` cells with `1` and `W` cells with `0`. This row and column will be used as counters.\n\n3. Similar to the previous approach, iterate over the cells with row `[1, M)` and column `[1, N)` and for each black cell at `(x, y)` increment the count in the first row at `picture[x][0]` and `picture[0][y]` by `1`.\n\n4. Now iterate over each cell starting from the cell at `(1, 1)`, and for each black cell, if the value at the corresponding row and column in the first row and column is `1`, then increment `answer`.\n\n5. Return `answer`.\n\n![fig](../Figures/531/531.png)\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/6Ek3prAD/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6Ek3prAD\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $M$ is the number of rows in the given matrix `picture`, and $N$ is the number of columns in it.\n\n* Time complexity: $O(M * N)$\n\n   We spent $O(M * N)$ time to find the number of lonely cells in the first row and column because we iterate over each of the $M$ cells in the first row and then traverse over the cells in the first row and its column. Similarly for the lonely cell in the first column. To find the lonely cells in the rest of the matrix we used an approach similar to the first one and just iterated over each cell twice. Therefore, the total time complexity is equal to $O(M *N)$.\n\n* Space complexity: $O(1)$\n\n  We are not using any separate array as we did in the previous approach. Hence the total space complexity will be equal to $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

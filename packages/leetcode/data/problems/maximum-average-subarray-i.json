@@ -1,0 +1,133 @@
+{
+  "questionId": "643",
+  "questionFrontendId": "643",
+  "title": "Maximum Average Subarray I",
+  "titleSlug": "maximum-average-subarray-i",
+  "difficulty": "Easy",
+  "content": "<p>You are given an integer array <code>nums</code> consisting of <code>n</code> elements, and an integer <code>k</code>.</p>\n\n<p>Find a contiguous subarray whose <strong>length is equal to</strong> <code>k</code> that has the maximum average value and return <em>this value</em>. Any answer with a calculation error less than <code>10<sup>-5</sup></code> will be accepted.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,12,-5,-6,50,3], k = 4\n<strong>Output:</strong> 12.75000\n<strong>Explanation:</strong> Maximum average is (12 - 5 - 6 + 50) / 4 = 51 / 4 = 12.75\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5], k = 1\n<strong>Output:</strong> 5.00000\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums.length</code></li>\n\t<li><code>1 &lt;= k &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>4</sup> &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findMaxAverage\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"k\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"double\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"1.2M\", \"totalSubmission\": \"2.4M\", \"totalAcceptedRaw\": 1158107, \"totalSubmissionRaw\": 2442874, \"acRate\": \"47.4%\"}",
+  "likes": 4385,
+  "dislikes": 386,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Average Subarray II\", \"titleSlug\": \"maximum-average-subarray-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"K Radius Subarray Averages\", \"titleSlug\": \"k-radius-subarray-averages\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,12,-5,-6,50,3]\n4",
+    "[5]\n1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"oppo\", \"name\": \"OPPO\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    double findMaxAverage(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public double findMaxAverage(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findMaxAverage(self, nums: List[int], k: int) -> float:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findMaxAverage(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: float\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar findMaxAverage = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findMaxAverage(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public double FindMaxAverage(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "double findMaxAverage(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findMaxAverage(nums []int, k int) float64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findMaxAverage(nums: IntArray, k: Int): Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findMaxAverage(_ nums: [Int], _ k: Int) -> Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_max_average(nums: Vec<i32>, k: i32) -> f64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Float}\ndef find_max_average(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Float\n     */\n    function findMaxAverage($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  double findMaxAverage(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findMaxAverage(nums: Array[Int], k: Int): Double = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_max_average(nums :: [integer], k :: integer) :: float\n  def find_max_average(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_max_average(Nums :: [integer()], K :: integer()) -> float().\nfind_max_average(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-max-average nums k)\n  (-> (listof exact-integer?) exact-integer? flonum?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "221",
+    "content": "[TOC]\n\n \n## Solution\n\n---\n### Approach #1 Cumulative Sum [Accepted]\n\n**Algorithm**\n\nWe know that in order to obtain the averages of subarrays with length $$k$$, we need to obtain the sum of these $$k$$ length subarrays. One of the methods of obtaining this sum is to make use of a cumulative sum array, $$sum$$, which is populated only once. Here, $$sum[i]$$ is used to store the sum of the elements of the given $$nums$$ array from the first element upto the element at the $$i^{th}$$ index.\n\nOnce the $$sum$$ array has been filled up, in order to find the sum of elements from the index $$i$$ to $$i+k$$, all we need to do is to use: $$sum[i] - sum[i-k]$$. Thus, now, by doing one more iteration over the $$sum$$ array, we can determine the maximum average possible from the subarrays of length $$k$$.\n\nThe following animation illustrates the process for a simple example.\n\n!?!../Documents/643_Maximum_Average.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/dJyoFWQo/shared\" frameBorder=\"0\" name=\"dJyoFWQo\" width=\"100%\" height=\"275\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. We iterate over the $$nums$$ array of length $$n$$ once to fill the $$sum$$ array. Then, we iterate over $$n-k$$ elements of $$sum$$ to determine the required result.\n\n* Space complexity : $$O(n)$$. We make use of a $$sum$$ array of length $$n$$ to store the cumulative sum.\n\n---\n\n\n### Approach #2 Sliding Window [Accepted]\n\n**Algorithm**\n\nInstead of creating a cumulative sum array first, and then traversing over it to determine the required sum, we can simply traverse over $$nums$$ just once, and on the go keep on determining the sums possible for the subarrays of length $$k$$. To understand the idea, assume that we already know the sum of elements from index $$i$$ to index $$i+k$$, say it is $$x$$.\n\nNow, to determine the sum of elements from the index $$i+1$$ to the index $$i+k+1$$, all we need to do is to subtract the element $$nums[i]$$ from $$x$$ and to add the element $$nums[i+k+1]$$ to $$x$$. We can carry out our process based on this idea and determine the maximum possible average.\n\n<iframe src=\"https://leetcode.com/playground/uABxt2Z8/shared\" frameBorder=\"0\" name=\"uABxt2Z8\" width=\"100%\" height=\"292\"></iframe>\n\n<iframe src=\"https://leetcode.com/playground/PU8RHoJh/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"PU8RHoJh\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. We iterate over the given $$nums$$ array of length $$n$$ once only.\n\n* Space complexity : $$O(1)$$. Constant extra space is used.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

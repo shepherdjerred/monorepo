@@ -1,0 +1,137 @@
+{
+  "questionId": "553",
+  "questionFrontendId": "553",
+  "title": "Optimal Division",
+  "titleSlug": "optimal-division",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code>. The adjacent integers in <code>nums</code> will perform the float division.</p>\n\n<ul>\n\t<li>For example, for <code>nums = [2,3,4]</code>, we will evaluate the expression <code>&quot;2/3/4&quot;</code>.</li>\n</ul>\n\n<p>However, you can add any number of parenthesis at any position to change the priority of operations. You want to add these parentheses such the value of the expression after the evaluation is maximum.</p>\n\n<p>Return <em>the corresponding expression that has the maximum value in string format</em>.</p>\n\n<p><strong>Note:</strong> your expression should not contain redundant parenthesis.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1000,100,10,2]\n<strong>Output:</strong> &quot;1000/(100/10/2)&quot;\n<strong>Explanation:</strong> 1000/(100/10/2) = 1000/((100/10)/2) = 200\nHowever, the bold parenthesis in &quot;1000/(<strong>(</strong>100/10<strong>)</strong>/2)&quot; are redundant since they do not influence the operation priority.\nSo you should return &quot;1000/(100/10/2)&quot;.\nOther cases:\n1000/(100/10)/2 = 50\n1000/(100/(10/2)) = 50\n1000/100/10/2 = 0.5\n1000/100/(10/2) = 2\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,3,4]\n<strong>Output:</strong> &quot;2/(3/4)&quot;\n<strong>Explanation:</strong> (2/(3/4)) = 8/3 = 2.667\nIt can be shown that after trying all possibilities, we cannot get an expression with evaluation greater than 2.667\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10</code></li>\n\t<li><code>2 &lt;= nums[i] &lt;= 1000</code></li>\n\t<li>There is only one optimal division for the given input.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"optimalDivision\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"51.4K\", \"totalSubmission\": \"81.8K\", \"totalAcceptedRaw\": 51403, \"totalSubmissionRaw\": 81773, \"acRate\": \"62.9%\"}",
+  "likes": 421,
+  "dislikes": 1636,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1000,100,10,2]",
+    "[2,3,4]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string optimalDivision(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String optimalDivision(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def optimalDivision(self, nums: List[int]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def optimalDivision(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {string}\n */\nvar optimalDivision = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function optimalDivision(nums: number[]): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string OptimalDivision(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* optimalDivision(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func optimalDivision(nums []int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun optimalDivision(nums: IntArray): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func optimalDivision(_ nums: [Int]) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn optimal_division(nums: Vec<i32>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {String}\ndef optimal_division(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return String\n     */\n    function optimalDivision($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String optimalDivision(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def optimalDivision(nums: Array[Int]): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec optimal_division(nums :: [integer]) :: String.t\n  def optimal_division(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec optimal_division(Nums :: [integer()]) -> unicode:unicode_binary().\noptimal_division(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (optimal-division nums)\n  (-> (listof exact-integer?) string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "108",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach #1 Brute Force [Accepted]\n\n**Algorithm**\n\nBrute force of this problem is to divide the list into two parts $$left$$ and $$right$$ and call function for these two parts. We will iterate $$i$$ from $$start$$ to $$end$$ so that $$left=(start,i)$$ and $$right=(i+1,end)$$.\n\n$$left$$ and $$right$$ parts return their maximum and minimum value and corresponding strings.\n\nMinimum value can be found by dividing minimum of left by maximum of right i.e. $$minVal=left.min/right.max$$.\n\nSimilarly,Maximum value can be found by dividing maximum of left value by minimum of right value. i.e. $$maxVal=left.max/right.min$$.\n\nNow, how to add parenthesis? As associativity of division operator is from left to right i.e. by default left most divide should be done first, we need not have to add paranthesis to the left part, but we must add parenthesis to the right part.\n\neg- \"2/(3/4)\" will be formed as leftPart+\"/\"+\"(\"+rightPart+\")\", assuming leftPart is \"2\" and rightPart is\"3/4\".\n\nOne more point, we also don't require parenthesis to right part when it contains single digit.\n\neg- \"2/3\", here left part is \"2\" and right part is \"3\" (contains single digit) . 2/(3) is not valid.\n\n\n<iframe src=\"https://leetcode.com/playground/CAbJyzm4/shared\" frameBorder=\"0\" name=\"CAbJyzm4\" width=\"100%\" height=\"515\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n!)$$. Number of permutations of expression after applying brackets will be in $$O(n!)$$ where $$n$$ is the number of items in the list.\n\n* Space complexity: $$O(n^2)$$. Depth of recursion tree will be $$O(n)$$ and each node contains string of maximum length $$O(n)$$.\n\n---\n### Approach #2 Using Memorization [Accepted]\n\n**Algorithm**\n\nIn the above approach we called optimal function recursively for ever $$start$$ and $$end$$. We can notice that there are many redundant calls in the above approach, we can reduce these calls by using memorization to store the result of different function calls. Here, $$memo$$ array is used for this purpose.\n\n<iframe src=\"https://leetcode.com/playground/xFgr7Cpd/shared\" frameBorder=\"0\" name=\"xFgr7Cpd\" width=\"100%\" height=\"515\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^3)$$. $$memo$$ array of size $$n^2$$ is filled and filling of each cell of the $$memo$$ array takes $$O(n)$$ time.\n\n* Space complexity : $$O(n^3)$$. $$memo$$ array of size $$n^2$$ where each cell of array contains string of length $$O(n)$$.\n\n---\n### Approach #3 Using some Math [Accepted]\n\n**Algorithm**\n\nUsing some simple math we can find the easy solution of this problem. Consider the input in the form of [a,b,c,d], now we have to set priority of\noperations to maximize a/b/c/d. We know that to maximize fraction $$p/q$$, $$q$$(denominator) should be minimized. So, to maximize $$a/b/c/d$$  we have to first minimize b/c/d. Now our objective turns to minimize the expression b/c/d.\n\nThere are two possible combinations of this expression, b/(c/d) and (b/c)/d.\n```\nb/(c/d)        (b/c)/d = b/c/d\n(b*d)/c        b/(d*c)\nd/c            1/(d*c)\n```\n\nObviously, $$d/c > 1/(d*c)$$ for $$d>1$$.\n\nYou can see that second combination will always be less than first one for numbers greater than $$1$$. So, the answer will be a/(b/c/d).\nSimilarly for expression like a/b/c/d/e/f... answer will be a/(b/c/d/e/f...).\n\n\n\n<iframe src=\"https://leetcode.com/playground/wUbJEUre/shared\" frameBorder=\"0\" name=\"wUbJEUre\" width=\"100%\" height=\"309\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. Single loop to traverse $$nums$$ array.\n\n* Space complexity : $$O(n)$$. $$res$$ variable is used to store the result.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

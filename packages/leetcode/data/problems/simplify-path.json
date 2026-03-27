@@ -1,0 +1,136 @@
+{
+  "questionId": "71",
+  "questionFrontendId": "71",
+  "title": "Simplify Path",
+  "titleSlug": "simplify-path",
+  "difficulty": "Medium",
+  "content": "<p>You are given an <em>absolute</em> path for a Unix-style file system, which always begins with a slash <code>&#39;/&#39;</code>. Your task is to transform this absolute path into its <strong>simplified canonical path</strong>.</p>\n\n<p>The <em>rules</em> of a Unix-style file system are as follows:</p>\n\n<ul>\n\t<li>A single period <code>&#39;.&#39;</code> represents the current directory.</li>\n\t<li>A double period <code>&#39;..&#39;</code> represents the previous/parent directory.</li>\n\t<li>Multiple consecutive slashes such as <code>&#39;//&#39;</code> and <code>&#39;///&#39;</code> are treated as a single slash <code>&#39;/&#39;</code>.</li>\n\t<li>Any sequence of periods that does <strong>not match</strong> the rules above should be treated as a <strong>valid directory or</strong> <strong>file </strong><strong>name</strong>. For example, <code>&#39;...&#39; </code>and <code>&#39;....&#39;</code> are valid directory or file names.</li>\n</ul>\n\n<p>The simplified canonical path should follow these <em>rules</em>:</p>\n\n<ul>\n\t<li>The path must start with a single slash <code>&#39;/&#39;</code>.</li>\n\t<li>Directories within the path must be separated by exactly one slash <code>&#39;/&#39;</code>.</li>\n\t<li>The path must not end with a slash <code>&#39;/&#39;</code>, unless it is the root directory.</li>\n\t<li>The path must not have any single or double periods (<code>&#39;.&#39;</code> and <code>&#39;..&#39;</code>) used to denote current or parent directories.</li>\n</ul>\n\n<p>Return the <strong>simplified canonical path</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">path = &quot;/home/&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;/home&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The trailing slash should be removed.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">path = &quot;/home//foo/&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;/home/foo&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Multiple consecutive slashes are replaced by a single one.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">path = &quot;/home/user/Documents/../Pictures&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;/home/user/Pictures&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>A double period <code>&quot;..&quot;</code> refers to the directory up a level (the parent directory).</p>\n</div>\n\n<p><strong class=\"example\">Example 4:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">path = &quot;/../&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;/&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Going one level up from the root directory is not possible.</p>\n</div>\n\n<p><strong class=\"example\">Example 5:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">path = &quot;/.../a/../b/c/../d/./&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;/.../b/d&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><code>&quot;...&quot;</code> is a valid name for a directory in this problem.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= path.length &lt;= 3000</code></li>\n\t<li><code>path</code> consists of English letters, digits, period <code>&#39;.&#39;</code>, slash <code>&#39;/&#39;</code> or <code>&#39;_&#39;</code>.</li>\n\t<li><code>path</code> is a valid absolute Unix path.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{ \r\n  \"name\": \"simplifyPath\",\r\n  \"params\": [\r\n    { \r\n      \"name\": \"path\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.3M\", \"totalSubmission\": \"2.6M\", \"totalAcceptedRaw\": 1303297, \"totalSubmissionRaw\": 2593772, \"acRate\": \"50.2%\"}",
+  "likes": 6532,
+  "dislikes": 1410,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"/home/\"",
+    "\"/home//foo/\"",
+    "\"/home/user/Documents/../Pictures\"",
+    "\"/../\"",
+    "\"/.../a/../b/c/../d/./\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 2, \"slug\": \"capital-one\", \"name\": \"Capital One\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"patreon\", \"name\": \"Patreon\"}, {\"timesEncountered\": 7, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 7, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 4, \"slug\": \"tinkoff\", \"name\": \"Tinkoff\"}, {\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 4, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 4, \"slug\": \"grab\", \"name\": \"Grab\"}, {\"timesEncountered\": 4, \"slug\": \"upstart\", \"name\": \"Upstart\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"arista-networks\", \"name\": \"Arista Networks\"}]}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string simplifyPath(string path) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String simplifyPath(String path) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def simplifyPath(self, path: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def simplifyPath(self, path):\n        \"\"\"\n        :type path: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} path\n * @return {string}\n */\nvar simplifyPath = function(path) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function simplifyPath(path: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string SimplifyPath(string path) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* simplifyPath(char* path) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func simplifyPath(path string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun simplifyPath(path: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func simplifyPath(_ path: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn simplify_path(path: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} path\n# @return {String}\ndef simplify_path(path)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $path\n     * @return String\n     */\n    function simplifyPath($path) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String simplifyPath(String path) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def simplifyPath(path: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec simplify_path(path :: String.t) :: String.t\n  def simplify_path(path) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec simplify_path(Path :: unicode:unicode_binary()) -> unicode:unicode_binary().\nsimplify_path(Path) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (simplify-path path)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "873",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/810685782\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Approach: Using Stacks\n\n**Intuition**\n\nThis is a direct implementation of one of the most common commands used (in one form of the other) on all the famous operating systems. For e.g. this directly translates to a part of the implementation of the `cd` command functionality in the Unix OS. It basically helps us to change directory. Obviously, there's much more to it than simply figuring out the smallest path of the final directory where the user wants to go. There is kernel level implementation involved that actually uses the underlying file system to `change` the directory you are in to the one where you want to go. You might argue that nobody would go crazy on the command line and want to run something like:\n\n<pre>\ncd /a/b/c/.././././//d</pre>\n\nHowever, our code needs to be able to handle the different scenarios and all the special characters like `.`, `..`, and `/`. All these weird scenarios will be taken care of by a couple of checks here and there. The main idea for solving this problem would remain the same. The heading of this approach mentions the data structure that we are going to use. However, we are going to work our way through the problem so as to understand as to why a `stack` fits in here. Let's look at a tree-ish representation of a simple directory path.\n\n<center>\n<img src=\"../Figures/71/img_fixed.png\"/>\n</center>\n\nNow suppose that to a path like `/a/b/c`, we add another component like `/a/b/c/..`. Now, this is interesting because the `..` is no longer a sub-directory name. It has a special meaning and an indication to the operating system to move up one level in the directory structure thus transforming the overall path to just `/a/b`. It's as if we `popped out` the subdirectory `c` from the overall path. That's the core idea of this problem. If you think about it, the only actionable special character is `..`. The single dot is kind of a no-op because it simply means the current directory. So nothing changes in the overall path as such. Now that we have a general idea about how this problem can be potentially solved using the stack, let's get right into the algorithm and discuss the solution.\n\n**Algorithm**\n\n1. Initialize a stack, `S` that we will be using for our implementation.\n2. Split the input string using `/` as the delimiter. This step is really important because no matter what, the given input is a `valid` path and we simply have to shorten it. So, that means that whatever we have between two `/` characters is either a directory name or a special character and we have to process them accordingly.\n3. Once we are done splitting the input path, we will process one component at a time.\n4. If the current component is a `.` or an empty string, we will do nothing and simply continue. Well if you think about it, the split string array for the string `/a//b` would be `[a,,b]`. yes, that's an empty string in between `a` and `b`. Again, from the perspective of the overall path, it doesn't mean anything.\n5. If we encounter a double-dot `..`, we have to do some processing. This simply means go one level up in the current directory path. So, we will pop an entry from our stack if it's not empty.\n6. Finally, if the component we are processing right now is not one of the special characters, then we will simply add it to our stack because it's a legitimate directory name.\n7. Once we are done processing all the components, we simply have to connect all the directory names in our stack together using `/` as the delimiter and we will have our shortest path that leads us to the same directory as the one provided as an input.\n\n<iframe src=\"https://leetcode.com/playground/kg2oD8UE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"kg2oD8UE\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$ if there are $$N$$ characters in the original path. First, we spend $$O(N)$$ trying to split the input path into components and then we process each component one by one which is again an $$O(N)$$ operation. We can get rid of the splitting part and just string together the characters and form directory names etc. However, that would be too complicated and not worth depicting in the implementation. The main idea of this algorithm is to use a stack. How you decide to process the input string is a personal choice.\n* Space Complexity: $$O(N)$$. Actually, it's $$2N$$ because we have the array that contains the split components and then we have the stack.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

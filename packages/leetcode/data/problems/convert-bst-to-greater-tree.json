@@ -1,0 +1,141 @@
+{
+  "questionId": "538",
+  "questionFrontendId": "538",
+  "title": "Convert BST to Greater Tree",
+  "titleSlug": "convert-bst-to-greater-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a Binary Search Tree (BST), convert it to a Greater Tree such that every key of the original BST is changed to the original key plus the sum of all keys greater than the original key in BST.</p>\n\n<p>As a reminder, a <em>binary search tree</em> is a tree that satisfies these constraints:</p>\n\n<ul>\n\t<li>The left subtree of a node contains only nodes with keys <strong>less than</strong> the node&#39;s key.</li>\n\t<li>The right subtree of a node contains only nodes with keys <strong>greater than</strong> the node&#39;s key.</li>\n\t<li>Both the left and right subtrees must also be binary search trees.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/05/02/tree.png\" style=\"width: 500px; height: 341px;\" />\n<pre>\n<strong>Input:</strong> root = [4,1,6,0,2,5,7,null,null,null,3,null,null,null,8]\n<strong>Output:</strong> [30,36,21,36,35,26,15,null,null,null,33,null,null,null,8]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [0,null,1]\n<strong>Output:</strong> [1,null,1]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[0, 10<sup>4</sup>]</code>.</li>\n\t<li><code>-10<sup>4</sup> &lt;= Node.val &lt;= 10<sup>4</sup></code></li>\n\t<li>All the values in the tree are <strong>unique</strong>.</li>\n\t<li><code>root</code> is guaranteed to be a valid binary search tree.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Note:</strong> This question is the same as 1038: <a href=\"https://leetcode.com/problems/binary-search-tree-to-greater-sum-tree/\" target=\"_blank\">https://leetcode.com/problems/binary-search-tree-to-greater-sum-tree/</a></p>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"convertBST\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"TreeNode\"\n  },\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"353.8K\", \"totalSubmission\": \"495K\", \"totalAcceptedRaw\": 353822, \"totalSubmissionRaw\": 494968, \"acRate\": \"71.5%\"}",
+  "likes": 5411,
+  "dislikes": 183,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[4,1,6,0,2,5,7,null,null,null,3,null,null,null,8]",
+    "[0,null,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Search Tree",
+      "slug": "binary-search-tree"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    TreeNode* convertBST(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public TreeNode convertBST(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def convertBST(self, root: Optional[TreeNode]) -> Optional[TreeNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def convertBST(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: Optional[TreeNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {TreeNode}\n */\nvar convertBST = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction convertBST(root: TreeNode | null): TreeNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public TreeNode ConvertBST(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nstruct TreeNode* convertBST(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc convertBST(root *TreeNode) *TreeNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun convertBST(root: TreeNode?): TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func convertBST(_ root: TreeNode?) -> TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn convert_bst(root: Option<Rc<RefCell<TreeNode>>>) -> Option<Rc<RefCell<TreeNode>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {TreeNode}\ndef convert_bst(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return TreeNode\n     */\n    function convertBST($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  TreeNode? convertBST(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def convertBST(root: TreeNode): TreeNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec convert_bst(root :: TreeNode.t | nil) :: TreeNode.t | nil\n  def convert_bst(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec convert_bst(Root :: #tree_node{} | null) -> #tree_node{} | null.\nconvert_bst(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (convert-bst root)\n  (-> (or/c tree-node? #f) (or/c tree-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "281",
+    "content": "[TOC]\n\n### Initial Thoughts\n\nThis question asks us to modify an asymptotically linear number of nodes in a\ngiven binary search tree, so a very efficient solution will visit each node\nonce. The key to such a solution would be a way to visit nodes in descending\norder, keeping a sum of all values that we have already visited and adding\nthat sum to the node's values as we traverse the tree. This method for tree traversal is\nknown as a\n*reverse in-order traversal*, and allows us to guarantee visitation of each\nnode in the desired order. The basic idea of such a traversal is that before\nvisiting any node in the tree, we must first visit all nodes with greater\nvalue. Where are all of these nodes conveniently located? In the right\nsubtree.\n\n### Approach #1 Recursion [Accepted]\n\n**Intuition**\n\nOne way to perform a reverse in-order traversal is via recursion. By using\nthe call stack to return to previous nodes, we can easily visit the nodes in\nreverse order.\n\n**Algorithm**\n\nFor the recursive approach, we maintain some minor \"global\" state so each\nrecursive call can access and modify the current total sum. Essentially, we\nensure that the current node exists, recurse on the right subtree, visit the\ncurrent node by updating its value and the total sum, and finally recurse on\nthe left subtree. If we know that recursing on `root.right` properly\nupdates the right subtree and that recursing on `root.left` properly updates\nthe left subtree, then we are guaranteed to update all nodes with larger values\nbefore the current node and all nodes with smaller values after.\n\n<iframe src=\"https://leetcode.com/playground/gu4JnKqC/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"gu4JnKqC\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(n)$$\n\n    A binary tree has no cycles by definition, so `convertBST` gets called on\n    each node no more than once. Other than the recursive calls, `convertBST`\n    does a constant amount of work, so a linear number of calls to `convertBST`\n    will run in linear time.\n\n* Space complexity : $$\\mathcal{O}(n)$$\n\n    Using the prior assertion that `convertBST` is called a linear number of\n    times, we can also show that the entire algorithm has linear space\n    complexity. Consider the worst case, a tree with only right (or only left)\n    subtrees. The call stack will grow until the end of the longest path is\n    reached, which in this case includes all $$n$$ nodes.\n\n---\n### Approach #2 Iteration with a Stack [Accepted]\n\n**Intuition**\n\nIf we don't want to use recursion, we can also perform a reverse in-order\ntraversal via iteration and a literal stack to emulate the call stack.\n\n**Algorithm**\n\nOne way to describe the iterative stack method is in terms of the intuitive\nrecursive solution. First, we initialize an empty stack and set the current\nnode to the root. Then, so long as there are unvisited nodes in the stack or\n`node` does not point to `null`, we push all of the nodes along the path to\nthe rightmost leaf onto the stack. This is equivalent to always processing\nthe right subtree first in the recursive solution, and is crucial for the\nguarantee of visiting nodes in order of decreasing value. Next, we visit the\nnode on the top of our stack, and consider its left subtree. This is just\nlike visiting the current node before recursing on the left subtree in the\nrecursive solution. Eventually, our stack is empty and `node` points to the\nleft `null` child of the tree's minimum value node, so the loop terminates.\n\n<iframe src=\"https://leetcode.com/playground/6rZeCvKd/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"6rZeCvKd\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(n)$$\n\n    The key observation is that each node is pushed onto the stack exactly\n    once. I will take for granted the assumption that a node will always be\n    pushed *at least* once, as the alternative would imply that at least one\n    node is disconnected from the root. Notice that nodes are only pushed\n    onto the stack when they are pointed to by `node` at the beginning of the\n    outer `while` loop, or when there is a path to them from such a node by\n    using only `right` pointers. Then notice that at the end of each\n    iteration of the loop, `node` points to the left child of a node that has\n    been pushed onto (and subsequently popped from) the stack. Therefore,\n    because the outer `while` loop always begins with `node` pointing to\n    `None`, the root (which is not pointed to by any other node), or a left\n    child of a visited node, we cannot revisit nodes.\n\n* Space complexity : $$\\mathcal{O}(n)$$\n  \n    If we assume that the above logic is sound, the assertion that each node is\n    pushed onto the stack exactly once implies that the stack can contain (at\n    most) $$n$$ nodes. All other parts of the algorithm use constant space, so\n    there is overall a linear memory footprint.\n\n---\n\n### Approach #3 Reverse Morris In-order Traversal [Accepted]\n\n**Intuition**\n\nThere is a clever way to perform an in-order traversal using only linear time\nand constant space, first described by J. H. Morris in his 1979 paper\n\"Traversing Binary Trees Simply and Cheaply\". In general, the recursive and\niterative stack methods sacrifice linear space for the ability to return to a\nnode after visiting its left subtree. The Morris traversal instead exploits\nthe unused `null` pointer(s) of the tree's leaves to create a temporary link\nout of the left subtree, allowing the traversal to be performed using only\nconstant additional memory. To apply it to this problem, we can simply swap\nall \"left\" and \"right\" references, which will reverse the traversal.\n\n**Algorithm**\n\nFirst, we initialize `node`, which points to the root. Then, until `node`\npoints to `null` (specifically, the left `null` of the tree's minimum-value\nnode), we repeat the following. First, consider whether the current node has\na right subtree. If it does not have a right subtree, then there is no\nunvisited node with a greater value, so we can visit this node and move into\nthe left subtree. If it does have a right subtree, then there is at least one\nunvisited node with a greater value, and thus we must visit first go to the\nright subtree. To do so, we obtain a reference to the in-order successor (the\nsmallest-value node larger than the current) via our helper function\n`getSuccessor`. This successor node is the node that must be visited\nimmediately before the current node, so it by definition has a `null` `left`\npointer (otherwise it would not be the successor). Therefore, when we first\nfind a node's successor, we temporarily link it (via its `left` pointer) to\nthe node and proceed to the node's right subtree. Then, when we finish\nvisiting the right subtree, the leftmost `left` pointer in it will be our\ntemporary link that we can use to escape the subtree. After following this\nlink, we have returned to the original node that we previously passed\nthrough, but did not visit. This time, when we find that the successor's\n`left` pointer loops back to the current node, we know that we have visited\nthe entire right subtree, so we can now erase the temporary link and move\ninto the left subtree.\n\n![Reverse Morris Traversal Example](../Figures/543/morris.png)\n\n\nThe figure above shows an example of the modified tree during a reverse\nMorris traversal. Left pointers are illustrated in blue and right pointers in\nred. Dashed edges indicate temporary links generated at some point during the\nalgorithm (which will be erased before it terminates). Notice that blue edges\ncan be dashed, as we always exploit the empty `left` pointer of successor\nnodes. Additionally, notice that every node with a right subtree has a link\nfrom its in-order successor.\n\n<iframe src=\"https://leetcode.com/playground/7s34oJ3X/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7s34oJ3X\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(n)$$\n\n    Although the Morris traversal does slightly more work than the other\n    approaches, it is only by a constant factor. To be specific, if we can\n    show that each edge in the tree is traversed no more than $$k$$ times (for\n    some constant $$k$$), then the algorithm is shown to have linear time\n    complexity. First, note that `getSuccessor` is called at most twice per\n    node. On the first invocation, the temporary link back to the node in\n    question is created, and on the second invocation, the temporary link is\n    erased. Then, the algorithm steps into the left subtree with no way to\n    return to the node. Therefore, each edge can only be traversed 3 times:\n    once when we move the `node` pointer, and once for each of the two calls\n    to `getSuccessor`.\n\n* Space complexity : $$\\mathcal{O}(1)$$\n\n    Because we only manipulate pointers that already exist, the Morris\n    traversal uses constant space.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

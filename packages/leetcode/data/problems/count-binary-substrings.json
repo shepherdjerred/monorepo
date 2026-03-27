@@ -1,0 +1,135 @@
+{
+  "questionId": "696",
+  "questionFrontendId": "696",
+  "title": "Count Binary Substrings",
+  "titleSlug": "count-binary-substrings",
+  "difficulty": "Easy",
+  "content": "<p>Given a binary string <code>s</code>, return the number of non-empty substrings that have the same number of <code>0</code>&#39;s and <code>1</code>&#39;s, and all the <code>0</code>&#39;s and all the <code>1</code>&#39;s in these substrings are grouped consecutively.</p>\n\n<p>Substrings that occur multiple times are counted the number of times they occur.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;00110011&quot;\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> There are 6 substrings that have equal number of consecutive 1&#39;s and 0&#39;s: &quot;0011&quot;, &quot;01&quot;, &quot;1100&quot;, &quot;10&quot;, &quot;0011&quot;, and &quot;01&quot;.\nNotice that some of these substrings repeat and are counted the number of times they occur.\nAlso, &quot;00110011&quot; is not a valid substring because all the 0&#39;s (and 1&#39;s) are not grouped together.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;10101&quot;\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> There are 4 substrings: &quot;10&quot;, &quot;01&quot;, &quot;10&quot;, &quot;01&quot; that have equal number of consecutive 1&#39;s and 0&#39;s.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s[i]</code> is either <code>&#39;0&#39;</code> or <code>&#39;1&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "How many valid binary substrings exist in \"000111\", and how many in \"11100\"?  What about \"00011100\"?"
+  ],
+  "metaData": "{\r\n  \"name\": \"countBinarySubstrings\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"369.7K\", \"totalSubmission\": \"525.5K\", \"totalAcceptedRaw\": 369676, \"totalSubmissionRaw\": 525533, \"acRate\": \"70.3%\"}",
+  "likes": 4637,
+  "dislikes": 977,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Encode and Decode Strings\", \"titleSlug\": \"encode-and-decode-strings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Substrings With Fixed Ratio\", \"titleSlug\": \"number-of-substrings-with-fixed-ratio\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Substrings With Dominant Ones\", \"titleSlug\": \"count-the-number-of-substrings-with-dominant-ones\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"00110011\"",
+    "\"10101\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 7, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"wells-fargo\", \"name\": \"Wells Fargo\"}], \"six_months\": [{\"timesEncountered\": 6, \"slug\": \"dell\", \"name\": \"Dell\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"weride\", \"name\": \"WeRide\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 4, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 2, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}, {\"timesEncountered\": 2, \"slug\": \"meesho\", \"name\": \"Meesho\"}, {\"timesEncountered\": 2, \"slug\": \"helix\", \"name\": \"Helix\"}]}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countBinarySubstrings(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countBinarySubstrings(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countBinarySubstrings(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countBinarySubstrings(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar countBinarySubstrings = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countBinarySubstrings(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountBinarySubstrings(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countBinarySubstrings(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countBinarySubstrings(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countBinarySubstrings(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countBinarySubstrings(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_binary_substrings(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef count_binary_substrings(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function countBinarySubstrings($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countBinarySubstrings(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countBinarySubstrings(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_binary_substrings(s :: String.t) :: integer\n  def count_binary_substrings(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_binary_substrings(S :: unicode:unicode_binary()) -> integer().\ncount_binary_substrings(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-binary-substrings s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "261",
+    "content": "[TOC]\n\n### Approach #1: Group By Character [Accepted]\n\n**Intuition**\n\nWe can convert the string `s` into an array `groups` that represents the length of same-character contiguous blocks within the string. For example, if `s = \"110001111000000\"`, then `groups = [2, 3, 4, 6]`.\n\nFor every binary string of the form `'0' * k + '1' * k` or `'1' * k + '0' * k`, the middle of this string must occur between two groups.  \n\nLet's try to count the number of valid binary strings between `groups[i]` and `groups[i+1]`. If we have `groups[i] = 2, groups[i+1] = 3`, then it represents either `\"00111\"` or `\"11000\"`. We clearly can make `min(groups[i], groups[i+1])` valid binary strings within this string.  Because the binary digits to the left or right of this string must change at the boundary, our answer can never be larger.\n\n**Algorithm**\n\nLet's create `groups` as defined above. The first element of `s` belongs in its own group. From then on, each element either doesn't match the previous element, so that it starts a new group of size 1, or it does match, so that the size of the most recent group increases by 1.\n\nAfterward, we will take the sum of `min(groups[i-1], groups[i])`.\n\n**Python**\n```python\nclass Solution(object):\n    def countBinarySubstrings(self, s):\n        groups = [1]\n        for i in xrange(1, len(s)):\n            if s[i-1] != s[i]:\n                groups.append(1)\n            else:\n                groups[-1] += 1\n\n        ans = 0\n        for i in xrange(1, len(groups)):\n            ans += min(groups[i-1], groups[i])\n        return ans\n```\n\n*Alternate Implentation*\n```python\nclass Solution(object):\n    def countBinarySubstrings(self, s):\n        groups = [len(list(v)) for _, v in itertools.groupby(s)]\n        return sum(min(a, b) for a, b in zip(groups, groups[1:]))\n```\n\n**Java**\n```java\nclass Solution {\n    public int countBinarySubstrings(String s) {\n        int[] groups = new int[s.length()];\n        int t = 0;\n        groups[0] = 1;\n        for (int i = 1; i < s.length(); i++) {\n            if (s.charAt(i-1) != s.charAt(i)) {\n                groups[++t] = 1;\n            } else {\n                groups[t]++;\n            }\n        }\n\n        int ans = 0;\n        for (int i = 1; i <= t; i++) {\n            ans += Math.min(groups[i-1], groups[i]);\n        }\n        return ans;\n    }\n}\n```\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$, where $$N$$ is the length of `s`. Every loop is through $$O(N)$$ items with $$O(1)$$ work inside the for-block.\n\n* Space Complexity: $$O(N)$$, the space used by `groups`.\n\n---\n### Approach #2: Linear Scan [Accepted]\n\n**Intuition and Algorithm**\n\nWe can amend our *Approach #1* to calculate the answer on the fly. Instead of storing `groups`, we will remember only `prev = groups[-2]` and `cur = groups[-1]`.  Then, the answer is the sum of `min(prev, cur)` over each different final `(prev, cur)` we see.\n\n**Python**\n```python\nclass Solution(object):\n    def countBinarySubstrings(self, s):\n        ans, prev, cur = 0, 0, 1\n        for i in xrange(1, len(s)):\n            if s[i-1] != s[i]:\n                ans += min(prev, cur)\n                prev, cur = cur, 1\n            else:\n                cur += 1\n\n        return ans + min(prev, cur)\n```\n\n**Java**\n```java\nclass Solution {\n    public int countBinarySubstrings(String s) {\n        int ans = 0, prev = 0, cur = 1;\n        for (int i = 1; i < s.length(); i++) {\n            if (s.charAt(i-1) != s.charAt(i)) {\n                ans += Math.min(prev, cur);\n                prev = cur;\n                cur = 1;\n            } else {\n                cur++;\n            }\n        }\n        return ans + Math.min(prev, cur);\n    }\n}\n```\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$, where $$N$$ is the length of `s`. Every loop is through $$O(N)$$ items with $$O(1)$$ work inside the for-block.\n\n* Space Complexity: $$O(1)$$, the space used by `prev`, `cur`, and `ans`.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

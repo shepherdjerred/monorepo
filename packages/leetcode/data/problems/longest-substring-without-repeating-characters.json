@@ -1,0 +1,140 @@
+{
+  "questionId": "3",
+  "questionFrontendId": "3",
+  "title": "Longest Substring Without Repeating Characters",
+  "titleSlug": "longest-substring-without-repeating-characters",
+  "difficulty": "Medium",
+  "content": "<p>Given a string <code>s</code>, find the length of the <strong>longest</strong> <span data-keyword=\"substring-nonempty\"><strong>substring</strong></span> without duplicate characters.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abcabcbb&quot;\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The answer is &quot;abc&quot;, with the length of 3. Note that <code>&quot;bca&quot;</code> and <code>&quot;cab&quot;</code> are also correct answers.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;bbbbb&quot;\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The answer is &quot;b&quot;, with the length of 1.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;pwwkew&quot;\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The answer is &quot;wke&quot;, with the length of 3.\nNotice that the answer must be a substring, &quot;pwke&quot; is a subsequence and not a substring.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= s.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>s</code> consists of English letters, digits, symbols and spaces.</li>\n</ul>\n",
+  "hints": [
+    "Since maximum string size is at most 26, generate and check all possible substrings with length at most 26."
+  ],
+  "metaData": "{ \r\n  \"name\": \"lengthOfLongestSubstring\",\r\n  \"params\": [\r\n    { \r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"9.2M\", \"totalSubmission\": \"23.8M\", \"totalAcceptedRaw\": 9217739, \"totalSubmissionRaw\": 23800441, \"acRate\": \"38.7%\"}",
+  "likes": 44801,
+  "dislikes": 2204,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Substring with At Most Two Distinct Characters\", \"titleSlug\": \"longest-substring-with-at-most-two-distinct-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Substring with At Most K Distinct Characters\", \"titleSlug\": \"longest-substring-with-at-most-k-distinct-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Subarrays with K Different Integers\", \"titleSlug\": \"subarrays-with-k-different-integers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Erasure Value\", \"titleSlug\": \"maximum-erasure-value\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Equal Count Substrings\", \"titleSlug\": \"number-of-equal-count-substrings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Consecutive Cards to Pick Up\", \"titleSlug\": \"minimum-consecutive-cards-to-pick-up\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Nice Subarray\", \"titleSlug\": \"longest-nice-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Optimal Partition of String\", \"titleSlug\": \"optimal-partition-of-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Complete Subarrays in an Array\", \"titleSlug\": \"count-complete-subarrays-in-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Longest Special Substring That Occurs Thrice II\", \"titleSlug\": \"find-longest-special-substring-that-occurs-thrice-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Longest Special Substring That Occurs Thrice I\", \"titleSlug\": \"find-longest-special-substring-that-occurs-thrice-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abcabcbb\"",
+    "\"bbbbb\"",
+    "\"pwwkew\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 35, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 34, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 17, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 14, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 5, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 4, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 3, \"slug\": \"netflix\", \"name\": \"Netflix\"}, {\"timesEncountered\": 3, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"six_months\": [{\"timesEncountered\": 10, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 10, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 7, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 4, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 4, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 4, \"slug\": \"at-t\", \"name\": \"AT&T\"}, {\"timesEncountered\": 3, \"slug\": \"accolite\", \"name\": \"Accolite\"}, {\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}], \"more_than_six_months\": [{\"timesEncountered\": 21, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 18, \"slug\": \"turing\", \"name\": \"Turing\"}, {\"timesEncountered\": 12, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 11, \"slug\": \"epam-systems\", \"name\": \"EPAM Systems\"}, {\"timesEncountered\": 9, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 8, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 8, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 7, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 5, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}, {\"timesEncountered\": 5, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int lengthOfLongestSubstring(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int lengthOfLongestSubstring(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def lengthOfLongestSubstring(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def lengthOfLongestSubstring(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar lengthOfLongestSubstring = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function lengthOfLongestSubstring(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LengthOfLongestSubstring(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int lengthOfLongestSubstring(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func lengthOfLongestSubstring(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun lengthOfLongestSubstring(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func lengthOfLongestSubstring(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn length_of_longest_substring(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef length_of_longest_substring(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function lengthOfLongestSubstring($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int lengthOfLongestSubstring(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def lengthOfLongestSubstring(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec length_of_longest_substring(s :: String.t) :: integer\n  def length_of_longest_substring(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec length_of_longest_substring(S :: unicode:unicode_binary()) -> integer().\nlength_of_longest_substring(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (length-of-longest-substring s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "36",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/497431788?texttrack=en\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n---\n\n## Solution Article\n\n### Overview\n\nThe primary challenge in this problem is to find an efficient way to get all possible longest substrings that contain no duplicate characters. To achieve this, we need to take advantage of [Hash Table](https://leetcode.com/explore/learn/card/hash-table/), which checks if a character occurs before quickly.\n\nIn the following three approaches, we utilize a hash table to guarantee substrings have no repeating characters and optimize the algorithm to query possible substrings step by step: the first approach is intuitive but may result in Time Limit Exceeded, and the second one uses a slide window method to narrow down the search range, and the third make further use of HashMap to reduce the search range faster. \n\n---\n\n### Approach 1: Brute Force (TLE)\n\n#### Intuition\n\nCheck all the substring one by one to see if it has no duplicate character.\n\n#### Algorithm\n\nSuppose we have a function `boolean allUnique(String substring)` which will return true if the characters in the substring are all unique, otherwise false. We can iterate through all the possible substrings of the given string `s` and call the function `allUnique`. If it turns out to be true, then we update our answer of the maximum length of substring without duplicate characters.\n\nNow let's fill the missing parts:\n\n1. To enumerate all substrings of a given string, we enumerate the start and end indices of them. Suppose the start and end indices are $i$ and $j$, respectively. Then we have $0 \\leq i \\lt j \\leq n$ (here end index $j$ is exclusive by convention). Thus, using two nested loops with $i$ from 0 to $n - 1$ and $j$ from $i+1$ to $n$, we can enumerate all the substrings of `s`.\n\n2. To check if one string has duplicate characters, we can use a set. We iterate through all the characters in the string and put them into the `set` one by one. Before putting one character, we check if the set already contains it. If so, we return `false`. After the loop, we return `true`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/hNBrFagz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"hNBrFagz\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n^3)$.\n\n    To verify if characters within index range $[i, j)$ are all unique, we need to scan all of them. Thus, it costs $O(j - i)$ time.\n\n    For a given `i`, the sum of time costed by each $j \\in [i+1, n]$ is\n\n    $$\n    \\sum_{i+1}^{n}O(j - i)\n    $$\n\n    Thus, the sum of all the time consumption is:\n\n    $$\n    O\\left(\\sum_{i = 0}^{n - 1}\\left(\\sum_{j = i + 1}^{n}(j - i)\\right)\\right) =\n    O\\left(\\sum_{i = 0}^{n - 1}\\frac{(1 + n - i)(n - i)}{2}\\right) =\n    O(n^3)\n    $$\n\n* Space complexity : $O(min(n, m))$. We need $O(k)$ space for checking a substring has no duplicate characters, where $k$ is the size of the `Set`. The size of the Set is upper bounded by the size of the string $n$ and the size of the charset/alphabet $m$.\n\n---\n\n### Approach 2: Sliding Window\n\n#### Intuition\n\nGiven a substring with a fixed end index in the string, maintain a HashMap to record the frequency of each character in the current substring. If any character occurs more than once, drop the leftmost characters until there are no duplicate characters. \n\n#### Algorithm\n\nThe naive approach is very straightforward. But it is too slow. So how can we optimize it?\n\nIn the naive approaches, we repeatedly check a substring to see if it has duplicate character. But it is unnecessary. If a substring $s_{ij}$ from index $i$ to $j - 1$ is already checked to have no duplicate characters. We only need to check if $s[j]$ is already in the substring $s_{ij}$.\n\nTo check if a character is already in the substring, we can scan the substring, which leads to an $O(n^2)$ algorithm. But we can do better.\n\nBy using HashSet as a sliding window, checking if a character in the current can be done in $O(1)$.\n\nA sliding window is an abstract concept commonly used in array/string problems. A window is a range of elements in the array/string which usually defined by the start and end indices, i.e. $[i, j)$ (left-closed, right-open). A sliding window is a window \"slides\" its two boundaries to the certain direction. For example, if we slide $[i, j)$ to the right by $1$ element, then it becomes $[i+1, j+1)$ (left-closed, right-open).\n\nBack to our problem. We use HashSet to store the characters in current window $[i, j)$ ($j = i$ initially). Then we slide the index $j$ to the right. If it is not in the HashSet, we slide $j$ further. Doing so until s[j] is already in the HashSet. At this point, we found the maximum size of substrings without duplicate characters start with index $i$. If we do this for all $i$, we get our answer.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/9gnqQshQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"9gnqQshQ\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(2n) = O(n)$. In the worst case each character will be visited twice by $i$ and $j$.\n\n* Space complexity : $O(min(m, n))$. Same as the previous approach. We need $O(k)$ space for the sliding window, where $k$ is the size of the `Set`. The size of the Set is upper bounded by the size of the string $n$ and the size of the charset/alphabet $m$.\n\n---\n\n### Approach 3: Sliding Window Optimized\n\n#### Intuition\n\nThe above solution requires at most 2n steps. In fact, it could be optimized to require only n steps. Instead of using a set to tell if a character exists or not, we could define a mapping of the characters to its index. Then we can skip the characters immediately when we found a repeated character.\n\n#### Algorithm\n\nThe reason is that if $s[j]$ have a duplicate in the range $[i, j)$ with index $j'$, we don't need to increase $i$ little by little. We can skip all the elements in the range $[i, j']$ and let $i$ to be $j' + 1$ directly.\n\nHere is a visualization of the above code.\n\n<div class=\"video-container\">\n<iframe src=\"https://player.vimeo.com/video/484238122\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n</div>\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4ksAT5iC/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"4ksAT5iC\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n)$. Index $j$ will iterate $n$ times.\n\n* Space complexity : $O(min(m, n))$. Same as the previous approach.\n\n---\n\n### Tips\n\nAll previous implementations have no assumption on the charset of the string `s`.\n\nIf we know that the charset is rather small, we can mimic what a HashSet/HashMap does with a boolean/integer array as direct access table. Though the time complexity of query or insertion is still $O(1)$, the constant factor is smaller in an array than in a HashMap/HashSet. Thus, we can achieve a shorter runtime by the replacement here.\n\nCommonly used tables are:\n\n* `int[26]` for Letters 'a' - 'z' or 'A' - 'Z'\n* `int[128]` for ASCII\n* `int[256]` for Extended ASCII\n\n<iframe src=\"https://leetcode.com/playground/2xQcJazU/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"2xQcJazU\"></iframe>\n\nFor this implementation, the space complexity is fixed to $O(m)$ while the time complexity keeps unchanged. $m$ is the size of the charset.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

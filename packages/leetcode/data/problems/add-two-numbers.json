@@ -1,0 +1,138 @@
+{
+  "questionId": "2",
+  "questionFrontendId": "2",
+  "title": "Add Two Numbers",
+  "titleSlug": "add-two-numbers",
+  "difficulty": "Medium",
+  "content": "<p>You are given two <strong>non-empty</strong> linked lists representing two non-negative integers. The digits are stored in <strong>reverse order</strong>, and each of their nodes contains a single digit. Add the two numbers and return the sum&nbsp;as a linked list.</p>\n\n<p>You may assume the two numbers do not contain any leading zero, except the number 0 itself.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/10/02/addtwonumber1.jpg\" style=\"width: 483px; height: 342px;\" />\n<pre>\n<strong>Input:</strong> l1 = [2,4,3], l2 = [5,6,4]\n<strong>Output:</strong> [7,0,8]\n<strong>Explanation:</strong> 342 + 465 = 807.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> l1 = [0], l2 = [0]\n<strong>Output:</strong> [0]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> l1 = [9,9,9,9,9,9,9], l2 = [9,9,9,9]\n<strong>Output:</strong> [8,9,9,9,0,0,0,1]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in each linked list is in the range <code>[1, 100]</code>.</li>\n\t<li><code>0 &lt;= Node.val &lt;= 9</code></li>\n\t<li>It is guaranteed that the list represents a number that does not have leading zeros.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"addTwoNumbers\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"l1\",\r\n      \"type\": \"ListNode\",\r\n      \"dealloc\": false\r\n    },\r\n    {\r\n      \"name\": \"l2\",\r\n      \"type\": \"ListNode\",\r\n      \"dealloc\": false\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"ListNode\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"6.9M\", \"totalSubmission\": \"14.3M\", \"totalAcceptedRaw\": 6878339, \"totalSubmissionRaw\": 14282437, \"acRate\": \"48.2%\"}",
+  "likes": 36603,
+  "dislikes": 7221,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Multiply Strings\", \"titleSlug\": \"multiply-strings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Add Binary\", \"titleSlug\": \"add-binary\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Two Integers\", \"titleSlug\": \"sum-of-two-integers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Add Strings\", \"titleSlug\": \"add-strings\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Add Two Numbers II\", \"titleSlug\": \"add-two-numbers-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Add to Array-Form of Integer\", \"titleSlug\": \"add-to-array-form-of-integer\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Add Two Polynomials Represented as Linked Lists\", \"titleSlug\": \"add-two-polynomials-represented-as-linked-lists\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Double a Number Represented as a Linked List\", \"titleSlug\": \"double-a-number-represented-as-a-linked-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,4,3]\n[5,6,4]",
+    "[0]\n[0]",
+    "[9,9,9,9,9,9,9]\n[9,9,9,9]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 52, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 25, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 17, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 16, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 11, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"cisco\", \"name\": \"Cisco\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 7, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 6, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 5, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 5, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 5, \"slug\": \"capital-one\", \"name\": \"Capital One\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 4, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 4, \"slug\": \"avito\", \"name\": \"Avito\"}, {\"timesEncountered\": 3, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}]}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public ListNode addTwoNumbers(ListNode l1, ListNode l2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def addTwoNumbers(self, l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def addTwoNumbers(self, l1, l2):\n        \"\"\"\n        :type l1: Optional[ListNode]\n        :type l2: Optional[ListNode]\n        :rtype: Optional[ListNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} l1\n * @param {ListNode} l2\n * @return {ListNode}\n */\nvar addTwoNumbers = function(l1, l2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction addTwoNumbers(l1: ListNode | null, l2: ListNode | null): ListNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public ListNode AddTwoNumbers(ListNode l1, ListNode l2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\nstruct ListNode* addTwoNumbers(struct ListNode* l1, struct ListNode* l2) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun addTwoNumbers(l1: ListNode?, l2: ListNode?): ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func addTwoNumbers(_ l1: ListNode?, _ l2: ListNode?) -> ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn add_two_numbers(l1: Option<Box<ListNode>>, l2: Option<Box<ListNode>>) -> Option<Box<ListNode>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {ListNode} l1\n# @param {ListNode} l2\n# @return {ListNode}\ndef add_two_numbers(l1, l2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $l1\n     * @param ListNode $l2\n     * @return ListNode\n     */\n    function addTwoNumbers($l1, $l2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *   int val;\n *   ListNode? next;\n *   ListNode([this.val = 0, this.next]);\n * }\n */\nclass Solution {\n  ListNode? addTwoNumbers(ListNode? l1, ListNode? l2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def addTwoNumbers(l1: ListNode, l2: ListNode): ListNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for singly-linked list.\n#\n# defmodule ListNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           next: ListNode.t() | nil\n#         }\n#   defstruct val: 0, next: nil\n# end\n\ndefmodule Solution do\n  @spec add_two_numbers(l1 :: ListNode.t | nil, l2 :: ListNode.t | nil) :: ListNode.t | nil\n  def add_two_numbers(l1, l2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for singly-linked list.\n%%\n%% -record(list_node, {val = 0 :: integer(),\n%%                     next = null :: 'null' | #list_node{}}).\n\n-spec add_two_numbers(L1 :: #list_node{} | null, L2 :: #list_node{} | null) -> #list_node{} | null.\nadd_two_numbers(L1, L2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n(define/contract (add-two-numbers l1 l2)\n  (-> (or/c list-node? #f) (or/c list-node? #f) (or/c list-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "30",
+    "content": "## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/817450104\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Approach 1: Elementary Math\n\n**Intuition**\n\nKeep track of the carry using a variable and simulate digits-by-digits sum starting from the head of list, which contains the least-significant digit.\n\n![Illustration of Adding two numbers](../Figures/2_add_two_numbers.svg){:width=\"539px\"}\n\n\n*Figure 1. Visualization of the addition of two numbers: $$342 + 465 = 807$$.  \nEach node contains a single digit and the digits are stored in reverse order.*\n\n\n**Algorithm**\n\nJust like how you would sum two numbers on a piece of paper, we begin by summing the least-significant digits, which is the head of $$l1$$ and $$l2$$. Since each digit is in the range of $$0 \\ldots 9$$, summing two digits may \"overflow\". For example $$5 + 7 = 12$$. In this case, we set the current digit to $$2$$ and bring over the $$carry = 1$$ to the next iteration. $$carry$$ must be either $$0$$ or $$1$$ because the largest possible sum of two digits (including the carry) is $$9 + 9 + 1 = 19$$.\n\nThe pseudocode is as following:\n\n* Initialize current node to dummy head of the returning list.\n* Initialize carry to $$0$$.\n* Loop through lists $$l1$$ and $$l2$$ until you reach both ends and carry is $$0$$.\n    * Set $$x$$ to node $$l1$$'s value. If $$l1$$ has reached the end of $$l1$$, set to $$0$$.\n    * Set $$y$$ to node $$l2$$'s value. If $$l2$$ has reached the end of $$l2$$, set to $$0$$.\n    * Set $$sum = x + y + carry$$.\n    * Update $$carry = sum / 10$$.\n    * Create a new node with the digit value of $$(sum \\bmod 10)$$ and set it to current node's next, then advance current node to next.\n    * Advance both $$l1$$ and $$l2$$.\n* Return dummy head's next node.\n\nNote that we use a dummy head to simplify the code. Without a dummy head, you would have to write extra conditional statements to initialize the head's value.\n\nTake extra caution of the following cases:\n\n| Test case | Explanation |\n| ------------- | ---------------- |\n| $$l1=[0,1]$$<br>$$l2=[0,1,2]$$ | When one list is longer than the other. |\n| $$l1=[]$$<br>$$l2=[0,1]$$ | When one list is null, which means an empty list. |\n| $$l1=[9,9]$$<br>$$l2=[1]$$ | The sum could have an extra carry of one at the end, which is easy to forget. |\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/XsLdm2AA/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"XsLdm2AA\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(\\max(m, n))$$. Assume that $$m$$ and $$n$$ represents the length of $$l1$$ and $$l2$$ respectively, the algorithm above iterates at most $$\\max(m, n)$$ times.\n\n* Space complexity : $$O(1)$$. The length of the new list is at most $$\\max(m,n) + 1$$ However, we don't count the answer as part of the space complexity.\n\n**Follow up**\n\nWhat if the the digits in the linked list are stored in non-reversed order? For example:\n\n$$\n(3 \\to 4 \\to 2) + (4 \\to 6 \\to 5) = 8 \\to 0 \\to 7\n$$",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

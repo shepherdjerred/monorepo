@@ -1,0 +1,148 @@
+{
+  "questionId": "332",
+  "questionFrontendId": "332",
+  "title": "Reconstruct Itinerary",
+  "titleSlug": "reconstruct-itinerary",
+  "difficulty": "Hard",
+  "content": "<p>You are given a list of airline <code>tickets</code> where <code>tickets[i] = [from<sub>i</sub>, to<sub>i</sub>]</code> represent the departure and the arrival airports of one flight. Reconstruct the itinerary in order and return it.</p>\n\n<p>All of the tickets belong to a man who departs from <code>&quot;JFK&quot;</code>, thus, the itinerary must begin with <code>&quot;JFK&quot;</code>. If there are multiple valid itineraries, you should return the itinerary that has the smallest lexical order when read as a single string.</p>\n\n<ul>\n\t<li>For example, the itinerary <code>[&quot;JFK&quot;, &quot;LGA&quot;]</code> has a smaller lexical order than <code>[&quot;JFK&quot;, &quot;LGB&quot;]</code>.</li>\n</ul>\n\n<p>You may assume all tickets form at least one valid itinerary. You must use all the tickets once and only once.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/14/itinerary1-graph.jpg\" style=\"width: 382px; height: 222px;\" />\n<pre>\n<strong>Input:</strong> tickets = [[&quot;MUC&quot;,&quot;LHR&quot;],[&quot;JFK&quot;,&quot;MUC&quot;],[&quot;SFO&quot;,&quot;SJC&quot;],[&quot;LHR&quot;,&quot;SFO&quot;]]\n<strong>Output:</strong> [&quot;JFK&quot;,&quot;MUC&quot;,&quot;LHR&quot;,&quot;SFO&quot;,&quot;SJC&quot;]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/14/itinerary2-graph.jpg\" style=\"width: 222px; height: 230px;\" />\n<pre>\n<strong>Input:</strong> tickets = [[&quot;JFK&quot;,&quot;SFO&quot;],[&quot;JFK&quot;,&quot;ATL&quot;],[&quot;SFO&quot;,&quot;ATL&quot;],[&quot;ATL&quot;,&quot;JFK&quot;],[&quot;ATL&quot;,&quot;SFO&quot;]]\n<strong>Output:</strong> [&quot;JFK&quot;,&quot;ATL&quot;,&quot;JFK&quot;,&quot;SFO&quot;,&quot;ATL&quot;,&quot;SFO&quot;]\n<strong>Explanation:</strong> Another possible reconstruction is [&quot;JFK&quot;,&quot;SFO&quot;,&quot;ATL&quot;,&quot;JFK&quot;,&quot;ATL&quot;,&quot;SFO&quot;] but it is larger in lexical order.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= tickets.length &lt;= 300</code></li>\n\t<li><code>tickets[i].length == 2</code></li>\n\t<li><code>from<sub>i</sub>.length == 3</code></li>\n\t<li><code>to<sub>i</sub>.length == 3</code></li>\n\t<li><code>from<sub>i</sub></code> and <code>to<sub>i</sub></code> consist of uppercase English letters.</li>\n\t<li><code>from<sub>i</sub> != to<sub>i</sub></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findItinerary\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"tickets\",\r\n      \"type\": \"list<list<string>>\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<string>\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"546.3K\", \"totalSubmission\": \"1.2M\", \"totalAcceptedRaw\": 546332, \"totalSubmissionRaw\": 1230983, \"acRate\": \"44.4%\"}",
+  "likes": 6321,
+  "dislikes": 1928,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Common Subpath\", \"titleSlug\": \"longest-common-subpath\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Valid Arrangement of Pairs\", \"titleSlug\": \"valid-arrangement-of-pairs\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[\"MUC\",\"LHR\"],[\"JFK\",\"MUC\"],[\"SFO\",\"SJC\"],[\"LHR\",\"SFO\"]]",
+    "[[\"JFK\",\"SFO\"],[\"JFK\",\"ATL\"],[\"SFO\",\"ATL\"],[\"ATL\",\"JFK\"],[\"ATL\",\"SFO\"]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 7, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 2, \"slug\": \"compass\", \"name\": \"Compass\"}], \"more_than_six_months\": [{\"timesEncountered\": 18, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 14, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 11, \"slug\": \"netflix\", \"name\": \"Netflix\"}, {\"timesEncountered\": 8, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 5, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 4, \"slug\": \"bookingcom\", \"name\": \"Booking.com\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 3, \"slug\": \"hopper\", \"name\": \"Hopper\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Eulerian Circuit",
+      "slug": "eulerian-circuit"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> findItinerary(vector<vector<string>>& tickets) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> findItinerary(List<List<String>> tickets) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findItinerary(self, tickets: List[List[str]]) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findItinerary(self, tickets):\n        \"\"\"\n        :type tickets: List[List[str]]\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[][]} tickets\n * @return {string[]}\n */\nvar findItinerary = function(tickets) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findItinerary(tickets: string[][]): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> FindItinerary(IList<IList<string>> tickets) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** findItinerary(char*** tickets, int ticketsSize, int* ticketsColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findItinerary(tickets [][]string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findItinerary(tickets: List<List<String>>): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findItinerary(_ tickets: [[String]]) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_itinerary(tickets: Vec<Vec<String>>) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[][]} tickets\n# @return {String[]}\ndef find_itinerary(tickets)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[][] $tickets\n     * @return String[]\n     */\n    function findItinerary($tickets) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> findItinerary(List<List<String>> tickets) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findItinerary(tickets: List[List[String]]): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_itinerary(tickets :: [[String.t]]) :: [String.t]\n  def find_itinerary(tickets) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_itinerary(Tickets :: [[unicode:unicode_binary()]]) -> [unicode:unicode_binary()].\nfind_itinerary(Tickets) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-itinerary tickets)\n  (-> (listof (listof string?)) (listof string?))\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,145 @@
+{
+  "questionId": "526",
+  "questionFrontendId": "526",
+  "title": "Beautiful Arrangement",
+  "titleSlug": "beautiful-arrangement",
+  "difficulty": "Medium",
+  "content": "<p>Suppose you have <code>n</code> integers labeled <code>1</code> through <code>n</code>. A permutation of those <code>n</code> integers <code>perm</code> (<strong>1-indexed</strong>) is considered a <strong>beautiful arrangement</strong> if for every <code>i</code> (<code>1 &lt;= i &lt;= n</code>), <strong>either</strong> of the following is true:</p>\n\n<ul>\n\t<li><code>perm[i]</code> is divisible by <code>i</code>.</li>\n\t<li><code>i</code> is divisible by <code>perm[i]</code>.</li>\n</ul>\n\n<p>Given an integer <code>n</code>, return <em>the <strong>number</strong> of the <strong>beautiful arrangements</strong> that you can construct</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2\n<strong>Output:</strong> 2\n<b>Explanation:</b> \nThe first beautiful arrangement is [1,2]:\n    - perm[1] = 1 is divisible by i = 1\n    - perm[2] = 2 is divisible by i = 2\nThe second beautiful arrangement is [2,1]:\n    - perm[1] = 2 is divisible by i = 1\n    - i = 2 is divisible by perm[2] = 1\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 15</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"countArrangement\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"214.9K\", \"totalSubmission\": \"332K\", \"totalAcceptedRaw\": 214938, \"totalSubmissionRaw\": 332011, \"acRate\": \"64.7%\"}",
+  "likes": 3405,
+  "dislikes": 391,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Beautiful Arrangement II\", \"titleSlug\": \"beautiful-arrangement-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2",
+    "1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"hashedin\", \"name\": \"HashedIn\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Bitmask",
+      "slug": "bitmask"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countArrangement(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countArrangement(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countArrangement(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countArrangement(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar countArrangement = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countArrangement(n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountArrangement(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countArrangement(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countArrangement(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countArrangement(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countArrangement(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_arrangement(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef count_arrangement(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function countArrangement($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countArrangement(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countArrangement(n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_arrangement(n :: integer) :: integer\n  def count_arrangement(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_arrangement(N :: integer()) -> integer().\ncount_arrangement(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-arrangement n)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "118",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach #1 Brute Force [Time Limit Exceeded]\n\n#### Algorithm\n\nIn the brute force method, we can find out all the arrays that can be formed using the numbers from 1 to N(by creating every possible permutation of the given elements). Then, we iterate over all the elements of every permutation generated and check for the required conditions of divisibility.\n\nIn order to generate all the possible pairings, we make use of a function `permute(nums, current_index)`. This function creates all the possible permutations of the elements of the given array.\n\nTo do so, `permute` takes the index of the current element $$current_index$$ as one of the arguments. Then, it swaps the current element with every other element in the array, lying towards its right, so as to generate a new ordering of the array elements. After the swapping has been done, it makes another call to permute but this time with the index of the next element in the array. While returning back, we reverse the swapping done in the current function call.\n\nThus, when we reach the end of the array, a new ordering of the array's elements is generated. The following animation depicts the process of generating the permutations.\n\n!?!../Documents/561_Array.json:1000,563!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5cbz54de/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5cbz54de\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $$O(n!)$$. A total of $$n!$$ permutations will be generated for an array of length $$n$$.\n\n* Space complexity : $$O(n)$$. The depth of the recursion tree can go upto $$n$$. $$nums$$ array of size $$n$$ is used.\n\n---\n### Approach #2 Better Brute Force [Accepted]\n\n#### Algorithm\n\nIn the brute force approach, we create the full array for every permutation and then check the array for the given divisibilty conditions. But this method can be optimized to a great extent. To do so, we can keep checking the elements while being added to the permutation array at every step for the divisibility condition and  can stop creating it any further as soon as we find out the element just added to the permutation violates the divisiblity condition. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/D4dVJwn7/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"D4dVJwn7\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $$O(k)$$. $$k$$ refers to the number of valid permutations.\n\n* Space complexity : $$O(n)$$. The depth of recursion tree can go upto $$n$$. Further, $$nums$$ array of size $$n$$ is used, where, $$n$$ is the given number.\n\n---\n\n### Approach #3 Backtracking [Accepted]\n\n#### Algorithm\n\n\nThe idea behind this approach is simple. We try to create all the permutations of numbers from 1 to N. We can fix one number at a particular position and check for the divisibility criteria of that number at the particular position. But, we need to keep a track of the numbers which have already been considered earlier so that they aren't reconsidered while generating the permutations. If the current \nnumber doesn't satisfy the divisibility criteria, we can leave all the permutations that can be generated with that number at the particular position. This helps to prune the search space of the permutations to a great extent. We do so by trying to place each of the numbers at each position.\n\n\nWe make use of a visited array of size $$N$$. Here, $$visited[i]$$ refers to the $$i^{th}$$ number being already placed/not placed in the array being formed till now(True indicates that the number has already been placed).\n\nWe make use of a `calculate` function, which puts all the numbers pending numbers from 1 to N(i.e. not placed till now in the array), indicated by a $$False$$ at the corresponding $$visited[i]$$ position, and tries to create all the permutations with those numbers starting from the $$pos$$ index onwards in the current array. While putting the $$pos^{th}$$ number, we check whether the $$i^{th}$$ number satisfies the divisibility criteria on the go i.e. we continue forward with creating the permutations with the number $$i$$ at the $$pos^{th}$$ position only if the number $$i$$ and $$pos$$ satisfy the given criteria. Otherwise, we continue with putting the next numbers at the same position and keep on generating the permutations.\n\nLook at the animation below for a better understanding of the methodology:\n\n!?!../Documents/526_Beautiful.json:1000,563!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/EVQebXTW/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"EVQebXTW\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $$O(k)$$. $$k$$ refers to the number of valid permutations.\n\n* Space complexity : $$O(n)$$. $$visited$$ array of size $$n$$ is used. The depth of recursion tree will also go upto $$n$$. Here, $$n$$ refers to the given integer $$n$$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

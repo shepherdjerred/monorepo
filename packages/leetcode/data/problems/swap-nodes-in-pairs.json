@@ -1,0 +1,135 @@
+{
+  "questionId": "24",
+  "questionFrontendId": "24",
+  "title": "Swap Nodes in Pairs",
+  "titleSlug": "swap-nodes-in-pairs",
+  "difficulty": "Medium",
+  "content": "<p>Given a&nbsp;linked list, swap every two adjacent nodes and return its head. You must solve the problem without&nbsp;modifying the values in the list&#39;s nodes (i.e., only nodes themselves may be changed.)</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">head = [1,2,3,4]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[2,1,4,3]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/10/03/swap_ex1.jpg\" style=\"width: 422px; height: 222px;\" /></p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">head = []</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[]</span></p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">head = [1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[1]</span></p>\n</div>\n\n<p><strong class=\"example\">Example 4:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">head = [1,2,3]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[2,1,3]</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the&nbsp;list&nbsp;is in the range <code>[0, 100]</code>.</li>\n\t<li><code>0 &lt;= Node.val &lt;= 100</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"swapPairs\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"head\",\r\n      \"type\": \"ListNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"ListNode\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.9M\", \"totalSubmission\": \"2.7M\", \"totalAcceptedRaw\": 1888887, \"totalSubmissionRaw\": 2730331, \"acRate\": \"69.2%\"}",
+  "likes": 13128,
+  "dislikes": 513,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Reverse Nodes in k-Group\", \"titleSlug\": \"reverse-nodes-in-k-group\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Swapping Nodes in a Linked List\", \"titleSlug\": \"swapping-nodes-in-a-linked-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4]",
+    "[]",
+    "[1]",
+    "[1,2,3]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"qualcomm\", \"name\": \"Qualcomm\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"arista-networks\", \"name\": \"Arista Networks\"}, {\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 2, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}]}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    ListNode* swapPairs(ListNode* head) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public ListNode swapPairs(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def swapPairs(self, head: Optional[ListNode]) -> Optional[ListNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def swapPairs(self, head):\n        \"\"\"\n        :type head: Optional[ListNode]\n        :rtype: Optional[ListNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} head\n * @return {ListNode}\n */\nvar swapPairs = function(head) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction swapPairs(head: ListNode | null): ListNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public ListNode SwapPairs(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\nstruct ListNode* swapPairs(struct ListNode* head) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc swapPairs(head *ListNode) *ListNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun swapPairs(head: ListNode?): ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func swapPairs(_ head: ListNode?) -> ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn swap_pairs(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {ListNode} head\n# @return {ListNode}\ndef swap_pairs(head)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $head\n     * @return ListNode\n     */\n    function swapPairs($head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *   int val;\n *   ListNode? next;\n *   ListNode([this.val = 0, this.next]);\n * }\n */\nclass Solution {\n  ListNode? swapPairs(ListNode? head) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def swapPairs(head: ListNode): ListNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for singly-linked list.\n#\n# defmodule ListNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           next: ListNode.t() | nil\n#         }\n#   defstruct val: 0, next: nil\n# end\n\ndefmodule Solution do\n  @spec swap_pairs(head :: ListNode.t | nil) :: ListNode.t | nil\n  def swap_pairs(head) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for singly-linked list.\n%%\n%% -record(list_node, {val = 0 :: integer(),\n%%                     next = null :: 'null' | #list_node{}}).\n\n-spec swap_pairs(Head :: #list_node{} | null) -> #list_node{} | null.\nswap_pairs(Head) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n(define/contract (swap-pairs head)\n  (-> (or/c list-node? #f) (or/c list-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "831",
+    "content": "[TOC]\n\n## Solution\n---\n\n### Approach 1: Recursive Approach\n\n**Intuition**\n\nThe problem doesn't ask for entire reversal of linked list. It's rather asking us to swap every two adjacent nodes of a linked list starting at the very first node.\n\n<center>\n<img src=\"../Figures/24/24_Swap_Nodes_0.png\" width=\"500\"/>\n</center>\n\nThe basic intuition is to reach to the end of the linked list in steps of two using recursion.\n\n<center>\n<img src=\"../Figures/24/24_Swap_Nodes_1.png\" width=\"500\"/>\n</center>\n\nand while back tracking the nodes can be swapped.\n\n<center>\n<img src=\"../Figures/24/24_Swap_Nodes_2.png\" width=\"500\"/>\n</center>\n\nIn every function call we take out two nodes which would be swapped and the remaining nodes are passed to the next recursive call. The reason we are adopting a recursive approach here is because a sub-list of the original list would still be a linked list and hence, it would adapt to our recursive strategy. Assuming the recursion would return the swapped `remaining` list of nodes, we just swap the current two nodes and attach the remaining list we get from recursion to these two swapped pairs.\n\n<center>\n<img src=\"../Figures/24/24_Swap_Nodes_3.png\" width=\"500\"/>\n</center>\n\n**Algorithm**\n\n1. Start the recursion with `head` node of the original linked list.\n\n2. Every recursion call is responsible for swapping a pair of nodes. Let's represent the two nodes to be swapped by `firstNode` and `secondNode`.\n\n3. Next recursion is made by calling the function with head of the next pair of nodes. This call would swap the next two nodes and make further recursive calls if there are nodes left in the linked list.\n\n4. Once we get the pointer to the remaining swapped list from the recursion call, we can swap the `firstNode` and `secondNode` i.e. the nodes in the current recursive call and then return the pointer to the `secondNode` since it will be the new head after swapping.\n\n    <center>\n    <img src=\"../Figures/24/24_Swap_Nodes_4.png\" width=\"600\"/>\n    </center>\n\n5. Once all the pairs are swapped in the backtracking step, we would eventually be returning the pointer to the head of the now `swapped` list. This head will essentially be the second node in the original linked list.\n<br>\n\n<iframe src=\"https://leetcode.com/playground/c7hW72iR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"c7hW72iR\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$ where $$N$$ is the size of the linked list.\n* Space Complexity: $$O(N)$$ stack space utilized for recursion.\n<br/>\n<br/>\n\n---\n\n### Approach 2: Iterative Approach\n\n**Intuition**\n\nThe concept here is similar to the recursive approach. We break the linked list into pairs by jumping in steps of two. The only difference is, unlike recursion, we swap the nodes on the go. After swapping a pair of nodes, say `A` and `B`, we need to link the node `B` to the node that was right before `A`. To establish this linkage we save the previous node of node `A` in `prevNode`.\n\n<center>\n<img src=\"../Figures/24/24_Swap_Nodes_5.png\" width=\"500\"/>\n</center>\n\n**Algorithm**\n\n1. We iterate the linked list with jumps in steps of two.\n\n2. Swap the pair of nodes as we go, before we jump to the next pair. Let's represent the two nodes to be swapped by `firstNode` and `secondNode`.\n\n    <center>\n    <img src=\"../Figures/24/24_Swap_Nodes_6.png\" width=\"500\"/>\n    </center>\n\n3. Swap the two nodes. The swap step is\n\n    <pre>\n      firstNode.next = secondNode.next\n      secondNode.next = firstNode\n    </pre>\n\n    <center>\n    <img src=\"../Figures/24/24_Swap_Nodes_7.png\" width=\"500\"/>\n    </center>\n\n4. We also need to assign the `prevNode`'s next to the head of the swapped pair. This step would ensure the currently *swapped* pair is linked correctly to the end of the previously *swapped* list.\n\n    <pre>\n      prevNode.next = secondNode\n    </pre>\n\n    <center>\n    <img src=\"../Figures/24/24_Swap_Nodes_8.png\" width=\"500\"/>\n    </center>\n\n    This is an iterative step, so the nodes are swapped on the go and attached to the previously swapped list. And in the end we get the final swapped list.\n\n<iframe src=\"https://leetcode.com/playground/FJMXrRLs/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FJMXrRLs\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity : $$O(N)$$ where N is the size of the linked list.\n\n* Space Complexity : $$O(1)$$.\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

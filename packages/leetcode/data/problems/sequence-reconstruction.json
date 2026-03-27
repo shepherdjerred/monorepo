@@ -1,0 +1,133 @@
+{
+  "questionId": "444",
+  "questionFrontendId": "444",
+  "title": "Sequence Reconstruction",
+  "titleSlug": "sequence-reconstruction",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code> of length <code>n</code> where <code>nums</code> is a permutation of the integers in the range <code>[1, n]</code>. You are also given a 2D integer array <code>sequences</code> where <code>sequences[i]</code> is a subsequence of <code>nums</code>.</p>\n\n<p>Check if <code>nums</code> is the shortest possible and the only <strong>supersequence</strong>. The shortest <strong>supersequence</strong> is a sequence <strong>with the shortest length</strong> and has all <code>sequences[i]</code> as subsequences. There could be multiple valid <strong>supersequences</strong> for the given array <code>sequences</code>.</p>\n\n<ul>\n\t<li>For example, for <code>sequences = [[1,2],[1,3]]</code>, there are two shortest <strong>supersequences</strong>, <code>[1,2,3]</code> and <code>[1,3,2]</code>.</li>\n\t<li>While for <code>sequences = [[1,2],[1,3],[1,2,3]]</code>, the only shortest <strong>supersequence</strong> possible is <code>[1,2,3]</code>. <code>[1,2,3,4]</code> is a possible supersequence but not the shortest.</li>\n</ul>\n\n<p>Return <code>true</code><em> if </em><code>nums</code><em> is the only shortest <strong>supersequence</strong> for </em><code>sequences</code><em>, or </em><code>false</code><em> otherwise</em>.</p>\n\n<p>A <strong>subsequence</strong> is a sequence that can be derived from another sequence by deleting some or no elements without changing the order of the remaining elements.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3], sequences = [[1,2],[1,3]]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> There are two possible supersequences: [1,2,3] and [1,3,2].\nThe sequence [1,2] is a subsequence of both: [<strong><u>1</u></strong>,<strong><u>2</u></strong>,3] and [<strong><u>1</u></strong>,3,<strong><u>2</u></strong>].\nThe sequence [1,3] is a subsequence of both: [<strong><u>1</u></strong>,2,<strong><u>3</u></strong>] and [<strong><u>1</u></strong>,<strong><u>3</u></strong>,2].\nSince nums is not the only shortest supersequence, we return false.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3], sequences = [[1,2]]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> The shortest possible supersequence is [1,2].\nThe sequence [1,2] is a subsequence of it: [<strong><u>1</u></strong>,<strong><u>2</u></strong>].\nSince nums is not the shortest supersequence, we return false.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3], sequences = [[1,2],[1,3],[2,3]]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The shortest possible supersequence is [1,2,3].\nThe sequence [1,2] is a subsequence of it: [<strong><u>1</u></strong>,<strong><u>2</u></strong>,3].\nThe sequence [1,3] is a subsequence of it: [<strong><u>1</u></strong>,2,<strong><u>3</u></strong>].\nThe sequence [2,3] is a subsequence of it: [1,<strong><u>2</u></strong>,<strong><u>3</u></strong>].\nSince nums is the only shortest supersequence, we return true.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>nums</code> is a permutation of all the integers in the range <code>[1, n]</code>.</li>\n\t<li><code>1 &lt;= sequences.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= sequences[i].length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= sum(sequences[i].length) &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= sequences[i][j] &lt;= n</code></li>\n\t<li>All the arrays of <code>sequences</code> are <strong>unique</strong>.</li>\n\t<li><code>sequences[i]</code> is a subsequence of <code>nums</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"sequenceReconstruction\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"sequences\",\n      \"type\": \"list<list<integer>>\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"64.9K\", \"totalSubmission\": \"211.9K\", \"totalAcceptedRaw\": 64875, \"totalSubmissionRaw\": 211927, \"acRate\": \"30.6%\"}",
+  "likes": 613,
+  "dislikes": 1547,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Course Schedule II\", \"titleSlug\": \"course-schedule-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3]\n[[1,2],[1,3]]",
+    "[1,2,3]\n[[1,2]]",
+    "[1,2,3]\n[[1,2],[1,3],[2,3]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool sequenceReconstruction(vector<int>& nums, vector<vector<int>>& sequences) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean sequenceReconstruction(int[] nums, List<List<Integer>> sequences) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def sequenceReconstruction(self, nums: List[int], sequences: List[List[int]]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def sequenceReconstruction(self, nums, sequences):\n        \"\"\"\n        :type nums: List[int]\n        :type sequences: List[List[int]]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number[][]} sequences\n * @return {boolean}\n */\nvar sequenceReconstruction = function(nums, sequences) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function sequenceReconstruction(nums: number[], sequences: number[][]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool SequenceReconstruction(int[] nums, IList<IList<int>> sequences) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool sequenceReconstruction(int* nums, int numsSize, int** sequences, int sequencesSize, int* sequencesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func sequenceReconstruction(nums []int, sequences [][]int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun sequenceReconstruction(nums: IntArray, sequences: List<List<Int>>): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func sequenceReconstruction(_ nums: [Int], _ sequences: [[Int]]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn sequence_reconstruction(nums: Vec<i32>, sequences: Vec<Vec<i32>>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer[][]} sequences\n# @return {Boolean}\ndef sequence_reconstruction(nums, sequences)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer[][] $sequences\n     * @return Boolean\n     */\n    function sequenceReconstruction($nums, $sequences) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool sequenceReconstruction(List<int> nums, List<List<int>> sequences) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def sequenceReconstruction(nums: Array[Int], sequences: List[List[Int]]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec sequence_reconstruction(nums :: [integer], sequences :: [[integer]]) :: boolean\n  def sequence_reconstruction(nums, sequences) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec sequence_reconstruction(Nums :: [integer()], Sequences :: [[integer()]]) -> boolean().\nsequence_reconstruction(Nums, Sequences) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (sequence-reconstruction nums sequences)\n  (-> (listof exact-integer?) (listof (listof exact-integer?)) boolean?)\n  )"
+    }
+  ],
+  "solution": null
+}

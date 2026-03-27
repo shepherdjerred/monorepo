@@ -1,0 +1,142 @@
+{
+  "questionId": "675",
+  "questionFrontendId": "675",
+  "title": "Cut Off Trees for Golf Event",
+  "titleSlug": "cut-off-trees-for-golf-event",
+  "difficulty": "Hard",
+  "content": "<p>You are asked to cut off all the trees in a forest for a golf event. The forest is represented as an <code>m x n</code> matrix. In this matrix:</p>\n\n<ul>\n\t<li><code>0</code> means the cell cannot be walked through.</li>\n\t<li><code>1</code> represents an empty cell that can be walked through.</li>\n\t<li>A number greater than <code>1</code> represents a tree in a cell that can be walked through, and this number is the tree&#39;s height.</li>\n</ul>\n\n<p>In one step, you can walk in any of the four directions: north, east, south, and west. If you are standing in a cell with a tree, you can choose whether to cut it off.</p>\n\n<p>You must cut off the trees in order from shortest to tallest. When you cut off a tree, the value at its cell becomes <code>1</code> (an empty cell).</p>\n\n<p>Starting from the point <code>(0, 0)</code>, return <em>the minimum steps you need to walk to cut off all the trees</em>. If you cannot cut off all the trees, return <code>-1</code>.</p>\n\n<p><strong>Note:</strong> The input is generated such that no two trees have the same height, and there is at least one tree needs to be cut off.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/11/26/trees1.jpg\" style=\"width: 242px; height: 242px;\" />\n<pre>\n<strong>Input:</strong> forest = [[1,2,3],[0,0,4],[7,6,5]]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> Following the path above allows you to cut off the trees from shortest to tallest in 6 steps.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/11/26/trees2.jpg\" style=\"width: 242px; height: 242px;\" />\n<pre>\n<strong>Input:</strong> forest = [[1,2,3],[0,0,0],[7,6,5]]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> The trees in the bottom row cannot be accessed as the middle row is blocked.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> forest = [[2,3,4],[0,0,5],[8,7,6]]\n<strong>Output:</strong> 6\n<b>Explanation:</b> You can follow the same path as Example 1 to cut off all the trees.\nNote that you can cut off the first tree at (0, 0) before making any steps.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == forest.length</code></li>\n\t<li><code>n == forest[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 50</code></li>\n\t<li><code>0 &lt;= forest[i][j] &lt;= 10<sup>9</sup></code></li>\n\t<li>Heights of all trees are <strong>distinct</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"cutOffTree\",\n  \"params\": [\n    {\n      \"name\": \"forest\",\n      \"type\": \"list<list<integer>>\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}\n",
+  "stats": "{\"totalAccepted\": \"84.3K\", \"totalSubmission\": \"232.6K\", \"totalAcceptedRaw\": 84283, \"totalSubmissionRaw\": 232587, \"acRate\": \"36.2%\"}",
+  "likes": 1293,
+  "dislikes": 690,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,2,3],[0,0,4],[7,6,5]]",
+    "[[1,2,3],[0,0,0],[7,6,5]]",
+    "[[2,3,4],[0,0,5],[8,7,6]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int cutOffTree(vector<vector<int>>& forest) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int cutOffTree(List<List<Integer>> forest) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def cutOffTree(self, forest: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def cutOffTree(self, forest):\n        \"\"\"\n        :type forest: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} forest\n * @return {number}\n */\nvar cutOffTree = function(forest) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function cutOffTree(forest: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CutOffTree(IList<IList<int>> forest) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int cutOffTree(int** forest, int forestSize, int* forestColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func cutOffTree(forest [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun cutOffTree(forest: List<List<Int>>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func cutOffTree(_ forest: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn cut_off_tree(forest: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} forest\n# @return {Integer}\ndef cut_off_tree(forest)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $forest\n     * @return Integer\n     */\n    function cutOffTree($forest) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int cutOffTree(List<List<int>> forest) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def cutOffTree(forest: List[List[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec cut_off_tree(forest :: [[integer]]) :: integer\n  def cut_off_tree(forest) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec cut_off_tree(Forest :: [[integer()]]) -> integer().\ncut_off_tree(Forest) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (cut-off-tree forest)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "277",
+    "content": "[TOC]\n\n\n### Approach Framework\n\n**Explanation**\n\nStarting from `(0, 0)`, for each tree in height order, we will calculate the distance from where we are to the next tree (and move there), adding that distance to the answer.\n\nWe frame the problem as providing some distance function `dist(forest, sr, sc, tr, tc)` that calculates the path distance from source `(sr, sc)` to target `(tr, tc)` through obstacles `dist[i][j] == 0`. (This distance function will return `-1` if the path is impossible.)\n\nWhat follows is code and complexity analysis that is common to all three approaches. After, the algorithms presented in our approaches will focus on only providing our `dist` function.\n\n\n**Python**\n```python\nclass Solution(object):\n    def cutOffTree(self, forest):\n        trees = sorted((v, r, c) for r, row in enumerate(forest)\n                       for c, v in enumerate(row) if v > 1)\n        sr = sc = ans = 0\n        for _, tr, tc in trees:\n            d = dist(forest, sr, sc, tr, tc)\n            if d < 0: return -1\n            ans += d\n            sr, sc = tr, tc\n        return ans\n```\n\n**Java**\n```java\nclass Solution {\n    int[] dr = {-1, 1, 0, 0};\n    int[] dc = {0, 0, -1, 1};\n\n    public int cutOffTree(List<List<Integer>> forest) {\n        List<int[]> trees = new ArrayList();\n        for (int r = 0; r < forest.size(); ++r) {\n            for (int c = 0; c < forest.get(0).size(); ++c) {\n                int v = forest.get(r).get(c);\n                if (v > 1) trees.add(new int[]{v, r, c});\n            }\n        }\n\n        Collections.sort(trees, (a, b) -> Integer.compare(a[0], b[0]));\n\n        int ans = 0, sr = 0, sc = 0;\n        for (int[] tree: trees) {\n            int d = dist(forest, sr, sc, tree[1], tree[2]);\n            if (d < 0) return -1;\n            ans += d;\n            sr = tree[1]; sc = tree[2];\n        }\n        return ans;\n    }\n}\n```\n\n**Complexity Analysis**\n\nAll three algorithms have similar worst-case complexities, but in practice, each successive algorithm presented performs faster on random data.\n\n* Time Complexity: $$O((RC)^2)$$ where there are $$R$$ rows and $$C$$ columns in the given `forest`. We walk to $$R*C$$ trees, and each walk could spend $$O(R*C)$$ time searching for the tree.\n\n* Space Complexity: $$O(R*C)$$, the maximum size of the data structures used.\n\n---\n### Approach #1: BFS [Accepted]\n\n**Intuition and Algorithm**\n\nWe perform a breadth-first-search, processing nodes (grid positions) in a queue. `seen` keeps track of nodes that have already been added to the queue at some point - those nodes will be already processed or are in the queue awaiting processing.\n\nFor each node next to be processed, we look at its neighbors. If they are in the forest (grid), they haven't been enqueued, and they aren't an obstacle, we will enqueue that neighbor.\n\nWe also keep a side count of the distance traveled for each node. If the node we are processing is our destination 'target' `(tr, tc)`, we'll return the answer.\n\n**Python**\n```python\ndef bfs(forest, sr, sc, tr, tc):\n    R, C = len(forest), len(forest[0])\n    queue = collections.deque([(sr, sc, 0)])\n    seen = {(sr, sc)}\n    while queue:\n        r, c, d = queue.popleft()\n        if r == tr and c == tc:\n            return d\n        for nr, nc in ((r-1, c), (r+1, c), (r, c-1), (r, c+1)):\n            if (0 <= nr < R and 0 <= nc < C and\n                    (nr, nc) not in seen and forest[nr][nc]):\n                seen.add((nr, nc))\n                queue.append((nr, nc, d+1))\n    return -1\n```\n\n**Java**\n```java\npublic int bfs(List<List<Integer>> forest, int sr, int sc, int tr, int tc) {\n    int R = forest.size(), C = forest.get(0).size();\n    Queue<int[]> queue = new LinkedList();\n    queue.add(new int[]{sr, sc, 0});\n    boolean[][] seen = new boolean[R][C];\n    seen[sr][sc] = true;\n    while (!queue.isEmpty()) {\n        int[] cur = queue.poll();\n        if (cur[0] == tr && cur[1] == tc) return cur[2];\n        for (int di = 0; di < 4; ++di) {\n            int r = cur[0] + dr[di];\n            int c = cur[1] + dc[di];\n            if (0 <= r && r < R && 0 <= c && c < C &&\n                    !seen[r][c] && forest.get(r).get(c) > 0) {\n                seen[r][c] = true;\n                queue.add(new int[]{r, c, cur[2]+1});\n            }\n        }\n    }\n    return -1;\n}\n```\n\n---\n\n### Approach #2: A* Search [Accepted]\n\n**Intuition and Algorithm**\n\nThe A* star algorithm is another path-finding algorithm.  For every node at position `(r, c)`, we have some estimated cost `node.f = node.g + node.h`, where `node.g` is the actual distance from `(sr, sc)` to `(r, c)`, and `node.h` is our *heuristic* (guess) of the distance from `(r, c)` to `(tr, tc)`.  In this case, our guess will be the taxicab distance, `node.h = abs(r-tr) + abs(c-tc)`.\n\nWe keep a priority queue to decide what node to search in (*expand*) next. We can prove that if we find the target node, we must have traveled the lowest possible distance `node.g`. By considering the last time when two backward paths are the same, without loss of generality we could suppose the penultimate square of the two paths are different, and then in this case `node.f = node.g + 1`, showing the path with less actual distance travelled is expanded first as desired.\n\nIt might be useful for solvers familiar with *Dijkstra's Algorithm* to know that Dijkstra's algorithm is a special case of *A\\* Search* with `node.h = 0` always.\n\n**Python**\n```python\ndef astar(forest, sr, sc, tr, tc):\n    R, C = len(forest), len(forest[0])\n    heap = [(0, 0, sr, sc)]\n    cost = {(sr, sc): 0}\n    while heap:\n        f, g, r, c = heapq.heappop(heap)\n        if r == tr and c == tc: return g\n        for nr, nc in ((r-1,c), (r+1,c), (r,c-1), (r,c+1)):\n            if 0 <= nr < R and 0 <= nc < C and forest[nr][nc]:\n                ncost = g + 1 + abs(nr - tr) + abs(nc - tc)\n                if ncost < cost.get((nr, nc), 9999):\n                    cost[nr, nc] = ncost\n                    heapq.heappush(heap, (ncost, g+1, nr, nc))\n    return -1\n```\n\n**Java**\n```java\npublic int cutOffTree(List<List<Integer>> forest, int sr, int sc, int tr, int tc) {\n    int R = forest.size(), C = forest.get(0).size();\n    PriorityQueue<int[]> heap = new PriorityQueue<int[]>(\n        (a, b) -> Integer.compare(a[0], b[0]));\n    heap.offer(new int[]{0, 0, sr, sc});\n\n    HashMap<Integer, Integer> cost = new HashMap();\n    cost.put(sr * C + sc, 0);\n\n    while (!heap.isEmpty()) {\n        int[] cur = heap.poll();\n        int g = cur[1], r = cur[2], c = cur[3];\n        if (r == tr && c == tc) return g;\n        for (int di = 0; di < 4; ++di) {\n            int nr = r + dr[di], nc = c + dc[di];\n            if (0 <= nr && nr < R && 0 <= nc && nc < C && forest.get(nr).get(nc) > 0) {\n                int ncost = g + 1 + Math.abs(nr-tr) + Math.abs(nc-tr);\n                if (ncost < cost.getOrDefault(nr * C + nc, 9999)) {\n                    cost.put(nr * C + nc, ncost);\n                    heap.offer(new int[]{ncost, g+1, nr, nc});\n                }\n            }\n        }\n    }\n    return -1;\n}\n```\n\n---\n### Approach #3: Hadlock's Algorithm [Accepted]\n\n**Intuition**\n\nWithout any obstacles, the distance from `source = (sr, sc)` to `target = (tr, tc)` is simply `taxi(source, target) = abs(sr-tr) + abs(sc-tc)`. This represents a sort of minimum distance that must be traveled. Whenever we walk \"away\" from the target, we increase this minimum by 2, as we stepped 1 move, plus the taxicab distance from our new location has increased by one.\n\nLet's call such a move that walks away from the target a *detour*. It can be proven that the distance from source to target is simply `taxi(source, target) + 2 * detours`, where `detours` is the smallest number of detours in any path from `source` to `target`.\n\n**Algorithm**\n\nWith respect to a `source` and `target`, call the *detour number* of a square to be the lowest number of detours possible in any path from `source` to that square.  (Here, detours are defined with respect to `target` - the number of away steps from that target.)\n\nWe will perform a priority-first search in order of detour number. If the target is found, it was found with the lowest detour number and therefore the lowest corresponding distance.  This motivates using `processed`, keeping track of when nodes are expanded, not visited - nodes could potentially be visited twice.\n\nAs each neighboring node can only have the same detour number or a detour number one higher, we will only consider at most 2 priority classes at a time. Thus, we can use a deque (double-ended queue) to perform this implementation.  We will place nodes with the same detour number to be expanded first, and nodes with a detour number one higher to be expanded after all nodes with the current number are done.\n\n**Python**\n```python\ndef hadlocks(forest, sr, sc, tr, tc):\n    R, C = len(forest), len(forest[0])\n    processed = set()\n    deque = collections.deque([(0, sr, sc)])\n    while deque:\n        detours, r, c = deque.popleft()\n        if (r, c) not in processed:\n            processed.add((r, c))\n            if r == tr and c == tc:\n                return abs(sr-tr) + abs(sc-tc) + 2*detours\n            for nr, nc, closer in ((r-1, c, r > tr), (r+1, c, r < tr),\n                                   (r, c-1, c > tc), (r, c+1, c < tc)):\n                if 0 <= nr < R and 0 <= nc < C and forest[nr][nc]:\n                    if closer:\n                        deque.appendleft((detours, nr, nc))\n                    else:\n                        deque.append((detours+1, nr, nc))\n    return -1\n```\n\n**Java**\n```java\npublic int hadlocks(List<List<Integer>> forest, int sr, int sc, int tr, int tc) {\n    int R = forest.size(), C = forest.get(0).size();\n    Set<Integer> processed = new HashSet();\n    Deque<int[]> deque = new ArrayDeque();\n    deque.offerFirst(new int[]{0, sr, sc});\n    while (!deque.isEmpty()) {\n        int[] cur = deque.pollFirst();\n        int detours = cur[0], r = cur[1], c = cur[2];\n        if (!processed.contains(r*C + c)) {\n            processed.add(r*C + c);\n            if (r == tr && c == tc) {\n                return Math.abs(sr-tr) + Math.abs(sc-tc) + 2 * detours;\n            }\n            for (int di = 0; di < 4; ++di) {\n                int nr = r + dr[di];\n                int nc = c + dc[di];\n                boolean closer;\n                if (di <= 1) closer = di == 0 ? r > tr : r < tr;\n                else closer = di == 2 ? c > tc : c < tc;\n                if (0 <= nr && nr < R && 0 <= nc && nc < C && forest.get(nr).get(nc) > 0) {\n                    if (closer) deque.offerFirst(new int[]{detours, nr, nc});\n                    else deque.offerLast(new int[]{detours+1, nr, nc});\n                }\n            }\n        }\n    }\n    return -1;\n}\n```",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

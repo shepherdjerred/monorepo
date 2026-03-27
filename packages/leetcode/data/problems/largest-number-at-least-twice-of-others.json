@@ -1,0 +1,130 @@
+{
+  "questionId": "748",
+  "questionFrontendId": "747",
+  "title": "Largest Number At Least Twice of Others",
+  "titleSlug": "largest-number-at-least-twice-of-others",
+  "difficulty": "Easy",
+  "content": "<p>You are given an integer array <code>nums</code> where the largest integer is <strong>unique</strong>.</p>\n\n<p>Determine whether the largest element in the array is <strong>at least twice</strong> as much as every other number in the array. If it is, return <em>the <strong>index</strong> of the largest element, or return </em><code>-1</code><em> otherwise</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,6,1,0]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> 6 is the largest integer.\nFor every other number in the array x, 6 is at least twice as big as x.\nThe index of value 6 is 1, so we return 1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> 4 is less than twice the value of 3, so we return -1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= nums.length &lt;= 50</code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 100</code></li>\n\t<li>The largest element in <code>nums</code> is unique.</li>\n</ul>\n",
+  "hints": [
+    "Scan through the array to find the unique largest element `m`, keeping track of it's index `maxIndex`.\r\n\r\nScan through the array again.  If we find some `x != m` with `m < 2*x`, we should return `-1`.\r\n\r\nOtherwise, we should return `maxIndex`."
+  ],
+  "metaData": "{\r\n  \"name\": \"dominantIndex\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"336.3K\", \"totalSubmission\": \"643.8K\", \"totalAcceptedRaw\": 336341, \"totalSubmissionRaw\": 643805, \"acRate\": \"52.2%\"}",
+  "likes": 1377,
+  "dislikes": 956,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Keep Multiplying Found Values by Two\", \"titleSlug\": \"keep-multiplying-found-values-by-two\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Largest Number After Digit Swaps by Parity\", \"titleSlug\": \"largest-number-after-digit-swaps-by-parity\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,6,1,0]",
+    "[1,2,3,4]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int dominantIndex(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int dominantIndex(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def dominantIndex(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def dominantIndex(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar dominantIndex = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function dominantIndex(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int DominantIndex(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int dominantIndex(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func dominantIndex(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun dominantIndex(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func dominantIndex(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn dominant_index(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef dominant_index(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function dominantIndex($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int dominantIndex(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def dominantIndex(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec dominant_index(nums :: [integer]) :: integer\n  def dominant_index(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec dominant_index(Nums :: [integer()]) -> integer().\ndominant_index(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (dominant-index nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,141 @@
+{
+  "questionId": "337",
+  "questionFrontendId": "337",
+  "title": "House Robber III",
+  "titleSlug": "house-robber-iii",
+  "difficulty": "Medium",
+  "content": "<p>The thief has found himself a new place for his thievery again. There is only one entrance to this area, called <code>root</code>.</p>\n\n<p>Besides the <code>root</code>, each house has one and only one parent house. After a tour, the smart thief realized that all houses in this place form a binary tree. It will automatically contact the police if <strong>two directly-linked houses were broken into on the same night</strong>.</p>\n\n<p>Given the <code>root</code> of the binary tree, return <em>the maximum amount of money the thief can rob <strong>without alerting the police</strong></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/10/rob1-tree.jpg\" style=\"width: 277px; height: 293px;\" />\n<pre>\n<strong>Input:</strong> root = [3,2,3,null,3,null,1]\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> Maximum amount of money the thief can rob = 3 + 3 + 1 = 7.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/10/rob2-tree.jpg\" style=\"width: 357px; height: 293px;\" />\n<pre>\n<strong>Input:</strong> root = [3,4,5,1,3,null,1]\n<strong>Output:</strong> 9\n<strong>Explanation:</strong> Maximum amount of money the thief can rob = 4 + 5 = 9.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 10<sup>4</sup>]</code>.</li>\n\t<li><code>0 &lt;= Node.val &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"rob\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"499.8K\", \"totalSubmission\": \"896.8K\", \"totalAcceptedRaw\": 499807, \"totalSubmissionRaw\": 896782, \"acRate\": \"55.7%\"}",
+  "likes": 9105,
+  "dislikes": 157,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"House Robber\", \"titleSlug\": \"house-robber\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"House Robber II\", \"titleSlug\": \"house-robber-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,2,3,null,3,null,1]",
+    "[3,4,5,1,3,null,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"docusign\", \"name\": \"Docusign\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"oyo\", \"name\": \"oyo\"}]}",
+  "topicTags": [
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int rob(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int rob(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def rob(self, root: Optional[TreeNode]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def rob(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number}\n */\nvar rob = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction rob(root: TreeNode | null): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int Rob(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint rob(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc rob(root *TreeNode) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun rob(root: TreeNode?): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func rob(_ root: TreeNode?) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn rob(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer}\ndef rob(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer\n     */\n    function rob($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int rob(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def rob(root: TreeNode): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec rob(root :: TreeNode.t | nil) :: integer\n  def rob(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec rob(Root :: #tree_node{} | null) -> integer().\nrob(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (rob root)\n  (-> (or/c tree-node? #f) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1017",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThis problem is an extension of the original [House Robber Problem](https://leetcode.com/problems/house-robber/). In this problem, our poor thief does not have a straight street, but have a binary-tree-like area instead. \n\nTo help better understand the problem, below is an example robbing plan on a binary tree:\n\n![one example robbing](../Figures/337/337_overview.png)\n\nWell, it looks a bit more complicated. For problems related to the tree data structure, often we could apply the recursion. Also, due to the characteristic of this problem, the [memoization](https://en.wikipedia.org/wiki/Memoization) approach and the DP approach are available.\n\nBelow, we will discuss three approaches: *Recursion* , *Recursion with Memoization*, and *Dynamic Programming*. They are similar but have some differences. Generally, we recommend the first and the second approaches, and provide the third approach as an extension reading for interested readers.\n\n---\n\n### Approach 1: Recursion\n\n**Intuition**\n\nIn this part, we explain how to think of this approach step by step. If you are only interested in the pure algorithm, you can jump to the algorithm part.\n\nSince the tree itself is a recursive data structure, usually recursion is used to tackle these tree-relative problems.\n\nNow we need a recursive function, let's call it `helper` (or whatever you want to call it).\n\nUsually, we use a node as the input to the `helper` and add other arguments if we need more information.\n\n>The pseudo code of the common structure to solve recursive problems is as below:\n\n<pre>\nfunction helper(node, other_information) {\n    // basic case, such as node is null\n    if node is null:\n        return things like 0 or null\n    else:\n        do something relates to helper(node.left) and helper(node.right)\n}\nfunction answerToProblem(root) {\n    return helper(root, other_information)\n}\n</pre>\n\n>In some cases, we can use `answerToProblem` itself as the `helper` function.\n\nOK, back to our problem. The next question is what should our `helper` function return.\n\nSince the problem asks us to find out the maximum amount of money the thief can get, we could try using this maximum value as the return value of the `helper` function.\n\nSo `helper` receives a `node` as input, and returns the maximum amount the thief can get starting from this `node`.\n\nLet's try writing the actual code. Well, it's a bit of trouble...\n\n<pre>\nfunction helper(node) { // return the maximum by starting from this node\n    if node is null: // basic case\n        return 0\n    else:\n        two choices: rob this node or not?\n        if not rob... we have: helper(node.left) + helper(node.right)\n\n        what if rob? we get node.val!\n        what about node.left and node.right? we can not rob them.\n        Hmm... maybe we need to touch node.left.left and its other siblings... troublesome!\n}\n</pre>\n\nIf we need to touch the grandchildren of this node, the case becomes complicated. Well, it is not infeasible but requires extra effort and code. Often, the best practice is to only touch its children, not its grandchildren.\n\nThe ideal situation is to make `node.left` and `node.right` automatically handle the grandchildren for us.\n\nHow to do it? Well, we can let them know whether we robbed this node or not by passing this information as input, like this:\n\n<pre>\n    two choices: rob this node or not?\n\n    rob = node.val + helper(node.left, parent_robbed=True)\n                + helper(node.right,  parent_robbed=True)\n\n    not_rob = helper(node.left, parent_robbed=False)\n            + helper(node.right, parent_robbed=False)\n\n    return max(rob, not_rob)\n</pre>\n\nCool, we also need to change the input correspondingly:\n\n<pre>\nfunction helper(node, the parent is robbed or not?) {\n    // return the maximum by starting from this node\n    tackle basic case...\n\n    if the parent is robbed:\n        we can not rob this node.\n        return helper(node.left, False) + helper(node.right, False)\n\n    if the parent is not robbed:\n        two choices: rob this node or not?\n        calculate `rob` and `not_rob`...\n        return max(rob, not_rob)\n}\n</pre>\n\nGood, now we have a functioning code. But the code is still not perfect.\n\nAn obvious problem is that the `helper` is called too many times. Ideally, it should only be called as least as possible to reduce redundant calculations.\n\nFor example, when calculating `rob` and `not_rob`:\n\n<pre>\n    rob = node.val + helper(node.left, True) + helper(node.right, True)\n    not_rob = helper(node.left, False) + helper(node.right, False)\n</pre>\n\nThe `helper` is called four times. Moreover, when we call `helper(node.left, True)` and `helper(node.left, False)`, those two involve same calculations internally, such as `helper(node.left.left, False)`. \n\n>In other words, `helper(node.left.left, False)` is called inside `helper(node.left, True)`, and also is called inside `helper(node.left, False)`. It is calculated twice! We do not want that.\n\nWhat if... we can combine them together?\n\nWe return the results of `helper(node.left, True)` and `helper(node.left, False)` in a single function: `helper(node.left)`. Those two results can be stored in a two-element array.\n\n<pre>\nfunction helper(node) {\n    // return original [`helper(node.left, True)`, `helper(node.left, False)`]\n    tackle basic case...\n    left = helper(node.left)\n    right = helper(node.right)\n    some calculation...\n    return [max_if_rob, max_if_not_rob]\n}\n</pre>\n\nIn this case, we fully use the calculation results without redundant calculation.\n\n>Also, you can reduce extra calculations by [memoization](https://en.wikipedia.org/wiki/Memoization) or by DP, which we will discuss in the following approaches.\n\n**Algorithm**\n\nUse a helper function which receives a node as input and returns a two-element array, where the first element represents the maximum amount of money the thief can rob if starting from this node without robbing this node, and the second element represents the maximum amount of money the thief can rob if starting from this node and robbing this node.\n\nThe basic case of the helper function should be `null` node, and in this case, it returns two zeros.\n\nFinally, call the `helper(root)` in the main function, and return its maximum value.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/Zk6ypKzK/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"Zk6ypKzK\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of nodes in the binary tree.\n\n* Time complexity: $$\\mathcal{O}(N)$$ since we visit all nodes once.\n\n* Space complexity: $$\\mathcal{O}(N)$$ since we need stacks to do recursion, and the maximum depth of the recursion is the height of the tree, which is $$\\mathcal{O}(N)$$ in the worst case and $$\\mathcal{O}(\\log(N))$$ in the best case.\n\n---\n\n### Approach 2: Recursion with Memoization\n\n**Intuition**\n\nRecall in the later part of approach 1, we have the following `helper` function:\n\n<pre>\nfunction helper(node, the parent is robbed or not?) {\n    // return the maximum by starting from this node\n    tackle basic case...\n    if the parent is robbed:\n        return helper(node.left, True) + helper(node.right, True)\n\n    if the parent is not robbed:\n        two choices: rob this node or not?\n        calculate `rob` and `not_rob`...\n        return max(rob, not_rob)\n}\n</pre>\n\nHowever, this code is not good since it involves some redundant calculations. Improvements are needed.\n\nTo avoid those redundant calculations, using memoization is an option. i.e., save the results of the functions in hash maps, and return the stored results when are called next time.\n\n>You can also add memoization to the \"grandchildren\" method we mentioned in approach 1. That would be another functioning approach. There is a lot of possibilities.\n\n**Algorithm**\n \nUse a helper function which receives a node and a bool variable as input, and if that variable is true, it returns the maximum amount of money the thief can rob if starting from this node and robbing this node, else returns the maximum amount of money the thief can rob if starting from this node without robbing this node.\n\nThe result of this helper function would be saved in the maps, and return from the maps when are called next time.\n\nThe basic case of the helper function should be `null` node, and in this case, it returns zero.\n\nFinally, call the `helper(root)` in the main function, and return its value.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/Ag5RhDL4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Ag5RhDL4\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of nodes in the binary tree.\n\n* Time complexity: $$\\mathcal{O}(N)$$ since we run the `helper` function for all nodes once, and saved the results to prevent the second calculation.\n\n* Space complexity: $$\\mathcal{O}(N)$$ since we need two maps with the size of $$\\mathcal{O}(N)$$ to store the results, and $$\\mathcal{O}(N)$$ space for stacks to start recursion.\n\n---\n\n### Approach 3: Dynamic Programming\n\n**Intuition**\n\nAs we mentioned before, we could also apply the Dynamic Programming (DP) algorithm to this problem. Tree DP is a good method to tackle some tree problems.\n\n>Technically, the memoization approach we mentioned above can also be viewed as a DP approach. However, in this approach, we use DP arrays to generalize it.\n\n>This approach is a little hard, and you can treat it as extra reading for interested readers.\n\nTo perform a tree DP, we still need DP arrays, and by filling these arrays to get the final result.\n\nHere we create two arrays: `dp_rob` and `dp_not_rob`.\n\n`dp_rob[i]` represents the max money we can rob if we start from node `i` and rob this node.\n\n`dp_not_rob[i]` represents the max money we can rob if we start from node `i` and do not rob this node.\n\nHere comes a question: what is node `i`? We do not have an index `i` for each node.\n\nIt seems like we need to index or map the nodes in the tree to some integers.\n\nWell, there are many available mapping methods. Of course, you can choose whatever kind of mapping you want.\n\nBelow is the mapping we use in this approach: From left to right, from up to down:\n\n![the example mapping](../Figures/337/337_approach_2_1.png)\n\nThis mapping is used in many situations, such as heap and segment tree, where you store a tree in an array.\n\nThe Breadth-First Search (BFS) suffices to construct this mapping.\n\n>In some cases, we are provided with an array of node's values and a hashmap storing the relationship between nodes. If so, we can directly perform the dp since we already have the mapping.\n>\n>However, in this problem, we have to use a lot of code to construct the mapping.\n\nAlso, we need to build a graph to store the relationships between those integers -- the parents and children's relationships:\n\n![the example mapping with graph](../Figures/337/337_approach_2_2.png)\n\nOK. Now we have two questions remained: the basic cases of our DP, and the transition equations.\n\nFor the first question, the basic cases should be leaf nodes. For those leaf nodes, `dp_rob[i]` is just `node.val`, and `dp_not_rob[i]` is 0.\n\nFor the the transition equations, let's say we need to calculate `dp_rob[i]` and `dp_not_rob[i]`.\n\nIf we want to rob node `i`, then we can not rob its children. Each child provides `dp_not_rob[child]`. Therefore:\n\n$$\n\\text{dp\\_rob}_i = \\text{tree}_i + \\sum_{\\text{child} \\in \\text{graph}_i}\\text{dp\\_not\\_rob}_{\\text{child}}\n$$\n\nIf we do not want to rob node `i`, then we can choose to rob its children or not. In this case, each child provides the maximum of `dp_rob[child]` and `dp_not_rob[child]`.\n\nTherefore:\n\n$$\n\\text{dp\\_not\\_rob}_i = \\sum_{\\text{child} \\in \\text{graph}_i}\\max(\\text{dp\\_rob}_{\\text{child}}, \\text{dp\\_not\\_rob}_{\\text{child}})\n$$\n\nNote that the child's index is always larger than the parent's index in our mapping, so we should iterate the dp arrays backward.\n\n**Algorithm**\n\nTransform the tree from node-based into an array-based `tree` and a map `graph`.\n\nThen create two DP arrays, where `dp_rob[i]` represents the maximum amount of money the thief can rob if starting from node `i` with robbing this node, and `dp_not_rob[i]` represents the maximum amount of money the thief can rob if starting from node `i` without robbing this node.\n\nThe transition equations is:\n\n$$\n\\text{dp\\_rob}_i = \\text{tree}_i + \\sum_{\\text{child} \\in \\text{graph}_i}\\text{dp\\_not\\_rob}_{\\text{child}}\n$$\n\n$$\n\\text{dp\\_not\\_rob}_i = \\sum_{\\text{child} \\in \\text{graph}_i}\\max(\\text{dp\\_rob}_{\\text{child}}, \\text{dp\\_not\\_rob}_{\\text{child}})\n$$\n\nFinally, return the maximum of `dp_rob[0]` and `dp_not_rob[0]`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/9aUu63xB/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"9aUu63xB\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of nodes in the binary tree.\n\n* Time complexity: $$\\mathcal{O}(N)$$ since we visit all nodes once to form the tree-array, and then iterate two DP array, which both have length $$\\mathcal{O}(N)$$.\n\n* Space complexity: $$\\mathcal{O}(N)$$ since we need an array of length $$\\mathcal{O}(N)$$ to store the tree, and two DP arrays of length $$\\mathcal{O}(N)$$. Also, the sizes of other data structures in code do not exceed $$\\mathcal{O}(N)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

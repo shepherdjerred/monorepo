@@ -1,0 +1,137 @@
+{
+  "questionId": "462",
+  "questionFrontendId": "462",
+  "title": "Minimum Moves to Equal Array Elements II",
+  "titleSlug": "minimum-moves-to-equal-array-elements-ii",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code> of size <code>n</code>, return <em>the minimum number of moves required to make all array elements equal</em>.</p>\n\n<p>In one move, you can increment or decrement an element of the array by <code>1</code>.</p>\n\n<p>Test cases are designed so that the answer will fit in a <strong>32-bit</strong> integer.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong>\nOnly two moves are needed (remember each move increments or decrements one element):\n[<u>1</u>,2,3]  =&gt;  [2,2,<u>3</u>]  =&gt;  [2,2,2]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,10,2,9]\n<strong>Output:</strong> 16\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums.length</code></li>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"minMoves2\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"223.7K\", \"totalSubmission\": \"362.9K\", \"totalAcceptedRaw\": 223717, \"totalSubmissionRaw\": 362877, \"acRate\": \"61.7%\"}",
+  "likes": 3518,
+  "dislikes": 132,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Best Meeting Point\", \"titleSlug\": \"best-meeting-point\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Moves to Equal Array Elements\", \"titleSlug\": \"minimum-moves-to-equal-array-elements\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make a Uni-Value Grid\", \"titleSlug\": \"minimum-operations-to-make-a-uni-value-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Removing Minimum Number of Magic Beans\", \"titleSlug\": \"removing-minimum-number-of-magic-beans\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost to Make Array Equal\", \"titleSlug\": \"minimum-cost-to-make-array-equal\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make All Array Elements Equal\", \"titleSlug\": \"minimum-operations-to-make-all-array-elements-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost to Make Array Equalindromic\", \"titleSlug\": \"minimum-cost-to-make-array-equalindromic\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make Subarray Elements Equal\", \"titleSlug\": \"minimum-operations-to-make-subarray-elements-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make Elements Within K Subarrays Equal\", \"titleSlug\": \"minimum-operations-to-make-elements-within-k-subarrays-equal\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3]",
+    "[1,10,2,9]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"myntra\", \"name\": \"Myntra\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minMoves2(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minMoves2(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minMoves2(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minMoves2(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar minMoves2 = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minMoves2(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinMoves2(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minMoves2(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minMoves2(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minMoves2(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minMoves2(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_moves2(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef min_moves2(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function minMoves2($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minMoves2(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minMoves2(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_moves2(nums :: [integer]) :: integer\n  def min_moves2(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_moves2(Nums :: [integer()]) -> integer().\nmin_moves2(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-moves2 nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "92",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach 1: Brute Force\n\nIn the brute force approach, we consider every possible number to which all the array elements should be equated so as to minimize the number of moves required. One point is obvious that the number to which all the elements are equated at the end should lie between the minimum and the maximum elements present in the array. Thus, we first find the minimum and the maximum element in the array. Suppose $$k$$ is the number to which all the elements are equated. Then, we iterate $$k$$ over the range between the minimum and maximum values and find the number of moves required for each $$k$$, simultaneously finding the minimum moves, which will be the end result.\n\n<iframe src=\"https://leetcode.com/playground/mYV2Vub6/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"mYV2Vub6\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n \\cdot \\text{diff})$$, where $$n$$ is the length of the array and $$\\text{diff}$$ is the difference between maximum element and minimum element.\n* Space complexity : $$O(1)$$. No extra space required.\n\n---\n### Approach 2: Better Brute Force\n\n**Algorithm**\n\nIn this approach, rather than choosing every possible $$k$$ between the minimum and the maximum values in the array,\nwe can simply consider $$k$$ as every element of the array. To understand why we need not iterate over all the complete range but only the elements of the array, consider the\nfollowing example.\n\nSay the array is:\n\n$$mums = [x_1 x_2 x_3 x_4 x_5 x_6 x_7]$$. Now, if we try to equalize all the elements to $$x_4$$, which by the way, may or may not be the final number required to be settled down to.\n\nThe total number of moves for doing this is given by: $$moves_1 = (x_4 - x_1) + (x_4 - x_2) + (x_4 - x_3) + (x_5 - x_4) + (x_6 - x_4) + (x_7 - x_4)$$\n\nSuppose, now, instead of $$x_4$$, we try to equalize all the elements to a number $$x'$$, which is not present in the given array, but is slightly larger than $$x_4$$ and is thus given by\n say $$x' =  x_4 + \\delta x$$, where $$\\delta x$$ is an integer. Thus, the total number of moves required now will be given by:\n\n $$moves_2 = (x' - x_1) + (x' - x_2) + (x' - x_3) + (x' - x_4) + (x_5 - x') + (x_6 - x') + (x_7 - x')$$\n\n  $$moves_2 = ((x_4 + \\delta x) - x_1) + ((x_4 + \\delta x) - x_2) + ((x_4 + \\delta x) - x_3) + ((x_4 + \\delta x) - x_4) + (x_5 - (x_4 + \\delta x)) + (x_6 - (x_4 + \\delta x)) + (x_7 - (x_4 + \\delta x))$$\n\n  $$moves_2 = (x_4 - x_1) + \\delta x + (x_4 - x_2) + \\delta x + (x_4 - x_3) + \\delta x + 0 + \\delta x + (x_5 - x_4) - \\delta x + (x_6 - x_4) - \\delta x + (x_7 - x_4) - \\delta x$$\n\n  $$moves_2 = (x_4 - x_1) + (x_4 - x_2) + (x_4 - x_3) + (x_5 - x_4) + (x_6 - x_4) + (x_7 - x_4) + 4\\delta x - 3\\delta x$$\n\n  $$moves_2 = moves_1 + \\delta x$$        ...using $$moves_1$$ from above\n\n  From this equation, it is clear that the number of moves required to settle to some arbitrary number present in the array $$x_4$$ is always lesser than the number of moves\n  required to settle down to some arbitrary number $$x' = x_4 + \\delta x$$. This completes the proof.\n\n<iframe src=\"https://leetcode.com/playground/jDnVE7sr/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"jDnVE7sr\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^2)$$. Two nested loops are there.\n\n* Space complexity : $$O(1)$$. No extra space required.\n\n---\n### Approach 3: Using Sorting\n\n**Algorithm**\n\nIn the previous approach, we needed to find the number of moves required for every $$k$$ chosen from the array, by iterating over the whole array. We can optimize this approach to sum extent by sorting the array and observing the following fact. The number of moves required to raise the elements smaller than $$k$$ to equalize them to $$k$$ will be given by: $$(k*countBefore_k) - (sumBefore_k)$$(The meanings of the keywords are given below) .\n Similarly, the number of moves required to decrement the elements larger than $$k$$ to equalize them to $$k$$ will be: $$(sumAfter_k) - (k*countAfter_k)$$.\nThe total number of moves required will, thus, be the sum of these two parts.\nHence, for a particular $$k$$ chosen, the total number of moves required will be given by:\n\n $$numberOfMoves_k = [(k*countBefore_k) - (sumBefore_k)] + [(sumAfter_k) - (k*countAfter_k)]$$\n\nwhere, $$k$$ = The number to which all the elements are equalized at the end.\n\n$$countBefore_k$$ = The number of elements which are lesser than $$k$$.\n\n$$sumBefore_k$$ =  The sum of elements which are lesser than $$k$$.\n\n$$countAfter_k$$ = The number of elements which are larger than $$k$$.\n\n$$sumAfter_k$$ =  The sum of elements which are larger than $$k$$.\n\n$$numberOfMoves_k$$ = The total number of moves required to equalize all the elements of the array to $$k$$.\n\n\nLet's say that the index of the element corresponding to the element $$k$$ be given by $$index_k$$. Instead of iterating over the array for calculating $$sumBefore_k$$ and\n$$sumAfter_k$$, we can keep on calculating them while traversing the array since the array is sorted. We calculate the total sum of the given array $$nums$$ once, given\nby $$total$$. We start by choosing $$sumBefore_k=0$$ and $$sumAfter_k$$ as $$total$$.\nTo calculate $$sumBefore_k$$, we just add the element $$nums[index_k - 1]$$ to the previous $$sumBefore_k$$.\nTo calculate $$sumAfter_k$$, we subtract the element $$k$$ from the previous $$sumAfter_k$$.\n\n<iframe src=\"https://leetcode.com/playground/UjMtake6/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"UjMtake6\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O\\big(n\\log n\\big)$$. Sorting will take $$O\\big(n\\log n\\big)$$ time.\n\n* Space complexity : $$O(1)$$. No extra space required.\n\n---\n\n### Approach 4: Using Median and Sorting\n\n**Algorithm**\n\nThe problem of finding the number $$k$$ to which all the other numbers eventually settle can also be viewed as: Given a set of points in 1-d.\n Find a point $$k$$ such that the cumulative sum of distances between $$k$$ and the rest of the points is minimum. This is a very common mathematical problem whose answer is known.\n  The point $$k$$ is the median of the given points. The reason behind choosing the median is given after the algorithm.\n\n  We can simply sort the given points and find the $$median$$ as the element in the middle of the array. Thus, the total number of moves required to equalize all the array elements is given by\n  the sum of differences of all the elements from the $$median$$. In mathematical terms, the solution is given by:\n\n$$moves = \\sum_{i=0}^{n-1} |median - nums[i]|$$ , where $$n$$ is the size of the given array.\n\n<!--![Median_Partition](../Figures/462_Minimum_Moves_Median.gif)-->\n!?!../Documents/462_Minimum_Moves1.json:1000,563!?!\n\nNow, we'll look at the mathematical reasoning behind choosing the median as the number $$k$$ to which we'll settle. As discussed in the previous approach, the total number of moves\nrequired is given by:\n\n $$numberOfMoves_k = [(k*countBefore_k) - (sumBefore_k)] + [(sumAfter_k) - (k*countAfter_k)]$$, where all the variables have the same definition.\n\n Now, as we know, in order to maximize this term w.r.t. the changes in $$k$$, we can take the derivative of the above term w.r.t. $$k$$. Thus, we proceed as:\n\n $$\\frac{d(numberOfMoves_k)}{dk} = \\frac{[(k*countBefore_k) - (sumBefore_k)] + [(sumAfter_k) - (k*countAfter_k)]}{dk}$$\n\n $$\\frac{d(numberOfMoves_k)}{dk} = \\frac{(k*countBefore_k)}{dk} - \\frac{d(sumBefore_k)}{dk} + \\frac{d(sumAfter_k)}{dk} - \\frac{(k*countAfter_k)}{dk}$$\n\n $$\\frac{d(numberOfMoves_k)}{dk} = countBefore_k - countAfter_k$$\n\n Setting derivative $$\\frac{d(numberOfMoves_k)}{dk}$$ equal to $$0$$, we get:\n\n $$countBefore_k - countAfter_k = 0$$ or $$countBefore_k = countAfter_k$$. This property is satisfied by the median only, which completes the proof.\n\n\n<iframe src=\"https://leetcode.com/playground/XgudXFaq/shared\" frameBorder=\"0\" width=\"100%\" height=\"225\" name=\"XgudXFaq\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O\\big(n\\log n\\big)$$. Sorting will take $$O\\big(n\\log n\\big)$$ time.\n\n* Space complexity : $$O(1)$$. Only single extra variable is used.\n\n---\n\n### Approach 5: Without Finding Median\n\n**Algorithm**\n\nIn the previous approach, we went for finding the median after sorting and then calculated the number of moves required. But, if we observe properly, we'll find that if the array is sorted, we can\ndo the same task without actually finding the median or the number $$k$$ to which we need to settle at the end. To proceed with this, let's look at the maximum($$max$$) and the minimum\nnumbers($$min$$) in the array, which currently lie at its extreme positions. We know, at the end, both these numbers should be equalized to $$k$$. For the number $$max$$, the number of moves\nrequired to do this is given by $$max - k$$. Similarly, for the number $$min$$, the number of moves is given by $$k - min$$. Thus, the total number of moves for both $$max$$ and $$min$$ is given by\n$$max - k + (k - min) = max - min$$, which is independent of the number $$k$$. Thus, we can continue now, with the next maximum and the next minimum number in the array, until the complete array is exhausted.\n\nTherefore, the equation becomes:\n\n$$moves = \\sum_{i=0}^{\\left \\lceil{\\frac{n}{2}} \\right \\rceil - 1} |nums[n-i] - nums[i]|$$, where $$n$$ is the number of elements in the array $$nums$$.\n\n<iframe src=\"https://leetcode.com/playground/QtgRvxZy/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"QtgRvxZy\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O\\big(n\\log n\\big)$$. Sorting will take $$O\\big(n\\log n\\big)$$ time.\n\n* Space complexity : $$O(1)$$. No extra space required.\n\n---\n\n### Approach 6: Using Quick-Select\n\n**Algorithm**\n\nIn order to find the median, we need not necessarily sort the given array. But we can find the median directly using the Quick-Select method to find the median, which\ndoesn't use sorting.\n\nThe quick-select method is similar to the Quick-Sort method. In a single iteration, we choose a pivot and somehow bring it to its correct position in the array.\nIf the correct position happens to be the central position(corresponding to the median), we can return the median directly from there. Now, let's look at the implementation of quick-select.\n\n Quick-Select makes use of two functions $$partition$$ and $$select$$. $$select$$ function takes the leftmost and the rightmost indices of the given array and the central index as well. If the element reaching the\n correct position in the current function call to $$select$$ function happens to be the median(i.e. it reaches the central position), we return the element(since it is the median).\n The function $$partition$$ takes the leftmost and the rightmost indices of the array and returns the correct position of the current pivot(which is chosen as the rightmost element of the array).\n This function makes use of two pointers $$i$$ and $$j$$. Both the pointers initially point to the leftmost element of the array.\n\n At every step, we compare the element at the\n $$j^{th}$$ index($$list[j]$$) with the pivot element($$pivot$$). If $$list[j]<pivot$$, we swap the elements $$list[i]$$ and $$list[j]$$ and increment $$i$$ and $$j$$. Otherwise,\n only $$j$$ is incremented. When $$j$$ reaches the end of the array, we swap the $$pivot$$ with $$list[i]$$. In this way, now, all the elements lesser than $$pivot$$ lie to the\n left of the $$i^{th}$$ index, and all the elements larger than $$pivot$$ lie to the right of the $$i^{th}$$ index and thus, the $$pivot$$ reaches at its correct position in the array.\n If this position isn't the central index of the array, we again make use of the $$select$$ functions passing the left and the right subarrays relative to the $$i^{th}$$ index.\n\n For more clarification, look at the animation below for this example:\n ```\n [3 8 2 5 1 4 7 6]\n ```\n\n <!--![Median_Partition](../Figures/462_Minimum_Moves_Partition.gif)-->\n !?!../Documents/462_Minimum_Moves2.json:1000,563!?!\n\n\n After finding the median, we can find the sum of absolute differences of all the elements from the median to determine the number of moves required. Mathematically, we use:\n\n $$moves = \\sum_{i=0}^{n-1} |median - list[i]|$$ , where $$n$$ is the size of the given array.\n\n<iframe src=\"https://leetcode.com/playground/fjwk7ggK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fjwk7ggK\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity :\nAverage Case: $$O(n)$$. Quick-Select average case time complexity is $$O(n)$$.\nWorst Case: $$O(n^2)$$. In worst case quick-select can go upto $$n^2$$\n\n* Space complexity : $$O(1)$$. No extra space required.\n\n---\n\n### Approach 7: Using Median of Medians\n\n**Algorithm**\n\nIt isn't hard to see that, in quick-select, if we naively choose the pivot element, this\nalgorithm has a worst case performance of $$O(n^2)$$. To guarantee the linear running\ntime in order to find the median, however we need a strategy for choosing the pivot element that\nguarantees that we partition the list into two sublists of\nrelatively comparable size. Obviously the median of the values\nin the list would be the optimal choice, but if we could find the\n median in linear time, we would already have a solution to our problem.\n\n The median-of-medians algorithm chooses its pivot in the following clever way:\n\n$$kthSmallest(arr[0..n-1], k)$$\n\n1. Divide $$arr[]$$ into $$\\left \\lceil{\\frac{n}{5}}\\right\\rceil$$ groups where size of each group is 5 elements,\n   except possibly the last group which may have less than 5 elements.\n\n2. Sort the above created $$\\left \\lceil{\\frac{n}{5}}\\right\\rceil$$ groups and find median\n   of all groups. Create an auxiliary array $$median[]$$ and store medians\n   of all $$\\left \\lceil{\\frac{n}{5}}\\right\\rceil$$ groups in this median array.\n   Also, recursively call this method to find median of median[0...$$(\\left \\lceil{\\frac{n}{5}}\\right\\rceil - 1)$$]\n\n3. $$\\text{medOfMed} = kthSmallest\\big(median[0...(\\left \\lceil{\\frac{n}{5}}\\right\\rceil - 1)], \\left \\lceil{\\frac{n}{10}}\\right\\rceil\\big)$$\n\n4. Partition $$arr[]$$ around $$\\text{medOfMed}$$ and obtain its position(i.e. use $$\\text{medOfMed}$$ as the pivot element).\n     $$pos = partition(arr, n, \\text{medOfMed})$$\n\n5. If $$pos == k$$ return $$\\text{medOfMed}$$\n6. If $$pos < k$$ return $$kthSmallest(arr[l..pos-1], k)$$\n7. If $$pos > k$$ return $$kthSmallest(arr[pos+1..r], k-pos+l-1)$$\n\nUsing the above method ensures that the chosen pivot, in the worst case, has at most 70% elements which are larger/smaller than the pivot.\n The proof of the same as well as the reason behind choosing the group size of 5 is given\nin the explanation of time complexity.\n\n\n<iframe src=\"https://leetcode.com/playground/ADHUFdZk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ADHUFdZk\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. Worst case time complexity is $$O(n)$$.\n\n* Space complexity : $$O(n)$$ to keep `medians` array of at most `(n + 4) / 5` elements.\n\n**Proof: Time Complexity $$O(n)$$**:\n\nThe worst case time complexity of the above algorithm is $$O(n)$$. Let us analyze all steps.\n\nThe steps 1. and 2. take $$O(n)$$ time as finding median of an array of size 5 takes O(1) time and there are $$\\left \\lceil{\\frac{n}{5}}\\right\\rceil$$ such arrays.\nThe step 3. takes $$T(n/5)$$ time(if the whole algorithm takes $$T(n)$$ time). The step 4. is standard partition and takes $$O(n)$$ time.\nThe interesting steps are 6. and 7. At most, one of them is executed. These are recursive steps. What is the worst case size of these recursive calls?\nThe answer is maximum number of elements greater than $$\\text{medOfMed}$$ (obtained in step 3) or maximum number of elements smaller than $$\\text{medOfMed}$$.\n\nHow many elements are greater than $$\\text{medOfMed}$$ and how many are smaller?\n\nLet's assume that the list of medians obtained from step 2. in the sorted order be\n $$m_1, m_2, m_3,....,m_{x-1}, m_x, m_{x+1} ...m_{n-2}, m_{n-1}, m_n$$, where $$m_x$$ is the median chosen as the pivot. To find an upper bound on the number of elements in\n the given array smaller than our pivot, first consider the half of the medians from step 2($$m_1, m_2, ..., m_{x-1}$$) which are smaller than\n the pivot. It is possible for all five of the elements in the sublists corresponding to these medians to be smaller than the pivot($$m_x$$, which leads to an upper\n bound of $$\\left \\lceil{\\frac{n}{5}}\\right\\rceil*5*\\frac{1}{2}$$ such elements. Now consider the half of the medians from step 2 which are larger than the pivot\n ($$m_{x+1}, ..., m_{n-1}, m_n$$). It is only possible for two of the\n elements(which are smaller than the respective medians) in the sublists corresponding to these medians to be smaller than the pivot($$m_x$$), which leads to an upper bound of\n $$\\left \\lceil{\\frac{n}{5}}\\right\\rceil*2*\\frac{1}{2} = \\left \\lceil{\\frac{n}{5}}\\right\\rceil$$ such elements. In addition, the sublist containing the pivot($$m_x$$) contributes\n exactly two elements smaller than the pivot. It total, we may have at most:\n\n  $$\\frac{5}{2}\\left \\lceil{\\frac{n}{5}}\\right\\rceil + \\left \\lceil{\\frac{n}{5}}\\right\\rceil + 2 = \\frac{7}{2}\\left \\lceil{\\frac{n}{5}}\\right\\rceil + 2 \\leq \\frac{7n}{10} + 6$$\n\n elements smaller than the pivot, or approximately 70% of the list. The same upper bound applies the the number of elements in the list larger than the pivot. It is this\n guarantee that the partitions cannot be too lopsided that leads to linear run time.\n\nThus, the minimum number of elements which are smaller or larger than the chosen pivot($$\\text{medOfMed}$$) is given by $$n - (\\frac{7n}{10} + 6) = \\frac{3n}{10} - 6$$ or nearly\n30% of the elements.\n\n In the worst case, the function recurs for at most $$\\frac{7n}{10} + 6$$ times.\n\nNote that $$\\frac{7n}{10} + 6 < n$$ for $$n > 20$$ and that any input of 80 or fewer elements requires $$O(1)$$ time. We can therefore obtain the recurrence:\n\n$$\nT(n) \\leq \\begin{cases} \\Theta(1), & n\\leq80 \\\\ T\\left \\lceil\\frac{n}{5}\\right\\rceil + T(\\frac{7n}{10} + 6) + O(n), & n>80 \\end{cases}\n$$\n\nWe show that the running time is linear by substitution. Assume that $$T(n) = c \\cdot n$$ for some constant $$c$$ and all $$n > 80$$. Substituting this inductive hypothesis into the right-hand side of the recurrence yields\n\n\n$$T(n) \\leq \\frac{cn}{5} + c(\\frac{7n}{10} + 6) + O(n)$$\n    $$\\leq \\frac{cn}{5} + c + \\frac{7cn}{10} + 6c + O(n)$$\n    $$\\leq \\frac{9cn}{10} + 7c + O(n)$$\n    $$\\leq cn$$\nsince we can pick c large enough so that $$c(\\frac{n}{10} - 7)$$ is larger than the function described by the $$O(n)$$ term for all $$n > 80$$. The worst-case running time of is therefore linear.\n\nChoosing the group size of 3 leads to at least half of the n/3 blocks having at least 2 elements $$\\geq \\text{medOfMed}$$, hence this gives a n/3 split, or 2n/3 in the worst case.\n\nThis gives $$T(n)$$ = $$T(\\frac{n}{3}) + T(\\frac{2n}{3}) + O(n)$$, which reduces to $$O(n\\log n)$$ in the worst case.\n\nThere is no reason why you should not use something greater than five; for example with seven the inequality would be\n\n$$T(n) \\leq T(\\frac{n}{7})+T(\\frac{5n}{7})+O(n)$$\n\n$$T(n) \\leq T(\\frac{n}{7})+T(\\frac{5n}{7})+O(n)$$\n\nwhich also works, but five is the smallest odd number (useful for medians) which works.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

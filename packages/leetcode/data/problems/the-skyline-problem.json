@@ -1,0 +1,157 @@
+{
+  "questionId": "218",
+  "questionFrontendId": "218",
+  "title": "The Skyline Problem",
+  "titleSlug": "the-skyline-problem",
+  "difficulty": "Hard",
+  "content": "<p>A city&#39;s <strong>skyline</strong> is the outer contour of the silhouette formed by all the buildings in that city when viewed from a distance. Given the locations and heights of all the buildings, return <em>the <strong>skyline</strong> formed by these buildings collectively</em>.</p>\n\n<p>The geometric information of each building is given in the array <code>buildings</code> where <code>buildings[i] = [left<sub>i</sub>, right<sub>i</sub>, height<sub>i</sub>]</code>:</p>\n\n<ul>\n\t<li><code>left<sub>i</sub></code> is the x coordinate of the left edge of the <code>i<sup>th</sup></code> building.</li>\n\t<li><code>right<sub>i</sub></code> is the x coordinate of the right edge of the <code>i<sup>th</sup></code> building.</li>\n\t<li><code>height<sub>i</sub></code> is the height of the <code>i<sup>th</sup></code> building.</li>\n</ul>\n\n<p>You may assume all buildings are perfect rectangles grounded on an absolutely flat surface at height <code>0</code>.</p>\n\n<p>The <strong>skyline</strong> should be represented as a list of &quot;key points&quot; <strong>sorted by their x-coordinate</strong> in the form <code>[[x<sub>1</sub>,y<sub>1</sub>],[x<sub>2</sub>,y<sub>2</sub>],...]</code>. Each key point is the left endpoint of some horizontal segment in the skyline except the last point in the list, which always has a y-coordinate <code>0</code> and is used to mark the skyline&#39;s termination where the rightmost building ends. Any ground between the leftmost and rightmost buildings should be part of the skyline&#39;s contour.</p>\n\n<p><b>Note:</b> There must be no consecutive horizontal lines of equal height in the output skyline. For instance, <code>[...,[2 3],[4 5],[7 5],[11 5],[12 7],...]</code> is not acceptable; the three lines of height 5 should be merged into one in the final output as such: <code>[...,[2 3],[4 5],[12 7],...]</code></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/12/01/merged.jpg\" style=\"width: 800px; height: 331px;\" />\n<pre>\n<strong>Input:</strong> buildings = [[2,9,10],[3,7,15],[5,12,12],[15,20,10],[19,24,8]]\n<strong>Output:</strong> [[2,10],[3,15],[7,12],[12,0],[15,10],[20,8],[24,0]]\n<strong>Explanation:</strong>\nFigure A shows the buildings of the input.\nFigure B shows the skyline formed by those buildings. The red points in figure B represent the key points in the output list.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> buildings = [[0,2,3],[2,5,3]]\n<strong>Output:</strong> [[0,3],[5,0]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= buildings.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= left<sub>i</sub> &lt; right<sub>i</sub> &lt;= 2<sup>31</sup> - 1</code></li>\n\t<li><code>1 &lt;= height<sub>i</sub> &lt;= 2<sup>31</sup> - 1</code></li>\n\t<li><code>buildings</code> is sorted by <code>left<sub>i</sub></code> in&nbsp;non-decreasing order.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"getSkyline\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"buildings\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<list<integer>>\",\r\n    \"colsize\": 2,\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"349K\", \"totalSubmission\": \"773.4K\", \"totalAcceptedRaw\": 349028, \"totalSubmissionRaw\": 773434, \"acRate\": \"45.1%\"}",
+  "likes": 6210,
+  "dislikes": 285,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Falling Squares\", \"titleSlug\": \"falling-squares\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Shifting Letters II\", \"titleSlug\": \"shifting-letters-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[2,9,10],[3,7,15],[5,12,12],[15,20,10],[19,24,8]]",
+    "[[0,2,3],[2,5,3]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 7, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 6, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"siemens\", \"name\": \"Siemens\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}, {\"timesEncountered\": 2, \"slug\": \"yelp\", \"name\": \"Yelp\"}, {\"timesEncountered\": 2, \"slug\": \"zomato\", \"name\": \"Zomato\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Binary Indexed Tree",
+      "slug": "binary-indexed-tree"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    },
+    {
+      "name": "Sweep Line",
+      "slug": "line-sweep"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> getSkyline(vector<vector<int>>& buildings) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> getSkyline(int[][] buildings) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def getSkyline(self, buildings: List[List[int]]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def getSkyline(self, buildings):\n        \"\"\"\n        :type buildings: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} buildings\n * @return {number[][]}\n */\nvar getSkyline = function(buildings) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function getSkyline(buildings: number[][]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> GetSkyline(int[][] buildings) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** getSkyline(int** buildings, int buildingsSize, int* buildingsColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func getSkyline(buildings [][]int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun getSkyline(buildings: Array<IntArray>): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func getSkyline(_ buildings: [[Int]]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn get_skyline(buildings: Vec<Vec<i32>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} buildings\n# @return {Integer[][]}\ndef get_skyline(buildings)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $buildings\n     * @return Integer[][]\n     */\n    function getSkyline($buildings) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> getSkyline(List<List<int>> buildings) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def getSkyline(buildings: Array[Array[Int]]): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec get_skyline(buildings :: [[integer]]) :: [[integer]]\n  def get_skyline(buildings) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec get_skyline(Buildings :: [[integer()]]) -> [[integer()]].\nget_skyline(Buildings) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (get-skyline buildings)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1475",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\n\nIn this problem, we are given a list of buildings and would like to construct the **skyline**, a set of key points that describes the contour of the buildings, as shown in the picture below.\n\n![img](../Figures/218_re/218_description.png)\n\nThis problem is very interesting and challenging with some tricky corner cases. Here we introduce several approaches starting with two brute-force algorithms that might not pass under the limited time but can pave the way for more efficient approaches.\n\n<br/>\n\n---\n\n### Approach 1: Brute Force I\n\nCollect all the positions of the left and right edges from `buildings`, that's all the possible `x` where skyline key points are generated. For convenience, let's number these unique positions sequentially, representing these positions by indexes according to their location on the x-axis.\n\n![img](../Figures/218_re/218_bf1_more.png)\n\nIf a building with height `h` covers the indexes from `x_i` to `x_j`, then all the indexes from `x_i` to `x_j` (exclusive) have the height of `h` at least. Notice that the right edge of a building doesn't count!\n\nTherefore, we can iterate over all the buildings, and for each building we find the positions of its left edge and right edge and their corresponding indexes `left_index` and `right_index`. Then we update the maximum height for all the indexes within the range `[left_index, right_index)`. Finally, traverse the updated `heights` and output all the positions where height changes as skyline key points!\n\n!?!../Documents/218_re/bf_1.json:601,301!?!\n\n**Algorithm**\n\n1) Collect all unique positions for the left and right edges of the buildings in `buildings` and save them in list `edgeSet`.\n2) Initalize:\n    - an empty list `heights` of the same length as `edgeSet`.\n    - hashtable `edge_index_map` stores corresponding index and value of elements from `heights`.\n    - empty list `answer` for skyline key points.\n3) Iterate over `buildings`, for each building `buildings[i]`:\n    - Get the index of its left edge and right edge `left_index`, `right_index`, and its height `height`.\n    - For index in `[left_index, right_index)`, update `heights[index]` if necessary.\n4) Traverse the updated `heights` and add all the positions where the height changes to `answer` as skyline key points.\n5) Return `answer` as the skyline.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/d7z87NFf/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"d7z87NFf\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of the input array `buildings`.\n\n* Time complexity: $$O(n^2)$$\n    - Obtaining our sorted list of positions will require an average of $$O(n \\log n)$$ time.\n    - Then for each of the $$n$$ buildings, we need to update the maximum heights at all the indexes covered by its left edge and right edge. In the worst-case scenario, we have to update $$n$$ values in each iteration step, so this process will take $$O(n^2)$$ time.\n    \n* Space complexity: $$O(n)$$\n    - The number of left and right edges is $$2n$$, thus we need a set and an array of size $$O(n)$$.\n    - Then we need a hash table of indexes and an array of heights, both of size $$O(n)$$.\n    - We also use an answer array to store all the skyline points, of which there are at most $$n$$.\n\n<br/>\n\n\n\n---\n\n### Approach 2: Brute Force II, Sweep Line\n\nAnother instinctive idea is to use a vertical line of infinite length to sweep over the ground from the left to right. The line stops by every edge and we shall record the maximum height among all the buildings that intersect with the line. As shown in the picture below, the right edge of a building doesn't count!\n\n![img](../Figures/218_re/218_sw_exp.png)\n\nLet's refer to the slides below for an explanation:\n\n!?!../Documents/218_re/bf_2.json:601,301!?!\n\nFor more information about Sweep Line Algorithm, please refer to [wikipedia](https://en.wikipedia.org/wiki/Sweep_line_algorithm).\n\n\n**Algorithm**\n1) Initialize an empty list `answer` for skyline key points.\n2) Use a set (`edgeSet`) to store all distinct edges in `buildings`.\n3) Iterate over the sorted `positions`, and for each position:\n    - Check for buildings that intersect with the imaginary vertical line at `position`. (A building is considered to be intersecting with the line if `position` is within the range `[left, right)`.)\n4) The `max_height` is the maximum height of the intersecting buildings at `position`, or `0` if no building intersects with the line.\n5) If `max_height` differs from that of the previous skyline point, add a new skyline point to `answer`.\n6) Return `answer` as the skyline.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/X4NDxJuM/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"X4NDxJuM\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of the input array `buildings`.\n\n* Time complexity: $$O(n^2)$$\n    - Obtaining our sorted list of positions will require an average of $$O(n \\log n)$$ time.\n    - Then for each of the $$2 n$$ positions we need to check if any of the $$n$$ buildings intersect with the line at that position. This process will take $$O(n^2)$$ time.\n\n* Space complexity: $$O(n)$$\n    - The number of left and right edges is $$2 n$$, thus we need a set and an array of size $$O(n)$$.\n    - We also use an answer array to store all the skyline points, of which there are at most $$n$$.\n\n<br/>\n\n\n\n\n\n---\n\n### Approach 3: Sweep Line + Priority Queue\n\n**Intuition**   \n\nIn the previous sweep line approach, we had to iterate through all the buildings at each position and ended up with $$O(n^2)$$ time complexity. We are looking for a more efficient way of determining such intersecting buildings. (For convenience, let's call them \"live\" buildings from now on.)\n\nNotice that the current height is only decided by the tallest \"live\" building, hence we no longer need to traverse over all the buildings if we can get the tallest \"live\" building directly! This can be implemented by using a **priority queue**. Similar to the previous approach, we can use a vertical line to sweep along the `x` axis. In this approach, however, we add each intersecting building to the priority queue `live`. Therefore, whenever we need to get the height of the tallest \"live\" building, we can just check the top result from `live` (or 0 if `live` is empty), rather than iterating over all the buildings! \n\n**What if we run into the right edge of a building?**\n\nTheoretically, we should remove the building from `live` once we run into its right edge (recall the right-edge-doesn't-count conclusion), meaning we have passed this building so it won't contribute to the skyline height anymore. As long as the tallest building is surely live, it's okay if some lower buildings that have been passed are still in `live`. We only need to make sure we remove a \"past\" building once it becomes the tallest one in `live`.\n\n\n![img](../Figures/218_re/218_sl_exp2.png)\n\nFirst, we need to sort all the edges in non-decreasing order for the sweep line algorithm. In order to track which building a certain edge belongs to, we should also mark each edge with the index of the building in `buildings`. \n\nSince there might be multiple edges at the same position on the x-axis, we should finish handling all edges at the same position before moving on to the next position.\n\nTake the slide below as an example!\n\n!?!../Documents/218_re/sl.json:601,301!?!\n\n**Algorithm**\n\n2) Iterate over `buildings` and store each building's edges separately with the building's index as a reference in `edges`. \n3) Sort the entries in `edges` by their first element.\n4) Iterate over the sorted `edges` and for each edge/index:\n    - If `buildings[b][0] == curr_x`, meaning its a left edge and the `building[b]` is live, we add `(height, right)` to `live`.     \n    - While the tallest live building has been passed, remove it from `live`.\n5) Once we finish handling all the edges at the `curr_x`, we shall move on to the next position.\n6) After the iteration, return `answer` as the skyline.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/bDNxhFAd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bDNxhFAd\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of the input array `buildings`.\n\n* Time complexity: $$O(n\\log n)$$\n    - There are $$2 n$$ edges so we have at most $$O(n)$$ unique positions during the iteration.\n    - At each step, we need to pop out the passed buildings from priority queue `live` and put in the newly added building (if exist). In worse-case scenario, we have $$O(n)$$ live buildings in `live`, both the `pop` and `push` operations take $$O(\\log n)$$ time.\n    - To sum up, the overall time complexity is $$O(n \\log n)$$.\n\n* Space complexity: $$O(n)$$\n    - We initalize `edges` of size $$O(2n)$$ to store all the edges and its indexes, empty list `answer` to store all the skyline key points. \n    - We maintain a priority queue `live` which has at most $$O(n)$$ elements.\n    - There can be at most $$O(n)$$ skyline key points, thus `answer` takes at most $$O(n)$$ space.\n    - Therefore, the overall space complexity is $$O(n)$$. \n\n<br/>\n\n---\n\n\n\n\n\n### Approach 4: Sweep Line + Two Priority Queue\n\nWe still use a priority queue `live` to keep all the buildings we picked up. Recall that in the previous approaches, we have to assign an auxiliary mark (the mark could either be the position of its right edge, or its original index in `buildings`) to each building, thus we can get the position of its right edge, so as to judge if the top building from `live` should be dropped. Here, we can make this step more intuitive, by discarding this unique index and only storing the heights of buildings: Whenever we meet the left edge of a building, we just add its height to `live`. \n\nBut how do we know if some buildings apart from the top buildings should be removed? Since we are not expected to remove an intermediate element from a regular priority queue.\n\n> We use another priority queue (let's call it `past`) to keep all the buildings that **should be** removed from `live` but **haven't been** yet.\n\nWe can see that `live` works as a debt card: it can temporarily record our \"debt\". Once we are able to pay the \"debt\", that is. when the top building in `live` equals the top building in `past`, we will remove it from `past`. Since the \"debt\" has been cleared, we will remove the top building from `past` as well.\n\nWe repeatedly remove top building from both `live` and `past`, until:\n- `past` is empty, meaning every building in `live` is literally \"live\".\n- The top building in `live` is taller than the top building in `past`, in this case, we may still have some buildings to remove, but their height is too small to affect the height of the top building.\n\nTake the following slides as an example:\n\n!?!../Documents/218_re/2pq.json:601,301!?!\n\n\n**Algorithm**\n1) Initalize: \n    - an empty list `edges` for storing all the x-values of the left and right edges.\n    - an empty list `answer` for storing all the skyline key points.\n    - an empty priority queue `live` for storing the live buildings.\n    - an empty priority queue `past` for storing the buildings that should be removed already.\n2) Iterate over `buildings`, for `building[i] = [left, right, height]`, add `[left, height]`, `[right, -height]` to `edges`, thus we can easily distinguish if an edge is a left edge (`height > 0`) or a right edge (`height < 0`).\n3) Sort `edges` by the first elements of its elements. \n4) Iterate over `edges`, for every `edges[idx]` let `curr_x = edge[idx][0]`, while `curr_x = edge[idx][0]`:\n    - If `height > 0`, add `height` to `live`.     \n    - Otherwise, add `height` to `past`.\n    - increment `idx` by 1.\n6) While `past` is not empty and top buildings from `live` and `past` have the same height, remove top building from both `live` and `past`. \n7) Get `max_height` from `live` (`max_height = 0` if `live` is empty).\n8) If `answer` is empty or `max_height` changes, add `[curr_x, max_height]` to `answer` as a new skyline key point.\n9) After the iteration, return `answer` as the skyline.\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/J9szFT8F/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"J9szFT8F\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of the input array `buildings`.\n\n* Time complexity: $$O(n\\cdot\\log n)$$\n\n    - We sort a list with length of $$2\\cdot n$$, which takes $$O(n)$$ time.\n    - Then we iterate over all the sorted edges, during the iteration, we have to manipulate on two priority queues, the amortized cost of this operation is $$O(\\log n)$$.\n    - To sum up, the overall time complexity is $$O(n\\cdot\\log n)$$\n    \n\n* Space complexity: $$O(n)$$\n    - We used an empty array `edges` to store the information of all the left and right edges. There are $$2\\cdot n$$ edges and will cost $$O(n)$$ space.\n    - Besides, we need to maintain two priority queues, in the worst-case scenario, each of them takes $$O(n)$$ space. \n    - To sum up, the overall space complexity is $$O(n)$$.\n\n<br/>\n\n---\n\n\n\n\n\n\n\n\n\n\n\n\n### Approach 5: Union Find\n\n**Algorithm**\n\nRecall the first brute-force solution with $$O(n^2)$$ time complexity; whenever we added a new building, we had to traverse over all the indexes covered by the building and update the appropriate values in `heights`. Now suppose that a building has a very small height, and many of its `heights` values have previously been updated by some taller buildings, thus won't update this time. \n\n![img](../Figures/218_re/218_uf_brute.png)\n\nCan we find a method to avoid such \"unnecessary\" non-updates? The answer is: \"Yes!\"\n\nImagine if we give some indexes a billboard saying:\n> **All the heights starting from me and ending by XXX (an index on its right) have already been updated! These heights are larger than yours, thus you don't need to bother attempting to update these heights; just jump directly to XXX and move on!**\n\nIt seems feasible! Let's give it a shot by assigning a value to each edge, which equals the rightmost edge of the consecutive range having a height no less than the current edge.\n\n**What is the use of such value?**\n> It will help identify the range of edges that we can just skip past.\n\n![img](../Figures/218_re/218_uf_mark.png)\n\nAs shown in the picture below, unlike iterating over every index and updating nothing, we will first look up the current index in `root` to see if we can skip past any intermediate indexes that have already been updated by some taller buildings. This is the core difference between this approach and the brute-force one!\n\n![img](../Figures/218_re/218_uf_skip.png)\n\n**How can we maximize skips by assuring that the updates are made by taller buildings first?**\n> We can iterate over the buildings by descending height. Therefore, for each building, all the previous updates in `heights` are made by buildings of larger or equal height! We can safely skip those indexes that have been updated already.\n\n**Which data structure should we use?**\n> We can use a disjoint-set data structure to store this relation between indexes. The `root` of an index `x_i` can be regarded as the rightmost index `x_j` where all indexes in the range `[x_i, x_j)` have larger or equal heights as that of `x_i`.\n\nLet's refer to the slides below as an example:\n\n!?!../Documents/218_re/uf.json:601,301!?!\n\n\n**Implementation**\n\n1) Use a set to collect all the unique positions of left and right edges of the buildings in `buildings` and make sure they're in sorted order.\n3) Iterate over all the buildings by descending height, and for each building:\n    - Use the hash table to convert the left and right edges into `leftIndex` and `rightIndex`.\n    - While `leftIndex < rightIndex`:\n        - Use the `UnionFind.Find()` to advance `leftIndex` to `Find(leftIndex)`, skipping past unnecessary indexes.\n        - Update `heights` with the current `height` at the new `leftIndex`.\n        - Use the `UnionFind.Union()` to set the root of `leftIndex` to the root of `rightIndex` and increment `leftIndex` by 1.\n5) Iterate over the updated `heights` and add every position where the height changes to `answer` as the skyline key points.\n\n<iframe src=\"https://leetcode.com/playground/dKXiqPRw/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dKXiqPRw\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of the input array `buildings`.\n\n* Time complexity: $$O(n\\log n)$$\n    - Sorting the $$n$$ buildings has an average time complexity of $$O(n \\log n)$$, though sorting algorithms vary by language.\n    - There are at most $$2 n$$ unique positions for $$2n$$ edges, and sorting them similarly has an average time complexity of $$O(n \\log n)$$.\n    - The `UnionFind.union()` function has a time complexity of $$O(1)$$ and will run at most $$2n$$ times for an overall time complexity of $$O(n)$$.\n    - The `UnionFind.find()` function has a time complexity of $$O(n)$$ for the worst-case scenario, but using a collapsing find technique brings this down to $$O(1)$$ with repeated use. This amortizes to an overall time complexity of $$O(n)$$, as each successful `find()` will update a value in `root`, and there are up to $$2n$$ elements in `root`. As shown in the picture below.\n    \n    ![img](../Figures/218_re/218_uf_time.png)\n\n\n* Space complexity: $$O(n)$$\n    - There are at most $$2n$$ edges, thus the set `edgeSet`, the lists `edges`, `heights`, and `answers`, the union-find's `root` list, and the recursion stack for the union-find's `find()` are each limited to $$O(n)$$ space.\n\n<br/>\n\n---\n\n\n\n\n\n\n\n### Approach 6: Divide-and-Conquer\n\n**Intuition**   \n\nThe divide-and-conqueror algorithm is a common algorithmic paradigm based on recursion with three core parts:\n\n- Divide: Divide the original problem into a number of smaller sub-problems.\n- Conquer: Solve the sub-problems recursively.\n- Combine: Merge these sub-problem solutions into a solution for the original problem.\n\nFor more information on divide-and-conqueror, please refer to the [LeetCode explore card](https://leetcode.com/explore/learn/card/recursion-ii/470/divide-and-conquer/).\n\n\nRecall how we sort a list of numbers using merge-sort (divide-and-conqueror):\n- Divide the unsorted list into two roughly even sublists.\n- Sort each of the sublists recursively.\n- Merge the sorted sublists back together.\n\nSimilarly, we can solve this problem using the divide-and-conquer algorithm. \n- Divide the list of buildings into two roughly even sublists.\n- Get the skyline from each of the sublists recursively.\n- Merge the two skylines together.\n\n\n![img](../Figures/218_re/218_dc_main.png)\n\nThe first step is straightforward as we can simply split the list of buildings into two halves. For the base case in the second step, we can get the skyline from a single building directly. In the third part, two skylines should be merged into one skyline, we would use a much simplier version of sweep line algorithm.\n\nLet's take the following slides as an example.\n\n!?!../Documents/218_re/dc.json:601,401!?!\n\n> We always compare the heights from both skylines, even if `R` comes before `L`, we should also consider the height of `L` as well. \n\nTake the picture below as an example: \n\n![img](../Figures/218_re/218_dc_background.png)\n\nIn the graphic's first case, `R` has many skyline points, yet we don't add any of them to our answer, That's because they're \"hidden\" behind the taller building in `L`. Hence the merged skyline's height doesn't change unless the current point's height is taller than the current height of the opposite side. In the graphic's second case, for example, we can add a skyline point where the height of `R` exceeds `L`.\n\n\n**Algorithm**\n1) Recursively divide the current array `buildings` into two halves.\n2) When the recursion reaches the base case of a single building, return the simple skyline.\n3) Merge the resulting skylines using a line sweep algorithm moving from left to right.\n4) Return the fully merged skyline.\n \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/WYcW6v4L/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WYcW6v4L\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of the input array `buildings`.\n\n* Time complexity: $$O(n\\log n)$$\n\n    - During the divide-and-conquer process, we recursively cut the array into two halves, thus $$\\log n$$ steps are needed to split the original input array into single buildings and then merge them back together. In other words, the recursion stack has a depth of $$\\log n$$ levels.\n    - In each level of the recursion, it takes a total of $$O(n)$$ time to merge all the sub-skylines into larger skylines.\n    \n\n* Space complexity: $$O(n)$$\n\n    - We need $$O(n)$$ space to create the answer array to record the merged skylines as there are at most $$2n$$ skyline key points.\n    - The recursion stack also requires an additional $$O(\\log n)$$ space.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

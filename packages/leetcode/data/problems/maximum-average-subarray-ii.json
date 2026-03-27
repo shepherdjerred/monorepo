@@ -1,0 +1,137 @@
+{
+  "questionId": "644",
+  "questionFrontendId": "644",
+  "title": "Maximum Average Subarray II",
+  "titleSlug": "maximum-average-subarray-ii",
+  "difficulty": "Hard",
+  "content": "<p>You are given an integer array <code>nums</code> consisting of <code>n</code> elements, and an integer <code>k</code>.</p>\n\n<p>Find a contiguous subarray whose <strong>length is greater than or equal to</strong> <code>k</code> that has the maximum average value and return <em>this value</em>. Any answer with a calculation error less than <code>10<sup>-5</sup></code> will be accepted.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,12,-5,-6,50,3], k = 4\n<strong>Output:</strong> 12.75000\n<b>Explanation:\n</b>- When the length is 4, averages are [0.5, 12.75, 10.5] and the maximum average is 12.75\n- When the length is 5, averages are [10.4, 10.8] and the maximum average is 10.8\n- When the length is 6, averages are [9.16667] and the maximum average is 9.16667\nThe maximum average is when we choose a subarray of length 4 (i.e., the sub array [12, -5, -6, 50]) which has the max average 12.75, so we return 12.75\nNote that we do not consider the subarrays of length &lt; 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5], k = 1\n<strong>Output:</strong> 5.00000\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums.length</code></li>\n\t<li><code>1 &lt;= k &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>-10<sup>4</sup> &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findMaxAverage\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"k\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"double\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"23K\", \"totalSubmission\": \"61K\", \"totalAcceptedRaw\": 22996, \"totalSubmissionRaw\": 60976, \"acRate\": \"37.7%\"}",
+  "likes": 639,
+  "dislikes": 74,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Maximum Average Subarray I\", \"titleSlug\": \"maximum-average-subarray-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,12,-5,-6,50,3]\n4",
+    "[5]\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    double findMaxAverage(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public double findMaxAverage(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findMaxAverage(self, nums: List[int], k: int) -> float:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findMaxAverage(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: float\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar findMaxAverage = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findMaxAverage(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public double FindMaxAverage(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "double findMaxAverage(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findMaxAverage(nums []int, k int) float64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findMaxAverage(nums: IntArray, k: Int): Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findMaxAverage(_ nums: [Int], _ k: Int) -> Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_max_average(nums: Vec<i32>, k: i32) -> f64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Float}\ndef find_max_average(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Float\n     */\n    function findMaxAverage($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  double findMaxAverage(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findMaxAverage(nums: Array[Int], k: Int): Double = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_max_average(nums :: [integer], k :: integer) :: float\n  def find_max_average(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_max_average(Nums :: [integer()], K :: integer()) -> float().\nfind_max_average(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-max-average nums k)\n  (-> (listof exact-integer?) exact-integer? flonum?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "222",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/482858215?texttrack=en\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n### Approach #1 Iterative method [Time Limit Exceeded]\n\nOne of the simplest solutions is to consider the sum of every possible subarray with length greater than or equal to $$k$$ and to determine the maximum average from out of those. But, instead of finding out this sum in a naive manner for every subarray with length greater than or equal to $$k$$ separately, we can do as follows.\n\nFor every starting point, $$s$$, considered, we can iterate over the elements of $$nums$$ starting from $$nums$$, and keep a track of the $$sum$$ found till the current index($$i$$). Whenever the index reached is such that the number of elements lying between $$s$$ and $$i$$ is greater than or equal to $$k$$, we can check if the average of the elements between $$s$$ and $$i$$ is greater than the average found till now or not.\n\n<iframe src=\"https://leetcode.com/playground/uX3gpV7T/shared\" frameBorder=\"0\" name=\"uX3gpV7T\" width=\"100%\" height=\"309\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^2)$$. Two for loops iterating over the whole length of $$nums$$ with $$n$$ elements.\n\n* Space complexity : $$O(1)$$. Constant extra space is used.\n\n---\n### Approach #2 Using Binary Search [Accepted]\n\n**Algorithm**\n\nTo understand the idea behind this method, let's look at the following points.\n\nFirstly, we know that the value of the average could lie between the range $$(min, max)$$. Here, $$min$$ and $$max$$ refer to the minimum and the maximum values out of the given $$nums$$ array. This is because, the average can't be lesser than the minimum value and can't be larger than the maximum value.\n\nBut, in this case, we need to find the maximum average of a subarray with atleast $$k$$ elements. The idea in this method is to try to approximate(guess) the solution and to try to find if this solution really exists.\n\n\nIf it exists, we can continue trying to approximate the solution even to a further precise value, but choosing a larger number as the next approximation. But, if the initial guess is wrong, and the initial maximum average value(guessed) isn't possible, we need to try with a smaller number as the next approximate.\n\nNow, instead of doing the guesses randomly, we can make use of Binary Search. With $$min$$ and $$max$$ as the initial numbers to begin with, we can find out the $$mid$$ of these two numbers given by $$(min+max)/2$$. Now, we need to find if a subarray with length greater than or equal to $$k$$ is possible with an average sum greater than this $$mid$$ value.\n\nTo determine if this is possible in a single scan, let's look at an observation. Suppose, there exist $$j$$ elements, $$a_1, a_2, a_3..., a_j$$ in a subarray within $$nums$$ such that their average is greater than $$mid$$. In this case, we can say that\n\n$$(a_1+a_2+ a_3...+a_j)/j &geq; mid$$ or\n\n$$(a_1+a_2+ a_3...+a_j) &geq; j*mid$$ or\n\n$$(a_1-mid) +(a_2-mid)+ (a_3-mid) ...+(a_j-mid) &geq; 0$$\n\nThus, we can see that if after subtracting the $$mid$$ number from the elements of a subarray with more than $$k-1$$ elements, within $$nums$$, if the sum of elements of this reduced subarray is greater than 0, we can achieve an average value greater than $$mid$$. Thus, in this case, we need to set the $$mid$$ as the new minimum element and continue the process.\n\nOtherwise, if this reduced sum is lesser than 0 for all subarrays with greater than or equal to $$k$$ elements, we can't achieve $$mid$$ as the average. Thus, we need to set $$mid$$ as the new maximum element and continue the process.\n\nIn order to determine if such a subarray exists in a linear manner, we keep on adding $$nums[i]-mid$$ to the $$sum$$ obtained till the $$i^{th}$$ element while traversing over the $$nums$$ array. If on traversing the first $$k$$ elements, the $$sum$$ becomes greater than or equal to 0, we can directly determine that we can increase the average beyond $$mid$$. Otherwise, we continue making additions to $$sum$$ for elements beyond the $$k^{th}$$ element, making use of the following idea.\n\nIf we know the cumulative sum upto indices $$i$$ and $$j$$, say $$sum_i$$ and $$sum_j$$ respectively, we can determine the sum of the subarray between these indices(including $$j$$) as $$sum_j - sum_i$$. In our case, we want this difference between the cumulative sums to be greater than or equal to 0 as discusssed above.\n\nFurther, for $$sum_i$$ as the cumulative sum upto the current($$i^{th}$$) index, all we need is $$sum_j - sum_i &geq; 0$$ such that $$j - i &geq; k$$.\n\nTo achive this, instead of checking with all possible values of $$sum_i$$, we can just consider the minimum cumulative sum upto the index $$j - k$$. This is because if the required condition can't be sastisfied with the minimum $$sum_i$$, it can never be satisfied with a larger value.\n\nTo fulfil this, we make use of a $$prev$$ variable which again stores the cumulative sums but, its current index(for cumulative sum) lies behind the current index for $$sum$$ at an offset of $$k$$ units. Thus, by finding the minimum out of $$prev$$ and the last minimum value, we can easily find out the required minimum sum value.\n\nEvery time after checking the possiblility with a new $$mid$$ value, at the end, we need to settle at some value as the average. But, we can observe that eventually, we'll reach a point, where we'll keep moving near some same value with very small changes. In order to keep our precision in control, we limit this process to $$10^-5$$ precision, by making use of $$error$$ and continuing the process till $$error$$ becomes lesser than 0.00001 .\n\n\n\n<iframe src=\"https://leetcode.com/playground/9co4Jxkv/shared\" frameBorder=\"0\" name=\"9co4Jxkv\" width=\"100%\" height=\"515\"></iframe>\n\n**Complexity Analysis**\n\nLet `N` be the number of element in the array, and `range` be the difference between the maximal and minimal values in the array, _i.e._ `range = max_val - min_val`, and finally the `error` be the precision required in the problem.\n\n* Time complexity : $$O\\big(N \\cdot \\log_2{\\frac{(\\text{max\\_val} - \\text{min\\_val})}{0.00001}} \\big)$$.\n\n    - The algorithm consists of a binary search loop in the function of `findMaxAverage()`.\n\n    - At each iteration of the loop, the `check()` function dominates the time complexity, which is of $$O(N)$$ for each invocation.\n\n    - It now boils down to how many iterations the loop would run eventually. To calculate the number of iterations, let us break it down in the following steps.\n\n    - After the first iteration, the $$\\text{error}$$ would be $$\\frac{\\text{range}}{2}$$, as one can see. Further on, at each iteration, the $$\\text{error}$$ would be reduced into half. For example, after the second iteration, we would have the $$\\text{error}$$ as $$\\frac{\\text{range}}{2}\\cdot \\frac{1}{2}$$.\n\n    - As a result, after $$K$$ iterations, the error would become $$\\text{error} = \\text{range}\\cdot 2^{-K}$$. Given the condition of the loop, _i.e._ $$\\text{error} < 0.00001 $$, we can deduct that $$K > \\log_2{\\frac{\\text{range}}{0.00001}} = \\log_2{\\frac{(\\text{max\\_val} - \\text{min\\_val})}{0.00001}} $$\n\n    - To sum up, the time complexity of the algorithm would be $$O\\big( N \\cdot K \\big) = O\\big(N \\cdot \\log_2{\\frac{(\\text{max\\_val} - \\text{min\\_val})}{0.00001}} \\big)$$.\n\n* Space complexity : $$O(1)$$. Constant Space is used.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

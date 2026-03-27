@@ -1,0 +1,139 @@
+{
+  "questionId": "714",
+  "questionFrontendId": "714",
+  "title": "Best Time to Buy and Sell Stock with Transaction Fee",
+  "titleSlug": "best-time-to-buy-and-sell-stock-with-transaction-fee",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array <code>prices</code> where <code>prices[i]</code> is the price of a given stock on the <code>i<sup>th</sup></code> day, and an integer <code>fee</code> representing a transaction fee.</p>\n\n<p>Find the maximum profit you can achieve. You may complete as many transactions as you like, but you need to pay the transaction fee for each transaction.</p>\n\n<p><strong>Note:</strong></p>\n\n<ul>\n\t<li>You may not engage in multiple transactions simultaneously (i.e., you must sell the stock before you buy again).</li>\n\t<li>The transaction fee is only charged once for each stock purchase and sale.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> prices = [1,3,2,8,4,9], fee = 2\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> The maximum profit can be achieved by:\n- Buying at prices[0] = 1\n- Selling at prices[3] = 8\n- Buying at prices[4] = 4\n- Selling at prices[5] = 9\nThe total profit is ((8 - 1) - 2) + ((9 - 4) - 2) = 8.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> prices = [1,3,7,5,10,3], fee = 3\n<strong>Output:</strong> 6\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= prices.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= prices[i] &lt; 5 * 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= fee &lt; 5 * 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Consider the first K stock prices.  At the end, the only legal states are that you don't own a share of stock, or that you do.  Calculate the most profit you could have under each of these two cases."
+  ],
+  "metaData": "{\r\n  \"name\": \"maxProfit\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"prices\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"fee\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"567.7K\", \"totalSubmission\": \"790.7K\", \"totalAcceptedRaw\": 567712, \"totalSubmissionRaw\": 790748, \"acRate\": \"71.8%\"}",
+  "likes": 7618,
+  "dislikes": 235,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Best Time to Buy and Sell Stock II\", \"titleSlug\": \"best-time-to-buy-and-sell-stock-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,2,8,4,9]\n2",
+    "[1,3,7,5,10,3]\n3"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxProfit(vector<int>& prices, int fee) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxProfit(int[] prices, int fee) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxProfit(self, prices: List[int], fee: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxProfit(self, prices, fee):\n        \"\"\"\n        :type prices: List[int]\n        :type fee: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} prices\n * @param {number} fee\n * @return {number}\n */\nvar maxProfit = function(prices, fee) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxProfit(prices: number[], fee: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxProfit(int[] prices, int fee) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxProfit(int* prices, int pricesSize, int fee) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxProfit(prices []int, fee int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxProfit(prices: IntArray, fee: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxProfit(_ prices: [Int], _ fee: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_profit(prices: Vec<i32>, fee: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} prices\n# @param {Integer} fee\n# @return {Integer}\ndef max_profit(prices, fee)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $prices\n     * @param Integer $fee\n     * @return Integer\n     */\n    function maxProfit($prices, $fee) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxProfit(List<int> prices, int fee) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxProfit(prices: Array[Int], fee: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_profit(prices :: [integer], fee :: integer) :: integer\n  def max_profit(prices, fee) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_profit(Prices :: [integer()], Fee :: integer()) -> integer().\nmax_profit(Prices, Fee) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-profit prices fee)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1852",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nAs shown in the picture below, if we do the following operations:\n\n- Buy the stock on day `0`.\n- Sell the stock on day `3`.\n- Buy the stock on day `4`.\n- Sell the stock on day `5`.\n\nConsidering the two transaction fees, we can make a total profit of `8`.\n\n![img](../Figures/714/intro.png)\n\nHowever, we have to be aware of some restrictions:\n\n- We can hold at most 1 stock at a time, we can't buy this stock twice.\n- We can't sell the stock before we hold it.\n\n---\n\n### Approach 1: Dynamic Programming\n\n#### Intuition   \n\nIf you are not familiar with dynamic programming, please refer to our [Dynamic Programming Explore Card](https://leetcode.com/explore/featured/card/dynamic-programming/630/an-introduction-to-dynamic-programming/)!\n\n<br>\n\nGiven the length of `prices` is `n`, which means that we want to get the maximum profit after `n` days. Assume that we are on day `i`, the profit we can make today is determined by today's operation plus the maximum profit we have made before. The question is, how do we get the maximum profit that can be obtained from the previous `i` days? \n\nWe can perform one of the three operations on day `i`:\n- Buy the stock.\n- Sell the stock.\n- Do nothing.\n\nThe profit depends on our operations and the maximum profit obtained from the previous `i - 1` days. To solve the problem on day `i`, we need to use the sub-problem of day `i - 1`. This state transition equation implies that we can solve it with dynamic programming.\n\n\n\n![img](../Figures/714/1.png)\n\n\nLet's first try the most basic dynamic programming approach. We create an array called `dp` of length `n` where `dp[i]` records the maximum profit we can obtain from the first `i` days. \n\n![img](../Figures/714/2.png)\n\nNext, we need to find the state transition equation. Recall that we have three operations on day `i`: \n- Buy the stock, spend `prices[i]`.\n- Sell the stock, gain `prices[i]`.\n- Do nothing.\n\n![img](../Figures/714/3.png)\n\nBut this solution above is **incorrect** because of the constraints given in the problem. Let's analyze where the problem lies. On the day `i`, if we want to sell the stock, the prerequisite is that we must hold the stock. However, we might have two different status on day `i`:\n- Currently holding the stock.\n\n- Not currently holding the stock.\n\n\nThe state transition equation in our previous method did not distinguish between these two states.\n\n![img](../Figures/714/4.png)\n\n<br>\n\nTherefore, our dynamic programming array `dp[i]` should also have two states: \n\n- The maximum profit when free of stock.\n- The maximum profit when holding the stock.\n\nSo, we would need to create two arrays, which we call `free` and `hold`, corresponding to the maximum profit that can be obtained without holding the stock or holding the stock in the first `i` days. \n\n\nBack to the previous analysis, if we buy the stock on the day `i`, the profit obtained is the maximum profit without holding the stock on the previous day i - 1 `free[i - 1]` plus the profit from buying the stock `-prices[i]`. \n\n\n![img](../Figures/714/5.png)\n\nIf we sell the stock on the day `i`, our state changes from holding the stock to not holding the stock, so our current profit is the maximum profit of holding the stock on the previous day i - 1 `hold[i - 1]` plus the profit from selling the stock `prices[i] - fee`. \n\n\n![img](../Figures/714/6.png)\n\nOf course, we can also choose to do nothing, in which case our profit on day `i` is equal to the maximum profit of the previous day.\n\n- `free[i] = free[i - 1]`\n- `hold[i] = hold[i - 1]`\n\n![img](../Figures/714/7.png)\n\n\nTherefore, we can get the state transition equation for the maximum profit with different states on day `i` as:\n\n- `free[i] = max(free[i - 1], hold[i - 1] + prices[i] - fee)`\n\n- `hold[i] = max(hold[i - 1], free[i - 1] - prices[i])`\n\n\nOnce we create these two arrays, we will set `free[0] = 0` since we will make no profit with an empty hand on the first day, and set `hold[0] = -prices[0]` as we need to buy the stock on day `0` to maintain the holding state.\n\n\nThen we iterate from day `1` to day `n - 1`, update `free` and `hold` and get the maximum profit from the last day `free[n - 1]`. (There is no point in ending the problem while still holding stock, we might as well sell it on the last day)\n\n\n\n\n<br>\n\n#### Algorithm\n\n1) Create two arrays of length `n`, `free` and `hold`. Set `hold[0] = -prices[0]` and `free[0] = 0`.\n\n\n2) Iterate from day `1` to day `n - 1`, on each day `i`:\n    - Update `hold[i]` to the larger of `hold[i - 1]` and `free[i - 1] - prices[i]`.\n    - Update `free[i]` to the larger of `free[i - 1]` and `hold[i - 1] + prices[i] - fee`.\n    \n\n3) Return `free[i - 1]` once the iteration ends.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/e3omXfPJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"e3omXfPJ\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input array `prices`.\n\n* Time complexity: $$O(n)$$\n\n    - We iterate from day `1` to day `n - 1`, which contains `n - 1` steps. \n    - At each step, we update `free[i]` and `hold[i]` which takes $$O(1)$$.\n    \n\n* Space complexity: $$O(n)$$\n\n    - We create two arrays of length `n` to record the maximum profit with two status on each day.\n\n<br/>\n\n\n---\n\n### Approach 2: Space-Optimized Dynamic Programming\n\n\n#### Intuition   \n\nIn the previous solution, we created two arrays of length `n` to record the maximum profits up to each day. \n\nHowever, if we look at the state transition equation:\n\n- `hold[i] = max(hold[i - 1], free[i - 1] - prices[i])`\n- `free[i] = max(free[i - 1], hold[i - 1] + prices[i] - fee)`\n\n\nWe can see that the maximum profit up to day `i` (`hold[i]` or `free[i]`) only depends on the maximum profit up to day `i - 1` (`hold[i - 1]` and `free[i - 1]`), and we don't need to keep track of the profits from earlier days. \n\nTherefore, we can use only two variables `hold` and `free` to represent the maximum profits in the two states on the current day. When we move to the next day (day `i`), we can simply update these two variables. \n\n- `hold = max(hold, free - prices[i])`\n- `free = max(free, hold + prices[i] - fee)`\n\nTo avoid modifying `hold` before updating `free`, we can do the following:\n\n- `tmp = hold`\n- `hold = max(hold, free - prices[i])`\n- `free = max(free, tmp + prices[i] - fee)`\n\n<br>\n\n#### Algorithm\n\n1) Set `free = 0` and `hold = -prices[0]` as the maximum profit for two status on day `0`.\n\n2) Iterate from day `1` to day `n - 1`, on each day `i`:\n    - Set `tmp = hold` so that we record the maximum profit for holding a stock on day `i - 1`.\n    - Update `hold` to the larger of `hold` and `free - prices[i]`.\n    - Update `free` to the larger of `free` and `tmp + prices[i] - fee`.\n    \n\n3) Return `free` once the iteration ends.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/jNidiFwk/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"jNidiFwk\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input array `prices`.\n\n* Time complexity: $$O(n)$$\n\n    - We iterate from day `1` to day `n - 1`, which contains `n - 1` steps. \n    - At each step, we update `free` and `hold` which takes $$O(1)$$.\n\n    \n\n* Space complexity: $$O(1)$$\n\n    - We only need to update three parameters `tmp`, `free` and `hold`.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

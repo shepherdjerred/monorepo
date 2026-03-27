@@ -1,0 +1,135 @@
+{
+  "questionId": "913",
+  "questionFrontendId": "519",
+  "title": "Random Flip Matrix",
+  "titleSlug": "random-flip-matrix",
+  "difficulty": "Medium",
+  "content": "<p>There is an <code>m x n</code> binary grid <code>matrix</code> with all the values set <code>0</code> initially. Design an algorithm to randomly pick an index <code>(i, j)</code> where <code>matrix[i][j] == 0</code> and flips it to <code>1</code>. All the indices <code>(i, j)</code> where <code>matrix[i][j] == 0</code> should be equally likely to be returned.</p>\n\n<p>Optimize your algorithm to minimize the number of calls made to the <strong>built-in</strong> random function of your language and optimize the time and space complexity.</p>\n\n<p>Implement the <code>Solution</code> class:</p>\n\n<ul>\n\t<li><code>Solution(int m, int n)</code> Initializes the object with the size of the binary matrix <code>m</code> and <code>n</code>.</li>\n\t<li><code>int[] flip()</code> Returns a random index <code>[i, j]</code> of the matrix where <code>matrix[i][j] == 0</code> and flips it to <code>1</code>.</li>\n\t<li><code>void reset()</code> Resets all the values of the matrix to be <code>0</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;Solution&quot;, &quot;flip&quot;, &quot;flip&quot;, &quot;flip&quot;, &quot;reset&quot;, &quot;flip&quot;]\n[[3, 1], [], [], [], [], []]\n<strong>Output</strong>\n[null, [1, 0], [2, 0], [0, 0], null, [2, 0]]\n\n<strong>Explanation</strong>\nSolution solution = new Solution(3, 1);\nsolution.flip();  // return [1, 0], [0,0], [1,0], and [2,0] should be equally likely to be returned.\nsolution.flip();  // return [2, 0], Since [1,0] was returned, [2,0] and [0,0]\nsolution.flip();  // return [0, 0], Based on the previously returned indices, only [0,0] can be returned.\nsolution.reset(); // All the values are reset to 0 and can be returned.\nsolution.flip();  // return [2, 0], [0,0], [1,0], and [2,0] should be equally likely to be returned.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= m, n &lt;= 10<sup>4</sup></code></li>\n\t<li>There will be at least one free cell for each call to <code>flip</code>.</li>\n\t<li>At most <code>1000</code> calls will be made to <code>flip</code> and <code>reset</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"Solution\",\n  \"maxbytesperline\": 200000,\n  \"constructor\": {\n    \"params\": [\n      {\n        \"name\": \"m\",\n        \"type\": \"integer\"\n      },\n      {\n        \"name\": \"n\",\n        \"type\": \"integer\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"name\": \"flip\",\n      \"params\": [],\n      \"return\": {\n        \"type\": \"integer[]\"\n      }\n    },\n    {\n      \"name\": \"reset\",\n      \"params\": [],\n      \"return\": {\n        \"type\": \"void\"\n      }\n    }\n  ],\n  \"systemdesign\": true,\n  \"params\": [\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<String>\",\n    \"dealloc\": true\n  }\n}",
+  "stats": "{\"totalAccepted\": \"30.4K\", \"totalSubmission\": \"66.6K\", \"totalAcceptedRaw\": 30384, \"totalSubmissionRaw\": 66637, \"acRate\": \"45.6%\"}",
+  "likes": 461,
+  "dislikes": 135,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"Solution\",\"flip\",\"flip\",\"flip\",\"reset\",\"flip\"]\n[[3,1],[],[],[],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Reservoir Sampling",
+      "slug": "reservoir-sampling"
+    },
+    {
+      "name": "Randomized",
+      "slug": "randomized"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    Solution(int m, int n) {\n        \n    }\n    \n    vector<int> flip() {\n        \n    }\n    \n    void reset() {\n        \n    }\n};\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution* obj = new Solution(m, n);\n * vector<int> param_1 = obj->flip();\n * obj->reset();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n\n    public Solution(int m, int n) {\n        \n    }\n    \n    public int[] flip() {\n        \n    }\n    \n    public void reset() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = new Solution(m, n);\n * int[] param_1 = obj.flip();\n * obj.reset();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n\n    def __init__(self, m: int, n: int):\n        \n\n    def flip(self) -> List[int]:\n        \n\n    def reset(self) -> None:\n        \n\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution(m, n)\n# param_1 = obj.flip()\n# obj.reset()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n\n    def __init__(self, m, n):\n        \"\"\"\n        :type m: int\n        :type n: int\n        \"\"\"\n        \n\n    def flip(self):\n        \"\"\"\n        :rtype: List[int]\n        \"\"\"\n        \n\n    def reset(self):\n        \"\"\"\n        :rtype: None\n        \"\"\"\n        \n\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution(m, n)\n# param_1 = obj.flip()\n# obj.reset()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} m\n * @param {number} n\n */\nvar Solution = function(m, n) {\n    \n};\n\n/**\n * @return {number[]}\n */\nSolution.prototype.flip = function() {\n    \n};\n\n/**\n * @return {void}\n */\nSolution.prototype.reset = function() {\n    \n};\n\n/** \n * Your Solution object will be instantiated and called as such:\n * var obj = new Solution(m, n)\n * var param_1 = obj.flip()\n * obj.reset()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Solution {\n    constructor(m: number, n: number) {\n        \n    }\n\n    flip(): number[] {\n        \n    }\n\n    reset(): void {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * var obj = new Solution(m, n)\n * var param_1 = obj.flip()\n * obj.reset()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n\n    public Solution(int m, int n) {\n        \n    }\n    \n    public int[] Flip() {\n        \n    }\n    \n    public void Reset() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = new Solution(m, n);\n * int[] param_1 = obj.Flip();\n * obj.Reset();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Solution;\n\n\nSolution* solutionCreate(int m, int n) {\n    \n}\n\nint* solutionFlip(Solution* obj, int* retSize) {\n    \n}\n\nvoid solutionReset(Solution* obj) {\n    \n}\n\nvoid solutionFree(Solution* obj) {\n    \n}\n\n/**\n * Your Solution struct will be instantiated and called as such:\n * Solution* obj = solutionCreate(m, n);\n * int* param_1 = solutionFlip(obj, retSize);\n \n * solutionReset(obj);\n \n * solutionFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Solution struct {\n    \n}\n\n\nfunc Constructor(m int, n int) Solution {\n    \n}\n\n\nfunc (this *Solution) Flip() []int {\n    \n}\n\n\nfunc (this *Solution) Reset()  {\n    \n}\n\n\n/**\n * Your Solution object will be instantiated and called as such:\n * obj := Constructor(m, n);\n * param_1 := obj.Flip();\n * obj.Reset();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution(m: Int, n: Int) {\n\n    fun flip(): IntArray {\n        \n    }\n\n    fun reset() {\n        \n    }\n\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * var obj = Solution(m, n)\n * var param_1 = obj.flip()\n * obj.reset()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Solution {\n\n    init(_ m: Int, _ n: Int) {\n        \n    }\n    \n    func flip() -> [Int] {\n        \n    }\n    \n    func reset() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * let obj = Solution(m, n)\n * let ret_1: [Int] = obj.flip()\n * obj.reset()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Solution {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Solution {\n\n    fn new(m: i32, n: i32) -> Self {\n        \n    }\n    \n    fn flip(&self) -> Vec<i32> {\n        \n    }\n    \n    fn reset(&self) {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * let obj = Solution::new(m, n);\n * let ret_1: Vec<i32> = obj.flip();\n * obj.reset();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Solution\n\n=begin\n    :type m: Integer\n    :type n: Integer\n=end\n    def initialize(m, n)\n        \n    end\n\n\n=begin\n    :rtype: Integer[]\n=end\n    def flip()\n        \n    end\n\n\n=begin\n    :rtype: Void\n=end\n    def reset()\n        \n    end\n\n\nend\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution.new(m, n)\n# param_1 = obj.flip()\n# obj.reset()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n    /**\n     * @param Integer $m\n     * @param Integer $n\n     */\n    function __construct($m, $n) {\n        \n    }\n  \n    /**\n     * @return Integer[]\n     */\n    function flip() {\n        \n    }\n  \n    /**\n     * @return NULL\n     */\n    function reset() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * $obj = Solution($m, $n);\n * $ret_1 = $obj->flip();\n * $obj->reset();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n\n  Solution(int m, int n) {\n    \n  }\n  \n  List<int> flip() {\n    \n  }\n  \n  void reset() {\n    \n  }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = Solution(m, n);\n * List<int> param1 = obj.flip();\n * obj.reset();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Solution(_m: Int, _n: Int) {\n\n    def flip(): Array[Int] = {\n        \n    }\n\n    def reset(): Unit = {\n        \n    }\n\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * val obj = new Solution(m, n)\n * val param_1 = obj.flip()\n * obj.reset()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec init_(m :: integer, n :: integer) :: any\n  def init_(m, n) do\n    \n  end\n\n  @spec flip() :: [integer]\n  def flip() do\n    \n  end\n\n  @spec reset() :: any\n  def reset() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Solution.init_(m, n)\n# param_1 = Solution.flip()\n# Solution.reset()\n\n# Solution.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec solution_init_(M :: integer(), N :: integer()) -> any().\nsolution_init_(M, N) ->\n  .\n\n-spec solution_flip() -> [integer()].\nsolution_flip() ->\n  .\n\n-spec solution_reset() -> any().\nsolution_reset() ->\n  .\n\n\n%% Your functions will be called as such:\n%% solution_init_(M, N),\n%% Param_1 = solution_flip(),\n%% solution_reset(),\n\n%% solution_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define solution%\n  (class object%\n    (super-new)\n    \n    ; m : exact-integer?\n    ; n : exact-integer?\n    (init-field\n      m\n      n)\n    \n    ; flip : -> (listof exact-integer?)\n    (define/public (flip)\n      )\n    ; reset : -> void?\n    (define/public (reset)\n      )))\n\n;; Your solution% object will be instantiated and called as such:\n;; (define obj (new solution% [m m] [n n]))\n;; (define param_1 (send obj flip))\n;; (send obj reset)"
+    }
+  ],
+  "solution": null
+}

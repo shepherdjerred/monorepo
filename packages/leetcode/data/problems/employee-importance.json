@@ -1,0 +1,115 @@
+{
+  "questionId": "690",
+  "questionFrontendId": "690",
+  "title": "Employee Importance",
+  "titleSlug": "employee-importance",
+  "difficulty": "Medium",
+  "content": "<p>You have a data structure of employee information, including the employee&#39;s unique ID, importance value, and direct subordinates&#39; IDs.</p>\n\n<p>You are given an array of employees <code>employees</code> where:</p>\n\n<ul>\n\t<li><code>employees[i].id</code> is the ID of the <code>i<sup>th</sup></code> employee.</li>\n\t<li><code>employees[i].importance</code> is the importance value of the <code>i<sup>th</sup></code> employee.</li>\n\t<li><code>employees[i].subordinates</code> is a list of the IDs of the direct subordinates of the <code>i<sup>th</sup></code> employee.</li>\n</ul>\n\n<p>Given an integer <code>id</code> that represents an employee&#39;s ID, return <em>the <strong>total</strong> importance value of this employee and all their direct and indirect subordinates</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/05/31/emp1-tree.jpg\" style=\"width: 400px; height: 258px;\" />\n<pre>\n<strong>Input:</strong> employees = [[1,5,[2,3]],[2,3,[]],[3,3,[]]], id = 1\n<strong>Output:</strong> 11\n<strong>Explanation:</strong> Employee 1 has an importance value of 5 and has two direct subordinates: employee 2 and employee 3.\nThey both have an importance value of 3.\nThus, the total importance value of employee 1 is 5 + 3 + 3 = 11.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/05/31/emp2-tree.jpg\" style=\"width: 362px; height: 361px;\" />\n<pre>\n<strong>Input:</strong> employees = [[1,2,[5]],[5,-3,[]]], id = 5\n<strong>Output:</strong> -3\n<strong>Explanation:</strong> Employee 5 has an importance value of -3 and has no direct subordinates.\nThus, the total importance value of employee 5 is -3.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= employees.length &lt;= 2000</code></li>\n\t<li><code>1 &lt;= employees[i].id &lt;= 2000</code></li>\n\t<li>All <code>employees[i].id</code> are <strong>unique</strong>.</li>\n\t<li><code>-100 &lt;= employees[i].importance &lt;= 100</code></li>\n\t<li>One employee has at most one direct leader and may have several subordinates.</li>\n\t<li>The IDs in <code>employees[i].subordinates</code> are valid IDs.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"getImportance\",\n  \"params\": [\n    {\n      \"name\": \"employees\",\n      \"type\": \"list<string>\"\n    },\n    {\n      \"name\": \"id\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"ruby\",\n    \"python3\",\n    \"kotlin\",\n    \"scala\",\n    \"csharp\",\n    \"javascript\",\n    \"swift\",\n    \"golang\",\n    \"php\",\n    \"typescript\"\n  ],\n  \"manual\": true,\n  \"typescriptCustomType\":\"class Employee {\\n    id: number;\\n    importance: number;\\n    subordinates: number[];\\n    constructor(id: number, importance: number, subordinates: number[]) {\\n        this.id = (id === undefined) ? 0 : id;\\n        this.importance = (importance === undefined) ? 0 : importance;\\n        this.subordinates = (subordinates === undefined) ? [] : subordinates;\\n    }\\n}\"\n  \n}",
+  "stats": "{\"totalAccepted\": \"251.6K\", \"totalSubmission\": \"362.7K\", \"totalAcceptedRaw\": 251600, \"totalSubmissionRaw\": 362669, \"acRate\": \"69.4%\"}",
+  "likes": 2208,
+  "dislikes": 1360,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Nested List Weight Sum\", \"titleSlug\": \"nested-list-weight-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,5,[2,3]],[2,3,[]],[3,3,[]]]\n1",
+    "[[1,2,[5]],[5,-3,[]]]\n5"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"robinhood\", \"name\": \"Robinhood\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/*\n// Definition for Employee.\nclass Employee {\npublic:\n    int id;\n    int importance;\n    vector<int> subordinates;\n};\n*/\n\nclass Solution {\npublic:\n    int getImportance(vector<Employee*> employees, int id) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/*\n// Definition for Employee.\nclass Employee {\n    public int id;\n    public int importance;\n    public List<Integer> subordinates;\n};\n*/\n\nclass Solution {\n    public int getImportance(List<Employee> employees, int id) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "\"\"\"\n# Definition for Employee.\nclass Employee:\n    def __init__(self, id: int, importance: int, subordinates: List[int]):\n        self.id = id\n        self.importance = importance\n        self.subordinates = subordinates\n\"\"\"\n\nclass Solution:\n    def getImportance(self, employees: List['Employee'], id: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "\"\"\"\n# Definition for Employee.\nclass Employee(object):\n    def __init__(self, id, importance, subordinates):\n    \t#################\n        :type id: int\n        :type importance: int\n        :type subordinates: List[int]\n        #################\n        self.id = id\n        self.importance = importance\n        self.subordinates = subordinates\n\"\"\"\n\nclass Solution(object):\n    def getImportance(self, employees, id):\n        \"\"\"\n        :type employees: List[Employee]\n        :type id: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for Employee.\n * function Employee(id, importance, subordinates) {\n *     this.id = id;\n *     this.importance = importance;\n *     this.subordinates = subordinates;\n * }\n */\n\n/**\n * @param {Employee[]} employees\n * @param {number} id\n * @return {number}\n */\nvar GetImportance = function(employees, id) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for Employee.\n * class Employee {\n *     id: number\n *     importance: number\n *     subordinates: number[]\n *     constructor(id: number, importance: number, subordinates: number[]) {\n *         this.id = (id === undefined) ? 0 : id;\n *         this.importance = (importance === undefined) ? 0 : importance;\n *         this.subordinates = (subordinates === undefined) ? [] : subordinates;\n *     }\n * }\n */\n\nfunction getImportance(employees: Employee[], id: number): number {\n\t\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/*\n// Definition for Employee.\nclass Employee {\n    public int id;\n    public int importance;\n    public IList<int> subordinates;\n}\n*/\n\nclass Solution {\n    public int GetImportance(IList<Employee> employees, int id) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for Employee.\n * type Employee struct {\n *     Id int\n *     Importance int\n *     Subordinates []int\n * }\n */\n\nfunc getImportance(employees []*Employee, id int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/*\n *\t// Definition for Employee.\n *\tclass Employee {\n *\t\tvar id:Int = 0\n *\t\tvar importance:Int = 0\n *\t\tvar subordinates:List<Int> = listOf()\n *\t}\n */\n\nclass Solution {\n    fun getImportance(employees: List<Employee?>, id: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for Employee.\n * public class Employee {\n *     public var id: Int\n *     public var importance: Int\n *     public var subordinates: [Int]\n *     public init(_ id: Int, _ importance: Int, _ subordinates: [Int]) {\n *         self.id = id\n *         self.importance = importance\n *         self.subordinates = subordinates\n *     }\n * }\n */\n\nclass Solution {\n    func getImportance(_ employees: [Employee], _ id: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "=begin\n# Definition for Employee.\nclass Employee\n    attr_accessor :id, :importance, :subordinates\n    def initialize( id, importance, subordinates)\n        @id = id\n        @importance = importance\n        @subordinates = subordinates\n    end\nend\n=end\n\n# @param {Employee} employees\n# @param {Integer} id\n# @return {Integer}\ndef get_importance(employees, id)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for Employee.\n * class Employee {\n *     public $id = null;\n *     public $importance = null;\n *     public $subordinates = array();\n *     function __construct($id, $importance, $subordinates) {\n *         $this->id = $id;\n *         $this->importance = $importance;\n *         $this->subordinates = $subordinates;\n *     }\n * }\n */\n\nclass Solution {\n    /**\n     * @param Employee[] $employees\n     * @param Integer $id\n     * @return Integer\n     */\n    function getImportance($employees, $id) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/*\n// Definition for Employee.\nclass Employee() {\n    var id: Int = 0\n    var importance: Int = 0\n    var subordinates: List[Int] = List()\n};\n*/\n\nobject Solution {\n    def getImportance(employees: List[Employee], id: Int): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "303",
+    "content": "[TOC]\n\n### Approach #1: Depth-First Search [Accepted]\n\n**Intuition and Algorithm**\n\nLet's use a hashmap `emap = {employee.id -> employee}` to query employees quickly.\n\nNow to find the total importance of an employee, it will be the importance of that employee, plus the total importance of each of that employee's subordinates.  This is a straightforward depth-first search.\n\n<iframe src=\"https://leetcode.com/playground/jnJd8b9P/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"jnJd8b9P\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$, where $$N$$ is the number of employees. We might query each employee in `dfs`.\n\n* Space Complexity: $$O(N)$$, the size of the implicit call stack when evaluating `dfs`.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "questionId": "31",
+  "questionFrontendId": "31",
+  "title": "Next Permutation",
+  "titleSlug": "next-permutation",
+  "difficulty": "Medium",
+  "content": "<p>A <strong>permutation</strong> of an array of integers is an arrangement of its members into a sequence or linear order.</p>\n\n<ul>\n\t<li>For example, for <code>arr = [1,2,3]</code>, the following are all the permutations of <code>arr</code>: <code>[1,2,3], [1,3,2], [2, 1, 3], [2, 3, 1], [3,1,2], [3,2,1]</code>.</li>\n</ul>\n\n<p>The <strong>next permutation</strong> of an array of integers is the next lexicographically greater permutation of its integer. More formally, if all the permutations of the array are sorted in one container according to their lexicographical order, then the <strong>next permutation</strong> of that array is the permutation that follows it in the sorted container. If such arrangement is not possible, the array must be rearranged as the lowest possible order (i.e., sorted in ascending order).</p>\n\n<ul>\n\t<li>For example, the next permutation of <code>arr = [1,2,3]</code> is <code>[1,3,2]</code>.</li>\n\t<li>Similarly, the next permutation of <code>arr = [2,3,1]</code> is <code>[3,1,2]</code>.</li>\n\t<li>While the next permutation of <code>arr = [3,2,1]</code> is <code>[1,2,3]</code> because <code>[3,2,1]</code> does not have a lexicographical larger rearrangement.</li>\n</ul>\n\n<p>Given an array of integers <code>nums</code>, <em>find the next permutation of</em> <code>nums</code>.</p>\n\n<p>The replacement must be <strong><a href=\"http://en.wikipedia.org/wiki/In-place_algorithm\" target=\"_blank\">in place</a></strong> and use only constant extra memory.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3]\n<strong>Output:</strong> [1,3,2]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,2,1]\n<strong>Output:</strong> [1,2,3]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,1,5]\n<strong>Output:</strong> [1,5,1]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 100</code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"nextPermutation\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"void\"\r\n  },\r\n  \"output\": {\r\n    \"paramindex\": 0\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"2.2M\", \"totalSubmission\": \"4.9M\", \"totalAcceptedRaw\": 2219280, \"totalSubmissionRaw\": 4938262, \"acRate\": \"44.9%\"}",
+  "likes": 21301,
+  "dislikes": 5110,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Permutations\", \"titleSlug\": \"permutations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Permutations II\", \"titleSlug\": \"permutations-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Permutation Sequence\", \"titleSlug\": \"permutation-sequence\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Palindrome Permutation II\", \"titleSlug\": \"palindrome-permutation-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Adjacent Swaps to Reach the Kth Smallest Number\", \"titleSlug\": \"minimum-adjacent-swaps-to-reach-the-kth-smallest-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3]",
+    "[3,2,1]",
+    "[1,1,5]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 15, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 8, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 7, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 7, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 5, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 5, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 4, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 4, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 3, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    void nextPermutation(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public void nextPermutation(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def nextPermutation(self, nums: List[int]) -> None:\n        \"\"\"\n        Do not return anything, modify nums in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def nextPermutation(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: None Do not return anything, modify nums in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {void} Do not return anything, modify nums in-place instead.\n */\nvar nextPermutation = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n Do not return anything, modify nums in-place instead.\n */\nfunction nextPermutation(nums: number[]): void {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public void NextPermutation(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "void nextPermutation(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func nextPermutation(nums []int)  {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun nextPermutation(nums: IntArray): Unit {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func nextPermutation(_ nums: inout [Int]) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn next_permutation(nums: &mut Vec<i32>) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Void} Do not return anything, modify nums in-place instead.\ndef next_permutation(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return NULL\n     */\n    function nextPermutation(&$nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  void nextPermutation(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def nextPermutation(nums: Array[Int]): Unit = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "58",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/788112386\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Approach 1: Brute Force\n\n**Algorithm**\n\nIn this approach, we find out every possible permutation of list formed by the elements of the given array and find out the permutation which is\njust larger than the given one. But this one will be a very naive approach, since it requires us to find out every possible permutation\n which will take really long time and the implementation is complex.\n Thus, this approach is not acceptable at all. Hence, we move on directly to the correct approach.\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n!)$$. Total possible permutations is $$n!$$.\n* Space complexity : $$O(n)$$. Since an array will be used to store the permutations.\n<br />\n<br />\n\n---\n\n### Approach 2: Single Pass Approach\n\n**Algorithm**\n\nFirst, we observe that for any given sequence that is in descending order, no next larger permutation is possible.\n For example, no next permutation is possible for the following array:\n ```\n [9, 5, 4, 3, 1]\n ```\n\nWe need to find the first pair of two successive numbers $$a[i]$$ and $$a[i-1]$$, from the right, which satisfy\n $$a[i] > a[i-1]$$. Now, no rearrangements to the right of $$a[i-1]$$ can create a larger permutation since that subarray consists of numbers in descending order.\n Thus, we need to rearrange the numbers to the right of $$a[i-1]$$ including itself.\n\nNow, what kind of rearrangement will produce the next larger number? We want to create the permutation just larger than the current one. Therefore, we need to replace the number $$a[i-1]$$ with the number which is just larger than itself among the numbers lying to its right section, say $$a[j]$$.\n\n![ Next Permutation ](https://leetcode.com/media/original_images/31_nums_graph.png)\n\nWe swap the numbers $$a[i-1]$$ and $$a[j]$$. We now have the correct number at index $$i-1$$. But still the current permutation isn't the permutation\n    that we are looking for. We need the smallest permutation that can be formed by using the numbers only to the right of $$a[i-1]$$. Therefore, we need to place those\n     numbers in ascending order to get their smallest permutation.\n\nBut, recall that while scanning the numbers from the right, we simply kept decrementing the index\n      until we found the pair $$a[i]$$ and $$a[i-1]$$ where,  $$a[i] > a[i-1]$$. Thus, all numbers to the right of $$a[i-1]$$ were already sorted in descending order.\n      Furthermore, swapping $$a[i-1]$$ and $$a[j]$$ didn't change that order.\n      Therefore, we simply need to reverse the numbers following $$a[i-1]$$ to get the next smallest lexicographic permutation.\n\nThe following animation will make things clearer:\n\n![Next Permutation](https://leetcode.com/media/original_images/31_Next_Permutation.gif)\n\n<iframe src=\"https://leetcode.com/playground/Dm6PeACq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Dm6PeACq\"></iframe>\n\n**Complexity Analysis**\n\nLet $n$ be the size of the `nums` array.\n\n- Time complexity: $O(n)$\n\n   The first `while` loop runs at most $n$ iterations, decrementing the variable `i` as it searches for the first decreasing element from the right. In the worst case, it checks all elements, so it takes $O(n)$ time.\n    \n   The second `while` loop also runs at most $n$ iterations, decrementing the variable `j` as it searches for the smallest element larger than `nums[i]`. Similarly, it can take $O(n)$ time.\n    \n   The `reverse` function is called on a portion of the array, from index `i + 1` to the end. In the worst case, this can cover the entire array, leading to a time complexity of $O(n)$.\n    \n   The `swap` function runs in constant time, $O(1)$, since it only exchanges two elements.\n    \n    Therefore, the overall time complexity is $O(n)$.\n\n- Space complexity: $O(1)$\n\n   The function operates in-place on the `nums` array, meaning no extra space is used for storing additional data.\n    \n   Only a few constant space variables (`i`, `j`, and `temp`) are used.\n    \n   The built-in `swap` and `reverse` functions do not require additional space beyond what is already present in the input array.\n\n    Hence, the space complexity is $O(1)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

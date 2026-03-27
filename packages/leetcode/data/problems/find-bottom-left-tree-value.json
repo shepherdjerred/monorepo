@@ -1,0 +1,141 @@
+{
+  "questionId": "513",
+  "questionFrontendId": "513",
+  "title": "Find Bottom Left Tree Value",
+  "titleSlug": "find-bottom-left-tree-value",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary tree, return the leftmost value in the last row of the tree.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/12/14/tree1.jpg\" style=\"width: 302px; height: 182px;\" />\n<pre>\n<strong>Input:</strong> root = [2,1,3]\n<strong>Output:</strong> 1\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/12/14/tree2.jpg\" style=\"width: 432px; height: 421px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,4,null,5,6,null,null,7]\n<strong>Output:</strong> 7\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 10<sup>4</sup>]</code>.</li>\n\t<li><code>-2<sup>31</sup> &lt;= Node.val &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findBottomLeftValue\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"440.5K\", \"totalSubmission\": \"609.9K\", \"totalAcceptedRaw\": 440540, \"totalSubmissionRaw\": 609892, \"acRate\": \"72.2%\"}",
+  "likes": 4006,
+  "dislikes": 301,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,1,3]",
+    "[1,2,3,4,null,5,6,null,null,7]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"josh-technology\", \"name\": \"josh technology\"}, {\"timesEncountered\": 3, \"slug\": \"gopuff\", \"name\": \"Gopuff\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int findBottomLeftValue(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int findBottomLeftValue(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def findBottomLeftValue(self, root: Optional[TreeNode]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def findBottomLeftValue(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number}\n */\nvar findBottomLeftValue = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction findBottomLeftValue(root: TreeNode | null): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int FindBottomLeftValue(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint findBottomLeftValue(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc findBottomLeftValue(root *TreeNode) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun findBottomLeftValue(root: TreeNode?): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func findBottomLeftValue(_ root: TreeNode?) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn find_bottom_left_value(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer}\ndef find_bottom_left_value(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer\n     */\n    function findBottomLeftValue($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int findBottomLeftValue(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def findBottomLeftValue(root: TreeNode): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec find_bottom_left_value(root :: TreeNode.t | nil) :: integer\n  def find_bottom_left_value(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec find_bottom_left_value(Root :: #tree_node{} | null) -> integer().\nfind_bottom_left_value(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (find-bottom-left-value root)\n  (-> (or/c tree-node? #f) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2236",
+    "content": "[TOC]\n\n## Solution\n\n\n---\n\n### Overview\n\nOur objective is to find the leftmost value at the bottom level of the tree. We are provided with the root of the tree. \n\nSince we need to find a specific value at the bottom of a tree, we will need to traverse the tree, searching for the leftmost node at the bottom level. When we find that node, we can return its value.\n\n> If you are not familiar with tree traversal, check out our [Explore Card](https://leetcode.com/explore/learn/card/data-structure-tree/134/traverse-a-tree/)\n\n---\n\n### Approach 1: Depth-First Search\n\n\n#### Intuition\n\nWe need to find the leftmost node in the bottom level of the tree. As we are concerned with the bottom level specifically, we will need to keep track of the current level/depth as we traverse.\n\nOne of the primary ways to traverse a tree is a Depth-First Search (DFS). We will use this approach to search for the leftmost node in the bottom level because it will be easy to keep track of the depth. We will use a preorder traversal, visiting each subtree's root first so that we can keep track of the level and visiting the left child first so that when we get to a new depth, we know that the current node is the leftmost node of that level.\n\nBinary trees are often traversed using recursive methods. Below is an example pseudocode for a preorder traversal.\n\n##### Standard Recursive Preorder Traversal\n1. If the tree is empty, return.\n2. Handle the root.\n3. Traverse the left subtree - call Preorder(root.left).\n4. Traverse the right subtree - call Preorder(root.right).\n\nBelow is an example tree, with each level's depth labeled.\n\n![Binary Tree with \\[1, 2, 3, 4, null, 5, 6, null, null, 7\\]](../Figures/513/513_1.png)\n\nA preorder traversal visits the nodes in this order: 1, 2, 4, 3, 5, 7, 6.\n\nWe can implement a recursive function `dfs` to search for the leftmost node in the bottom level, which we will call `bottomLeftValue`. \n\nGenerally, when working recursively with trees, the base case is when the tree is empty. If the current node is empty, we return. \n\nFrom there, we can build the rest of our recursive function `dfs`. We keep track of the deepest level of the tree we have encountered so far in `maxDepth`. We store the value of the deepest leftmost node we have found thus far in `bottomLeftValue`. To perform a pre-order traversal, we first handle the root, then recursively search the left subtree, then the right subtree. Each time we recursively call `dfs`, we increment the depth by one because the left or right child of the current node is one level deeper than the current node. When we visit the current node, we will check if it is deeper than any node we have discovered yet. If the current node is the deepest we have found so far, we have discovered a new level of the tree. We visit nodes to the left first, so we know this is the leftmost node in this level. We can update `bottomLeftValue` to the current node's value and also update `maxDepth`.\n\nAfter defining `dfs`, all we have to do to solve the problem is call the function and then return `bottomLeftValue``.\n\n\n#### Algorithm\n\n1. Initialize a variable `maxDepth` to store the depth of the bottom level of the tree.\n2. Initialize a variable `bottomLeftValue` to store the leftmost value in the last row of the tree.\n3. Implement a recursive function, `dfs`, that traverses the tree and finds the leftmost value in the last row of the tree. The parameters are `current`, the current node, and `depth`, its depth.\n    1. Check whether `current` is empty. If so, return.\n    2. Check if the current depth exceeds the global variable `maxDepth`. If it does, that means we have found a new level.\n        1. Set `maxDepth` to `depth`.\n        2. Set `bottomLeftValue` to the value of the current node.\n    3. Recursively call `dfs` on the current node's left subtree and increment `depth` by one.\n    4. Recursively call `dfs` on the current node's right subtree and increment `depth` by one.\n4. Call `dfs` with `root` and the initial `depth` of `0`.\n5. Return `bottomLeftValue`.\n\n\n#### Implementation\n\n\n\n<iframe src=\"https://leetcode.com/playground/795bdDWi/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"795bdDWi\"></iframe>\n\n\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n- Time complexity: $O(n)$\n\n    Traversing the tree with a DFS costs $O(n)$ as we visit each node exactly once. At each visit, we perform $O(1)$ work.\n\n\n- Space complexity: $O(n)$\n\n    The space complexity of DFS, when implemented recursively, is determined by the maximum depth of the call stack, which corresponds to the depth of the tree. In the worst case, if the tree is entirely unbalanced (e.g., a linked list), the call stack can grow as deep as the number of nodes, resulting in a space complexity of $O(n)$.\n\n---\n\n### Approach 2: Breadth-First Search Right to Left\n\n#### Intuition\n\nThe other primary way to traverse a tree is a Breath-First Search (BFS). This traversal method, also known as level-order traversal, could apply to this problem because the algorithm visits all the nodes in each level before moving on to the next level. BFS could be helpful because we are concerned with the last level specifically, and visiting the levels in order means that the final nodes we encounter are on the bottom level. The general algorithm for Breadth-First Search is below.\n\n##### Standard Breadth-First Search\n1. Create a queue for storing the nodes on each level.\n2. Add the root node to the queue.\n3. While the queue is not empty:\n    1. Remove the front node of the queue.\n    2. Handle the node and add its children to the back of the queue.\n\n\nBelow is an example tree to visualize how BFS works.\n\n![Binary Tree with \\[1, 2, 3, 4, null, 5, 6, null, null, 7\\]](../Figures/513/513_2.png)\n\nBreath First Search visits the nodes in this order: 1, 2, 3, 4, 5, 6, 7.\n\nIn the depth-first search implementation above, we kept track of the depth and `maxDepth` of the tree using a variable. We could use the same strategy to track the depth during the BFS, but it may not be necessary. BFS performs a level order search, meaning the last nodes we encounter will be on the bottom level. We are searching for the leftmost node in the bottom level of the tree. \n\n> How can we find the leftmost node in the bottom level?  \n\nBFS of a tree is often implemented such that the left child of a given node is visited first, then the right child. If we implement BFS such that the right child of a given node is visited first, then the left child, the last node we visit is the leftmost node in the bottom level of the tree. This makes a variable for depth unnecessary. We can just return the value of the last node we encounter during the search.\n\n\n\n#### Algorithm\n\n1. Initialize a Queue `queue` for storing the nodes on each level.\n2. Create a new node `current` and set it to `root`.\n3. Add `current` to `queue`.\n4. While `queue` is not empty:\n    1. Remove the front node from the queue and save it in `current`.\n    2. If the `current` has a right child, add it to `queue`.\n    3. If the `current` has a left child, add it to `queue`.\n5. After the while loop, each node in the tree has been visited. The search traversed the whole tree, top to bottom, right to left, so the last node stored in `current` is the leftmost node in the bottom level of the tree, and we return its value.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/g6zXpErc/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"g6zXpErc\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n* Time complexity: $O(n)$\n\n    We perform BFS, which costs $O(n)$ because we don't visit a node more than once. At each node, we perform $O(1)$ work.\n\n\n* Space complexity: $O(n)$\n\n    We require $O(n)$ space for the queue during the BFS for `queue`.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

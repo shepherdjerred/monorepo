@@ -1,0 +1,144 @@
+{
+  "questionId": "375",
+  "questionFrontendId": "375",
+  "title": "Guess Number Higher or Lower II",
+  "titleSlug": "guess-number-higher-or-lower-ii",
+  "difficulty": "Medium",
+  "content": "<p>We are playing the Guessing Game. The game will work as follows:</p>\n\n<ol>\n\t<li>I pick a number between&nbsp;<code>1</code>&nbsp;and&nbsp;<code>n</code>.</li>\n\t<li>You guess a number.</li>\n\t<li>If you guess the right number, <strong>you win the game</strong>.</li>\n\t<li>If you guess the wrong number, then I will tell you whether the number I picked is <strong>higher or lower</strong>, and you will continue guessing.</li>\n\t<li>Every time you guess a wrong number&nbsp;<code>x</code>, you will pay&nbsp;<code>x</code>&nbsp;dollars. If you run out of money, <strong>you lose the game</strong>.</li>\n</ol>\n\n<p>Given a particular&nbsp;<code>n</code>, return&nbsp;<em>the minimum amount of money you need to&nbsp;<strong>guarantee a win regardless of what number I pick</strong></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/10/graph.png\" style=\"width: 505px; height: 388px;\" />\n<pre>\n<strong>Input:</strong> n = 10\n<strong>Output:</strong> 16\n<strong>Explanation:</strong> The winning strategy is as follows:\n- The range is [1,10]. Guess 7.\n&nbsp;   - If this is my number, your total is $0. Otherwise, you pay $7.\n&nbsp;   - If my number is higher, the range is [8,10]. Guess 9.\n&nbsp;       - If this is my number, your total is $7. Otherwise, you pay $9.\n&nbsp;       - If my number is higher, it must be 10. Guess 10. Your total is $7 + $9 = $16.\n&nbsp;       - If my number is lower, it must be 8. Guess 8. Your total is $7 + $9 = $16.\n&nbsp;   - If my number is lower, the range is [1,6]. Guess 3.\n&nbsp;       - If this is my number, your total is $7. Otherwise, you pay $3.\n&nbsp;       - If my number is higher, the range is [4,6]. Guess 5.\n&nbsp;           - If this is my number, your total is $7 + $3 = $10. Otherwise, you pay $5.\n&nbsp;           - If my number is higher, it must be 6. Guess 6. Your total is $7 + $3 + $5 = $15.\n&nbsp;           - If my number is lower, it must be 4. Guess 4. Your total is $7 + $3 + $5 = $15.\n&nbsp;       - If my number is lower, the range is [1,2]. Guess 1.\n&nbsp;           - If this is my number, your total is $7 + $3 = $10. Otherwise, you pay $1.\n&nbsp;           - If my number is higher, it must be 2. Guess 2. Your total is $7 + $3 + $1 = $11.\nThe worst case in all these scenarios is that you pay $16. Hence, you only need $16 to guarantee a win.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1\n<strong>Output:</strong> 0\n<strong>Explanation:</strong>&nbsp;There is only one possible number, so you can guess 1 and not have to pay anything.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>&nbsp;There are two possible numbers, 1 and 2.\n- Guess 1.\n&nbsp;   - If this is my number, your total is $0. Otherwise, you pay $1.\n&nbsp;   - If my number is higher, it must be 2. Guess 2. Your total is $1.\nThe worst case is that you pay $1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 200</code></li>\n</ul>\n",
+  "hints": [
+    "The best strategy to play the game is to minimize the maximum loss you could possibly face. Another strategy is to minimize the expected loss. Here, we are interested in the <b>first</b> scenario.",
+    "Take a small example (n = 3). What do you end up paying in the worst case?",
+    "Check out <a href=\"https://en.wikipedia.org/wiki/Minimax\">this article</a> if you're still stuck.",
+    "The purely recursive implementation of minimax would be worthless for even a small n. You MUST use dynamic programming.",
+    "As a follow-up, how would you modify your code to solve the problem of minimizing the expected loss, instead of the worst-case loss?"
+  ],
+  "metaData": "{\n  \"name\": \"getMoneyAmount\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"158.9K\", \"totalSubmission\": \"302.3K\", \"totalAcceptedRaw\": 158933, \"totalSubmissionRaw\": 302316, \"acRate\": \"52.6%\"}",
+  "likes": 2334,
+  "dislikes": 2166,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Flip Game II\", \"titleSlug\": \"flip-game-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Guess Number Higher or Lower\", \"titleSlug\": \"guess-number-higher-or-lower\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Can I Win\", \"titleSlug\": \"can-i-win\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find K Closest Elements\", \"titleSlug\": \"find-k-closest-elements\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "10",
+    "1",
+    "2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"zeta\", \"name\": \"Zeta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Game Theory",
+      "slug": "game-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int getMoneyAmount(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int getMoneyAmount(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def getMoneyAmount(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def getMoneyAmount(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar getMoneyAmount = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function getMoneyAmount(n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int GetMoneyAmount(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int getMoneyAmount(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func getMoneyAmount(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun getMoneyAmount(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func getMoneyAmount(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn get_money_amount(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef get_money_amount(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function getMoneyAmount($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int getMoneyAmount(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def getMoneyAmount(n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec get_money_amount(n :: integer) :: integer\n  def get_money_amount(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec get_money_amount(N :: integer()) -> integer().\nget_money_amount(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (get-money-amount n)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "66",
+    "content": "[TOC]\n\n## Summary\n\nGiven a number $$n$$, we have to find the worst-case cost of guessing a number chosen from the range $$(1, n)$$, assuming that the guesses are made intelligently(minimize the total cost). The cost is incremented by $$i$$ for every wrong guess $$i$$.\n\nFor example:\n```\nn=5\n1 2 3 4 5\n```\nIf we start with 3 as the initial guess, the next guess would certainly be 4 as in the worst case required number is 5. Total Cost $$= 4+3=7$$.\n\nBut if we start with 4 as the initial guess, our next guess would be 2 as in the worst case required number is 3 or 1. Total Cost $$=4+2=6$$ which is the minimum cost.\n\n```\nn=8\n1 2 3 4 5 6 7 8\n```\nIn this case, we have to guess 5 followed by 7. Total Cost $$=5+7=12$$.\nIf we choose 4 as our initial guess. Total Cost $$=4+5+7=16$$.\n\n## Solution\n\n---\n### Approach #1 Brute Force [Time Limit Exceeded]\n\nFirstly, we need to be aware of the fact that out of the range $$(1, n)$$, we have to guess the numbers intelligently in order to minimize the cost. But, along with that we have to take into account the worst-case scenario possible, that is we have to assume that the original number chosen is such that it will try to maximize the overall cost.\n\nIn Brute Force, we can pick up any number $$i$$ in the range $$(1, n)$$. Assuming it is a wrong guess(worst-case scenario), we have to minimize the cost of reaching the required number. Now, the required number could be lying either to the right or left of the number picked($$i$$). But to cover the possibility of the worst case number chosen, we need to take the maximum cost out of the cost of reaching the worst number out of the right and left segments of $$i$$. Thus, if we pick up $$i$$ as the pivot, the overall minimum cost for the worst required number will be:\n\n$$\n\\mathrm{cost}(1, n)=i + \\max\\big(\\mathrm{cost}(1,i-1), \\mathrm{cost}(i+1,n)\\big)\n$$\n\nFor every segment, we can further choose another pivot and repeat the same process for calculating the minimum cost.\n\nBy using the above procedure, we found out the cost of reaching the required number starting with $$i$$ as the pivot. In the same way, we iterate over all the numbers in the range $$(1, n)$$, choosing them as the pivot, calculating the cost of every pivot chosen, and thus, we can find the minimum cost out of those.\n\n\n<iframe src=\"https://leetcode.com/playground/QW3ndyqL/shared\" frameBorder=\"0\" name=\"QW3ndyqL\" width=\"100%\" height=\"326\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n!)$$. We choose a number as the pivot and repeat the pivoting process further $$n$$ times $$O(n!)$$. We repeat the same process for $$n$$ pivots.\n* Space complexity : $$O(n)$$. Recursion of depth $$n$$ is used.\n\n---\n### Approach #2 Modified Brute Force [Time Limit Exceeded]\n\n**Algorithm**\n\nIn Brute Force, for numbers in the range $$(i, j)$$, we picked up every number from $$i$$ to $$j$$ as the pivot and found the maximum cost out of its left and right segments. But an important point to observe is that if we choose any number from the range $$\\big( i,\\frac{i+j}{2} \\big)$$ as the pivot, the right segment(consisting of numbers larger than the picked up pivot) will be longer than the left segment(consisting of numbers smaller than it). Thus, we will always get the maximum cost from the right segment and it will be larger than the minimum cost achievable by choosing some other pivot. Therefore, our objective here is to reduce the larger cost that is coming from the right segment. Thus, it is wise to choose the pivot from the range $$\\big(\\frac{i+j}{2}, j\\big)$$. In this way the costs of the two segments will be nearer to each other and this will minimize the overall cost.\n\nThus, while choosing the pivot instead of iterating from $$i$$ to $$j$$, we iterate from $$\\frac{i+j}{2}$$ to $$j$$ and find the minimum achievable cost similar to brute force.\n\n<iframe src=\"https://leetcode.com/playground/juXrfQvD/shared\" frameBorder=\"0\" name=\"juXrfQvD\" width=\"100%\" height=\"309\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n!)$$. We choose a number as the pivot and repeat the pivoting process further $$n$$ times $$O(n!)$$. We repeat the same process for $$n$$ pivots.\n* Space complexity : $$O(n)$$. Recursion of depth $$n$$ is used.\n\n---\n### Approach #3 Using DP [Accepted]\n\n**Algorithm**\n\nThe problem of finding the minimum cost of reaching the destination number by choosing $$i$$ as a pivot can be divided into the subproblem of finding the maximum out of the minimum costs of its left and right segments as explained above. For each segment, we can continue the process leading to smaller and smaller subproblems. This leads us to the conclusion that we can use DP for this problem.\n\nWe need to use a $$dp$$ matrix, where $$dp(i, j)$$ refers to the minimum cost of finding the worst number given only the numbers in the range $$(i, j)$$. Now, we need to know how to fill in the entries of this $$dp$$. If we are given only a single number $$k$$, no matter what the number is the cost of finding that number is always 0 since we always hit the number directly without any wrong guess. Thus, firstly, we fill in all the entries of the $$dp$$ which correspond to segments of length 1 i.e. all entries $$dp(k, k)$$ are initialized to 0. Then, in order to find the entries for segments of length 2, we need all the entries for segments of length 1. Thus, in general, to fill in the entries corresponding to segments of length $$len$$, we need all the entries of length $$len-1$$ and below to be already filled. Thus, we need to fill the entries in the order of their segment lengths. Thus, we fill the entries of $$dp$$ diagonally.\n\nNow, what criteria do we need to fill up the $$dp$$ matrix? For any entry  $$dp(i, j)$$, given the current segment length of interest is $$len$$ i.e. if $$len=j-i+1$$, we assume as if we are available only with the numbers in the range $$(i, j)$$. To fill in its current entry, we follow the same process as Approach 1, choosing every number as the pivot and finding the minimum cost as:\n\n$$\n\\mathrm{cost}(i, j)=\\mathrm{pivot} + \\max\\big(\\mathrm{cost}(i,\\mathrm{pivot}-1), \\mathrm{cost}(\\mathrm{pivot}+1,j)\\big)\n$$\n\nBut, we have an advantage in terms of calculating the cost here, since we already know the costs for the segments of length smaller than $$len$$ from $$dp$$. Thus, the dp equation becomes:\n\n$$\n\\mathrm{dp}(i, j) = \\min_{\\mathrm{pivot} \\in (i, j)} \\big[ \\mathrm{pivot} + \\max \\big( \\mathrm{dp}(i,\\mathrm{pivot}-1) , \\mathrm{dp}(\\mathrm{pivot}+1,j) \\big) \\big]\n$$\n\n  where $$\\min_{\\mathrm{pivot} \\in (i, j)}$$ indicates the minimum obtained by considering every number in the range $$(i, j)$$ as the pivot.\n\nThe following animation will make the process more clear for n=5:\n<!--![Guess Number Higher or Lower](https://leetcode.com/media/original_images/375_Guess_Number_Higher_or_Lower.gif)-->\n!?!../Documents/375_Guess.json:791,552!?!\n\n\n<iframe src=\"https://leetcode.com/playground/X99KiHYD/shared\" frameBorder=\"0\" name=\"X99KiHYD\" width=\"100%\" height=\"326\"></iframe>\n**Complexity Analysis**\n\n* Time complexity : $$O(n^3)$$. We traverse the complete $$dp$$ matrix once $$(O(n^2))$$. For every entry, we take at most $$n$$ numbers as pivot.\n\n* Space complexity : $$O(n^2)$$. $$dp$$ matrix of size $$n^2$$ is used.\n\n---\n\n### Approach #4 Better Approach using DP [Accepted]\n\n**Algorithm**\n\nIn the last approach, we chose every possible pivot from the range $$(i, j)$$. But, as per the argument given in Approach 2, we can choose pivots only from the range $$\\big(i+(len-1)/2,j\\big)$$, where $$len$$ is the current segment length of interest.\nThus the governing equation is:\n\n$$\n\\mathrm{dp}(i, j)=\\min_{\\mathrm{pivot} \\in \\big(i+\\frac{len-1}{2}, j\\big)}\\big[\\mathrm{pivot} + \\max\\big(\\mathrm{dp}(i,\\mathrm{pivot}-1), \\mathrm{dp}(\\mathrm{pivot}+1,j)\\big)\\big]\n$$\n\n Thus, we can optimize the Approach 3 to some extent.\n\n\n<iframe src=\"https://leetcode.com/playground/vxpg2Chd/shared\" frameBorder=\"0\" name=\"vxpg2Chd\" width=\"100%\" height=\"360\"></iframe>\n**Complexity Analysis**\n\n* Time complexity : $$O(n^3)$$. We traverse the complete $$dp$$ matrix once $$(O(n^2))$$. For every entry, we take at most $$n$$ numbers as pivot.\n\n* Space complexity : $$O(n^2)$$. $$dp$$ matrix of size $$n^2$$ is used.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

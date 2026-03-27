@@ -1,0 +1,144 @@
+{
+  "questionId": "743",
+  "questionFrontendId": "742",
+  "title": "Closest Leaf in a Binary Tree",
+  "titleSlug": "closest-leaf-in-a-binary-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary tree where every node has <strong>a unique value</strong> and a target integer <code>k</code>, return <em>the value of the <strong>nearest leaf node</strong> to the target </em><code>k</code><em> in the tree</em>.</p>\n\n<p><strong>Nearest to a leaf</strong> means the least number of edges traveled on the binary tree to reach any leaf of the tree. Also, a node is called a leaf if it has no children.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/13/closest1-tree.jpg\" style=\"width: 224px; height: 145px;\" />\n<pre>\n<strong>Input:</strong> root = [1,3,2], k = 1\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> Either 2 or 3 is the nearest leaf node to the target of 1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/13/closest2-tree.jpg\" style=\"width: 64px; height: 65px;\" />\n<pre>\n<strong>Input:</strong> root = [1], k = 1\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The nearest leaf node is the root node itself.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/13/closest3-tree.jpg\" style=\"width: 464px; height: 384px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,4,null,null,null,5,null,6], k = 2\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The leaf node with value 3 (and not the leaf node with value 6) is nearest to the node with value 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 1000]</code>.</li>\n\t<li><code>1 &lt;= Node.val &lt;= 1000</code></li>\n\t<li>All the values of the tree are <strong>unique</strong>.</li>\n\t<li>There exist some node in the tree where <code>Node.val == k</code>.</li>\n</ul>\n",
+  "hints": [
+    "Convert the tree to a general graph, and do a breadth-first search.  Alternatively, find the closest leaf for every node on the path from root to target."
+  ],
+  "metaData": "{\n  \"name\": \"findClosestLeaf\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"55.8K\", \"totalSubmission\": \"117.6K\", \"totalAcceptedRaw\": 55773, \"totalSubmissionRaw\": 117599, \"acRate\": \"47.4%\"}",
+  "likes": 890,
+  "dislikes": 189,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,3,2]\n1",
+    "[1]\n1",
+    "[1,2,3,4,null,null,null,5,null,6]\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"databricks\", \"name\": \"Databricks\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int findClosestLeaf(TreeNode* root, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int findClosestLeaf(TreeNode root, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def findClosestLeaf(self, root: Optional[TreeNode], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def findClosestLeaf(self, root, k):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {number} k\n * @return {number}\n */\nvar findClosestLeaf = function(root, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction findClosestLeaf(root: TreeNode | null, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int FindClosestLeaf(TreeNode root, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint findClosestLeaf(struct TreeNode* root, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc findClosestLeaf(root *TreeNode, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun findClosestLeaf(root: TreeNode?, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func findClosestLeaf(_ root: TreeNode?, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn find_closest_leaf(root: Option<Rc<RefCell<TreeNode>>>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @param {Integer} k\n# @return {Integer}\ndef find_closest_leaf(root, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @param Integer $k\n     * @return Integer\n     */\n    function findClosestLeaf($root, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int findClosestLeaf(TreeNode? root, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def findClosestLeaf(root: TreeNode, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec find_closest_leaf(root :: TreeNode.t | nil, k :: integer) :: integer\n  def find_closest_leaf(root, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec find_closest_leaf(Root :: #tree_node{} | null, K :: integer()) -> integer().\nfind_closest_leaf(Root, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (find-closest-leaf root k)\n  (-> (or/c tree-node? #f) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "334",
+    "content": "[TOC]\n\n### Approach #1: Convert to Graph [Accepted]\n\n**Intuition**\n\nInstead of a binary tree, if we converted the tree to a general graph, we could find the shortest path to a leaf using breadth-first search.\n\n**Algorithm**\n\nWe use a depth-first search to record in our graph each edge traveled from parent to node.\n\nAfter, we use a breadth-first search on nodes that started with a value of `k`, so that we are visiting nodes in order of their distance to `k`. When the node is a leaf (it has one outgoing edge, where the `root` has a \"ghost\" edge to `null`), it must be the answer.\n\n<iframe src=\"https://leetcode.com/playground/hWTqP8mU/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"hWTqP8mU\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$ where $$N$$ is the number of nodes in the given input tree. We visit every node a constant number of times.\n\n* Space Complexity: $$O(N)$$, the size of the graph.\n\n---\n### Approach #2: Annotate Closest Leaf [Accepted]\n\n**Intuition and Algorithm**\n\nSay from each node, we already knew where the closest leaf in its subtree is. Using any kind of traversal plus memoization, we can remember this information.\n\nThen the closest leaf to the target (in general, not just subtree) has to have the lowest common ancestor with the `target` that is on the path from the `root` to the `target`. We can find the path from `root` to `target` via any kind of traversal, and look at our annotation for each node on this path to determine all leaf candidates, choosing the best one.\n\n<iframe src=\"https://leetcode.com/playground/fL4CVewb/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fL4CVewb\"></iframe>\n\n**Complexity Analysis**\n\n* Time and Space Complexity: $$O(N)$$. The analysis is the same as in *Approach #1*.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

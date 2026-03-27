@@ -1,0 +1,138 @@
+{
+  "questionId": "250",
+  "questionFrontendId": "250",
+  "title": "Count Univalue Subtrees",
+  "titleSlug": "count-univalue-subtrees",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary tree, return <em>the number of <strong>uni-value</strong> </em><span data-keyword=\"subtree\"><em>subtrees</em></span>.</p>\n\n<p>A <strong>uni-value subtree</strong> means all nodes of the subtree have the same value.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/21/unival_e1.jpg\" style=\"width: 450px; height: 258px;\" />\n<pre>\n<strong>Input:</strong> root = [5,1,5,5,5,null,5]\n<strong>Output:</strong> 4\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = []\n<strong>Output:</strong> 0\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [5,5,5,5,5,null,5]\n<strong>Output:</strong> 6\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of the node in the tree will be in the range <code>[0, 1000]</code>.</li>\n\t<li><code>-1000 &lt;= Node.val &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"countUnivalSubtrees\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"170.3K\", \"totalSubmission\": \"296.2K\", \"totalAcceptedRaw\": 170292, \"totalSubmissionRaw\": 296191, \"acRate\": \"57.5%\"}",
+  "likes": 1246,
+  "dislikes": 456,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Subtree of Another Tree\", \"titleSlug\": \"subtree-of-another-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Longest Univalue Path\", \"titleSlug\": \"longest-univalue-path\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,1,5,5,5,null,5]",
+    "[]",
+    "[5,5,5,5,5,null,5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"6sense\", \"name\": \"6sense\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"zeta\", \"name\": \"Zeta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int countUnivalSubtrees(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int countUnivalSubtrees(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def countUnivalSubtrees(self, root: Optional[TreeNode]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def countUnivalSubtrees(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number}\n */\nvar countUnivalSubtrees = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction countUnivalSubtrees(root: TreeNode | null): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int CountUnivalSubtrees(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint countUnivalSubtrees(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc countUnivalSubtrees(root *TreeNode) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun countUnivalSubtrees(root: TreeNode?): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func countUnivalSubtrees(_ root: TreeNode?) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn count_unival_subtrees(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer}\ndef count_unival_subtrees(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer\n     */\n    function countUnivalSubtrees($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int countUnivalSubtrees(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def countUnivalSubtrees(root: TreeNode): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec count_unival_subtrees(root :: TreeNode.t | nil) :: integer\n  def count_unival_subtrees(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec count_unival_subtrees(Root :: #tree_node{} | null) -> integer().\ncount_unival_subtrees(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (count-unival-subtrees root)\n  (-> (or/c tree-node? #f) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1875",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nGiven the `root` of a binary tree, return the number of **uni-value subtrees** where a **uni-value subtree** means all nodes of the subtree have the same value.\n\n---\n\n### Approach 1: Depth First Search\n\n#### Intuition\n\nGiven a `node` in our tree, we know that it is a uni-value subtree if it meets the following criteria:\n\n1. The children are also uni-value subtrees.\n2. The children have the same value as `node`.\n\nThe preceding conditions automatically apply to a leaf node because a leaf node's subtree contains only that node.\n\nWe can recursively iterate through the `left` and `right` children of each `node` to see if the children form uni-value subtrees. If all of the children form uni-value subtrees, we can then check if each child has the same value as the value of `node`.\n\nWe can use a depth-first search to perform this recursive traversal.\n\nIn DFS, we use a recursive function to explore nodes as far as possible along each branch. Upon reaching the end of a branch, we backtrack to the previous node and continue exploring the next branches.\n\nIf you are new to Depth First Search, please see our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/619/depth-first-search-in-graph/3882/) for more information on it!\n\nWe implement a `dfs` method that takes a `TreeNode node` as an argument and starts the traversal from there. We begin with `root`. The `dfs` method returns a boolean that indicates whether or not the subtree rooted at `node` is a uni-value subtree.\n\nIf `node` is null, we don't need to worry about it, but we also don't want it to affect the \"parent\" (the node we came from to get to null). Therefore, if `node == null`, we return `true`. Notice that for a leaf node, both children will be null, thus both children's call will return `true`, which is what we want.\n\nWe recursively perform DFS traversal over the `left` and `right` child to see if they create uni-value subtrees. We perform `isLeftUniValue = dfs(node.left)` and `isRightUniValue = dfs(node.right)`. \n\nIf both children form uni-value subtrees, i.e., `isLeftUniValue && isRightUniValue` is `true`, we verify whether both children (if they exist) have the same value as `node`. If the `left` child exists and `node.left.val != node.val`, we return `false`. While the `left` child forms a uni-value subtree, its value differs from that of `node`, so the current `node`'s subtree cannot be a uni-value subtree. We apply the same logic for the `right` child.\n\nIf we do not return `false` in any of the preceding cases, it means that the children who exist have the same value as `node`, forming a uni-value subtree. As a result, we add `1` to our count variable and return `true`.\n\nOtherwise, if any child does not form a uni-value subtree, i.e., `isLeftUniValue && isRightUniValue` returns `false`, the subtree rooted at `node` cannot be a uni-value subtree.\n\nHere's a visual representation of how the approach works in the first example given in the problem description:\n\n!?!../Documents/250/250-slides.json:1000,518!?!\n\n#### Algorithm\n\n1. Create an integer variable `count` to count the number of uni-value subtrees. We initialize it to `0`.\n2. Perform the DFS traversal over the given binary tree. We perform `dfs(root)` where `dfs` is a recursive method that takes a `TreeNode node` as a parameter from which the traversal begins. It returns a boolean indicating whether the subtree rooted at `node` is a uni-value subtree or not. We perform the following in this method:\n    - If `node` is `null`, return `true`.\n    - Recursively check whether the `left` child forms a uni-value subtree. We perform `isLeftUniValue = dfs(node.left)`.\n    - Recursively check whether the `right` child forms a uni-value subtree. We perform `isRightUniValue = dfs(node.right)`.\n    - If both the children form uni-value subtrees, i.e, `isLeftUniValue && isRightUniValue` is `true`, we compare the values of the `node`'s children with `node`' value. If the `left` child exists and `node.left.val != node.val`, we return `false` as the values don't match and we don't have a uni-value subtree. Likewise, if the `right` child exists and `node.right.val != node.val`, we return `false`. Otherwise, we increment `count` by `1` and return `true`.\n    - Otherwise, one or both of the children do not form a uni-value subtree, so the tree rooted at `node` cannot either. We return `false`.\n3. Return `count`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/GNWDitRm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GNWDitRm\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the number of nodes in the given binary tree.\n\n* Time complexity: $O(n)$.\n    - We traverse once over each node of the tree using DFS traversal which takes $O(n)$ time.\n\n* Space complexity: $O(n)$.\n    - The DFS traversal is recursive and would take some space to store the stack calls. The maximum number of active stack calls at a time would be the tree's height, which in the worst case would be $O(n)$ when the tree is a straight line.\n\n---\n\n### Approach 2: Depth First Search Without Using The Global Variable\n\n#### Intuition\n\nIn the previous approach we used a non-constant global variable `count` to count the number of uni-value subtrees. The non-constant global variables are evil because their value can be changed by any function. Using global variables reduces the modularity and flexibility of the program. It is always suggested not to use global variables and instead use local variables in the program.\n\nTo avoid using global variables, we alter the `dfs` method, which accepts a `TreeNode node` as an argument and returns a list of two values. The first value in the list provides a boolean indicating whether or not the subtree rooted at `node` is a uni-value subtree (exactly the same as in the previous approach), and the second value indicates the number of uni-value subtrees in the tree rooted at `node`.\n\nOur answer would be `dfs(root)[1]`, i.e., the second element in the list which would give the number of uni-value subtrees in the tree rooted at `root`, which is what we want.\n\n#### Algorithm\n\n1. Perform the DFS traversal over the given binary tree. We implement a recursive `dfs` method that takes a `TreeNode node` as an argument from which the traversal begins. We perform the following in this method:\n    - If `node` is `null`, we return `true` similar to the previous approach but also return `0` as an empty tree cannot have any uni-value subtrees. We return `{true, 0}`.\n    - Recursively call `dfs` for the `left` child. We perform `left = dfs(node.left)`.\n    - Recursively call `dfs` for the `right` child. We perform `right = dfs(node.right)`.\n    - We create two boolean variables `isLeftUniValue = left.first` and `isRightUniValue = right.first`, to indicate whether the `left` and `right` subtrees constitute uni-value subtrees or not. We additionally keep a `count` of the number of uni-value subtrees in the `left` and `right` subtrees.\n    - If both the children form uni-value subtrees, i.e, `isLeftUniValue && isRightUniValue` is `true`, we compare the values of the `node`'s children with `node`' value. If the `left` child exists and `node.left.val != node.val`, we return `{false, count}` as this is not a uni-value subtree and we have `count` number of uni-value subtrees in the tree rooted at `node`. Likewise, if the `right` child exists and `node.right.val != node.val`, we return `{false, count}`. Otherwise, the subtree rooted at `node` forms a uni-value subtree, so we return `{true, count + 1}`.\n    - Otherwise, one or both of the children do not form a uni-value subtree, so the tree rooted at `node` cannot either. We return `{false, count}`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PiSvNsxd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PiSvNsxd\"></iframe>\n\nWe used the global variable `count` in place of a local variable in the first approach to ensure that the same variable is updated every time a new uni-value subtree is discovered. If we had used a local variable `count` and simply passed it into the `dfs` method, each call would create a new duplicate of the integer. Incrementing this new copy of the integer would have had no effect on our initial local variable `count`.\n\nWe can use pass by reference to modify the same integer without creating a global variable. We pass an integer or an integer array with just one element to count the number of uni-valued subtrees in the given tree based on the language. We can use an integer variable `count = 0` and pass it by reference in `C++`. Because we cannot pass integers by reference in `Java` and `Python3`, we create an integer array `count` with only one element and use it for these languages.\n\nIt's worth noting that here we would need to initialize (expose) the `count` variable in the `countUnivalSubtrees` method, which wasn't necessary in the previous implementation of this approach, therefore the previous solution with multiple return values is better in terms of design.\n\nYou can take a look at the implementation using pass by reference below:\n\n<iframe src=\"https://leetcode.com/playground/5otMd64V/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5otMd64V\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the number of nodes in the given binary tree.\n\n* Time complexity: $O(n)$.\n    - We traverse once over each node of the tree using DFS traversal which takes $O(n)$ time.\n\n* Space complexity: $O(n)$.\n    - The DFS traversal is recursive and would take some space to store the stack calls. The maximum number of active stack calls at a time would be the tree's height, which in the worst case would be $O(n)$ when the tree is a straight line.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

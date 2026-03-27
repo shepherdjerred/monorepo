@@ -1,0 +1,137 @@
+{
+  "questionId": "687",
+  "questionFrontendId": "687",
+  "title": "Longest Univalue Path",
+  "titleSlug": "longest-univalue-path",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary tree, return <em>the length of the longest path, where each node in the path has the same value</em>. This path may or may not pass through the root.</p>\n\n<p><strong>The length of the path</strong> between two nodes is represented by the number of edges between them.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/10/13/ex1.jpg\" style=\"width: 450px; height: 238px;\" />\n<pre>\n<strong>Input:</strong> root = [5,4,5,1,1,null,5]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The shown image shows that the longest path of the same value (i.e. 5).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/10/13/ex2.jpg\" style=\"width: 450px; height: 238px;\" />\n<pre>\n<strong>Input:</strong> root = [1,4,5,4,4,null,5]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The shown image shows that the longest path of the same value (i.e. 4).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[0, 10<sup>4</sup>]</code>.</li>\n\t<li><code>-1000 &lt;= Node.val &lt;= 1000</code></li>\n\t<li>The depth of the tree will not exceed <code>1000</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"longestUnivaluePath\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"222.7K\", \"totalSubmission\": \"509.6K\", \"totalAcceptedRaw\": 222666, \"totalSubmissionRaw\": 509614, \"acRate\": \"43.7%\"}",
+  "likes": 4459,
+  "dislikes": 681,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Binary Tree Maximum Path Sum\", \"titleSlug\": \"binary-tree-maximum-path-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Univalue Subtrees\", \"titleSlug\": \"count-univalue-subtrees\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Path Sum III\", \"titleSlug\": \"path-sum-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Path With Different Adjacent Characters\", \"titleSlug\": \"longest-path-with-different-adjacent-characters\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,4,5,1,1,null,5]",
+    "[1,4,5,4,4,null,5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"zepto\", \"name\": \"Zepto\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"sprinklr\", \"name\": \"Sprinklr\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int longestUnivaluePath(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int longestUnivaluePath(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def longestUnivaluePath(self, root: Optional[TreeNode]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def longestUnivaluePath(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number}\n */\nvar longestUnivaluePath = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction longestUnivaluePath(root: TreeNode | null): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int LongestUnivaluePath(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint longestUnivaluePath(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc longestUnivaluePath(root *TreeNode) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun longestUnivaluePath(root: TreeNode?): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func longestUnivaluePath(_ root: TreeNode?) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn longest_univalue_path(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer}\ndef longest_univalue_path(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer\n     */\n    function longestUnivaluePath($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int longestUnivaluePath(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def longestUnivaluePath(root: TreeNode): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec longest_univalue_path(root :: TreeNode.t | nil) :: integer\n  def longest_univalue_path(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec longest_univalue_path(Root :: #tree_node{} | null) -> integer().\nlongest_univalue_path(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (longest-univalue-path root)\n  (-> (or/c tree-node? #f) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2196",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Depth-First Search\n\n**Intuition**\n\nWe can try to solve the problem in a recursive manner, as for trees the recursive solutions are intuitive and easy to follow. Let's suppose we have a node in the binary tree, and for both the left and right child, we have the count of nodes in the path that is equal to the node's value. How can we determine the longest univalue path for this node? If the node count for the left and right child is `x` and `y` respectively, then the answer for the parent node should be `x + y`. This is because the longest path would be considering the nodes on both children starting from one child to the parent node and then to the other child.\n\nIn the image below, the univalue path for the root node will be 3, as the number of nodes on the left child path that have the same value as the root node is 1 and the number of nodes on the right child path having the same value as the root node is 2. Hence, the path will include the nodes on both left and right and thus will have a length of 3.\n\n![fig](../Figures/687/687B.png)\n\nNow, we know that, for each left and right child path, we can find the number of nodes equal to their parent node. Then we can find the longest univalue path for the parent node. How to find the count of these nodes? As we just discussed above, if the number of nodes on the left and right child path have the same value as the node `x` and `y`, then the number of nodes that are equal to the parent node should be `max(x, y) + 1`. This is because we will consider only the longest child path, and there's an extra `1` representing the current node.\n\nTherefore, in the recursive function, the base condition would be that if the node is null then we can return `0`. Otherwise, we will recursively call for the left and right child and store the count of nodes in the variables `left` and `right`. Update the answer variable if it's less than the univalue path at the current node which is `x + y`. Return the `max(x, y) + 1` which is the maximum number of nodes that have the same value as `root` on either the left or right side.\n\n![fig](../Figures/687/687A.png)\n\n**Algorithm**\n\n1. Define the recursive function `solve()`, which accepts two arguments first the current node` root` and the second is the value of its parent node `parent`. This method returns the maximum number of consecutive nodes that are present on either the left or right side of the `root` with the same value, including the `root`.\n\n    1. If the root is `NULL`, then return `0`.\n    2. Recursively call `solve()` for the left and right child with the parent value as the value of `root`.\n    3. Update the answer variable `ans` if `left + right` is greater than `ans`.\n    4. If the value of `root` is equal to the parent, return `max(left, right) + 1`, otherwise, return `0`.\n\n2. Call `solve()` with `root` and parent value as `-1`.\n3. Return the maximum univalue path length `ans`.\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/RDxJkYBK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RDxJkYBK\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the number of nodes in the binary tree.\n\n* Time complexity: $O(N)$\n\n  We are iterating over each node only once and hence the time complexity is equal to $O(N)$.\n\n* Space complexity: $O(N)$\n\n  The only space we need is during the recursion, the maximum number of active stack calls would be equal to the height of the tree. In the case of a skewed tree, the height of the tree will be equal to $N$, hence the space complexity is equal to $O(N)$.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

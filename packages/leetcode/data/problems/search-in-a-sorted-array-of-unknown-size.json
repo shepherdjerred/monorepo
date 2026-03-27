@@ -1,0 +1,112 @@
+{
+  "questionId": "786",
+  "questionFrontendId": "702",
+  "title": "Search in a Sorted Array of Unknown Size",
+  "titleSlug": "search-in-a-sorted-array-of-unknown-size",
+  "difficulty": "Medium",
+  "content": "<p>This is an <strong><em>interactive problem</em></strong>.</p>\n\n<p>You have a sorted array of <strong>unique</strong> elements and an <strong>unknown size</strong>. You do not have an access to the array but you can use the <code>ArrayReader</code> interface to access it. You can call <code>ArrayReader.get(i)</code> that:</p>\n\n<ul>\n\t<li>returns the value at the <code>i<sup>th</sup></code> index (<strong>0-indexed</strong>) of the secret array (i.e., <code>secret[i]</code>), or</li>\n\t<li>returns <code>2<sup>31</sup> - 1</code> if the <code>i</code> is out of the boundary of the array.</li>\n</ul>\n\n<p>You are also given an integer <code>target</code>.</p>\n\n<p>Return the index <code>k</code> of the hidden array where <code>secret[k] == target</code> or return <code>-1</code> otherwise.</p>\n\n<p>You must write an algorithm with <code>O(log n)</code> runtime complexity.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> secret = [-1,0,3,5,9,12], target = 9\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> 9 exists in secret and its index is 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> secret = [-1,0,3,5,9,12], target = 2\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> 2 does not exist in secret so return -1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= secret.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>-10<sup>4</sup> &lt;= secret[i], target &lt;= 10<sup>4</sup></code></li>\n\t<li><code>secret</code> is sorted in a strictly increasing order.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"search\",\n  \"params\": [\n    {\n      \"name\": \"secret\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"target\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"c\",\n    \"javascript\",\n    \"golang\",\n    \"python3\",\n    \"kotlin\",\n    \"csharp\",\n    \"scala\",\n    \"ruby\",\n    \"php\",\n    \"swift\",\n    \"typescript\"\n  ],\n  \"manual\": true,\n  \"typescriptCustomType\":\"class ArrayReader {\\n    reader: number[];\\n    constructor(array: number[]) {\\n        this.reader = array;\\n    };\\n\\n\\tget(index: number): number {\\n        if (index >= 0 && index < this.reader.length) {\\n            return this.reader[index];\\n        }\\n        return 2147483647;\\n    };\\n};\"\n}",
+  "stats": "{\"totalAccepted\": \"113K\", \"totalSubmission\": \"154.5K\", \"totalAcceptedRaw\": 112960, \"totalSubmissionRaw\": 154503, \"acRate\": \"73.1%\"}",
+  "likes": 941,
+  "dislikes": 51,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Binary Search\", \"titleSlug\": \"binary-search\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Index of the Large Integer\", \"titleSlug\": \"find-the-index-of-the-large-integer\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[-1,0,3,5,9,12]\n9",
+    "[-1,0,3,5,9,12]\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Interactive",
+      "slug": "interactive"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * // This is the ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * class ArrayReader {\n *   public:\n *     int get(int index);\n * };\n */\n\nclass Solution {\npublic:\n    int search(const ArrayReader& reader, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * // This is ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * interface ArrayReader {\n *     public int get(int index) {}\n * }\n */\n\nclass Solution {\n    public int search(ArrayReader reader, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# \"\"\"\n# This is ArrayReader's API interface.\n# You should not implement it, or speculate about its implementation\n# \"\"\"\n#class ArrayReader:\n#    def get(self, index: int) -> int:\n\nclass Solution:\n    def search(self, reader: 'ArrayReader', target: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# \"\"\"\n# This is ArrayReader's API interface.\n# You should not implement it, or speculate about its implementation\n# \"\"\"\n#class ArrayReader(object):\n#    def get(self, index):\n#        \"\"\"\n#        :type index: int\n#        :rtype int\n#        \"\"\"\n\nclass Solution(object):\n    def search(self, reader, target):\n        \"\"\"\n        :type reader: ArrayReader\n        :type target: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * // This is the ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * function ArrayReader() {\n *\n *     @param {number} index\n *     @return {number}\n *     this.get = function(index) {\n *         ...\n *     };\n * };\n */\n\n/**\n * @param {ArrayReader} reader\n * @param {number} target\n * @return {number}\n */\nvar search = function (reader, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * class ArrayReader {\n *\t\t// This is the ArrayReader's API interface.\n *\t\t// You should not implement it, or speculate about its implementation\n *\t\tget(index: number): number {};\n *  };\n */\n\nfunction search(reader: ArrayReader, target: number): number {\n\t\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * // This is ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * class ArrayReader {\n *     public int Get(int index) {}\n * }\n */\n\nclass Solution {\n    public int Search(ArrayReader reader, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * *********************************************************************\n * // This is the ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * *********************************************************************\n *\n * int getElement(ArrayReader *, int index);\n */\n\nint search(struct ArrayReader* reader, int target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * // This is the ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * type ArrayReader struct {\n * }\n *\n * func (this *ArrayReader) get(index int) int {}\n */\n\nfunc search(reader ArrayReader, target int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * // This is ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * class ArrayReader {\n *     fun get(index: Int): Int {}\n * }\n */\n\nclass Solution {\n    fun search(reader: ArrayReader, target: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * // This is ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * public class ArrayReader {\n *     public func get(_ index: Int) -> Int {}\n * }\n */\n\nclass Solution {\n    func search(_ reader: ArrayReader, _ target: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# This is ArrayReader's API interface.\n# You should not implement it, or speculate about its implementation\n# class ArrayReader\n#     def get(index)\n#\t\t\n#     end\n# end\n\n# @param {ArrayReader} reader\n# @param {int} target\n# @return {int}\ndef search(reader, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * // This is ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * class ArrayReader {\n *     function get($index) {}\n * }\n */\n\nclass Solution {\n    /**\n     * @param ArrayReader $reader\n     * @param Integer $target\n     * @return Integer\n     */\n    function search($reader, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * // This is ArrayReader's API interface.\n * // You should not implement it, or speculate about its implementation\n * class ArrayReader {\n *     def get(index: Int): Int = {}\n * }\n */\n\nobject Solution {\n    def search(reader: ArrayReader, target: Int): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "771",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Binary Search \n\n**Split into Two Subproblems**\n\nThe array is sorted, i.e. one could try to fit into a logarithmic time complexity. That means two subproblems and both should be done\nin a logarithmic time:\n\n- Define search limits, i.e. left and right boundaries for the search.\n\n- Perform a binary search in the defined boundaries.\n\n![limits](../Figures/702/way.png)\n\n**Define Search Boundaries**\n\nThis is a key subproblem here. \n\nThe idea is quite simple. Let's take the two first indexes, 0 and 1, as left and right boundaries. If the target value is not among these zeroth and the first element, then it's outside the boundaries, on the right. \n\nThat means that the left boundary could moved to the right, and the right boundary should be extended. To keep logarithmic time complexity, let's extend it twice as far: `right = right * 2`. \n\n![limits](../Figures/702/limits.png)\n\nIf the target now is less than the right element, we're done, the boundaries are set. If not, repeat these two steps till the boundaries are established:\n\n- Move the left boundary to the right: `left = right`.\n\n- Extend the right boundary: `right = right * 2`.  \n\n![limits](../Figures/702/done.png)\n\n**Binary Search**\n\n[Binary search](https://leetcode.com/explore/learn/card/binary-search/) is a textbook algorithm with logarithmic time complexity. It's based on the idea of comparing the target value to the middle element of the array.\n\n- If the target value is equal to the middle element - we're done.\n\n- If the target value is smaller - continue to search on the left.\n\n- If the target value is larger - continue to search on the right.\n\n![limits](../Figures/702/binary2.png)\n\n**Prerequisites: left and right shifts**\n\nTo speed up, one could use here [bitwise shifts](https://wiki.python.org/moin/BitwiseOperators):\n\n- Left shift: `x << 1`. The same as multiplying by 2: `x * 2`.\n\n- Right shift: `x >> 1`. The same as dividing by 2: `x / 2`.\n\n**Algorithm**\n\nDefine boundaries:\n\n- Initiate `left = 0` and `right = 1`.\n\n- While the target is on the right to the right boundary: `reader.get(right) < target`:\n\n    - Set the left boundary equal to the right one: `left = right`.\n    \n    - Extend right boundary: `right *= 2`. To speed up, use right shift instead of multiplication: `right <<= 1`. \n    \n- Now the target is between left and right boundaries. \n\nBinary Search:\n\n- While `left <= right`:\n\n    - Pick a pivot index in the middle: `pivot = (left + right) / 2`. To avoid overflow, use the form `pivot = left + ((right - left) >> 1)` instead of the straightforward expression above. \n     \n    - Retrieve the element at this index: `num = reader.get(pivot)`.  \n    \n    - Compare the middle element `num` to the target value.\n    \n        - If the middle element _is_ the target `num == target`: return `pivot`. \n        \n        - If the target is not yet found: \n        \n            - If `num > target`, continue to search on the left `right = pivot - 1`.\n            \n            - Else continue to search on the right `left = pivot + 1`.\n    \n- We're here because the target is not found. Return -1. \n            \n**Implementation**\n\n\n\n<iframe src=\"https://leetcode.com/playground/DuVu4DRd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DuVu4DRd\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(\\log T)$$, where $$T$$ is an index of target value. \n\n    There are two operations here: to define search boundaries and to perform binary search. \n    \n    Let's first find the number of steps k to set up the boundaries. In the first step, the boundaries are $$2^0 .. 2^{0 + 1}$$, on the second step $$2^1 .. 2^{1 + 1}$$, etc. When everything is done, the boundaries are $$2^k .. 2^{k + 1}$$ and $$2^k < T \\le 2^{k + 1}$$. That means one needs $$k = \\log T$$ steps to setup the boundaries, which means $$\\mathcal{O}(\\log T)$$ time complexity.  \n    \n    Now let's discuss the complexity of the binary search. There are $$2^{k + 1} - 2^k = 2^k$$ elements in the boundaries, i.e. $$2^{\\log T} = T$$ elements. [As discussed](https://leetcode.com/articles/binary-search/), binary search has logarithmic complexity, that results in $$\\mathcal{O}(\\log T)$$ time complexity.  \n     \n* Space complexity : $$\\mathcal{O}(1)$$ since it's a constant space solution.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

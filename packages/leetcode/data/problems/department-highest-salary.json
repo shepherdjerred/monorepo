@@ -1,0 +1,58 @@
+{
+  "questionId": "184",
+  "questionFrontendId": "184",
+  "title": "Department Highest Salary",
+  "titleSlug": "department-highest-salary",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Employee</code></p>\n\n<pre>\n+--------------+---------+\n| Column Name  | Type    |\n+--------------+---------+\n| id           | int     |\n| name         | varchar |\n| salary       | int     |\n| departmentId | int     |\n+--------------+---------+\nid is the primary key (column with unique values) for this table.\ndepartmentId is a foreign key (reference columns) of the ID from the <code>Department </code>table.\nEach row of this table indicates the ID, name, and salary of an employee. It also contains the ID of their department.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Department</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| id          | int     |\n| name        | varchar |\n+-------------+---------+\nid is the primary key (column with unique values) for this table. It is guaranteed that department name is not <code>NULL.</code>\nEach row of this table indicates the ID of a department and its name.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find employees who have the highest salary in each of the departments.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nEmployee table:\n+----+-------+--------+--------------+\n| id | name  | salary | departmentId |\n+----+-------+--------+--------------+\n| 1  | Joe   | 70000  | 1            |\n| 2  | Jim   | 90000  | 1            |\n| 3  | Henry | 80000  | 2            |\n| 4  | Sam   | 60000  | 2            |\n| 5  | Max   | 90000  | 1            |\n+----+-------+--------+--------------+\nDepartment table:\n+----+-------+\n| id | name  |\n+----+-------+\n| 1  | IT    |\n| 2  | Sales |\n+----+-------+\n<strong>Output:</strong> \n+------------+----------+--------+\n| Department | Employee | Salary |\n+------------+----------+--------+\n| IT         | Jim      | 90000  |\n| Sales      | Henry    | 80000  |\n| IT         | Max      | 90000  |\n+------------+----------+--------+\n<strong>Explanation:</strong> Max and Jim both have the highest salary in the IT department and Henry has the highest salary in the Sales department.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Employee (id int, name varchar(255), salary int, departmentId int)\", \"Create table If Not Exists Department (id int, name varchar(255))\"], \"mssql\": [\"Create table Employee (id int, name varchar(255), salary int, departmentId int)\", \"Create table Department (id int, name varchar(255))\"], \"oraclesql\": [\"Create table Employee (id int, name varchar(255), salary int, departmentId int)\", \"Create table Department (id int, name varchar(255))\"], \"database\": true, \"name\": \"department_highest_salary\", \"pythondata\": [\"Employee = pd.DataFrame([], columns=['id', 'name', 'salary', 'departmentId']).astype({'id':'Int64', 'name':'object', 'salary':'Int64', 'departmentId':'Int64'})\", \"Department = pd.DataFrame([], columns=['id', 'name']).astype({'id':'Int64', 'name':'object'})\"], \"postgresql\": [\"Create table If Not Exists Employee (id int, name varchar(255), salary int, departmentId int)\", \"Create table If Not Exists Department (id int, name varchar(255))\"], \"database_schema\": {\"Employee\": {\"id\": \"INT\", \"name\": \"VARCHAR(255)\", \"salary\": \"INT\", \"departmentId\": \"INT\"}, \"Department\": {\"id\": \"INT\", \"name\": \"VARCHAR(255)\"}}}",
+  "stats": "{\"totalAccepted\": \"653.6K\", \"totalSubmission\": \"1.1M\", \"totalAcceptedRaw\": 653583, \"totalSubmissionRaw\": 1134671, \"acRate\": \"57.6%\"}",
+  "likes": 2385,
+  "dislikes": 210,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Highest Grade For Each Student\", \"titleSlug\": \"highest-grade-for-each-student\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Employee\": [\"id\", \"name\", \"salary\", \"departmentId\"], \"Department\": [\"id\", \"name\"]}, \"rows\": {\"Employee\": [[1, \"Joe\", 70000, 1], [2, \"Jim\", 90000, 1], [3, \"Henry\", 80000, 2], [4, \"Sam\", 60000, 2], [5, \"Max\", 90000, 1]], \"Department\": [[1, \"IT\"], [2, \"Sales\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"target\", \"name\": \"Target\"}, {\"timesEncountered\": 2, \"slug\": \"tencent\", \"name\": \"Tencent\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef department_highest_salary(employee: pd.DataFrame, department: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "213",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Approach: Left Join\n#### Algorithm\n\nWe start by merging two tables to obtain all the department names, employee names, and salaries. \n\n```python\ndf = employee.merge(department, left_on='departmentId', right_on='id', how='left')\n```\n\n<table>\n  <thead>\n    <tr>\n      <th>id_x</th>\n      <th>name_x</th>\n      <th>salary</th>\n      <th>departmentId</th>\n      <th>id_y</th>\n      <th>name_y</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>1</td>\n      <td>Joe</td>\n      <td>70000</td>\n      <td>1</td>\n      <td>1</td>\n      <td>IT</td>\n    </tr>\n    <tr>\n      <td>2</td>\n      <td>Jim</td>\n      <td>90000</td>\n      <td>1</td>\n      <td>1</td>\n      <td>IT</td>\n    </tr>\n    <tr>\n      <td>3</td>\n      <td>Henry</td>\n      <td>80000</td>\n      <td>2</td>\n      <td>2</td>\n      <td>Sales</td>\n    </tr>\n    <tr>\n      <td>4</td>\n      <td>Sam</td>\n      <td>60000</td>\n      <td>2</td>\n      <td>2</td>\n      <td>Sales</td>\n    </tr>\n    <tr>\n      <td>5</td>\n      <td>Max</td>\n      <td>90000</td>\n      <td>1</td>\n      <td>1</td>\n      <td>IT</td>\n    </tr>\n  </tbody>\n</table>\n\n\n\n> Note that after the merge, columns with the same name (for example, `name`) in the original tables will be renamed (as `name_x` and `name_y`), so we need to perform column renaming.\n\n```python\ndf.rename(columns={'name_x': 'Employee', 'name_y': 'Department', 'salary': 'Salary'}, inplace=True)\n```\n\nThe resulting `df` will be as follows.\n\n<table>\n  <thead>\n    <tr>\n      <th>id_x</th>\n      <th>Employee</th>\n      <th>Salary</th>\n      <th>departmentId</th>\n      <th>id_y</th>\n      <th>Department</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>1</td>\n      <td>Joe</td>\n      <td>70000</td>\n      <td>1</td>\n      <td>1</td>\n      <td>IT</td>\n    </tr>\n    <tr>\n      <td>2</td>\n      <td>Jim</td>\n      <td>90000</td>\n      <td>1</td>\n      <td>1</td>\n      <td>IT</td>\n    </tr>\n    <tr>\n      <td>3</td>\n      <td>Henry</td>\n      <td>80000</td>\n      <td>2</td>\n      <td>2</td>\n      <td>Sales</td>\n    </tr>\n    <tr>\n      <td>4</td>\n      <td>Sam</td>\n      <td>60000</td>\n      <td>2</td>\n      <td>2</td>\n      <td>Sales</td>\n    </tr>\n    <tr>\n      <td>5</td>\n      <td>Max</td>\n      <td>90000</td>\n      <td>1</td>\n      <td>1</td>\n      <td>IT</td>\n    </tr>\n  </tbody>\n</table>\n\n\nNext, we group `df` based on the `Department` column and apply the function `transform('max')` to the `Salary` column, which calculates the maximum salary for each department and returns a Series of the same length, with each value being the maximum salary for the corresponding department (it may not necessarily be the salary of the corresponding employee.).\n\n```python\nmax_salary = df.groupby('Department')['Salary'].transform('max')\n```\n\n\n```\n0    90000\n1    90000\n2    80000\n3    80000\n4    90000\nName: Salary, dtype: int64\n```\n<br>\n\nTherefore, by using `df[df['salary'] == max_salary]`, we can select all the employees whose salary is equal to the maximum salary within their respective departments.\n\n```python\ndf = df[df['Salary'] == max_salary]\n```\n\n\nWe will obtain the following DataFrame `df`:\n\n<table>\n  <thead>\n    <tr>\n      <th>id_x</th>\n      <th>Employee</th>\n      <th>Salary</th>\n      <th>departmentId</th>\n      <th>id_y</th>\n      <th>Department</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>1</td>\n      <td>Jim</td>\n      <td>90000</td>\n      <td>1</td>\n      <td>1</td>\n      <td>IT</td>\n    </tr>\n    <tr>\n      <td>2</td>\n      <td>Henry</td>\n      <td>80000</td>\n      <td>2</td>\n      <td>2</td>\n      <td>Sales</td>\n    </tr>\n    <tr>\n      <td>4</td>\n      <td>Max</td>\n      <td>90000</td>\n      <td>1</td>\n      <td>1</td>\n      <td>IT</td>\n    </tr>\n  </tbody>\n</table>\n<br>\n\nThe last step is to return the dataframe that only contains the required columns, the complete code is as follows.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/SixfNL3Q/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"SixfNL3Q\"></iframe>\n\n\n<br>\n\n---\n\n## Database\n\n### Approach: `Left Join` and `WHERE` Clause\n#### Algorithm\n\nSince the **Employee** table contains the *Salary* and *DepartmentId* information, we can query the highest salary in a department.\n\n```sql\nSELECT\n    DepartmentId, MAX(Salary)\nFROM\n    Employee\nGROUP BY DepartmentId;\n```\n>Note: There might be multiple employees having the same highest salary, so it is safe not to include the employee name information in this query.\n\n<table>\n  <thead>\n    <tr>\n      <th>DepartmentId</th>\n      <th>MAX(Salary)</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>1</td>\n      <td>90000</td>\n    </tr>\n    <tr>\n      <td>2</td>\n      <td>80000</td>\n    </tr>\n  </tbody>\n</table>\n\n\nThen, we can join table **Employee** and **Department**, and query the (DepartmentId, Salary) are in the temp table using `IN` statement as below.\n\n#### Implementation\n\n```sql\nSELECT\n    Department.name AS 'Department',\n    Employee.name AS 'Employee',\n    Salary\nFROM\n    Employee\n        JOIN\n    Department ON Employee.DepartmentId = Department.Id\nWHERE\n    (Employee.DepartmentId , Salary) IN\n    (   SELECT\n            DepartmentId, MAX(Salary)\n        FROM\n            Employee\n        GROUP BY DepartmentId\n    )\n;\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

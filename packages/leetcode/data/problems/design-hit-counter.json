@@ -1,0 +1,144 @@
+{
+  "questionId": "362",
+  "questionFrontendId": "362",
+  "title": "Design Hit Counter",
+  "titleSlug": "design-hit-counter",
+  "difficulty": "Medium",
+  "content": "<p>Design a hit counter which counts the number of hits received in the past <code>5</code> minutes (i.e., the past <code>300</code> seconds).</p>\n\n<p>Your system should accept a <code>timestamp</code> parameter (<strong>in seconds</strong> granularity), and you may assume that calls are being made to the system in chronological order (i.e., <code>timestamp</code> is monotonically increasing). Several hits may arrive roughly at the same time.</p>\n\n<p>Implement the <code>HitCounter</code> class:</p>\n\n<ul>\n\t<li><code>HitCounter()</code> Initializes the object of the hit counter system.</li>\n\t<li><code>void hit(int timestamp)</code> Records a hit that happened at <code>timestamp</code> (<strong>in seconds</strong>). Several hits may happen at the same <code>timestamp</code>.</li>\n\t<li><code>int getHits(int timestamp)</code> Returns the number of hits in the past 5 minutes from <code>timestamp</code> (i.e., the past <code>300</code> seconds).</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;HitCounter&quot;, &quot;hit&quot;, &quot;hit&quot;, &quot;hit&quot;, &quot;getHits&quot;, &quot;hit&quot;, &quot;getHits&quot;, &quot;getHits&quot;]\n[[], [1], [2], [3], [4], [300], [300], [301]]\n<strong>Output</strong>\n[null, null, null, null, 3, null, 4, 3]\n\n<strong>Explanation</strong>\nHitCounter hitCounter = new HitCounter();\nhitCounter.hit(1);       // hit at timestamp 1.\nhitCounter.hit(2);       // hit at timestamp 2.\nhitCounter.hit(3);       // hit at timestamp 3.\nhitCounter.getHits(4);   // get hits at timestamp 4, return 3.\nhitCounter.hit(300);     // hit at timestamp 300.\nhitCounter.getHits(300); // get hits at timestamp 300, return 4.\nhitCounter.getHits(301); // get hits at timestamp 301, return 3.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= timestamp &lt;= 2 * 10<sup>9</sup></code></li>\n\t<li>All the calls are being made to the system in chronological order (i.e., <code>timestamp</code> is monotonically increasing).</li>\n\t<li>At most <code>300</code> calls will be made to <code>hit</code> and <code>getHits</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> What if the number of hits per second could be huge? Does your design scale?</p>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"HitCounter\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"timestamp\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"void\"\n      },\n      \"name\": \"hit\"\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"timestamp\"\n        }\n      ],\n      \"name\": \"getHits\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"330.5K\", \"totalSubmission\": \"474.6K\", \"totalAcceptedRaw\": 330483, \"totalSubmissionRaw\": 474628, \"acRate\": \"69.6%\"}",
+  "likes": 2141,
+  "dislikes": 255,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Logger Rate Limiter\", \"titleSlug\": \"logger-rate-limiter\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"HitCounter\",\"hit\",\"hit\",\"hit\",\"getHits\",\"hit\",\"getHits\",\"getHits\"]\n[[],[1],[2],[3],[4],[300],[300],[301]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 12, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 6, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 5, \"slug\": \"databricks\", \"name\": \"Databricks\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 6, \"slug\": \"cloudflare\", \"name\": \"Cloudflare\"}, {\"timesEncountered\": 5, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 5, \"slug\": \"reddit\", \"name\": \"Reddit\"}, {\"timesEncountered\": 5, \"slug\": \"affirm\", \"name\": \"Affirm\"}, {\"timesEncountered\": 4, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 3, \"slug\": \"coupang\", \"name\": \"Coupang\"}, {\"timesEncountered\": 2, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}, {\"timesEncountered\": 2, \"slug\": \"careem\", \"name\": \"Careem\"}, {\"timesEncountered\": 2, \"slug\": \"dropbox\", \"name\": \"Dropbox\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Data Stream",
+      "slug": "data-stream"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class HitCounter {\npublic:\n    HitCounter() {\n        \n    }\n    \n    void hit(int timestamp) {\n        \n    }\n    \n    int getHits(int timestamp) {\n        \n    }\n};\n\n/**\n * Your HitCounter object will be instantiated and called as such:\n * HitCounter* obj = new HitCounter();\n * obj->hit(timestamp);\n * int param_2 = obj->getHits(timestamp);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class HitCounter {\n\n    public HitCounter() {\n        \n    }\n    \n    public void hit(int timestamp) {\n        \n    }\n    \n    public int getHits(int timestamp) {\n        \n    }\n}\n\n/**\n * Your HitCounter object will be instantiated and called as such:\n * HitCounter obj = new HitCounter();\n * obj.hit(timestamp);\n * int param_2 = obj.getHits(timestamp);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class HitCounter:\n\n    def __init__(self):\n        \n\n    def hit(self, timestamp: int) -> None:\n        \n\n    def getHits(self, timestamp: int) -> int:\n        \n\n\n# Your HitCounter object will be instantiated and called as such:\n# obj = HitCounter()\n# obj.hit(timestamp)\n# param_2 = obj.getHits(timestamp)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class HitCounter(object):\n\n    def __init__(self):\n        \n\n    def hit(self, timestamp):\n        \"\"\"\n        :type timestamp: int\n        :rtype: None\n        \"\"\"\n        \n\n    def getHits(self, timestamp):\n        \"\"\"\n        :type timestamp: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your HitCounter object will be instantiated and called as such:\n# obj = HitCounter()\n# obj.hit(timestamp)\n# param_2 = obj.getHits(timestamp)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar HitCounter = function() {\n    \n};\n\n/** \n * @param {number} timestamp\n * @return {void}\n */\nHitCounter.prototype.hit = function(timestamp) {\n    \n};\n\n/** \n * @param {number} timestamp\n * @return {number}\n */\nHitCounter.prototype.getHits = function(timestamp) {\n    \n};\n\n/** \n * Your HitCounter object will be instantiated and called as such:\n * var obj = new HitCounter()\n * obj.hit(timestamp)\n * var param_2 = obj.getHits(timestamp)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class HitCounter {\n    constructor() {\n        \n    }\n\n    hit(timestamp: number): void {\n        \n    }\n\n    getHits(timestamp: number): number {\n        \n    }\n}\n\n/**\n * Your HitCounter object will be instantiated and called as such:\n * var obj = new HitCounter()\n * obj.hit(timestamp)\n * var param_2 = obj.getHits(timestamp)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class HitCounter {\n\n    public HitCounter() {\n        \n    }\n    \n    public void Hit(int timestamp) {\n        \n    }\n    \n    public int GetHits(int timestamp) {\n        \n    }\n}\n\n/**\n * Your HitCounter object will be instantiated and called as such:\n * HitCounter obj = new HitCounter();\n * obj.Hit(timestamp);\n * int param_2 = obj.GetHits(timestamp);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} HitCounter;\n\n\nHitCounter* hitCounterCreate() {\n    \n}\n\nvoid hitCounterHit(HitCounter* obj, int timestamp) {\n    \n}\n\nint hitCounterGetHits(HitCounter* obj, int timestamp) {\n    \n}\n\nvoid hitCounterFree(HitCounter* obj) {\n    \n}\n\n/**\n * Your HitCounter struct will be instantiated and called as such:\n * HitCounter* obj = hitCounterCreate();\n * hitCounterHit(obj, timestamp);\n \n * int param_2 = hitCounterGetHits(obj, timestamp);\n \n * hitCounterFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type HitCounter struct {\n    \n}\n\n\nfunc Constructor() HitCounter {\n    \n}\n\n\nfunc (this *HitCounter) Hit(timestamp int)  {\n    \n}\n\n\nfunc (this *HitCounter) GetHits(timestamp int) int {\n    \n}\n\n\n/**\n * Your HitCounter object will be instantiated and called as such:\n * obj := Constructor();\n * obj.Hit(timestamp);\n * param_2 := obj.GetHits(timestamp);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class HitCounter() {\n\n    fun hit(timestamp: Int) {\n        \n    }\n\n    fun getHits(timestamp: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your HitCounter object will be instantiated and called as such:\n * var obj = HitCounter()\n * obj.hit(timestamp)\n * var param_2 = obj.getHits(timestamp)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass HitCounter {\n\n    init() {\n        \n    }\n    \n    func hit(_ timestamp: Int) {\n        \n    }\n    \n    func getHits(_ timestamp: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your HitCounter object will be instantiated and called as such:\n * let obj = HitCounter()\n * obj.hit(timestamp)\n * let ret_2: Int = obj.getHits(timestamp)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct HitCounter {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl HitCounter {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn hit(&self, timestamp: i32) {\n        \n    }\n    \n    fn get_hits(&self, timestamp: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your HitCounter object will be instantiated and called as such:\n * let obj = HitCounter::new();\n * obj.hit(timestamp);\n * let ret_2: i32 = obj.get_hits(timestamp);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class HitCounter\n    def initialize()\n        \n    end\n\n\n=begin\n    :type timestamp: Integer\n    :rtype: Void\n=end\n    def hit(timestamp)\n        \n    end\n\n\n=begin\n    :type timestamp: Integer\n    :rtype: Integer\n=end\n    def get_hits(timestamp)\n        \n    end\n\n\nend\n\n# Your HitCounter object will be instantiated and called as such:\n# obj = HitCounter.new()\n# obj.hit(timestamp)\n# param_2 = obj.get_hits(timestamp)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class HitCounter {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $timestamp\n     * @return NULL\n     */\n    function hit($timestamp) {\n        \n    }\n  \n    /**\n     * @param Integer $timestamp\n     * @return Integer\n     */\n    function getHits($timestamp) {\n        \n    }\n}\n\n/**\n * Your HitCounter object will be instantiated and called as such:\n * $obj = HitCounter();\n * $obj->hit($timestamp);\n * $ret_2 = $obj->getHits($timestamp);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class HitCounter {\n\n  HitCounter() {\n    \n  }\n  \n  void hit(int timestamp) {\n    \n  }\n  \n  int getHits(int timestamp) {\n    \n  }\n}\n\n/**\n * Your HitCounter object will be instantiated and called as such:\n * HitCounter obj = HitCounter();\n * obj.hit(timestamp);\n * int param2 = obj.getHits(timestamp);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class HitCounter() {\n\n    def hit(timestamp: Int): Unit = {\n        \n    }\n\n    def getHits(timestamp: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your HitCounter object will be instantiated and called as such:\n * val obj = new HitCounter()\n * obj.hit(timestamp)\n * val param_2 = obj.getHits(timestamp)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule HitCounter do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec hit(timestamp :: integer) :: any\n  def hit(timestamp) do\n    \n  end\n\n  @spec get_hits(timestamp :: integer) :: integer\n  def get_hits(timestamp) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# HitCounter.init_()\n# HitCounter.hit(timestamp)\n# param_2 = HitCounter.get_hits(timestamp)\n\n# HitCounter.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec hit_counter_init_() -> any().\nhit_counter_init_() ->\n  .\n\n-spec hit_counter_hit(Timestamp :: integer()) -> any().\nhit_counter_hit(Timestamp) ->\n  .\n\n-spec hit_counter_get_hits(Timestamp :: integer()) -> integer().\nhit_counter_get_hits(Timestamp) ->\n  .\n\n\n%% Your functions will be called as such:\n%% hit_counter_init_(),\n%% hit_counter_hit(Timestamp),\n%% Param_2 = hit_counter_get_hits(Timestamp),\n\n%% hit_counter_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define hit-counter%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; hit : exact-integer? -> void?\n    (define/public (hit timestamp)\n      )\n    ; get-hits : exact-integer? -> exact-integer?\n    (define/public (get-hits timestamp)\n      )))\n\n;; Your hit-counter% object will be instantiated and called as such:\n;; (define obj (new hit-counter%))\n;; (send obj hit timestamp)\n;; (define param_2 (send obj get-hits timestamp))"
+    }
+  ],
+  "solution": {
+    "id": "1069",
+    "content": "[TOC]\n\n### Approach #1: Using Queue\n\n**Intuition**\n\nA key observation here is that all the timestamps that we will encounter are going to be in increasing order. Also as the timestamps' value increases we have to ignore the timestamps that occurred previously (having a difference of 300 or more with the latest timestamp). This is the case of considering the elements in the FIFO manner (First in first out) which is best solved by using the \"queue\" data structure.\n\n**Algorithm**\n\nWe will add each timestamp to the queue in the `hit` method and will remove all the timestamps with difference greater than or equal to 300 from the queue inside `getHits`. The answer returned from the `getHits` method is then simply the size of the queue.\n\nBelow is the implementation of this approach.\n\n<iframe src=\"https://leetcode.com/playground/LXEmiZc7/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LXEmiZc7\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity\n    \n    * `hit` - Since inserting a value in the queue takes place in $$O(1)$$ time, hence `hit` method works in $$O(1)$$.\n\n    * `getHits` - Assuming a total of $$n$$ values present in the queue at a time and the total number of timestamps encountered throughout is $$N$$. In the worst case scenario, we might end up removing all the entries from the queue in `getHits` method if the difference in timestamp is greater than or equal to 300. Hence in the worst case, a \"single\" call to the `getHits` method can take $$O(n)$$ time. However, we must notice that each timestamp is processed only twice (first while adding the timestamp in the queue in `hit` method and second while removing the timestamp from the queue in the `getHits` method). Hence if the total number of timestamps encountered throughout is $$N$$, the overall time taken by `getHits` method is $$O(N)$$. This results in an amortized time complexity of $$O(1)$$ for a single call to `getHits` method.\n\n* Space Complexity: Considering the total timestamps encountered throughout to be $$N$$, the queue can have upto $$N$$ elements, hence overall space complexity of this approach is $$O(N)$$. \n\n### Approach #2: Using Deque with Pairs\n\nConsider the follow up, where we have multiple hits arriving at the \"same\" timestamps. We can optimize Approach 1 even further. In this approach, we'll not only keep the timestamps but will also keep the count of the timestamps as well. For example, if we call `hit` method 5 times for `timestamp = 1`, the queue in case of Approach 1 will look like `[1, 1, 1, 1, 1]`. This will lead to 5 removals in the `getHits` method when we remove the value `1` from the queue. To avoid this repetitive removals of the same value, in Approach 2, we'll store the value as `(1, 5)` where the first value 1 is the timestamp and the second value `5` is the count. For this, we'll use the \"deque\" data structure which allows us to insert and delete values from both the ends of the queue.\n\n**Algorithm**\n\nThe updated algorithm in Approach 2 is as follows.\n\n* If we encounter the hit for the same timestamp, instead of appending a new entry in the deque, we simply increment the count of the latest timestamp.\n\n* In order to keep the track of total number of elements (for the last 300 seconds), we also use a variable `total` which we initialize to `0` and keep updating as we add or remove the elements from the queue. We increment the value of `total` by 1 when `hit` method is called and we decrement by the value of `total` by the count of the timestamp that we remove from the queue.\n\nBelow is the implementation of this approach.\n\n<iframe src=\"https://leetcode.com/playground/ds8M9eUs/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ds8M9eUs\"></iframe>\n\n**Complexity Analysis**\n\nIn the worst case, when there are not many repetitions, the time complexity and space complexity of Approach 2 is the same as Approach 1. However in case we have repetitions (say k repetitions of a particular i<sup>th</sup> timestamp), the time complexity and space complexities are as follows.\n\n* Time Complexity:\n\n    * `hit` - $$O(1)$$.\n\n    * `getHits` - If there are a total of $$n$$ pairs present in the deque, worst case time complexity can be $$O(n)$$. However, by clubbing all the timestamps with same value together, for the i<sup>th</sup> timestamp with k repetitions, the time complexity is $$O(1)$$ as here, instead of removing all those k repetitions, we only remove a single entry from the deque.\n\n* Space complexity: If there are a total of $$N$$ elements that we encountered throughout, the space complexity is $$O(N)$$ (similar to Approach 1). However, in the case of repetitions, the space required for storing those k values $$O(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

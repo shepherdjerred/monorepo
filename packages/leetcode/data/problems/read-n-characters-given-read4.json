@@ -1,0 +1,118 @@
+{
+  "questionId": "157",
+  "questionFrontendId": "157",
+  "title": "Read N Characters Given Read4",
+  "titleSlug": "read-n-characters-given-read4",
+  "difficulty": "Easy",
+  "content": "<p>Given a <code>file</code> and assume that you can only read the file using a given method <code>read4</code>, implement a method to read <code>n</code> characters.</p>\n\n<p><strong>Method read4: </strong></p>\n\n<p>The API <code>read4</code> reads <strong>four consecutive characters</strong> from <code>file</code>, then writes those characters into the buffer array <code>buf4</code>.</p>\n\n<p>The return value is the number of actual characters read.</p>\n\n<p>Note that <code>read4()</code> has its own file pointer, much like <code>FILE *fp</code> in C.</p>\n\n<p><strong>Definition of read4:</strong></p>\n\n<pre>\n    Parameter:  char[] buf4\n    Returns:    int\n\nbuf4[] is a destination, not a source. The results from read4 will be copied to buf4[].\n</pre>\n\n<p>Below is a high-level example of how <code>read4</code> works:</p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/07/01/157_example.png\" style=\"width: 600px; height: 403px;\" />\n<pre>\nFile file(&quot;abcde<code>&quot;); // File is &quot;</code>abcde<code>&quot;, initially file pointer (fp) points to &#39;a&#39;\nchar[] buf4 = new char[4]; // Create buffer with enough space to store characters\nread4(buf4); // read4 returns 4. Now buf4 = &quot;abcd&quot;, fp points to &#39;e&#39;\nread4(buf4); // read4 returns 1. Now buf4 = &quot;e&quot;, fp points to end of file\nread4(buf4); // read4 returns 0. Now buf4 = &quot;&quot;, fp points to end of file</code>\n</pre>\n\n<p>&nbsp;</p>\n\n<p><strong>Method read:</strong></p>\n\n<p>By using the <code>read4</code> method, implement the method read that reads <code>n</code> characters from <code>file</code> and store it in the buffer array <code>buf</code>. Consider that you cannot manipulate <code>file</code> directly.</p>\n\n<p>The return value is the number of actual characters read.</p>\n\n<p><strong>Definition of read: </strong></p>\n\n<pre>\n    Parameters:\tchar[] buf, int n\n    Returns:\tint\n\nbuf[] is a destination, not a source. You will need to write the results to buf[].\n</pre>\n\n<p><strong>Note:</strong></p>\n\n<ul>\n\t<li>Consider that you cannot manipulate the file directly. The file is only accessible for <code>read4</code> but not for <code>read</code>.</li>\n\t<li>The <code>read</code> function will only be called once for each test case.</li>\n\t<li>You may assume the destination buffer array, <code>buf</code>, is guaranteed to have enough space for storing <code>n</code> characters.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> file = &quot;abc&quot;, n = 4\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> After calling your read method, buf should contain &quot;abc&quot;. We read a total of 3 characters from the file, so return 3.\nNote that &quot;abc&quot; is the file&#39;s content, not buf. buf is the destination buffer that you will have to write the results to.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> file = &quot;abcde&quot;, n = 5\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> After calling your read method, buf should contain &quot;abcde&quot;. We read a total of 5 characters from the file, so return 5.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> file = &quot;abcdABCD1234&quot;, n = 12\n<strong>Output:</strong> 12\n<strong>Explanation:</strong> After calling your read method, buf should contain &quot;abcdABCD1234&quot;. We read a total of 12 characters from the file, so return 12.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= file.length &lt;= 500</code></li>\n\t<li><code>file</code> consist of English letters and digits.</li>\n\t<li><code>1 &lt;= n &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"read\",\n  \"params\": [\n    {\n      \"name\": \"file\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  },\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"208.9K\", \"totalSubmission\": \"491.1K\", \"totalAcceptedRaw\": 208867, \"totalSubmissionRaw\": 491104, \"acRate\": \"42.5%\"}",
+  "likes": 604,
+  "dislikes": 3605,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Read N Characters Given read4 II - Call Multiple Times\", \"titleSlug\": \"read-n-characters-given-read4-ii-call-multiple-times\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abc\"\n4",
+    "\"abcde\"\n5",
+    "\"abcdABCD1234\"\n12"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    },
+    {
+      "name": "Interactive",
+      "slug": "interactive"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * The read4 API is defined in the parent class Reader4.\n *     int read4(char *buf4);\n */\n\nclass Solution {\npublic:\n    /**\n     * @param buf Destination buffer\n     * @param n   Number of characters to read\n     * @return    The number of actual characters read\n     */\n    int read(char *buf, int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * The read4 API is defined in the parent class Reader4.\n *     int read4(char[] buf4);\n */\n\npublic class Solution extends Reader4 {\n    /**\n     * @param buf Destination buffer\n     * @param n   Number of characters to read\n     * @return    The number of actual characters read\n     */\n    public int read(char[] buf, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "\"\"\"\nThe read4 API is already defined for you.\n\n    @param buf4, a list of characters\n    @return an integer\n    def read4(buf4):\n\n# Below is an example of how the read4 API can be called.\nfile = File(\"abcdefghijk\") # File is \"abcdefghijk\", initially file pointer (fp) points to 'a'\nbuf4 = [' '] * 4 # Create buffer with enough space to store characters\nread4(buf4) # read4 returns 4. Now buf = ['a','b','c','d'], fp points to 'e'\nread4(buf4) # read4 returns 4. Now buf = ['e','f','g','h'], fp points to 'i'\nread4(buf4) # read4 returns 3. Now buf = ['i','j','k',...], fp points to end of file\n\"\"\"\n\nclass Solution:\n    def read(self, buf, n):\n        \"\"\"\n        :type buf: Destination buffer (List[str])\n        :type n: Number of characters to read (int)\n        :rtype: The number of actual characters read (int)\n        \"\"\"\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "\"\"\"\nThe read4 API is already defined for you.\n\n    @param buf4, a list of characters\n    @return an integer\n    def read4(buf4):\n\n# Below is an example of how the read4 API can be called.\nfile = File(\"abcdefghijk\") # File is \"abcdefghijk\", initially file pointer (fp) points to 'a'\nbuf4 = [' '] * 4 # Create buffer with enough space to store characters\nread4(buf4) # read4 returns 4. Now buf = ['a','b','c','d'], fp points to 'e'\nread4(buf4) # read4 returns 4. Now buf = ['e','f','g','h'], fp points to 'i'\nread4(buf4) # read4 returns 3. Now buf = ['i','j','k',...], fp points to end of file\n\"\"\"\n\nclass Solution(object):\n    def read(self, buf, n):\n        \"\"\"\n        :type buf: Destination buffer (List[str])\n        :type n: Number of characters to read (int)\n        :rtype: The number of actual characters read (int)\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for read4()\n * \n * @param {character[]} buf4 Destination buffer\n * @return {number} The number of actual characters read\n * read4 = function(buf4) {\n *     ...\n * };\n */\n\n/**\n * @param {function} read4()\n * @return {function}\n */\nvar solution = function(read4) {\n    /**\n     * @param {character[]} buf Destination buffer\n     * @param {number} n Number of characters to read\n     * @return {number} The number of actual characters read\n     */\n    return function(buf, n) {\n        \n    };\n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for read4()\n * read4 = function(buf4: string[]): number {\n *     ...\n * };\n */\n\nvar solution = function(read4: any) {\n\n    return function(buf: string[], n: number): number {\n        \n    };\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * The Read4 API is defined in the parent class Reader4.\n *     int Read4(char[] buf4);\n */\n\npublic class Solution : Reader4 {\n    /**\n     * @param buf Destination buffer\n     * @param n   Number of characters to read\n     * @return    The number of actual characters read\n     */\n    public int Read(char[] buf, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * The read4 API is defined in the parent class Reader4.\n * Please don't remove the next line.\n */\nint read4(char *buf);\n\n/**\n * @param buf Destination buffer\n * @param n   Number of characters to read\n * @return    The number of actual characters read\n */\nint _read(char* buf, int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * The read4 API is already defined for you.\n *\n *     read4 := func(buf4 []byte) int\n *\n * // Below is an example of how the read4 API can be called.\n * file := File(\"abcdefghijk\") // File is \"abcdefghijk\", initially file pointer (fp) points to 'a'\n * buf4 := make([]byte, 4) // Create buffer with enough space to store characters\n * read4(buf4) // read4 returns 4. Now buf = ['a','b','c','d'], fp points to 'e'\n * read4(buf4) // read4 returns 4. Now buf = ['e','f','g','h'], fp points to 'i'\n * read4(buf4) // read4 returns 3. Now buf = ['i','j','k',...], fp points to end of file\n */\n\nvar solution = func(read4 func([]byte) int) func([]byte, int) int {\n    // implement read below.\n    return func(buf []byte, n int) int {\n        \n    }\n}\n"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n* The read4 API is defined in the parent class Reader4.\n* fun read4(buf4:CharArray): Int {}\n*/\n\nclass Solution:Reader4() {\n    /**\n      * @param buf Destination buffer\n      * @param n Number of characters to read\n      * @return The number of actual characters read\n      */\n    override fun read(buf:CharArray, n:Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * The read4 API is defined in the parent class Reader4.\n *     func read4(_ buf4: inout [Character]) -> Int;\n */\n\nclass Solution : Reader4 {\n\t/**\n     * @param buf Destination buffer\n     * @param n   Number of characters to read\n     * @return    The number of actual characters read\n     */\n    func read(_ buf: inout [Character], _ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "/**\n * The read4 API is defined as.\n *     fn read4(&self,buf4: &mut [char]) -> i32;\n * You can call it using self.read4(buf4)\n */\n\nimpl Solution {\n    pub fn read(&self, buf: &mut [char], n: i32) -> i32 {\n         \n    }\n}\n"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# The read4 API is already defined for you.\n# Below is an example of how the read4 API can be called.\n# file = File.new(\"abcdefghijk\") File is \"abcdefghijk\", initially file pointer (fp) points to 'a'\n# buf4 = [' '] * 4 Create buffer with enough space to store characters\n# read4(buf4) # read4 returns 4. Now buf = ['a','b','c','d'], fp points to 'e'\n# read4(buf4) # read4 returns 4. Now buf = ['e','f','g','h'], fp points to 'i'\n# read4(buf4) # read4 returns 3. Now buf = ['i','j','k',...], fp points to end of file\n\n# @param {List[str]} buf\n# @param {int} n\n# @return {int}\ndef read(buf, n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/* The read4 API is defined in the parent class Reader4.\n      public function read4(&$buf4){} */\n\nclass Solution extends Reader4 {\n    /**\n     * @param  Char[]   &$buf\tDestination buffer\n     * @param  Integer  $n\t\tNumber of characters to read\n     * @return Integer \t\t\tThe number of actual characters read\n     */\n    function read(&$buf, $n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n  * The read4 API is defined in the parent class Reader4.\n  *     def read4(buf4: Array[Char]): Int = {}\n  */\n\nclass Solution extends Reader4 {\n    /**\n      * @param buf Destination buffer\n \t  * @param n   Number of characters to read\n      * @return    The number of actual characters read\n      */\n    def read(buf: Array[Char], n: Int): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "991",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\n**Interview Tendencies: Google and Facebook**\n\nA long time ago, long ago, so long ago that no one can remember, algorithm interview questions were less popular. Ten years ago big companies mainly filtered the candidates by the university ranks, and the interview questions were like [please describe how DDR memory works](https://hexus.net/tech/tech-explained/ram/702-ddr-ii-how-it-works/).\n\nNowadays there are some tendencies to merge this \"old-style interview\" with the modern algorithm questions interview. The idea is to ask a question that \nsounds like algorithmic but checks your knowledge of how computers work: [Round-robin CPU scheduling](https://en.wikipedia.org/wiki/Round-robin_scheduling), [C10k problem first solved by nginx](https://en.wikipedia.org/wiki/C10k_problem), etc. \n\n> Is it good or bad? That's a reality to deal with, especially if we speak about Google or Facebook interviews.\n\n**Read N Characters Given Read4**\n\nBack to the problem, the question is \"How does the memory work\":\n\n- Because of the physical implementation, loading 4 bytes in DDR is faster than loading 1 byte 4 times.\n\n- On the majority of computers today, a collection of 4 bytes, or 32 bits, is called a _word_. Most modern CPUs are optimized for the operations with _words_. \n\nTo sum up, the problem is a practical low-level question. The standard approach (Approach 1) to solve it using the _internal_ buffer of 4 characters:\n\nFile -> Internal Buffer of 4 Characters -> Buffer of N Characters.\n\n![img](../Figures/157/internal.png)\n*Figure 1. Approach 1: solution with an internal buffer.*\n\n\nOnce it's done, and you show your understanding of memory operations, the follow-up question is how to speed up. The answer (Approach 2) is quite straightforward. If it's possible, do not use the internal buffer of 4 characters to avoid the double copy:\n\nFile -> Buffer of N Characters.\n\n![img](../Figures/157/no_internal2.png)\n*Figure 2. Approach 2: solution without internal buffer.*\n\n\n<br />\n<br />\n\n\n---\n### Approach 1: Use Internal Buffer of 4 Characters\n\n![img](../Figures/157/internal.png)\n*Figure 3. Solution with internal buffer.*\n\n\n**Algorithm**\n\nLet's use an internal buffer of 4 characters to solve this problem:\n\nFile -> Internal Buffer of 4 Characters -> Buffer of N Characters.\n\n- Initialize the number of copied characters `copiedChars = 0`, and the number of read characters: `readChars = 4`. It's convenient to initialize `readChars` to `4` and then use `readChars != 4` as EOF marker. \n\n- Initialize an internal buffer of 4 characters: `buf4`.\n\n- While the number of copied characters is less than N: `copiedChars < n` and there are still characters in the file: `readChars == 4`:\n\n    - Read from the file into the internal buffer: `readChars = read4(buf4)`.\n    \n    - Copy the characters from internal buffer `buf4` into main buffer `buf` one by one. Increase `copiedChars` after each character. If the number of copied characters is equal to N: `copiedChars == n`, interrupt the copy process and return `copiedChars`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/nvdMjUvD/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"nvdMjUvD\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(N)$$ to copy N characters.\n\n* Space complexity: $$O(1)$$ to keep `buf4` of 4 elements.\n\n<br />\n<br />\n\n\n---\n### Approach 2: Speed Up: No Internal Buffer\n\n![img](../Figures/157/one_buf.png)\n*Figure 4. Solution without internal buffer.*\n\n\nThis solution is mainly suitable for the languages (C, C++, Golang) where pointers allow to append directly to the primary buffer `buf`. \n\n**Algorithm**\n\n1. Initialize: \n   - The number of copied characters `copiedChars` as `0`.\n   - The number of read characters `readChars` as `4`.\n   - The number of remaining characters that we want to read `remainingChars` as `n`. \n2. While number of remaining characters that we want to read is greater than or equal to 4 and the number of read characters equals 4:\n   - Read from the file directly into the buffer (`read4(buf + copiedChars)`). \n   - Increase the count of `copiedChars` by the number of characters read.\n3. We break from the while loop either when we run out of characters to read (`readChars != 4`) or when there are less than `4` characters left that we want to read. Why break when `remainingChars` is less than `4`? Because if we only want to read say `2` more characters, and there are `3` or more characters remaining in the given file, then we will end up writing more than `n` characters to `buf`.\n4. So when there are less than 4 characters that we want to read, we will use an internal buffer **only once** and read exactly `remainingChars` from that buffer into `buf`. \n5. Finally, `buf` will either contain **exactly** `n` characters, or there were less than `n` characters in the file and we read all of the characters. So we will return the minimum value of `n` and `copiedChars` since this represents exactly how many characters were stored in `buf`. \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/CcbebpLR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"CcbebpLR\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(N)$$ to copy N characters.\n\n* Space complexity: $$O(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,130 @@
+{
+  "questionId": "58",
+  "questionFrontendId": "58",
+  "title": "Length of Last Word",
+  "titleSlug": "length-of-last-word",
+  "difficulty": "Easy",
+  "content": "<p>Given a string <code>s</code> consisting of words and spaces, return <em>the length of the <strong>last</strong> word in the string.</em></p>\n\n<p>A <strong>word</strong> is a maximal <span data-keyword=\"substring-nonempty\">substring</span> consisting of non-space characters only.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;Hello World&quot;\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The last word is &quot;World&quot; with length 5.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;   fly me   to   the moon  &quot;\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The last word is &quot;moon&quot; with length 4.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;luffy is still joyboy&quot;\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> The last word is &quot;joyboy&quot; with length 6.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>s</code> consists of only English letters and spaces <code>&#39; &#39;</code>.</li>\n\t<li>There will be at least one word in <code>s</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{ \r\n  \"name\": \"lengthOfLastWord\",\r\n  \"params\": [\r\n    { \r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"3.3M\", \"totalSubmission\": \"5.7M\", \"totalAcceptedRaw\": 3344858, \"totalSubmissionRaw\": 5716887, \"acRate\": \"58.5%\"}",
+  "likes": 6411,
+  "dislikes": 364,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"Hello World\"",
+    "\"   fly me   to   the moon  \"",
+    "\"luffy is still joyboy\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"qualcomm\", \"name\": \"Qualcomm\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int lengthOfLastWord(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int lengthOfLastWord(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def lengthOfLastWord(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def lengthOfLastWord(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar lengthOfLastWord = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function lengthOfLastWord(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LengthOfLastWord(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int lengthOfLastWord(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func lengthOfLastWord(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun lengthOfLastWord(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func lengthOfLastWord(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn length_of_last_word(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef length_of_last_word(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function lengthOfLastWord($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int lengthOfLastWord(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def lengthOfLastWord(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec length_of_last_word(s :: String.t) :: integer\n  def length_of_last_word(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec length_of_last_word(S :: unicode:unicode_binary()) -> integer().\nlength_of_last_word(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (length-of-last-word s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "933",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach 1: String Index Manipulation\n\n**Intuition**\n\nThere is no doubt that this is an easy problem. Yet, it could be a good exercise for one to practice string manipulation, which is definitely common during interviews.\n\nIn this article, we start with some approaches that manipulate string indexes, then we look at how to use the built-in string functions to solve the problem.\n\n>The intuition is simple, as it pretty much given away from the name of the problem, _i.e._ first we **locate** the last word, then we **count** the length of the last word.\n\nOne should pay attention to some edge cases though:\n\n- The input string could be empty.\n<br>\n\n- There could be some trailing spaces in the input string, _e.g._ `hello <space>`.\n<br/>\n\n- There might only be one word in the given string.\n\nThe challenge is to build a *concise* yet *comprehensive* solution that could handle all above cases.\n\n**Algorithm**\n\nOne can break down the solution into two steps:\n\n- First, we would try to locate the last word, starting from the end of the string. We iterate the string in reverse order, consuming the empty spaces. When we first come across a non-space character, we know that we are at the last character of the last word.\n<br/>\n- Second, once we locate the last word. We count its length, starting from its last character. Again, we could use a loop here.\n\n![two loop](../Figures/58/58_two_loops.png)\n\nHere is what it looks like, a solution with **two loops**:\n\n<iframe src=\"https://leetcode.com/playground/i2yFApEN/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"i2yFApEN\"></iframe>\n\n\n\n**Complexity**\n\n- Time Complexity: $$\\mathcal{O}(N)$$, where $$N$$ is the length of the input string.\n\n    In the worst case, the input string might contain only a single word, which implies that we would need to iterate through the entire string to obtain the result.\n\n- Space Complexity: $$\\mathcal{O}(1)$$, only constant memory is consumed, regardless the input.\n<br/>\n<br/>\n\n---\n### Approach 2: One-loop Iteration\n\n**Intuition**\n\nIn the above approach, we applied two loops. One is used to locate the last word, and the other one to calculate its length.\n\n>We could actually complete the same tasks within a single loop.\n\nThe trick is that we could define a condition, _i.e._ the precise moment that we should start to count the length of the word.\n\n![one loop](../Figures/58/58_one_loop.png)\n\nIn the following animation, we demonstrate how the above algorithm works.\n\n!?!../Documents/58_LIS.json:1000,219!?!\n\n\n**Algorithm**\n\nHere are some sample implementations with comments.\n\n<iframe src=\"https://leetcode.com/playground/LDU34sxB/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"LDU34sxB\"></iframe>\n\n**Complexity**\n\n- Time Complexity: $$\\mathcal{O}(N)$$, where $$N$$ is the length of the input string.\n\n    This approach has the same time complexity as the previous approach. The only difference is that we combined two loops into one.\n\n- Space Complexity: $$\\mathcal{O}(1)$$, again a constant memory is consumed, regardless the input.\n<br/>\n<br/>\n\n---\n### Approach 3: Built-in String Functions\n\n**Intuition**\n\nAs we mentioned at the beginning of the article, we could also resort to the **_built-in_** functions of the String data structure, in order to solve the problem.\n\nIn fact, String is such an important data type in many programming languages, that often it comes with a rich set of _built-in_ functions that can help one to accomplish many common tasks, such as trimming the empty spaces in the string _etc._\n\nIt would be really helpful to get proficient with those built-in functions.\n\n**Algorithm**\n\nIn different programming languages, the sets of built-in functions associated with String are different though. In this section, we showcase some examples.\n\nIn Python, we would use the following built-in functions to accomplish the tasks:\n\n- `str.isspace()`: this function determines if the `str` contains only spaces.\n<br/>\n\n- `str.split(delimiter)`:  this function could split the input string into several substrings, based on the given _delimiter_ (by default, the delimiter is space).\n\nOne can find the list of built-in functions in Python from the [official documentation](https://docs.python.org/3/library/stdtypes.html#str).\n\nIn Java, here is a list of built-in functions that we would use:\n\n- `String.trim()`: this function returns a copy of the string, with the leading and trailing whitespaces trimmed.\n<br/>\n\n- `String.length()`: this function returns the length of the string.\n<br/>\n\n- `String.lastIndexOf(char)`: this function returns the index of the last occurrence of the given character.\n\nAgain, one can find more details about the APIs for the String data structure in Java, from the [official documentation](https://docs.oracle.com/javase/7/docs/api/java/lang/String.html).\n\n\n<iframe src=\"https://leetcode.com/playground/RNFz7hCf/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"RNFz7hCf\"></iframe>\n\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(N)$$, where $$N$$ is the length of the input string.\n\n    Since we use some built-in function from the String data type, we should look into the complexity of each built-in function that we used, in order to obtain the overall time complexity of our algorithm.\n  \n    It would be safe to assume the time complexity of the methods such as `str.split()` and `String.lastIndexOf()` to be $$\\mathcal{O}(N)$$, since in the worst case we would need to scan the entire string for both methods.\n\n- Space Complexity: $$\\mathcal{O}(N)$$. Again, we should look into the built-in functions that we used in the algorithm.\n\n    In the Java implementation, we used the function `String.trim()` which returns a _**copy**_ of the input string without leading and trailing whitespace. Therefore, we would need $$\\mathcal{O}(N)$$ space for our algorithm to hold this copy.\n\n    In the Python implementation, we used `str.split()`, which returns a list of **_substrings_** that are separated by the space delimiter. As a result, we would need $$\\mathcal{O}(N)$$ space for our algorithm to store this list.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

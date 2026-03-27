@@ -1,0 +1,105 @@
+{
+  "questionId": "850",
+  "questionFrontendId": "708",
+  "title": "Insert into a Sorted Circular Linked List",
+  "titleSlug": "insert-into-a-sorted-circular-linked-list",
+  "difficulty": "Medium",
+  "content": "<p>Given a Circular Linked List node, which is sorted in non-descending order, write a function to insert a value <code>insertVal</code> into the list such that it remains a sorted circular list. The given node can be a reference to any single node in the list and may not necessarily be the smallest value in the circular list.</p>\n\n<p>If there are multiple suitable places for insertion, you may choose any place to insert the new value. After the insertion, the circular list should remain sorted.</p>\n\n<p>If the list is empty (i.e., the given node is <code>null</code>), you should create a new single circular list and return the reference to that single node. Otherwise, you should return the originally given node.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/01/19/example_1_before_65p.jpg\" style=\"width: 250px; height: 149px;\" /><br />\n&nbsp;\n<pre>\n<strong>Input:</strong> head = [3,4,1], insertVal = 2\n<strong>Output:</strong> [3,4,1,2]\n<strong>Explanation:</strong> In the figure above, there is a sorted circular list of three elements. You are given a reference to the node with value 3, and we need to insert 2 into the list. The new node should be inserted between node 1 and node 3. After the insertion, the list should look like this, and we should still return node 3.\n\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/01/19/example_1_after_65p.jpg\" style=\"width: 250px; height: 149px;\" />\n\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> head = [], insertVal = 1\n<strong>Output:</strong> [1]\n<strong>Explanation:</strong> The list is empty (given head is&nbsp;<code>null</code>). We create a new single circular list and return the reference to that single node.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> head = [1], insertVal = 0\n<strong>Output:</strong> [1,0]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the list is in the range <code>[0, 5 * 10<sup>4</sup>]</code>.</li>\n\t<li><code>-10<sup>6</sup> &lt;= Node.val, insertVal &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"insert\",\n  \"params\": [\n    {\n      \"name\": \"head\",\n      \"type\": \"ListNode\"\n    },\n    {\n      \"name\": \"insertVal\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"ListNode\"\n  },\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"csharp\",\n    \"javascript\",\n    \"python3\",\n    \"kotlin\",\n    \"ruby\",\n    \"scala\",\n    \"c\",\n    \"golang\",\n    \"swift\",\n    \"php\",\n    \"typescript\"\n  ],\n  \"manual\": true, \"typescriptCustomType\" : \"class _Node {\\n    val: number\\n    next: _Node | null\\n    \\n    constructor(val?: number, next?: _Node) {\\n        this.val = (val===undefined ? 0 : val);\\n        this.next = (next===undefined ? null : next);\\n    }\\n}\\n\"\n\n}",
+  "stats": "{\"totalAccepted\": \"244.6K\", \"totalSubmission\": \"634.8K\", \"totalAcceptedRaw\": 244649, \"totalSubmissionRaw\": 634840, \"acRate\": \"38.5%\"}",
+  "likes": 1339,
+  "dislikes": 801,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Insertion Sort List\", \"titleSlug\": \"insertion-sort-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,4,1]\n2",
+    "[]\n1",
+    "[1]\n0"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 9, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"anduril\", \"name\": \"Anduril\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/*\n// Definition for a Node.\nclass Node {\npublic:\n    int val;\n    Node* next;\n\n    Node() {}\n\n    Node(int _val) {\n        val = _val;\n        next = NULL;\n    }\n\n    Node(int _val, Node* _next) {\n        val = _val;\n        next = _next;\n    }\n};\n*/\n\nclass Solution {\npublic:\n    Node* insert(Node* head, int insertVal) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/*\n// Definition for a Node.\nclass Node {\n    public int val;\n    public Node next;\n\n    public Node() {}\n\n    public Node(int _val) {\n        val = _val;\n    }\n\n    public Node(int _val, Node _next) {\n        val = _val;\n        next = _next;\n    }\n};\n*/\n\nclass Solution {\n    public Node insert(Node head, int insertVal) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "\"\"\"\n# Definition for a Node.\nclass Node:\n    def __init__(self, val=None, next=None):\n        self.val = val\n        self.next = next\n\"\"\"\n\nclass Solution:\n    def insert(self, head: 'Optional[Node]', insertVal: int) -> 'Node':\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "\"\"\"\n# Definition for a Node.\nclass Node(object):\n    def __init__(self, val=None, next=None):\n        self.val = val\n        self.next = next\n\"\"\"\n\nclass Solution(object):\n    def insert(self, head, insertVal):\n        \"\"\"\n        :type head: Node\n        :type insertVal: int\n        :rtype: Node\n        \"\"\"\n\t\t"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * // Definition for a _Node.\n * function _Node(val, next) {\n *     this.val = val;\n *     this.next = next;\n * };\n */\n\n/**\n * @param {_Node} head\n * @param {number} insertVal\n * @return {_Node}\n */\nvar insert = function(head, insertVal) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for _Node.\n * class _Node {\n *     val: number\n *     next: _Node | null\n *     \n *     constructor(val?: number, next?: _Node) {\n *         this.val = (val===undefined ? 0 : val);\n *         this.next = (next===undefined ? null : next);\n *     }\n * }\n */\n\n\nfunction insert(head: _Node | null, insertVal: number): _Node | null {\n\t\n}"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/*\n// Definition for a Node.\npublic class Node {\n    public int val;\n    public Node next;\n\n    public Node() {}\n\n    public Node(int _val) {\n        val = _val;\n        next = null;\n    }\n\n    public Node(int _val, Node _next) {\n        val = _val;\n        next = _next;\n    }\n}\n*/\n\npublic class Solution {\n    public Node Insert(Node head, int insertVal) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a Node.\n * struct Node {\n *     int val;\n *     struct Node *next;\n * };\n */\n\nstruct Node* insert(struct Node* head, int insertVal) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a Node.\n * type Node struct {\n *     Val int\n *     Next *Node\n * }\n */\n\nfunc insert(aNode *Node, x int) *Node {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Definition for a Node.\n * class Node(var `val`: Int) {\n *     var next: Node? = null\n * }\n */\n\nclass Solution {\n    fun insert(head: Node?, insertVal: Int): Node? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a Node.\n * public class Node {\n *     public var val: Int\n *     public var next: Node?\n *     public init(_ val: Int) {\n *         self.val = val\n *         self.next = nil\n *     }\n * }\n */\n\nclass Solution {\n    func insert(_ head: Node?, _ insertVal: Int) -> Node? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a Node.\n# class Node\n#     attr_accessor :val, :next\n#     def initialize(val=nil, next_=nil)\n#         @val = val\n#         @next = next_\n#     end\n# end\n\n# @param {Node} head\n# @param {Integer} insertVal\n# @return {Node}\ndef insert(head, insertVal)\n\t\nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a Node.\n * class Node {\n *     public $val = null;\n *     public $next = null;\n *     function __construct($val = 0) {\n *         $this->val = $val;\n *         $this->next = null;\n *     }\n * }\n */\n\nclass Solution {\n    /**\n     * @param Node $root\n     * @param Integer $insertVal\n     * @return Node\n     */\n    function insert($head, $insertVal) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a Node.\n * class Node(var _value: Int) {\n *   var value: Int = _value\n *   var next: Node = null\n * }\n */\n\nobject Solution {\n    def insert(head: Node, insertVal: Int): Node = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "824",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach 1: Two-Pointers Iteration\n\n**Intuition**\n\nAs simple as the problem might seem to be, it is actually not trivial to write a solution that covers all cases. \n\n>Often the case for the problems with linked list, one could apply the approach of **Two-Pointers Iteration**, where one uses two pointers as surrogate to traverse the linked list.\n\nOne of reasons of having two pointers rather than one is that in singly-linked list one does not have a reference to the precedent node, therefore we keep an additional pointer which points to the precedent node.\n\n>For this problem, we iterate through the cyclic list using two pointers, namely `prev` and `curr`. When we find a suitable place to insert the new value, we insert it between the `prev` and `curr` nodes. \n\n![pic](../Figures/708/708_two_pointers.png)\n\n\n**Algorithm**\n\nFirst of all, let us define the skeleton of two-pointers iteration algorithm as follows:\n\n- As we mentioned in the intuition, we *loop over* the linked list with two pointers (_i.e._ `prev` and `curr`) step by step. The termination condition of the loop is that we get back to the starting point of the two pointers (_i.e._ `prev == head`) \n\n- During the loop, at each step, we check if the current place bounded by the two pointers is the right place to insert the new value.\n\n- If not, we move both pointers one step forwards.\n\nNow, the tricky part of this problem is to sort out different cases that our algorithm should deal with within the loop, and then design a *concise* logic to handle them sound and properly. Here we break it down into _three_ general cases.\n\n>**Case 1).** The value of new node sits between the minimal and maximal values of the current list. As a result, it should be inserted within the list.\n\n![pic](../Figures/708/708_case_1.png)\n\nAs we can see from the above example, the new value (`6`) sits between the minimal and maximal values of the list (_i.e._ `1` and `9`). No matter where we start from (in this example we start from the node `{3}`), the new node would end up being inserted between the nodes `{5}` and `{7}`.\n\n_The condition is to find the place that meets the constraint of `{prev.val <= insertVal <= curr.val}`._\n\n>**Case 2).** The value of new node goes beyond the minimal and maximal values of the current list, either less than the minimal value or greater than the maximal value. In either case, the new node should be added right after the _tail_ node (_i.e._ the node with the maximal value of the list).\n\nHere are the examples with the same input list as in the previous example.\n\n![pic](../Figures/708/708_case_2_1.png)\n\n![pic](../Figures/708/708_case_2_2.png)\n\nFirstly, we should locate the position of the **tail** node, by finding a descending order between the adjacent, _i.e._ the condition of `{prev.val > curr.val}`, since the nodes are sorted in ascending order, the tail node would have the greatest value of all nodes.\n\nFurthermore, we check if the new value goes beyond the values of tail and head nodes, which are pointed by the `prev` and `curr` pointers respectively.\n\nThe Case 2.1 corresponds to the condition where the value to be inserted is _greater than or equal to_ the one of tail node, _i.e._ `{insertVal >= prev.val}`.\n\nThe Case 2.2 corresponds to the condition where the value to be inserted is _less than or equal to_ the head node, _i.e._ `{insertVal <= curr.val}`. \n\nOnce we locate the tail and head nodes, we basically **_extend_** the original list by inserting the value in between the tail and head nodes, _i.e._ in between the `prev` and `curr` pointers, the same operation as in the Case 1.\n\n>Case 3). Finally, there is one case that does not fall into any of the above two cases. This is the case where the list contains uniform values.\n\nThough not explicitly stated in the problem description, our sorted list can contain some duplicate values. And in the extreme case, the entire list has only one single unique value.\n\n![pic](../Figures/708/708_case_3.png)\n\nIn this case, we would end up looping through the list and getting back to the starting point.\n\n_The followup action is just to add the new node after any node in the list, regardless the value to be inserted._ Since we are back to the starting point, we might as well add the new node right after the starting point (our entrance node).\n\nNote that, we cannot skip the iteration though, since we have to iterate through the list to determine if our list contains a single unique value.\n\n>The above three cases cover the scenarios within and after our iteration loop. There is however one minor **corner** case we still need to deal with, where we have an **empty** list. This, we could easily handle before the loop.\n\n<iframe src=\"https://leetcode.com/playground/hBvAqQWf/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"hBvAqQWf\"></iframe>\n\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(N)$$ where $$N$$ is the size of list. In the worst case, we would iterate through the entire list.\n\n- Space Complexity: $$\\mathcal{O}(1)$$. It is a constant space solution.\n<br/>\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

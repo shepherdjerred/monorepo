@@ -1,0 +1,141 @@
+{
+  "questionId": "508",
+  "questionFrontendId": "508",
+  "title": "Most Frequent Subtree Sum",
+  "titleSlug": "most-frequent-subtree-sum",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary tree, return the most frequent <strong>subtree sum</strong>. If there is a tie, return all the values with the highest frequency in any order.</p>\n\n<p>The <strong>subtree sum</strong> of a node is defined as the sum of all the node values formed by the subtree rooted at that node (including the node itself).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/24/freq1-tree.jpg\" style=\"width: 207px; height: 183px;\" />\n<pre>\n<strong>Input:</strong> root = [5,2,-3]\n<strong>Output:</strong> [2,-3,4]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/24/freq2-tree.jpg\" style=\"width: 207px; height: 183px;\" />\n<pre>\n<strong>Input:</strong> root = [5,2,-5]\n<strong>Output:</strong> [2]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 10<sup>4</sup>]</code>.</li>\n\t<li><code>-10<sup>5</sup> &lt;= Node.val &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findFrequentTreeSum\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer[]\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"174.9K\", \"totalSubmission\": \"253.3K\", \"totalAcceptedRaw\": 174917, \"totalSubmissionRaw\": 253284, \"acRate\": \"69.1%\"}",
+  "likes": 2371,
+  "dislikes": 334,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Subtree of Another Tree\", \"titleSlug\": \"subtree-of-another-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count Nodes Equal to Sum of Descendants\", \"titleSlug\": \"count-nodes-equal-to-sum-of-descendants\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,2,-3]",
+    "[5,2,-5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> findFrequentTreeSum(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int[] findFrequentTreeSum(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def findFrequentTreeSum(self, root: Optional[TreeNode]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def findFrequentTreeSum(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number[]}\n */\nvar findFrequentTreeSum = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction findFrequentTreeSum(root: TreeNode | null): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int[] FindFrequentTreeSum(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* findFrequentTreeSum(struct TreeNode* root, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc findFrequentTreeSum(root *TreeNode) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun findFrequentTreeSum(root: TreeNode?): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func findFrequentTreeSum(_ root: TreeNode?) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn find_frequent_tree_sum(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer[]}\ndef find_frequent_tree_sum(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer[]\n     */\n    function findFrequentTreeSum($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  List<int> findFrequentTreeSum(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def findFrequentTreeSum(root: TreeNode): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec find_frequent_tree_sum(root :: TreeNode.t | nil) :: [integer]\n  def find_frequent_tree_sum(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec find_frequent_tree_sum(Root :: #tree_node{} | null) -> [integer()].\nfind_frequent_tree_sum(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (find-frequent-tree-sum root)\n  (-> (or/c tree-node? #f) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1597",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nIn this problem, we have to return the array of sums of subtrees with maximum frequency.        \nAnd a subtree sum is the sum of all nodes of a subtree.\n\n![subtree](../Figures/508/Slide1.png)\n\nLet's go from naive to an optimized approach for finding the frequency of all subtree sums in a given tree.\n\n---\n\n### Approach 1: Pre-Order Traversal\n\n#### Intuition\n\nWe have to find the sum of all subtrees.          \nSo, we can think of traversing the given tree in pre-order (i.e. root first, then left and right children), and for each node, we find the sum of the subtree where the current node is the root node.\n\n**Now, how we can find the sum of all nodes of a tree, provided we have a root node?**         \nRemember one thing, thinking recursively is the most easy way to solve tree problems.         \n\nHere, if we had the sum of left and right subtrees of the current root, then we can say the current subtree's sum will be:      \n`current root's value + left subtree sum + right subtree sum` \n\n![tree_sum](../Figures/508/Slide2.png)\n\nThus, we can recursively find the sum of the left and right subtrees of the given node and return the current node's tree's sum.     \nWe also need some base conditions to stop the recursion. The base condition is simply the case where we can get the result without doing any computation.       \n\n**Can you tell what will be the sum of nodes of an empty tree?**       \nExactly it can be considered 0 as there are no nodes present. Thus, this is our base case.\n\nThus, our pseudocode for finding sum of all nodes of a subtree will look like:\n\n```\nint findTreeSum(TreeNode root) {\n    // Base condition.\n    if !root {\n        return 0\n    }\n    \n    // Current root's tree's sum will be, current root's value + left subtree sum + right subtree sum.\n    return root.val + findTreeSum(root.left) + findTreeSum(root.right)\n}\n```\n\nLet's now look at this slideshow to better understand this.\n\n!?!../Documents/508/slideshow1.json:960,540!?!\n\n<br />\n\n#### Algorithm\n\n1. Initialize variables:\n    - `sumFreq`, hashmap to store frequency count of all sums.\n    - `maxFreq`, variable to store the maximum frequency.\n    - `maxFreqSums`, array to store values of all different sums whose frequency is maximum.\n\n2. Iterate over each node of the given tree using pre-order traversal:\n    - Calculate the current node's subtree's sum as discussed above.\n    - Increment the sum's frequency in `sumFreq`.\n    - If the current subtree's sum's frequency is greater than `maxFreq`, store it's frequency in `maxFreq`.\n\n3. Iterate over `sumFreq` map, and push all sums in `maxFreqSums` array whose frequency is equal to `maxFreq`.\n\n4. Return `maxFreqSums` array.\n\n\n!?!../Documents/508/slideshow2.json:960,540!?!\n\n<br />\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/HtGHE6ZM/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HtGHE6ZM\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the number of nodes in the binary tree.\n\n* Time complexity: $O(N^{2})$.\n  - We iterate over each node of the tree and then calculate the sum of the node's subtree.\n  - For finding the sum of a subtree, we traverse each node of that subtree, in worst-case, tree can be skew thus it is $ O(N) $ time operation. Thus, for finding the sum of subtree for $N$ nodes, it will take $ O(N^2) $ time.\n  - In the end we traverse on all the unique sums, and as there are $ N $ subtrees, $ N $ different sums are possible, thus in worst-case we will iterate on $ N $ elements.\n  - Thus, overall we take $ O(N^2 + N) = O(N^2) $ time.\n\n* Space complexity: $O(N)$.\n  - Our hashmap, stores all different possible subtree sums. There are $ N $ nodes, which means $ N $ different subtrees are possible with different sums, thus requiring $ O(N) $ space.\n  - Both function's recursion call stack can take at most $ O(N) $ space in case of a skew tree. Thus, in the worst-case scenario, the recursive stack space used will be $ O(N + N) = O(N) $.\n\n---\n\n\n### Approach 2: Post-Order Traversal\n\n#### Intuition\n\nOne thing we can notice is that we will repeatedly traverse to the same set of nodes again and again while traversing in the pre-order direction.                  \nBecause a smaller subtree can be part of bigger subtrees.       \n\n![tree_repeat](../Figures/508/Slide40.png)\n\nNow imagine if there were hundreds of layers. The smaller subtree will be traversed a lot of times.\n\nWe know, that if we had the sum of left and right subtrees of the current root, then we can say the current subtree's sum will be:      \n`current root's value + left subtree sum + right subtree sum`.\n\nSo instead of going from root to child nodes, and repeatedly calculating the sum of the subtree of child nodes,         \nwe can traverse to child nodes first and then use the sum of the child node's subtree to get the sum of the current node's subtree.\n    \nLook at this slideshow to better understand this.\n\n!?!../Documents/508/slideshow3.json:960,540!?!\n\n<br />\n\n#### Algorithm\n\n1. Initialize variables:\n    - `sumFreq`, hashmap to store frequency count of all sums.\n    - `maxFreq`, variable to store the maximum frequency.\n    - `maxFreqSums`, array to store values of all different sums whose frequency is maximum.\n\n2. Iterate over each node of the given tree using post-order traversal:\n    - Using the left and right child's tree's sum, calculate the current node's tree's sum.\n    - Increment the sum's frequency in `sumFreq`.\n    - If the current subtree's sum's frequency is greater than `maxFreq`, update `maxFreq` as this frequency.\n\n3. Iterate over `sumFreq` map, and push all sums in the `maxFreqSums` array whose frequency is equal to `maxFreq`.\n\n4. Return `maxFreqSums` array.\n\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/XRPVqQmt/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XRPVqQmt\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $N$ is the number of nodes in the binary tree.\n\n* Time complexity: $O(N)$.\n  - We iterate over each node of the tree only once and find its subtree sum in $ O(1) $ time. Thus, it takes $ O(N) $ time to find all the subtree sums of a tree with $ N $ nodes.\n  - In the end we traverse on all the unique sums, and as there are $ N $ subtrees, $ N $ different sums are possible, thus in worst-case we will iterate on $ N $ elements.\n  - Thus, overall we take $ O(N + N) = O(N) $ time.\n\n* Space complexity: $O(N)$.\n  - We use a hashmap to store all different possible subtree sums. There are $ N $ nodes, which means $ N $ different subtrees are possible with different sums, thus requiring $ O(N) $ space.\n  - Recursion call stack can also take at most $ O(N) $ space in case of a skew tree. \n  - Thus, overall we require $ O(N + N) = O(N) $ extra space.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

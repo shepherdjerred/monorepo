@@ -1,0 +1,134 @@
+{
+  "questionId": "864",
+  "questionFrontendId": "835",
+  "title": "Image Overlap",
+  "titleSlug": "image-overlap",
+  "difficulty": "Medium",
+  "content": "<p>You are given two images, <code>img1</code> and <code>img2</code>, represented as binary, square matrices of size <code>n x n</code>. A binary matrix has only <code>0</code>s and <code>1</code>s as values.</p>\n\n<p>We <strong>translate</strong> one image however we choose by sliding all the <code>1</code> bits left, right, up, and/or down any number of units. We then place it on top of the other image. We can then calculate the <strong>overlap</strong> by counting the number of positions that have a <code>1</code> in <strong>both</strong> images.</p>\n\n<p>Note also that a translation does <strong>not</strong> include any kind of rotation. Any <code>1</code> bits that are translated outside of the matrix borders are erased.</p>\n\n<p>Return <em>the largest possible overlap</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/09/overlap1.jpg\" style=\"width: 450px; height: 231px;\" />\n<pre>\n<strong>Input:</strong> img1 = [[1,1,0],[0,1,0],[0,1,0]], img2 = [[0,0,0],[0,1,1],[0,0,1]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We translate img1 to right by 1 unit and down by 1 unit.\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/09/overlap_step1.jpg\" style=\"width: 450px; height: 105px;\" />\nThe number of positions that have a 1 in both images is 3 (shown in red).\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/09/overlap_step2.jpg\" style=\"width: 450px; height: 231px;\" />\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> img1 = [[1]], img2 = [[1]]\n<strong>Output:</strong> 1\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> img1 = [[0]], img2 = [[0]]\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == img1.length == img1[i].length</code></li>\n\t<li><code>n == img2.length == img2[i].length</code></li>\n\t<li><code>1 &lt;= n &lt;= 30</code></li>\n\t<li><code>img1[i][j]</code> is either <code>0</code> or <code>1</code>.</li>\n\t<li><code>img2[i][j]</code> is either <code>0</code> or <code>1</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"largestOverlap\",\n  \"params\": [\n    {\n      \"name\": \"img1\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"name\": \"img2\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"105.3K\", \"totalSubmission\": \"164.5K\", \"totalAcceptedRaw\": 105284, \"totalSubmissionRaw\": 164500, \"acRate\": \"64.0%\"}",
+  "likes": 1409,
+  "dislikes": 506,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,1,0],[0,1,0],[0,1,0]]\n[[0,0,0],[0,1,1],[0,0,1]]",
+    "[[1]]\n[[1]]",
+    "[[0]]\n[[0]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int largestOverlap(vector<vector<int>>& img1, vector<vector<int>>& img2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int largestOverlap(int[][] img1, int[][] img2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def largestOverlap(self, img1: List[List[int]], img2: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def largestOverlap(self, img1, img2):\n        \"\"\"\n        :type img1: List[List[int]]\n        :type img2: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} img1\n * @param {number[][]} img2\n * @return {number}\n */\nvar largestOverlap = function(img1, img2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function largestOverlap(img1: number[][], img2: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LargestOverlap(int[][] img1, int[][] img2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int largestOverlap(int** img1, int img1Size, int* img1ColSize, int** img2, int img2Size, int* img2ColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func largestOverlap(img1 [][]int, img2 [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun largestOverlap(img1: Array<IntArray>, img2: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func largestOverlap(_ img1: [[Int]], _ img2: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn largest_overlap(img1: Vec<Vec<i32>>, img2: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} img1\n# @param {Integer[][]} img2\n# @return {Integer}\ndef largest_overlap(img1, img2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $img1\n     * @param Integer[][] $img2\n     * @return Integer\n     */\n    function largestOverlap($img1, $img2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int largestOverlap(List<List<int>> img1, List<List<int>> img2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def largestOverlap(img1: Array[Array[Int]], img2: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec largest_overlap(img1 :: [[integer]], img2 :: [[integer]]) :: integer\n  def largest_overlap(img1, img2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec largest_overlap(Img1 :: [[integer()]], Img2 :: [[integer()]]) -> integer().\nlargest_overlap(Img1, Img2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (largest-overlap img1 img2)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "990",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nFirst of all, this is a really fun problem to solve, as one would discover later.\nIn addition, it could be a practical problem in real world.\nFor instance, if one can find the maximal overlapping zone between two images, one could _clip_ the images to make them smaller and more focused.\n\nIn this article, we will cover three approaches as follows:\n\n- We could solve the problem intuitively by enumerating all the possible overlapping zones.\n\n- Or more efficiently, we can apply some knowledge of _**linear algebra**_ (or geometry), as we will present another solution in the second approach.\n\n- Finally, we could even solve it with the conception of **_convolution_**, as in Convolution Neural Network (_a.k.a._ CNN), which is the backbone operation for the image recognition models nowadays.\n\n\n---\n### Approach 1: Shift and Count\n\n**Intuition**\n\nAs stated in the problem description, in order to calculate the number of ones in the overlapping zone, we should first **_shift_** one of the images.\nOnce the image is shifted, it is intuitive to __*count*__ the numbers.\n\n>Therefore, a simple idea is that one could come up all possible overlapping zones, by _shifting_ the image matrix, and then simply count within each overlapping zone.\n\nThe image matrix could be shifted in four directions, _i.e._ left, right, up and down.\n\nWe could represent the shifting with a 2-axis coordinate as follows, where the X-axis indicates the shifting on the directions of _left_ and _right_ and the Y-axis indicates the shifting of _up_ and _down_.\n\n![Image Shift](../Figures/835/835_image_shift.png)\n\nFor instance, the coordinate of `(1, 1)` represents that we shift the matrix to the right by one and to the up side by one as well.\n\n>One important insight is that shifting one matrix to a direction is **equivalent** to shifting the other matrix to the _opposite_ direction, in the sense that we would have the same overlapping zone at the end.\n\n![Image Shift](../Figures/835/835_equivalent_shifts.png)\n\nFor example, by shifting the matrix A to one step on the right, is same as shifting the matrix B to the left by one step.\n\n**Algorithm**\n\nBased on the above intuition, we could implement the solution step by step.\nFirst we define the function `shift_and_count(x_shift, y_shift, M, R)` where we shift the matrix `M` with reference to the matrix `R` with the shifting coordinate `(x_shift, y_shift)` and then we count the overlapping ones in the overlapping zone.\n\n- The algorithm is organized as a loop over all possible combinations of shifting coordinates `(x_shift, y_shift)`.\n\n- More specifically, the ranges of `x_shift` and `y_shift` are both `[0, N-1]` where $$N$$ is the width of the matrix. \n\n- At each iteration, we invoke the function `shift_and_count()` twice to shift and count the overlapping zone, first with the matrix B as the reference and vice versa.\n\n\n<iframe src=\"https://leetcode.com/playground/kTpcEyox/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"kTpcEyox\"></iframe>\n\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the width of the matrix.\n\nFirst of all, let us calculate the number of all possible shiftings, (_i.e._ the number of overlapping zones).\n\nFor a matrix of length $$N$$, we have $$2(N-1)$$ possible offsets along each axis to shift the matrix.\nTherefore, there are in total $$2(N-1) \\cdot 2(N-1)  = 4(N-1)^2$$ possible overlapping zones to calculate.\n\n- Time Complexity: $$\\mathcal{O}(N^4)$$\n\n    - As discussed before, we have in total $$4(N-1)^2$$ possible overlapping zones.\n\n    - The size of the overlapping zone is bounded by $$\\mathcal{O}(N^2)$$.\n\n    - Since we iterate through each overlapping zone to find out the overlapping ones, the overall time complexity of the algorithm would be $$4(N-1)^2 \\cdot \\mathcal{O}(N^2) = \\mathcal{O}(N^4)$$.\n\n- Space Complexity: $$\\mathcal{O}(1)$$\n\n    - As one can see, a constant space is used in the above algorithm.\n\n\n---\n### Approach 2: Linear Transformation\n\n**Intuition**\n\nOne drawback of the above algorithm is that we would scan through those zones that are filled with zeros over and over, even though these zones are not of our interests.\n\nBecause for those cells filled with zero, no matter how we _shift_, they would not _add up_ to the final solutions.\nAs a follow-up question, we could ask ourselves that, _can we **focus** on those cells with ones?_\n\n>The answer is yes. The idea is that we filter out those cells with ones in both matrices, and then we apply the **_linear transformation_** to _align_ the cells.\n\nFirst of all, we define a 2-dimension coordinate, via which we could assign a unique coordinate to each cell in the matrix, _e.g._ a cell can be indexed as $$I = (X_i, Y_i)$$.\n\nThen to shift a cell, we can obtain the new position of the cell by applying a _linear transformation_.\nFor example, to shift the cell to the right by one and to the up side by one is to apply the linear transformation vector of $$V = (1, 1)$$.\nThe new index of the cell can be obtained by $$I + V = (X_i + 1, Y_i + 1)$$.\n\n![linear transformation](../Figures/835/835_linear_transformation.png)\n\nFurthermore, given two matrices, we have two non-zero cells respectively in the matrices as $$P_a =(X_a, Y_a)$$ and $$P_b = (X_b, Y_b)$$.\nTo **align** these cells together, we would need a transformation vector as $$V_{ab} = (X_b - X_a, Y_b - Y_a)$$, so that $$P_a + V_{ab} = P_b$$.\n\n>Now, the key insight is that all the cells in the **same** overlapping zone would share the **same** linear transformation vector.\n\nBased on the above insight, we can then use the transformation vector $$V_{ab}$$ as a key to **group** all the non-zero cells alignments between two matrices.\nEach group represents an overlapping zone.\nNaturally, the size of the overlapping zone would be the size of the group as well.\n\n**Algorithm**\n\nThe algorithm can be implemented in two overall steps.\n\n- First, we filter out those non-zero cells in each matrix respectively.\n\n- Second, we do a cartesian product on the non-zero cells. For each pair of the products, we calculate the corresponding linear transformation vector as $$V_{ab} = (X_b - X_a, Y_b - Y_a)$$.\nThen, we count the number of the pairs that have the same transformation vector, which is also the number of ones in the overlapping zone. \n\nHere are some sample implementation which are inspired from the user [TejPatel18](https://leetcode.com/problems/image-overlap/discuss/150504/Python-Easy-Logic) in the discussion forum.\n\n<iframe src=\"https://leetcode.com/playground/CvjZdk3Z/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"CvjZdk3Z\"></iframe>\n\n\n\n**Complexity Analysis**\n\nLet $$M_a, M_b$$ be the number of non-zero cells in the matrix A and B respectively. Let $$N$$ be the width of the matrix.\n\n- Time Complexity: $$\\mathcal{O}(N^4)$$.\n\n    - In the first step, we filter out the non-zero cells in each matrix, which would take $$\\mathcal{O}(N^2)$$ time.\n\n    - In the second step, we enumerate the cartesian product of non-zero cells between the two matrices, which would take $$\\mathcal{O}(M_a \\cdot M_b)$$ time. In the worst case, both $$M_a$$ and $$M_b$$ would be up to $$N^2$$, _i.e._ matrix filled with ones.\n\n    - To sum up, the overall time complexity of the algorithm would be $$\\mathcal{O}(N^2) + \\mathcal{O}(N^2 \\cdot N^2) = \\mathcal{O}(N^4)$$.\n\n    - Although this approach has the same time complexity as the previous approach, it should run faster in practice, since we ignore those zero cells.\n\n- Space Complexity: $$\\mathcal{O}(N^2)$$\n\n    - We kept the indices of non-zero cells in both matrices. In the worst case, we would need the $$\\mathcal{O}(N^2)$$ space for the matrices filled with ones.\n\n\n---\n### Approach 3: Imagine Convolution\n\n**Intuition**\n\nAs it turns out, the number of overlapped ones in an overlapping zone is equal to the result of performing a [convolution operation](https://en.wikipedia.org/wiki/Kernel_(image_processing)) between two matrices.\n\n![image convolution](../Figures/835/835_convolution.png)\n\nTo put it simple, the convolution between two matrices is to perform a **dot product** between them, _i.e._ $$\\sum_{x}^{N}\\sum_{y}^{N}\\big(V_{xy}(A) \\cdot V_{xy}(B)\\big)$$ where $$V_{xy}(A)$$ and is the value of the cell in the matrix A at the position of $$(x, y)$$.\n\nFrom the above formulas, one can clearly see why the result of convolution is the number of overlapping ones.\n\nUsually, the image convolution is performed between an image and a specific **_kernel_** matrix, in order to obtain certain effects such as blurring or sharpening.\nIn our case, we would perform the convolution between the matrix A and the **_shifted_** matrix B which serves as a kernel.\n\nMore importantly, we should shift the matrix with truncation and **_zero padding_**, in order to obtain a proper kernel for convolution.\n\n![shift with padding](../Figures/835/835_shift_with_padding.png)\n\n>As a result, rather than manually counting the number of overlapping ones, we could perform the convolution operation instead.\n\n**Algorithm**\n\nOverall, we enumerate all possible kernels (by shifting the matrix B), and then perform the convolution operation to count the overlapping ones.\nThe algorithm can be broke down into the following steps:\n\n- First of all, we extend both the width and height of the matrix B to $$N + 2(N-1) = 3N-2$$, and pad the extended cells with zeros, as follows:\n\n![kernels](../Figures/835/835_kernels.png)\n\n- From the extended and padded matrix B, we then can extract the kernel one by one.\n\n- For each kernel, we perform the convolution operation with the matrix A to count the number of overlapping ones.\n\n- At the end, we return the maximal value of overlapping ones.\n\nHere are some sample implementations that are inspired from the solution of user [HeroKillerEver](https://leetcode.com/problems/image-overlap/discuss/131344/An-interesting-SOLUTION%3A-Let-us-think-about-it-as-%22Convolution%22) in the discussion forum.\n\n<iframe src=\"https://leetcode.com/playground/E2P2GPmj/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"E2P2GPmj\"></iframe>\n\nNote that, in the Python solution, we utilize the `numpy` package, which is a well-known library in the tasks of data processing and machine learning.\n\nThe `numpy` library is highly _optimized_ for the matrix operations, which is why it runs faster than the Approach #1, although they have the same time complexity.\n\n**Complexity Analysis**\n\nLet $$N$$ be the width of the matrix.\n\n- Time Complexity: $$\\mathcal{O}(N^4)$$\n\n    - We iterate through $$(2N-1) \\cdot (2N-1)$$ number of kernels.\n\n    - For each kernel, we perform a convolution operation, which takes $$\\mathcal{O}(N^2)$$ time.\n\n    - To sum up, the overall time complexity of the algorithm would be $$(2N-1) \\cdot (2N-1) \\cdot \\mathcal{O}(N^2) = \\mathcal{O}(N^4)$$.\n\n- Space Complexity: $$\\mathcal{O}(N^2)$$\n\n    - We extend the matrix B to the size of $$(3N-2) \\cdot (3N-2)$$, which would require the space of $$\\mathcal{O}(N^2)$$.\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

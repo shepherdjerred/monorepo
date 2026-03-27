@@ -1,0 +1,58 @@
+{
+  "questionId": "627",
+  "questionFrontendId": "627",
+  "title": "Swap Sex of Employees",
+  "titleSlug": "swap-sex-of-employees",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Salary</code></p>\n\n<pre>\n+-------------+----------+\n| Column Name | Type     |\n+-------------+----------+\n| id          | int      |\n| name        | varchar  |\n| sex         | ENUM     |\n| salary      | int      |\n+-------------+----------+\nid is the primary key (column with unique values) for this table.\nThe sex column is ENUM (category) value of type (&#39;m&#39;, &#39;f&#39;).\nThe table contains information about an employee.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to swap all <code>&#39;f&#39;</code> and <code>&#39;m&#39;</code> values (i.e., change all <code>&#39;f&#39;</code> values to <code>&#39;m&#39;</code> and vice versa) with a <strong>single update statement</strong> and no intermediate temporary tables.</p>\n\n<p>Note that you must write a single update statement, <strong>do not</strong> write any select statement for this problem.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nSalary table:\n+----+------+-----+--------+\n| id | name | sex | salary |\n+----+------+-----+--------+\n| 1  | A    | m   | 2500   |\n| 2  | B    | f   | 1500   |\n| 3  | C    | m   | 5500   |\n| 4  | D    | f   | 500    |\n+----+------+-----+--------+\n<strong>Output:</strong> \n+----+------+-----+--------+\n| id | name | sex | salary |\n+----+------+-----+--------+\n| 1  | A    | f   | 2500   |\n| 2  | B    | m   | 1500   |\n| 3  | C    | f   | 5500   |\n| 4  | D    | m   | 500    |\n+----+------+-----+--------+\n<strong>Explanation:</strong> \n(1, A) and (3, C) were changed from &#39;m&#39; to &#39;f&#39;.\n(2, B) and (4, D) were changed from &#39;f&#39; to &#39;m&#39;.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Salary (id int, name varchar(100), sex char(1), salary int)\"], \"mssql\": [\"Create table Salary (id int, name varchar(100), sex char(1), salary int)\"], \"oraclesql\": [\"Create table Salary (id int, name varchar(100), sex char(1), salary int)\"], \"database\": true, \"manual\": true, \"name\": \"swap_salary\", \"pythondata\": [\"Salary = pd.DataFrame([], columns=['id', 'name', 'sex', 'salary']).astype({'id':'Int64', 'name':'object', 'sex':'object', 'salary':'Int64'})\\n\"], \"postgresql\": [\"Create table If Not Exists Salary (id int, name varchar, sex char, salary int)\\n\"], \"database_schema\": {\"Salary\": {\"id\": \"INT\", \"name\": \"VARCHAR(100)\", \"sex\": \"CHAR(1)\", \"salary\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"546.3K\", \"totalSubmission\": \"646.1K\", \"totalAcceptedRaw\": 546346, \"totalSubmissionRaw\": 646058, \"acRate\": \"84.6%\"}",
+  "likes": 1864,
+  "dislikes": 572,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Salary\":[\"id\",\"name\",\"sex\",\"salary\"]},\"rows\":{\"Salary\":[[1,\"A\",\"m\",2500],[2,\"B\",\"f\",1500],[3,\"C\",\"m\",5500],[4,\"D\",\"f\",500]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef swap_salary(salary: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "177",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach: Using `UPDATE` and `CASE...WHEN` [Accepted]\n\n**Algorithm**\n\nTo dynamically set a value to a column, we can use [`UPDATE`](https://dev.mysql.com/doc/refman/5.7/en/update.html) statement together when [`CASE...WHEN...`](https://dev.mysql.com/doc/refman/5.7/en/case.html) flow control statement.\n\n**MySQL**\n\n```sql\nUPDATE salary\nSET\n    sex = CASE sex\n        WHEN 'm' THEN 'f'\n        ELSE 'm'\n    END;\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

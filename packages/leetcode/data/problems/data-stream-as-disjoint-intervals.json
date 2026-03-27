@@ -1,0 +1,148 @@
+{
+  "questionId": "352",
+  "questionFrontendId": "352",
+  "title": "Data Stream as Disjoint Intervals",
+  "titleSlug": "data-stream-as-disjoint-intervals",
+  "difficulty": "Hard",
+  "content": "<p>Given a data stream input of non-negative integers <code>a<sub>1</sub>, a<sub>2</sub>, ..., a<sub>n</sub></code>, summarize the numbers seen so far as a list of disjoint intervals.</p>\n\n<p>Implement the <code>SummaryRanges</code> class:</p>\n\n<ul>\n\t<li><code>SummaryRanges()</code> Initializes the object with an empty stream.</li>\n\t<li><code>void addNum(int value)</code> Adds the integer <code>value</code> to the stream.</li>\n\t<li><code>int[][] getIntervals()</code> Returns a summary of the integers in the stream currently as a list of disjoint intervals <code>[start<sub>i</sub>, end<sub>i</sub>]</code>. The answer should be sorted by <code>start<sub>i</sub></code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;SummaryRanges&quot;, &quot;addNum&quot;, &quot;getIntervals&quot;, &quot;addNum&quot;, &quot;getIntervals&quot;, &quot;addNum&quot;, &quot;getIntervals&quot;, &quot;addNum&quot;, &quot;getIntervals&quot;, &quot;addNum&quot;, &quot;getIntervals&quot;]\n[[], [1], [], [3], [], [7], [], [2], [], [6], []]\n<strong>Output</strong>\n[null, null, [[1, 1]], null, [[1, 1], [3, 3]], null, [[1, 1], [3, 3], [7, 7]], null, [[1, 3], [7, 7]], null, [[1, 3], [6, 7]]]\n\n<strong>Explanation</strong>\nSummaryRanges summaryRanges = new SummaryRanges();\nsummaryRanges.addNum(1);      // arr = [1]\nsummaryRanges.getIntervals(); // return [[1, 1]]\nsummaryRanges.addNum(3);      // arr = [1, 3]\nsummaryRanges.getIntervals(); // return [[1, 1], [3, 3]]\nsummaryRanges.addNum(7);      // arr = [1, 3, 7]\nsummaryRanges.getIntervals(); // return [[1, 1], [3, 3], [7, 7]]\nsummaryRanges.addNum(2);      // arr = [1, 2, 3, 7]\nsummaryRanges.getIntervals(); // return [[1, 3], [7, 7]]\nsummaryRanges.addNum(6);      // arr = [1, 2, 3, 6, 7]\nsummaryRanges.getIntervals(); // return [[1, 3], [6, 7]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= value &lt;= 10<sup>4</sup></code></li>\n\t<li>At most <code>3 * 10<sup>4</sup></code> calls will be made to <code>addNum</code> and <code>getIntervals</code>.</li>\n\t<li>At most <code>10<sup>2</sup></code>&nbsp;calls will be made to&nbsp;<code>getIntervals</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> What if there are lots of merges and the number of disjoint intervals is small compared to the size of the data stream?</p>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"SummaryRanges\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"value\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"void\"\n      },\n      \"name\": \"addNum\"\n    },\n    {\n      \"params\": [],\n      \"return\": {\n        \"type\": \"integer[][]\"\n      },\n      \"name\": \"getIntervals\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"132.6K\", \"totalSubmission\": \"221K\", \"totalAcceptedRaw\": 132620, \"totalSubmissionRaw\": 220952, \"acRate\": \"60.0%\"}",
+  "likes": 1819,
+  "dislikes": 374,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Summary Ranges\", \"titleSlug\": \"summary-ranges\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find Right Interval\", \"titleSlug\": \"find-right-interval\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Range Module\", \"titleSlug\": \"range-module\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Integers in Intervals\", \"titleSlug\": \"count-integers-in-intervals\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"SummaryRanges\",\"addNum\",\"getIntervals\",\"addNum\",\"getIntervals\",\"addNum\",\"getIntervals\",\"addNum\",\"getIntervals\",\"addNum\",\"getIntervals\"]\n[[],[1],[],[3],[],[7],[],[2],[],[6],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Data Stream",
+      "slug": "data-stream"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class SummaryRanges {\npublic:\n    SummaryRanges() {\n        \n    }\n    \n    void addNum(int value) {\n        \n    }\n    \n    vector<vector<int>> getIntervals() {\n        \n    }\n};\n\n/**\n * Your SummaryRanges object will be instantiated and called as such:\n * SummaryRanges* obj = new SummaryRanges();\n * obj->addNum(value);\n * vector<vector<int>> param_2 = obj->getIntervals();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class SummaryRanges {\n\n    public SummaryRanges() {\n        \n    }\n    \n    public void addNum(int value) {\n        \n    }\n    \n    public int[][] getIntervals() {\n        \n    }\n}\n\n/**\n * Your SummaryRanges object will be instantiated and called as such:\n * SummaryRanges obj = new SummaryRanges();\n * obj.addNum(value);\n * int[][] param_2 = obj.getIntervals();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class SummaryRanges:\n\n    def __init__(self):\n        \n\n    def addNum(self, value: int) -> None:\n        \n\n    def getIntervals(self) -> List[List[int]]:\n        \n\n\n# Your SummaryRanges object will be instantiated and called as such:\n# obj = SummaryRanges()\n# obj.addNum(value)\n# param_2 = obj.getIntervals()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class SummaryRanges(object):\n\n    def __init__(self):\n        \n\n    def addNum(self, value):\n        \"\"\"\n        :type value: int\n        :rtype: None\n        \"\"\"\n        \n\n    def getIntervals(self):\n        \"\"\"\n        :rtype: List[List[int]]\n        \"\"\"\n        \n\n\n# Your SummaryRanges object will be instantiated and called as such:\n# obj = SummaryRanges()\n# obj.addNum(value)\n# param_2 = obj.getIntervals()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar SummaryRanges = function() {\n    \n};\n\n/** \n * @param {number} value\n * @return {void}\n */\nSummaryRanges.prototype.addNum = function(value) {\n    \n};\n\n/**\n * @return {number[][]}\n */\nSummaryRanges.prototype.getIntervals = function() {\n    \n};\n\n/** \n * Your SummaryRanges object will be instantiated and called as such:\n * var obj = new SummaryRanges()\n * obj.addNum(value)\n * var param_2 = obj.getIntervals()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class SummaryRanges {\n    constructor() {\n        \n    }\n\n    addNum(value: number): void {\n        \n    }\n\n    getIntervals(): number[][] {\n        \n    }\n}\n\n/**\n * Your SummaryRanges object will be instantiated and called as such:\n * var obj = new SummaryRanges()\n * obj.addNum(value)\n * var param_2 = obj.getIntervals()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class SummaryRanges {\n\n    public SummaryRanges() {\n        \n    }\n    \n    public void AddNum(int value) {\n        \n    }\n    \n    public int[][] GetIntervals() {\n        \n    }\n}\n\n/**\n * Your SummaryRanges object will be instantiated and called as such:\n * SummaryRanges obj = new SummaryRanges();\n * obj.AddNum(value);\n * int[][] param_2 = obj.GetIntervals();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} SummaryRanges;\n\n\nSummaryRanges* summaryRangesCreate() {\n    \n}\n\nvoid summaryRangesAddNum(SummaryRanges* obj, int value) {\n    \n}\n\nint** summaryRangesGetIntervals(SummaryRanges* obj, int* retSize, int** retColSize) {\n    \n}\n\nvoid summaryRangesFree(SummaryRanges* obj) {\n    \n}\n\n/**\n * Your SummaryRanges struct will be instantiated and called as such:\n * SummaryRanges* obj = summaryRangesCreate();\n * summaryRangesAddNum(obj, value);\n \n * int** param_2 = summaryRangesGetIntervals(obj, retSize, retColSize);\n \n * summaryRangesFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type SummaryRanges struct {\n    \n}\n\n\nfunc Constructor() SummaryRanges {\n    \n}\n\n\nfunc (this *SummaryRanges) AddNum(value int)  {\n    \n}\n\n\nfunc (this *SummaryRanges) GetIntervals() [][]int {\n    \n}\n\n\n/**\n * Your SummaryRanges object will be instantiated and called as such:\n * obj := Constructor();\n * obj.AddNum(value);\n * param_2 := obj.GetIntervals();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class SummaryRanges() {\n\n    fun addNum(value: Int) {\n        \n    }\n\n    fun getIntervals(): Array<IntArray> {\n        \n    }\n\n}\n\n/**\n * Your SummaryRanges object will be instantiated and called as such:\n * var obj = SummaryRanges()\n * obj.addNum(value)\n * var param_2 = obj.getIntervals()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass SummaryRanges {\n\n    init() {\n        \n    }\n    \n    func addNum(_ value: Int) {\n        \n    }\n    \n    func getIntervals() -> [[Int]] {\n        \n    }\n}\n\n/**\n * Your SummaryRanges object will be instantiated and called as such:\n * let obj = SummaryRanges()\n * obj.addNum(value)\n * let ret_2: [[Int]] = obj.getIntervals()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct SummaryRanges {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl SummaryRanges {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn add_num(&self, value: i32) {\n        \n    }\n    \n    fn get_intervals(&self) -> Vec<Vec<i32>> {\n        \n    }\n}\n\n/**\n * Your SummaryRanges object will be instantiated and called as such:\n * let obj = SummaryRanges::new();\n * obj.add_num(value);\n * let ret_2: Vec<Vec<i32>> = obj.get_intervals();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class SummaryRanges\n    def initialize()\n        \n    end\n\n\n=begin\n    :type value: Integer\n    :rtype: Void\n=end\n    def add_num(value)\n        \n    end\n\n\n=begin\n    :rtype: Integer[][]\n=end\n    def get_intervals()\n        \n    end\n\n\nend\n\n# Your SummaryRanges object will be instantiated and called as such:\n# obj = SummaryRanges.new()\n# obj.add_num(value)\n# param_2 = obj.get_intervals()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class SummaryRanges {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $value\n     * @return NULL\n     */\n    function addNum($value) {\n        \n    }\n  \n    /**\n     * @return Integer[][]\n     */\n    function getIntervals() {\n        \n    }\n}\n\n/**\n * Your SummaryRanges object will be instantiated and called as such:\n * $obj = SummaryRanges();\n * $obj->addNum($value);\n * $ret_2 = $obj->getIntervals();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class SummaryRanges {\n\n  SummaryRanges() {\n    \n  }\n  \n  void addNum(int value) {\n    \n  }\n  \n  List<List<int>> getIntervals() {\n    \n  }\n}\n\n/**\n * Your SummaryRanges object will be instantiated and called as such:\n * SummaryRanges obj = SummaryRanges();\n * obj.addNum(value);\n * List<List<int>> param2 = obj.getIntervals();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class SummaryRanges() {\n\n    def addNum(value: Int): Unit = {\n        \n    }\n\n    def getIntervals(): Array[Array[Int]] = {\n        \n    }\n\n}\n\n/**\n * Your SummaryRanges object will be instantiated and called as such:\n * val obj = new SummaryRanges()\n * obj.addNum(value)\n * val param_2 = obj.getIntervals()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule SummaryRanges do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec add_num(value :: integer) :: any\n  def add_num(value) do\n    \n  end\n\n  @spec get_intervals() :: [[integer]]\n  def get_intervals() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# SummaryRanges.init_()\n# SummaryRanges.add_num(value)\n# param_2 = SummaryRanges.get_intervals()\n\n# SummaryRanges.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec summary_ranges_init_() -> any().\nsummary_ranges_init_() ->\n  .\n\n-spec summary_ranges_add_num(Value :: integer()) -> any().\nsummary_ranges_add_num(Value) ->\n  .\n\n-spec summary_ranges_get_intervals() -> [[integer()]].\nsummary_ranges_get_intervals() ->\n  .\n\n\n%% Your functions will be called as such:\n%% summary_ranges_init_(),\n%% summary_ranges_add_num(Value),\n%% Param_2 = summary_ranges_get_intervals(),\n\n%% summary_ranges_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define summary-ranges%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; add-num : exact-integer? -> void?\n    (define/public (add-num value)\n      )\n    ; get-intervals : -> (listof (listof exact-integer?))\n    (define/public (get-intervals)\n      )))\n\n;; Your summary-ranges% object will be instantiated and called as such:\n;; (define obj (new summary-ranges%))\n;; (send obj add-num value)\n;; (define param_2 (send obj get-intervals))"
+    }
+  ],
+  "solution": {
+    "id": "1625",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n\n### Approach 1: Save all values in an ordered set\n\n#### Intuition\n\nThe question asks to combine consecutive values into intervals, namely, if we have values of 1, 2, 3, and 4, we can make an interval that starts from 1 and ends at 4. If the data is sorted, we can easily iterate over it to find the intervals. A data structure is needed that allows us to insert elements while maintaining sorted order, otherwise we would need to sort the data every time we call `getIntervals`, which is expensive.\n\nJava's TreeSet can do the work. The reason to use a TreeSet is that we can iterate on the values in it in the increasing order and elements can be added in $O(\\log{}n)$. In Python we can use SortedList and in C++ we can use the standard library's set. To find the intervals, we can look at each value and check whether it is adjacent to the previous one. If it is, we can build an interval, otherwise we need to start a new one.\n\n#### Algorithm\n\nInitialize a TreeSet equivalent data structure `values`.\n\n\n##### addNum(int value)\nSimply add `value` into `values`. If your language's TreeSet equivalent allows duplicate values like Python's SortedList, you will also need to check that `value` does not already exist in `values` as duplicates will break the algorithm.\n\n##### getIntervals\n\n\n* If `values` is empty, return an empty array.\n* Create an empty list of intervals.\n* Set `left = right = -1`. `left` represents the left bound of the current interval and `right` represents the right bound.\n* Iterate over `values`. At each iteration:\n   *  If `left < 0` set `left = right = value` \n   *  else if `value = right + 1`, set `right = value` as we can continue the current interval.\n   *  else, we cannot continue the current interval. Insert `[left, right]` into `intervals` and set `left = right = value` to start a new one.\n* Insert `[left, right]` into `intervals` and return `intervals`\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/GQnYWXuW/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GQnYWXuW\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $N$ is the total number of calls of `addNum`.\n\n* Time complexity: $O(log(N))$ for addNum, $O(N)$ for getIntervals.\n\n  For `addNum`, we insert a value into the TreeSet which takes $O(log(N))$ time.\n  For `getIntervals`, we iterate all the values in the TreeSet which is the same as traversing the whole tree, so the time complexity is $O(N)$.\n\n* Space complexity: $O(N)$.\n\n  This is just the space to save all the values in the TreeSet.\n\n\n### Approach 2: Maintain all the intervals in ordered map\n\n#### Intuition\nInstead of storing the values and then building the intervals every time we call `getIntervals`, we can just store the intervals themselves and update them every time we add a number.\n\nIn Java, we can maintain a TreeMap in which each entry represents an interval. The key and value are the left and right bounds of an interval. We still want to maintain the intervals in sorted order so that when we add a number, we can easily find the interval a number is close to and perform merges if necessary. `getIntervals` then returns all the entries in the TreeMap. In Python, SortedDict can be used. In C++, STL map can be used.\n\n\nWhen we insert a `value`, there are 3 non-trivial cases (in all cases, blue represents existing intervals, red is the number being added, and cyan is the result after our operations):\n\n1. There is an interval with a right bound of `value - 1`.\nIn this case, we need to merge the this interval and the `value`, namely change the the interval's right bound into `value`.\n\n<center>\n<img src=\"../Figures/352/352_Data_Stream_as_Disjoint_Intervals_2.png\" width=\"500\"/>\n</center>\n<br>\n\n\n2. There is an interval with a left bound of `value + 1`.\nIn this case, we need to merge this interval and the `value`, namely change the interval's left bound into `value`.\n\n<center>\n<img src=\"../Figures/352/352_Data_Stream_as_Disjoint_Intervals_1.png\" width=\"500\"/>\n</center>\n<br>\n\n3. Both condition 1 and 2 are satisfied.\nThis is the combination of the previous 2 cases. We should make a new interval which \"connects\" the two intervals and replace them with the new one.\n\n<center>\n<img src=\"../Figures/352/352_Data_Stream_as_Disjoint_Intervals_3.png\" width=\"500\"/>\n</center>\n<br>\n\nTo be complete, there are 2 trivial cases as well:\n\n1. The `value` is already in the existing intervals.\nWe do nothing.\n\n2. All other cases.\nWe need to insert a new interval [`value`, `value`].\n\n\n#### Algorithm\n\nInitialize a TreeMap equivalent data structure `intervals`.\n\n\n##### addNum(int value)\n* Set `left = right = value`. These variables will represent the bounds of a new interval to be created.\n* Let `smallEntry` be the entry with the greatest key (left bound) no larger than `value` in `intervals`.\n* If `smallEntry` exists\n   * Let `previous` be the value (right bound) in `smallEntry`, if `previous >= value` then this is the first trivial case, so return. \n   * If `previous == value - 1`, set `left` to the key (left bound) in `smallEntry`. This is the first non trivial case, so we will prepare a merge.\n* Let `maxEntry` be the entry with the smallest key (left bound) larger than `value` in `intervals`.\n* If `maxEntry` exists and the key in it is `value + 1`, then this is the second non trivial case.\n  * Set `right` to the value in `maxEntry`.\n  * Remove the key `value + 1` from `intervals`.\n* Insert `[left, right]` into `intervals`. All cases are covered here. \n\n1. In the first case, we are updating the existing interval's entry since we set `left` to be that interval's key.\n2. In the second case, we removed the old interval and are now adding a new one with the `right` bound set to be the removed interval's old `right` bound and `left` updated to `value`.\n3. In the third case, we have done both of the above. We are replacing the interval on the left and deleting the interval on the right.\n4. For the 2nd trivial case, we didn't modify any intervals and `[left, right] = [value, value]`.\n\n\n\n##### getIntervals\nIterate over all the entries in `intervals` and return them in order.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/c7bDrXgu/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"c7bDrXgu\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $N$ is the total number of calls of `addNum`.\n\n* Time complexity: $O(log(N))$ for `addNum`, $O(N)$ for `getIntervals`.\n\n  For `addNum`, in the worst case, we remove 2 entries from the TreeMap and add 1 entry, the time complexity for each operation is $O(log(N))$.\n  For `getIntervals`, we iterate all the entries in the TreeMap which is the same as traversing the whole tree, so the time complexity is $O(N)$.\n\n* Space complexity: $O(N)$.\n\n  This is just the space to save all the intervals in the TreeMap.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

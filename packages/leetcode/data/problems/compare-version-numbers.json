@@ -1,0 +1,137 @@
+{
+  "questionId": "165",
+  "questionFrontendId": "165",
+  "title": "Compare Version Numbers",
+  "titleSlug": "compare-version-numbers",
+  "difficulty": "Medium",
+  "content": "<p>Given two <strong>version strings</strong>, <code>version1</code> and <code>version2</code>, compare them. A version string consists of <strong>revisions</strong> separated by dots <code>&#39;.&#39;</code>. The <strong>value of the revision</strong> is its <strong>integer conversion</strong> ignoring leading zeros.</p>\n\n<p>To compare version strings, compare their revision values in <strong>left-to-right order</strong>. If one of the version strings has fewer revisions, treat the missing revision values as <code>0</code>.</p>\n\n<p>Return the following:</p>\n\n<ul>\n\t<li>If <code>version1 &lt; version2</code>, return -1.</li>\n\t<li>If <code>version1 &gt; version2</code>, return 1.</li>\n\t<li>Otherwise, return 0.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">version1 = &quot;1.2&quot;, version2 = &quot;1.10&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">-1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>version1&#39;s second revision is &quot;2&quot; and version2&#39;s second revision is &quot;10&quot;: 2 &lt; 10, so version1 &lt; version2.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">version1 = &quot;1.01&quot;, version2 = &quot;1.001&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Ignoring leading zeroes, both &quot;01&quot; and &quot;001&quot; represent the same integer &quot;1&quot;.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">version1 = &quot;1.0&quot;, version2 = &quot;1.0.0.0&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>version1 has less revisions, which means every missing revision are treated as &quot;0&quot;.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= version1.length, version2.length &lt;= 500</code></li>\n\t<li><code>version1</code> and <code>version2</code>&nbsp;only contain digits and <code>&#39;.&#39;</code>.</li>\n\t<li><code>version1</code> and <code>version2</code>&nbsp;<strong>are valid version numbers</strong>.</li>\n\t<li>All the given revisions in&nbsp;<code>version1</code> and <code>version2</code>&nbsp;can be stored in&nbsp;a&nbsp;<strong>32-bit integer</strong>.</li>\n</ul>\n",
+  "hints": [
+    "You can use two pointers for each version string to traverse them together while comparing the corresponding segments.",
+    "Utilize the substring method to extract each version segment delimited by '.'. Ensure you're extracting the segments correctly by adjusting the start and end indices accordingly."
+  ],
+  "metaData": "{\r\n  \"name\": \"compareVersion\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"version1\",\r\n      \"type\": \"string\"\r\n    },\r\n    {\r\n      \"name\": \"version2\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"699.4K\", \"totalSubmission\": \"1.5M\", \"totalAcceptedRaw\": 699425, \"totalSubmissionRaw\": 1512438, \"acRate\": \"46.2%\"}",
+  "likes": 3167,
+  "dislikes": 2798,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"1.2\"\n\"1.10\"",
+    "\"1.01\"\n\"1.001\"",
+    "\"1.0\"\n\"1.0.0.0\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"nextdoor\", \"name\": \"Nextdoor\"}], \"more_than_six_months\": [{\"timesEncountered\": 16, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 7, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 6, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"vk\", \"name\": \"VK\"}]}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int compareVersion(string version1, string version2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int compareVersion(String version1, String version2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def compareVersion(self, version1: str, version2: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def compareVersion(self, version1, version2):\n        \"\"\"\n        :type version1: str\n        :type version2: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} version1\n * @param {string} version2\n * @return {number}\n */\nvar compareVersion = function(version1, version2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function compareVersion(version1: string, version2: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CompareVersion(string version1, string version2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int compareVersion(char* version1, char* version2) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func compareVersion(version1 string, version2 string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun compareVersion(version1: String, version2: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func compareVersion(_ version1: String, _ version2: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn compare_version(version1: String, version2: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} version1\n# @param {String} version2\n# @return {Integer}\ndef compare_version(version1, version2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $version1\n     * @param String $version2\n     * @return Integer\n     */\n    function compareVersion($version1, $version2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int compareVersion(String version1, String version2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def compareVersion(version1: String, version2: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec compare_version(version1 :: String.t, version2 :: String.t) :: integer\n  def compare_version(version1, version2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec compare_version(Version1 :: unicode:unicode_binary(), Version2 :: unicode:unicode_binary()) -> integer().\ncompare_version(Version1, Version2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (compare-version version1 version2)\n  (-> string? string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "877",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Split + Parse, Two Pass\n\n**Intuition**\n\nThe first idea is to split both strings by dot character into chunks and then compare the chunks one by one.\n\n![traversal](../Figures/165/yoyo3.png)\n\nThat works fine if the number of chunks is the same for both versions. If not, we need to pad the shorter string by adding `.0` at the end of the string with fewer chunks one or several times, so that the number of chunks will be the same.\n\n![traversal](../Figures/165/diff3.png)\n\n**Algorithm**\n\n- Split both strings by dot character into two arrays.\n\n- Iterate over the longest array and compare chunks one by one. If one of the arrays is over, virtually add as many zeros as needed to continue the comparison with the longer array.\n\n    - If two chunks are not equal, return 1 or -1.\n\n- If we're here, the versions are equal. Return 0.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/byW63Sqx/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"byW63Sqx\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(N + M)$$, where $$N$$ and $$M$$ are lengths of input strings.\n\n* Space complexity : $$\\mathcal{O}(N + M)$$ to store arrays `nums1` and `nums2`.\n\n---\n\n### Approach 2: Two Pointers, One Pass\n\n**Intuition**\n\nRather than splitting the string all at once with the `split()` function, we could also split the string **_on the fly_**, through which we only need to iterate through the revisions once.\n\n>The idea is that we split the string _chunk by chunk_, _i.e._ each trunk represents a revision in the version number. The moment we retrieve a trunk from each string, we then compare them.\n\nIn this way, one could move along both strings in parallel, and retrieve and compare corresponding chunks. Once both strings are parsed, the comparison is done as well.\n\nAs a result, the process can be done in a **single** pass.\n\n**Algorithm**\n\nFirst, we define a function named `get_next_chunk(version, n, p)`, which is to retrieve the next chunk in the string.\n\nThis function takes three arguments: the input string `version`, its length `n`, and a pointer `p` set to the first character of the chunk to retrieve. It returns an integer chunk in between the pointer `p` and the next dot. To help with the iteration, it returns a pointer set to the first character of the next chunk.\n\nHere is how one could solve the problem using this function:\n\n- Set a pointer `p1` pointed to the beginning of string `version1` and a pointer `p2` to the beginning of string `version2`: `p1 = p2 = 0`.\n\n- Iterate over both strings in parallel. While `p1 < n1 or p2 < n2`:\n\n    - Retrieve the next chunk `i1` from string `version1` and next chunk `i2` from string `version2` using the above-defined `get_next_chunk` function.\n\n    - Compare `i1` and `i2`. If they are not equal, return 1 or -1.\n\n- If we're here, the versions are equal. Return 0.\n\nNow let's implement our `get_next_chunk(version, n, p)` function:\n\n- The beginning of the chunk is marked by the pointer `p`. If `p` is set to the end of the string, the string is already parsed. To continue the comparison, let's add a virtual `.0` at the end of this string by returning 0.\n\n- If `p` is not at the end of the string, move the pointer `p_end` along the string to find the end of the chunk.\n\n- Return the chunk `version.substring(p, p_end)`.\n\n**Implementation**\n\n!?!../Documents/165_LIS.json:1000,357!?!\n\n<iframe src=\"https://leetcode.com/playground/ds3bfkG5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ds3bfkG5\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(\\max(N, M))$$, where $$N$$ and $$M$$ are the lengths of the input strings respectively. It's a one-pass solution.\n\n* Space complexity : $$\\mathcal{O}(\\max(N, M))$$.\n  - Despite the fact that we did not keep arrays of revision numbers, we still need some additional space to store a substring of the input string for integer conversion.\n  In the worst case, the substring could be of the original string as well.\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

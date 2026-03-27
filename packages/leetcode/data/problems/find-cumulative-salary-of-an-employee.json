@@ -1,0 +1,62 @@
+{
+  "questionId": "579",
+  "questionFrontendId": "579",
+  "title": "Find Cumulative Salary of an Employee",
+  "titleSlug": "find-cumulative-salary-of-an-employee",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Employee</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| id          | int  |\n| month       | int  |\n| salary      | int  |\n+-------------+------+\n(id, month) is the primary key (combination of columns with unique values) for this table.\nEach row in the table indicates the salary of an employee in one month during the year 2020.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution&nbsp;to calculate the <strong>cumulative salary summary</strong> for every employee in a single unified table.</p>\n\n<p>The <strong>cumulative salary summary</strong> for an employee can be calculated as follows:</p>\n\n<ul>\n\t<li>For each month that the employee worked, <strong>sum</strong> up the salaries in <strong>that month</strong> and the <strong>previous two months</strong>. This is their <strong>3-month sum</strong> for that month. If an employee did not work for the company in previous months, their effective salary for those months is <code>0</code>.</li>\n\t<li>Do <strong>not</strong> include the 3-month sum for the <strong>most recent month</strong> that the employee worked for in the summary.</li>\n\t<li>Do <strong>not</strong> include the 3-month sum for any month the employee <strong>did not work</strong>.</li>\n</ul>\n\n<p>Return the result table ordered by <code>id</code> in <strong>ascending order</strong>. In case of a tie, order it by <code>month</code> in <strong>descending order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nEmployee table:\n+----+-------+--------+\n| id | month | salary |\n+----+-------+--------+\n| 1  | 1     | 20     |\n| 2  | 1     | 20     |\n| 1  | 2     | 30     |\n| 2  | 2     | 30     |\n| 3  | 2     | 40     |\n| 1  | 3     | 40     |\n| 3  | 3     | 60     |\n| 1  | 4     | 60     |\n| 3  | 4     | 70     |\n| 1  | 7     | 90     |\n| 1  | 8     | 90     |\n+----+-------+--------+\n<strong>Output:</strong> \n+----+-------+--------+\n| id | month | Salary |\n+----+-------+--------+\n| 1  | 7     | 90     |\n| 1  | 4     | 130    |\n| 1  | 3     | 90     |\n| 1  | 2     | 50     |\n| 1  | 1     | 20     |\n| 2  | 1     | 20     |\n| 3  | 3     | 100    |\n| 3  | 2     | 40     |\n+----+-------+--------+\n<strong>Explanation:</strong> \nEmployee &#39;1&#39; has five salary records excluding their most recent month &#39;8&#39;:\n- 90 for month &#39;7&#39;.\n- 60 for month &#39;4&#39;.\n- 40 for month &#39;3&#39;.\n- 30 for month &#39;2&#39;.\n- 20 for month &#39;1&#39;.\nSo the cumulative salary summary for this employee is:\n+----+-------+--------+\n| id | month | salary |\n+----+-------+--------+\n| 1  | 7     | 90     |  (90 + 0 + 0)\n| 1  | 4     | 130    |  (60 + 40 + 30)\n| 1  | 3     | 90     |  (40 + 30 + 20)\n| 1  | 2     | 50     |  (30 + 20 + 0)\n| 1  | 1     | 20     |  (20 + 0 + 0)\n+----+-------+--------+\nNote that the 3-month sum for month &#39;7&#39; is 90 because they did not work during month &#39;6&#39; or month &#39;5&#39;.\n\nEmployee &#39;2&#39; only has one salary record (month &#39;1&#39;) excluding their most recent month &#39;2&#39;.\n+----+-------+--------+\n| id | month | salary |\n+----+-------+--------+\n| 2  | 1     | 20     |  (20 + 0 + 0)\n+----+-------+--------+\n\nEmployee &#39;3&#39; has two salary records excluding their most recent month &#39;4&#39;:\n- 60 for month &#39;3&#39;.\n- 40 for month &#39;2&#39;.\nSo the cumulative salary summary for this employee is:\n+----+-------+--------+\n| id | month | salary |\n+----+-------+--------+\n| 3  | 3     | 100    |  (60 + 40 + 0)\n| 3  | 2     | 40     |  (40 + 0 + 0)\n+----+-------+--------+\n</pre>\n",
+  "hints": [
+    "Seem hard at first glance? Try to divide this problem into some sub-problems. \r\nThink about how to calculate the cumulative sum of one employee, how to get the cumulative sum for many employees, and how to except the most recent month of the result.",
+    "Use the technique of self-join if you have only one table but to write a complex query.",
+    "Still remember how to use the function `sum` and `max`?"
+  ],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Employee (id int, month int, salary int)\"], \"mssql\": [\"Create table Employee (id int, month int, salary int)\"], \"oraclesql\": [\"Create table Employee (id int, month int, salary int)\"], \"database\": true, \"name\": \"cumulative_salary\", \"pythondata\": [\"Employee = pd.DataFrame([], columns=['id', 'month', 'salary']).astype({'id':'Int64', 'month':'Int64', 'salary':'Int64'})\\n\"], \"postgresql\": [\"\\nCreate table If Not Exists Employee (id int, month int, salary int)\"], \"database_schema\": {\"Employee\": {\"id\": \"INT\", \"month\": \"INT\", \"salary\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"44.1K\", \"totalSubmission\": \"89.2K\", \"totalAcceptedRaw\": 44054, \"totalSubmissionRaw\": 89217, \"acRate\": \"49.4%\"}",
+  "likes": 248,
+  "dislikes": 405,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Employee\":[\"id\",\"month\",\"salary\"]},\"rows\":{\"Employee\":[[1,1,20],[2,1,20],[1,2,30],[2,2,30],[3,2,40],[1,3,40],[3,3,60],[1,4,60],[3,4,70],[1,7,90],[1,8,90]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef cumulative_salary(employee: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "207",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Using `OUTER JOIN` and temporary tables\n\n**Intuition**\n\nSolve this issue by two steps. The first one is to get the cumulative sum of an employee's salary over a period of 3 months, and then exclude the most recent month from the result.\n\n**Algorithm**\n\nIf you feel hard to work out how to get the cumulative sum of an employee's salary over a period of 3 months, think about 2 months as a start. By joining this **Employee** table with itself, you can get salary information for one more month.\n\n```sql\nSELECT *\nFROM\n    Employee E1\n        LEFT JOIN\n    Employee E2 ON (E2.id = E1.id\n        AND E2.month = E1.month - 1)\nORDER BY E1.id ASC , E1. month DESC\n```\n\n| Id | Month | Salary | Id | Month | Salary |\n|----|-------|--------|----|-------|--------|\n| 1  | 4     | 60     | 1  | 3     | 40     |\n| 1  | 3     | 40     | 1  | 2     | 30     |\n| 1  | 2     | 30     | 1  | 1     | 20     |\n| 1  | 1     | 20     |    |       |        |\n| 2  | 2     | 30     | 2  | 1     | 20     |\n| 2  | 1     | 20     |    |       |        |\n| 3  | 4     | 70     | 3  | 3     | 60     |\n| 3  | 3     | 60     | 3  | 2     | 40     |\n| 3  | 2     | 40     |    |       |        |\n>Note:\n> - The blank value in the output is actually `NULL` in the database.\n> - The first three columns are from E1, and the rest ones are from E2.\n\nThen we can add the salary to get the cumulative sum for 2 months.\n\n```sql\nSELECT\n    E1.id,\n    E1.month,\n    (IFNULL(E1.salary, 0) + IFNULL(E2.salary, 0)) AS Salary\nFROM\n    Employee E1\n        LEFT JOIN\n    Employee E2 ON (E2.id = E1.id\n        AND E2.month = E1.month - 1)\nORDER BY E1.id ASC , E1.month DESC\n```\n```\n| id | month | Salary |\n|----|-------|--------|\n| 1  | 4     | 100    |\n| 1  | 3     | 70     |\n| 1  | 2     | 50     |\n| 1  | 1     | 20     |\n| 2  | 2     | 50     |\n| 2  | 1     | 20     |\n| 3  | 4     | 130    |\n| 3  | 3     | 100    |\n| 3  | 2     | 40     |\n```\n\nSimilarly, you can join this table one more time to get the cumulative sum for 3 months.\n\n```sql\nSELECT\n    E1.id,\n    E1.month,\n    (IFNULL(E1.salary, 0) + IFNULL(E2.salary, 0) + IFNULL(E3.salary, 0)) AS Salary\nFROM\n    Employee E1\n        LEFT JOIN\n    Employee E2 ON (E2.id = E1.id\n        AND E2.month = E1.month - 1)\n        LEFT JOIN\n    Employee E3 ON (E3.id = E1.id\n        AND E3.month = E1.month - 2)\nORDER BY E1.id ASC , E1.month DESC\n;\n```\n```\n| id | month | Salary |\n|----|-------|--------|\n| 1  | 4     | 130    |\n| 1  | 3     | 90     |\n| 1  | 2     | 50     |\n| 1  | 1     | 20     |\n| 2  | 2     | 50     |\n| 2  | 1     | 20     |\n| 3  | 4     | 170    |\n| 3  | 3     | 100    |\n| 3  | 2     | 40     |\n```\n\nIn addition, we have to exclude the most recent month as required. If we have a temp table including every id and most recent month like below, then we can easily opt out these months by join it with the above table.\n```\n| id | month |\n|----|-------|\n| 1  | 4     |\n| 2  | 2     |\n| 3  | 4     |\n```\n\nHere is the code to generate this table.\n```sql\nSELECT\n    id, MAX(month) AS month\nFROM\n    Employee\nGROUP BY id\nHAVING COUNT(*) > 1\n;\n```\n\nAt last, we can join them together and get the desired cumulative sum of an employee's salary over a period of 3 months excluding the most recent one.\n\n**MySQL**\n\n```sql\nSELECT\n    E1.id,\n    E1.month,\n    (IFNULL(E1.salary, 0) + IFNULL(E2.salary, 0) + IFNULL(E3.salary, 0)) AS Salary\nFROM\n    (SELECT\n        id, MAX(month) AS month\n    FROM\n        Employee\n    GROUP BY id\n    HAVING COUNT(*) > 1) AS maxmonth\n        LEFT JOIN\n    Employee E1 ON (maxmonth.id = E1.id\n        AND maxmonth.month > E1.month)\n        LEFT JOIN\n    Employee E2 ON (E2.id = E1.id\n        AND E2.month = E1.month - 1)\n        LEFT JOIN\n    Employee E3 ON (E3.id = E1.id\n        AND E3.month = E1.month - 2)\nORDER BY id ASC , month DESC\n;\n```\n\n| id | month | Salary |\n|----|-------|--------|\n| 1  | 3     | 90     |\n| 1  | 2     | 50     |\n| 1  | 1     | 20     |\n| 2  | 1     | 20     |\n| 3  | 3     | 100    |\n| 3  | 2     | 40     |\n\nNote: Thank [@xiaxin](https://discuss.leetcode.com/user/xiaxin) for providing this elegant solution.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

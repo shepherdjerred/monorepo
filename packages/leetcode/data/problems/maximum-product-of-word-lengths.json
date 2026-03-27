@@ -1,0 +1,138 @@
+{
+  "questionId": "318",
+  "questionFrontendId": "318",
+  "title": "Maximum Product of Word Lengths",
+  "titleSlug": "maximum-product-of-word-lengths",
+  "difficulty": "Medium",
+  "content": "<p>Given a string array <code>words</code>, return <em>the maximum value of</em> <code>length(word[i]) * length(word[j])</code> <em>where the two words do not share common letters</em>. If no such two words exist, return <code>0</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;abcw&quot;,&quot;baz&quot;,&quot;foo&quot;,&quot;bar&quot;,&quot;xtfn&quot;,&quot;abcdef&quot;]\n<strong>Output:</strong> 16\n<strong>Explanation:</strong> The two words can be &quot;abcw&quot;, &quot;xtfn&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;a&quot;,&quot;ab&quot;,&quot;abc&quot;,&quot;d&quot;,&quot;cd&quot;,&quot;bcd&quot;,&quot;abcd&quot;]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The two words can be &quot;ab&quot;, &quot;cd&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;a&quot;,&quot;aa&quot;,&quot;aaa&quot;,&quot;aaaa&quot;]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> No such pair of words.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= words.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= words[i].length &lt;= 1000</code></li>\n\t<li><code>words[i]</code> consists only of lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"maxProduct\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"words\",\r\n      \"type\": \"string[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"251.2K\", \"totalSubmission\": \"411.1K\", \"totalAcceptedRaw\": 251208, \"totalSubmissionRaw\": 411061, \"acRate\": \"61.1%\"}",
+  "likes": 3624,
+  "dislikes": 146,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"abcw\",\"baz\",\"foo\",\"bar\",\"xtfn\",\"abcdef\"]",
+    "[\"a\",\"ab\",\"abc\",\"d\",\"cd\",\"bcd\",\"abcd\"]",
+    "[\"a\",\"aa\",\"aaa\",\"aaaa\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxProduct(vector<string>& words) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxProduct(String[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxProduct(self, words: List[str]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxProduct(self, words):\n        \"\"\"\n        :type words: List[str]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @return {number}\n */\nvar maxProduct = function(words) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxProduct(words: string[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxProduct(string[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxProduct(char** words, int wordsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxProduct(words []string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxProduct(words: Array<String>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxProduct(_ words: [String]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_product(words: Vec<String>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @return {Integer}\ndef max_product(words)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @return Integer\n     */\n    function maxProduct($words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxProduct(List<String> words) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxProduct(words: Array[String]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_product(words :: [String.t]) :: integer\n  def max_product(words) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_product(Words :: [unicode:unicode_binary()]) -> integer().\nmax_product(Words) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-product words)\n  (-> (listof string?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "763",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nLet's start with the naive straightforward solution.\n\n> Compare each word with all the following words one by one. If two words have no common letters, update the maximum product `maxProd`.\n\nLet's omit for the moment the implementation of `noCommonLetters` function.\n\n<iframe src=\"https://leetcode.com/playground/3oToq3Jw/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"3oToq3Jw\"></iframe>\n\nThe number of operations performed in the nested loops is\n \n$$(N - 1) + (N - 2) + ... + 2 + 1 = \\frac{N(N - 1)}{2}$$\n\nthat results in $$\\mathcal{O}(N^2 \\times f(L_1, L_2))$$ time complexity. Here $$f(L_1, L_2)$$ is a complexity of function `noCommonLetters(String s1, String s2)`, i.e. the price to compare two words of lengths $$L_1$$ and $$L_2$$.\n\n> What could be done here?\n\n![fig](../Figures/318/methods2.png)\n\n- Approach 1: minimize time complexity $$f(L_1, L_2)$$ of `noCommonLetters` function.\n\n- Approach 2: minimize the number of word comparisons. There is no need to always perform $$\\mathcal{O}(N^2)$$ comparisons. Among all the strings with the same set of letters ($$ab$$, $$aaaaabaabaaabb$$, $$bbabbabba$$) it's enough to keep the longest one ($$aaaaabaabaaabb$$). \n<br /> \n<br />\n\n\n---\n### Approach 1: Optimize noCommonLetters function: Bitmasks + Precomputation\n\nThe idea is to minimize first the time complexity $$f(L_1, L_2)$$ of word comparison.\n\n![fig](../Figures/318/methods.png)\n\n**Naive Solution : $$\\mathcal{O}(L_1 \\times L_2)$$ time**\n\nThis naive solution is simple but not optimal. Check the characters in the first word one by one. For each character ensure that this character is _not_ in the second word.\n\n<iframe src=\"https://leetcode.com/playground/7PdAkwLy/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"7PdAkwLy\"></iframe>\n \n**Bitmasks : $$\\mathcal{O}(L_1 + L_2)$$ time**\n\nA more elegant and fast solution would be to use bitmasks.\n\nWords contain only lower case letters and hence an absence or presence of each letter in a word could be encoded with a bitmask of 26 elements. Let's set bit number 0 equal to 1 if character `a` is present in the word, and to 0 otherwise. Now bit number 1. Let's set it equal to 1 if character `b` is present in the word, and to 0 otherwise. And so on and so forth, till the bit number 26 which is equal to 1 if `z` is present in the word.\n\n![fig](../Figures/318/n_th.png)\n\n> How to set the n-th bit? Use standard bitwise trick : `n_th_bit = 1 << n`.\n\n> How to compute bitmask for a word? Iterate over the word, letter by letter, compute bit number corresponding to that letter `n = (int)ch - (int)'a'`, and add this n-th bit `n_th_bit = 1 << n` into bitmask `bitmask |= n_th_bit`.\n\n![fig](../Figures/318/bitmask.png)\n\nThis way one could compute two bitmasks, character by character, in $$\\mathcal{O}(L_1 + L_2)$$ time. Then the word comparison itself could be done in one operation and in a constant time.\n\n<iframe src=\"https://leetcode.com/playground/gpyW66vC/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"gpyW66vC\"></iframe>\n\n**Bitmasks + Precomputation : Comparison in $$\\mathcal{O}(1)$$ time**\n\nIn the previous approach, one computes a bitmask of each word N times. In fact, each bitmask could be precomputed just once, memorized, and then used for the runtime comparison in a constant time.\n\nLet's use two integer arrays to store bitmasks and string lengths. That's a Java-optimised way since in general Java works faster with arrays than with hashmaps. \n\n**Algorithm**\n\n- Precompute bitmasks for all words and save them in the array `masks`. Use array `lens` to keep the lengths for all words.\n\n- Compare each word with all the following words one by one. If two words have no common letters, update the maximum product `maxProd`. Perform \"no common letters\" check in a constant time with the help of precomputed `masks` array: `(masks[i] & masks[j]) == 0`.\n\n- Return `maxProd`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/QE5BByBd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QE5BByBd\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(N^2 + L)$$ where $$N$$ is a number of words and $$L$$ is a total length of all words together. The precomputation takes $$\\mathcal{O}(L)$$ time because we iterate over all characters in all words. The runtime word comparison takes $$\\mathcal{O}(N^2)$$ time. In total, that results in $$\\mathcal{O}(N^2 + L)$$ time complexity.\n\n* Space complexity : $$\\mathcal{O}(N)$$ to keep two arrays of N elements.\n<br /> \n<br />\n\n\n---\n### Approach 2: Optimise Number of Comparisons: Bitmasks + Precomputation + Hashmap\n\nNow, when the comparison itself is optimized, one could optimize the number of comparisons. There is no need to always perform $$\\mathcal{O}(N^2)$$\ncomparisons. Among all the strings with the same set of letters ($$ab$$, $$aaaaabaabaaabb$$, $$bbabbabba$$) it's enough to keep the longest one ($$aaaaabaabaaabb$$). \n\nFor that, instead of two arrays of length $$N$$ as in Approach 1, one could use a hashmap: bitmask -> max word length with that bitmask.\n\n![fig](../Figures/318/same.png)\n\nThis way the total number of word comparisons could be reduced, which speeds up the solution in Python. Note that for Java, this way is not the optimal one because of known problems with [HashMap performance](https://github.com/vavr-io/vavr/issues/571).  \n\n**Algorithm**\n\n- Precompute bitmasks for all words and save them in the hashmap bitmask -> max word length with such a bitmask. (There could be several words with the same bitmask, for example, \"a\" and \"aaaaaaa\").\n\n- Compare each word with all the following words one by one. If two words have no common letters, update the maximum product `maxProd`. Perform \"no common letters\" check in a constant time with the help of precomputed hashmap of bitmasks: `(x & y) == 0`.\n\n- Return `maxProd`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/7sZYin3D/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7sZYin3D\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N^2 + L)$$ where N is the number of words and L is the total length of all words together. If you want to have some fun, here is a [bloody discussion](https://leetcode.com/problems/maximum-product-of-word-lengths/discuss/76976/Bit-shorter-C++/80869) that all this is for \"small\" N only when $$N < 2^{26}$$. The idea is that the number of bitmasks is not more than $$2^{26}$$ and hence for $$N > 2^{26}$$ the complexity is $$\\mathcal{O}(L)$$. \n\n* Space complexity : $$\\mathcal{O}(N)$$ to keep a hashmap of N elements if $$N < 2^{26}$$. Otherwise, it's $$\\mathcal{O}(2^{26})$$ = $$\\mathcal{O}(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

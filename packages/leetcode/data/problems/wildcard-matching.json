@@ -1,0 +1,142 @@
+{
+  "questionId": "44",
+  "questionFrontendId": "44",
+  "title": "Wildcard Matching",
+  "titleSlug": "wildcard-matching",
+  "difficulty": "Hard",
+  "content": "<p>Given an input string (<code>s</code>) and a pattern (<code>p</code>), implement wildcard pattern matching with support for <code>&#39;?&#39;</code> and <code>&#39;*&#39;</code> where:</p>\n\n<ul>\n\t<li><code>&#39;?&#39;</code> Matches any single character.</li>\n\t<li><code>&#39;*&#39;</code> Matches any sequence of characters (including the empty sequence).</li>\n</ul>\n\n<p>The matching should cover the <strong>entire</strong> input string (not partial).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aa&quot;, p = &quot;a&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> &quot;a&quot; does not match the entire string &quot;aa&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aa&quot;, p = &quot;*&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong>&nbsp;&#39;*&#39; matches any sequence.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;cb&quot;, p = &quot;?a&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong>&nbsp;&#39;?&#39; matches &#39;c&#39;, but the second letter is &#39;a&#39;, which does not match &#39;b&#39;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= s.length, p.length &lt;= 2000</code></li>\n\t<li><code>s</code> contains only lowercase English letters.</li>\n\t<li><code>p</code> contains only lowercase English letters, <code>&#39;?&#39;</code> or <code>&#39;*&#39;</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{ \r\n  \"name\": \"isMatch\",\r\n  \"params\": [\r\n    { \r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    },\r\n    { \r\n      \"name\": \"p\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"855.7K\", \"totalSubmission\": \"2.7M\", \"totalAcceptedRaw\": 855660, \"totalSubmissionRaw\": 2706882, \"acRate\": \"31.6%\"}",
+  "likes": 9104,
+  "dislikes": 419,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Regular Expression Matching\", \"titleSlug\": \"regular-expression-matching\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Substring Matching Pattern\", \"titleSlug\": \"substring-matching-pattern\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"aa\"\n\"a\"",
+    "\"aa\"\n\"*\"",
+    "\"cb\"\n\"?a\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"more_than_six_months\": [{\"timesEncountered\": 16, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"coupang\", \"name\": \"Coupang\"}, {\"timesEncountered\": 4, \"slug\": \"instacart\", \"name\": \"Instacart\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}, {\"timesEncountered\": 2, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 2, \"slug\": \"two-sigma\", \"name\": \"Two Sigma\"}]}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isMatch(string s, string p) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isMatch(String s, String p) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isMatch(self, s: str, p: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isMatch(self, s, p):\n        \"\"\"\n        :type s: str\n        :type p: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string} p\n * @return {boolean}\n */\nvar isMatch = function(s, p) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isMatch(s: string, p: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsMatch(string s, string p) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isMatch(char* s, char* p) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isMatch(s string, p string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isMatch(s: String, p: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isMatch(_ s: String, _ p: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_match(s: String, p: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String} p\n# @return {Boolean}\ndef is_match(s, p)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String $p\n     * @return Boolean\n     */\n    function isMatch($s, $p) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isMatch(String s, String p) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isMatch(s: String, p: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_match(s :: String.t, p :: String.t) :: boolean\n  def is_match(s, p) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_match(S :: unicode:unicode_binary(), P :: unicode:unicode_binary()) -> boolean().\nis_match(S, P) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-match s p)\n  (-> string? string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "730",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Recursion with Memoization\n\n**Intuition**\n\nThe first idea here is a recursion. It is a relatively straightforward approach but quite time-consuming because of the huge recursion depth for long input strings.\n\n- If the strings are equal (`p == s`), then return `True`.\n\n- If the pattern matches any string (`p == '*'`), then return `True`.\n\n- If `p` is empty, or `s` is empty, return `False`.\n\n- If the current characters match (`p[0] == s[0]` or `p[0] == '?'`), then compare the next ones and return `isMatch(s[1:], p[1:])`.\n\n- If the current pattern character is a star (`p[0] == '*'`), then there are two possible situations:\n\n    - The star matches no characters, and hence the answer is `isMatch(s, p[1:])`.\n    \n    - The star matches one or more characters, and so the answer is `isMatch(s[1:], p)`.\n    \n- If `p[0] != s[0]`, return `False`.\n\n![pic](../Figures/44/stupid.png)\n\nThe problem with this algorithm is that it doesn't pass all test cases because of time limit issues, and hence has to be optimized. Here is what could be done:\n\n1. _Memoization_. That is a standard way to optimize the recursion. Let's have a memoization hashmap using pair `(s, p)` as a key and match/don't match as a boolean value. One could keep all already checked pairs `(s, p)` in this hashmap, so that if there are any duplicate checks, the answer is right here, and there is no need to proceed to the computations again.\n\n2. _Clean up of the input data_. Whether the patterns with multiple stars in a row `a****bc**cc` are valid wildcards or not, they could be simplified without any data loss to `a*bc*cc`. Such a cleanup helps to decrease the recursion depth. \n\n**Algorithm**\n\nHere is the algorithm.\n\n- Clean up the input by replacing more than one star in a row with a single star: `p = remove_duplicate_stars(p)`.\n\n- Initiate the memoization hashmap `dp`.\n\n- Return the helper function with a cleaned input: `helper(s, p)`.\n\n- `helper(s, p)`:\n\n    - If `(s, p)` is already known and stored in `dp`, return the value.\n\n    - If the strings are equal (`p == s`), or the pattern matches any string (`p == '*'`), add `dp[(s, p)] = True`.\n    \n    - Else if `p` is empty, or `s` is empty, add `dp[(s, p)] = False`.\n    \n    - Else if the current characters match (`p[0] == s[0]` or `p[0] == '?'`), then compare the next ones and add `dp[(s, p)] = helper(s[1:], p[1:])`.\n    \n    - Else if the current pattern character is a star (`p[0] == '*'`), then there are two possible situations: the star matches no characters, and the star matches one or more characters: `dp[(s, p)] = helper(s, p[1:]) or helper(s[1:], p)`.\n        \n    - Else `p[0] != s[0]`, then add `dp[(s, p)] = False`.\n    \n    - Now when the value is computed, return it: `dp[(s, p)]`.\n\n**Implementation**   \n\n<iframe src=\"https://leetcode.com/playground/C8VDAToH/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"C8VDAToH\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(S \\cdot P \\cdot (S + P))$$\n\t\n    * Removing duplicate stars requires us to traverse the string `p` once, this requires $$O(P)$$ time. \n\t\n    *  Regarding the helper function, every non-memoized recursive call we will: \n        1. Check if `helper(s, p)` has already been calculated.  This takes $$O(S + P)$$ time to create a hash of the tuple `(s, p)` the first time and $$O(1)$$ time to check if the result has already been cached.\n\n        2. Go through our if statements.  If `(s, p)` is one of the base cases, this will take $$O(min(S, P))$$ time for the string equality check or just $$O(1)$$ time for other checks, otherwise, it will take $$O(S + P)$$ time to create a substring `s[1:]` and a substring `p[1:]`.  Here, let's assume the worst-case scenario where most of the non-memoized recursive calls require $$O(S + P)$$ time.  \n\n        3. Then we will cache our result, which takes $$O(1)$$ time since the hash for tuple `(s, p)` was already created when we checked if the result for `(s, p)` is already cached.\n\t      \n        So in total, we spend $$O(2 \\cdot (S + P)) = O(S + P)$$ time on every non-memoized call ($$S + P$$ for creating a hash and $$S + P$$ for creating substrings).  We can only have as many non-memoized calls as there are combinations of `s` and `p`. Therefore, in the worst case, we can have $$S \\cdot P$$ non-memoized calls. This gives us a total time spent on non-memoized calls of $$O(S \\cdot P \\cdot (S + P))$$.\n\t      \n    * As for the memoized calls, for each non-memoized call, we can make at most 2 additional calls to `helper`.  This means that there will be at most $$S \\cdot P$$ memoized calls.  Each memoized call takes $$O(S + P)$$ time to create the hash for `(s, p)` and $$O(1)$$ time to get the cached result.  So the total time spent on memoized calls is $$O(S \\cdot P \\cdot (S + P))$$ which is a loose upper bound. \n\n    * Adding all 3 time complexities together we get: $$O(P + 2 \\cdot S \\cdot P \\cdot (S + P)) = O(S \\cdot P \\cdot (S + P))$$.\n\t\n        > Note: This approach can be optimized by using two pointers to track the current position on `s` and `p` instead of passing substrings of `s` and `p` as arguments.  To improve readability, this was not implemented here, however, doing so will reduce the time complexity to $$O(S \\cdot P)$$ since hashing two integers takes $$O(1)$$ time and each recursive call to `helper` would no longer require creating new substrings which takes linear time.  Thus the total time complexity is $$O(1)$$ per call for a maximum of $$S \\cdot P$$ non-memoized calls and $$S \\cdot P$$ memoized calls.\n\n* Space complexity: $$O(S \\cdot P)$$. Creating a new string `p` requires $$O(P)$$ space. The recursion call stack may exceed `max(S, P)` in cases such as `(s, p)` = `(aaab, *a*b)`, however, it is bounded by $$O(S + P)$$.  Lastly, the hashmap requires $$O(S \\cdot P)$$ space to memoize the result of each call to `helper`.\n<br />\n<br />\n\n\n---\n### Approach 2: Dynamic Programming \n\n**Intuition**\n\nThe recursion approach above shows how painful the large recursion depth could be, so let's try something more iterative. \n\nMemoization from the first approach gives an idea to try dynamic programming. The problem is very similar to [Edit Distance problem](https://leetcode.com/problems/edit-distance/solution/), so let's use exactly the same approach here.\n\nThe idea would be to reduce the problem to simple ones. For example, there is a string `adcebdk` and pattern `*a*b?k`, and we want to compute if there is a match for them: `D = True/False`. One could notice that it seems to be more simple for short strings and patterns and so it would be logical to relate a match `D[p_len][s_len]` with the lengths `p_len` and `s_len` of input pattern and string correspondingly.\n\nLet's go further and introduce a match `D[p_idx][s_idx]` which is a match between the first `p_idx` characters of the pattern and the first `s_idx` characters of the string.\n\n![pic](../Figures/44/dp_match2_fixed.png)\n\nIt turns out that one could compute `D[p_idx][s_idx]`, knowing a match without the last characters `D[p_idx - 1][s_idx - 1]`.\n\nIf the last characters are the same or the pattern character is '?', then \n\n> $$D[p_{idx}][s_{idx}] = D[p_{idx} - 1][s_{idx} - 1] \\qquad (1)$$\n\n![pic](../Figures/44/word_match3.png)\n\nIf the pattern character is '*' and there was a match on the previous step `D[p_idx - 1][s_idx - 1] = True`, then \n\n- The star at the end of the pattern still results in a match. \n\n- The star could match as many characters as you wish.\n\n> $$D[p_{idx} - 1][i] = \\textrm{True}, i \\ge s_{idx} - 1 \\qquad(2)$$\n\n\nSo each step of the computation would be done based on the previous ones, as follows: \n\n![pic](../Figures/44/if_match.png)\n\n![pic](../Figures/44/dpstar.png)\n\n**Algorithm**\n\n- Start from the table `D` filled with `False` everywhere but `D[0][0] = True`.\n\n- Apply rules (1) and (2) in a loop and return `D[p_len][s_len]` as an answer.\n\n![pic](../Figures/44/fixed.png)\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/AVMvpQ67/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"AVMvpQ67\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(S \\cdot P)$$ where $$S$$ and $$P$$ are lengths of the input string and the pattern respectively. \n* Space complexity: $$O(S \\cdot P)$$ to store the matrix.\n<br />\n<br />\n\n\n---\n### Approach 3: Backtracking\n\n**Intuition**\n\nComplexity $$O(S \\cdot P)$$ is much better than $$O(S \\cdot P \\cdot (S + P))$$, but still could be improved. There is no need to compute the entire matrix, i.e., to check all the possibilities for each star:\n\n- Star matches zero characters.\n- Star matches one character.\n- Star matches two characters. \n\n...\n\n- Star matches all remaining characters.  \n\nLet's just pick up the first opportunity \"matches zero characters\" and proceed further. If this assumption would lead to \"no match\" situation, then _backtrack_: come back to the previous star, assume now that it matches one more character (one), and proceed again. Again \"no match\" situation? _Backtrack again_: come back to the previous star, and assume now that it matches one more character (two), etc. \n\n![pic](../Figures/44/backtrack.png)\n\n**Algorithm**\n\nHere is the algorithm.\n\n- Let's use two pointers here: `s_idx` to iterate over the string, and `p_idx` to iterate over the pattern. While `s_idx < s_len`:\n\n    - If there are still characters in the pattern (`p_idx < p_len`) and the characters under the pointers match (`p[p_idx] == s[s_idx]` or `p[p_idx] == '?'`), then move forward by increasing both pointers.\n    \n    - Otherwise, if there are still characters in the pattern (`p_idx < p_len`), and `p[p_idx] == '*'`, then first check \"match zero characters\" situation, i.e., increase only pattern pointer `p_idx++`. Write down for a possible backtrack the star position in `star_idx` variable, and the current string pointer in `s_tmp_idx` variable.\n    \n    - Else if there is \"no match\" situation: the pattern is used up `p_idx < p_len` or the characters under the pointers don't match. \n    \n        - If there were no stars in the pattern, i.e., no `star_idx`, return `False`.\n        \n        - If there was a star, then backtrack: set pattern pointer just after the last star `p_idx = star_idx + 1`, and string pointer `s_idx = s_tmp_idx + 1`, i.e., assume that this time the star matches _one more character_. Save the current string pointer for the possible backtrack `s_tmp_idx = s_idx`.\n        \n- Return `True` if all remaining characters in the pattern are stars. \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/Wnff39GC/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Wnff39GC\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(\\min(S, P))$$ for the best case and better than $$O(S \\log P)$$ for the average case, where $$S$$ and $$P$$ are lengths of the input string and the pattern correspondingly. Please refer to [this article](https://arxiv.org/pdf/1407.0950.pdf) for detailed proof. However, in the worst-case scenario, this algorithm requires $$O(S \\cdot P)$$ time.\n* Space complexity: $$O(1)$$ since it's a constant space solution.\n<br />\n<br />\n\n\n---\n### Further reading\n\nThere are a lot of search-related questions around this problem that could pop up during the interview. To prepare, you could read about [string searching algorithm](https://en.wikipedia.org/wiki/String-searching_algorithm) and [KMP algorithm](https://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm).",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

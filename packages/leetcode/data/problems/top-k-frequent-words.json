@@ -1,0 +1,157 @@
+{
+  "questionId": "692",
+  "questionFrontendId": "692",
+  "title": "Top K Frequent Words",
+  "titleSlug": "top-k-frequent-words",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of strings <code>words</code> and an integer <code>k</code>, return <em>the </em><code>k</code><em> most frequent strings</em>.</p>\n\n<p>Return the answer <strong>sorted</strong> by <strong>the frequency</strong> from highest to lowest. Sort the words with the same frequency by their <strong>lexicographical order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;i&quot;,&quot;love&quot;,&quot;leetcode&quot;,&quot;i&quot;,&quot;love&quot;,&quot;coding&quot;], k = 2\n<strong>Output:</strong> [&quot;i&quot;,&quot;love&quot;]\n<strong>Explanation:</strong> &quot;i&quot; and &quot;love&quot; are the two most frequent words.\nNote that &quot;i&quot; comes before &quot;love&quot; due to a lower alphabetical order.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;the&quot;,&quot;day&quot;,&quot;is&quot;,&quot;sunny&quot;,&quot;the&quot;,&quot;the&quot;,&quot;the&quot;,&quot;sunny&quot;,&quot;is&quot;,&quot;is&quot;], k = 4\n<strong>Output:</strong> [&quot;the&quot;,&quot;is&quot;,&quot;sunny&quot;,&quot;day&quot;]\n<strong>Explanation:</strong> &quot;the&quot;, &quot;is&quot;, &quot;sunny&quot; and &quot;day&quot; are the four most frequent words, with the number of occurrence being 4, 3, 2 and 1 respectively.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 500</code></li>\n\t<li><code>1 &lt;= words[i].length &lt;= 10</code></li>\n\t<li><code>words[i]</code> consists of lowercase English letters.</li>\n\t<li><code>k</code> is in the range <code>[1, The number of <strong>unique</strong> words[i]]</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow-up:</strong> Could you solve it in <code>O(n log(k))</code> time and <code>O(n)</code> extra space?</p>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"topKFrequent\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"words\",\r\n      \"type\": \"string[]\"\r\n    },\r\n    {\r\n        \"name\": \"k\",\r\n        \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<string>\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"781K\", \"totalSubmission\": \"1.3M\", \"totalAcceptedRaw\": 780983, \"totalSubmissionRaw\": 1300442, \"acRate\": \"60.1%\"}",
+  "likes": 8024,
+  "dislikes": 375,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Top K Frequent Elements\", \"titleSlug\": \"top-k-frequent-elements\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"K Closest Points to Origin\", \"titleSlug\": \"k-closest-points-to-origin\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sort Features by Popularity\", \"titleSlug\": \"sort-features-by-popularity\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sender With Largest Word Count\", \"titleSlug\": \"sender-with-largest-word-count\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Pairs in Array\", \"titleSlug\": \"maximum-number-of-pairs-in-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"i\",\"love\",\"leetcode\",\"i\",\"love\",\"coding\"]\n2",
+    "[\"the\",\"day\",\"is\",\"sunny\",\"the\",\"the\",\"the\",\"sunny\",\"is\",\"is\"]\n4"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 2, \"slug\": \"box\", \"name\": \"Box\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 9, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 9, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 8, \"slug\": \"robinhood\", \"name\": \"Robinhood\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 3, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 3, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 3, \"slug\": \"redfin\", \"name\": \"Redfin\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Bucket Sort",
+      "slug": "bucket-sort"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> topKFrequent(vector<string>& words, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> topKFrequent(String[] words, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def topKFrequent(self, words: List[str], k: int) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def topKFrequent(self, words, k):\n        \"\"\"\n        :type words: List[str]\n        :type k: int\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @param {number} k\n * @return {string[]}\n */\nvar topKFrequent = function(words, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function topKFrequent(words: string[], k: number): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> TopKFrequent(string[] words, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** topKFrequent(char** words, int wordsSize, int k, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func topKFrequent(words []string, k int) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun topKFrequent(words: Array<String>, k: Int): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func topKFrequent(_ words: [String], _ k: Int) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn top_k_frequent(words: Vec<String>, k: i32) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @param {Integer} k\n# @return {String[]}\ndef top_k_frequent(words, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @param Integer $k\n     * @return String[]\n     */\n    function topKFrequent($words, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> topKFrequent(List<String> words, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def topKFrequent(words: Array[String], k: Int): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec top_k_frequent(words :: [String.t], k :: integer) :: [String.t]\n  def top_k_frequent(words, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec top_k_frequent(Words :: [unicode:unicode_binary()], K :: integer()) -> [unicode:unicode_binary()].\ntop_k_frequent(Words, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (top-k-frequent words k)\n  (-> (listof string?) exact-integer? (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1546",
+    "content": "[TOC]\n\n## Solution\n\n### Overview\n\nAt first glance, this problem is very similar to [347. Top K Frequent Elements](https://leetcode.com/problems/top-k-frequent-elements/), except for some subtle differences:\n\n1. The input is a list of **strings**, not **int values**.\n2. Require to return a **sorted** list of strings, not **in any order**.\n3. The frequency of a word is not guaranteed to be **unique**, so you have to break a tie when they have an identical frequency.\n\nThe detailed approaches to find out *$k$ most frequent elements* are given in the [solution](https://leetcode.com/problems/top-k-frequent-elements/solution/) to 347, so we only give a brief description of those approaches here. Based on 347, the primary challenge to solving this problem is to figure out a proper data structure and algorithm to give a **lexicographically smaller string** when breaking a tie in frequency and returning the list in the correct order. In the following approaches, we will start from the most naive approach and discuss how to utilize some complicated data structures, e.g., heap and trie, to reduce the complexity step by step.\n\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nAs we need the most frequent `k` words, to find which words are of higher frequencies, we just need to sort all words by their frequencies and return the first k words. Notice that the sorting order is first by frequencies and then lexicographically.\n\n\n#### Algorithm\n\nAccording to the requirement of the problem, we \n\n1. Count the frequency of each word and store the records by a HashMap `cnt`. \n2. Define the sorting order as what the problem indicates (by frequencies from high to low, and then from lexicographically smaller ones to larger ones when we meet a tie-in frequency) and sort the entire list of all words.\n3. Only return the first k words as the returned result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KYf5EyPC/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"KYf5EyPC\"></iframe>\n\n\n#### Complexity Analysis\n\nlet $N$ be the length of `words`.\n\n* Time Complexity: $O(N \\log{N})$. We count the frequency of each word in $O(N)$ time, and then we sort the given words in $O(N \\log{N})$ time.\n\n* Space Complexity: $O(N)$, the space used to store frequencies in a HashMap and return a slice from a sorted list of length $O(N)$.\n\n---\n\n### Approach 2: Max Heap\n\n#### Intuition\n\nIf we put all numbers into a max heap, the top element of the heap must be the max value of all numbers in the heap. So instead of sorting all unique words, we only need to pop the word with the max frequency from a max heap `k` times.\n\n#### Algorithm\n\n1. Count the frequency of each word like Approach 1.\n2. Heapify: make the list of words as a max heap `h` by their frequencies, in which the top element has the max frequency and lexicographically in all words with the same frequency.\n3. Pop the top element from the max heap `h` totally `k` times, and then the words you get are already in the correct order.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/GHytaVGD/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GHytaVGD\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the length of `words`.\n\n* Time Complexity: $O(N + k\\log{N})$. We count the frequency of each word in $O(N)$ time and then heapify the list of unique words in $O(N)$ time. Each time we pop the top from the heap, it costs $\\log{N}$ time as the size of the heap is $O(N)$.\n\n* Space Complexity: $O(N)$, the space used to store our counter `cnt` and heap `h`.\n\n--- \n\n### Approach 3: Min Heap\n\n#### Intuition\n\nApproach 2 looks perfect when the given input is offline, i.e., no new unique words will be added later. For those top-k elements problems that may have dynamically added elements, we often solve them by maintaining a min heap of size `k` to store the largest `k` elements so far. Every time we enumerate a new element, just compare it with the top of the min heap and check if it is one of the largest k elements.\n\n#### Algorithm\n\nIt's almost the same idea as [Approach 1 in solution to 347](https://leetcode.com/problems/top-k-frequent-elements/solution/), except that:\n\n1. We need to be careful with the order, considering not only the frequency but the word lexicographically.\n2. The min heap doesn't guarantee the order. We need to sort the elements in the heap before returning them or just pop them one by one from the min-heap to our result in order.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/6qKyvCMu/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"6qKyvCMu\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity: $O(N\\log{k})$, where $N$ is the length of `words`. We count the frequency of each word in $O(N)$ time, then we add $N$ words to the heap, each in $O(\\log {k})$ time. Finally, we pop from the heap up to $k$ times or just sort all elements in the heap as the returned result, which takes $O(k\\log{k})$. As $k \\le N$, $O(N) + O(N\\log{k}) + O(k\\log{k}) = O(N\\log{k})$\n\n* Space Complexity: $O(N)$, $O(N)$ space is used to store our counter `cnt` while $O(k)$ space is for the heap.\n\n---\n\n### Approach 4: Bucket Sorting + Trie\n\n#### Intuition\n\nSince we need at least $k\\log{k}$ time to sort k elements by comparison (for more about sorting, see [this explore card](https://leetcode.com/explore/learn/card/sorting/693/introduction/)), we have to turn to non-comparison sorting such as bucket/counting sorting to determine potential k elements with max frequencies. \n\nFor the words with the same frequency, we store them together in a trie (for more about trie, see[this explore card](https://leetcode.com/explore/learn/card/trie/)). By traversing a trie in a pre-order DFS way, we can get all words in the trie in a lexicographical order.\n\nFor example, if we have `words` as\n\n```\nwords = [\"ab\", \"ed\", \"ed\", \"ed\", \"ac\"]\n```\n\n`\"ab\"` and `\"ac\"` only occur once, but `\"ed\"` occurs three times. We build the following bucket and tries:\n\n![](../Documents/692/692_bucket_trie.drawio.svg)\n\n`#` marks the node in a trie as a leaf in the graph above. We build a trie in bucket 1 to store the word `\"ab\"` and `\"ac\"`, and another trie in bucket 3 to store the word `\"ed\"`. Then we start from `n=5` to 1, and enumerate every bucket: if there is a non-empty trie in this bucket, we read words in the trie by traversing every path lexicographically. For example, when we traverse the trie in bucket 1, we first go to `a` and then go to `b`, as `b` is a leaf node, we now get a complete word along this path as `\"ab\"`. Similarly, we will traverse all tries and get the result `[\"ed\", \"ab\", \"ac\"].`\n\n#### Algorithm\n\nWe use counting sorting, a special bucket sorting with a bucket size of 1, to \n\n1. Count the frequency of each word as what we did in all previous approaches, and get a counter `cnt`.\n2. Initialize `bucket` of length `N+1` (`N` is the length of `words`) with an empty trie in each bucket, that is, the trie in `bucket[i]` stores all words with frequency `i`.\n3. Enumerate words in `cnt`, and add each word to the trie mapping to its frequency.\n4. Enumerate all frequencies `i` in from `N` to `1`, traverse every `bucket[i]` to get all words within it from lexicographically smaller ones to the larger ones, and add the obtained words to the result until `k` words are obtained in the result. Then, this is our final result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/METYJePo/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"METYJePo\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $N$ be the length of `words`.\n\n* Time Complexity: $O(N)$. We take $O(N)$ time to count frequencies and enumerate all buckets. Since we only need to get $k$ words from tries, we traverse $k$ paths in tries, and each path is neglectable in length ($\\le 10$), $O(k)$ time is required to generate all those words from tries. Besides, it takes $O(N)$ time to put $N$ words in tries. As $k \\le N$, $O(N+k) = O(N)$\n* Space Complexity: $O(N)$, like other approaches, our counter `cnt` needs $O(N)$ space. Besides, tries to store at most $N$ words also needs $O(n)$ space.\n\n> Note: Though we optimize the time complexity to $O(N)$, it may run slower than previous approaches due to the large constant factors.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

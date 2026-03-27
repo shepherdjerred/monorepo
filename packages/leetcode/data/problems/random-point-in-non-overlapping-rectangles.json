@@ -1,0 +1,147 @@
+{
+  "questionId": "914",
+  "questionFrontendId": "497",
+  "title": "Random Point in Non-overlapping Rectangles",
+  "titleSlug": "random-point-in-non-overlapping-rectangles",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array of non-overlapping axis-aligned rectangles <code>rects</code> where <code>rects[i] = [a<sub>i</sub>, b<sub>i</sub>, x<sub>i</sub>, y<sub>i</sub>]</code> indicates that <code>(a<sub>i</sub>, b<sub>i</sub>)</code> is the bottom-left corner point of the <code>i<sup>th</sup></code> rectangle and <code>(x<sub>i</sub>, y<sub>i</sub>)</code> is the top-right corner point of the <code>i<sup>th</sup></code> rectangle. Design an algorithm to pick a random integer point inside the space covered by one of the given rectangles. A point on the perimeter of a rectangle is included in the space covered by the rectangle.</p>\n\n<p>Any integer point inside the space covered by one of the given rectangles should be equally likely to be returned.</p>\n\n<p><strong>Note</strong> that an integer point is a point that has integer coordinates.</p>\n\n<p>Implement the <code>Solution</code> class:</p>\n\n<ul>\n\t<li><code>Solution(int[][] rects)</code> Initializes the object with the given rectangles <code>rects</code>.</li>\n\t<li><code>int[] pick()</code> Returns a random integer point <code>[u, v]</code> inside the space covered by one of the given rectangles.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/07/24/lc-pickrandomrec.jpg\" style=\"width: 419px; height: 539px;\" />\n<pre>\n<strong>Input</strong>\n[&quot;Solution&quot;, &quot;pick&quot;, &quot;pick&quot;, &quot;pick&quot;, &quot;pick&quot;, &quot;pick&quot;]\n[[[[-2, -2, 1, 1], [2, 2, 4, 6]]], [], [], [], [], []]\n<strong>Output</strong>\n[null, [1, -2], [1, -1], [-1, -2], [-2, -2], [0, 0]]\n\n<strong>Explanation</strong>\nSolution solution = new Solution([[-2, -2, 1, 1], [2, 2, 4, 6]]);\nsolution.pick(); // return [1, -2]\nsolution.pick(); // return [1, -1]\nsolution.pick(); // return [-1, -2]\nsolution.pick(); // return [-2, -2]\nsolution.pick(); // return [0, 0]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= rects.length &lt;= 100</code></li>\n\t<li><code>rects[i].length == 4</code></li>\n\t<li><code>-10<sup>9</sup> &lt;= a<sub>i</sub> &lt; x<sub>i</sub> &lt;= 10<sup>9</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= b<sub>i</sub> &lt; y<sub>i</sub> &lt;= 10<sup>9</sup></code></li>\n\t<li><code>x<sub>i</sub> - a<sub>i</sub> &lt;= 2000</code></li>\n\t<li><code>y<sub>i</sub> - b<sub>i</sub> &lt;= 2000</code></li>\n\t<li>All the rectangles do not overlap.</li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>pick</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n    \"classname\": \"Solution\",\r\n    \"maxbytesperline\": 200000,\r\n    \"constructor\": {\r\n        \"params\": [\r\n            {\r\n                \"name\": \"rects\",\r\n                \"type\": \"integer[][]\"\r\n            },\r\n            {\r\n                \"type\": \"integer\",\r\n                \"name\": \"rectsSize\",\r\n                \"lang\": \"c\",\r\n                \"value\": \"size_1\"\r\n            }\r\n        ]\r\n    },\r\n    \"methods\": [\r\n        {\r\n            \"name\" : \"pick\",\r\n            \"params\": [\r\n            ],\r\n            \"return\": {\r\n                \"type\": \"integer[]\"\r\n            }\r\n        }\r\n    ],\r\n    \"systemdesign\": true,\r\n    \"params\": [\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        },\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        }\r\n    ],\r\n    \"return\": {\r\n        \"type\": \"list<String>\",\r\n        \"dealloc\": true\r\n    }\r\n}",
+  "stats": "{\"totalAccepted\": \"52.6K\", \"totalSubmission\": \"132.9K\", \"totalAcceptedRaw\": 52567, \"totalSubmissionRaw\": 132929, \"acRate\": \"39.5%\"}",
+  "likes": 523,
+  "dislikes": 689,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Random Pick with Weight\", \"titleSlug\": \"random-pick-with-weight\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Generate Random Point in a Circle\", \"titleSlug\": \"generate-random-point-in-a-circle\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"Solution\",\"pick\",\"pick\",\"pick\",\"pick\",\"pick\"]\n[[[[-2,-2,1,1],[2,2,4,6]]],[],[],[],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Reservoir Sampling",
+      "slug": "reservoir-sampling"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    },
+    {
+      "name": "Randomized",
+      "slug": "randomized"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    Solution(vector<vector<int>>& rects) {\n        \n    }\n    \n    vector<int> pick() {\n        \n    }\n};\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution* obj = new Solution(rects);\n * vector<int> param_1 = obj->pick();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n\n    public Solution(int[][] rects) {\n        \n    }\n    \n    public int[] pick() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = new Solution(rects);\n * int[] param_1 = obj.pick();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n\n    def __init__(self, rects: List[List[int]]):\n        \n\n    def pick(self) -> List[int]:\n        \n\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution(rects)\n# param_1 = obj.pick()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n\n    def __init__(self, rects):\n        \"\"\"\n        :type rects: List[List[int]]\n        \"\"\"\n        \n\n    def pick(self):\n        \"\"\"\n        :rtype: List[int]\n        \"\"\"\n        \n\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution(rects)\n# param_1 = obj.pick()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} rects\n */\nvar Solution = function(rects) {\n    \n};\n\n/**\n * @return {number[]}\n */\nSolution.prototype.pick = function() {\n    \n};\n\n/** \n * Your Solution object will be instantiated and called as such:\n * var obj = new Solution(rects)\n * var param_1 = obj.pick()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Solution {\n    constructor(rects: number[][]) {\n        \n    }\n\n    pick(): number[] {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * var obj = new Solution(rects)\n * var param_1 = obj.pick()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n\n    public Solution(int[][] rects) {\n        \n    }\n    \n    public int[] Pick() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = new Solution(rects);\n * int[] param_1 = obj.Pick();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Solution;\n\n\nSolution* solutionCreate(int** rects, int rectsSize, int* rectsColSize) {\n    \n}\n\nint* solutionPick(Solution* obj, int* retSize) {\n    \n}\n\nvoid solutionFree(Solution* obj) {\n    \n}\n\n/**\n * Your Solution struct will be instantiated and called as such:\n * Solution* obj = solutionCreate(rects, rectsSize, rectsColSize);\n * int* param_1 = solutionPick(obj, retSize);\n \n * solutionFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Solution struct {\n    \n}\n\n\nfunc Constructor(rects [][]int) Solution {\n    \n}\n\n\nfunc (this *Solution) Pick() []int {\n    \n}\n\n\n/**\n * Your Solution object will be instantiated and called as such:\n * obj := Constructor(rects);\n * param_1 := obj.Pick();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution(rects: Array<IntArray>) {\n\n    fun pick(): IntArray {\n        \n    }\n\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * var obj = Solution(rects)\n * var param_1 = obj.pick()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Solution {\n\n    init(_ rects: [[Int]]) {\n        \n    }\n    \n    func pick() -> [Int] {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * let obj = Solution(rects)\n * let ret_1: [Int] = obj.pick()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Solution {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Solution {\n\n    fn new(rects: Vec<Vec<i32>>) -> Self {\n        \n    }\n    \n    fn pick(&self) -> Vec<i32> {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * let obj = Solution::new(rects);\n * let ret_1: Vec<i32> = obj.pick();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Solution\n\n=begin\n    :type rects: Integer[][]\n=end\n    def initialize(rects)\n        \n    end\n\n\n=begin\n    :rtype: Integer[]\n=end\n    def pick()\n        \n    end\n\n\nend\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution.new(rects)\n# param_1 = obj.pick()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n    /**\n     * @param Integer[][] $rects\n     */\n    function __construct($rects) {\n        \n    }\n  \n    /**\n     * @return Integer[]\n     */\n    function pick() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * $obj = Solution($rects);\n * $ret_1 = $obj->pick();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n\n  Solution(List<List<int>> rects) {\n    \n  }\n  \n  List<int> pick() {\n    \n  }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = Solution(rects);\n * List<int> param1 = obj.pick();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Solution(_rects: Array[Array[Int]]) {\n\n    def pick(): Array[Int] = {\n        \n    }\n\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * val obj = new Solution(rects)\n * val param_1 = obj.pick()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec init_(rects :: [[integer]]) :: any\n  def init_(rects) do\n    \n  end\n\n  @spec pick() :: [integer]\n  def pick() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Solution.init_(rects)\n# param_1 = Solution.pick()\n\n# Solution.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec solution_init_(Rects :: [[integer()]]) -> any().\nsolution_init_(Rects) ->\n  .\n\n-spec solution_pick() -> [integer()].\nsolution_pick() ->\n  .\n\n\n%% Your functions will be called as such:\n%% solution_init_(Rects),\n%% Param_1 = solution_pick(),\n\n%% solution_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define solution%\n  (class object%\n    (super-new)\n    \n    ; rects : (listof (listof exact-integer?))\n    (init-field\n      rects)\n    \n    ; pick : -> (listof exact-integer?)\n    (define/public (pick)\n      )))\n\n;; Your solution% object will be instantiated and called as such:\n;; (define obj (new solution% [rects rects]))\n;; (define param_1 (send obj pick))"
+    }
+  ],
+  "solution": null
+}

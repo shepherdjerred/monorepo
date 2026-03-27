@@ -1,0 +1,133 @@
+{
+  "questionId": "188",
+  "questionFrontendId": "188",
+  "title": "Best Time to Buy and Sell Stock IV",
+  "titleSlug": "best-time-to-buy-and-sell-stock-iv",
+  "difficulty": "Hard",
+  "content": "<p>You are given an integer array <code>prices</code> where <code>prices[i]</code> is the price of a given stock on the <code>i<sup>th</sup></code> day, and an integer <code>k</code>.</p>\n\n<p>Find the maximum profit you can achieve. You may complete at most <code>k</code> transactions: i.e. you may buy at most <code>k</code> times and sell at most <code>k</code> times.</p>\n\n<p><strong>Note:</strong> You may not engage in multiple transactions simultaneously (i.e., you must sell the stock before you buy again).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> k = 2, prices = [2,4,1]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> Buy on day 1 (price = 2) and sell on day 2 (price = 4), profit = 4-2 = 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> k = 2, prices = [3,2,6,5,0,3]\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> Buy on day 2 (price = 2) and sell on day 3 (price = 6), profit = 6-2 = 4. Then buy on day 5 (price = 0) and sell on day 6 (price = 3), profit = 3-0 = 3.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= 100</code></li>\n\t<li><code>1 &lt;= prices.length &lt;= 1000</code></li>\n\t<li><code>0 &lt;= prices[i] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"maxProfit\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"k\",\r\n      \"type\": \"integer\"\r\n    },\r\n    {\r\n      \"name\": \"prices\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"704.3K\", \"totalSubmission\": \"1.4M\", \"totalAcceptedRaw\": 704308, \"totalSubmissionRaw\": 1415414, \"acRate\": \"49.8%\"}",
+  "likes": 7993,
+  "dislikes": 226,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Best Time to Buy and Sell Stock\", \"titleSlug\": \"best-time-to-buy-and-sell-stock\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Best Time to Buy and Sell Stock II\", \"titleSlug\": \"best-time-to-buy-and-sell-stock-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Best Time to Buy and Sell Stock III\", \"titleSlug\": \"best-time-to-buy-and-sell-stock-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Profit From Trading Stocks\", \"titleSlug\": \"maximum-profit-from-trading-stocks\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2\n[2,4,1]",
+    "2\n[3,2,6,5,0,3]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 16, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"nielsen\", \"name\": \"Nielsen\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxProfit(int k, vector<int>& prices) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxProfit(int k, int[] prices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxProfit(self, k: int, prices: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxProfit(self, k, prices):\n        \"\"\"\n        :type k: int\n        :type prices: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} k\n * @param {number[]} prices\n * @return {number}\n */\nvar maxProfit = function(k, prices) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxProfit(k: number, prices: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxProfit(int k, int[] prices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxProfit(int k, int* prices, int pricesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxProfit(k int, prices []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxProfit(k: Int, prices: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxProfit(_ k: Int, _ prices: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_profit(k: i32, prices: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} k\n# @param {Integer[]} prices\n# @return {Integer}\ndef max_profit(k, prices)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $k\n     * @param Integer[] $prices\n     * @return Integer\n     */\n    function maxProfit($k, $prices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxProfit(int k, List<int> prices) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxProfit(k: Int, prices: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_profit(k :: integer, prices :: [integer]) :: integer\n  def max_profit(k, prices) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_profit(K :: integer(), Prices :: [integer()]) -> integer().\nmax_profit(K, Prices) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-profit k prices)\n  (-> exact-integer? (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "980",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\nYou probably can guess from the problem title, that this is the fourth problem in the series of [Best Time to Buy and Sell Stock](https://leetcode.com/problems/best-time-to-buy-and-sell-stock/) problem. It's strongly recommended that you should finish the previous problems before starting this one. Nevertheless, it's not necessary to finish the previous problems to understand this solution, and you can even use the methods we provide to help you solve the other problems.\n\nHere, two approaches are introduced: _Dynamic Programming_ approach, and _Merging_ approach. Both are awesome, but the first method is more universal to other problems.\n\n---\n### Approach 1: Dynamic Programming\n\n#### Intuition\n\n[Dynamic programming](https://en.wikipedia.org/wiki/Dynamic_programming) (DP) is a popular method among hard-level problems. Its basic idea is to store the previous result to reduce redundant calculations. However, it is hard for beginners to think of the DP method. Below, a step-by-step tutorial on how to think of dp is introduced. If you are already familiar with dp, you can jump to the algorithm part to check out the actual implementation.\n\nGenerally, there are two ways to come up with a DP solution. One way is to start with a brute-force approach and reduce unnecessary calculations. Another way is to treat the stored results as \"states\", and try to jump from the starting state to the ending state.\n\nFor beginners, it is recommended to start with the brute force approach. So, how to brute force solve this problem?\n\nBack to (part of) the question:\n\n> Say you have an array for which the i-th element is the price of a given stock on day i.\n>\n> Design an algorithm to find the maximum profit. You may complete at most k transactions.\n\nCool, looks like we need to arrange at most k transactions. A natural idea is to iterate all the possible combinations of k transactions, and then find the best combination. As for those with less than k transactions, they are similar and can be considered later. A transaction consists of two parts: buying and selling. Therefore, we need to find 2k points in the stock line, k points for buying, and k points for selling.\n\nNow, we can roughly estimate the time complexity. Suppose there are n days in total, and we need to pick 2k days. The number of possible situations is about $$C^{2k}_{n} = \\frac{n!}{(2k)!(n-2k)!}$$. It's not a good result because it involves factorial, which is likely to cause Time Limit Exceeded (TLE). Usually what we need is a polynomial one. However, it includes some invalid situations so the actual number is smaller.\n\nAnother problem is that what if `k * 2` is larger than n? In this case, we are not able to pick 2k points from n points, which means we will not reach the limit no matter how we try. Therefore, all we need to do is to iterate each day, and if the price of day `i` rises, buy the stock in i-1th day and sell it at ith day.\n\n> $k \\cdot 2 \\geq n$ is a special case and can be addressed easily.\n\nBack to our factorial number. The next step is to review our brute force approach and find out the possible redundant calculations. In our brute force approach, we need to iterate all the possible combinations and calculate the profit of each one to find the best. Can you find out where repeated calculations are?\n\nConsider the following case, where the red color represents a possible combination, and the green represents another one:\n\n![two similar combinations](../Figures/188/188_repeated.png)\n\nThe two combinations are the same before day 10. If we calculate the profits separately, we need to calculate the profit before day 10 twice. Here is where dp comes in! We can store the current balance on day 9, and reuse it later. Therefore, we can store the result in a hash map, where the key is the day number and the transactions we made before, and the value is the balance. Wait a minute, can we do better?\n\nConsider another case:\n\n![two less similar combinations](../Figures/188/188_better.png)\n\nThe only difference is that the red sells stock at a lower price during the second transaction. Therefore, the red has a lower profit on day 10 than the green has. In this case, we need not calculate the rest profit of the red, since it can not beat the green in the future.\n\nTherefore, we can compare those reds, and continue the next day with the one with the highest profit. However, we need to ensure that the best one will not be beaten by the \"losers\" in the future, so they should have the same \"resources\" at the time we store and compare the balances.\n\nHence, we can use three characteristics to store the profit: the day number, the transaction number used, and the stock holding status. You can use other representations of resources, such as using \"the day remained\" instead of \"the day number\". Feel free to try. Now, let's go to the algorithm part.\n\n\n#### Algorithm\n\nIn the previous part, we introduced an intuitive idea from brute force to dp method, and here we need to decide the details of the algorithm.\n\nWe can either store the dp results in a dictionary or an array. An array costs less time to access and update than a dictionary, so we always prefer an array when possible. Because of three needed characteristics (day number, transaction number used, stock holding status), a three-dimensional array is our choice. We can use \n`dp[day_number][used_transaction_number][stock_holding_status]` to represent our states, where `stock_holding_status` is a 0/1 number representing whether you hold the stock or not.\n\n> The value of `dp[i][j][l]` represents the best profit we can have at the end of the `i`-th day, with `j` remaining transactions to make and `l` stocks.\n\nThe next step is finding out the so-called \"transition equation\", which is a method that tells you how to jump from one state to another.\n\nWe start with `dp[0][0][0] = 0` and `dp[0][1][1]=-prices[0]`, and our final aim is max of `dp[n-1][j][0]` from `j=0` to `j=k`. Now, we need to fill out the entire array to find out the result. Assume we have gotten the results before day `i`, and we need to calculate the profit of day `i`. There are only four possible actions we can do on the day `i`: 1. keep holding the stock, 2. keep not holding the stock, 3. buy the stock, or 4. sell the stock. The profit is easy to calculate.\n\n1. Keep holding the stock:\n\n$$\ndp[i][j][1] = dp[i-1][j][1]\n$$\n\n2. Keep not holding the stock:\n\n$$\ndp[i][j][0] = dp[i-1][j][0]\n$$\n\n3. Buying, when j>0:\n\n$$\ndp[i][j][1] = dp[i-1][j-1][0]-prices[i]\n$$\n\n4. Selling:\n\n$$\ndp[i][j][0] = dp[i-1][j][1]+prices[i]\n$$\n\nWe can combine them together to find the maximum profit:\n\n$$\ndp[i][j][1] = max(dp[i-1][j][1], dp[i-1][j-1][0]-prices[i])\n$$\n\n$$\ndp[i][j][0] = max(dp[i-1][j][0], dp[i-1][j][1]+prices[i])\n$$\n\nAwesome! Now we can use for-loop to calculate the whole dp array and achieve our final result. Remember to solve the special cases when $k \\cdot 2 \\geq n$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3Bj3cg3K/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3Bj3cg3K\"></iframe>\n\nThere are a few points you should notice from the code above:\n\n1. Take care of the initial values in the DP array. Generally, it's okay to initialize them to zero. However, in this case, we need to make them -inf to mark impossible situations, such as `dp[0][0][1]`.\n\n2. You can reverse the order of filling the dp array, with some modifications in the transition equation. For example, decreasing `j` instead of increasing it.\n\n3. Some state-compressed methods can be applied if you want. For example, we only need `dp[i-1]`, when calculating `dp[i]`, therefore we can delete other useless `dp` to save memory. Just using two arrays to store `dp[i-1]` and `dp[i]` and refreshing them every iteration will do.\n\n4. The code above is not the fastest because we prioritize readability. It would be faster if you put the larger dimension in the inner array since it uses the CPU cache more efficiently.\n\n#### Complexity Analysis\n\n- Time Complexity: $$\\mathcal{O}(nk)$$ if $$k \\cdot 2 \\le n$$, $$\\mathcal{O}(n)$$ if $$k \\cdot 2 > n$$, where $$n$$ is the length of the `prices` sequence since we have two for-loop. \n<br/>\n\n- Space Complexity: $$\\mathcal{O}(nk)$$ without state-compressed, and $$\\mathcal{O}(k)$$ with state-compressed, where $$n$$ is the length of the `prices` sequence.\n\n\n---\n### Approach 2: Merging\n\n#### Intuition\n\nThis approach starts from a simple situation with k=infinity and decreases k one by one.\n\nConsider a weakened problem when k=infinity. Since we already know the prices of tomorrow, our solution is to trade whenever `prices[i-1] < prices[i]`. Below is an example.\n\n![k = inf](../Figures/188/188_best.png)\n\nWe only used 4 transactions! However, what we need to solve is the case with an actual k. Let's decrease k from inf and see what happens. Our solution can handle all the k >= 4 since we only used 4 transactions. But what if k=3?\n\nNotice that on day 5, we buy and sell the stock at the same time. We can cancel the redundant transaction without impacting the final profit!\n\n![k = 3](../Figures/188/188_3.png)\n\nWe can conclude that for the consecutively increasing subsequence, we only need to buy once at the start and sell once at the end.\n\nHow about k=2? Maybe we need to delete one transaction. We can iterate all the transactions and delete the one with the least revenue. However, deleting can not always achieve our best solution. Consider the following example:\n\n![delete?](../Figures/188/188_delete.png)\n\nWhen k=2, the best solution is to buy on day 1 and day 9 and to sell on day 6 and day 10. Deleting any transactions cannot reach this solution. However, we can merge the previous two transactions to get to this. A naive approach is iterating all the near transactions and finding out the pair with the lowest impact on the revenue. Since we decrease k one by one, reducing one transaction is enough. Ok, let's go to the algorithm part to check the details.\n\n#### Algorithm\n\nThe general idea is to store all consecutively increasing subsequence as the initial solution. Then delete or merge transactions until the number of transactions is less than or equal to k.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/oVk2kyZn/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"oVk2kyZn\"></iframe>\n\n\n#### Complexity Analysis\n\n- Time Complexity: $$\\mathcal{O}(n(n-k))$$ if $$\\frac{k}{2} \\le n$$ , $$\\mathcal{O}(n)$$ if $$\\frac{k}{2} > n$$, where $$n$$ is the length of the price sequence. The maximum size of `transactions` is $$\\mathcal{O}(n)$$, and we need $$\\mathcal{O}(n-k)$$ iterations.\n<br/>\n\n- Space Complexity: $$\\mathcal{O}(n)$$, since we need a list to store `transactions`.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

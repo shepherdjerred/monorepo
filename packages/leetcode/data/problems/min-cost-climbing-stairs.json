@@ -1,0 +1,137 @@
+{
+  "questionId": "747",
+  "questionFrontendId": "746",
+  "title": "Min Cost Climbing Stairs",
+  "titleSlug": "min-cost-climbing-stairs",
+  "difficulty": "Easy",
+  "content": "<p>You are given an integer array <code>cost</code> where <code>cost[i]</code> is the cost of <code>i<sup>th</sup></code> step on a staircase. Once you pay the cost, you can either climb one or two steps.</p>\n\n<p>You can either start from the step with index <code>0</code>, or the step with index <code>1</code>.</p>\n\n<p>Return <em>the minimum cost to reach the top of the floor</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> cost = [10,<u>15</u>,20]\n<strong>Output:</strong> 15\n<strong>Explanation:</strong> You will start at index 1.\n- Pay 15 and climb two steps to reach the top.\nThe total cost is 15.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> cost = [<u>1</u>,100,<u>1</u>,1,<u>1</u>,100,<u>1</u>,<u>1</u>,100,<u>1</u>]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> You will start at index 0.\n- Pay 1 and climb two steps to reach index 2.\n- Pay 1 and climb two steps to reach index 4.\n- Pay 1 and climb two steps to reach index 6.\n- Pay 1 and climb one step to reach index 7.\n- Pay 1 and climb two steps to reach index 9.\n- Pay 1 and climb one step to reach the top.\nThe total cost is 6.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= cost.length &lt;= 1000</code></li>\n\t<li><code>0 &lt;= cost[i] &lt;= 999</code></li>\n</ul>\n",
+  "hints": [
+    "Build an array dp where dp[i] is the minimum cost to climb to the top starting from the ith staircase.",
+    "Assuming we have n staircase labeled from 0 to n - 1 and assuming the top is n, then dp[n] = 0, marking that if you are at the top, the cost is 0.",
+    "Now, looping from n - 1 to 0, the dp[i] = cost[i] + min(dp[i + 1], dp[i + 2]). The answer will be the minimum of dp[0] and dp[1]"
+  ],
+  "metaData": "{\r\n  \"name\": \"minCostClimbingStairs\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"cost\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"1.7M\", \"totalSubmission\": \"2.5M\", \"totalAcceptedRaw\": 1723779, \"totalSubmissionRaw\": 2530529, \"acRate\": \"68.1%\"}",
+  "likes": 12356,
+  "dislikes": 1892,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Climbing Stairs\", \"titleSlug\": \"climbing-stairs\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find Number of Ways to Reach the K-th Stair\", \"titleSlug\": \"find-number-of-ways-to-reach-the-k-th-stair\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[10,15,20]",
+    "[1,100,1,1,1,100,1,1,100,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minCostClimbingStairs(vector<int>& cost) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minCostClimbingStairs(int[] cost) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minCostClimbingStairs(self, cost: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minCostClimbingStairs(self, cost):\n        \"\"\"\n        :type cost: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} cost\n * @return {number}\n */\nvar minCostClimbingStairs = function(cost) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minCostClimbingStairs(cost: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinCostClimbingStairs(int[] cost) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minCostClimbingStairs(int* cost, int costSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minCostClimbingStairs(cost []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minCostClimbingStairs(cost: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minCostClimbingStairs(_ cost: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_cost_climbing_stairs(cost: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} cost\n# @return {Integer}\ndef min_cost_climbing_stairs(cost)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $cost\n     * @return Integer\n     */\n    function minCostClimbingStairs($cost) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minCostClimbingStairs(List<int> cost) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minCostClimbingStairs(cost: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_cost_climbing_stairs(cost :: [integer]) :: integer\n  def min_cost_climbing_stairs(cost) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_cost_climbing_stairs(Cost :: [integer()]) -> integer().\nmin_cost_climbing_stairs(Cost) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-cost-climbing-stairs cost)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1137",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe can make two important observations about this problem. First, we need to find the maximum or minimum of something. Second, we have to make decisions that might look different depending on decisions we made previously. These characteristics are typical of a dynamic programming problem. In this case, we need to make decisions about either taking 1 step or 2 steps at a time, and our goal is to minimize the overall cost. \n\nIf you're new to dynamic programming, this question may seem more like a medium. Don't worry though, this is a great problem for getting started with dynamic programming. Generally, there are two main ways to implement a dynamic programming algorithm - top-down and bottom-up. In this article, we will take a look at both.\n\nBefore we begin, let's clear up some of the confusion surrounding the problem statement. <br>\n\n<img src=\"../Figures/746/746_1.png\" width=\"960\"> <br>\n\nThe \"top of the floor\" does not refer to the final index of `costs`. We actually need to \"arrive\" beyond the array's bounds.\n\n</br>\n\n---\n\n### Approach 1: Bottom-Up Dynamic Programming (Tabulation)\n\n**Intuition**\n\nBottom-up dynamic programming is also known as **tabulation** and is done iteratively. Dynamic programming is based on the concept of **overlapping subproblems** and **optimal substructure**. This is when the solution to a problem can be constructed from solutions to similar and smaller subproblems. Solving a smaller version of the problem can be easier and faster, thus if we break up the problem into smaller subproblems, solving them can lead us to the final solution easier and faster.\n\nLet's look at an example `costs = [0,1,2,3,4,5]`. Since we can take 1 or 2 steps at a time, we need to reach either step 4 or step 5 (0-indexed), and then pay the respective cost to reach the top. For this example, to reach step 4 optimally would cost **2** by taking path `0 --> 2 --> 4` (we're not counting the cost of step 4 yet since we are only talking about *reaching* the step right now). To reach step 5 optimally would cost **4** by taking path `1 --> 3 --> 5`.\n\nNow, imagine that before we started the problem, somebody came up to us and said \"to optimally reach step 4 costs **2** and to optimally reach step 5 costs **4**.\" Well, then the problem is trivial - the answer is the minimum of `2 + cost[4] = 6` and `4 + cost[5] = 9`. The only reason this was so easy was because we already knew the cost to reach steps 4 and 5.\n\nSo how do we find the minimum cost to reach step 4 or step 5? Well, you might notice that it's the exact same problem, just with a smaller input. For example, finding the minimum cost to reach step 4 is like solving the original problem with input `[0,1,2,3]` (step 4 is the \"top of the floor\" now). To solve this subproblem, we need to find the minimum cost to reach steps 2 and 3, which requires us to answer the original problem for inputs `[0,1]` and `[0,1,2]`.\n\nThis pattern is known as a **recurrence relation**, and in this case, the minimum cost to reach the $$i^{th}$$ step is equal to `minimumCost[i] = min(minimumCost[i - 1] + cost[i - 1], minimumCost[i - 2] + cost[i - 2])`. As you can see, we get the solution for the $$i^{th}$$ step by using solutions from earlier steps. So, when does the sequence terminate? For this question, the base cases are given in the problem description - we are allowed to start at either step 0 or step 1, so `minimumCost[0]` and `minimumCost[1]` are both `0`.\n\n**Algorithm**\n\nWith our base cases and recurrence relation, we can now easily solve this problem.\n\n1. Define an array `minimumCost`, where `minimumCost[i]` represents the minimum cost of reaching the $$i^{th}$$ step. The array should be one element longer than `costs` and start with all elements set to `0`.\n    - The reason the array should contain one additional element is because we will treat the *top floor* as the *step* to reach.\n\n2. Iterate over the array starting at the 2nd index. The problem statement says we are allowed to start at the $$0^{th}$$ or $$1^{st}$$ step, so we know the minimum cost to reach those steps is `0`.\n\n3. For each step, apply the recurrence relation - `minimumCost[i] = min(minimumCost[i - 1] + cost[i - 1], minimumCost[i - 2] + cost[i - 2])`. As you can see, as we populate `minimumCost`, it becomes possible to solve future subproblems. For example, before solving the 5th and 6th steps we are required to solve the 4th step.\n\n4. At the end, return the final element of `minimumCost`. Remember, we are treating this \"step\" as the top floor that we need to reach.\n\nHere's an animation that shows how and why this algorithm works:\n\n!?!../Documents/746_Min_Cost_Stairs.json:960,540!?!\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/MZScJC6f/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"MZScJC6f\"></iframe>\n\n\n**Complexity Analysis**\n\nGiven $$N$$ as the length of `cost`,\n\n* Time complexity: $$O(N)$$.\n\n    We iterate `N - 1` times, and at each iteration we apply an equation that requires $$O(1)$$ time.\n\n* Space complexity: $$O(N)$$.\n\n    The array `minimumCost` is always 1 element longer than the array `cost`.\n    \n<br/>\n\n---\n\n### Approach 2: Top-Down Dynamic Programming (Recursion + Memoization)\n\n**Intuition**\n\nBottom-up dynamic programming is named as such because we start from the bottom (in this case, the bottom of the staircase) and iteratively work our way to the top. Top-down dynamic programming starts at the top and works its way down to the base cases. Typically, this is implemented through recursion, and then made efficient using _memoization_. Memoization refers to storing the results of expensive function calls in order to avoid duplicate computations - we'll soon see why this is important for this problem. If you're new to recursion, check out the [recursion explore card](https://leetcode.com/explore/featured/card/recursion-i/).\n\nSimilar to the first approach, we will make use of the recurrence relation we found. This time, we will implement `minimumCost` as a function instead of an array. Again, `minimumCost(i)` will represent the minimum cost to reach the $$i^{th}$$ step. The base cases for this function will be `minimumCost(0) = minimumCost(1) = 0`, since we are allowed to start on either step 0 or step 1. For any other step `i`, we can refer to our recurrence relation - we know `minimumCost(i) = min(cost[i - 1] + minimumCost(i - 1), cost[i - 2] + minimumCost(i - 2))`.\n\nWe can implement this function easily enough, but there's a major problem - repeated computations. If we want to find `minimumCost(5)`, then we call `minimumCost(3)` and `minimumCost(4)`. However, `minimumCost(4)` will then call `minimumCost(3)`, and both `minimumCost(3)` calls will call `minimumCost(2)`, on top of another `minimumCost(2)` call from `minimumCost(4)`. <br>\n\n<img src=\"../Figures/746/746_1b.png\" width=\"960\"> <br>\n\nAs you can see, there are a ton of repeat computations. When there are only 5 stairs, it might not seem that bad. However, imagine if there were 6 stairs instead. This entire image would be one child of the root. As `n` increases, the amount of computations required grows exponentially. So, how do we resolve this issue? If we calculate, say, `minimumCost(3)`, then why should we calculate it again? Instead of going through the entire subtree every time we want to calculate `minimumCost(3)`, let's just store the value of `minimumCost(3)` after calculating it the first time, and refer to that instead.\n\nThis is what memoization is - caching \"expensive\" function calls to avoid duplicate computations. Imagine what the recursion tree would look like for a call to `minimumCost(10000)`, and how expensive calls like `minimumCost(9998)` would be to compute multiple times. We can use a hash map for the memoization, where each key will have the value `minimumCost(key)`.\n\n**Algorithm**\n\n1. Define a hash map `memo`, where `memo[i]` represents the minimum cost of reaching the $$i^{th}$$ step.\n\n2. Define a function `minimumCost`, where `minimumCost(i)` will determine the minimum cost to reach the $$i^{th}$$ step. \n\n3. In our function `minimumCost`, first check the base cases: `return 0` when `i == 0` or `i == 1`. Next, check if the argument `i` has already been calculated and stored in our hash map `memo`. If so, `return memo[i]`. Otherwise, use the recurrence relation to calculate `memo[i]`, and then return `memo[i]`.\n\n4. Simply call and return `minimumCost(cost.length)`. Once again, we can make use of the trick from approach 1 where we treat the top floor as an extra \"step\". Since `cost` is 0-indexed, `cost.length` will be an index 1 step above the last element of `cost`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/5qVDgWsQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"5qVDgWsQ\"></iframe>\n\n**Extra Notes**\n\nFor this approach, we are using hash maps as our data structure to memoize function calls. We could also use an array since the calls to `minimumCost` are very well defined (between 0 and `cost.length + 1`). However, a hash map is used for most top-down dynamic programming solutions, as there will often be multiple function arguments, the arguments will not be integers, or a variety of other reasons that require a hash map instead of an array. Although using an array is slightly more efficient, using a hash map here is good practice that can be applied to other problems.\n\nIn Python, the [functools](https://docs.python.org/3/library/functools.html) module contains functions that can be used to automatically memoize a function. In LeetCode, modules are automatically imported, so you can just add the `@cache` wrapper to any function definition to have it automatically memoize.\n\n<iframe src=\"https://leetcode.com/playground/V8hv7v3b/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"V8hv7v3b\"></iframe>\n\nYou can observe that by removing the @cache wrapper, on attempted submission, the code will exceed the time limit.\n\n**Complexity Analysis**\n\nGiven $$N$$ as the length of `cost`,\n\n* Time complexity: $$O(N)$$\n\n    `minimumCost` gets called with each index from `0` to `N`. Because of our memoization, each call will only take $$O(1)$$ time.\n\n* Space complexity: $$O(N)$$\n\n    The extra space used by this algorithm is the recursion call stack. For example, `minimumCost(10000)` will call `minimumCost(9999)`, which calls `minimumCost(9998)` etc., all the way down until the base cases at `minimumCost(0)` and `minimumCost(1)`. In addition, our hash map `memo` will be of size `N` at the end, since we populate it with every index from `0` to `N`.\n    \n<br/>\n\n---\n\n### Approach 3: Bottom-Up, Constant Space\n\n**Intuition**\n\nYou may have noticed that our recurrence relation from the previous two approaches only cares about 2 steps below the current step. For example, if we are calculating the minimum cost to reach step 12, we only care about data from step 10 and step 11. While we would have needed to calculate the minimum cost for steps 2-9 as well, at the time of the actual calculation for step 12, we no longer care about any of those steps.\n\nTherefore, instead of using $$O(n)$$ space to keep an array, we can improve to $$O(1)$$ space using only two variables.\n\n**Algorithm**\n\n1. Initialize two variables, `downOne` and `downTwo`, that represent the minimum cost to reach one step and two steps below the current step, respectively. We will start iteration from step 2, which means these variables will initially represent the minimum cost to reach steps 0 and 1, so we will initialize each of them to 0.\n\n2. Iterate over the array, again with 1 extra iteration at the end to treat the top floor as the final \"step\". At each iteration, simulate moving 1 step up. This means `downOne` will now refer to the current step, so apply our recurrence relation to update `downOne`. `downTwo` will be whatever `downOne` was prior to the update, so let's use a temporary variable to help with the update.\n\n3. In the end, since we treated the top floor as a *step*, `downOne` will refer to the minimum cost to reach the top floor. Return `downOne`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/BWhimJCG/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"BWhimJCG\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$N$$ as the length of `cost`,\n\n* Time complexity: $$O(N)$$.\n\n    We only iterate `N - 1` times, and at each iteration we apply an equation that uses $$O(1)$$ time.\n\n* Space complexity: $$O(1)$$\n\n    The only extra space we use is 2 variables, which are independent of input size.\n    \n<br/>\n\n---\n\n### Closing Notes\n\nIf you're new to dynamic programming, hopefully you learned something from this article. Please post any questions you may have in the comment section below. For additional practice, here's a list of similar dynamic programming questions that are good for beginners.\n\n[70. Climbing Stairs (Easy)](https://leetcode.com/problems/climbing-stairs/)\n\n[198. House Robber (Medium)](https://leetcode.com/problems/house-robber/)\n\n[256. Paint House (Medium)](https://leetcode.com/problems/paint-house/)\n\n[509. Fibonacci Number (Easy)](https://leetcode.com/problems/fibonacci-number/)\n\n[931. Minimum Falling Path Sum (Medium)](https://leetcode.com/problems/minimum-falling-path-sum/)\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

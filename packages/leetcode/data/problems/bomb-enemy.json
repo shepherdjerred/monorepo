@@ -1,0 +1,137 @@
+{
+  "questionId": "361",
+  "questionFrontendId": "361",
+  "title": "Bomb Enemy",
+  "titleSlug": "bomb-enemy",
+  "difficulty": "Medium",
+  "content": "<p>Given an <code>m x n</code> matrix <code>grid</code> where each cell is either a wall <code>&#39;W&#39;</code>, an enemy <code>&#39;E&#39;</code> or empty <code>&#39;0&#39;</code>, return <em>the maximum enemies you can kill using one bomb</em>. You can only place the bomb in an empty cell.</p>\n\n<p>The bomb kills all the enemies in the same row and column from the planted point until it hits the wall since it is too strong to be destroyed.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/27/bomb1-grid.jpg\" style=\"width: 600px; height: 187px;\" />\n<pre>\n<strong>Input:</strong> grid = [[&quot;0&quot;,&quot;E&quot;,&quot;0&quot;,&quot;0&quot;],[&quot;E&quot;,&quot;0&quot;,&quot;W&quot;,&quot;E&quot;],[&quot;0&quot;,&quot;E&quot;,&quot;0&quot;,&quot;0&quot;]]\n<strong>Output:</strong> 3\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/27/bomb2-grid.jpg\" style=\"width: 500px; height: 194px;\" />\n<pre>\n<strong>Input:</strong> grid = [[&quot;W&quot;,&quot;W&quot;,&quot;W&quot;],[&quot;0&quot;,&quot;0&quot;,&quot;0&quot;],[&quot;E&quot;,&quot;E&quot;,&quot;E&quot;]]\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 500</code></li>\n\t<li><code>grid[i][j]</code> is either <code>&#39;W&#39;</code>, <code>&#39;E&#39;</code>, or <code>&#39;0&#39;</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"maxKilledEnemies\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"grid\",\r\n      \"type\": \"character[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"86.6K\", \"totalSubmission\": \"164K\", \"totalAcceptedRaw\": 86593, \"totalSubmissionRaw\": 164030, \"acRate\": \"52.8%\"}",
+  "likes": 1003,
+  "dislikes": 118,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Minimum Cost Homecoming of a Robot in a Grid\", \"titleSlug\": \"minimum-cost-homecoming-of-a-robot-in-a-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Stamping the Grid\", \"titleSlug\": \"stamping-the-grid\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Unguarded Cells in the Grid\", \"titleSlug\": \"count-unguarded-cells-in-the-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Trailing Zeros in a Cornered Path\", \"titleSlug\": \"maximum-trailing-zeros-in-a-cornered-path\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[\"0\",\"E\",\"0\",\"0\"],[\"E\",\"0\",\"W\",\"E\"],[\"0\",\"E\",\"0\",\"0\"]]",
+    "[[\"W\",\"W\",\"W\"],[\"0\",\"0\",\"0\"],[\"E\",\"E\",\"E\"]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxKilledEnemies(vector<vector<char>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxKilledEnemies(char[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxKilledEnemies(self, grid: List[List[str]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxKilledEnemies(self, grid):\n        \"\"\"\n        :type grid: List[List[str]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {character[][]} grid\n * @return {number}\n */\nvar maxKilledEnemies = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxKilledEnemies(grid: string[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxKilledEnemies(char[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxKilledEnemies(char** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxKilledEnemies(grid [][]byte) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxKilledEnemies(grid: Array<CharArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxKilledEnemies(_ grid: [[Character]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_killed_enemies(grid: Vec<Vec<char>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Character[][]} grid\n# @return {Integer}\ndef max_killed_enemies(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[][] $grid\n     * @return Integer\n     */\n    function maxKilledEnemies($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxKilledEnemies(List<List<String>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxKilledEnemies(grid: Array[Array[Char]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_killed_enemies(grid :: [[char]]) :: integer\n  def max_killed_enemies(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_killed_enemies(Grid :: [[char()]]) -> integer().\nmax_killed_enemies(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-killed-enemies grid)\n  (-> (listof (listof char?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1047",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach 1: Brute-force Enumeration\n\n**Intuition**\n\nArguably the most intuitive solution is to _try out_ all empty cells, _i.e._ placing a bomb on each empty to see how many enemies it will kill.\n\n![explosion](../Figures/361/361_explosion.png)\n\nAs naïve as it might sound, this approach can pass the test on the online judge.\n\n**Algorithm**\n\n- We enumerate each cell in the grid from left to right and from top to bottom.\nFor each **empty** cell, we calculate how many enemies it will kill if we place a bomb on the cell.\n\n- We define a function named `killEnemies(row, col)` which returns the number of enemies we kill if we place a bomb on the coordinate of `(row, col)`.\n\n- In order to implement the `killEnemies(row, col)` function, starting from the position of empty cell `(row, col)`, we move away from the cell in four directions (_i.e._ left, right, up, down), until we run into a wall or the boundary of the grid.\n\n- At the end of enumeration, we return the maximum value among all the return values of `killEnemies(row, col)`.\n\n<iframe src=\"https://leetcode.com/playground/3J4yA8Zp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3J4yA8Zp\"></iframe>\n\n\n\n**Complexity Analysis**\n\nLet $$W$$ be the width of the grid and $$H$$ be the hight of the grid.\n\n- Time Complexity: $$\\mathcal{O}\\big(W \\cdot H \\cdot (W+H)\\big)$$\n    - We run an iteration over each element in the grid. In total, the number of iterations would be $$W \\cdot H$$.\n\n    - Within each iteration, we need to calculate how many enemies we will kill if we place a bomb on the given cell.\n    In the worst case where there is no wall in the grid, we need to check $$(W - 1 + H - 1)$$ number of cells.\n\n    - To sum up, in the worst case where all cells are empty, the number of checks we need to perform would be $$W \\cdot H \\cdot (W-1+H-1)$$.\n    Hence the overall time complexity of the algorithm is $$\\mathcal{O}\\big(W \\cdot H \\cdot (W+H)\\big)$$.\n\n\n- Space Complexity: $$\\mathcal{O}(1)$$\n\n    - The size of the variables that we used in the algorithm is constant, regardless of the input.\n\n\n---\n### Approach 2: Dynamic Programming\n\n**Intuition**\n\nAs one might notice in the above brute-force approach, there are some **redundant calculations** during the iteration.\nMore specifically, for any row or column that does not have any wall in-between, the number of enemies that we can kill remains the same for any empty on that particular row or column.\nWhile in our brute-force approach, we would iterate the same row or column over and over, regardless the situation of the cells.\n\nIn order to _reduce_ or even eliminate the redundant calculation, one might recall one of the well-known techniques called [Dynamic Programming](https://en.wikipedia.org/wiki/Dynamic_programming).\n\n>The basic principal of **dynamic programming** is that we store the immediate results which are intended to be reused later, to avoid the recalculation.\n\nHowever, the key to apply dynamic programming technique lies on how we can **_decompose_** the problem into a set of subproblems.\nThe solutions of subproblems would then be kept as intermediate results, in order to calculate the final result.\n\nNow let us get back to our problem.\nGiven an empty cell located at `(row, col)`, if we place a bomb on the cell, as we know, its influence zone would extend over the same row and column.\nLet us define the number of enemies that the bomb kills as `total_hits`, and the number of enemies it kills along the row and column as `row_hits` and `col_hits` respectively.\nAs one might figure, we can obtain the equation of `total_hits = row_hits + col_hits`.\n\nIt now boils down to how we calculate the `row_hits` and `col_hits` for each cell, and moreover how we can **_reuse_** the results.\n\nLet us take a look at some examples.\n\n![examples](../Figures/361/361_illustration.png)\n\nIn order to calculate the `row_hits`, we can break it down into two cases:\n\n- **case 1).** if the cell is situated at the beginning of the row, we then can scan the entire row until we run into a wall or the boundary of the grid.\nThe number of enemies that we encounter along the scan would be the value for `row_hits`.\nAnd the `row_hits` value that we obtained would remain _**valid**_ until the next obstacle.\nFor example, as we can see the top-left cell in the above graph, its `row_hits` would be one and it remains valid for the rest of the cells on the same row.\n\n- **case 2).** if the cell is situated right after a wall, which indicates that the previous `row_hits` that we calculated becomes invalid.\nAs a result, we need to recalculate the value for `row_hits` starting from this cell.\nFor example, for the enemy cell that is located on the column of index `2`, right before the cell, there is a wall, which invalidates the previous `row_hits` value.\nAs a result, we run another scan starting from this cell, to calculate the `row_hits` value.\n\n>We can calculate the value for `col_hits` in the **same sprit**, but with one small difference.\n\nFor the `row_hits` value, it suffices to use one variable for all the cells on the same row, since we iterate over the grid from left to right and we don't need to memorize the `row_hits` value for the previous row.\n\nAs to the `col_hits` value, we need to use an _**array**_ to keep track of all the `col_hits` values, since we need to go over all the columns for each row.\n\n**Algorithm**\n\nThe overall algorithm is rather similar with the brute-force approach, where we still run an iteration over each cell in the grid.\n\nRather than recalculating the hits for each cell, we **_store_** the intermediate results such as `row_hits` and `col_hits` and **_reuse_** them whenever possible.\n\nHere are some sample implementations, which are inspired from the post by [StefanPochmann](https://leetcode.com/problems/bomb-enemy/discuss/83387/Short-O(mn)-time-O(n)-space-solution) in the discussion forum.\n\n<iframe src=\"https://leetcode.com/playground/eW2WXcAx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"eW2WXcAx\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$W$$ be the width of the grid and $$H$$ be the hight of the grid.\n\n- Time Complexity: $$\\mathcal{O}(W \\cdot H)$$\n\n    - One might argue that the time complexity should be $$\\mathcal{O}\\big(W \\cdot H \\cdot (W + H)\\big)$$, judging from the detail that we run nested loop for each cell in grid.\n    If this is the case, then the time complexity of our dynamic programming approach would be the same as the brute-force approach.\n    Yet this is contradicted to the fact that by applying the dynamic programming technique we reduce the redundant calculation.\n\n    - To estimate overall time complexity, let us take another perspective.\n    Concerning each cell in the grid, we assert that it would be visited **exactly three times**.\n    The first visit is the case where we iterate through each cell in the grid in the outer loop.\n    The second visit would occur when we need to calculate the `row_hits` that involves with the cell.\n    And finally the third visit would occur when we calculate the value of `col_hits` that involves with the cell.\n\n    - Based on the above analysis, we can say that the overall time complexity of this dynamic programming approach is $$\\mathcal{O}(3 \\cdot W \\cdot H) = \\mathcal{O}(W \\cdot H)$$.\n\n- Space Complexity: $$\\mathcal{O}(W)$$\n\n    - In general, with the dynamic programming approach, we gain in terms of time complexity, in trade of a lost in space complexity.\n\n    - In our case, we allocate some variables to hold the intermediates results, namely `row_hits` and `col_hits[*]`.\n    Therefore, the overall space complexity of the algorithm is $$\\mathcal{O}(W)$$, where $$W$$ is the number of columns in the grid.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "questionId": "610",
+  "questionFrontendId": "610",
+  "title": "Triangle Judgement",
+  "titleSlug": "triangle-judgement",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Triangle</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| x           | int  |\n| y           | int  |\n| z           | int  |\n+-------------+------+\nIn SQL, (x, y, z) is the primary key column for this table.\nEach row of this table contains the lengths of three line segments.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Report for every three line segments whether they can form a triangle.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nTriangle table:\n+----+----+----+\n| x  | y  | z  |\n+----+----+----+\n| 13 | 15 | 30 |\n| 10 | 20 | 15 |\n+----+----+----+\n<strong>Output:</strong> \n+----+----+----+----------+\n| x  | y  | z  | triangle |\n+----+----+----+----------+\n| 13 | 15 | 30 | No       |\n| 10 | 20 | 15 | Yes      |\n+----+----+----+----------+\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Triangle (x int, y int, z int)\"], \"mssql\": [\"Create table Triangle (x int, y int, z int)\"], \"oraclesql\": [\"Create table Triangle (x int, y int, z int)\"], \"database\": true, \"name\": \"triangle_judgement\", \"pythondata\": [\"Triangle = pd.DataFrame([], columns=['x', 'y', 'z']).astype({'x':'Int64', 'y':'Int64', 'z':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Triangle (x int, y int, z int)\"], \"database_schema\": {\"Triangle\": {\"x\": \"INT\", \"y\": \"INT\", \"z\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"466.5K\", \"totalSubmission\": \"625K\", \"totalAcceptedRaw\": 466478, \"totalSubmissionRaw\": 625013, \"acRate\": \"74.6%\"}",
+  "likes": 851,
+  "dislikes": 237,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Triangle\":[\"x\",\"y\",\"z\"]},\"rows\":{\"Triangle\":[[13,15,30],[10,20,15]]}}"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef triangle_judgement(triangle: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "180",
+    "content": "[TOC]\n\n# Solution\n---\n\n### Overview\n\nTo solve this problem, the triangle inequality theorem is utilized, which states that for a set of three lengths to form a triangle, the sum of any two sides must be greater than the remaining side. This theorem provides three conditions that must be satisfied:\n\n1. \\(x + y > z\\)\n2. \\(y + z > x\\)\n3. \\(z + x > y\\)\n\nwhere \\(x\\), \\(y\\), and \\(z\\) are the lengths of the three sides.\n\n**Visualization of triangle inequality theorem**\n\n![fig](../Figures/610/610-1.png)\n\n---\n\n## pandas\n\n\n### Approach: DataFrame Row-Wise Application of the Triangle Inequality Theorem\n\n#### Intuition\n\nIn Math, three segments can form a triangle only if the sum of any of the two segments is larger than the third one.\n(In other words, the subtraction of any of the two segments are smaller than the third one.)\n\nWe create a function `is_triangle` which takes a single parameter, `row`. This function will be applied to each row in the input DataFrame to check if the values in that row represent the lengths of the sides of a triangle.\n\n```python\ndef is_triangle(row):\n    return (\n        \"Yes\"\n        if (row[\"x\"] + row[\"y\"] > row[\"z\"])\n        and (row[\"y\"] + row[\"z\"] > row[\"x\"])\n        and (row[\"z\"] + row[\"x\"] > row[\"y\"])\n        else \"No\"\n    )\n```\n\nIn this function, we check whether the values in the current row satisfy the conditions of the triangle inequality theorem:\n - `row['x'] + row['y'] > row['z']` checks that the sum of the lengths of sides `x` and `y` is greater than the length of side `z`.\n - `row['y'] + row['z'] > row['x']` checks that the sum of the lengths of sides `y` and `z` is greater than the length of side `x`.\n - `row['z'] + row['x'] > row['y']` checks that the sum of the lengths of sides `z` and `x` is greater than the length of side `y`.\nIf all three conditions are met, it returns `'Yes'`, indicating that a triangle can be formed with the side lengths. Otherwise, it returns `'No'`.\n\nWe use the `apply` method of pandas to apply the `is_triangle` function to each row (specified with `axis=1`) in the input DataFrame. The result is a new Series which we assign to the DataFrame as a new column named 'triangle'.\n\n```python\ntriangle['triangle'] = triangle.apply(is_triangle, axis=1)\n```\n\n#### Implementation\n\nBased on the understanding above we can implement the solution as follows: \n\n<iframe src=\"https://leetcode.com/playground/dsjE3eRQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"dsjE3eRQ\"></iframe>\n<br>\n\n---\n\n## Database\n\n### Approach: Using `case...when...` \n\n#### Intiuition\n\nIn Math, three segments can form a triangle only if the sum of any of the two segments is larger than the third one.\n(In other words, the subtraction of any of the two segments are smaller than the third one.)\n\nSo, we can use this knowledge to judge with the help of the MySQL control statements [`case...when...`](https://dev.mysql.com/doc/refman/5.7/en/case.html).\n\n\n#### Implementation\n\n```sql\nSELECT \n    x,\n    y,\n    z,\n    CASE\n        WHEN x + y > z AND x + z > y AND y + z > x THEN 'Yes'\n        ELSE 'No'\n    END AS 'triangle'\nFROM\n    triangle\n;\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

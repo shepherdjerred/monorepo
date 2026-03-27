@@ -1,0 +1,137 @@
+{
+  "questionId": "17",
+  "questionFrontendId": "17",
+  "title": "Letter Combinations of a Phone Number",
+  "titleSlug": "letter-combinations-of-a-phone-number",
+  "difficulty": "Medium",
+  "content": "<p>Given a string containing digits from <code>2-9</code> inclusive, return all possible letter combinations that the number could represent. Return the answer in <strong>any order</strong>.</p>\n\n<p>A mapping of digits to letters (just like on the telephone buttons) is given below. Note that 1 does not map to any letters.</p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/03/15/1200px-telephone-keypad2svg.png\" style=\"width: 300px; height: 243px;\" />\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> digits = &quot;23&quot;\n<strong>Output:</strong> [&quot;ad&quot;,&quot;ae&quot;,&quot;af&quot;,&quot;bd&quot;,&quot;be&quot;,&quot;bf&quot;,&quot;cd&quot;,&quot;ce&quot;,&quot;cf&quot;]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> digits = &quot;2&quot;\n<strong>Output:</strong> [&quot;a&quot;,&quot;b&quot;,&quot;c&quot;]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= digits.length &lt;= 4</code></li>\n\t<li><code>digits[i]</code> is a digit in the range <code>[&#39;2&#39;, &#39;9&#39;]</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{ \r\n  \"name\": \"letterCombinations\",\r\n  \"params\": [\r\n    { \r\n      \"name\": \"digits\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<string>\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"3M\", \"totalSubmission\": \"4.5M\", \"totalAcceptedRaw\": 2965791, \"totalSubmissionRaw\": 4511910, \"acRate\": \"65.7%\"}",
+  "likes": 20916,
+  "dislikes": 1132,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Generate Parentheses\", \"titleSlug\": \"generate-parentheses\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Combination Sum\", \"titleSlug\": \"combination-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Binary Watch\", \"titleSlug\": \"binary-watch\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count Number of Texts\", \"titleSlug\": \"count-number-of-texts\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Pushes to Type Word I\", \"titleSlug\": \"minimum-number-of-pushes-to-type-word-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Pushes to Type Word II\", \"titleSlug\": \"minimum-number-of-pushes-to-type-word-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"23\"",
+    "\"2\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 15, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 8, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"epic-systems\", \"name\": \"Epic Systems\"}, {\"timesEncountered\": 10, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 8, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 8, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 6, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 5, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 5, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 5, \"slug\": \"flexport\", \"name\": \"Flexport\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"tesla\", \"name\": \"Tesla\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> letterCombinations(string digits) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> letterCombinations(String digits) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def letterCombinations(self, digits: str) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def letterCombinations(self, digits):\n        \"\"\"\n        :type digits: str\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} digits\n * @return {string[]}\n */\nvar letterCombinations = function(digits) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function letterCombinations(digits: string): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> LetterCombinations(string digits) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** letterCombinations(char* digits, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func letterCombinations(digits string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun letterCombinations(digits: String): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func letterCombinations(_ digits: String) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn letter_combinations(digits: String) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} digits\n# @return {String[]}\ndef letter_combinations(digits)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $digits\n     * @return String[]\n     */\n    function letterCombinations($digits) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> letterCombinations(String digits) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def letterCombinations(digits: String): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec letter_combinations(digits :: String.t) :: [String.t]\n  def letter_combinations(digits) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec letter_combinations(Digits :: unicode:unicode_binary()) -> [unicode:unicode_binary()].\nletter_combinations(Digits) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (letter-combinations digits)\n  (-> string? (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1118",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nOne of the first things you should always do is look at the constraints. Quite often, you can figure out what sort of approach needs to be taken simply from looking at the input size. In an interview, asking your interviewer about the constraints will also show your attention to detail - on top of giving you information.\n\nIn this particular problem, the length of the input is **extremely** small, `0 <= digits.length <= 4`. With such small input sizes, we can safely assume that a brute force solution in which we generate all combinations of letters will be accepted.\n\nWhenever you have a problem where you need to generate all combinations/permutations of some group of letters/numbers, the first thought you should have is backtracking. If you're new to backtracking, check out our [backtracking explore card](https://leetcode.com/explore/featured/card/recursion-ii/472/backtracking/). Backtracking algorithms can often keep the _space complexity_ linear with the input size. \n\n</br>\n\n---\n\n### Approach 1: Backtracking\n\n**Intuition**\n\nThere aren't any smart tricks needed for this problem - the hard part is just figuring out how to correctly generate all possible combinations, and to do this using a standard backtracking algorithm template. Let's break down the problem, by starting with an input that is only 1-digit long, for example `digits = \"2\"`. This example is trivial - just generate all letters that correspond with `digit = \"2\"`, which would be `[\"a\", \"b\", \"c\"]`.\n\nWhat if instead we had a 2-digit long input, `digits = \"23\"`? Imagine taking each letter of `digit = \"2\"` as a *starting point*. That is, **lock the first letter in**, and solve all the possible combinations that **start with that letter**. If our first letter will always be `\"a\"`, then the problem is trivial again - it's the 1-digit case, and all we have to do is generate all the letters corresponding with `digit = \"3\"`, and add that to `\"a\"`, to get `[\"ad\", \"ae\",\"af\"]`. This was easy because we ignored the first letter, and said it will always be `\"a\"`. But we know how to generate all the first letters too - it's the 1-digit case which we already solved to be `[\"a\", \"b\", \"c\"]`.\n\nAs you can see, solving the 1-digit case is trivial, and solving the 2-digit case is just solving the 1-digit case twice. The same reasoning can be extended to `n` digits. For the 3-digit case, solve the 2-digit case to generate all combinations of the first 2 letters, and then solve the 1-digit case for the final digit. Now that we know how to solve the 3-digit case, to solve the 4-digit case, solve the 3-digit case for all combinations of the first 3 letters, and then solve the 1-digit case for the final digit. We could extend this to infinity, but, don't worry, for this problem we're finished after 4. \n\n!?!../Documents/17_Letter_Combinations_Phone.json:960,540!?!\n\n**Algorithm**\n\nAs mentioned previously, we need to **lock-in** letters when we generate new letters. The easiest way to save state like this is to use recursion. Our algorithm will be as follows:\n\n1. If the input is empty, return an empty array.\n\n2. Initialize a data structure (e.g. a hash map) that maps digits to their letters, for example, mapping \"6\" to \"m\", \"n\", and \"o\".\n\n3. Use a backtracking function to generate all possible combinations.\n    - The function should take 2 primary inputs: the current combination of letters we have, `path`, and the `index` we are currently checking.\n    - As a base case, if our current combination of letters is the same length as the input `digits`, that means we have a complete combination. Therefore, add it to our answer, and backtrack.\n    - Otherwise, get all the letters that correspond with the current digit we are looking at, `digits[index]`.\n    - Loop through these letters. For each letter, add the letter to our current `path`, and call `backtrack` again, but move on to the next digit by incrementing `index` by 1.\n    - Make sure to remove the letter from `path` once finished with it.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/Dg8af8PT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Dg8af8PT\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity: $$O(4^N \\cdot N)$$, where $$N$$ is the length of `digits`. Note that $$4$$ in this expression is referring to the maximum *value* length in the *hash map*, and ***not*** to the length of the *input*.\n\n   The worst-case is where the input consists of only 7s and 9s. In that case, we have to explore 4 additional paths for every extra digit. Then, for each combination, it costs up to $$N$$ to build the combination. This problem can be generalized to a scenario where numbers correspond with up to $$M$$ digits, in which case the time complexity would be $$O(M^N \\cdot N)$$. For the problem constraints, we're given, $$M = 4$$, because of digits 7 and 9 having 4 letters each.\n\n* Space complexity: $$O(N)$$, where $$N$$ is the length of `digits`.\n\n    Not counting space used for the output, the extra space we use relative to input size is the space occupied by the recursion call stack. It will only go as deep as the number of digits in the input since whenever we reach that depth, we backtrack.\n\n    As the hash map does not grow as the inputs grows, it occupies $$O(1)$$ space. \n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

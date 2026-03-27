@@ -1,0 +1,129 @@
+{
+  "questionId": "163",
+  "questionFrontendId": "163",
+  "title": "Missing Ranges",
+  "titleSlug": "missing-ranges",
+  "difficulty": "Easy",
+  "content": "<p>You are given an inclusive range <code>[lower, upper]</code> and a <strong>sorted unique</strong> integer array <code>nums</code>, where all elements are within the inclusive range.</p>\n\n<p>A number <code>x</code> is considered <strong>missing</strong> if <code>x</code> is in the range <code>[lower, upper]</code> and <code>x</code> is not in <code>nums</code>.</p>\n\n<p>Return <em>the <strong>shortest sorted</strong> list of ranges that <b>exactly covers all the missing numbers</b></em>. That is, no element of <code>nums</code> is included in any of the ranges, and each missing number is covered by one of the ranges.</p>\n\n<p>&nbsp;</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0,1,3,50,75], lower = 0, upper = 99\n<strong>Output:</strong> [[2,2],[4,49],[51,74],[76,99]]\n<strong>Explanation:</strong> The ranges are:\n[2,2]\n[4,49]\n[51,74]\n[76,99]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [-1], lower = -1, upper = -1\n<strong>Output:</strong> []\n<strong>Explanation:</strong> There are no missing ranges since there are no missing numbers.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>-10<sup>9</sup> &lt;= lower &lt;= upper &lt;= 10<sup>9</sup></code></li>\n\t<li><code>0 &lt;= nums.length &lt;= 100</code></li>\n\t<li><code>lower &lt;= nums[i] &lt;= upper</code></li>\n\t<li>All the values of <code>nums</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"findMissingRanges\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"lower\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"upper\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<list<integer>>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"308K\", \"totalSubmission\": \"866.5K\", \"totalAcceptedRaw\": 308026, \"totalSubmissionRaw\": 866510, \"acRate\": \"35.5%\"}",
+  "likes": 1182,
+  "dislikes": 3021,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Summary Ranges\", \"titleSlug\": \"summary-ranges\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find Maximal Uncovered Ranges\", \"titleSlug\": \"find-maximal-uncovered-ranges\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[0,1,3,50,75]\n0\n99",
+    "[-1]\n-1\n-1"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> findMissingRanges(vector<int>& nums, int lower, int upper) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> findMissingRanges(int[] nums, int lower, int upper) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findMissingRanges(self, nums: List[int], lower: int, upper: int) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findMissingRanges(self, nums, lower, upper):\n        \"\"\"\n        :type nums: List[int]\n        :type lower: int\n        :type upper: int\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} lower\n * @param {number} upper\n * @return {number[][]}\n */\nvar findMissingRanges = function(nums, lower, upper) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findMissingRanges(nums: number[], lower: number, upper: number): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> FindMissingRanges(int[] nums, int lower, int upper) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** findMissingRanges(int* nums, int numsSize, int lower, int upper, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findMissingRanges(nums []int, lower int, upper int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findMissingRanges(nums: IntArray, lower: Int, upper: Int): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findMissingRanges(_ nums: [Int], _ lower: Int, _ upper: Int) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_missing_ranges(nums: Vec<i32>, lower: i32, upper: i32) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} lower\n# @param {Integer} upper\n# @return {Integer[][]}\ndef find_missing_ranges(nums, lower, upper)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $lower\n     * @param Integer $upper\n     * @return Integer[][]\n     */\n    function findMissingRanges($nums, $lower, $upper) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> findMissingRanges(List<int> nums, int lower, int upper) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findMissingRanges(nums: Array[Int], lower: Int, upper: Int): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_missing_ranges(nums :: [integer], lower :: integer, upper :: integer) :: [[integer]]\n  def find_missing_ranges(nums, lower, upper) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_missing_ranges(Nums :: [integer()], Lower :: integer(), Upper :: integer()) -> [[integer()]].\nfind_missing_ranges(Nums, Lower, Upper) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-missing-ranges nums lower upper)\n  (-> (listof exact-integer?) exact-integer? exact-integer? (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1865",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an inclusive range `[lower, upper]` and a sorted unique integer array `nums`, where all elements are within the inclusive range.\n\nOur task is to return the shortest sorted list of ranges that exactly covers all the missing numbers. That is, no element of `nums` is included in any of the ranges, and each missing number is covered by one of the ranges.\n\n---\n\n### Approach: Linear Scan\n\n#### Intuition\n\nAs the input array `nums` is sorted ascending and all the elements in it are within the given `[lower, upper]` bounds, we can simply check consecutive elements to see if they differ by one or not. If they don't, then we have found a missing range.\n\n- When `nums[i + 1] - nums[i] <= 1`, we know that there are no missing elements between `nums[i + 1]` and `nums[i]`.\n- When `nums[i + 1] - nums[i] > 1`, we know that the range of elements, `[nums[i] + 1, nums[i + 1] - 1]`, is missing.\n\nHowever, there are two edge cases:\n\n1. If we don't start with `lower` as the first element of the array, we will need to include `[lower, num[0] - 1]` as a missing range as well.\n2. Similarly, if we don't end with `upper` as the last element of the array, we will need to include `[nums[n - 1] + 1, upper]` as a missing range as well where `n` is the length of `nums`.\n\nHere's a visual representation of the missing ranges for an example:\n\n![img](../Figures/163/163-1.png)\n\n#### Algorithm\n\n1. Create a variable `n` and initialize it to the size of `nums`.\n2. Create a list `missingRanges` that will contain the solution to the problem.\n3. If there are no elements in `nums`, we simply return the range `[lower, upper]`.\n4. We check if the first element of the array is equal to `lower` or not. If `lower < nums[0]`, we have a missing range `[lower, nums[0] - 1]`. We add it to `missingRanges`.\n5. We iterate over all the elements in `nums` using a loop that runs from `i = 0` to `n - 2` (till the second last element):\n    - If the current element `nums[i]` and the next element `nums[i + 1]` differ by `1` or less, there are no missing numbers between these two numbers. Otherwise, if `nums[i + 1] - nums[i] > 1`, we have missing numbers from `nums[i] + 1` to `nums[i + 1] - 1` (both inclusive). As a result, `[nums[i] + 1, nums[i + 1] - 1]` is added to `missingRanges`.\n6. We check if the last element of the array is equal to `upper` or not. If `nums[n - 1] < upper`, we have a missing range `[nums[n - 1] + 1, upper]`. We again add it to `missingRanges`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/J2Lzr9nN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"J2Lzr9nN\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the number of elements in `nums`.\n\n* Time complexity: $O(n)$.\n    - We iterate over all the elements of `nums` and check whether an element differs by `1` or greater from its succeeding element, which takes $O(n)$ time.\n    - All of the ranges are also added to the `missing_ranges` list. In the worst-case scenario, $n + 1$ elements could be added to the list again, which would take $O(n)$ time. This would occur if we did not begin with `lower` as the first element of the array, if each subsequent element in 'nums' differed by more than `1`, and if we did not end with `upper` as the last element of the array.\n\n* Space complexity: $O(1)$.\n    - Except for a few integer variables like `n` and `i` that use constant space, we do not consume any space (if we ignore the space consumed by the input and output).",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

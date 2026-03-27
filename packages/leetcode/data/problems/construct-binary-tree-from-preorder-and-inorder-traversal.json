@@ -1,0 +1,145 @@
+{
+  "questionId": "105",
+  "questionFrontendId": "105",
+  "title": "Construct Binary Tree from Preorder and Inorder Traversal",
+  "titleSlug": "construct-binary-tree-from-preorder-and-inorder-traversal",
+  "difficulty": "Medium",
+  "content": "<p>Given two integer arrays <code>preorder</code> and <code>inorder</code> where <code>preorder</code> is the preorder traversal of a binary tree and <code>inorder</code> is the inorder traversal of the same tree, construct and return <em>the binary tree</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/02/19/tree.jpg\" style=\"width: 277px; height: 302px;\" />\n<pre>\n<strong>Input:</strong> preorder = [3,9,20,15,7], inorder = [9,3,15,20,7]\n<strong>Output:</strong> [3,9,20,null,null,15,7]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> preorder = [-1], inorder = [-1]\n<strong>Output:</strong> [-1]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= preorder.length &lt;= 3000</code></li>\n\t<li><code>inorder.length == preorder.length</code></li>\n\t<li><code>-3000 &lt;= preorder[i], inorder[i] &lt;= 3000</code></li>\n\t<li><code>preorder</code> and <code>inorder</code> consist of <strong>unique</strong> values.</li>\n\t<li>Each value of <code>inorder</code> also appears in <code>preorder</code>.</li>\n\t<li><code>preorder</code> is <strong>guaranteed</strong> to be the preorder traversal of the tree.</li>\n\t<li><code>inorder</code> is <strong>guaranteed</strong> to be the inorder traversal of the tree.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"buildTree\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"preorder\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"inorder\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"TreeNode\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.8M\", \"totalSubmission\": \"2.7M\", \"totalAcceptedRaw\": 1836813, \"totalSubmissionRaw\": 2679587, \"acRate\": \"68.5%\"}",
+  "likes": 16616,
+  "dislikes": 625,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Construct Binary Tree from Inorder and Postorder Traversal\", \"titleSlug\": \"construct-binary-tree-from-inorder-and-postorder-traversal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,9,20,15,7]\n[9,3,15,20,7]",
+    "[-1]\n[-1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 2, \"slug\": \"pure\", \"name\": \"Pure\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public TreeNode buildTree(int[] preorder, int[] inorder) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def buildTree(self, preorder: List[int], inorder: List[int]) -> Optional[TreeNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def buildTree(self, preorder, inorder):\n        \"\"\"\n        :type preorder: List[int]\n        :type inorder: List[int]\n        :rtype: Optional[TreeNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {number[]} preorder\n * @param {number[]} inorder\n * @return {TreeNode}\n */\nvar buildTree = function(preorder, inorder) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction buildTree(preorder: number[], inorder: number[]): TreeNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public TreeNode BuildTree(int[] preorder, int[] inorder) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nstruct TreeNode* buildTree(int* preorder, int preorderSize, int* inorder, int inorderSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc buildTree(preorder []int, inorder []int) *TreeNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun buildTree(preorder: IntArray, inorder: IntArray): TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func buildTree(_ preorder: [Int], _ inorder: [Int]) -> TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn build_tree(preorder: Vec<i32>, inorder: Vec<i32>) -> Option<Rc<RefCell<TreeNode>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {Integer[]} preorder\n# @param {Integer[]} inorder\n# @return {TreeNode}\ndef build_tree(preorder, inorder)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param Integer[] $preorder\n     * @param Integer[] $inorder\n     * @return TreeNode\n     */\n    function buildTree($preorder, $inorder) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  TreeNode? buildTree(List<int> preorder, List<int> inorder) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def buildTree(preorder: Array[Int], inorder: Array[Int]): TreeNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec build_tree(preorder :: [integer], inorder :: [integer]) :: TreeNode.t | nil\n  def build_tree(preorder, inorder) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec build_tree(Preorder :: [integer()], Inorder :: [integer()]) -> #tree_node{} | null.\nbuild_tree(Preorder, Inorder) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (build-tree preorder inorder)\n  (-> (listof exact-integer?) (listof exact-integer?) (or/c tree-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1114",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\n> This problem examines your understanding of preorder and inorder binary tree traversals. If you are not familiar with them, feel free to visit our [Explore Cards](https://leetcode.com/explore/learn/card/data-structure-tree/) where you will see all the ways to traverse a binary tree including preorder, inorder, postorder, and level-order traversals :)\n\nA tree has a recursive structure because it has subtrees which are trees themselves. Let's take a look at the inorder traversal of a binary tree, and you will see the built-in recursive structure.\n\n![The recursive structure in a Tree.](../Figures/105/105-Page-1_fix.jpg)\n\n*Figure 1. The recursive structure in a Tree.*\n\n\nHenceforth, we will leverage this property and find a way to recursively construct the tree.\n\n</br>\n\n---\n\n### Approach: Recursion\n\n#### Intuition\n\nThe two key observations are:\n1. Preorder traversal follows `Root -> Left -> Right`, therefore, given the preorder array `preorder`, we have easy access to the root which is `preorder[0]`.\n\n2. Inorder traversal follows `Left -> Root -> Right`, therefore if we know the position of `Root`, we can recursively split the entire array into two subtrees.\n\nNow the idea should be clear enough. We will design a recursion function: it will set the first element of `preorder` as the root, and then construct the entire tree. To find the left and right subtrees, it will look for the root in `inorder`, so that everything on the left should be the left subtree, and everything on the right should be the right subtree. Both subtrees can be constructed by making another recursion call.\n\nIt is worth noting that, while we recursively construct the subtrees, we should choose the next element in `preorder` to initialize as the new roots. This is because the current one has already been initialized to a parent node for the subtrees.\n\n![Always use the next element in `preorder` to initialize a root.](../Figures/105/105-Page-2_fix.jpg)\n*Figure 2. Always use the next element in `preorder` to initialize a root.*\n\n!?!../Documents/105_LIS.json:1008,542!?!\n\n#### Algorithm\n\n- Build a hashmap to record the relation of `value -> index` for `inorder`, so that we can find the position of root in constant time.\n- Initialize an integer variable `preorderIndex` to keep track of the element that will be used to construct the root.\n- Implement the recursion function `arrayToTree` which takes a range of `inorder` and returns the constructed binary tree:\n  - if the range is empty, return `null`;\n  - initialize the root with `preorder[preorderIndex]` and then increment `preorderIndex`;\n  - recursively use the left and right portions of `inorder` to construct the left and right subtrees.\n- Simply call the recursion function with the entire range of `inorder`.\n\n<iframe src=\"https://leetcode.com/playground/mmZqy6oy/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"mmZqy6oy\"></iframe>\n\n**Complexity analysis**\n\nLet $$N$$ be the length of the input arrays.\n\n* Time complexity : $$O(N)$$.\n\n  Building the hashmap takes $$O(N)$$ time, as there are $$N$$ nodes to add, and adding items to a hashmap has a cost of $$O(1)$$, so we get $$N \\cdot O(1) = O(N)$$.\n\n  Building the tree also takes $$O(N)$$ time. The recursive helper method has a cost of $$O(1)$$ for each call (it has no loops), and it is called _once_ for each of the $$N$$ nodes, giving a total of $$O(N)$$.\n\n  Taking both into consideration, the time complexity is $$O(N)$$.\n\n* Space complexity : $$O(N)$$.\n\n  Building the hashmap and storing the entire tree each requires $$O(N)$$ memory. The size of the implicit system stack used by recursion calls depends on the height of the tree, which is $$O(N)$$ in the worst case and $$O(\\log N)$$ on average. Taking both into consideration, the space complexity is $$O(N)$$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

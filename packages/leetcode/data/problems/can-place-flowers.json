@@ -1,0 +1,133 @@
+{
+  "questionId": "605",
+  "questionFrontendId": "605",
+  "title": "Can Place Flowers",
+  "titleSlug": "can-place-flowers",
+  "difficulty": "Easy",
+  "content": "<p>You have a long flowerbed in which some of the plots are planted, and some are not. However, flowers cannot be planted in <strong>adjacent</strong> plots.</p>\n\n<p>Given an integer array <code>flowerbed</code> containing <code>0</code>&#39;s and <code>1</code>&#39;s, where <code>0</code> means empty and <code>1</code> means not empty, and an integer <code>n</code>, return <code>true</code>&nbsp;<em>if</em> <code>n</code> <em>new flowers can be planted in the</em> <code>flowerbed</code> <em>without violating the no-adjacent-flowers rule and</em> <code>false</code> <em>otherwise</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> flowerbed = [1,0,0,0,1], n = 1\n<strong>Output:</strong> true\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> flowerbed = [1,0,0,0,1], n = 2\n<strong>Output:</strong> false\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= flowerbed.length &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>flowerbed[i]</code> is <code>0</code> or <code>1</code>.</li>\n\t<li>There are no two adjacent flowers in <code>flowerbed</code>.</li>\n\t<li><code>0 &lt;= n &lt;= flowerbed.length</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"canPlaceFlowers\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"flowerbed\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"1.4M\", \"totalSubmission\": \"4.7M\", \"totalAcceptedRaw\": 1374693, \"totalSubmissionRaw\": 4727742, \"acRate\": \"29.1%\"}",
+  "likes": 7377,
+  "dislikes": 1324,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Teemo Attacking\", \"titleSlug\": \"teemo-attacking\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Asteroid Collision\", \"titleSlug\": \"asteroid-collision\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,0,0,0,1]\n1",
+    "[1,0,0,0,1]\n2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"six_months\": [{\"timesEncountered\": 12, \"slug\": \"htc\", \"name\": \"HTC\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}], \"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 10, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}, {\"timesEncountered\": 5, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 3, \"slug\": \"soti\", \"name\": \"SOTI\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 2, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 2, \"slug\": \"nike\", \"name\": \"Nike\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool canPlaceFlowers(vector<int>& flowerbed, int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean canPlaceFlowers(int[] flowerbed, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def canPlaceFlowers(self, flowerbed: List[int], n: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def canPlaceFlowers(self, flowerbed, n):\n        \"\"\"\n        :type flowerbed: List[int]\n        :type n: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} flowerbed\n * @param {number} n\n * @return {boolean}\n */\nvar canPlaceFlowers = function(flowerbed, n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function canPlaceFlowers(flowerbed: number[], n: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CanPlaceFlowers(int[] flowerbed, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool canPlaceFlowers(int* flowerbed, int flowerbedSize, int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func canPlaceFlowers(flowerbed []int, n int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun canPlaceFlowers(flowerbed: IntArray, n: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func canPlaceFlowers(_ flowerbed: [Int], _ n: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn can_place_flowers(flowerbed: Vec<i32>, n: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} flowerbed\n# @param {Integer} n\n# @return {Boolean}\ndef can_place_flowers(flowerbed, n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $flowerbed\n     * @param Integer $n\n     * @return Boolean\n     */\n    function canPlaceFlowers($flowerbed, $n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool canPlaceFlowers(List<int> flowerbed, int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def canPlaceFlowers(flowerbed: Array[Int], n: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec can_place_flowers(flowerbed :: [integer], n :: integer) :: boolean\n  def can_place_flowers(flowerbed, n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec can_place_flowers(Flowerbed :: [integer()], N :: integer()) -> boolean().\ncan_place_flowers(Flowerbed, N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (can-place-flowers flowerbed n)\n  (-> (listof exact-integer?) exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "154",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach #1 Single Scan [Accepted]\n\nThe solution is very simple. We can find out the extra maximum number of flowers, $$count$$, that can be planted for the given $$flowerbed$$ arrangement. To do so, we can traverse over all the elements of the $$flowerbed$$ and find out those elements which are 0(implying an empty position). For every such element, we check if its both adjacent positions are also empty. If so, we can plant a flower at the current position without violating the no-adjacent-flowers-rule. For the first and last elements, we need not check the previous and the next adjacent positions respectively.\n\nIf the $$count$$ obtained is greater than or equal to $$n$$, the required number of flowers to be planted, we can plant $$n$$ flowers in the empty spaces, otherwise not.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/UncMMEFa/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"UncMMEFa\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity: $$O(n)$$. A single scan of the $$flowerbed$$ array of size $$n$$ is done.\n\n* Space complexity: $$O(1)$$. Constant extra space is used.\n\n---\n### Approach #2 Optimized [Accepted]\n\n**Algorithm**\n\nInstead of finding the maximum value of $$count$$ that can be obtained, as done in the last approach, we can stop the process of checking the positions for planting the flowers as soon as $$count$$ becomes equal to $$n$$. Doing this leads to an optimization of the first approach. If $$count$$ never becomes equal to $$n$$, $$n$$ flowers can't be planted at the empty positions.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/RSPq2Ur6/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"RSPq2Ur6\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(n)$$. A single scan of the $$flowerbed$$ array of size $$n$$ is done.\n\n* Space complexity: $$O(1)$$. Constant extra space is used.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

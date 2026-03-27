@@ -1,0 +1,131 @@
+{
+  "questionId": "728",
+  "questionFrontendId": "728",
+  "title": "Self Dividing Numbers",
+  "titleSlug": "self-dividing-numbers",
+  "difficulty": "Easy",
+  "content": "<p>A <strong>self-dividing number</strong> is a number that is divisible by every digit it contains.</p>\n\n<ul>\n\t<li>For example, <code>128</code> is <strong>a self-dividing number</strong> because <code>128 % 1 == 0</code>, <code>128 % 2 == 0</code>, and <code>128 % 8 == 0</code>.</li>\n</ul>\n\n<p>A <strong>self-dividing number</strong> is not allowed to contain the digit zero.</p>\n\n<p>Given two integers <code>left</code> and <code>right</code>, return <em>a list of all the <strong>self-dividing numbers</strong> in the range</em> <code>[left, right]</code> (both <strong>inclusive</strong>).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> left = 1, right = 22\n<strong>Output:</strong> [1,2,3,4,5,6,7,8,9,11,12,15,22]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> left = 47, right = 85\n<strong>Output:</strong> [48,55,66,77]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= left &lt;= right &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "For each number in the range, check whether it is self dividing by converting that number to a character array (or string in Python), then checking that each digit is nonzero and divides the original number."
+  ],
+  "metaData": "{\r\n  \"name\": \"selfDividingNumbers\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"left\",\r\n      \"type\": \"integer\"\r\n    },\r\n    {\r\n      \"name\": \"right\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<integer>\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"331.3K\", \"totalSubmission\": \"410.7K\", \"totalAcceptedRaw\": 331307, \"totalSubmissionRaw\": 410689, \"acRate\": \"80.7%\"}",
+  "likes": 1938,
+  "dislikes": 386,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Perfect Number\", \"titleSlug\": \"perfect-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Check if Number Has Equal Digit Count and Digit Value\", \"titleSlug\": \"check-if-number-has-equal-digit-count-and-digit-value\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count the Digits That Divide a Number\", \"titleSlug\": \"count-the-digits-that-divide-a-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "1\n22",
+    "47\n85"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"epic-systems\", \"name\": \"Epic Systems\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> selfDividingNumbers(int left, int right) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> selfDividingNumbers(int left, int right) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def selfDividingNumbers(self, left: int, right: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def selfDividingNumbers(self, left, right):\n        \"\"\"\n        :type left: int\n        :type right: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} left\n * @param {number} right\n * @return {number[]}\n */\nvar selfDividingNumbers = function(left, right) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function selfDividingNumbers(left: number, right: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> SelfDividingNumbers(int left, int right) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* selfDividingNumbers(int left, int right, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func selfDividingNumbers(left int, right int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun selfDividingNumbers(left: Int, right: Int): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func selfDividingNumbers(_ left: Int, _ right: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn self_dividing_numbers(left: i32, right: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} left\n# @param {Integer} right\n# @return {Integer[]}\ndef self_dividing_numbers(left, right)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $left\n     * @param Integer $right\n     * @return Integer[]\n     */\n    function selfDividingNumbers($left, $right) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> selfDividingNumbers(int left, int right) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def selfDividingNumbers(left: Int, right: Int): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec self_dividing_numbers(left :: integer, right :: integer) :: [integer]\n  def self_dividing_numbers(left, right) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec self_dividing_numbers(Left :: integer(), Right :: integer()) -> [integer()].\nself_dividing_numbers(Left, Right) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (self-dividing-numbers left right)\n  (-> exact-integer? exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "296",
+    "content": "[TOC]\n\n### Approach : Brute Force [Accepted]\n\n**Intuition and Algorithm**\n\nFor each number in the given range, we will directly test if that number is self-dividing.\n\nBy definition, we want to test each whether each digit is non-zero and divide the number. For example, with `128`, we want to test `d != 0 && 128 % d == 0` for `d = 1, 2, 8`.  To do that, we need to iterate over each digit of the number.\n\nA straightforward approach to that problem would be to convert the number into a character array (string in Python), and then convert it back to an integer to perform the modulo operation when checking `n % d == 0`.\n\nWe could also continually divide the number by 10 and peek at the last digit.  That is shown as a variation in a comment.\n\n<iframe src=\"https://leetcode.com/playground/hg6C7WWp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"hg6C7WWp\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: We iterate through each digit in the given number; therefore, the time complexity is $O(D)$, where $D$ represents the number of digits in the number.\n\n* Space Complexity: $$O(1)$$, since we do not include the output size in space complexity calculations and only consider the intermediate variables or references used during the computation.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

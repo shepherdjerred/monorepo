@@ -1,0 +1,131 @@
+{
+  "questionId": "143",
+  "questionFrontendId": "143",
+  "title": "Reorder List",
+  "titleSlug": "reorder-list",
+  "difficulty": "Medium",
+  "content": "<p>You are given the head of a singly linked-list. The list can be represented as:</p>\n\n<pre>\nL<sub>0</sub> &rarr; L<sub>1</sub> &rarr; &hellip; &rarr; L<sub>n - 1</sub> &rarr; L<sub>n</sub>\n</pre>\n\n<p><em>Reorder the list to be on the following form:</em></p>\n\n<pre>\nL<sub>0</sub> &rarr; L<sub>n</sub> &rarr; L<sub>1</sub> &rarr; L<sub>n - 1</sub> &rarr; L<sub>2</sub> &rarr; L<sub>n - 2</sub> &rarr; &hellip;\n</pre>\n\n<p>You may not modify the values in the list&#39;s nodes. Only nodes themselves may be changed.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/04/reorder1linked-list.jpg\" style=\"width: 422px; height: 222px;\" />\n<pre>\n<strong>Input:</strong> head = [1,2,3,4]\n<strong>Output:</strong> [1,4,2,3]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/09/reorder2-linked-list.jpg\" style=\"width: 542px; height: 222px;\" />\n<pre>\n<strong>Input:</strong> head = [1,2,3,4,5]\n<strong>Output:</strong> [1,5,2,4,3]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the list is in the range <code>[1, 5 * 10<sup>4</sup>]</code>.</li>\n\t<li><code>1 &lt;= Node.val &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"reorderList\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"head\",\r\n      \"type\": \"ListNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"void\"\r\n  },\r\n  \"output\": {\r\n    \"paramindex\": 0\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.5M\", \"totalSubmission\": \"2.3M\", \"totalAcceptedRaw\": 1483573, \"totalSubmissionRaw\": 2286657, \"acRate\": \"64.9%\"}",
+  "likes": 12513,
+  "dislikes": 516,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Delete the Middle Node of a Linked List\", \"titleSlug\": \"delete-the-middle-node-of-a-linked-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Take K of Each Character From Left and Right\", \"titleSlug\": \"take-k-of-each-character-from-left-and-right\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4]",
+    "[1,2,3,4,5]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"arista-networks\", \"name\": \"Arista Networks\"}, {\"timesEncountered\": 4, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}]}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    void reorderList(ListNode* head) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public void reorderList(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def reorderList(self, head: Optional[ListNode]) -> None:\n        \"\"\"\n        Do not return anything, modify head in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def reorderList(self, head):\n        \"\"\"\n        :type head: Optional[ListNode]\n        :rtype: None Do not return anything, modify head in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} head\n * @return {void} Do not return anything, modify head in-place instead.\n */\nvar reorderList = function(head) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\n/**\n Do not return anything, modify head in-place instead.\n */\nfunction reorderList(head: ListNode | null): void {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public void ReorderList(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\nvoid reorderList(struct ListNode* head) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc reorderList(head *ListNode)  {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun reorderList(head: ListNode?): Unit {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func reorderList(_ head: ListNode?) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn reorder_list(head: &mut Option<Box<ListNode>>) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {ListNode} head\n# @return {Void} Do not return anything, modify head in-place instead.\ndef reorder_list(head)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $head\n     * @return NULL\n     */\n    function reorderList($head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *   int val;\n *   ListNode? next;\n *   ListNode([this.val = 0, this.next]);\n * }\n */\nclass Solution {\n  void reorderList(ListNode? head) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def reorderList(head: ListNode): Unit = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n(define/contract (reorder-list head)\n  (-> (or/c list-node? #f) void?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "932",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Solution Bricks\n\nThis problem is a combination of these three easy problems:\n\n- [Middle of the Linked List](https://leetcode.com/problems/middle-of-the-linked-list).\n\n- [Reverse Linked List](https://leetcode.com/problems/reverse-linked-list).\n\n- [Merge Two Sorted Lists](https://leetcode.com/problems/merge-two-sorted-lists).\n\n<br /> \n<br />\n\n\n---\n### Approach 1: Reverse the Second Part of the List and Merge Two Sorted Lists\n\n**Overview**\n\n- Find a middle node of the linked list. \nIf there are two middle nodes, return the second middle node.\nExample: for the list `1->2->3->4->5->6`, the middle element is `4`.\n\n- Once a middle node has been found, reverse the second part of the list.\nExample: convert `1->2->3->4->5->6` into `1->2->3->4` and `6->5->4`.\n\n- Now merge the two sorted lists.\nExample: merge `1->2->3->4` and `6->5->4` into `1->6->2->5->3->4`.\n\n![append](../Figures/143/overview.png)\n\nNow let's check each algorithm part in more detail.\n\n**Find a Middle Node**\n\nLet's use two pointers, `slow` and `fast`. While the slow pointer moves one step forward `slow = slow.next`, the fast pointer moves two steps forward `fast = fast.next.next`, _i.e._ `fast` traverses twice as fast as `slow`. When the fast pointer reaches the end of the list, the slow pointer should be in the middle.\n\n![append](../Figures/143/slow_fast.png)\n\n<iframe src=\"https://leetcode.com/playground/VzpjE7Du/shared\" frameBorder=\"0\" width=\"100%\" height=\"174\" name=\"VzpjE7Du\"></iframe>\n\n**Reverse the Second Part of the List**\n\nLet's traverse the list starting from the middle node `slow` and its virtual predecessor `None`. For each current node, save its neighbors: the previous node `prev` and the next node `tmp = curr.next`.\n\nWhile you're moving along the list, change the node's next pointer to point to the previous node: `curr.next = prev`, and shift the current node to the right for the next iteration: `prev = curr`, `curr = tmp`. \n \n![append](../Figures/143/reverse2.png)\n\n<iframe src=\"https://leetcode.com/playground/G55RcLqX/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"G55RcLqX\"></iframe>\n\nThere is a more elegant way to do it in Python:\n\n<iframe src=\"https://leetcode.com/playground/CHbAGCRy/shared\" frameBorder=\"0\" width=\"100%\" height=\"157\" name=\"CHbAGCRy\"></iframe>\n\n**Merge Two Sorted Lists**\n\nThis algorithm is similar to the one for list reversal.\n\nLet's pick the first node of each list - first and second, and save their successors. While you're traversing the list, set the first node's next pointer to point to the second node, and the second node's next pointer to point to the successor of the first node. For this iteration, the job is done, and for the next iteration, move to the previously saved nodes' successors.   \n\n![append](../Figures/143/first_second.png)\n\n<iframe src=\"https://leetcode.com/playground/NPoVdXP6/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"NPoVdXP6\"></iframe>\n\nOnce again, there is a way to make things simple in Python\n\n<iframe src=\"https://leetcode.com/playground/TJUJoyL2/shared\" frameBorder=\"0\" width=\"100%\" height=\"157\" name=\"TJUJoyL2\"></iframe>\n\n**Implementation**\n\nNow it's time to put all the pieces together.\n\n<iframe src=\"https://leetcode.com/playground/LUpSJdKy/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LUpSJdKy\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$. There are three steps here. To identify the middle node takes $$\\mathcal{O}(N)$$ time. To reverse the second part of the list, one needs $$N/2$$ operations. The final step, to merge two lists, requires $$N/2$$ operations as well. In total, that results in $$\\mathcal{O}(N)$$ time complexity. \n\n* Space complexity: $$\\mathcal{O}(1)$$, since we do not allocate any additional data structures.\n  \n<br /> \n<br />",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

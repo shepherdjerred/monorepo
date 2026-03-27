@@ -1,0 +1,134 @@
+{
+  "questionId": "33",
+  "questionFrontendId": "33",
+  "title": "Search in Rotated Sorted Array",
+  "titleSlug": "search-in-rotated-sorted-array",
+  "difficulty": "Medium",
+  "content": "<p>There is an integer array <code>nums</code> sorted in ascending order (with <strong>distinct</strong> values).</p>\n\n<p>Prior to being passed to your function, <code>nums</code> is <strong>possibly left rotated</strong> at an unknown index <code>k</code> (<code>1 &lt;= k &lt; nums.length</code>) such that the resulting array is <code>[nums[k], nums[k+1], ..., nums[n-1], nums[0], nums[1], ..., nums[k-1]]</code> (<strong>0-indexed</strong>). For example, <code>[0,1,2,4,5,6,7]</code> might be left rotated by&nbsp;<code>3</code>&nbsp;indices and become <code>[4,5,6,7,0,1,2]</code>.</p>\n\n<p>Given the array <code>nums</code> <strong>after</strong> the possible rotation and an integer <code>target</code>, return <em>the index of </em><code>target</code><em> if it is in </em><code>nums</code><em>, or </em><code>-1</code><em> if it is not in </em><code>nums</code>.</p>\n\n<p>You must write an algorithm with <code>O(log n)</code> runtime complexity.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> nums = [4,5,6,7,0,1,2], target = 0\n<strong>Output:</strong> 4\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> nums = [4,5,6,7,0,1,2], target = 3\n<strong>Output:</strong> -1\n</pre><p><strong class=\"example\">Example 3:</strong></p>\n<pre><strong>Input:</strong> nums = [1], target = 0\n<strong>Output:</strong> -1\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 5000</code></li>\n\t<li><code>-10<sup>4</sup> &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n\t<li>All values of <code>nums</code> are <strong>unique</strong>.</li>\n\t<li><code>nums</code> is an ascending array that is possibly rotated.</li>\n\t<li><code>-10<sup>4</sup> &lt;= target &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"search\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"target\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"4.3M\", \"totalSubmission\": \"9.8M\", \"totalAcceptedRaw\": 4345984, \"totalSubmissionRaw\": 9813112, \"acRate\": \"44.3%\"}",
+  "likes": 29923,
+  "dislikes": 1818,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Search in Rotated Sorted Array II\", \"titleSlug\": \"search-in-rotated-sorted-array-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Minimum in Rotated Sorted Array\", \"titleSlug\": \"find-minimum-in-rotated-sorted-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Pour Water Between Buckets to Make Water Levels Equal\", \"titleSlug\": \"pour-water-between-buckets-to-make-water-levels-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,5,6,7,0,1,2]\n0",
+    "[4,5,6,7,0,1,2]\n3",
+    "[1]\n0"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 12, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"more_than_six_months\": [{\"timesEncountered\": 17, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 15, \"slug\": \"grammarly\", \"name\": \"Grammarly\"}, {\"timesEncountered\": 10, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 9, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 8, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 6, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 5, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 5, \"slug\": \"autodesk\", \"name\": \"Autodesk\"}, {\"timesEncountered\": 5, \"slug\": \"newsbreak\", \"name\": \"NewsBreak\"}, {\"timesEncountered\": 4, \"slug\": \"criteo\", \"name\": \"Criteo\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int search(vector<int>& nums, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int search(int[] nums, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def search(self, nums: List[int], target: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def search(self, nums, target):\n        \"\"\"\n        :type nums: List[int]\n        :type target: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} target\n * @return {number}\n */\nvar search = function(nums, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function search(nums: number[], target: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int Search(int[] nums, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int search(int* nums, int numsSize, int target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func search(nums []int, target int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun search(nums: IntArray, target: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func search(_ nums: [Int], _ target: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn search(nums: Vec<i32>, target: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} target\n# @return {Integer}\ndef search(nums, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $target\n     * @return Integer\n     */\n    function search($nums, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int search(List<int> nums, int target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def search(nums: Array[Int], target: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec search(nums :: [integer], target :: integer) :: integer\n  def search(nums, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec search(Nums :: [integer()], Target :: integer()) -> integer().\nsearch(Nums, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (search nums target)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1990",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nDefine the **pivot** index as representing the **smallest** element in `nums`.\n\n![img](../Figures/33/1.png)\n\nIn a rotated sorted array, the pivot value signifies where the rotation occurs. It partitions the array (of length $n$) into two sorted portions `nums[0 ~ pivot - 1]` and `nums[pivot ~ n - 1]`.\n\n---\n\n### Approach 1: Find Pivot Index + Binary Search \n\n#### Intuition   \n\n> If you are not familiar with binary search, please refer to our explore cards [Binary Search Explore Card](https://leetcode.com/explore/learn/card/binary-search/). We will focus on the usage in this article and not the underlying principles or implementation details.\n\nTo pinpoint the pivot value, we can employ a modified binary search algorithm and find the leftmost element that is smaller than or equal to the last element in `nums`.\n\n\n![img](../Figures/33/o1.png)\n\n\nAfter identifying the middle element in the searching space `[left ~ right]`, we compare `nums[mid]` with `nums[-1]`.\n- If `nums[mid] > nums[-1]`, it suggests that the pivot value lies on the right of `nums[mid]`. We will then proceed with the right half of the search space, which is `[mid + 1 ~ right]`.\n- Otherwise, the pivot value is `nums[mid]` or it's situated to the left of `nums[mid]`, we continue with the left half of the searching space, which is `[left ~ mid - 1]`.\n\n\n![img](../Figures/33/o2.png)\n\nBy determining the pivot value, we set the boundaries for our subsequent binary searches. Once we have the pivot value, we can execute two binary searches on each half of the array to locate the target element.\n\n<br>\n\n> > Note: the typical way to calculate `mid` is `(left + right) / 2`. However, a safer way is `left + (right - left) / 2`. The two equations are equivalent, but the second one is safer because it guarantees no number larger than `right` is ever stored. In the first equation, if `left + right` is huge, then it could end up overflowing.\n\n\n#### Algorithm\n\n1) Perform a binary search to locate the pivot element by initializing the boundaries of the searching space as `left = 0` and `right = n - 1`. While `left < right`:\n    - Let `mid = left + (right - left) // 2`.\n    - If `nums[mid] > nums[n - 1]`, this suggests that `pivot` is located to the right of `mid`, hence we set `left = mid + 1`. Otherwise, `pivot` could be either at `mid` or to the left of `mid`, in which case we should set `right = mid - 1`.\n\n2) Upon completion of the binary search, we have the pivot index denoted as `pivot = left`.\n\n3) `nums` consists of two sorted subarrays, `nums[0 ~ left - 1]` and `nums[left ~ n - 1]`.\n\n4) Perform a binary search over `nums[0 ~ left - 1]` for `target`. If `target` is within this subarray, return its index.\n\n5) Otherwise, perform a binary search over `nums[left ~ n - 1]` for `target`. If `target` is within this subarray, return its index. Otherwise, return `-1`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ULivn3qC/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ULivn3qC\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n$ be the length of `nums`.\n\n* Time complexity: $O(\\log n)$\n    - The algorithm requires one binary search to locate `pivot`, and at most 2 binary searches to find `target`. Each binary search takes $O(\\log n)$ time.\n\n\n* Space complexity: $O(1)$\n    \n    - We only need to update several parameters `left`, `right` and `mid`, which takes $O(1)$ space.\n\n<br/>\n\n---\n\n### Approach 2: Find Pivot Index + Binary Search with Shift\n\n#### Intuition   \n\nThe array we're working with has been rotated by a certain number of steps, which means we can't apply a regular binary search to the modified array. However, if we can revert this array to its original sorted form, then a conventional binary search becomes a viable approach.\n\nOur key task is to locate `pivot`, the index of the smallest value in `nums`. Notably, `nums[pivot]` would have been at index 0 in the unrotated, original array. Hence, if we were to rotate it to the right by `n - pivot` steps (taking the modulus of `n` into account), it would return to its original position, index 0.\n\nApplying the same transformation to every element enables us to revert the rotated array back to its original, sorted form.\n\n![img](../Figures/33/t1.png)\n\nAt this point, we can perform a conventional binary search to locate the target. Let's assume that `nums[i] = target`. Remembering that we had to shift every element to the right by `n - pivot` steps to reach the sorted version of nums, we now need to shift the index in the sorted nums to the left by `n - pivot` steps to find its corresponding index, `i`, in the original nums. This gives us `i - (n - pivot)` (taking the modulus of `n` into account).\n\n![img](../Figures/33/t2.png)\n\nCrucially, there's no need to actually create the sorted version of `nums` from the original `nums`. We can simply represent the sorted `nums` by shifting the indices.\n\n\n<br>\n\n#### Algorithm\n\n1) Perform a binary search to locate the pivot element by initializing the boundaries of the searching space as `left = 0` and `right = n - 1`. While `left < right`:\n    - Let `mid = left + (right - left) // 2`.\n    - If `nums[mid] > nums[n - 1]`, this suggests that `pivot` is located to the right of `mid`, hence we set `left = mid + 1`. Otherwise, `pivot` could be either at `mid` or to the left of `mid`, in which case we should set `right = mid - 1`.\n\n2) Upon completion of the binary search, we have the pivot index denoted as `pivot = left`.\n\n3) Set the boundaries of the search space as `(pivot + shift) % n` and `(pivot - 1 + shift) % n`.\n\n4) While `left < right`, we get the middle index `mid = (left + right) // 2`, and compare `nums[(mid - shift + n) % n]` with `target`.\n    - If `nums[(mid - shift + n) % n]` is equal to `target`, return `mid - shift + n`\n    - If `nums[(mid - shift + n) % n] > target`, continue with the left half by setting `right` as `mid - 1`.\n    - If `nums[(mid - shift + n) % n] < target`, continue with the right half by setting `left` as `mid + 1`.\n\n5) Return `-1` once the binary search is complete.\n\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ikPeDTXM/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ikPeDTXM\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `nums`.\n\n* Time complexity: $O(\\log n)$\n\n    - The algorithm requires one binary search to locate `pivot` and one binary search over the shifted indices to find `target`. Each binary search takes $O(\\log n)$ time. \n\n* Space complexity: $O(1)$\n    \n    - We only need to update several parameters `left`, `right` `mid` and `shift`, which takes $O(1)$ space.\n\n<br/>\n\n---\n\n### Approach 3: One Binary Search \n\n#### Intuition   \n\nThe two preceding approaches both comprise two steps:\n\n- Perform a binary search to identify the pivot index.\n- Conduct another binary search to locate the target value.\n\nHowever, we can perform these two steps within a single binary search.\n\n<br>\n\nLet's take a step back and consider a regular binary search. Why are we able to confidently discard half of the array after comparing `target` with the middle value `nums[mid]`? The reason is that both halves of the array are sorted. Hence, if `target` is less than the middle value, it's assured to be smaller than every value in the right half. If `target` is larger than the middle value, it's guaranteed to be larger than every value in the left half. Therefore, we can safely discard one half of `nums` in either case.\n\nHowever, a rotated sorted array may not possess this characteristic – we can't determine whether `target` is definitively not in the array just by comparing boundary values.\n\n<br>\n\nIf we cut a subarray `nums[left ~ right]` by the index `mid`. We split this subarray into 3 parts:\n- subarray `nums[left ~ mid - 1]`\n- element `nums[mid]`.\n- subarray `nums[mid + 1, right]`.\n\nIt is important to note that there is at most one rotated sorted array in the two subarrays, which means that there is at least one sorted array for comparison.\n\n\n![img](../Figures/33/q0.png)\n\nTherefore, we can compare `target` with the sorted half to decide which subarray to retain for the next round.\n\n\n>It is straightforward to determine if a sorted array `A[l ~ r]` could possibly contain `target`, we can simply compare `target` with two boundary values `A[l]` and `A[r]`. \n> - If `A[l] <= target <= A[r]`, then `A[l ~ r]` might contain `target`, which needs to be verified by binary search, we will continue with this subarray.\n\n> - Otherwise, `target` is guaranteed to not be in `A[l ~ r]`, and there is no need to search over this array, we will continue with the other subarray.\n\n\n<br>\n\nTo sum up, there are 3 possible cases after comparing `target` with `nums[mid]`:\n\nCase 1. If `nums[mid] = target`, which denotes that we have found `target`, return `mid` as its index.\n\nCase 2. If `nums[mid] >= nums[left]`. It implies that the left subarray `nums[left ~ mid]` is sorted. We can determine whether to proceed with this subarray by comparing `target` with the boundary elements:\n\n- If `nums[left] <= target` and `target < nums[mid]`, it suggests that the sorted left half might include `target` while the other half does not contain `target`. Consequently, we focus on the left half for further steps.\n- Otherwise, the left half is guaranteed not to contain `target`, and we will move on to the right half.\n\n![img](../Figures/33/q1.png)\n\nCase 3. If `nums[mid] < nums[left]`, it implies that the left subarray is rotated and the right subarray `nums[mid ~ right]` is sorted. Therefore, we can determine whether to proceed with the right subarray by comparing the target with its boundary elements:\n\n\n- If `nums[mid] < target` and `target < nums[right]`, it implies that the sorted right half might contain `target`. As a result, we will move on with the right half.\n- Otherwise, the right half is guaranteed not to contain `target`, and we will move on to the left half.\n\n![img](../Figures/33/q2.png)\n\n\n\n<br>\n\n#### Algorithm\n\n- Initialize pointers:\n  - Set `left` to 0.\n  - Set `right` to `n - 1` where `n` is the length of the array `nums`.\n\n- Perform binary search:\n  - While `left` is less than or equal to `right`:\n    - Calculate the middle index `mid` as `left + (right - left) / 2`.\n\n    - Case 1: Check if the middle element `nums[mid]` is equal to `target`.\n      - If true, return `mid` as the index of `target`.\n\n    - Case 2: Check if the subarray from `left` to `mid` is sorted (`nums[mid] >= nums[left]`).\n      - If `target` is within the range `[nums[left], nums[mid])`:\n        - Adjust the search range by setting `right` to `mid - 1`.\n      - Otherwise:\n        - Adjust the search range by setting `left` to `mid + 1`.\n\n    - Case 3: If the subarray from `mid` to `right` is sorted (`nums[mid] > nums[right]`):\n      - If `target` is within the range `(nums[mid], nums[right]]`:\n        - Adjust the search range by setting `left` to `mid + 1`.\n      - Otherwise:\n        - Adjust the search range by setting `right` to `mid - 1`.\n\n- If the target is not found, return `-1`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ChfaVX79/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ChfaVX79\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n$ be the length of `nums`.\n\n* Time complexity: $O(\\log n)$\n\n    - This algorithm only requires one binary search over `nums`.\n\n\n* Space complexity: $O(1)$\n    \n    - We only need to update several parameters `left`, `right` and `mid`, which takes $O(1)$ space.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

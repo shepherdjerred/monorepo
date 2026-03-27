@@ -1,0 +1,113 @@
+{
+  "questionId": "278",
+  "questionFrontendId": "278",
+  "title": "First Bad Version",
+  "titleSlug": "first-bad-version",
+  "difficulty": "Easy",
+  "content": "<p>You are a product manager and currently leading a team to develop a new product. Unfortunately, the latest version of your product fails the quality check. Since each version is developed based on the previous version, all the versions after a bad version are also bad.</p>\n\n<p>Suppose you have <code>n</code> versions <code>[1, 2, ..., n]</code> and you want to find out the first bad one, which causes all the following ones to be bad.</p>\n\n<p>You are given an API <code>bool isBadVersion(version)</code> which returns whether <code>version</code> is bad. Implement a function to find the first bad version. You should minimize the number of calls to the API.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 5, bad = 4\n<strong>Output:</strong> 4\n<strong>Explanation:</strong>\ncall isBadVersion(3) -&gt; false\ncall isBadVersion(5)&nbsp;-&gt; true\ncall isBadVersion(4)&nbsp;-&gt; true\nThen 4 is the first bad version.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1, bad = 1\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= bad &lt;= n &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"firstBadVersion\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"bad\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"2.1M\", \"totalSubmission\": \"4.6M\", \"totalAcceptedRaw\": 2139264, \"totalSubmissionRaw\": 4555459, \"acRate\": \"47.0%\"}",
+  "likes": 9033,
+  "dislikes": 3439,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find First and Last Position of Element in Sorted Array\", \"titleSlug\": \"find-first-and-last-position-of-element-in-sorted-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Search Insert Position\", \"titleSlug\": \"search-insert-position\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Guess Number Higher or Lower\", \"titleSlug\": \"guess-number-higher-or-lower\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "5\n4",
+    "1\n1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Interactive",
+      "slug": "interactive"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "// The API isBadVersion is defined for you.\n// bool isBadVersion(int version);\n\nclass Solution {\npublic:\n    int firstBadVersion(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/* The isBadVersion API is defined in the parent class VersionControl.\n      boolean isBadVersion(int version); */\n\npublic class Solution extends VersionControl {\n    public int firstBadVersion(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# The isBadVersion API is already defined for you.\n# def isBadVersion(version: int) -> bool:\n\nclass Solution:\n    def firstBadVersion(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# The isBadVersion API is already defined for you.\n# @param version, an integer\n# @return a bool\n# def isBadVersion(version):\n\nclass Solution(object):\n    def firstBadVersion(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for isBadVersion()\n * \n * @param {integer} version number\n * @return {boolean} whether the version is bad\n * isBadVersion = function(version) {\n *     ...\n * };\n */\n\n/**\n * @param {function} isBadVersion()\n * @return {function}\n */\nvar solution = function(isBadVersion) {\n    /**\n     * @param {integer} n Total versions\n     * @return {integer} The first bad version\n     */\n    return function(n) {\n        \n    };\n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * The knows API is defined in the parent class Relation.\n * isBadVersion(version: number): boolean {\n *     ...\n * };\n */\n\nvar solution = function(isBadVersion: any) {\n\n    return function(n: number): number {\n        \n    };\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/* The isBadVersion API is defined in the parent class VersionControl.\n      bool IsBadVersion(int version); */\n\npublic class Solution : VersionControl {\n    public int FirstBadVersion(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "// The API isBadVersion is defined for you.\n// bool isBadVersion(int version);\n\nint firstBadVersion(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/** \n * Forward declaration of isBadVersion API.\n * @param   version   your guess about first bad version\n * @return \t \t      true if current version is bad \n *\t\t\t          false if current version is good\n * func isBadVersion(version int) bool;\n */\n\nfunc firstBadVersion(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/* The isBadVersion API is defined in the parent class VersionControl.\n      fun isBadVersion(version: Int) : Boolean {} */\n\nclass Solution: VersionControl() {\n    override fun firstBadVersion(n: Int) : Int {\n        \n\t}\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * The knows API is defined in the parent class VersionControl.\n *     func isBadVersion(_ version: Int) -> Bool{}\n */\n\nclass Solution : VersionControl {\n    func firstBadVersion(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// The API isBadVersion is defined for you.\n// isBadVersion(version:i32)-> bool;\n// to call it use self.isBadVersion(version)\n\nimpl Solution {\n    pub fn first_bad_version(&self, n: i32) -> i32 {\n\t\t\n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# The is_bad_version API is already defined for you.\n# @param {Integer} version\n# @return {boolean} whether the version is bad\n# def is_bad_version(version):\n\n# @param {Integer} n\n# @return {Integer}\ndef first_bad_version(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/* The isBadVersion API is defined in the parent class VersionControl.\n      public function isBadVersion($version){} */\n\nclass Solution extends VersionControl {\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function firstBadVersion($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/* The isBadVersion API is defined in the parent class VersionControl.\n      def isBadVersion(version: Int): Boolean = {} */\n\nclass Solution extends VersionControl {\n    def firstBadVersion(n: Int): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "8",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/671407634\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Summary\n\nThis is a very simple problem. There is a subtle trap that you may fall into if you are not careful. Other than that, it is a direct application of a very famous algorithm.\n\n## Solution Article\n\n---\n\n### Approach #1 (Linear Scan) [Time Limit Exceeded]\n\nThe straight forward way is to brute force it by doing a linear scan.\n\n<iframe src=\"https://leetcode.com/playground/Ezb8JYsL/shared\" frameBorder=\"0\" name=\"Ezb8JYsL\" width=\"100%\" height=\"190\"></iframe>\n\n**Complexity analysis**\n\n* Time complexity : $$O(n)$$.\nAssume that $$isBadVersion(version)$$ takes constant time to check if a *version* is bad. It takes at most $$n - 1$$ checks, therefore the overall time complexity is $$O(n)$$.\n\n* Space complexity : $$O(1)$$.\n\n---\n### Approach #2 (Binary Search) [Accepted]\n\nIt is not difficult to see that this could be solved using a classic algorithm - Binary search. Let us see how the search space could be halved each time below.\n\n    Scenario #1: isBadVersion(mid) => false\n\n     1 2 3 4 5 6 7 8 9\n     G G G G G G B B B       G = Good, B = Bad\n     |       |       |\n    left    mid    right\n\nLet us look at the first scenario above where $$isBadVersion(mid) \\Rightarrow  false$$. We know that all versions preceding and including $$mid$$ are all good. So we set $$left = mid + 1$$ to indicate that the new search space is the interval $$[mid + 1, right]$$ (inclusive).\n\n    Scenario #2: isBadVersion(mid) => true\n\n     1 2 3 4 5 6 7 8 9\n     G G G B B B B B B       G = Good, B = Bad\n     |       |       |\n    left    mid    right\n\nThe only scenario left is where $$isBadVersion(mid) \\Rightarrow true$$. This tells us that $$mid$$ may or may not be the first bad version, but we can tell for sure that all versions after $$mid$$ can be discarded. Therefore we set $$right = mid$$ as the new search space of interval $$[left,mid]$$ (inclusive).\n\nIn our case, we indicate $$left$$ and $$right$$ as the boundary of our search space (both inclusive). This is why we initialize $$left = 1$$ and $$right = n $$. How about the terminating condition? We could guess that $$left$$ and $$right$$ eventually both meet and it must be the first bad version, but how could you tell for sure?\n\nThe formal way is to [prove by induction](http://www.cs.cornell.edu/courses/cs211/2006sp/Lectures/L06-Induction/binary_search.html), which you can read up yourself if you are interested. Here is a helpful tip to quickly prove the correctness of your binary search algorithm\nduring an interview. We just need to test an input of size 2. Check if it reduces the search space to a single element (which must be the answer) for both of the scenarios above. If not, your algorithm will never terminate.\n\nIf you are setting $$mid = \\frac{left + right}{2}$$, you have to be very careful. Unless you are using a language that does not overflow such as [Python](https://www.reddit.com/r/Python/comments/36xu5z/can_integer_operations_overflow_in_python/), $$left + right$$ could overflow. One way to fix this is to use $$left + \\frac{right - left}{2}$$ instead.\n\nIf you fall into this subtle overflow bug, you are not alone. Even Jon Bentley's own implementation of binary search had this [overflow bug](https://en.wikipedia.org/wiki/Binary_search_algorithm#Implementation_issues) and remained undetected for over twenty years.\n\n<iframe src=\"https://leetcode.com/playground/VQBrosDg/shared\" frameBorder=\"0\" name=\"VQBrosDg\" width=\"100%\" height=\"275\"></iframe>\n\n**Complexity analysis**\n\n* Time complexity : $$O(\\log n)$$.\nThe search space is halved each time, so the time complexity is $$O(\\log n)$$.\n\n* Space complexity : $$O(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

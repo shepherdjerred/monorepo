@@ -1,0 +1,146 @@
+{
+  "questionId": "85",
+  "questionFrontendId": "85",
+  "title": "Maximal Rectangle",
+  "titleSlug": "maximal-rectangle",
+  "difficulty": "Hard",
+  "content": "<p>Given a <code>rows x cols</code>&nbsp;binary <code>matrix</code> filled with <code>0</code>&#39;s and <code>1</code>&#39;s, find the largest rectangle containing only <code>1</code>&#39;s and return <em>its area</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/14/maximal.jpg\" style=\"width: 402px; height: 322px;\" />\n<pre>\n<strong>Input:</strong> matrix = [[&quot;1&quot;,&quot;0&quot;,&quot;1&quot;,&quot;0&quot;,&quot;0&quot;],[&quot;1&quot;,&quot;0&quot;,&quot;1&quot;,&quot;1&quot;,&quot;1&quot;],[&quot;1&quot;,&quot;1&quot;,&quot;1&quot;,&quot;1&quot;,&quot;1&quot;],[&quot;1&quot;,&quot;0&quot;,&quot;0&quot;,&quot;1&quot;,&quot;0&quot;]]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> The maximal rectangle is shown in the above picture.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> matrix = [[&quot;0&quot;]]\n<strong>Output:</strong> 0\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> matrix = [[&quot;1&quot;]]\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>rows == matrix.length</code></li>\n\t<li><code>cols == matrix[i].length</code></li>\n\t<li><code>1 &lt;= rows, cols &lt;= 200</code></li>\n\t<li><code>matrix[i][j]</code> is <code>&#39;0&#39;</code> or <code>&#39;1&#39;</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"maximalRectangle\",\n  \"params\": [\n    {\n      \"name\": \"matrix\",\n      \"type\": \"character[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"790.8K\", \"totalSubmission\": \"1.4M\", \"totalAcceptedRaw\": 790783, \"totalSubmissionRaw\": 1354788, \"acRate\": \"58.4%\"}",
+  "likes": 12062,
+  "dislikes": 227,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Largest Rectangle in Histogram\", \"titleSlug\": \"largest-rectangle-in-histogram\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximal Square\", \"titleSlug\": \"maximal-square\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Sorted Submatrices With Maximum Element at Most K\", \"titleSlug\": \"find-sorted-submatrices-with-maximum-element-at-most-k\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[\"1\",\"0\",\"1\",\"0\",\"0\"],[\"1\",\"0\",\"1\",\"1\",\"1\"],[\"1\",\"1\",\"1\",\"1\",\"1\"],[\"1\",\"0\",\"0\",\"1\",\"0\"]]",
+    "[[\"0\"]]",
+    "[[\"1\"]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"zeta\", \"name\": \"Zeta\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 2, \"slug\": \"arcesium\", \"name\": \"Arcesium\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Monotonic Stack",
+      "slug": "monotonic-stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximalRectangle(vector<vector<char>>& matrix) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximalRectangle(char[][] matrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximalRectangle(self, matrix: List[List[str]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximalRectangle(self, matrix):\n        \"\"\"\n        :type matrix: List[List[str]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {character[][]} matrix\n * @return {number}\n */\nvar maximalRectangle = function(matrix) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximalRectangle(matrix: string[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximalRectangle(char[][] matrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximalRectangle(char** matrix, int matrixSize, int* matrixColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximalRectangle(matrix [][]byte) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximalRectangle(matrix: Array<CharArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximalRectangle(_ matrix: [[Character]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximal_rectangle(matrix: Vec<Vec<char>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Character[][]} matrix\n# @return {Integer}\ndef maximal_rectangle(matrix)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[][] $matrix\n     * @return Integer\n     */\n    function maximalRectangle($matrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximalRectangle(List<List<String>> matrix) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximalRectangle(matrix: Array[Array[Char]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximal_rectangle(matrix :: [[char]]) :: integer\n  def maximal_rectangle(matrix) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximal_rectangle(Matrix :: [[char()]]) -> integer().\nmaximal_rectangle(Matrix) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximal-rectangle matrix)\n  (-> (listof (listof char?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "712",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n**Algorithm**\n\nTrivially we can enumerate every possible rectangle. This is done by iterating over all possible combinations of coordinates `(x1, y1)` and `(x2, y2)` and letting them define a rectangle with the coordinates being opposite corners. This is too slow to pass all test cases.\n\n\n**Complexity Analysis**\n\n* Time complexity : $$O(N^3M^3)$$, with `N` being the number of rows and `M` the number of columns.\n\n    Iterating over all possible coordinates is $$O(N^2M^2)$$, and iterating over the rectangle defined by two coordinates is an additional $$O(NM)$$. $$O(NM) * O(N^2M^2) = O(N^3M^3)$$.\n\n* Space complexity : $$O(1)$$.\n\n---\n\n### Approach 2: Dynamic Programming - Better Brute Force on Histograms\n\n**Algorithm**\n\nWe can compute the maximum width of a rectangle that ends at a given coordinate in constant time. We do this by keeping track of the number of consecutive ones each square in each row. As we iterate over each row we update the maximum possible width at that point. This is done using `row[i] = row[i - 1] + 1 if row[i] == '1'`.\n\n!?!../Documents/85_maximal_rectangle_anim1.json:2000,500!?!\n\nOnce we know the maximum widths for each point above a given point, we can compute the maximum rectangle with the lower right corner at that point in linear time. As we iterate up the column, we know that the maximal width of a rectangle spanning from the original point to the current point is the running minimum of each maximal width we have encountered.\n\nWe define:\n\n$$maxWidth = min(maxWidth, widthHere)$$\n\n$$curArea = maxWidth * (currentRow - originalRow + 1)$$\n\n$$maxArea = max(maxArea, curArea)$$\n\nThe following animation makes this more clear. Given the maximal width of all points above it, let's calculate the maximum area of any rectangle at the bottom yellow square:\n\n!?!../Documents/85_maximal_rectangle_anim3.json:1400,1125!?!\n\nRepeating this process for every point in our input gives us the global maximum.\n\nNote that our method of precomputing our maximum width essentially breaks down our input into a set of histograms, with each column being a new histogram. We are computing the maximal area for each histogram.\n\n![Histograms](../Figures/85/histogram.jpg)\n\nAs a result, the above approach is essentially a repeated use of the better brute force approach detailed in [84 - Largest Rectangle in Histogram](https://leetcode.com/problems/largest-rectangle-in-histogram/solution/).\n\n<iframe src=\"https://leetcode.com/playground/5ePM7BXF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5ePM7BXF\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(N^2M)$$. Computing the maximum area for one point takes $$O(N)$$ time, since it iterates over the values in the same column. This is done for all $$N * M$$ points, giving $$O(N) * O(NM) = O(N^2M)$$.\n\n* Space complexity : $$O(NM)$$. We allocate an equal sized array to store the maximum width at each point.\n\n---\n\n### Approach 3: Using Histograms - Stack\n\n**Algorithm**\n\nIn the previous approach we discussed breaking the input into a set of histograms - one histogram representing the substructure at each column. To compute the maximum area in our rectangle, we merely have to compute the maximum area of each histogram and find the global maximum (note that the below approach builds a histogram for each row instead of each column, but the idea is still the same).\n\nSince [Largest Rectangle in Histogram](https://leetcode.com/problems/largest-rectangle-in-histogram/) is already a problem on leetcode, we can just borrow the fastest stack-based solution [here](https://leetcode.com/problems/largest-rectangle-in-histogram/solution/) and apply it onto each histogram we generate. For an in-depth explanation on how the Largest Rectangle in Histogram algorithm works, please use the links above.\n\n<iframe src=\"https://leetcode.com/playground/SnhWLF7S/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"SnhWLF7S\"></iframe>\n\nNote that the code under the function `leetcode84` is a direct copy paste from the final solution in [84 - Largest Rectangle in Histogram](https://leetcode.com/problems/largest-rectangle-in-histogram/solution/).\n\n**Complexity Analysis**\n\n* Time complexity : $$O(NM)$$. Running `leetcode84` on each row takes `M` (length of each row) time. This is done `N` times for $$O(NM)$$.\n\n* Space complexity : $$O(M)$$. We allocate an array the size of the the number of columns to store our widths at each row.\n\n---\n\n### Approach 4: Dynamic Programming - Maximum Height at Each Point\n\n**Intuition**\n\nImagine an algorithm where for each point we computed a rectangle by doing the following:\n\n * Finding the maximum height of the rectangle by iterating upwards until a 0 is reached\n\n * Finding the maximum width of the rectangle by iterating outwards left and right until a height that doesn't accommodate the maximum height of the rectangle\n\n For example finding the rectangle defined by the yellow point:\n\n !?!../Documents/85_maximal_rectangle_anim2.json:1125,1125!?!\n\n We know that the maximal rectangle must be one of the rectangles constructed in this manner.\n\n Given a maximal rectangle with height `h`, left bound `l`, and right bound `r`, there must be a point on the interval `[l, r]` on the rectangle's base where the number of consecutive ones (height) above the point is `<=h`. If this point exists, then the rectangle defined by the point in the above manner will be the maximal rectangle, as it will reach height `h` iterating upward and then expand to the bounds of `[l, r]` as all heights within those bounds must accommodate `h` for the rectangle to exist.\n\n\n If this point does not exist, then the rectangle cannot be maximum, as you would be able to create a bigger rectangle by simply increasing the height of original rectangle, since all heights on the interval `[l, r]` would be greater than `h`.\n\n As a result for each point you only need to compute `h`, `l`, and `r` - the height, left bound, and right bound of the rectangle it defines.\n\n Using dynamic programming, we can use the `h`, `l`, and `r` of each point in the previous row to compute the `h`, `l`, and `r` for every point in the next row in linear time.\n\n\n**Algorithm**\n\nGiven row `matrix[i]`, we keep track of the `h`, `l`, and `r` of each point in the row by defining three arrays - `height`, `left`, and `right`.\n\n`height[j]` will correspond to the height of `matrix[i][j]`, and so on and so forth with the other arrays.\n\nThe question now becomes how to update each array.\n\nHeight:\n\nThis one is easy. `h` is defined as the number of continuous ones in a line from our point. We explored how to compute this in Approach 2 in one row with:\n\n    row[j] = row[j - 1] + 1 if row[j] == '1'\n\nWe can just make a minor modification for it to work for us here:\n\n    new_height[j] = old_height[j] + 1 if row[j] == '1' else 0\n\n\nLeft:\n\nConsider what causes changes to the left bound of our rectangle. Since all instances of zeros occurring in the row above the current one have already been factored into the current version of `left`, the only thing that affects our `left` is if we encounter a zero in our current row.\n\nAs a result we can define:\n\n    new_left[j] = max(old_left[j], cur_left)\n\n`cur_left` is one greater than rightmost occurrence of zero we have encountered. When we \"expand\" the rectangle to the left, we know it can't expand past that point, otherwise it'll run into the zero.\n\nRight:\n\nHere we can reuse our reasoning in `left` and define:\n\n    new_right[j] = min(old_right[j], cur_right)\n\n`cur_right` is the leftmost occurrence of zero we have encountered. For the sake of simplicity, we don't decrement `cur_right` by one (like how we increment `cur_left`) so we can compute the area of the rectangle with `height[j] * (right[j] - left[j])` instead of `height[j] * (right[j] + 1 - left[j])`.\n\nThis means that _technically_ the base of the rectangle is defined by the half-open interval `[l, r)` instead of the closed interval `[l, r]`, and `right` is really one greater than right boundary. Although the algorithm will still work if we don't do this with `right`, doing it this way makes the area calculation a little cleaner.\n\nNote that to keep track of our `cur_right` correctly, we must iterate from right to left, so this is what is done when updating `right`.\n\nWith our `left`, `right`, and `height` arrays appropriately updated, all that there is left to do is compute the area of each rectangle.\n\nSince we know the bounds and height of rectangle `j`, we can trivially compute it's area with `height[j] * (right[j] - left[j])`, and change our `max_area` if we find that rectangle `j`'s area is greater.\n\n\n<iframe src=\"https://leetcode.com/playground/RXvG3YV4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RXvG3YV4\"></iframe>\n\nThe code and idea for the above solution originates from user [morrischen2008](https://leetcode.com/morrischen2008/).\n\n**Complexity Analysis**\n\n* Time complexity : $$O(NM)$$. In each iteration over `N` we iterate over `M` a constant number of times.\n\n* Space complexity : $$O(M)$$. `M` is the length of the additional arrays we keep.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

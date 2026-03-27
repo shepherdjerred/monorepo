@@ -1,0 +1,137 @@
+{
+  "questionId": "64",
+  "questionFrontendId": "64",
+  "title": "Minimum Path Sum",
+  "titleSlug": "minimum-path-sum",
+  "difficulty": "Medium",
+  "content": "<p>Given a <code>m x n</code> <code>grid</code> filled with non-negative numbers, find a path from top left to bottom right, which minimizes the sum of all numbers along its path.</p>\n\n<p><strong>Note:</strong> You can only move either down or right at any point in time.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/11/05/minpath.jpg\" style=\"width: 242px; height: 242px;\" />\n<pre>\n<strong>Input:</strong> grid = [[1,3,1],[1,5,1],[4,2,1]]\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> Because the path 1 &rarr; 3 &rarr; 1 &rarr; 1 &rarr; 1 minimizes the sum.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[1,2,3],[4,5,6]]\n<strong>Output:</strong> 12\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 200</code></li>\n\t<li><code>0 &lt;= grid[i][j] &lt;= 200</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"minPathSum\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"grid\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.8M\", \"totalSubmission\": \"2.7M\", \"totalAcceptedRaw\": 1814145, \"totalSubmissionRaw\": 2668455, \"acRate\": \"68.0%\"}",
+  "likes": 13677,
+  "dislikes": 201,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Unique Paths\", \"titleSlug\": \"unique-paths\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Dungeon Game\", \"titleSlug\": \"dungeon-game\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Cherry Pickup\", \"titleSlug\": \"cherry-pickup\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Path Cost in a Grid\", \"titleSlug\": \"minimum-path-cost-in-a-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Points with Cost\", \"titleSlug\": \"maximum-number-of-points-with-cost\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost Homecoming of a Robot in a Grid\", \"titleSlug\": \"minimum-cost-homecoming-of-a-robot-in-a-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Paths in Matrix Whose Sum Is Divisible by K\", \"titleSlug\": \"paths-in-matrix-whose-sum-is-divisible-by-k\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Check if There is a Path With Equal Number of 0's And 1's\", \"titleSlug\": \"check-if-there-is-a-path-with-equal-number-of-0s-and-1s\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost of a Path With Special Roads\", \"titleSlug\": \"minimum-cost-of-a-path-with-special-roads\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,3,1],[1,5,1],[4,2,1]]",
+    "[[1,2,3],[4,5,6]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"spacex\", \"name\": \"SpaceX\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 32, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 4, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 4, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 3, \"slug\": \"palo-alto-networks\", \"name\": \"Palo Alto Networks\"}, {\"timesEncountered\": 3, \"slug\": \"general-motors\", \"name\": \"General Motors\"}, {\"timesEncountered\": 3, \"slug\": \"texas-instruments\", \"name\": \"Texas Instruments\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minPathSum(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minPathSum(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minPathSum(self, grid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minPathSum(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number}\n */\nvar minPathSum = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minPathSum(grid: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinPathSum(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minPathSum(int** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minPathSum(grid [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minPathSum(grid: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minPathSum(_ grid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_path_sum(grid: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer}\ndef min_path_sum(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer\n     */\n    function minPathSum($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minPathSum(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minPathSum(grid: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_path_sum(grid :: [[integer]]) :: integer\n  def min_path_sum(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_path_sum(Grid :: [[integer()]]) -> integer().\nmin_path_sum(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-path-sum grid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "68",
+    "content": "[TOC]\n\n## Summary\n\nWe have to find the minimum sum of numbers over a path from the top left to the bottom right of the given matrix .\n\n## Solution\n\n---\n### Approach 1: Brute Force\n\nThe Brute Force approach involves recursion. For each element, we consider two paths, rightwards and downwards and find the minimum sum out of those two. It specifies whether we need to take a right step or downward step to minimize the sum.\n\n$$\n\\mathrm{cost}(i, j)=\\mathrm{grid}[i][j] + \\min \\big(\\mathrm{cost}(i+1, j), \\mathrm{cost}(i, j+1) \\big)\n$$\n\n\n<iframe src=\"https://leetcode.com/playground/dHk5aANZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"dHk5aANZ\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O\\big(2^{m+n}\\big)$$. For every move, we have at most 2 options.\n* Space complexity : $$O(m+n)$$. Recursion of depth $$m+n$$.\n\n---\n\n### Approach 2: Dynamic Programming 2D\n\n**Algorithm**\n\nWe use an extra matrix $$dp$$ of the same size as the original matrix. In this matrix, $$dp(i, j)$$ represents the minimum sum of the path from the index $$(i, j)$$ to\nthe bottom rightmost element. We start by initializing the bottom rightmost element\nof $$dp$$ as the last element of the given matrix. Then for each element starting from\nthe bottom right, we traverse backwards and fill in the matrix with the required\nminimum sums. Now, we need to note that at every element, we can move either\nrightwards or downwards. Therefore, for filling in the minimum sum, we use the\nequation:\n\n$$\ndp(i, j)= \\mathrm{grid}(i,j)+\\min\\big(dp(i+1,j),dp(i,j+1)\\big)\n$$\n\ntaking care of the boundary conditions.\n\nThe following figure illustrates the process:\n<!--![Minimum Path Sum](https://leetcode.com/media/original_images/64_Minimum_Path_Sum.gif)-->\n!?!../Documents/64_Minimum_Path_Sum.json:859,390!?!\n\n<iframe src=\"https://leetcode.com/playground/VxMRDsWz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VxMRDsWz\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(mn)$$. We traverse the entire matrix once.\n\n* Space complexity : $$O(mn)$$. Another matrix of the same size is used.\n\n---\n\n### Approach 3: Dynamic Programming 1D\n\n**Algorithm**\n\nIn the previous case, instead of using a 2D matrix for dp, we can do the same\nwork using a $$dp$$ array of the row size, since for making the current entry all we need is the dp entry for the bottom and\n the right element. Thus,\nwe start by initializing only the last element of the array as the last element of the given matrix.\nThe last entry is the bottom rightmost element of the given matrix. Then, we start\nmoving towards the left and update the entry $$dp(j)$$ as:\n\n$$\ndp(j)=\\mathrm{grid}(i,j)+\\min\\big(dp(j),dp(j+1)\\big)\n$$\n\nWe repeat the same process for every row as we move upwards. At the end $$dp(0)$$ gives the\n required minimum sum.\n\n\n<iframe src=\"https://leetcode.com/playground/djmJmvGB/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"djmJmvGB\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(mn)$$. We traverse the entire matrix once.\n\n* Space complexity : $$O(n)$$. Another array of row size is used.\n\n---\n\n### Approach 4: Dynamic Programming (Without Extra Space)\n\n**Algorithm**\n\nThis approach is same as [Approach 2](#approach-2-dynamic-programming-2d), with a slight difference. Instead of using\nanother $$dp$$ matrix. We can store the minimum sums in the original matrix itself,\nsince we need not retain the original matrix here. Thus, the governing equation\nnow becomes:\n\n$$\n\\mathrm{grid}(i, j)=\\mathrm{grid}(i,j)+\\min \\big(\\mathrm{grid}(i+1,j), \\mathrm{grid}(i,j+1)\\big)\n$$\n\n<iframe src=\"https://leetcode.com/playground/4TFmmxpp/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"4TFmmxpp\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(mn)$$. We traverse the entire matrix once.\n\n* Space complexity : $$O(1)$$. No extra space is used.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

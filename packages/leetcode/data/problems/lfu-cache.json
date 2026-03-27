@@ -1,0 +1,140 @@
+{
+  "questionId": "460",
+  "questionFrontendId": "460",
+  "title": "LFU Cache",
+  "titleSlug": "lfu-cache",
+  "difficulty": "Hard",
+  "content": "<p>Design and implement a data structure for a <a href=\"https://en.wikipedia.org/wiki/Least_frequently_used\" target=\"_blank\">Least Frequently Used (LFU)</a> cache.</p>\n\n<p>Implement the <code>LFUCache</code> class:</p>\n\n<ul>\n\t<li><code>LFUCache(int capacity)</code> Initializes the object with the <code>capacity</code> of the data structure.</li>\n\t<li><code>int get(int key)</code> Gets the value of the <code>key</code> if the <code>key</code> exists in the cache. Otherwise, returns <code>-1</code>.</li>\n\t<li><code>void put(int key, int value)</code> Update the value of the <code>key</code> if present, or inserts the <code>key</code> if not already present. When the cache reaches its <code>capacity</code>, it should invalidate and remove the <strong>least frequently used</strong> key before inserting a new item. For this problem, when there is a <strong>tie</strong> (i.e., two or more keys with the same frequency), the <strong>least recently used</strong> <code>key</code> would be invalidated.</li>\n</ul>\n\n<p>To determine the least frequently used key, a <strong>use counter</strong> is maintained for each key in the cache. The key with the smallest <strong>use counter</strong> is the least frequently used key.</p>\n\n<p>When a key is first inserted into the cache, its <strong>use counter</strong> is set to <code>1</code> (due to the <code>put</code> operation). The <strong>use counter</strong> for a key in the cache is incremented either a <code>get</code> or <code>put</code> operation is called on it.</p>\n\n<p>The functions&nbsp;<code data-stringify-type=\"code\">get</code>&nbsp;and&nbsp;<code data-stringify-type=\"code\">put</code>&nbsp;must each run in <code>O(1)</code> average time complexity.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;LFUCache&quot;, &quot;put&quot;, &quot;put&quot;, &quot;get&quot;, &quot;put&quot;, &quot;get&quot;, &quot;get&quot;, &quot;put&quot;, &quot;get&quot;, &quot;get&quot;, &quot;get&quot;]\n[[2], [1, 1], [2, 2], [1], [3, 3], [2], [3], [4, 4], [1], [3], [4]]\n<strong>Output</strong>\n[null, null, null, 1, null, -1, 3, null, -1, 3, 4]\n\n<strong>Explanation</strong>\n// cnt(x) = the use counter for key x\n// cache=[] will show the last used order for tiebreakers (leftmost element is  most recent)\nLFUCache lfu = new LFUCache(2);\nlfu.put(1, 1);   // cache=[1,_], cnt(1)=1\nlfu.put(2, 2);   // cache=[2,1], cnt(2)=1, cnt(1)=1\nlfu.get(1);      // return 1\n                 // cache=[1,2], cnt(2)=1, cnt(1)=2\nlfu.put(3, 3);   // 2 is the LFU key because cnt(2)=1 is the smallest, invalidate 2.\n&nbsp;                // cache=[3,1], cnt(3)=1, cnt(1)=2\nlfu.get(2);      // return -1 (not found)\nlfu.get(3);      // return 3\n                 // cache=[3,1], cnt(3)=2, cnt(1)=2\nlfu.put(4, 4);   // Both 1 and 3 have the same cnt, but 1 is LRU, invalidate 1.\n                 // cache=[4,3], cnt(4)=1, cnt(3)=2\nlfu.get(1);      // return -1 (not found)\nlfu.get(3);      // return 3\n                 // cache=[3,4], cnt(4)=1, cnt(3)=3\nlfu.get(4);      // return 4\n                 // cache=[4,3], cnt(4)=2, cnt(3)=3\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= capacity&nbsp;&lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= key &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= value &lt;= 10<sup>9</sup></code></li>\n\t<li>At most <code>2 * 10<sup>5</sup></code>&nbsp;calls will be made to <code>get</code> and <code>put</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<span style=\"display: none;\">&nbsp;</span>",
+  "hints": [],
+  "metaData": "{\r\n    \"classname\": \"LFUCache\",\r\n    \"maxbytesperline\": 200000,\r\n    \"constructor\": {\r\n        \"params\": [\r\n            {\r\n                \"type\": \"integer\",\r\n                \"name\": \"capacity\"\r\n            }\r\n        ]\r\n    },\r\n    \"methods\": [\r\n        {\r\n            \"name\" : \"get\",\r\n            \"params\": [\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"key\"\r\n                }\r\n            ],\r\n            \"return\": {\r\n                \"type\": \"integer\"\r\n            }\r\n        },\r\n        {\r\n            \"name\" : \"put\",\r\n            \"params\": [\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"key\"\r\n                },\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"value\"\r\n                }\r\n            ],\r\n            \"return\": {\r\n                \"type\": \"void\"\r\n            }\r\n        }\r\n    ],\r\n    \"systemdesign\": true,\r\n    \"params\": [\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        },\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        }\r\n    ],\r\n    \"return\": {\r\n        \"type\": \"list<String>\",\r\n        \"dealloc\": true\r\n    }\r\n}",
+  "stats": "{\"totalAccepted\": \"373.9K\", \"totalSubmission\": \"765.3K\", \"totalAcceptedRaw\": 373892, \"totalSubmissionRaw\": 765348, \"acRate\": \"48.9%\"}",
+  "likes": 6330,
+  "dislikes": 355,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"LRU Cache\", \"titleSlug\": \"lru-cache\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Design In-Memory File System\", \"titleSlug\": \"design-in-memory-file-system\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"LFUCache\",\"put\",\"put\",\"get\",\"put\",\"get\",\"get\",\"put\",\"get\",\"get\",\"get\"]\n[[2],[1,1],[2,2],[1],[3,3],[2],[3],[4,4],[1],[3],[4]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 3, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"coupang\", \"name\": \"Coupang\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 5, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 5, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 3, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 3, \"slug\": \"kla-tencor\", \"name\": \"KLA Tencor\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Doubly-Linked List",
+      "slug": "doubly-linked-list"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class LFUCache {\npublic:\n    LFUCache(int capacity) {\n        \n    }\n    \n    int get(int key) {\n        \n    }\n    \n    void put(int key, int value) {\n        \n    }\n};\n\n/**\n * Your LFUCache object will be instantiated and called as such:\n * LFUCache* obj = new LFUCache(capacity);\n * int param_1 = obj->get(key);\n * obj->put(key,value);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class LFUCache {\n\n    public LFUCache(int capacity) {\n        \n    }\n    \n    public int get(int key) {\n        \n    }\n    \n    public void put(int key, int value) {\n        \n    }\n}\n\n/**\n * Your LFUCache object will be instantiated and called as such:\n * LFUCache obj = new LFUCache(capacity);\n * int param_1 = obj.get(key);\n * obj.put(key,value);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class LFUCache:\n\n    def __init__(self, capacity: int):\n        \n\n    def get(self, key: int) -> int:\n        \n\n    def put(self, key: int, value: int) -> None:\n        \n\n\n# Your LFUCache object will be instantiated and called as such:\n# obj = LFUCache(capacity)\n# param_1 = obj.get(key)\n# obj.put(key,value)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class LFUCache(object):\n\n    def __init__(self, capacity):\n        \"\"\"\n        :type capacity: int\n        \"\"\"\n        \n\n    def get(self, key):\n        \"\"\"\n        :type key: int\n        :rtype: int\n        \"\"\"\n        \n\n    def put(self, key, value):\n        \"\"\"\n        :type key: int\n        :type value: int\n        :rtype: None\n        \"\"\"\n        \n\n\n# Your LFUCache object will be instantiated and called as such:\n# obj = LFUCache(capacity)\n# param_1 = obj.get(key)\n# obj.put(key,value)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} capacity\n */\nvar LFUCache = function(capacity) {\n    \n};\n\n/** \n * @param {number} key\n * @return {number}\n */\nLFUCache.prototype.get = function(key) {\n    \n};\n\n/** \n * @param {number} key \n * @param {number} value\n * @return {void}\n */\nLFUCache.prototype.put = function(key, value) {\n    \n};\n\n/** \n * Your LFUCache object will be instantiated and called as such:\n * var obj = new LFUCache(capacity)\n * var param_1 = obj.get(key)\n * obj.put(key,value)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class LFUCache {\n    constructor(capacity: number) {\n        \n    }\n\n    get(key: number): number {\n        \n    }\n\n    put(key: number, value: number): void {\n        \n    }\n}\n\n/**\n * Your LFUCache object will be instantiated and called as such:\n * var obj = new LFUCache(capacity)\n * var param_1 = obj.get(key)\n * obj.put(key,value)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class LFUCache {\n\n    public LFUCache(int capacity) {\n        \n    }\n    \n    public int Get(int key) {\n        \n    }\n    \n    public void Put(int key, int value) {\n        \n    }\n}\n\n/**\n * Your LFUCache object will be instantiated and called as such:\n * LFUCache obj = new LFUCache(capacity);\n * int param_1 = obj.Get(key);\n * obj.Put(key,value);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} LFUCache;\n\n\nLFUCache* lFUCacheCreate(int capacity) {\n    \n}\n\nint lFUCacheGet(LFUCache* obj, int key) {\n    \n}\n\nvoid lFUCachePut(LFUCache* obj, int key, int value) {\n    \n}\n\nvoid lFUCacheFree(LFUCache* obj) {\n    \n}\n\n/**\n * Your LFUCache struct will be instantiated and called as such:\n * LFUCache* obj = lFUCacheCreate(capacity);\n * int param_1 = lFUCacheGet(obj, key);\n \n * lFUCachePut(obj, key, value);\n \n * lFUCacheFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type LFUCache struct {\n    \n}\n\n\nfunc Constructor(capacity int) LFUCache {\n    \n}\n\n\nfunc (this *LFUCache) Get(key int) int {\n    \n}\n\n\nfunc (this *LFUCache) Put(key int, value int)  {\n    \n}\n\n\n/**\n * Your LFUCache object will be instantiated and called as such:\n * obj := Constructor(capacity);\n * param_1 := obj.Get(key);\n * obj.Put(key,value);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class LFUCache(capacity: Int) {\n\n    fun get(key: Int): Int {\n        \n    }\n\n    fun put(key: Int, value: Int) {\n        \n    }\n\n}\n\n/**\n * Your LFUCache object will be instantiated and called as such:\n * var obj = LFUCache(capacity)\n * var param_1 = obj.get(key)\n * obj.put(key,value)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass LFUCache {\n\n    init(_ capacity: Int) {\n        \n    }\n    \n    func get(_ key: Int) -> Int {\n        \n    }\n    \n    func put(_ key: Int, _ value: Int) {\n        \n    }\n}\n\n/**\n * Your LFUCache object will be instantiated and called as such:\n * let obj = LFUCache(capacity)\n * let ret_1: Int = obj.get(key)\n * obj.put(key, value)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct LFUCache {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl LFUCache {\n\n    fn new(capacity: i32) -> Self {\n        \n    }\n    \n    fn get(&self, key: i32) -> i32 {\n        \n    }\n    \n    fn put(&self, key: i32, value: i32) {\n        \n    }\n}\n\n/**\n * Your LFUCache object will be instantiated and called as such:\n * let obj = LFUCache::new(capacity);\n * let ret_1: i32 = obj.get(key);\n * obj.put(key, value);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class LFUCache\n\n=begin\n    :type capacity: Integer\n=end\n    def initialize(capacity)\n        \n    end\n\n\n=begin\n    :type key: Integer\n    :rtype: Integer\n=end\n    def get(key)\n        \n    end\n\n\n=begin\n    :type key: Integer\n    :type value: Integer\n    :rtype: Void\n=end\n    def put(key, value)\n        \n    end\n\n\nend\n\n# Your LFUCache object will be instantiated and called as such:\n# obj = LFUCache.new(capacity)\n# param_1 = obj.get(key)\n# obj.put(key, value)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class LFUCache {\n    /**\n     * @param Integer $capacity\n     */\n    function __construct($capacity) {\n        \n    }\n  \n    /**\n     * @param Integer $key\n     * @return Integer\n     */\n    function get($key) {\n        \n    }\n  \n    /**\n     * @param Integer $key\n     * @param Integer $value\n     * @return NULL\n     */\n    function put($key, $value) {\n        \n    }\n}\n\n/**\n * Your LFUCache object will be instantiated and called as such:\n * $obj = LFUCache($capacity);\n * $ret_1 = $obj->get($key);\n * $obj->put($key, $value);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class LFUCache {\n\n  LFUCache(int capacity) {\n    \n  }\n  \n  int get(int key) {\n    \n  }\n  \n  void put(int key, int value) {\n    \n  }\n}\n\n/**\n * Your LFUCache object will be instantiated and called as such:\n * LFUCache obj = LFUCache(capacity);\n * int param1 = obj.get(key);\n * obj.put(key,value);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class LFUCache(_capacity: Int) {\n\n    def get(key: Int): Int = {\n        \n    }\n\n    def put(key: Int, value: Int): Unit = {\n        \n    }\n\n}\n\n/**\n * Your LFUCache object will be instantiated and called as such:\n * val obj = new LFUCache(capacity)\n * val param_1 = obj.get(key)\n * obj.put(key,value)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule LFUCache do\n  @spec init_(capacity :: integer) :: any\n  def init_(capacity) do\n    \n  end\n\n  @spec get(key :: integer) :: integer\n  def get(key) do\n    \n  end\n\n  @spec put(key :: integer, value :: integer) :: any\n  def put(key, value) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# LFUCache.init_(capacity)\n# param_1 = LFUCache.get(key)\n# LFUCache.put(key, value)\n\n# LFUCache.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec lfu_cache_init_(Capacity :: integer()) -> any().\nlfu_cache_init_(Capacity) ->\n  .\n\n-spec lfu_cache_get(Key :: integer()) -> integer().\nlfu_cache_get(Key) ->\n  .\n\n-spec lfu_cache_put(Key :: integer(), Value :: integer()) -> any().\nlfu_cache_put(Key, Value) ->\n  .\n\n\n%% Your functions will be called as such:\n%% lfu_cache_init_(Capacity),\n%% Param_1 = lfu_cache_get(Key),\n%% lfu_cache_put(Key, Value),\n\n%% lfu_cache_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define lfu-cache%\n  (class object%\n    (super-new)\n    \n    ; capacity : exact-integer?\n    (init-field\n      capacity)\n    \n    ; get : exact-integer? -> exact-integer?\n    (define/public (get key)\n      )\n    ; put : exact-integer? exact-integer? -> void?\n    (define/public (put key value)\n      )))\n\n;; Your lfu-cache% object will be instantiated and called as such:\n;; (define obj (new lfu-cache% [capacity capacity]))\n;; (define param_1 (send obj get key))\n;; (send obj put key value)"
+    }
+  ],
+  "solution": {
+    "id": "1610",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Maintaining 2 HashMaps\n\n#### Intuition\n\nWe need to maintain all the keys, values and frequencies. Without invalidation (removing from the data structure when it reaches capacity), they can be maintained by a HashMap<Integer, Pair<Integer, Integer>>, keyed by the original `key` and valued by the `frequency`-`value` pair.\n\nWith the invalidation, we need to maintain the current minimum frequency and delete particular keys. Hence, we can group the keys with the same frequency together and maintain another HashMap<Integer, Set<Integer>>, keyed by the frequency and valued by the set of `keys` that have the same frequency. This way, if we know the minimum frequency, we can access the potential keys to be deleted.\n\nAlso note that in the case of a tie, we're required to find the least recently used key and invalidate it, hence we need to keep the frequencies ordered in the Set. Instead of using a TreeSet which adds an extra $O(log(N))$ time complexity, we can maintain the keys using a LinkedList so that it supports finding both an arbitrary key and the least recently used key in constant time. Fortunately, LinkedHashSet can do the job. Once a `key` is inserted/updated, we put it to the end of the LinkedHashSet so that we can invalidate the first `key` in the LinkedHashSet corresponding to the minimum frequency.\n\nThe original operations can be transformed into operations on the 2 HashMaps, keeping them in sync and maintaining the minimum frequency.\n\nSince C++ lacks LinkedHashSet, we have to use a workaround like maintaining a list of key and value pairs instead of the LinkedHashSet and keeping the iterator with the frequency in another unordered_map to keep this connection. The idea is similar but a little bit complicated. Another workaround would be to implement your own LRU cache with a doubly linked list.\n\n\n#### Algorithm\n\nTo make things simpler, assume we have 4 member variables:\n1. `HashMap<Integer, Pair<Integer, Integer>> cache`, keyed by the original `key` and valued by the `frequency`-`value` pair. \n2. `HashMap<Integer, LinkedListHashSet<Integer>> frequencies`, keyed by frequency and valued by the set of `keys` that have the same frequency.\n3. `int minf`, which is the minimum frequency at any given time.\n4. `int capacity`, which is the `capacity` given in the input.\n\nIt's also convenient to have a private utility function `insert` to insert a `key`-`value` pair with a given frequency.\n\n##### void insert(int key, int frequency, int value)\n1. Insert `frequency`-`value` pair into `cache` with the given `key`.\n2. Get the LinkedHashSet corresponding to the given `frequency` (default to empty Set) and insert the given `key`.\n\n\n##### int get(int key)\n1. If the given `key` is not in the `cache`, return `-1`, otherwise go to step `2`.\n2. Get the `frequency` and `value` from the `cache`.\n3. Get the LinkedHashSet associated with `frequency` from `frequencies` and remove the given `key` from it, since the usage of the current key is increased by this function call.\n4. If `minf` == `frequency` and the above LinkedHashSet is empty, that means there are no more elements used `minf` times, so increase `minf` by 1. To save some space, we can also delete the entry `frequency` from the `frequencies` hash map.\n5. Call insert(`key`, `frequency` + 1, `value`), since the current key's usage has increased from this function call.\n6. Return `value`\n\n##### void put(int key, int value)\n1. If `capacity` <= 0, exit.\n2. If the given `key` exists in `cache`, update the `value` in the original `frequency`-`value` (don't call insert here), and then increment the frequency by using get(`key`). Exit the function.\n3. If `cache.size()` == `capacity`, get the first (least recently used) value in the LinkedHashSet corresponding to `minf` in `frequencies`, and remove it from `cache` and the LinkedHashSet.\n4. If we didn't exit the function in step 2, it means that this element is a new one, so the minimum frequency cannot possibly be greater than one. Set `minf` to 1.\n5. Call insert(`key`, 1, `value`)\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/njKVWiZK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"njKVWiZK\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $N$ is the total number of operations.\n\n* Time complexity: $O(1)$, as required by the question.\n\n    Since we only have basic HashMap/(Linked)HashSet operations. For details,\n\n    Our utility function `insert` puts the `key`- `value` pair into the `cache`, queries and possibly puts an empty LinedHashSet in the `frequencies`, then queries `frequencies` again and adds a `key` into the associated `value` which is a LinkedHashSet. All the operations are based on the hash calculating for simple type (int or Integer) and the time complexity is constant.\n\n\n    For each `get` operation, in the worst case, we query the `frequencies` and remove a `key` from the associated `value` which is a LinkedHashSet and call `insert` function once. All the operations have the constant time complexity based on the hash calculating for simple type.\n\n    For each `put` operation, in the simple case we just insert the new `key`-`value` pair into the `cache` and call `get` function once. In the worst case, we query the `frequencies` to get the associated `value`, namely all the `keys` with the same frequencies which is a LinkedHashSet. And then we get the first key from the LinkedHashSet, remove it from both `cache` and `frequencies`. All the operations have the constant time complexity based on the hash calculating for simple type.\n\n* Space complexity: $O(N)$.\n\n    We save all the `key`-`value` pairs as well as all the keys with frequencies in the 2 HashMaps (plus a LinkedHashSet), so there are at most $min(N, capacity) `keys` and `values` at any given time.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

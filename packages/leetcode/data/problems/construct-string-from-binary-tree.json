@@ -1,0 +1,141 @@
+{
+  "questionId": "606",
+  "questionFrontendId": "606",
+  "title": "Construct String from Binary Tree",
+  "titleSlug": "construct-string-from-binary-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> node of a binary tree, your task is to create a string representation of the tree following a specific set of formatting rules. The representation should be based on a preorder traversal of the binary tree and must adhere to the following guidelines:</p>\n\n<ul>\n\t<li>\n\t<p><strong>Node Representation</strong>: Each node in the tree should be represented by its integer value.</p>\n\t</li>\n\t<li>\n\t<p><strong>Parentheses for Children</strong>: If a node has at least one child (either left or right), its children should be represented inside parentheses. Specifically:</p>\n\n\t<ul>\n\t\t<li>If a node has a left child, the value of the left child should be enclosed in parentheses immediately following the node&#39;s value.</li>\n\t\t<li>If a node has a right child, the value of the right child should also be enclosed in parentheses. The parentheses for the right child should follow those of the left child.</li>\n\t</ul>\n\t</li>\n\t<li>\n\t<p><strong>Omitting Empty Parentheses</strong>: Any empty parentheses pairs (i.e., <code>()</code>) should be omitted from the final string representation of the tree, with one specific exception: when a node has a right child but no left child. In such cases, you must include an empty pair of parentheses to indicate the absence of the left child. This ensures that the one-to-one mapping between the string representation and the original binary tree structure is maintained.</p>\n\n\t<p>In summary, empty parentheses pairs should be omitted when a node has only a left child or no children. However, when a node has a right child but no left child, an empty pair of parentheses must precede the representation of the right child to reflect the tree&#39;s structure accurately.</p>\n\t</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/05/03/cons1-tree.jpg\" style=\"padding: 10px; background: #fff; border-radius: .5rem;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,4]\n<strong>Output:</strong> &quot;1(2(4))(3)&quot;\n<strong>Explanation:</strong> Originally, it needs to be &quot;1(2(4)())(3()())&quot;, but you need to omit all the empty parenthesis pairs. And it will be &quot;1(2(4))(3)&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/05/03/cons2-tree.jpg\" style=\"padding: 10px; background: #fff; border-radius: .5rem;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,null,4]\n<strong>Output:</strong> &quot;1(2()(4))(3)&quot;\n<strong>Explanation:</strong> Almost the same as the first example, except the <code>()</code> after <code>2</code> is necessary to indicate the absence of a left child for <code>2</code> and the presence of a right child.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 10<sup>4</sup>]</code>.</li>\n\t<li><code>-1000 &lt;= Node.val &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"tree2str\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"354.5K\", \"totalSubmission\": \"501.9K\", \"totalAcceptedRaw\": 354525, \"totalSubmissionRaw\": 501862, \"acRate\": \"70.6%\"}",
+  "likes": 204,
+  "dislikes": 75,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Construct Binary Tree from String\", \"titleSlug\": \"construct-binary-tree-from-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Duplicate Subtrees\", \"titleSlug\": \"find-duplicate-subtrees\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4]",
+    "[1,2,3,null,4]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    string tree2str(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public String tree2str(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def tree2str(self, root: Optional[TreeNode]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def tree2str(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {string}\n */\nvar tree2str = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction tree2str(root: TreeNode | null): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public string Tree2str(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nchar* tree2str(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc tree2str(root *TreeNode) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun tree2str(root: TreeNode?): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func tree2str(_ root: TreeNode?) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn tree2str(root: Option<Rc<RefCell<TreeNode>>>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {String}\ndef tree2str(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return String\n     */\n    function tree2str($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  String tree2str(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def tree2str(root: TreeNode): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec tree2str(root :: TreeNode.t | nil) :: String.t\n  def tree2str(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec tree2str(Root :: #tree_node{} | null) -> unicode:unicode_binary().\ntree2str(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (tree2str root)\n  (-> (or/c tree-node? #f) string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "152",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1 Using Recursion\n\nThis solution is very simple. We simply need to do the preorder traversal of the given Binary Tree. But, along with this, we need to make use of braces at appropriate positions. But, we also need to make sure that we omit the unnecessary braces. To do the preorder traversal, we make use of recursion. We print the current node and call the same given function for the left and the right children of the node in that order(if they exist). For every node encountered, the following cases are possible.\n\nCase 1: Both the left child and the right child exist for the current node. In this case, we need to put the braces `()` around both the left child's preorder traversal output and the right child's preorder traversal output.\n\nCase 2: None of the left or the right child exist for the current node. In this case, as shown in the figure below, considering empty braces for the null left and right children is redundant. Hence, we need not put braces for any of them.\n\n![No_child](../Figures/606/606_Case2.PNG)\n\n\nCase 3: Only the left child exists for the current node. As the figure below shows, putting empty braces for the right child in this case is unnecessary while considering the preorder traversal. This is because the right child will always come after the left child in the preorder traversal. Thus, omitting the empty braces for the right child also leads to same mapping between the string and the binary tree.\n\n![Left_child](../Figures/606/606_Case3.PNG)\n\n\nCase 4: Only the right child exists for the current node. In this case, we need to consider the empty braces for the left child. This is because, during the preorder traversal, the left child needs to be considered first. Thus, to indicate that the child following the current node is a right child we need to put a pair of empty braces for the left child. \n\n![Right_child](../Figures/606/606_Case4.PNG)\n\n\nJust by taking care of the cases, mentioned above, we can obtain the required output string.\n\n<iframe src=\"https://leetcode.com/playground/QXMbCngk/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"QXMbCngk\"></iframe>\n\n### Complexity Analysis\n\n* Time complexity : $O(n)$. The preorder traversal is done over the $n$ nodes of the given Binary Tree.\n\n* Space complexity : $O(n)$. The depth of the recursion tree can go upto $n$ in case of a skewed tree.\n\n---\n\n### Approach 2 Iterative Method Using stack\n\n#### Algorithm\n\nIn order to solve the given problem, we can also make use of a $stack$. To see how to do it, we'll go through the implementation and we'll also look at the idea behind each step.\n\nWe make use of a $stack$ onto which various nodes of the given tree will be pushed during the process. The node at the top of the $stack$ represents the current node to be processed. Whenever a node has been processed once, it is marked as visited. The reasoning behind this will be discussed soon. \n\nWe start off by pushing the root of the binary tree onto the $stack$. Now, the root acts as the current node. For every current node encountered, firstly, we check if it has not been visited already. If not, we add it to the set of visited nodes. \n\nSince, for the preorder traversal, we know, we need to process the nodes in the order current-left-right. Thus, we add a `(` followed by the current node to the string $s$ to be returned. \n\nNow, if both the left and the right children of the current node exist, we need to process them in the order left-right. To do so, we need to push them onto the $stack$ in the reverse order, so that when they are picked up later on, their order of processing gets corrected.\n\nSince we've already added $(current\\_node$ to the string $s$, if only the right child of the current node exists, as discussed in case 4 in the last approach, we need to put a `()` in $s$ representing the null left node. We need not push anything onto the $stack$ for the left node and we can directly add the `()` to $s$ for this. But, we still need to push the right child onto the $stack$ for future processing. \n\nIf only the left child exists, we need not consider the right child at all, as discussed in case 3 in the last approach. We can continue the process by just pushing the left child onto the $stack$.\n\nNow, we need to note that even when a node is being processed, if it has not already been visited, it isn't popped off from the $stack$. But, if a node that has already been processed(i.e. its children have been considered already), it is popped off from the $stack$ when encountered again. Such a situation will occur for a node only when the preorder traversal of both its left and right sub-trees has been completely done. Thus, we need to add a `)` to mark the end of the preorder traversal of the current node as well.\n\nThus, at the end, we get the required pre-order traversal in the substring $s(1:n-1)$. Here, $n$ represents the length of $s$. This is because, we need not put the parentheses(redundant) at the outermost level.\n\nThe following animation better depicts the process.\n\n!?!../Documents/Construct_Binary_Tree_stack.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/qvqkT2qU/shared\" frameBorder=\"0\" name=\"qvqkT2qU\" width=\"100%\" height=\"515\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n)$. $n$ nodes are pushed and popped in a stack.\n\n* Space complexity : $O(n)$. $stack$ size can grow upto $n$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "questionId": "202",
+  "questionFrontendId": "202",
+  "title": "Happy Number",
+  "titleSlug": "happy-number",
+  "difficulty": "Easy",
+  "content": "<p>Write an algorithm to determine if a number <code>n</code> is happy.</p>\n\n<p>A <strong>happy number</strong> is a number defined by the following process:</p>\n\n<ul>\n\t<li>Starting with any positive integer, replace the number by the sum of the squares of its digits.</li>\n\t<li>Repeat the process until the number equals 1 (where it will stay), or it <strong>loops endlessly in a cycle</strong> which does not include 1.</li>\n\t<li>Those numbers for which this process <strong>ends in 1</strong> are happy.</li>\n</ul>\n\n<p>Return <code>true</code> <em>if</em> <code>n</code> <em>is a happy number, and</em> <code>false</code> <em>if not</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 19\n<strong>Output:</strong> true\n<strong>Explanation:</strong>\n1<sup>2</sup> + 9<sup>2</sup> = 82\n8<sup>2</sup> + 2<sup>2</sup> = 68\n6<sup>2</sup> + 8<sup>2</sup> = 100\n1<sup>2</sup> + 0<sup>2</sup> + 0<sup>2</sup> = 1\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2\n<strong>Output:</strong> false\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"isHappy\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"2.2M\", \"totalSubmission\": \"3.8M\", \"totalAcceptedRaw\": 2228499, \"totalSubmissionRaw\": 3751224, \"acRate\": \"59.4%\"}",
+  "likes": 11907,
+  "dislikes": 1638,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Linked List Cycle\", \"titleSlug\": \"linked-list-cycle\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Add Digits\", \"titleSlug\": \"add-digits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Ugly Number\", \"titleSlug\": \"ugly-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Digits of String After Convert\", \"titleSlug\": \"sum-of-digits-of-string-after-convert\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Addition to Make Integer Beautiful\", \"titleSlug\": \"minimum-addition-to-make-integer-beautiful\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Smallest Value After Replacing With Sum of Prime Factors\", \"titleSlug\": \"smallest-value-after-replacing-with-sum-of-prime-factors\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count the Digits That Divide a Number\", \"titleSlug\": \"count-the-digits-that-divide-a-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "19",
+    "2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"blackrock\", \"name\": \"BlackRock\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 7, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 6, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 4, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}, {\"timesEncountered\": 4, \"slug\": \"nike\", \"name\": \"Nike\"}, {\"timesEncountered\": 4, \"slug\": \"swiggy\", \"name\": \"Swiggy\"}, {\"timesEncountered\": 4, \"slug\": \"verily\", \"name\": \"Verily\"}, {\"timesEncountered\": 3, \"slug\": \"jump-trading\", \"name\": \"Jump Trading\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isHappy(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isHappy(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isHappy(self, n: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isHappy(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {boolean}\n */\nvar isHappy = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isHappy(n: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsHappy(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isHappy(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isHappy(n int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isHappy(n: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isHappy(_ n: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_happy(n: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Boolean}\ndef is_happy(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Boolean\n     */\n    function isHappy($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isHappy(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isHappy(n: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_happy(n :: integer) :: boolean\n  def is_happy(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_happy(N :: integer()) -> boolean().\nis_happy(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-happy n)\n  (-> exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "813",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Detect Cycles with a HashSet\n\n**Intuition**\n\nA good way to get started with a question like this is to make a couple of examples. Let's start with the number $$7$$. The next number will be $$49$$ (as $$7^2 = 49$$), and then the next after that will be $$97$$ (as $$4^2 + 9^2 = 97$$). We can continually repeat the process of squaring and then adding the digits until we get to $$1$$. Because we got to $$1$$, we know that $$7$$ is a happy number, and the function should return ```true```.\n\n![The chain of numbers starting with 7. It has the numbers 7, 49, 97, 130, 10 and 1.](../Figures/202/image1.png)\n\nAs another example, let's start with $$116$$. By repeatedly applying the squaring and adding process, we eventually get to $$58$$, and then a bit after that, we get *back to* $$58$$. Because we are back at a number we've already seen, we know there is a cycle, and therefore it is impossible to ever reach $$1$$. So for $$116$$, the function should return ```false```.\n\n![The chain of numbers starting with 116. It has the numbers 116, 38, 73, 58, and then goes in a circle to 89, 145, 42, 20, 4, 16, 37, and back to 58.](../Figures/202/image2.png)\n\nBased on our exploration so far, we'd expect continually following links to end in one of three ways.\n1. It eventually gets to $$1$$.\n2. It eventually gets stuck in a cycle.\n3. It keeps going higher and higher, up towards infinity.\n\nThat 3rd option sounds really annoying to detect and handle. How would we even know that it is going to continue going up, rather than eventually going back down, possibly to $$1?$$ Luckily, it turns out we don't need to worry about it. Think carefully about what the largest next number we could get for each number of digits is.\n\n| Digits        | Largest       | Next  |\n| ------------- |:-------------:| -----:|\n| 1             | 9             | 81    |\n| 2             | 99            | 162   |\n| 3             | 999           | 243   |\n| 4             | 9999          | 324   |\n| 13            | 9999999999999 | 1053  |\n<br>\n\nFor a number with $$3$$ digits, it's impossible for it to ever go larger than $$243$$. This means it will have to either get stuck in a cycle below $$243$$ or go down to $$1$$. Numbers with $$4$$ or more digits will always lose a digit at each step until they are down to $$3$$ digits. So we know that *at worst*, the algorithm might cycle around all the numbers under $$243$$ and then go back to one it's already been to (a cycle) or go to $$1$$. But it won't go on indefinitely, allowing us to rule out the 3rd option.\n\nEven though you don't need to handle the 3rd case in the code, you still need to understand *why* it can never happen, so that you can justify why you didn't handle it.\n\n**Algorithm**\n\nThere are 2 parts to the algorithm we'll need to design and code.\n1. Given a number $$n$$, what is its *next* number?\n2. Follow a chain of numbers and detect if we've entered a cycle.\n\n*Part 1* can be done by using the division and modulus operators to repeatedly take digits off the number until none remain, and then squaring each removed digit and adding them together. Have a careful look at the code for this, \"picking digits off one-by-one\" is a useful technique you'll use for solving a lot of different problems.\n\n*Part 2* can be done using a **HashSet**. Each time we generate the next number in the chain, we check if it's already in our HashSet.\n- If it is *not* in the HashSet, we should add it.\n- If it *is* in the HashSet, that means we're in a cycle and so should return ```false```.\n\nThe reason we use a **HashSet** and *not* a Vector, List, or Array is because we're repeatedly checking whether or not numbers are in it. Checking if a number is in a HashSet takes $$O(1)$$ time, whereas for the other data structures it takes $$O(n)$$ time. Choosing the correct data structures is an essential part of solving these problems.\n\n<iframe src=\"https://leetcode.com/playground/EFaqDBZS/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"EFaqDBZS\"></iframe>\n\n**Complexity Analysis**\n\nDetermining the *time complexity* for this problem is challenging for an \"easy\" level question. If you're new to these problems, have a go at calculating the time complexity for *just* the ```getNext(n)``` function (don't worry about how many numbers will be in the chain).\n\n* Time complexity : $$O(243 \\cdot\t3 + \\log n + \\log\\log n + \\log\\log\\log n)...$$ = $$O(\\log n)$$.\n\n    Finding the **next** value for a given number has a cost of $$O(\\log n)$$ because we are processing each digit in the number, and the number of digits in a number is given by $$\\log n$$.\n\n    To work out the *total* time complexity, we'll need to think carefully about how many numbers are in the chain, and how big they are.\n\n    We determined above that once a number is below $$243$$, it is impossible for it to go back up above $$243$$. Therefore, based on our very shallow analysis we know for *sure* that once a number is below $$243$$, it is impossible for it to take more than another $$243$$ steps to terminate. Each of these numbers has at most 3 digits. With a little more analysis, we could replace the $$243$$ with the length of the longest number chain below $$243$$, however because the constant doesn't matter anyway, we won't worry about it.\n\n    For an $$n$$ above $$243$$, we need to consider the cost of each number in the chain that is above $$243$$. With a little math, we can show that in the worst case, these costs will be $$O(\\log n) + O(\\log \\log n) + O(\\log \\log \\log n)...$$. Luckily for us, the $$O(\\log n)$$ is the dominating part, and the others are all tiny in comparison (collectively, they add up to less than $$\\log n)$$, so we can ignore them.\n\n* Space complexity : $$O(\\log n)$$.\n    Closely related to the time complexity, and is a measure of what numbers we're putting in the HashSet, and how big they are. For a large enough $$n$$, the most space will be taken by $$n$$ itself.\n\n    We can optimize to $$O(243 \\cdot 3) = O(1)$$ easily by only saving numbers in the set that are less than $$243$$, as we have already shown that for numbers that are higher, it's impossible to get back to them anyway.\n\nIt might seem worrying that we're simply dropping such \"large\" constants. But this is what we do in Big O notation, which is a measure of how long the function will take, as the *size of the input increases*.\n\nThink about what would happen if you had a number with *1 million* digits in it. The first step of the algorithm would process those million digits, and then the next value would be, at most (pretend all the digits are 9), be $$81 * 1,000,000 = 81,000,000$$. In just one step, we've gone from a million digits, down to just 8. The largest possible 8 digit number we could get is $$99,9999,999$$, which then goes down to $$81 * 8 = 648$$. And then from here, the cost will be the same as if we'd started with a 3 digit number. Starting with 2 million digits (a **massively** larger number than one with a 1 million digits) would only take roughly twice as long, as again, the dominant part is summing the squares of the 2 million digits, and the rest is *tiny* in comparison.\n\n<br />\n\n---\n\n### Approach 2: Floyd's Cycle-Finding Algorithm\n\n**Intuition**\n\nThe chain we get by repeatedly calling ```getNext(n)``` is an *implicit* **LinkedList**. *Implicit* means we don't have actual LinkedNode's and pointers, but the data does still form a LinkedList structure. The starting number is the head \"node\" of the list, and all the other numbers in the chain are nodes. The next pointer is obtained with our ```getNext(n)``` function above.\n\nRecognizing that we actually have a LinkedList, it turns out that this question is almost the same as another Leetcode problem, [detecting if a linked list has a cycle](https://leetcode.com/problems/linked-list-cycle). As @Freezen [has pointed out](https://leetcode.com/problems/happy-number/discuss/56917/My-solution-in-C(-O(1)-space-and-no-magic-math-property-involved-)), we can therefore use Floyd's Cycle-Finding Algorithm here. This algorithm is based on 2 runners running around a circular race track, a fast runner and a slow runner. In reference to a famous fable, many people call the slow runner the \"tortoise\" and the fast runner the \"hare\".\n\nRegardless of where the tortoise and hare start in the cycle, they are guaranteed to eventually meet. This is because the hare moves one node closer to the tortoise (in their direction of movement) each step.\n\n!?!../Documents/202_Happy_Number.json:960,540!?!\n\n**Algorithm**\n\nInstead of keeping track of just one value in the chain, we keep track of 2, called the slow runner and the fast runner. At each step of the algorithm, the slow runner goes forward by 1 number in the chain, and the fast runner goes forward by 2 numbers (nested calls to the ```getNext(n)``` function).\n\nIf n *is* a happy number, i.e. there is no cycle, then the fast runner will eventually get to 1 before the slow runner.\n\nIf n *is not* a happy number, then eventually the fast runner and the slow runner will be on the same number.\n\n<iframe src=\"https://leetcode.com/playground/hRsWWQmg/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"hRsWWQmg\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(\\log n)$$. Builds on the analysis for the previous approach, except this time we need to analyse how much extra work is done by keeping track of two places instead of one, and how many times they'll need to go around the cycle before meeting.\n\n   If there is no cycle, then the fast runner will get to 1, and the slow runner will get halfway to 1. Because there were 2 runners instead of 1, we know that at worst, the cost was $$O(2 \\cdot \\log n) = O(\\log n)$$.\n\n   Like above, we're treating the length of the chain to the cycle as insignificant compared to the cost of calculating the next value for the first n. Therefore, the only thing we need to do is show that the number of times the runners go back over previously seen numbers in the chain is constant.\n\n   Once both pointers are in the cycle (which will take constant time to happen) the fast runner will get one step closer to the slow runner at each cycle. Once the fast runner is one step behind the slow runner, they'll meet on the next step. Imagine there are $$k$$ numbers in the cycle. If they started at $$k - 1$$ places apart (which is the furthest apart they can start), then it will take $$k - 1$$ steps for the fast runner to reach the slow runner, which again is constant for our purposes. Therefore, the dominating operation is still calculating the next value for the starting n, which is $$O(\\log n)$$.\n\n* Space complexity : $$O(1)$$. For this approach, we don't need a HashSet to detect the cycles. The pointers require constant extra space.\n\n<br />\n\n---\n\n### Approach 3: Hardcoding the Only Cycle (Advanced)\n\n**Intuition**\n\nThe previous two approaches are the ones you'd be expected to come up with in an interview. This third approach is ***not something you'd write in an interview***, but is aimed at the mathematically curious among you as it's quite interesting.\n\nWhat's the biggest number that could have a next value bigger than itself? Well we know it has to be less than $$243$$, from the analysis we did previously. Therefore, we know that any cycles must contain numbers *smaller* than $$243$$, as anything bigger could not be cycled back to. With such small numbers, it's not difficult to write a brute force program that finds all the cycles.\n\nIf you do this, you'll find there's only *one* cycle: $$4 \\rightarrow 16 \\rightarrow  37 \\rightarrow  58 \\rightarrow 89 \\rightarrow 145 \\rightarrow 42 \\rightarrow 20 \\rightarrow  4$$. All other numbers are on chains that lead into this cycle, or on chains that lead into $$1$$.\n\nTherefore, we can just hardcode a HashSet containing these numbers, and if we ever reach one of them, then we know we're in the cycle. There's no need to keep track of where we've been previously.\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/LkQCTwht/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"LkQCTwht\"></iframe>\n\n**Complexity Analysis**\n\nTime complexity : $$O(\\log n)$$. Same as above.\n\nSpace complexity : $$O(1)$$. We are not maintaining any history of numbers we've seen. The hardcoded HashSet is of a constant size.\n\n**An Alternative Implementation**\n\nThanks [@Manky](https://leetcode.com/manky/) for sharing this alternative with us!\n\nThis approach was based on the idea that all numbers either end at `1` or enter the cycle `{4, 16, 37, 58, 89, 145, 42, 20}`, wrapping around it infinitely. \n\nAn alternative approach would be to recognise that all numbers will either end at `1`, or go past `4` (a member of the cycle) at some point. Therefore, instead of hardcoding the entire cycle, we can just hardcode the `4`.\n\n<iframe src=\"https://leetcode.com/playground/dsCSbuFd/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"dsCSbuFd\"></iframe>\n\nThis alternative has the same time and space complexity as approach 3, from a big-oh point of view. The time taken in practice for this alternative will be slower by a *constant* amount though. If the cycle was entered at 16, then the algorithm will traverse the entire cycle before getting back to 4. The space complexity will be *less* by a *constant* amount, because we're now only hardcoding `4` and not the other 7 numbers in the cycle.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

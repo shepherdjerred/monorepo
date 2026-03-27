@@ -1,0 +1,141 @@
+{
+  "questionId": "646",
+  "questionFrontendId": "646",
+  "title": "Maximum Length of Pair Chain",
+  "titleSlug": "maximum-length-of-pair-chain",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array of <code>n</code> pairs <code>pairs</code> where <code>pairs[i] = [left<sub>i</sub>, right<sub>i</sub>]</code> and <code>left<sub>i</sub> &lt; right<sub>i</sub></code>.</p>\n\n<p>A pair <code>p2 = [c, d]</code> <strong>follows</strong> a pair <code>p1 = [a, b]</code> if <code>b &lt; c</code>. A <strong>chain</strong> of pairs can be formed in this fashion.</p>\n\n<p>Return <em>the length longest chain which can be formed</em>.</p>\n\n<p>You do not need to use up all the given intervals. You can select pairs in any order.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> pairs = [[1,2],[2,3],[3,4]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The longest chain is [1,2] -&gt; [3,4].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> pairs = [[1,2],[7,8],[4,5]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The longest chain is [1,2] -&gt; [4,5] -&gt; [7,8].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == pairs.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 1000</code></li>\n\t<li><code>-1000 &lt;= left<sub>i</sub> &lt; right<sub>i</sub> &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findLongestChain\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"pairs\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"310.4K\", \"totalSubmission\": \"503.7K\", \"totalAcceptedRaw\": 310415, \"totalSubmissionRaw\": 503687, \"acRate\": \"61.6%\"}",
+  "likes": 4904,
+  "dislikes": 137,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Increasing Subsequence\", \"titleSlug\": \"longest-increasing-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Non-decreasing Subsequences\", \"titleSlug\": \"non-decreasing-subsequences\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Non-decreasing Subarray From Two Arrays\", \"titleSlug\": \"longest-non-decreasing-subarray-from-two-arrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,2],[2,3],[3,4]]",
+    "[[1,2],[7,8],[4,5]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"swiggy\", \"name\": \"Swiggy\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findLongestChain(vector<vector<int>>& pairs) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findLongestChain(int[][] pairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findLongestChain(self, pairs: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findLongestChain(self, pairs):\n        \"\"\"\n        :type pairs: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} pairs\n * @return {number}\n */\nvar findLongestChain = function(pairs) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findLongestChain(pairs: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindLongestChain(int[][] pairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findLongestChain(int** pairs, int pairsSize, int* pairsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findLongestChain(pairs [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findLongestChain(pairs: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findLongestChain(_ pairs: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_longest_chain(pairs: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} pairs\n# @return {Integer}\ndef find_longest_chain(pairs)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $pairs\n     * @return Integer\n     */\n    function findLongestChain($pairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findLongestChain(List<List<int>> pairs) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findLongestChain(pairs: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_longest_chain(pairs :: [[integer]]) :: integer\n  def find_longest_chain(pairs) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_longest_chain(Pairs :: [[integer()]]) -> integer().\nfind_longest_chain(Pairs) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-longest-chain pairs)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1976",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an array of `n` pairs `pairs` where $\\text{pairs}[i] = [\\text{left}_i, \\text{right}_i]$ and $\\text{left}_i < \\text{right}_i$.\n\nA pair `p2 = [c, d]` follows a pair `p1 = [a, b]` if `b < c`. A chain of pairs can be formed in this fashion.\n\nOur task is to return the length of the longest chain which can be formed.\n\n---\n\n### Approach 1: Recursive Dynamic Programming \n\n#### Intuition\n\nTwo pairs can join together to form a chain if the second element of the first pair is less than the first element of the next pair. Since the problem says that we can choose any combination in any order, we can safely sort the input. We can guarantee that all feasible chains can be built iteratively going from the first to the last pair after sorting.\n\nFollowing sorting, we have two options for a pair at index `i`: we may either include this pair in our current chain or we can choose not to include this pair in our current chain.\n\nIf we do not include this pair in the current chain, we may simply skip it and move on to the pair at index `i + 1`. We shall repeat in the range `[i + 1, n)`. Because we have already sorted the `pairs`, it means the next potential pair will be located after the present pair. \n\nOtherwise, if we include this pair, we increase the length of the chain by `1`. We then need to find the next pair that would follow the one we just added. It will be at an index `j` in the range of `[i + 1, n)`, and its first element must be greater than the second element of the pair we just added.\n\nThis would solve the problem but the solution is exponential in terms of time complexity.\n\nHere's how the partial recursion tree would look like for the above approach where `recur` is the recursive function that takes in the `index` of the starting pair and recursively finds the longest chain considering the pairs starting from the `index`:\n\n![img](../Figures/646/646-1.png)\n\nThe word **tail** refers to the second element of the most recently selected pair. The next chosen pair should have the first element be greater than the tail.\n\nWe can observe that there are several repeating problems in this solution. Several subproblems, such as `recur(2)`, `recur(3)`, etc., are solved multiple times in the partial recursion tree shown above. If we draw the entire recursion tree, we can see that many subproblems are solved repeatedly.\n\nTo avoid this issue, we store the solution of each sub-problem and when we encounter the same subproblem again, we simply refer to the stored result. This is called **memoization**.\n\nWe create an array of integers `memo` where `memo[i]` will store the longest length of the chain starting from the $i^{th}$ pair and including it.\n\nWe can now select every pair as the starting pair one by one. \n\nFor each starting pair `i`, we try to select all the pairs from the range `[i + 1, n)` as the next pair one by one. \n\nWe run a loop from `j = i + 1` to `n - 1` to check all the potential next pairs. If we can choose the pair at index `j` (`pairs[j][0] > pairs[i][1]`), we try using it as the next pair. We want to take the pair that maximizes the final length, so we perform `memo[i] = max(memo[i], 1 + recur[j])`. We added `1` as we selected the pair `i` in the chain and now moved to the next pair at the index `j`.\n\nThe longest chain starting from each pair is stored in `memo`, thus the answer is the maximum value in `memo`. Note that as a base case, any pair forms a chain of length `1` on its own.\n\n#### Algorithm\n\n1. Create an integer variable `n` to store the number of pairs in `pairs`.\n2. Sort `pairs` based on the first element (we could sort on the second element as well). \n3. Create an integer array `memo` of size `n` where `memo[i]` will store the longest length of the chain starting from the $i^{th}$ pair and including it.\n4. Create an integer variable `ans = 0`.\n5. Select every pair from `i = 0` to `n - 1` as the starting pair of the chain and take the maximum out of it in `ans`. To find the longest chain starting from the pair at index `i`, we call the recursive method `longestPairChain` which takes four parameters: `i` of the starting pair, `pairs`, `n`, and `memo`. We perform the following in this method:\n    - If we have already computed the length of the longest chain starting from pair at `i`, we simply return `memo[i]`.\n    - Set `memo[i] = 1` as the current pair can always be selected as the only pair in the chain.\n    - Iterate over all the pairs from `j = i + 1` to `n - 1` and recursively find the longest chain that can be formed by going to the $j^{th}$ pair. We perform `memo[i] = max(memo[i], 1 + longestPairChain(j, pairs, n, memo))` to figure and store the length of the longest chain starting with $i^{th}$ pair.\n6. Return `ans`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Ubpy7seF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Ubpy7seF\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the length of `pairs`.\n\n* Time complexity: $O(n^2)$.\n    - It takes $O(n \\cdot \\log{n})$ time to sort `pairs`.\n    - It further takes $O(n)$ time to initialize the `memo` array.\n    - In the recursive method, we iterate from the current pair till the last pair, which takes $O(n)$ time for each pair. We compute the length of the longest chain starting from each pair once (due to memoization). Since we have a total of $n$ pairs and it takes $O(n)$ time on average to iterate over all the next pairs, it would take $O(n^2)$ time in total.\n\n* Space complexity: $O(n)$.\n    - The recursion stack will grow up to a maximum size of $n$ in the case where all the calls corresponding to all the pairs are in the stack. This will occur when the subsequent pair in the sorted `pair` always satisfies the condition to be selected as the follow-up pair.\n    - The `memo` array also takes $O(n)$ space.\n\n---\n\n### Approach 2: Iterative Dynamic Programming\n\n#### Intuition\n\nWe used memoization in the preceding approach to store the answers to subproblems to solve a larger problem. We can also use a bottom-up approach to solve such problems without using recursion. We build answers to subproblems iteratively first, then use them to build answers to larger problems.\n\nWe create a list `dp[n]` where `dp[i]` will store the length of the longest chain starting from pair `i` and selecting it in the chain. Note that `dp[i] = memo[i] = longestPairChain(i, pairs, n, memo)` from the previous approach.\n\nWe initialize `dp[i] = 1` for all values of `i` since a single pair can always form a chain on its own. While moving from bottom to top, this serves as the base case for our solution.\n\nWe iterate from `i = n - 1` to `0` in the outer loop. It controls the starting index of the pair. After choosing the $i^{th}$ pair, we go on to the next pair by executing an inner loop from `j = i + 1` to `n - 1`. We determine if the pair at index `j` can be chosen as the $i^{th}$ pair's successor.\n\nIf we can choose pair `j`, we take the maximum from the longest chain we created so far beginning with `i` (`dp[i]`) and moving forward by selecting pair `j` as the next pair to create the longest chain possible. Basically, `dp[i] = max(dp[i], 1 + dp[j])` is what we perform. We would already know the solution to `dp[j]` as we are going from the end to the beginning.\n\nThe maximum value in the `dp` array is the answer.\n\nYou may realize that we could also fill the `dp` table by moving from the start to the end. We can use an outer loop from `i = 1` to `n - 1` and an inner loop from `j = 0` to `i - 1` to fill the `dp` table from the start.\n\n#### Algorithm\n\n1. Create an integer variable `n` to store the number of pairs in `pairs`.\n2. Sort `pairs` based on the first element (we could sort on the second element as well). \n3. Create an integer array `dp` of size `n` where `dp[i]` will store the longest length of the chain starting from the $i^{th}$ pair and including it. We initialize all the elements in `dp` to `1`.\n4. Create an integer variable `ans = 1` that stores the answer to the problem. As we have at least one pair in the input, we initialize it to `1`.\n5. We iterate using two loops. The outer loops run from `i = n - 1` to `0` and the inner loop runs from `j = i + 1` to `n - 1`:\n    - If $j^{th}$ pair can be selected as the next pair after $i^{th}$ pair, i.e., `pairs[i][1] < pairs[j][0]`, we update `dp[i] = max(dp[i], 1 + dp[j])`.\n    - After the completion of the inner loop, we update our answer with `ans = max(ans, dp[i])`.\n6. Return `ans`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Xsjv6bU9/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"Xsjv6bU9\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the length of `pairs`.\n\n* Time complexity: $O(n^2)$.\n    - We sort `pairs` which takes $O(n \\cdot \\log{n})$ time.\n    - We run two nested loops which consume $O(n^2)$ time.\n\n* Space complexity: $O(n)$.\n    - The `dp` array takes $O(n)$ space.\n\n---\n\n### Approach 3: Greedy\n\n#### Intuition\n\nIn the first two methods, we used dynamic programming to construct the solution to a larger problem by solving smaller subproblems. Let's think if we can solve the problem using a greedy approach.\n\nWe must think about sorting `pairs` if we want to solve the problem using a greedy strategy, which involves picking up pairs on the fly from the beginning to the end whenever we can.\n\nLet's see what happens if we order the \"pairs\" based on the first element and then pick pairs whenever we can in order. Take the pairs `[1, 10], [2, 4], [5, 8], [9, 11]` as an example. They are ordered according to the first element.\n\nAn incorrect answer of `1` will be returned if we choose the first element and keep choosing the pairs as we go. The correct answer is `3`.\n\nThis suggests that sorting based on the first element wouldn't be effective because the second element of a selected pair might be large enough to prevent the addition of numerous additional pairs.\n\nNote that sorting based on the first element worked with the earlier methods because we built the solution optimally for the length of all feasible chains, rather than just greedily choosing the first pair.\n\nLet's check out what happens if we sort the above list of pairs now using the second element. The above example would be changed to `[2, 4], [5, 8], [1, 10], [9, 11]`. If we begin by greedily choosing the pairs, we will choose `[2, 4], [5, 8], [9, 11]`, yielding the answer `3`, which is the right answer.\n\nWill this always work?\n\nConsider `pairA` and `pairB`, where `pairA` appears before `pairB` in the sorted pairs based on the second element. We want to figure out if it is always correct to pick `pairA` first if it comes before any other pair `pairB`.\n\nSince `pairA` comes before `pairB` in the sorted list, it implies that `pairA[1] <= pairB[1]`. There are no guarantees on `pairA[0]` and `pairB[0]`.\n\nNow, if `pairA[1] < pairB[0]`, it's obvious that we should append `pairA` first. This is because after picking `pairA` we can still pick `pairB`.\n\nWhen `pairA[1] >= pairB[0]`, we have to choose carefully. It means that either we only append `pairA` to the chain, or we only append `pairB` to the chain. Appending either `pairA` or `pairB` will increment the length of the chain by `1` but will affect the next pair we can pick.\n\nThe tail of the current chain would be `pairA[1]` if we choose `pairA` and would be `pairB[1]` if choose `pairB`. Since `pairA[1] < pairB[1]` (due to sorting), it is better to choose `pairA` first because that way we expose a smaller tail which has a better opportunity to append more future pairs.\n\nAs you can see, in both cases, it is better to pick `pairA`. So, this greedy approach of sorting `pairs` based on the second element and then greedily picking pairs whenever we can starting from the first pair will always give the length of the longest chain.\n\n#### Algorithm\n\n1. Sort `pairs` based on the second element.\n2. Create an integer variable `curr` to store the tail of the current chain (second element of the most recently selected pair). We initialize it to a large negative value.\n3. Create an integer variable `ans = 0` that stores the answer to the problem.\n4. Iterate over all the pairs in `pairs` from the start. For each `pair` in `pairs`, we perform the following:\n    - If `pair[0] > curr`, i.e., starting of `pair` is greater than the current tail of the chain `curr`, we increment `ans` by `1` and update `curr = pair[1]`. \n5. Return `ans`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/dygcsQ7y/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"dygcsQ7y\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the length of `pairs`.\n\n* Time complexity: $O(n \\cdot \\log{n})$.\n    - We sort `pairs` based on the second element which takes $O(n \\cdot \\log{n})$ time.\n    - We then iterate over `pairs` which takes $O(n)$.\n\n* Space complexity: $O(1)$.\n    - Except for using few variables that use constant space, we don't consume any space.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

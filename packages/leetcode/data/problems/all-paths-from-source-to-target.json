@@ -1,0 +1,141 @@
+{
+  "questionId": "813",
+  "questionFrontendId": "797",
+  "title": "All Paths From Source to Target",
+  "titleSlug": "all-paths-from-source-to-target",
+  "difficulty": "Medium",
+  "content": "<p>Given a directed acyclic graph (<strong>DAG</strong>) of <code>n</code> nodes labeled from <code>0</code> to <code>n - 1</code>, find all possible paths from node <code>0</code> to node <code>n - 1</code> and return them in <strong>any order</strong>.</p>\n\n<p>The graph is given as follows: <code>graph[i]</code> is a list of all nodes you can visit from node <code>i</code> (i.e., there is a directed edge from node <code>i</code> to node <code>graph[i][j]</code>).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/28/all_1.jpg\" style=\"width: 242px; height: 242px;\" />\n<pre>\n<strong>Input:</strong> graph = [[1,2],[3],[3],[]]\n<strong>Output:</strong> [[0,1,3],[0,2,3]]\n<strong>Explanation:</strong> There are two paths: 0 -&gt; 1 -&gt; 3 and 0 -&gt; 2 -&gt; 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/28/all_2.jpg\" style=\"width: 423px; height: 301px;\" />\n<pre>\n<strong>Input:</strong> graph = [[4,3,1],[3,2,4],[3],[4],[]]\n<strong>Output:</strong> [[0,4],[0,3,4],[0,1,3,4],[0,1,2,3,4],[0,1,4]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == graph.length</code></li>\n\t<li><code>2 &lt;= n &lt;= 15</code></li>\n\t<li><code>0 &lt;= graph[i][j] &lt; n</code></li>\n\t<li><code>graph[i][j] != i</code> (i.e., there will be no self-loops).</li>\n\t<li>All the elements of <code>graph[i]</code> are <strong>unique</strong>.</li>\n\t<li>The input graph is <strong>guaranteed</strong> to be a <strong>DAG</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"allPathsSourceTarget\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"graph\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<list<integer>>\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"682.8K\", \"totalSubmission\": \"817K\", \"totalAcceptedRaw\": 682768, \"totalSubmissionRaw\": 817050, \"acRate\": \"83.6%\"}",
+  "likes": 7630,
+  "dislikes": 152,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Ways to Arrive at Destination\", \"titleSlug\": \"number-of-ways-to-arrive-at-destination\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Increasing Paths in a Grid\", \"titleSlug\": \"number-of-increasing-paths-in-a-grid\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,2],[3],[3],[]]",
+    "[[4,3,1],[3,2,4],[3],[4],[]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> allPathsSourceTarget(vector<vector<int>>& graph) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> allPathsSourceTarget(int[][] graph) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def allPathsSourceTarget(self, graph: List[List[int]]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def allPathsSourceTarget(self, graph):\n        \"\"\"\n        :type graph: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} graph\n * @return {number[][]}\n */\nvar allPathsSourceTarget = function(graph) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function allPathsSourceTarget(graph: number[][]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> AllPathsSourceTarget(int[][] graph) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** allPathsSourceTarget(int** graph, int graphSize, int* graphColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func allPathsSourceTarget(graph [][]int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun allPathsSourceTarget(graph: Array<IntArray>): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func allPathsSourceTarget(_ graph: [[Int]]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn all_paths_source_target(graph: Vec<Vec<i32>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} graph\n# @return {Integer[][]}\ndef all_paths_source_target(graph)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $graph\n     * @return Integer[][]\n     */\n    function allPathsSourceTarget($graph) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> allPathsSourceTarget(List<List<int>> graph) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def allPathsSourceTarget(graph: Array[Array[Int]]): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec all_paths_source_target(graph :: [[integer]]) :: [[integer]]\n  def all_paths_source_target(graph) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec all_paths_source_target(Graph :: [[integer()]]) -> [[integer()]].\nall_paths_source_target(Graph) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (all-paths-source-target graph)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "971",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\n\nIf a hint is ever given on the problem description, that would be _**backtracking**_.\n\nIndeed, since the problem concerns about the *path exploration* in a *graph* data structure, it is a perfect scenario to apply the backtracking algorithm.\n\n>As a reminder, [backtracking](https://en.wikipedia.org/wiki/Backtracking) is a general algorithm that incrementally builds candidates to the solutions, and abandons a candidate (_\"backtrack\"_) as soon as it determines that the candidate cannot possibly lead to a valid solution.\n\nFor more details about how to implement a backtracking algorithm, one can refer to our [Explore card](https://leetcode.com/explore/learn/card/recursion-ii/472/backtracking/).\n\nIn this solution, we start from an approach using backtracking and discuss another alternative approach for this problem.\n\n---\n\n### Approach 1: Backtracking\n\n**Overview**\n\n\n#### Intuition\n\n>Specifically, for this problem, we could assume ourselves as an agent in a game, we can explore the graph one step at a time.\n\nAt any given node, we try out each neighbor node _recursively_ until we reach the target or there is no more node to hop on. \nBy trying out, we mark the choice before moving on, and later on we reverse the choice (_i.e._ backtrack) and start another exploration.\n\nTo better demonstrate the above idea, we illustrate how an agent would explore the graph with the _backtracking_ strategy, in the following image where we mark the order that each edge is visited.\n\n![DFS order](../Figures/797/797_DFS_order_.png)\n\n#### Algorithm\n\nThe above idea might remind one of the Depth-First Search (**DFS**) traversal algorithm.\nIndeed, often the backtracking algorithm assumes the form of DFS, but with the additional step of _backtracking_.\n\nAnd for the DFS traversal, we often adopt the **recursion** as its main form of implementation.\nWith recursion, we could implement a backtracking algorithm in a rather intuitive and concise way. We break it down into the following steps:\n\n- Essentially, we want to implement a recursive function called `backtrack(currNode, path)` which continues the exploration, given the current node and the path traversed so far.\n\n    - Within the recursive function, we first define its base case, _i.e._ the moment we should terminate the recursion. Obviously, we should stop the exploration when we encounter our target node. So the condition of the base case is `currNode == target`.\n\n    - As the body of our recursive function, we should enumerate through all the neighbor nodes of the current node.\n\n    - For each iteration, we first mark the choice by appending the neighbor node to the path. Then we _recursively_ invoke our `backtrack()` function to explore _deeper_. At the end of the iteration, we should reverse the choice by popping out the neighbor node from the path, so that we could start all over for the next neighbor node.\n\n- Once we define our `backtrack()` function, it suffices to add the initial node (_i.e._ node with index `0`) to the path, to _kick off_ our backtracking exploration. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/NcZXDdG8/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"NcZXDdG8\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $N$ be the number of nodes in the graph.\n\nFirst of all, let us estimate how many paths there are at maximum to travel from the Node `0` to the Node `N-1` for a graph with $N$ nodes.\n\nLet us start from a graph with only two nodes. As one can imagine, there is only one single path to connect the only two nodes in the graph.\n\nNow, let us add a new node into the previous two-nodes graph, we now have two paths, one from the previous path, the other one is bridged by the newly-added node.\n\n![3-nodes graph](../Figures/797/797_3_nodes_graph_.png)\n\n>If we continue to add nodes to the graph, one insight is that every time we add a new node into the graph, the number of paths would **double**.\n\nWith the newly-added node, new paths could be created by preceding all previous paths with the newly-added node, as illustrated in the following graph.\n\n![new paths](../Figures/797/797_new_paths_.png)\n\nAs a result, for a graph with $N$ nodes, at maximum, there could be $\\sum_{i=0}^{N-2}{2^i} = 2^{N-1} - 1$ number of paths between the starting and the ending nodes.\n\n\n- Time Complexity: $\\mathcal{O}(2^N \\cdot N)$ \n\n    - As we calculate shortly before, there could be at most $2^{N-1} - 1$ possible paths in the graph.\n\n    - For each path, there could be at most $N-2$ intermediate nodes, _i.e._ it takes $\\mathcal{O}(N)$ time to build a path.\n\n    - To sum up, a **loose** upper-bound on the time complexity of the algorithm would be $(2^{N-1} - 1) \\cdot \\mathcal{O}(N) = \\mathcal{O}(2^N \\cdot N)$, where we consider it takes $\\mathcal{O}(N)$ efforts to build each path.\n\n    - To estimate a lower-bound on the time complexity, you can imagine an extreme but valid input: the edge set of the graph is $\\{\\langle i,j\\rangle| 0 \\le i < j < N\\}$, that is, there exists an edge from node $i$ to $j$ if and only if $i<j$. In this case, we can arbitrarily build a set of nodes from 1 to $N-1$ and construct a valid path by adding the starting point 0 and the end point $N-1$.\n\n    - For each path of $k$ intermediate nodes, we have to take $O(k)$ time to build and deep copy the path to the result set. Thus, the total time complexity is at least $\\sum_{k=0}^{N-2}{k \\cdot {N-2 \\choose k}} = 2^{N-3} \\cdot (N-2)$, which is still $\\mathcal{O}(2^N \\cdot N)$.\n\n\n- Space Complexity: $\\mathcal{O}(N)$\n\n    - Since we also applied _recursion_ in the algorithm, the recursion could incur additional memory consumption in the function call stack. The stack can grow up to $N$ consecutive calls. Meanwhile, along with the recursive call, we also keep the state of the current path, which could take another $\\mathcal{O}(N)$ space. Therefore, in total, the recursion would require additional $\\mathcal{O}(N)$ space.\n\n    - However, apart from our algorithm, since at most we could have $2^{N-1}-1$ paths as the results and each path can contain up to $N$ nodes, we need extra $\\mathcal{O}(2^N \\cdot N)$ space to store and return the results.\n<br/>\n<br/>\n\n---\n\n### Approach 2: Top-Down Dynamic Programming\n\n#### Intuition\n\nThe backtracking approach applies the paradigm of divide-and-conquer, which breaks the problem down to smaller steps.\n\nAs one knows, there is another algorithm called _**Dynamic Programming**_ (DP), which also embodies the idea of divide-and-conquer.\n\nAs it turns out, we could also apply the DP algorithm to this problem, although it is less optimal than the backtracking approach as one will see later.\n\n>More specifically, we adopt the **Top-Down** DP approach, where we take a _laissez-faire_ strategy assuming that the target function would work out on its own.\n\nGiven a node `currNode`, our target function is `allPathsToTarget(currNode)`, which returns all the paths from the current node to the target node.\n\nThe target function could be calculated by iterating through the neighbor nodes of the current node, which we summarize with the following _recursive_ formula:\n\n$$\n\\forall \\text{nextNode} \\in \\text{neighbors}(\\text{currNode}),\n\\\\\n\\\\\n\\text{allPathsToTarget}(\\text{currNode}) = \\{ \\text{currNode} + \\text{allPathsToTarget}(\\text{nextNode}) \\}\n$$\n\nThe above formula can be read intuitively as: _\"the paths from the current node to the target node consist of all the paths starting from each neighbor of the current node.\"_\n\n#### Algorithm\n\nBased on the above formula, we could implement a DP algorithm.\n\n- First of all, we define our target function `allPathsToTarget(node)`.\n\n    - Naturally our target function is a recursive function, whose base case is when the given `node` is the target node.\n\n    - Otherwise, we iterate through its neighbor nodes, and we invoke our target function with each neighbor node, _i.e._ `allPathsToTarget(neighbor)`\n\n    - With the returned results from the target function, we then prepend the current node to the downstream paths, in order to build the final paths.\n\n- With the above defined target function, we simply invoke it with the desired starting node, _i.e._ node `0`.\n\nNote that, there is an important detail that we left out in the above step.\nIn order for the algorithm to be fully-qualified as a DP algorithm, we should **reuse** the intermediate results, rather than re-calculating them at each occasion.\n\nSpecially, we should **cache** the results returned from the target function `allPathsToTarget(node)`, since we would encounter a node multiple times if there is an overlapping between paths.\nTherefore, once we know the paths from a given node to the target node, we should keep it in the cache for reuse. This technique is also known as **_memoization_**.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/D8qp4Xn8/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"D8qp4Xn8\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $N$ be the number of nodes in the graph.\nAs we estimated before, there could be at most $2^{N-1}-1$ number of paths.\n\n- Time Complexity: $\\mathcal{O}(2^N \\cdot N)$.\n\n    - To estimate the overall time complexity, let us start from the last step when we prepend the starting node to each of the paths returned from the target function.\n    Since we have to copy each path in order to create new paths, it would take up to $N$ steps for each final path. Therefore, for this last step, it could take us $\\mathcal{O}(2^{N-1} \\cdot N)$ time.\n\n    - Right before the last step, when the maximal length of the path is $N-1$, we should have $2^{N-2}$ number of paths at this moment.\n\n    - Deducing from the above two steps, again a **loose** upper-bound of the time complexity would be $\\mathcal{O}(\\sum_{i=1}^{N}{2^{i-1}\\cdot i}) = \\mathcal{O}(2^N \\cdot N)$\n\n    - Similar to the complexity analysis in Approach 1, we can also get a lower-bound of the time complexity as $\\mathcal{O}(2^N \\cdot N)$. So the time complexity should be $\\mathcal{O}(2^N \\cdot N)$.\n\n    - The two approach might have the same asymptotic time complexity. However, in practice the DP approach is slower than the backtracking approach, since we copy the intermediate paths over and over.\n\n    - Note that, the performance would be degraded further, if we did not adopt the memoization technique here.\n\n\n- Space Complexity: $\\mathcal{O}(2^N \\cdot N)$\n\n    - Similarly, since at most we could have $2^{N-1}-1$ paths as the results and each path can contain up to $N$ nodes, the space we need to store the results would be $\\mathcal{O}(2^N \\cdot N)$.\n\n    - Since we also applied _recursion_ in the algorithm, it could incur additional memory consumption in the function call stack. The stack can grow up to $N$ consecutive calls. However, the space bottleneck in this approach is to memorize the results of intermedia calls of `allPathsToTarget(node)`. The total memory cost for that is estimated as $\\sum_{i=1}^n i \\cdot 2^i = \\mathcal{O}(2^N \\cdot N)$ like we analyzed in Approach 1.\n\n    - Thus, the space complexity is $\\mathcal{O}(2^N \\cdot N)$ either with or without the space for the final returned result.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

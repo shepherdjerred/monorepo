@@ -1,0 +1,140 @@
+{
+  "questionId": "604",
+  "questionFrontendId": "604",
+  "title": "Design Compressed String Iterator",
+  "titleSlug": "design-compressed-string-iterator",
+  "difficulty": "Easy",
+  "content": "<p>Design and implement a data structure for a compressed string iterator. The given compressed string will be in the form of each letter followed by a positive integer representing the number of this letter existing in the original uncompressed string.</p>\n\n<p>Implement the&nbsp;StringIterator class:</p>\n\n<ul>\n\t<li><code>next()</code>&nbsp;Returns <strong>the next character</strong> if the original string still has uncompressed characters, otherwise returns a <strong>white space</strong>.</li>\n\t<li><code>hasNext()</code>&nbsp;Returns true if&nbsp;there is any letter needs to be uncompressed in the original string, otherwise returns <code>false</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;StringIterator&quot;, &quot;next&quot;, &quot;next&quot;, &quot;next&quot;, &quot;next&quot;, &quot;next&quot;, &quot;next&quot;, &quot;hasNext&quot;, &quot;next&quot;, &quot;hasNext&quot;]\n[[&quot;L1e2t1C1o1d1e1&quot;], [], [], [], [], [], [], [], [], []]\n<strong>Output</strong>\n[null, &quot;L&quot;, &quot;e&quot;, &quot;e&quot;, &quot;t&quot;, &quot;C&quot;, &quot;o&quot;, true, &quot;d&quot;, true]\n\n<strong>Explanation</strong>\nStringIterator stringIterator = new StringIterator(&quot;L1e2t1C1o1d1e1&quot;);\nstringIterator.next(); // return &quot;L&quot;\nstringIterator.next(); // return &quot;e&quot;\nstringIterator.next(); // return &quot;e&quot;\nstringIterator.next(); // return &quot;t&quot;\nstringIterator.next(); // return &quot;C&quot;\nstringIterator.next(); // return &quot;o&quot;\nstringIterator.hasNext(); // return True\nstringIterator.next(); // return &quot;d&quot;\nstringIterator.hasNext(); // return True\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;=&nbsp;compressedString.length &lt;= 1000</code></li>\n\t<li><code>compressedString</code> consists of lower-case an upper-case English letters and digits.</li>\n\t<li>The number of a single character repetitions in&nbsp;<code>compressedString</code> is in the range <code>[1, 10^9]</code></li>\n\t<li>At most <code>100</code> calls will be made to <code>next</code> and <code>hasNext</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n    \"classname\": \"StringIterator\",\r\n    \"maxbytesperline\": 200000,\r\n    \"constructor\": {\r\n        \"params\": [\r\n            {\r\n            \"type\": \"string\",\r\n            \"name\": \"compressedString\"\r\n            }\r\n        ]\r\n    },\r\n    \"methods\": [\r\n        {\r\n            \"name\" : \"next\",\r\n            \"params\": [\r\n            ],\r\n            \"return\": {\r\n                \"type\": \"character\"\r\n            }\r\n        },\r\n        {\r\n            \"name\" : \"hasNext\",\r\n            \"params\": [\r\n            ],\r\n            \"return\": {\r\n                \"type\": \"boolean\"\r\n            }\r\n        }\r\n    ],\r\n    \"systemdesign\": true,\r\n    \"params\": [\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        },\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        }\r\n    ],\r\n    \"return\": {\r\n        \"type\": \"list<String>\",\r\n        \"dealloc\": true\r\n    }\r\n}",
+  "stats": "{\"totalAccepted\": \"39.5K\", \"totalSubmission\": \"97.8K\", \"totalAcceptedRaw\": 39501, \"totalSubmissionRaw\": 97849, \"acRate\": \"40.4%\"}",
+  "likes": 460,
+  "dislikes": 167,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"LRU Cache\", \"titleSlug\": \"lru-cache\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"String Compression\", \"titleSlug\": \"string-compression\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"StringIterator\",\"next\",\"next\",\"next\",\"next\",\"next\",\"next\",\"hasNext\",\"next\",\"hasNext\"]\n[[\"L1e2t1C1o1d1e1\"],[],[],[],[],[],[],[],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Iterator",
+      "slug": "iterator"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class StringIterator {\npublic:\n    StringIterator(string compressedString) {\n        \n    }\n    \n    char next() {\n        \n    }\n    \n    bool hasNext() {\n        \n    }\n};\n\n/**\n * Your StringIterator object will be instantiated and called as such:\n * StringIterator* obj = new StringIterator(compressedString);\n * char param_1 = obj->next();\n * bool param_2 = obj->hasNext();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class StringIterator {\n\n    public StringIterator(String compressedString) {\n        \n    }\n    \n    public char next() {\n        \n    }\n    \n    public boolean hasNext() {\n        \n    }\n}\n\n/**\n * Your StringIterator object will be instantiated and called as such:\n * StringIterator obj = new StringIterator(compressedString);\n * char param_1 = obj.next();\n * boolean param_2 = obj.hasNext();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class StringIterator:\n\n    def __init__(self, compressedString: str):\n        \n\n    def next(self) -> str:\n        \n\n    def hasNext(self) -> bool:\n        \n\n\n# Your StringIterator object will be instantiated and called as such:\n# obj = StringIterator(compressedString)\n# param_1 = obj.next()\n# param_2 = obj.hasNext()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class StringIterator(object):\n\n    def __init__(self, compressedString):\n        \"\"\"\n        :type compressedString: str\n        \"\"\"\n        \n\n    def next(self):\n        \"\"\"\n        :rtype: str\n        \"\"\"\n        \n\n    def hasNext(self):\n        \"\"\"\n        :rtype: bool\n        \"\"\"\n        \n\n\n# Your StringIterator object will be instantiated and called as such:\n# obj = StringIterator(compressedString)\n# param_1 = obj.next()\n# param_2 = obj.hasNext()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} compressedString\n */\nvar StringIterator = function(compressedString) {\n    \n};\n\n/**\n * @return {character}\n */\nStringIterator.prototype.next = function() {\n    \n};\n\n/**\n * @return {boolean}\n */\nStringIterator.prototype.hasNext = function() {\n    \n};\n\n/** \n * Your StringIterator object will be instantiated and called as such:\n * var obj = new StringIterator(compressedString)\n * var param_1 = obj.next()\n * var param_2 = obj.hasNext()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class StringIterator {\n    constructor(compressedString: string) {\n        \n    }\n\n    next(): string {\n        \n    }\n\n    hasNext(): boolean {\n        \n    }\n}\n\n/**\n * Your StringIterator object will be instantiated and called as such:\n * var obj = new StringIterator(compressedString)\n * var param_1 = obj.next()\n * var param_2 = obj.hasNext()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class StringIterator {\n\n    public StringIterator(string compressedString) {\n        \n    }\n    \n    public char Next() {\n        \n    }\n    \n    public bool HasNext() {\n        \n    }\n}\n\n/**\n * Your StringIterator object will be instantiated and called as such:\n * StringIterator obj = new StringIterator(compressedString);\n * char param_1 = obj.Next();\n * bool param_2 = obj.HasNext();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} StringIterator;\n\n\nStringIterator* stringIteratorCreate(char* compressedString) {\n    \n}\n\nchar stringIteratorNext(StringIterator* obj) {\n    \n}\n\nbool stringIteratorHasNext(StringIterator* obj) {\n    \n}\n\nvoid stringIteratorFree(StringIterator* obj) {\n    \n}\n\n/**\n * Your StringIterator struct will be instantiated and called as such:\n * StringIterator* obj = stringIteratorCreate(compressedString);\n * char param_1 = stringIteratorNext(obj);\n \n * bool param_2 = stringIteratorHasNext(obj);\n \n * stringIteratorFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type StringIterator struct {\n    \n}\n\n\nfunc Constructor(compressedString string) StringIterator {\n    \n}\n\n\nfunc (this *StringIterator) Next() byte {\n    \n}\n\n\nfunc (this *StringIterator) HasNext() bool {\n    \n}\n\n\n/**\n * Your StringIterator object will be instantiated and called as such:\n * obj := Constructor(compressedString);\n * param_1 := obj.Next();\n * param_2 := obj.HasNext();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class StringIterator(compressedString: String) {\n\n    fun next(): Char {\n        \n    }\n\n    fun hasNext(): Boolean {\n        \n    }\n\n}\n\n/**\n * Your StringIterator object will be instantiated and called as such:\n * var obj = StringIterator(compressedString)\n * var param_1 = obj.next()\n * var param_2 = obj.hasNext()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass StringIterator {\n\n    init(_ compressedString: String) {\n        \n    }\n    \n    func next() -> Character {\n        \n    }\n    \n    func hasNext() -> Bool {\n        \n    }\n}\n\n/**\n * Your StringIterator object will be instantiated and called as such:\n * let obj = StringIterator(compressedString)\n * let ret_1: Character = obj.next()\n * let ret_2: Bool = obj.hasNext()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct StringIterator {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl StringIterator {\n\n    fn new(compressedString: String) -> Self {\n        \n    }\n    \n    fn next(&self) -> char {\n        \n    }\n    \n    fn has_next(&self) -> bool {\n        \n    }\n}\n\n/**\n * Your StringIterator object will be instantiated and called as such:\n * let obj = StringIterator::new(compressedString);\n * let ret_1: char = obj.next();\n * let ret_2: bool = obj.has_next();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class StringIterator\n\n=begin\n    :type compressed_string: String\n=end\n    def initialize(compressed_string)\n        \n    end\n\n\n=begin\n    :rtype: Character\n=end\n    def next()\n        \n    end\n\n\n=begin\n    :rtype: Boolean\n=end\n    def has_next()\n        \n    end\n\n\nend\n\n# Your StringIterator object will be instantiated and called as such:\n# obj = StringIterator.new(compressed_string)\n# param_1 = obj.next()\n# param_2 = obj.has_next()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class StringIterator {\n    /**\n     * @param String $compressedString\n     */\n    function __construct($compressedString) {\n        \n    }\n  \n    /**\n     * @return String\n     */\n    function next() {\n        \n    }\n  \n    /**\n     * @return Boolean\n     */\n    function hasNext() {\n        \n    }\n}\n\n/**\n * Your StringIterator object will be instantiated and called as such:\n * $obj = StringIterator($compressedString);\n * $ret_1 = $obj->next();\n * $ret_2 = $obj->hasNext();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class StringIterator {\n\n  StringIterator(String compressedString) {\n    \n  }\n  \n  String next() {\n    \n  }\n  \n  bool hasNext() {\n    \n  }\n}\n\n/**\n * Your StringIterator object will be instantiated and called as such:\n * StringIterator obj = StringIterator(compressedString);\n * String param1 = obj.next();\n * bool param2 = obj.hasNext();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class StringIterator(_compressedString: String) {\n\n    def next(): Char = {\n        \n    }\n\n    def hasNext(): Boolean = {\n        \n    }\n\n}\n\n/**\n * Your StringIterator object will be instantiated and called as such:\n * val obj = new StringIterator(compressedString)\n * val param_1 = obj.next()\n * val param_2 = obj.hasNext()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule StringIterator do\n  @spec init_(compressed_string :: String.t) :: any\n  def init_(compressed_string) do\n    \n  end\n\n  @spec next() :: char\n  def next() do\n    \n  end\n\n  @spec has_next() :: boolean\n  def has_next() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# StringIterator.init_(compressed_string)\n# param_1 = StringIterator.next()\n# param_2 = StringIterator.has_next()\n\n# StringIterator.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec string_iterator_init_(CompressedString :: unicode:unicode_binary()) -> any().\nstring_iterator_init_(CompressedString) ->\n  .\n\n-spec string_iterator_next() -> char().\nstring_iterator_next() ->\n  .\n\n-spec string_iterator_has_next() -> boolean().\nstring_iterator_has_next() ->\n  .\n\n\n%% Your functions will be called as such:\n%% string_iterator_init_(CompressedString),\n%% Param_1 = string_iterator_next(),\n%% Param_2 = string_iterator_has_next(),\n\n%% string_iterator_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define string-iterator%\n  (class object%\n    (super-new)\n    \n    ; compressed-string : string?\n    (init-field\n      compressed-string)\n    \n    ; next : -> char?\n    (define/public (next)\n      )\n    ; has-next : -> boolean?\n    (define/public (has-next)\n      )))\n\n;; Your string-iterator% object will be instantiated and called as such:\n;; (define obj (new string-iterator% [compressed-string compressed-string]))\n;; (define param_1 (send obj next))\n;; (define param_2 (send obj has-next))"
+    }
+  ],
+  "solution": {
+    "id": "164",
+    "content": "[TOC]\n\n\n## Solution\n\n### Approach #1 Uncompressing the String [Time Limit Exceeded]\n\n**Algorithm**\n\nIn this approach, we make use of precomputation. We already form the uncompressed string and append the uncompressed letters for each compressed letter in the $$compressedString$$ to the $$res$$ stringbuilder. To find the uncompressed strings to be stored in $$res$$, we traverse over the given $$compressedString$$. Whenver we find an alphabet, we find the number following it by making use of decimal mathematics. Thus, we get the two elements(alphabet and the count) required for forming the current constituent of the uncompressed string.\n\nNow, we'll look at how the `next()` and `hasNext()` operations are performed:\n\n1. `next()`: We start off by checking if the compressed string has more uncompressed letters pending. If not, `hasNext()` returns a False value and `next()` returns a ' '. Otherwise, we return the letter pointed by $$ptr$$, which indicates the next letter to be returned. Before returning the letter, we also update the $$ptr$$ to point to the next letter in $$res$$.\n\n2. `hasNext()`: If the pointer $$ptr$$ reaches beyond the end of $$res$$ array, it indicates that no more uncompressed letters are left beyond the current index pointed by $$ptr$$. Thus, we return a False in this case. Otherwise, we return a True value.\n\n\n<iframe src=\"https://leetcode.com/playground/fddFPkFm/shared\" frameBorder=\"0\" name=\"fddFPkFm\" width=\"100%\" height=\"479\"></iframe>\n\n**Performance Analysis**\n\n* We precompute the elements of the uncompressed string. Thus, the space required in this case is $$O(m)$$, where $$m$$ refers to the length of the uncompressed string.\n\n* The time required for precomputation is $$O(m)$$ since we need to generate the uncompressed string of length $$m$$.\n\n* Once the precomputation has been done, the time required for performing `next()` and `hasNext()` is $$O(1)$$ for both.\n\n* This approach can be easily extended to include `previous()`, `last()` and `find()` operations. All these operations require the use an index only and thus, take $$O(1)$$ time. Operations like `hasPrevious()` can also be easily included.\n\n* Since, once the precomputation has been done, `next()` requires $$O(1)$$ time, this approach is useful if `next()` operation needs to be performed a large number of times. However, if `hasNext()` is performed most of the times, this approach isn't much advantageous since precomputation needs to be done anyhow.\n\n* A potential problem with this approach could arise if the length of the uncompressed string is very large. In such a case, the size of the complete uncompressed string could become so large that it can't fit in the memory limits, leading to memory overflow.\n\n---\n\n### Approach #2  Pre-Computation [Accepted]\n\n**Algorithm**\n\nIn this approach, firstly, we split the given $$compressedString$$ based on  numbers(0-9) and store the values(alphabets) obtained in $$chars$$ array. We also split the $$compressedString$$ based on the alphabets(a-z, A-Z) and store the numbers(in the form of a string) in a $$nums$$ array(after converting the strings obtained into integers). We do the splitting by making use of regular expression matching.\n\nA regular expression is a special sequence of letters that helps you match or find other strings or sets of strings, using a specialized syntax held in a pattern. They can be used to search, edit, or manipulate text and data.\n\nThis splitting using regex is done as a precomputation step. Now we'll look at how the `next()` and `hasNext()` operations are implemented.\n\n1. `next()`: Every time the `next()` operation is performed, firstly we check if there are any more letters to be uncompressed. We check it by making use of `hasNext()` function. If there aren't any more letters left, we return a ' '. We make use of a pointer $$ptr$$ to keep a track of the letter in the $$compressedString$$ that needs to be returned next. If there are more letters left in the uncompressed string, we return the current letter pointed to by $$ptr$$. But, before returning this letter, we also decrement the $$nums[ptr]$$ entry to indicate that the current letter is pending in the uncompressed string by one lesser count. On decrementing this entry, if it becomes zero, it indicates that no more instances of the current letter exist in the uncompressed string. Thus, we update the pointer $$ptr$$ to point to the next letter.\n\n2. `hasNext()`: For performing `hasNext()` operation, we simply need to check if the $$ptr$$ has already reached beyong the end of $$chars$$ array. If so, it indicates that no more compressed letters exist in the $$compressedString$$. Hence, we return a False value in this case. Otherwise, more compressed letters exist. Hence, we return a True value in this case.\n\n\n<iframe src=\"https://leetcode.com/playground/rRUsHDy3/shared\" frameBorder=\"0\" name=\"rRUsHDy3\" width=\"100%\" height=\"428\"></iframe>\n\n**Performance Analysis**\n\n* The space required for storing the results of the precomputation is $$O(n)$$, where $$n$$ refers to the length of the compressed string. The $$nums$$ and $$chars$$ array contain a total of $$n$$ elements.\n\n* The precomputation step requires $$O(n)$$ time. Thus, if `hasNext()` operation is performed most of the times, this precomputation turns out to be non-advantageous.\n\n* Once the precomputation has been done, `hasNext()` and `next()` requires $$O(1)$$ time. \n\n* This approach can be extended to include the `previous()` and  `hasPrevious()` operations, but that would require making some simple modifications to the current implementation.\n\n---\n\n### Approach #3  Demand-Computation [Accepted]\n\n**Algorithm**\n\nIn this approach, we don't make use of regex for finding the individual components of the given $$compressedString$$. We do not perform any form of precomputation. Whenever an operation needs to be performed, the required results are generated from the scratch. Thus, the operations are performed only on demand.\n\nLet's look at the implementation of the required operations:\n\n1. `next()`: We make use of a global pointer $$ptr$$ to keep a track of which compressed letter in the $$compressedString$$ needs to be processed next. We also make use of a global variable $$num$$ to keep a track of the number of instances of the current letter which are still pending. Whenever `next()` operation needs to be performed, firstly, we check if there are more uncompressed letters left in the $$compressedString$$. If not, we return a ' '. Otherwise, we check if there are more instances of the current letter still pending. If so, we directly decrement the count of instances indicated by $$nums$$ and return the current letter. But, if there aren't more instances pending for the current letter, we update the $$ptr$$ to point to the next letter in the $$compressedString$$. We also update the $$num$$ by obtaining the count for the next letter from the $$compressedString$$. This number is obtained by making use of decimal arithmetic.\n\n2. `hasNext()`: If the pointer $$ptr$$ has reached beyond the last index of the $$compressedString$$ and $$num$$ becomes, it indicates that no more uncompressed letters exist in the compressed string. Hence, we return a False in this case. Otherwise, a True value is returned indicating that more compressed letters exist in the $$compressedString$$.\n\n<iframe src=\"https://leetcode.com/playground/nto5MsQu/shared\" frameBorder=\"0\" name=\"nto5MsQu\" width=\"100%\" height=\"479\"></iframe>\n**Performance Analysis**\n\n* Since no precomputation is done, constant space is required in this case.\n\n* The time required to perform `next()` operation is $$O(1)$$.\n\n* The time required for `hasNext()` operation is $$O(1)$$.\n\n* Since no precomputations are done, and `hasNext()` requires only $$O(1)$$ time, this solution is advantageous if `hasNext()` operation is performed most of the times.\n\n* This approach can be extended to include `previous()` and `hasPrevious()` operationsm, but this will require the use of some additional variables.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

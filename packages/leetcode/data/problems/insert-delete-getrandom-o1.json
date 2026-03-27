@@ -1,0 +1,144 @@
+{
+  "questionId": "380",
+  "questionFrontendId": "380",
+  "title": "Insert Delete GetRandom O(1)",
+  "titleSlug": "insert-delete-getrandom-o1",
+  "difficulty": "Medium",
+  "content": "<p>Implement the <code>RandomizedSet</code> class:</p>\n\n<ul>\n\t<li><code>RandomizedSet()</code> Initializes the <code>RandomizedSet</code> object.</li>\n\t<li><code>bool insert(int val)</code> Inserts an item <code>val</code> into the set if not present. Returns <code>true</code> if the item was not present, <code>false</code> otherwise.</li>\n\t<li><code>bool remove(int val)</code> Removes an item <code>val</code> from the set if present. Returns <code>true</code> if the item was present, <code>false</code> otherwise.</li>\n\t<li><code>int getRandom()</code> Returns a random element from the current set of elements (it&#39;s guaranteed that at least one element exists when this method is called). Each element must have the <b>same probability</b> of being returned.</li>\n</ul>\n\n<p>You must implement the functions of the class such that each function works in&nbsp;<strong>average</strong>&nbsp;<code>O(1)</code>&nbsp;time complexity.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;RandomizedSet&quot;, &quot;insert&quot;, &quot;remove&quot;, &quot;insert&quot;, &quot;getRandom&quot;, &quot;remove&quot;, &quot;insert&quot;, &quot;getRandom&quot;]\n[[], [1], [2], [2], [], [1], [2], []]\n<strong>Output</strong>\n[null, true, false, true, 2, true, false, 2]\n\n<strong>Explanation</strong>\nRandomizedSet randomizedSet = new RandomizedSet();\nrandomizedSet.insert(1); // Inserts 1 to the set. Returns true as 1 was inserted successfully.\nrandomizedSet.remove(2); // Returns false as 2 does not exist in the set.\nrandomizedSet.insert(2); // Inserts 2 to the set, returns true. Set now contains [1,2].\nrandomizedSet.getRandom(); // getRandom() should return either 1 or 2 randomly.\nrandomizedSet.remove(1); // Removes 1 from the set, returns true. Set now contains [2].\nrandomizedSet.insert(2); // 2 was already in the set, so return false.\nrandomizedSet.getRandom(); // Since 2 is the only number in the set, getRandom() will always return 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>-2<sup>31</sup> &lt;= val &lt;= 2<sup>31</sup> - 1</code></li>\n\t<li>At most <code>2 *&nbsp;</code><code>10<sup>5</sup></code> calls will be made to <code>insert</code>, <code>remove</code>, and <code>getRandom</code>.</li>\n\t<li>There will be <strong>at least one</strong> element in the data structure when <code>getRandom</code> is called.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"RandomizedSet\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"val\"\n        }\n      ],\n      \"name\": \"insert\",\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"val\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"boolean\"\n      },\n      \"name\": \"remove\"\n    },\n    {\n      \"params\": [],\n      \"name\": \"getRandom\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"1.3M\", \"totalSubmission\": \"2.4M\", \"totalAcceptedRaw\": 1347732, \"totalSubmissionRaw\": 2436513, \"acRate\": \"55.3%\"}",
+  "likes": 9948,
+  "dislikes": 696,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Insert Delete GetRandom O(1) - Duplicates allowed\", \"titleSlug\": \"insert-delete-getrandom-o1-duplicates-allowed\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"RandomizedSet\",\"insert\",\"remove\",\"insert\",\"getRandom\",\"remove\",\"insert\",\"getRandom\"]\n[[],[1],[2],[2],[],[1],[2],[]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 19, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 6, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"axon\", \"name\": \"Axon\"}, {\"timesEncountered\": 3, \"slug\": \"quora\", \"name\": \"Quora\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"grammarly\", \"name\": \"Grammarly\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 3, \"slug\": \"ixl\", \"name\": \"IXL\"}, {\"timesEncountered\": 2, \"slug\": \"affirm\", \"name\": \"Affirm\"}], \"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 8, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 5, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 5, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 4, \"slug\": \"sofi\", \"name\": \"SoFi\"}, {\"timesEncountered\": 4, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 4, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 4, \"slug\": \"docusign\", \"name\": \"Docusign\"}, {\"timesEncountered\": 4, \"slug\": \"rubrik\", \"name\": \"Rubrik\"}, {\"timesEncountered\": 4, \"slug\": \"peloton\", \"name\": \"Peloton\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Randomized",
+      "slug": "randomized"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class RandomizedSet {\npublic:\n    RandomizedSet() {\n        \n    }\n    \n    bool insert(int val) {\n        \n    }\n    \n    bool remove(int val) {\n        \n    }\n    \n    int getRandom() {\n        \n    }\n};\n\n/**\n * Your RandomizedSet object will be instantiated and called as such:\n * RandomizedSet* obj = new RandomizedSet();\n * bool param_1 = obj->insert(val);\n * bool param_2 = obj->remove(val);\n * int param_3 = obj->getRandom();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class RandomizedSet {\n\n    public RandomizedSet() {\n        \n    }\n    \n    public boolean insert(int val) {\n        \n    }\n    \n    public boolean remove(int val) {\n        \n    }\n    \n    public int getRandom() {\n        \n    }\n}\n\n/**\n * Your RandomizedSet object will be instantiated and called as such:\n * RandomizedSet obj = new RandomizedSet();\n * boolean param_1 = obj.insert(val);\n * boolean param_2 = obj.remove(val);\n * int param_3 = obj.getRandom();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class RandomizedSet:\n\n    def __init__(self):\n        \n\n    def insert(self, val: int) -> bool:\n        \n\n    def remove(self, val: int) -> bool:\n        \n\n    def getRandom(self) -> int:\n        \n\n\n# Your RandomizedSet object will be instantiated and called as such:\n# obj = RandomizedSet()\n# param_1 = obj.insert(val)\n# param_2 = obj.remove(val)\n# param_3 = obj.getRandom()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class RandomizedSet(object):\n\n    def __init__(self):\n        \n\n    def insert(self, val):\n        \"\"\"\n        :type val: int\n        :rtype: bool\n        \"\"\"\n        \n\n    def remove(self, val):\n        \"\"\"\n        :type val: int\n        :rtype: bool\n        \"\"\"\n        \n\n    def getRandom(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your RandomizedSet object will be instantiated and called as such:\n# obj = RandomizedSet()\n# param_1 = obj.insert(val)\n# param_2 = obj.remove(val)\n# param_3 = obj.getRandom()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar RandomizedSet = function() {\n    \n};\n\n/** \n * @param {number} val\n * @return {boolean}\n */\nRandomizedSet.prototype.insert = function(val) {\n    \n};\n\n/** \n * @param {number} val\n * @return {boolean}\n */\nRandomizedSet.prototype.remove = function(val) {\n    \n};\n\n/**\n * @return {number}\n */\nRandomizedSet.prototype.getRandom = function() {\n    \n};\n\n/** \n * Your RandomizedSet object will be instantiated and called as such:\n * var obj = new RandomizedSet()\n * var param_1 = obj.insert(val)\n * var param_2 = obj.remove(val)\n * var param_3 = obj.getRandom()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class RandomizedSet {\n    constructor() {\n        \n    }\n\n    insert(val: number): boolean {\n        \n    }\n\n    remove(val: number): boolean {\n        \n    }\n\n    getRandom(): number {\n        \n    }\n}\n\n/**\n * Your RandomizedSet object will be instantiated and called as such:\n * var obj = new RandomizedSet()\n * var param_1 = obj.insert(val)\n * var param_2 = obj.remove(val)\n * var param_3 = obj.getRandom()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class RandomizedSet {\n\n    public RandomizedSet() {\n        \n    }\n    \n    public bool Insert(int val) {\n        \n    }\n    \n    public bool Remove(int val) {\n        \n    }\n    \n    public int GetRandom() {\n        \n    }\n}\n\n/**\n * Your RandomizedSet object will be instantiated and called as such:\n * RandomizedSet obj = new RandomizedSet();\n * bool param_1 = obj.Insert(val);\n * bool param_2 = obj.Remove(val);\n * int param_3 = obj.GetRandom();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} RandomizedSet;\n\n\nRandomizedSet* randomizedSetCreate() {\n    \n}\n\nbool randomizedSetInsert(RandomizedSet* obj, int val) {\n    \n}\n\nbool randomizedSetRemove(RandomizedSet* obj, int val) {\n    \n}\n\nint randomizedSetGetRandom(RandomizedSet* obj) {\n    \n}\n\nvoid randomizedSetFree(RandomizedSet* obj) {\n    \n}\n\n/**\n * Your RandomizedSet struct will be instantiated and called as such:\n * RandomizedSet* obj = randomizedSetCreate();\n * bool param_1 = randomizedSetInsert(obj, val);\n \n * bool param_2 = randomizedSetRemove(obj, val);\n \n * int param_3 = randomizedSetGetRandom(obj);\n \n * randomizedSetFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type RandomizedSet struct {\n    \n}\n\n\nfunc Constructor() RandomizedSet {\n    \n}\n\n\nfunc (this *RandomizedSet) Insert(val int) bool {\n    \n}\n\n\nfunc (this *RandomizedSet) Remove(val int) bool {\n    \n}\n\n\nfunc (this *RandomizedSet) GetRandom() int {\n    \n}\n\n\n/**\n * Your RandomizedSet object will be instantiated and called as such:\n * obj := Constructor();\n * param_1 := obj.Insert(val);\n * param_2 := obj.Remove(val);\n * param_3 := obj.GetRandom();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class RandomizedSet() {\n\n    fun insert(`val`: Int): Boolean {\n        \n    }\n\n    fun remove(`val`: Int): Boolean {\n        \n    }\n\n    fun getRandom(): Int {\n        \n    }\n\n}\n\n/**\n * Your RandomizedSet object will be instantiated and called as such:\n * var obj = RandomizedSet()\n * var param_1 = obj.insert(`val`)\n * var param_2 = obj.remove(`val`)\n * var param_3 = obj.getRandom()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass RandomizedSet {\n\n    init() {\n        \n    }\n    \n    func insert(_ val: Int) -> Bool {\n        \n    }\n    \n    func remove(_ val: Int) -> Bool {\n        \n    }\n    \n    func getRandom() -> Int {\n        \n    }\n}\n\n/**\n * Your RandomizedSet object will be instantiated and called as such:\n * let obj = RandomizedSet()\n * let ret_1: Bool = obj.insert(val)\n * let ret_2: Bool = obj.remove(val)\n * let ret_3: Int = obj.getRandom()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct RandomizedSet {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl RandomizedSet {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn insert(&self, val: i32) -> bool {\n        \n    }\n    \n    fn remove(&self, val: i32) -> bool {\n        \n    }\n    \n    fn get_random(&self) -> i32 {\n        \n    }\n}\n\n/**\n * Your RandomizedSet object will be instantiated and called as such:\n * let obj = RandomizedSet::new();\n * let ret_1: bool = obj.insert(val);\n * let ret_2: bool = obj.remove(val);\n * let ret_3: i32 = obj.get_random();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class RandomizedSet\n    def initialize()\n        \n    end\n\n\n=begin\n    :type val: Integer\n    :rtype: Boolean\n=end\n    def insert(val)\n        \n    end\n\n\n=begin\n    :type val: Integer\n    :rtype: Boolean\n=end\n    def remove(val)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def get_random()\n        \n    end\n\n\nend\n\n# Your RandomizedSet object will be instantiated and called as such:\n# obj = RandomizedSet.new()\n# param_1 = obj.insert(val)\n# param_2 = obj.remove(val)\n# param_3 = obj.get_random()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class RandomizedSet {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $val\n     * @return Boolean\n     */\n    function insert($val) {\n        \n    }\n  \n    /**\n     * @param Integer $val\n     * @return Boolean\n     */\n    function remove($val) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function getRandom() {\n        \n    }\n}\n\n/**\n * Your RandomizedSet object will be instantiated and called as such:\n * $obj = RandomizedSet();\n * $ret_1 = $obj->insert($val);\n * $ret_2 = $obj->remove($val);\n * $ret_3 = $obj->getRandom();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class RandomizedSet {\n\n  RandomizedSet() {\n    \n  }\n  \n  bool insert(int val) {\n    \n  }\n  \n  bool remove(int val) {\n    \n  }\n  \n  int getRandom() {\n    \n  }\n}\n\n/**\n * Your RandomizedSet object will be instantiated and called as such:\n * RandomizedSet obj = RandomizedSet();\n * bool param1 = obj.insert(val);\n * bool param2 = obj.remove(val);\n * int param3 = obj.getRandom();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class RandomizedSet() {\n\n    def insert(`val`: Int): Boolean = {\n        \n    }\n\n    def remove(`val`: Int): Boolean = {\n        \n    }\n\n    def getRandom(): Int = {\n        \n    }\n\n}\n\n/**\n * Your RandomizedSet object will be instantiated and called as such:\n * val obj = new RandomizedSet()\n * val param_1 = obj.insert(`val`)\n * val param_2 = obj.remove(`val`)\n * val param_3 = obj.getRandom()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule RandomizedSet do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec insert(val :: integer) :: boolean\n  def insert(val) do\n    \n  end\n\n  @spec remove(val :: integer) :: boolean\n  def remove(val) do\n    \n  end\n\n  @spec get_random() :: integer\n  def get_random() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# RandomizedSet.init_()\n# param_1 = RandomizedSet.insert(val)\n# param_2 = RandomizedSet.remove(val)\n# param_3 = RandomizedSet.get_random()\n\n# RandomizedSet.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec randomized_set_init_() -> any().\nrandomized_set_init_() ->\n  .\n\n-spec randomized_set_insert(Val :: integer()) -> boolean().\nrandomized_set_insert(Val) ->\n  .\n\n-spec randomized_set_remove(Val :: integer()) -> boolean().\nrandomized_set_remove(Val) ->\n  .\n\n-spec randomized_set_get_random() -> integer().\nrandomized_set_get_random() ->\n  .\n\n\n%% Your functions will be called as such:\n%% randomized_set_init_(),\n%% Param_1 = randomized_set_insert(Val),\n%% Param_2 = randomized_set_remove(Val),\n%% Param_3 = randomized_set_get_random(),\n\n%% randomized_set_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define randomized-set%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; insert : exact-integer? -> boolean?\n    (define/public (insert val)\n      )\n    ; remove : exact-integer? -> boolean?\n    (define/public (remove val)\n      )\n    ; get-random : -> exact-integer?\n    (define/public (get-random)\n      )))\n\n;; Your randomized-set% object will be instantiated and called as such:\n;; (define obj (new randomized-set%))\n;; (define param_1 (send obj insert val))\n;; (define param_2 (send obj remove val))\n;; (define param_3 (send obj get-random))"
+    }
+  ],
+  "solution": {
+    "id": "810",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe're asked to implement the structure which provides the following operations in _average_ $$\\mathcal{O}(1)$$ time:\n\n- Insert \n\n- Delete\n\n- GetRandom\n\nFirst of all - why this weird combination? The structure looks quite theoretical, but it's widely used in popular statistical algorithms like [Markov chain Monte Carlo](https://en.wikipedia.org/wiki/Markov_chain_Monte_Carlo) and [Metropolis–Hastings algorithm](https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm). These algorithms are for sampling from a probability distribution when it's difficult to compute the distribution itself. \n\nLet's figure out how to implement such a structure. Starting from the Insert, we immediately have two good candidates with $$\\mathcal{O}(1)$$ [average insert time](https://wiki.python.org/moin/TimeComplexity):\n\n- Hashmap (or HashSet, the implementation is very similar): [Java HashMap](https://docs.oracle.com/javase/8/docs/api/java/util/HashMap.html) / [Python dictionary](https://docs.python.org/3/tutorial/datastructures.html#dictionaries)\n\n- Array List: [Java ArrayList](https://docs.oracle.com/javase/8/docs/api/java/util/LinkedList.html) / [Python list](https://docs.python.org/3/tutorial/datastructures.html)\n\nLet's consider them one by one. \n\n> Hashmap provides Insert and Delete in average constant time, although has problems with GetRandom. \n\nThe idea of GetRandom is to choose a random index and then retrieve an element with that index. There are no indexes in the hashmap, and hence to get a true random value, one has first to convert hashmap keys in a list, which would take linear time. The solution here is to build a list of keys aside and use this list to compute GetRandom in constant time.\n\n> Array List has indexes and could provide Insert and GetRandom in average constant time, though has problems with Delete. \n\nDeleting a value at an arbitrary index takes linear time. The solution here is to always delete the last value:\n\n- Swap the element to delete with the last one.\n\n- Pop the last element out.\n\nFor that, one has to compute an index of each element in constant time and hence needs a hashmap which stores `element -> its index` dictionary.\n\nBoth ways converge into the same combination of data structures:\n\n- Hashmap `element -> its index`.\n\n- Array List of elements.\n\n![fig](../Figures/380/structure2.png)\n<br /> \n<br />\n\n\n---\n### Approach 1: HashMap + ArrayList\n\n**Insert**\n\n- Add value -> its index into dictionary, average $$\\mathcal{O}(1)$$ time.\n\n- Append value to array list, average $$\\mathcal{O}(1)$$ time as well.\n\n![fig](../Figures/380/isert.png)\n\n<iframe src=\"https://leetcode.com/playground/MKcjnKub/shared\" frameBorder=\"0\" width=\"100%\" height=\"208\" name=\"MKcjnKub\"></iframe>\n\n**Delete**\n\n- Retrieve an index of element to delete from the hashmap.\n\n- Move the last element to the place of the element to delete, $$\\mathcal{O}(1)$$ time.\n\n- Pop the last element out, $$\\mathcal{O}(1)$$ time.\n\n![fig](../Figures/380/delete.png)\n\n<iframe src=\"https://leetcode.com/playground/UzWgGq8n/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"UzWgGq8n\"></iframe>\n\n**GetRandom**\n\nGetRandom could be implemented in $$\\mathcal{O}(1)$$ time with the help of standard `random.choice` in Python and `Random` object in Java.\n\n<iframe src=\"https://leetcode.com/playground/QQcP2oR4/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"QQcP2oR4\"></iframe>\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/aNJCsmvE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"aNJCsmvE\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity. GetRandom is always $$\\mathcal{O}(1)$$. Insert and Delete both have $$\\mathcal{O}(1)$$ average time complexity, and $$\\mathcal{O}(N)$$ in the worst-case scenario when the operation exceeds the capacity of currently allocated array/hashmap and invokes space reallocation.\n\n* Space complexity: $$\\mathcal{O}(N)$$, to store N elements.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

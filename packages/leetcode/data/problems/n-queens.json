@@ -1,0 +1,133 @@
+{
+  "questionId": "51",
+  "questionFrontendId": "51",
+  "title": "N-Queens",
+  "titleSlug": "n-queens",
+  "difficulty": "Hard",
+  "content": "<p>The <strong>n-queens</strong> puzzle is the problem of placing <code>n</code> queens on an <code>n x n</code> chessboard such that no two queens attack each other.</p>\n\n<p>Given an integer <code>n</code>, return <em>all distinct solutions to the <strong>n-queens puzzle</strong></em>. You may return the answer in <strong>any order</strong>.</p>\n\n<p>Each solution contains a distinct board configuration of the n-queens&#39; placement, where <code>&#39;Q&#39;</code> and <code>&#39;.&#39;</code> both indicate a queen and an empty space, respectively.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/11/13/queens.jpg\" style=\"width: 600px; height: 268px;\" />\n<pre>\n<strong>Input:</strong> n = 4\n<strong>Output:</strong> [[&quot;.Q..&quot;,&quot;...Q&quot;,&quot;Q...&quot;,&quot;..Q.&quot;],[&quot;..Q.&quot;,&quot;Q...&quot;,&quot;...Q&quot;,&quot;.Q..&quot;]]\n<strong>Explanation:</strong> There exist two distinct solutions to the 4-queens puzzle as shown above\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1\n<strong>Output:</strong> [[&quot;Q&quot;]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 9</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"solveNQueens\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<list<string>>\",\r\n    \"colsize\": \"param_1\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.2M\", \"totalSubmission\": \"1.7M\", \"totalAcceptedRaw\": 1241140, \"totalSubmissionRaw\": 1651144, \"acRate\": \"75.2%\"}",
+  "likes": 14281,
+  "dislikes": 350,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"N-Queens II\", \"titleSlug\": \"n-queens-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Grid Illumination\", \"titleSlug\": \"grid-illumination\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "4",
+    "1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 14, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 5, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 5, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 4, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 2, \"slug\": \"huawei\", \"name\": \"Huawei\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<string>> solveNQueens(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<String>> solveNQueens(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def solveNQueens(self, n: int) -> List[List[str]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def solveNQueens(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: List[List[str]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {string[][]}\n */\nvar solveNQueens = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function solveNQueens(n: number): string[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<string>> SolveNQueens(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nchar*** solveNQueens(int n, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func solveNQueens(n int) [][]string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun solveNQueens(n: Int): List<List<String>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func solveNQueens(_ n: Int) -> [[String]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn solve_n_queens(n: i32) -> Vec<Vec<String>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {String[][]}\ndef solve_n_queens(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return String[][]\n     */\n    function solveNQueens($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<String>> solveNQueens(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def solveNQueens(n: Int): List[List[String]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec solve_n_queens(n :: integer) :: [[String.t]]\n  def solve_n_queens(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec solve_n_queens(N :: integer()) -> [[unicode:unicode_binary()]].\nsolve_n_queens(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (solve-n-queens n)\n  (-> exact-integer? (listof (listof string?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1141",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nA brute force solution would involve generating all possible board states with N queens. There are $$N^2$$ possible squares to place the first queen, $$N^2 - 1$$ to place the second and so on. This leads to a time complexity of $$O(N^{2N})$$, which is far too slow. The actual number of solutions is **far** fewer than the number of possible board states, so we should aim to minimize our consideration of invalid board states.\n\nImagine if we tried to generate all board states by placing queens down one by one. For 8 queens on a normal chessboard, let's say we place the first queen on the top left (index `(0, 0)`, or, if you are familiar with Chess, `a8`). Then, we place the second queen to its right (index `(0, 1)`, or `b8`). \n\n<img src=\"../Figures/51/board_example.png\" width=\"960\"><br>\n\nThere are 62 * 61 * ... * 57 = **44,261,653,680** possible ways to place the remaining 6 queens, but we already know that every single one of them is invalid, because the first 2 queens can attack each other.\n\n</br>\n\n---\n\n### Approach: Backtracking\n\n**Intuition**\n\nWe can still follow the strategy of generating board states, but we should never place a queen on a square that another queen can attack. This is a perfect problem for backtracking - place the queens one by one, and when all possibilities are exhausted, backtrack by removing a queen and placing it elsewhere.\n\n> If you're not familiar with backtracking, check out the backtracking section of our [Recursion II Explore Card](https://leetcode.com/explore/learn/card/recursion-ii/472/backtracking/).\n\nGiven a board state, and a possible placement for a queen, we need a smart way to determine whether or not that placement will put the queen under attack. A queen can be attacked if another queen is on the same row, column, diagonal, or anti-diagonal.\n\nRecall that to implement backtracking, we implement a `backtrack` function that makes some changes to the state, calls itself again, and then when that call returns it undoes those changes (this last part is why it's called \"backtracking\").\n\nEach time our `backtrack` function is called, we can encode the state in the following manner:\n\n- To make sure that we only place 1 queen per **row**, we will pass an integer argument `row` into `backtrack`, and will only place one queen during each call. Whenever we place a queen, we'll move onto the next row by calling `backtrack` again with the parameter value `row + 1`.\n\n- To make sure we only place 1 queen per **column**, we will use a set. Whenever we place a queen, we can add the column index to this set.\n\nThe diagonals are a little trickier - but they have a property that we can use to our advantage.\n\n- For each square on a given **diagonal**, the difference between the row and column indices `(row - col)` will be constant. Think about the diagonal that starts from `(0, 0)` - the $$i^{th}$$ square has the coordinates `(i, i)`, so the difference is always 0.\n\n<img src=\"../Figures/51/diagonals.png\" width=\"960\"><br>\n\n- For each square on a given **anti-diagonal**, the sum of the row and column indexes `(row + col)` will be constant. If you were to start at the highest square in an anti-diagonal and move downwards, the row index increments by 1 `(row + 1)`, and the column index decrements by 1 `(col - 1)`. These cancel each other out.\n\n<img src=\"../Figures/51/antidiagonals.png\" width=\"960\"><br>\n\nEvery time we place a queen, we should calculate the diagonal and the anti-diagonal value it belongs to. In the same way we use a set to keep track of which columns have been used, we should also have a set to keep track of which diagonals and anti-diagonals have been used. Then, we can add the values for this queen to the corresponding sets.\n\n**Algorithm**\n\nWe'll create a recursive function `backtrack` that takes a few arguments to maintain the board state. The first parameter is the row we're going to place a queen on next, and then we will have 3 sets that track which columns, diagonals, and anti-diagonals have already had queens placed on them. Additionally, we will store the actual board so that when we find a valid solution, we can include it in our answer. The function will work as follows:\n\n1. If the current row we are considering is equal to `n`, then we have a solution. Add the current board state to a list of solutions, and return. We'll make use of a small helper function to get our board into the correct output format.\n\n2. Iterate through the columns of the current row. At each column, we will attempt to place a queen at the square `(row, col)` - remember we are considering the current row through the function arguments.\n    - Calculate the diagonal and anti-diagonal that the square belongs to. If a queen has not been placed in the column, diagonal, or anti-diagonal, then we can place a queen in this column, in the current row.\n    - If we can't place the queen, skip this column (move on and try the next column).\n\n3. If we were able to place a queen, then add the queen to the board and update our 3 sets (`cols`, `diagonals`, and `antiDiagonals`), and call the function again, but with `row + 1`.\n\n4. The function call made in step 3 explores all valid board states with the queen we placed in step 2. Since we're done exploring that path, backtrack by removing the queen from the square - this includes removing the values we added to our sets on top of removing the `\"Q\"` from the board.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/4543HtPZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4543HtPZ\"></iframe>\n\n\n**Complexity Analysis**\n\nGiven $$N$$ as the number of queens (which is the same as the width and height of the board),\n\n* Time complexity: $$O(N!)$$\n\n    Unlike the brute force approach, we will only place queens on squares that aren't under attack. For the first queen, we have $$N$$ options. For the next queen, we won't attempt to place it in the same column as the first queen, and there must be at least one square attacked diagonally by the first queen as well. Thus, the maximum number of squares we can consider for the second queen is $$N - 2$$. For the third queen, we won't attempt to place it in 2 columns already occupied by the first 2 queens, and there must be at least two squares attacked diagonally from the first 2 queens. Thus, the maximum number of squares we can consider for the third queen is $$N - 4$$. This pattern continues, resulting in an approximate time complexity of $$N!$$.\n\n    While it costs $$O(N^2)$$ to build each valid solution, the amount of valid solutions $$S(N)$$ does not grow nearly as fast as $$N!$$, so $$O(N! + S(N) * N^2) = O(N!)$$\n\n* Space complexity: $$O(N^2)$$\n\n    Extra memory used includes the 3 sets used to store board state, as well as the recursion call stack. All of this scales linearly with the number of queens. However, to keep the board state costs $$O(N^2)$$, since the board is of size `N * N`. Space used for the output does not count towards space complexity.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

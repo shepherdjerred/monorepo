@@ -1,0 +1,141 @@
+{
+  "questionId": "515",
+  "questionFrontendId": "515",
+  "title": "Find Largest Value in Each Tree Row",
+  "titleSlug": "find-largest-value-in-each-tree-row",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary tree, return <em>an array of the largest value in each row</em> of the tree <strong>(0-indexed)</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/21/largest_e1.jpg\" style=\"width: 300px; height: 172px;\" />\n<pre>\n<strong>Input:</strong> root = [1,3,2,5,3,null,9]\n<strong>Output:</strong> [1,3,9]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [1,2,3]\n<strong>Output:</strong> [1,3]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree will be in the range <code>[0, 10<sup>4</sup>]</code>.</li>\n\t<li><code>-2<sup>31</sup> &lt;= Node.val &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"largestValues\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<integer>\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"517.5K\", \"totalSubmission\": \"780.6K\", \"totalAcceptedRaw\": 517487, \"totalSubmissionRaw\": 780613, \"acRate\": \"66.3%\"}",
+  "likes": 4137,
+  "dislikes": 130,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,3,2,5,3,null,9]",
+    "[1,2,3]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"josh-technology\", \"name\": \"josh technology\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> largestValues(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public List<Integer> largestValues(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def largestValues(self, root: Optional[TreeNode]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def largestValues(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number[]}\n */\nvar largestValues = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction largestValues(root: TreeNode | null): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public IList<int> LargestValues(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* largestValues(struct TreeNode* root, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc largestValues(root *TreeNode) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun largestValues(root: TreeNode?): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func largestValues(_ root: TreeNode?) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn largest_values(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer[]}\ndef largest_values(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer[]\n     */\n    function largestValues($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  List<int> largestValues(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def largestValues(root: TreeNode): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec largest_values(root :: TreeNode.t | nil) :: [integer]\n  def largest_values(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec largest_values(Root :: #tree_node{} | null) -> [integer()].\nlargest_values(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (largest-values root)\n  (-> (or/c tree-node? #f) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2069",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Breadth First Search (BFS)\n\n**Intuition**\n\n> If you are not familiar with BFS traversal, we suggest you read our relevant [LeetCode Explore Card](https://leetcode.com/explore/learn/card/queue-stack/231/practical-application-queue/1376/).\n\nBFS is perfect when we are dealing specifically with rows/levels of a binary tree. With BFS, we handle one row of the tree at a time.\n\nHere, we need to find the maximum value in each row. We can simply perform a BFS and for each row, keep track of the maximum value we have seen so far. We will initialize an integer `currMax` to a small value like negative infinity. Then we go through the row and try to update `currMax` when we see larger values. After handling the row, we add `currMax` to our answer.\n\n**Algorithm**\n\n1. If the `root` is null (empty) tree, just return an empty list.\n2. Initialize the answer list `ans` and a `queue` with the `root` to perform BFS.\n3. Perform BFS - while the `queue` is not empty:\n    - Initialize `currMax` to a small value and save the length of the queue in `currentLength`.\n    - Iterate `currentLength` times:\n        - Remove a `node` from the `queue`.\n        - Update `currMax` with `node.val` if it is larger.\n        - For each child of `node`, if it is not null, push it to the `queue`.\n    - Add `currMax` to `ans`.\n4. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/P7pFhbid/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"P7pFhbid\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the number of nodes in the tree,\n\n* Time complexity: $$O(n)$$\n\n    During the BFS, we visit each node in the tree once. At each node, we perform $$O(1)$$ work.\n\n* Space complexity: $$O(n)$$\n\n    In a perfect binary tree, the final row has $$O(\\frac{n}{2}) = O(n)$$ nodes, all of which will be in `queue`.\n    \n<br/>\n\n---\n\n### Approach 2: Depth First Search (DFS)\n\n**Intuition**\n\n> Note: This problem is perfect for BFS, but an interviewer might you to implement DFS as a follow-up. We have included a DFS approach for completeness.\n\nIn BFS, we handle each row explicitly, so it's easy to just keep track of the maximum value as we traverse through the row.\n\nIn DFS, the order in which we move through the tree is not related to the rows. Thus, we need to be more creative to find the maximum value in each row. The first observation to make is that each row can be described by the depth of its nodes.\n\n![depth](../Figures/515/1.png)\n<br>\n\nThe depth of a node is its distance from the root. The root has a depth of `0`, and every child has a depth of `1` greater than its parent. You may also notice that in terms of indices, each node's depth corresponds to its index in the answer.\n\nFor example, if `ans` is our answer list, then `ans[2]` holds the maximum value of all nodes with depth `2`.\n\nIf we keep track of each node's depth during the traversal, then we can update `ans` directly. How do we keep track of the depth? We will pass an additional argument `depth` in our `dfs` function. When we initially call `dfs` with `root`, we will pass `depth = 0`. When we call `dfs` on a child, we will pass `depth + 1`.\n\nThere is one problem: how do we know what length `ans` should be? We will initialize `ans` as an empty list. If we are at a `depth` that would be out of bounds if we tried to access `ans[depth]`, then we will simply initialize the current `node.val` as the maximum value seen at `depth` so far by pushing `node.val` to `ans`.\n\n**Algorithm**\n\n1. Initialize `ans` as an empty list.\n2. Define a function `dfs(node, depth)`:\n    - If `node` is null, return.\n    - If `depth == ans.length`, then push `node.val` to `ans`. Otherwise, try to update `ans[depth]` with `node.val` if its larger.\n    - Call `dfs` on `node.left` and `node.right` with `depth + 1` as the second argument.\n3. Call `dfs(root, 0)` and then `return ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/CmiiemQN/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"CmiiemQN\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the number of nodes in the tree and $$h$$ as the max depth of the tree,\n\n* Time complexity: $$O(n)$$\n\n    During the DFS, we visit each node in the tree once. At each node, we perform $$O(1)$$ work.\n\n* Space complexity: $$O(h)$$\n\n    We use extra space for the recursion call stack. The most calls in the call stack at any given time will be the max depth of the tree. In the worst-case scenario where the tree is like a linked list, the max depth will be $$O(n)$$.\n    \n<br/>\n\n---\n\n### Approach 3: DFS, Iterative\n\n**Intuition**\n\nWe can also implement DFS iteratively using a stack. Each entry in the stack will be a pair `node, depth`. We will use a while loop to perform the DFS, with each iteration being analogous to a function call from the previous approach. As such, we will perform the same process in each while loop iteration: try to update `ans` with `node.val`, then push the children of `node` to the stack if they exist.\n\n**Algorithm**\n\n1. If the `root` is null (empty) tree, just return an empty list.\n2. Initialize the answer list `ans` and a `stack` with `(root, 0)`.\n3. While the `stack` is not empty:\n    - Pop `(node, depth)` from the stack.\n    - If `depth == ans.length`, then push `node.val` to `ans`. Otherwise, try to update `ans[depth]` with `node.val` if its larger.\n    - If `node.left` is not null, push `(node.left, depth + 1)` to `stack`.\n    - If `node.right` is not null, push `(node.right, depth + 1)` to `stack`.\n4. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/Gc9wyzzK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Gc9wyzzK\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the number of nodes in the tree and $$h$$ as the max depth of the tree,\n\n* Time complexity: $$O(n)$$\n\n    During the DFS, we visit each node in the tree once. At each node, we perform $$O(1)$$ work.\n\n* Space complexity: $$O(h)$$\n\n    We use extra space for the recursion call stack. The most calls in the call stack at any given time will be the max depth of the tree. In the worst-case scenario where the tree is like a linked list, the max depth will be $$O(n)$$.\n\n    We pop the top node from the stack and then push its child nodes onto the stack based on the DFS traversal strategy. This process of pushing and popping forms a path-like structure within the stack, and the length of this path will not exceed the height of the tree. Therefore, $$O(h)$$ space will be used.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

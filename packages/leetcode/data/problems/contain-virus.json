@@ -1,0 +1,143 @@
+{
+  "questionId": "750",
+  "questionFrontendId": "749",
+  "title": "Contain Virus",
+  "titleSlug": "contain-virus",
+  "difficulty": "Hard",
+  "content": "<p>A virus is spreading rapidly, and your task is to quarantine the infected area by installing walls.</p>\n\n<p>The world is modeled as an <code>m x n</code> binary grid <code>isInfected</code>, where <code>isInfected[i][j] == 0</code> represents uninfected cells, and <code>isInfected[i][j] == 1</code> represents cells contaminated with the virus. A wall (and only one wall) can be installed between any two <strong>4-directionally</strong> adjacent cells, on the shared boundary.</p>\n\n<p>Every night, the virus spreads to all neighboring cells in all four directions unless blocked by a wall. Resources are limited. Each day, you can install walls around only one region (i.e., the affected area (continuous block of infected cells) that threatens the most uninfected cells the following night). There <strong>will never be a tie</strong>.</p>\n\n<p>Return <em>the number of walls used to quarantine all the infected regions</em>. If the world will become fully infected, return the number of walls used.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/01/virus11-grid.jpg\" style=\"width: 500px; height: 255px;\" />\n<pre>\n<strong>Input:</strong> isInfected = [[0,1,0,0,0,0,0,1],[0,1,0,0,0,0,0,1],[0,0,0,0,0,0,0,1],[0,0,0,0,0,0,0,0]]\n<strong>Output:</strong> 10\n<strong>Explanation:</strong> There are 2 contaminated regions.\nOn the first day, add 5 walls to quarantine the viral region on the left. The board after the virus spreads is:\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/01/virus12edited-grid.jpg\" style=\"width: 500px; height: 257px;\" />\nOn the second day, add 5 walls to quarantine the viral region on the right. The virus is fully contained.\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/01/virus13edited-grid.jpg\" style=\"width: 500px; height: 261px;\" />\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/01/virus2-grid.jpg\" style=\"width: 653px; height: 253px;\" />\n<pre>\n<strong>Input:</strong> isInfected = [[1,1,1],[1,0,1],[1,1,1]]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> Even though there is only one cell saved, there are 4 walls built.\nNotice that walls are only built on the shared boundary of two different cells.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> isInfected = [[1,1,1,0,0,0,0,0,0],[1,0,1,0,1,1,1,1,1],[1,1,1,0,0,0,0,0,0]]\n<strong>Output:</strong> 13\n<strong>Explanation:</strong> The region on the left only builds two new walls.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m ==&nbsp;isInfected.length</code></li>\n\t<li><code>n ==&nbsp;isInfected[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 50</code></li>\n\t<li><code>isInfected[i][j]</code> is either <code>0</code> or <code>1</code>.</li>\n\t<li>There is always a contiguous viral region throughout the described process that will <strong>infect strictly more uncontaminated squares</strong> in the next round.</li>\n</ul>\n",
+  "hints": [
+    "The implementation is long - we want to perfrom the following steps:\r\n\r\n* Find all viral regions (connected components), additionally for each region keeping track of the frontier (neighboring uncontaminated cells), and the perimeter of the region.\r\n\r\n* Disinfect the most viral region, adding it's perimeter to the answer.\r\n\r\n* Spread the virus in the remaining regions outward by 1 square."
+  ],
+  "metaData": "{\n  \"name\": \"containVirus\",\n  \"params\": [\n    {\n      \"name\": \"isInfected\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"18.4K\", \"totalSubmission\": \"33.7K\", \"totalAcceptedRaw\": 18426, \"totalSubmissionRaw\": 33732, \"acRate\": \"54.6%\"}",
+  "likes": 441,
+  "dislikes": 466,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count the Number of Infection Sequences\", \"titleSlug\": \"count-the-number-of-infection-sequences\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,1,0,0,0,0,0,1],[0,1,0,0,0,0,0,1],[0,0,0,0,0,0,0,1],[0,0,0,0,0,0,0,0]]",
+    "[[1,1,1],[1,0,1],[1,1,1]]",
+    "[[1,1,1,0,0,0,0,0,0],[1,0,1,0,1,1,1,1,1],[1,1,1,0,0,0,0,0,0]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int containVirus(vector<vector<int>>& isInfected) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int containVirus(int[][] isInfected) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def containVirus(self, isInfected: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def containVirus(self, isInfected):\n        \"\"\"\n        :type isInfected: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} isInfected\n * @return {number}\n */\nvar containVirus = function(isInfected) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function containVirus(isInfected: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ContainVirus(int[][] isInfected) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int containVirus(int** isInfected, int isInfectedSize, int* isInfectedColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func containVirus(isInfected [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun containVirus(isInfected: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func containVirus(_ isInfected: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn contain_virus(is_infected: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} is_infected\n# @return {Integer}\ndef contain_virus(is_infected)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $isInfected\n     * @return Integer\n     */\n    function containVirus($isInfected) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int containVirus(List<List<int>> isInfected) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def containVirus(isInfected: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec contain_virus(is_infected :: [[integer]]) :: integer\n  def contain_virus(is_infected) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec contain_virus(IsInfected :: [[integer()]]) -> integer().\ncontain_virus(IsInfected) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (contain-virus isInfected)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

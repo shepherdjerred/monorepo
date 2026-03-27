@@ -1,0 +1,142 @@
+{
+  "questionId": "258",
+  "questionFrontendId": "258",
+  "title": "Add Digits",
+  "titleSlug": "add-digits",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer <code>num</code>, repeatedly add all its digits until the result has only one digit, and return it.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 38\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The process is\n38 --&gt; 3 + 8 --&gt; 11\n11 --&gt; 1 + 1 --&gt; 2 \nSince 2 has only one digit, return it.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 0\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= num &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> Could you do it without any loop/recursion in <code>O(1)</code> runtime?</p>\n",
+  "hints": [
+    "A naive implementation of the above process is trivial. Could you come up with other methods?",
+    "What are all the possible results?",
+    "How do they occur, periodically or randomly?",
+    "You may find this <a href=\"https://en.wikipedia.org/wiki/Digital_root\" target=\"_blank\">Wikipedia article</a> useful."
+  ],
+  "metaData": "{\r\n  \"name\": \"addDigits\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"num\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.2M\", \"totalSubmission\": \"1.7M\", \"totalAcceptedRaw\": 1202298, \"totalSubmissionRaw\": 1748602, \"acRate\": \"68.8%\"}",
+  "likes": 5498,
+  "dislikes": 1980,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Happy Number\", \"titleSlug\": \"happy-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Digits in the Minimum Number\", \"titleSlug\": \"sum-of-digits-in-the-minimum-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Digits of String After Convert\", \"titleSlug\": \"sum-of-digits-of-string-after-convert\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Sum of Four Digit Number After Splitting Digits\", \"titleSlug\": \"minimum-sum-of-four-digit-number-after-splitting-digits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Calculate Digit Sum of a String\", \"titleSlug\": \"calculate-digit-sum-of-a-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Difference Between Element Sum and Digit Sum of an Array\", \"titleSlug\": \"difference-between-element-sum-and-digit-sum-of-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Alternating Digit Sum\", \"titleSlug\": \"alternating-digit-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "38",
+    "0"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}], \"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 13, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"pega\", \"name\": \"Pega\"}]}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    },
+    {
+      "name": "Number Theory",
+      "slug": "number-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int addDigits(int num) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int addDigits(int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def addDigits(self, num: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def addDigits(self, num):\n        \"\"\"\n        :type num: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} num\n * @return {number}\n */\nvar addDigits = function(num) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function addDigits(num: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int AddDigits(int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int addDigits(int num) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func addDigits(num int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun addDigits(num: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func addDigits(_ num: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn add_digits(num: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num\n# @return {Integer}\ndef add_digits(num)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $num\n     * @return Integer\n     */\n    function addDigits($num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int addDigits(int num) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def addDigits(num: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec add_digits(num :: integer) :: integer\n  def add_digits(num) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec add_digits(Num :: integer()) -> integer().\nadd_digits(Num) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (add-digits num)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "958",
+    "content": "[TOC]\n\n---\n\n### Overview\n\nThe value we're asked to compute is the so-called [Digital Root](https://en.wikipedia.org/wiki/Digital_root). Logarithmic time solution is easy to write, although the main question here is how to fit into a constant time.\n\n<iframe src=\"https://leetcode.com/playground/hvP39Nsq/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"hvP39Nsq\"></iframe>\n\n<br />\n\n---\n\n### Approach 1: Mathematical: Digital Root\n\n**Formula for the Digital Root**\n\nThere is a known formula to compute a digital root in a decimal numeral system\n\n$$\ndr_{10}(n) = 0, \\qquad \\text{if } n = 0 \n$$\n\n$$\ndr_{10}(n) = 9, \\qquad \\text{if } n = 9 k \n$$\n\n$$\ndr_{10}(n) = n \\mod 9, \\qquad \\text{if } n \\neq 9 k\n$$\n\nHow to derive it? Probably, you already know the following proof from school, where it was used for divisibility by 9: \"The original number is divisible by 9 if and only if the sum of its digits is divisible by 9\". Let's revise it briefly. \n\nThe input number could be presented in a standard way, where $$d_0, d_1, .. d_k$$ are digits of n:\n\n$$\nn = d_0 + d_1 \\cdot 10^1 + d_2 \\cdot 10^2 + ... + d_k \\cdot 10^k\n$$\n\nOne could expand each power of ten, using the following:\n\n$$\n10 = 9 \\cdot 1 + 1 \\\\ \n100 = 99 + 1 = 9 \\cdot 11 + 1 \\\\ \n1000 = 999 + 1 = 9 \\cdot 111 + 1 \\\\\n... \\\\\n10^k = 1\\underbrace{00..0}_\\text{k times} = \\underbrace{99..9}_\\text{k times} + 1 = 9 \\cdot \\underbrace{11..1}_\\text{k times} + 1\n$$\n\nThat results in \n\n$$\nn = d_0 + d_1 \\cdot (9 \\cdot 1 + 1) + d_2 \\cdot(9 \\cdot 11 + 1) + ... + d_k \\cdot (9 \\cdot \\underbrace{11..1}_\\text{k times} + 1)\n$$\n\nand could be simplified as\n\n$$\nn = (d_0 + d_1 + d_2 + ... + d_k) + 9 \\cdot (d_1 \\cdot 1 + d_2 \\cdot 11 + ... + d_k \\cdot \\underbrace{11..1}_\\text{k times})\n$$\n\nThe last step is to take the modulo from both sides:\n\n$$\nn \\mod 9 = (d_0 + d_1 + d_2 + ... + d_k) \\mod 9\n$$\n\nand to consider separately three cases: the sum of digits is 0, the sum of digits is divisible by 9, and the sum of digits is _not_ divisible by nine:\n\n$$\ndr_{10}(n) = 0, \\qquad \\text{if } n = 0\n$$\n\n$$\ndr_{10}(n) = 9, \\qquad \\text{if } n = 9 k \n$$\n\n$$\ndr_{10}(n) = n \\mod 9, \\qquad \\text{if } n \\neq 9 k\n$$\n\n**Implementation**\n\nThe straightforward implementation is \n\n<iframe src=\"https://leetcode.com/playground/CzKYBRXZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"191\" name=\"CzKYBRXZ\"></iframe>\n\nthough two last cases could be merged into one\n\n$$\ndr_{10}(n) = 0, \\qquad \\text{if } n = 0 \n$$\n\n$$\ndr_{10}(n) = 1 + (n - 1) \\mod 9, \\qquad \\text{if } n \\neq 0\n$$\n\n<iframe src=\"https://leetcode.com/playground/5sUsPBbx/shared\" frameBorder=\"0\" width=\"100%\" height=\"157\" name=\"5sUsPBbx\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the input number.\n\n- Time complexity: $O(1)$\n\n    The function performs a constant number of operations, regardless of the input size. The operations involve simple arithmetic calculations and a conditional check, all of which take constant time.\n\n- Space complexity: $O(1)$\n\n    The function uses a constant amount of extra space. It does not depend on the input size and only uses a few variables for the calculations, which do not grow with the input.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

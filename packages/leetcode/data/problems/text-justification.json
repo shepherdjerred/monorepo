@@ -1,0 +1,138 @@
+{
+  "questionId": "68",
+  "questionFrontendId": "68",
+  "title": "Text Justification",
+  "titleSlug": "text-justification",
+  "difficulty": "Hard",
+  "content": "<p>Given an array of strings <code>words</code> and a width <code>maxWidth</code>, format the text such that each line has exactly <code>maxWidth</code> characters and is fully (left and right) justified.</p>\n\n<p>You should pack your words in a greedy approach; that is, pack as many words as you can in each line. Pad extra spaces <code>&#39; &#39;</code> when necessary so that each line has exactly <code>maxWidth</code> characters.</p>\n\n<p>Extra spaces between words should be distributed as evenly as possible. If the number of spaces on a line does not divide evenly between words, the empty slots on the left will be assigned more spaces than the slots on the right.</p>\n\n<p>For the last line of text, it should be left-justified, and no extra space is inserted between words.</p>\n\n<p><strong>Note:</strong></p>\n\n<ul>\n\t<li>A word is defined as a character sequence consisting of non-space characters only.</li>\n\t<li>Each word&#39;s length is guaranteed to be greater than <code>0</code> and not exceed <code>maxWidth</code>.</li>\n\t<li>The input array <code>words</code> contains at least one word.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;This&quot;, &quot;is&quot;, &quot;an&quot;, &quot;example&quot;, &quot;of&quot;, &quot;text&quot;, &quot;justification.&quot;], maxWidth = 16\n<strong>Output:</strong>\n[\n&nbsp; &nbsp;&quot;This &nbsp; &nbsp;is &nbsp; &nbsp;an&quot;,\n&nbsp; &nbsp;&quot;example &nbsp;of text&quot;,\n&nbsp; &nbsp;&quot;justification. &nbsp;&quot;\n]</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;What&quot;,&quot;must&quot;,&quot;be&quot;,&quot;acknowledgment&quot;,&quot;shall&quot;,&quot;be&quot;], maxWidth = 16\n<strong>Output:</strong>\n[\n&nbsp; &quot;What &nbsp; must &nbsp; be&quot;,\n&nbsp; &quot;acknowledgment &nbsp;&quot;,\n&nbsp; &quot;shall be &nbsp; &nbsp; &nbsp; &nbsp;&quot;\n]\n<strong>Explanation:</strong> Note that the last line is &quot;shall be    &quot; instead of &quot;shall     be&quot;, because the last line must be left-justified instead of fully-justified.\nNote that the second line is also left-justified because it contains only one word.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;Science&quot;,&quot;is&quot;,&quot;what&quot;,&quot;we&quot;,&quot;understand&quot;,&quot;well&quot;,&quot;enough&quot;,&quot;to&quot;,&quot;explain&quot;,&quot;to&quot;,&quot;a&quot;,&quot;computer.&quot;,&quot;Art&quot;,&quot;is&quot;,&quot;everything&quot;,&quot;else&quot;,&quot;we&quot;,&quot;do&quot;], maxWidth = 20\n<strong>Output:</strong>\n[\n&nbsp; &quot;Science &nbsp;is &nbsp;what we&quot;,\n  &quot;understand &nbsp; &nbsp; &nbsp;well&quot;,\n&nbsp; &quot;enough to explain to&quot;,\n&nbsp; &quot;a &nbsp;computer. &nbsp;Art is&quot;,\n&nbsp; &quot;everything &nbsp;else &nbsp;we&quot;,\n&nbsp; &quot;do &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&quot;\n]</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 300</code></li>\n\t<li><code>1 &lt;= words[i].length &lt;= 20</code></li>\n\t<li><code>words[i]</code> consists of only English letters and symbols.</li>\n\t<li><code>1 &lt;= maxWidth &lt;= 100</code></li>\n\t<li><code>words[i].length &lt;= maxWidth</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"fullJustify\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"words\",\r\n      \"type\": \"string[]\"\r\n    },\r\n    {\r\n      \"name\": \"maxWidth\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<string>\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"640K\", \"totalSubmission\": \"1.3M\", \"totalAcceptedRaw\": 640034, \"totalSubmissionRaw\": 1262670, \"acRate\": \"50.7%\"}",
+  "likes": 4545,
+  "dislikes": 5384,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Rearrange Spaces Between Words\", \"titleSlug\": \"rearrange-spaces-between-words\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Divide a String Into Groups of Size k\", \"titleSlug\": \"divide-a-string-into-groups-of-size-k\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Split Message Based on Limit\", \"titleSlug\": \"split-message-based-on-limit\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"This\", \"is\", \"an\", \"example\", \"of\", \"text\", \"justification.\"]\n16",
+    "[\"What\",\"must\",\"be\",\"acknowledgment\",\"shall\",\"be\"]\n16",
+    "[\"Science\",\"is\",\"what\",\"we\",\"understand\",\"well\",\"enough\",\"to\",\"explain\",\"to\",\"a\",\"computer.\",\"Art\",\"is\",\"everything\",\"else\",\"we\",\"do\"]\n20"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 7, \"slug\": \"capital-one\", \"name\": \"Capital One\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"robinhood\", \"name\": \"Robinhood\"}], \"six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 3, \"slug\": \"anyscale\", \"name\": \"Anyscale\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 2, \"slug\": \"karat\", \"name\": \"Karat\"}, {\"timesEncountered\": 2, \"slug\": \"sentry\", \"name\": \"Sentry\"}], \"more_than_six_months\": [{\"timesEncountered\": 28, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 12, \"slug\": \"moveworks\", \"name\": \"Moveworks\"}, {\"timesEncountered\": 9, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}, {\"timesEncountered\": 8, \"slug\": \"coursera\", \"name\": \"Coursera\"}, {\"timesEncountered\": 6, \"slug\": \"databricks\", \"name\": \"Databricks\"}, {\"timesEncountered\": 6, \"slug\": \"sig\", \"name\": \"SIG\"}, {\"timesEncountered\": 6, \"slug\": \"bcg\", \"name\": \"BCG\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 5, \"slug\": \"mongodb\", \"name\": \"MongoDB\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> fullJustify(vector<string>& words, int maxWidth) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> fullJustify(String[] words, int maxWidth) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def fullJustify(self, words: List[str], maxWidth: int) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def fullJustify(self, words, maxWidth):\n        \"\"\"\n        :type words: List[str]\n        :type maxWidth: int\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @param {number} maxWidth\n * @return {string[]}\n */\nvar fullJustify = function(words, maxWidth) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function fullJustify(words: string[], maxWidth: number): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> FullJustify(string[] words, int maxWidth) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** fullJustify(char** words, int wordsSize, int maxWidth, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func fullJustify(words []string, maxWidth int) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun fullJustify(words: Array<String>, maxWidth: Int): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func fullJustify(_ words: [String], _ maxWidth: Int) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn full_justify(words: Vec<String>, max_width: i32) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @param {Integer} max_width\n# @return {String[]}\ndef full_justify(words, max_width)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @param Integer $maxWidth\n     * @return String[]\n     */\n    function fullJustify($words, $maxWidth) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> fullJustify(List<String> words, int maxWidth) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def fullJustify(words: Array[String], maxWidth: Int): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec full_justify(words :: [String.t], max_width :: integer) :: [String.t]\n  def full_justify(words, max_width) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec full_justify(Words :: [unicode:unicode_binary()], MaxWidth :: integer()) -> [unicode:unicode_binary()].\nfull_justify(Words, MaxWidth) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (full-justify words maxWidth)\n  (-> (listof string?) exact-integer? (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1929",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nUnlike most problems on LeetCode, this is one that can be solved by just doing exactly what the problem statement is telling us to do.\n\nYou don't need any data structures or algorithmic tricks to solve this problem. The point of this problem is to test your ability to quickly write clean code while navigating edge cases.\n\nThe solution we will present in this article is only one of many ways to approach this problem.\n\n---\n\n### Approach:\n\n**Intuition**\n\nThis problem falls into a class of problems that are rare on LeetCode - not algorithmic, but more representative of a real-life task. Another good example of a problem in this class is [Valid Number](https://leetcode.com/problems/valid-number/).\n\nThese problems are more annoying than difficult because there are multiple moving parts that sometimes aren't really related to each other. It can be frustrating managing everything without running into errors.\n\nOne of the most important principles in software engineering is [modularity](https://en.wikipedia.org/wiki/Modular_programming). We can increase modularity by splitting the overall problem into subtasks and then allocating sections of code (like with a helper function) to accomplish these subtasks independently.\n\nIn this problem, a natural approach would be to create one line of length `maxWidth` at a time. We can split creating a line into two subtasks:\n\n1. Determine which words should be on the line.\n2. Take the words from the first task and create a line.\n\nWe will look at these subtasks separately.\n\n---\n\n**Determine which words should be on a line**\n\nLet's create a helper method `getWords(int i)`. It takes an integer `i` that indicates the index of the first word in `words` that we are considering. It returns a list of words that will be included on a line. This list should be a subarray of `words` starting with `words[i]`. The problem description says to \"pack as many words as you can in each line\". Therefore, the length of this subarray should be maximized without the length of the line exceeding `maxWidth`.\n\nOn a line, every word except the final one must be followed by a space. Therefore, each `word` contributes `word.length + 1` to the line's length, except for the final word. We want to add as many words as possible without exceeding `maxWidth`.\n\nLet's use an integer `currLength` to indicate the current minimum length of our line. To determine if we should add `words[i]` to the current line, we can check the condition: `currLength + words[i].length <= maxWidth`. We don't need the `+ 1` in this condition because `words[i]` could be the final word, which doesn't need a space after it.\n\nIf the condition passes, then we can add `words[i]` to the current line. We should increment `currLength` by `words[i].length + 1`.\n\nYou may be thinking: why can we do the `+ 1` here? What if `words[i]` is the final word that can fit? Won't that `+ 1` be inaccurate since we aren't adding a space?\n\nThe reason we can do `+ 1` here is that we aren't actually building the line yet. We are just trying to determine how many words can fit. Think about the above condition `currLength + words[i].length <= maxWidth`, but with `words[i + 1]` instead. If we can add `words[i + 1]`, then there must have been a space after `words[i]`.\n\n> The `+ 1` is necessary when we add `words[i]` to \"prepare\" the condition check for `words[i + 1]`.\n\nWe can use a while loop to add words to the current line until adding another word would violate the condition.\n\n<iframe src=\"https://leetcode.com/playground/an9FRGzo/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"an9FRGzo\"></iframe>\n\n---\n\n**Take the words from the first task and create a line**\n\nWe have a list of words `line`. Now, we need to convert it to a string according to the problem description:\n\n1. The string must have a length of `maxWidth`. Use extra spaces to reach this length.\n2. The extra spaces should be distributed between the words as evenly as possible.\n3. If the number of extra spaces does not evenly divide between words, the words on the left should have more spaces than the ones on the right.\n4. The final line should only be left justified with only one space between words.\n\nThe first step is to figure out how many extra spaces are needed to force the line to have a length of `maxWidth`.\n\nAs we know from before, each `word` contributes `word[i].length + 1` to the line length except the last one, which only contributes `word[i].length`. The `+ 1` was due to the mandatory spaces between the words.\n\nWe can start by finding this minimum `baseLength`. Iterate over the words in `line` and add `word.length + 1` for each word. To account for the final word not having a space after it, we can initialize `baseLength = -1`.\n\nNow that we know `baseLength`, we can find how many extra spaces we need as `extraSpaces = maxWidth - baseLength`.\n\nNext, we need to distribute `extraSpaces` evenly. Let's consider how many extra spaces should go after each word. Because the final word does not have any spaces after it, we set `wordCount = line.length - 1`. This is the number of words in the line that need spaces after it.\n\nTo evenly distribute `extraSpaces`, we find the number of spaces between each word as `spacesPerWord = extraSpaces / wordCount` (floor division). The problem says that if `extraSpaces` does not evenly divide, then the leftover spaces should go to the leftmost words.\n\nWe can find how many words on the left need an additional space by finding the remainder as `needsExtraSpaces = extraSpaces % wordCount` (modulo/remainder operator).\n\nWe finally have all the information we need. Now we can add the spaces between the words. First, let's iterate over the `needsExtraSpaces` leftmost words and add a space `\" \"` to each string. Next, we iterate over all words except the last one and add `spacesPerWord` spaces to each string.\n\nFinally, don't forget about the mandatory space between each word - we can add that by joining the strings in `line` with `\" \"` as a delimiter.\n\nThat's the full process for a normal line. But we have two special cases to handle as well. First, the final line is handled separately. Second, if a line contains only one word, it needs to be handled the same as the final line. This is because the only word is also the final word, and the process we described above makes it so that the final word does not have any spaces after it.\n\nNotice that we set `wordCount = line.length - 1` to ignore the final word. If a line has only one word, we would have `wordCount = 0`, and then run into division-by-zero when trying to calculate `spacesPerWord`.\n\nBefore going through the full process, we first check if the line contains only one word or if we are dealing with the final line. We can check if we are dealing with the final line by checking if we have used all the words from the input.\n\nTo check for this, we will define our helper function as: `createLine(string[] lines, int i)`. We will pass `i` which is an integer that we will use to go through the input. If `i == words.length`, that means we have iterated over all the words in the `getWords` helper function we designed above, and we know we are dealing with the last line.\n\nTo deal with the special case, we can just join `line` with `\" \"` as a delimiter, and then add `extraSpaces` spaces at the end of the string. If `line` only has one string, then the delimiter-join will do nothing, and we just fill the string with spaces. If we are dealing with the last line which has multiple words, then the delimiter-join will put the mandatory space between each word, and then we fill the string with spaces to meet the length requirement.\n\n<iframe src=\"https://leetcode.com/playground/ifGriF7q/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ifGriF7q\"></iframe>\n\n---\n\n**Algorithm**\n\nThis brings us to our final solution.\n\n1. Create two helper methods `getWords` and `createLine` that we described above.\n2. Initialize an answer list `ans` and an integer `i` to iterate over the input.\n3. Use a while loop to iterate over the input. Each iteration in the while loop will handle one line in the answer.\n    - While `i < words.length`, do the following steps:\n    - Get the words that should be in the current line as `currentLine = getWords(i)`.\n    - Increment `i` by `currentLine.length`.\n    - Create the line by calling `createLine(line, i)` and add it to `ans`.\n\n4. Return `ans`.\n\n---\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/U3SxCEag/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"U3SxCEag\"></iframe>\n\n---\n\n**Complexity Analysis**\n\nLet $$n$$ be `words.length`, $$k$$ be the average length of a word, and $$m$$ be `maxWidth`.\n\nHere, we are assuming that you are using immutable strings. A language like C++ has mutable strings and thus the complexity analysis will be slightly different.\n\n* Time complexity: $$O(n \\cdot k)$$\n\n    <u>`getWords`</u>\n    \n    The work done in each while loop iteration is $$O(1)$$. Thus the cost of each call is equal to the number of times the while loop runs in each call. This is amortized throughout the runtime of the algorithm - each index of `words` can only be iterated over once throughout all calls, so the time complexity of all calls to `getWords` is $$O(n)$$.\n    \n    <u>`createLine`</u>\n    \n    First, we iterate over the words in `line` to calculate `baseLength`. Again, this is amortized over the runtime of the algorithm as each word in the input can only be iterated over once here. Therefore, this loop contributes $$O(n)$$ over all calls to `createLine`.\n\n    If we are dealing with the special case (one word line or last lane), we create a string of length `maxWidth`. This costs $$O(m)$$.\n\n    Otherwise, we iterate over the words in `line` and perform string operations on each. The first for loop which adds the mandatory space costs $$O(k)$$ per iteration. In the worst-case scenario, we won't have any lines with only one word and the final line has only one word. In this scenario, over the runtime of the algorithm, this for loop will iterate over every word except for the final one, which would cost $$O(n \\cdot k)$$.\n\n    The second for loop which adds the extra spaces is harder to analyze. At a minimum, each operation will cost $$O(k)$$. The amount of spaces we add is a function of `maxWidth` and the number of words in `line`, as well as the sum of their lengths. One thing is for certain though: on a given call, the strings we create in this for loop cannot exceed `maxWidth` in length combined. Therefore, we can say that this for loop costs $$O(m)$$ per call to `createLine`.\n\n    Finally, we join the line with a delimiter, which costs $$O(m)$$.\n\n    Overall, this function contributes $$O(n \\cdot k)$$ to the overall runtime, and $$O(m)$$ per call.\n\n    <u>Main section</u>\n\n    We already determined that all calls to `getWords` contribute $$O(n)$$ in total, so we don't have to worry about that.\n\n    Each call to `createLine` costs $$O(m)$$. We call it in each while loop iteration. The number of while loop iterations is a function of `n`, `k`, and `m`. On average, we can fit $$\\frac{m}{k}$$ words per line. Because we have $$n$$ words, that implies $$O(\\frac{n}{\\frac{m}{k}}) = O(\\frac{n \\cdot k}{m})$$ iterations. Each iteration costs $$O(m)$$, so this gives us $$O(n \\cdot k)$$.\n\n    Summing it all up and canceling constants, we have a time complexity of $$O(n \\cdot k)$$ - the sum of the characters in all the words.\n\n* Space complexity: $$O(m)$$\n\n    We don't count the answer as part of the space complexity.\n\n    We handle one line at a time and each line has a length of $$m$$. The intermediate arrays we use like `currentLine` hold strings, but the sum of the lengths of these strings cannot exceed $$m$$ either.\n\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

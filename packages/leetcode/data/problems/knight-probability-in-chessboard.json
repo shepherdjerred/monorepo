@@ -1,0 +1,129 @@
+{
+  "questionId": "688",
+  "questionFrontendId": "688",
+  "title": "Knight Probability in Chessboard",
+  "titleSlug": "knight-probability-in-chessboard",
+  "difficulty": "Medium",
+  "content": "<p>On an <code>n x n</code> chessboard, a knight starts at the cell <code>(row, column)</code> and attempts to make exactly <code>k</code> moves. The rows and columns are <strong>0-indexed</strong>, so the top-left cell is <code>(0, 0)</code>, and the bottom-right cell is <code>(n - 1, n - 1)</code>.</p>\n\n<p>A chess knight has eight possible moves it can make, as illustrated below. Each move is two cells in a cardinal direction, then one cell in an orthogonal direction.</p>\n<img src=\"https://assets.leetcode.com/uploads/2018/10/12/knight.png\" style=\"width: 300px; height: 300px;\" />\n<p>Each time the knight is to move, it chooses one of eight possible moves uniformly at random (even if the piece would go off the chessboard) and moves there.</p>\n\n<p>The knight continues moving until it has made exactly <code>k</code> moves or has moved off the chessboard.</p>\n\n<p>Return <em>the probability that the knight remains on the board after it has stopped moving</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, k = 2, row = 0, column = 0\n<strong>Output:</strong> 0.06250\n<strong>Explanation:</strong> There are two moves (to (1,2), (2,1)) that will keep the knight on the board.\nFrom each of those positions, there are also two moves that will keep the knight on the board.\nThe total probability the knight stays on the board is 0.0625.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1, k = 0, row = 0, column = 0\n<strong>Output:</strong> 1.00000\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 25</code></li>\n\t<li><code>0 &lt;= k &lt;= 100</code></li>\n\t<li><code>0 &lt;= row, column &lt;= n - 1</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"knightProbability\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"row\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"column\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"double\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"183.9K\", \"totalSubmission\": \"322.9K\", \"totalAcceptedRaw\": 183929, \"totalSubmissionRaw\": 322933, \"acRate\": \"57.0%\"}",
+  "likes": 4026,
+  "dislikes": 494,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Out of Boundary Paths\", \"titleSlug\": \"out-of-boundary-paths\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Moves to Kill All Pawns\", \"titleSlug\": \"maximum-number-of-moves-to-kill-all-pawns\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3\n2\n0\n0",
+    "1\n0\n0\n0"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"spinny\", \"name\": \"spinny\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    double knightProbability(int n, int k, int row, int column) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public double knightProbability(int n, int k, int row, int column) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def knightProbability(self, n: int, k: int, row: int, column: int) -> float:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def knightProbability(self, n, k, row, column):\n        \"\"\"\n        :type n: int\n        :type k: int\n        :type row: int\n        :type column: int\n        :rtype: float\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} k\n * @param {number} row\n * @param {number} column\n * @return {number}\n */\nvar knightProbability = function(n, k, row, column) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function knightProbability(n: number, k: number, row: number, column: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public double KnightProbability(int n, int k, int row, int column) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "double knightProbability(int n, int k, int row, int column) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func knightProbability(n int, k int, row int, column int) float64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun knightProbability(n: Int, k: Int, row: Int, column: Int): Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func knightProbability(_ n: Int, _ k: Int, _ row: Int, _ column: Int) -> Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn knight_probability(n: i32, k: i32, row: i32, column: i32) -> f64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} k\n# @param {Integer} row\n# @param {Integer} column\n# @return {Float}\ndef knight_probability(n, k, row, column)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $k\n     * @param Integer $row\n     * @param Integer $column\n     * @return Float\n     */\n    function knightProbability($n, $k, $row, $column) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  double knightProbability(int n, int k, int row, int column) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def knightProbability(n: Int, k: Int, row: Int, column: Int): Double = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec knight_probability(n :: integer, k :: integer, row :: integer, column :: integer) :: float\n  def knight_probability(n, k, row, column) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec knight_probability(N :: integer(), K :: integer(), Row :: integer(), Column :: integer()) -> float().\nknight_probability(N, K, Row, Column) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (knight-probability n k row column)\n  (-> exact-integer? exact-integer? exact-integer? exact-integer? flonum?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1943",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\n>**Note.** For this problem, we assume that you already know the fundamentals of dynamic programming and are figuring out how to apply it to a wide range of problems, such as this one. If you are not yet at this stage, we recommend checking out our relevant [Explore Card content on dynamic programming](https://leetcode.com/explore/featured/card/dynamic-programming/) before coming back to this article.\n\n---\n\n### Approach 1: Bottom-up Dynamic Programming\n\n#### Intuition\n\nWe need to find the probability that the knight will remain on the chessboard after $k$ moves, that is it will be in one of the cells $(i, j)$ such that $0 \\le i < n, 0 \\le j < n$.\n\nThe first observation: the probability of the knight being on the board after $k$ moves equals the sum of probabilities of being in the cell $(i, j)$ over all $0 \\le i < n, 0 \\le j < n$.\n\nWe reduce our problem to finding the probability of the knight being in the cell $(i, j)$ after $k$ moves for each $0 \\le i < n, 0 \\le j < n$.\n\nWhere the knight locates at the $k^\\text{th}$ move depends on where it was at the previous $(k - 1)^\\text{th}$ move which in turn depends on where it was at the $(k - 2)^\\text{th}$ move and so on.\n\nThe transition from the current $k^\\text{th}$ move to the previous $(k - 1)^\\text{th}$ one is essentially the reduction to the smaller subproblem. When we have a reduction to the smaller problem, it is worth thinking of dynamic programming.\n\nLet's think about what we need to completely describe the knight's state.\n\nThe knight makes the first move, then the second one, the third one, and so on until the last $k^\\text{th}$ move. The first parameter that describes the state is $\\text{moves}$ – how many moves has the knight already made. One can think of it as of time passed since the beginning of the knight's journey.\n\nAlso, we need the knight's location on the chessboard, which we can describe with two integers $i$ and $j$ – the cell's coordinates.\n\nThree parameters $\\text{moves}$, $i$, and $j$ are enough to fully describe the knight's state.\n\nTo solve the problem using dynamic programming, we define $\\text{dp}[\\text{moves}][i][j]$ as the probability of the knight being at cell $(i, j)$ on the chessboard after $\\text{moves}$ moves.\n\nHere is an example of the DP table for $n = 8, \\text{row} = 4, \\text{column} = 4, 0 \\le \\text{moves} \\le 2$.\n\n![Example of a DP table](../Figures/688/688_dp_example.drawio.png)\n\nThe base case is when $\\text{moves} = 0$, representing the starting position of the knight. In this case, the probability of being at cell $(\\text{row}, \\text{column})$ is 100%. We set $\\text{dp}[0][\\text{row}][\\text{column}] = 1$, and all other cells have a probability of $0$.\n\nNow, let's consider the transitions for the dynamic programming solution. We will compute the DP table in increasing order of $\\text{moves}$ – $\\text{dp}[0]$ is already calculated, after that we find $\\text{dp}[1]$, then $\\text{dp}[2]$ and so on. For each $\\text{moves}$ from $1$ to $k$, we want to calculate the probability for each cell $(i, j)$ based on the previous moves.\n\nTo determine the probability for each cell after $\\text{moves}$ moves, we iterate over all cells $(i, j)$ on the chessboard. For each cell, we consider all possible moves the knight can make to reach that cell.\n\n![Knight's moves](../Figures/688/688_knight_moves.drawio.png)\n\nFor a given cell $(i, j)$, we iterate over the possible directions, calculating the probability of reaching cell $(i, j)$ from neighboring cells $(i', j')$ in the previous move. The variables $i'$ and $j'$ represent the coordinates of the neighboring cells (in the sense of knight's moves).\n\nWe consider all eight possible directions that a knight can move. Each direction corresponds to a movement pattern of two steps in one direction and one step in the perpendicular direction, or vice versa. For example, one possible direction is moving two steps vertically up and one step horizontally to the right. We use a list of $\\text{directions}$ to represent these possible moves: $\\text{directions} = [(1, 2), (1, -2), (-1, 2), (-1, -2), (2, 1), (2, -1), (-2, 1), (-2, -1)]$.\n\nFor each direction, we calculate the probability of reaching cell $(i, j)$ from the neighboring cell $(i', j')$ in the previous move. We sum up the probabilities for all eight neighboring cells and divide the result by $8$ since there are eight possible moves for the knight.\n\nBy considering all possible directions and summing up the probabilities from the neighboring cells, we obtain the probability of being at cell $(i, j)$ after $\\text{moves}$ moves:\n\n$\\Large{\\text{dp}[\\text{moves}][i][j] = \\frac{1}{8} \\sum_{(i', j')} \\text{dp}[\\text{moves} - 1][i'][j']}$\n\n![1/8 factor](../Figures/688/688_1_8_factor.drawio.png)\n\nThis probability takes into account all the possible paths and movements of the knight up to that point.\n\nFinally, to calculate the total probability of the knight remaining on the board after $k$ moves, we sum up the probabilities for all cells $(i, j)$ on the chessboard.\n\nLet $\\text{total\\_probability}$ represent the overall probability that the knight remains on the chessboard after $k$ moves. To calculate this probability, we need to consider each cell on the chessboard.\n\nWe iterate over all the cells $(i, j)$ on the chessboard, starting from the top-left cell and moving row by row. For each cell, we sum up $\\text{dp}[k][i][j]$. These $\\text{dp}$ values represent the probabilities of the knight being at that cell after $k$ moves.\n\nBy summing up these probabilities for all cells on the chessboard, we obtain the $\\text{total\\_probability}$. This value reflects the cumulative likelihood that the knight will remain on the chessboard after $k$ moves. The higher the $\\text{total\\_probability}$, the greater the chance that the knight will still be on the board.\n\nOne can write this in mathematical notation: $$\\text{{total\\_probability}} = \\sum_{i=0}^{n-1} \\sum_{j=0}^{n-1} \\text{dp}[k][i][j]$$.\n\nThe $\\text{total\\_probability}$ represents the probability that the knight remains on the board after $k$ moves, and you can return this value as the result.\n\n#### Algorithm\n\n1. Define possible directions for the knight's moves in $\\text{directions}$.\n2. Initialize the dynamic programming table $\\text{dp}$ with zeros.\n3. Set $\\text{dp}[0][\\text{row}][\\text{column}]$ to $1$, representing the starting position of the knight.\n4. Iterate $\\text{moves}$ from $1$ to $k$.\n    - Iterate $i$ from $0$ to $n-1$ (rows on the chessboard).\n        - Iterate $j$ from $0$ to $n-1$ (columns on the chessboard).\n            - Iterate over possible directions:\n                - Calculate $i'$ as $i$ minus the vertical component of the direction.\n                - Calculate $j'$ as $j$ minus the horizontal component of the direction.\n                - Check if $i'$ and $j'$ are within the range $[0, n-1]$.\n                    - If within range, add $\\frac{1}{8} \\text{dp}[\\text{moves} - 1][i'][j']$ to $\\text{dp}[\\text{moves}][i][j]$.\n5. Calculate the total probability by summing all values in $\\text{dp}[k]$.\n6. Return the total probability.\n\n#### Implementation\n\nIn code, the variables $i'$ and $j'$ are denoted as $\\text{prev\\_i}$ and $\\text{prev\\_j}$, respectively.\n\n<iframe src=\"https://leetcode.com/playground/4gnHU7CH/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4gnHU7CH\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $O(k \\cdot n^2)$.\n\nWe have four nested for-loops: `for moves`, `for i`, `for j`, and `for direction`. The outer loop `for moves` runs $k$ times, the second and third loops `for i` and `for j` iterate over all cells on the $n \\times n$ chessboard, and the innermost loop `for direction` iterates over the possible directions. As there are a constant number of directions ($8$), this loop can be considered as $O(1)$ iterations.\n\nWithin each state $(\\text{moves}, i, j)$, the time complexity is constant, as we perform simple calculations and update the dynamic programming table.\n\nThe total number of iterations is determined by the product of the number of iterations in each loop: $O(k \\cdot n^2)$.\n\n* Space complexity: $O(k \\cdot n^2)$.\n\nWe use a three-dimensional dynamic programming table $\\text{dp}$ of size $(k+1) \\times n \\times n$ to store the probabilities of being at each cell after a certain number of moves. Therefore, the space complexity is $O(k \\cdot n^2)$.\n\n---\n\n### Approach 2: Bottom-up Dynamic Programming with Optimized Space Complexity\n\nIn the original approach, we used a 3D dynamic programming table $\\text{dp}$ to store the probabilities of being at each cell after a certain number of moves. However, this approach requires $O(k \\cdot n^2)$ space complexity.\n\nTo reduce the space complexity, we can observe that we only need the probabilities from the previous move $\\text{moves} - 1$ to calculate the probabilities for the current move $\\text{moves}$. Therefore, we can maintain two 2D arrays $\\text{prev\\_dp}$ and $\\text{curr\\_dp}$, each of size $n \\times n$, to store the probabilities for the previous move and the current move, respectively.\n\nDuring the iteration, we update the values in $\\text{curr\\_dp}$ based on the values in $\\text{prev\\_dp}$. After each iteration, we swap the arrays $\\text{prev\\_dp}$ and $\\text{curr\\_dp}$ to reuse the space for the next iteration.\n\nThis way, we only need $O(n^2)$ space to store the probabilities for the current and previous moves, resulting in an optimized space complexity of $O(n^2)$.\n\nBy using this optimized memory approach, we can solve the problem efficiently while reducing the space required for storage.\n\n#### Algorithm\n\n1. Define possible directions for the knight's moves in $\\text{directions}$.\n2. Initialize the dynamic programming tables $\\text{prev\\_dp}$ and $\\text{curr\\_dp}$ with zeros.\n3. Set $\\text{prev\\_dp}[\\text{row}][\\text{column}]$ to $1$, representing the starting position of the knight.\n4. Iterate $\\text{moves}$ from $1$ to $k$.\n    - Iterate $i$ from $0$ to $n-1$ (rows on the chessboard).\n        - Iterate $j$ from $0$ to $n-1$ (columns on the chessboard).\n\t    - Reset the probability for the current square before calculating it $\\text{curr\\_dp}[i][j] = 0$.\n            - Iterate over possible directions:\n                - Calculate $i'$ as $i$ minus the vertical component of the direction.\n                - Calculate $j'$ as $j$ minus the horizontal component of the direction.\n                - Check if $i'$ and $j'$ are within the range $[0, n-1]$.\n                    - If within range, add $\\frac{1}{8} \\text{prev\\_dp}[i'][j']$ to $\\text{curr\\_dp}[i][j]$.\n    - Swap $\\text{prev\\_dp}$ and $\\text{curr\\_dp}$.\n5. Calculate the total probability by summing all values in $\\text{prev\\_dp}$.\n6. Return the total probability.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/CK5WYbtD/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"CK5WYbtD\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $O(k \\cdot n^2)$.\n\nIt is the same as in the previous approach.\n\n* Space complexity: $O(n^2)$.\n\nWe use two dynamic programming tables: $\\text{prev\\_dp}$ and $\\text{curr\\_dp}$, each of size $n \\times n$. Therefore, the space complexity is $O(n^2)$. The space complexity does not depend on the number of moves $k$, as we only keep track of the probabilities of being at each cell after the previous and current moves.\n\n---\n\n### Approach 3: Top-down Dynamic Programming (Memoization)\n\n#### Intuition\n\nIn this approach, we will calculate the same DP table using the same recurrence relation as in the first one, but the manner of organizing computations will differ.\n\nWe will use the recursive function $\\text{calculateDP}(\\text{moves}, i, j)$ that returns the value of $\\text{dp}[\\text{moves}][i][j]$.\n\nThe base case of the recursive function is $\\text{moves} = 0$: $\\text{calculateDP}(0, \\text{row}, \\text{column})$ returns $1$, and $\\text{calculateDP}(0, i, j)$ returns $0$ for all cells $(i, j) \\ne (\\text{row}, \\text{column})$.\n\nOne can rewrite the DP recurrence relation as follows in terms of $\\text{calculateDP}$: $\\text{calculateDP}(\\text{moves}, i, j)$ returns the sum of $\\frac{1}{8} \\text{calculateDP}(\\text{moves} - 1, i', j')$ over the neighboring cells $(i', j')$. It is the same relation as in the first approach.\n\nThe answer to the problem is the sum of $\\text{calculateDP}(k, i, j)$ over all cells $(i, j)$.\n\nIn the function $\\text{calculateDP}(\\text{moves}, i, j)$, we check if the value $\\text{dp}[\\text{moves}][i][j]$ has already been calculated and stored in the DP table. If it has, we directly return the stored value. Otherwise, we calculate the probability using the same recurrence relation as in the first approach.\n\nTo use this function, we need to initialize the DP table $\\text{dp}$ with $-1$ values to indicate that the probabilities have not been calculated yet.\n\nAfter calculating the probabilities for each cell, we can calculate the total probability by summing up the probabilities for all cells $(i, j)$ on the chessboard.\n\n#### Algorithm\n\nThe function $\\text{calculateDP}$ takes three parameters: $\\text{moves}$, $i$, and $j$.\n\n1. If $\\text{moves}$ equals $0$, return $1$ if $i$ equals $\\text{row}$ and $j$ equals $\\text{column}$, otherwise return $0$.\n2. If $\\text{dp}[\\text{moves}][i][j]$ is not equal to $-1$, return $\\text{dp}[\\text{moves}][i][j]$.\n3. Initialize $\\text{dp}[\\text{moves}][i][j]$ to $0$.\n4. Iterate over possible directions:\n    - Calculate $i'$ by subtracting the vertical component of the direction from $i$.\n    - Calculate $j'$ by subtracting the horizontal component of the direction from $j$.\n    - Check if $i'$ and $j'$ are within the chessboard boundaries:\n        - If so, add $\\frac{1}{8} \\text{calculateDP}(\\text{moves} - 1, i', j')$ to $\\text{dp}[\\text{moves}][i][j]$.\n5. Return $\\text{dp}[\\text{moves}][i][j]$.\n\nTo solve the problem:\n- Initialize the $\\text{dp}$ table with $-1$ values.\n- Calculate the total probability by summing $\\text{calculateDP}(k, i, j)$ for all $i$, $j$.\n- Return the total probability.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/fdSjWkfm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fdSjWkfm\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $O(k \\cdot n^2)$.\n\nEven though we changed the order in which we calculate DP, the time complexity is the same as in the previous approach: for each state $(\\text{moves}, i, j)$, we calculate $\\text{dp}[\\text{moves}][i][j]$ in $O(1)$. Since we store the results in the memory, we will compute $\\text{dp}[\\text{moves}][i][j]$ only once.\n\n* Space complexity: $O(k \\cdot n^2)$.\n\nWe store the DP table of size $[k + 1][n][n]$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

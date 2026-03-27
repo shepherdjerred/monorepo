@@ -1,0 +1,138 @@
+{
+  "questionId": "122",
+  "questionFrontendId": "122",
+  "title": "Best Time to Buy and Sell Stock II",
+  "titleSlug": "best-time-to-buy-and-sell-stock-ii",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>prices</code> where <code>prices[i]</code> is the price of a given stock on the <code>i<sup>th</sup></code> day.</p>\n\n<p>On each day, you may decide to buy and/or sell the stock. You can only hold <strong>at most one</strong> share of the stock at any time. However, you can sell and buy the stock multiple times on the <strong>same day</strong>, ensuring you never hold more than one share of the stock.</p>\n\n<p>Find and return <em>the <strong>maximum</strong> profit you can achieve</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> prices = [7,1,5,3,6,4]\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> Buy on day 2 (price = 1) and sell on day 3 (price = 5), profit = 5-1 = 4.\nThen buy on day 4 (price = 3) and sell on day 5 (price = 6), profit = 6-3 = 3.\nTotal profit is 4 + 3 = 7.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> prices = [1,2,3,4,5]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> Buy on day 1 (price = 1) and sell on day 5 (price = 5), profit = 5-1 = 4.\nTotal profit is 4.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> prices = [7,6,4,3,1]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> There is no way to make a positive profit, so we never buy the stock to achieve the maximum profit of 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= prices.length &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= prices[i] &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"maxProfit\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"prices\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"3M\", \"totalSubmission\": \"4.2M\", \"totalAcceptedRaw\": 2974615, \"totalSubmissionRaw\": 4197213, \"acRate\": \"70.9%\"}",
+  "likes": 15346,
+  "dislikes": 2815,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Best Time to Buy and Sell Stock\", \"titleSlug\": \"best-time-to-buy-and-sell-stock\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Best Time to Buy and Sell Stock III\", \"titleSlug\": \"best-time-to-buy-and-sell-stock-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Best Time to Buy and Sell Stock IV\", \"titleSlug\": \"best-time-to-buy-and-sell-stock-iv\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Best Time to Buy and Sell Stock with Cooldown\", \"titleSlug\": \"best-time-to-buy-and-sell-stock-with-cooldown\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Best Time to Buy and Sell Stock with Transaction Fee\", \"titleSlug\": \"best-time-to-buy-and-sell-stock-with-transaction-fee\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Profit From Trading Stocks\", \"titleSlug\": \"maximum-profit-from-trading-stocks\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[7,1,5,3,6,4]",
+    "[1,2,3,4,5]",
+    "[7,6,4,3,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"toast\", \"name\": \"Toast\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"careem\", \"name\": \"Careem\"}], \"more_than_six_months\": [{\"timesEncountered\": 23, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 2, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"sigmoid\", \"name\": \"Sigmoid\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxProfit(vector<int>& prices) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxProfit(int[] prices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxProfit(self, prices: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxProfit(self, prices):\n        \"\"\"\n        :type prices: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} prices\n * @return {number}\n */\nvar maxProfit = function(prices) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxProfit(prices: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxProfit(int[] prices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxProfit(int* prices, int pricesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxProfit(prices []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxProfit(prices: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxProfit(_ prices: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_profit(prices: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} prices\n# @return {Integer}\ndef max_profit(prices)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $prices\n     * @return Integer\n     */\n    function maxProfit($prices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxProfit(List<int> prices) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxProfit(prices: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_profit(prices :: [integer]) :: integer\n  def max_profit(prices) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_profit(Prices :: [integer()]) -> integer().\nmax_profit(Prices) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-profit prices)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "53",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/671344950\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n---\n\n## Summary\n\nWe have to determine the maximum profit that can be obtained by making the transactions (no limit on the number of transactions done). For this we need to find out those sets of buying and selling prices which together lead to the maximization of profit.\n\n## Solution Article\n---\n\n### Approach 1: Brute Force\n\nIn this case, we simply calculate the profit corresponding to all the possible sets of transactions and find out the maximum profit out of them.\n\n<iframe src=\"https://leetcode.com/playground/8F6psjM8/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8F6psjM8\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^n)$$. Recursive function is called $$n^n$$ times.\n\n* Space complexity : $$O(n)$$. Depth of recursion is $$n$$.\n\n---\n\n### Approach 2: Peak Valley Approach\n\n**Algorithm**\n\nSay the given array is:\n\n$$\n\\begin{bmatrix}\n7, & 1, & 5, & 3, & 6, & 4\n\\end{bmatrix}\n$$\n\nIf we plot the numbers of the given array on a graph, we get:\n\n![Profit Graph](https://leetcode.com/media/original_images/122_maxprofit_1.PNG){:width=\"539px\"}\n\n\n\nIf we analyze the graph, we notice that the points of interest are the consecutive valleys and peaks.\n\nMathematically speaking:\n$$\n\\text{Total Profit} = \\sum_{i} \\left( \\text{height}(\\text{peak}_i) - \\text{height}(\\text{valley}_i) \\right)\n$$\n\nThe key point is we need to consider every peak immediately following a valley to maximize the profit. In case we skip one of the peaks (trying to obtain more profit), we will end up losing the profit over one of the transactions leading to an overall lesser profit.\n\nFor example, in the above case, if we skip $$\\text{peak}_i$$ and $$\\text{valley}_j$$ trying to obtain more profit by considering points with more difference in heights, the net profit obtained will always be lesser than the one obtained by including them, since $$C$$ will always be lesser than $$A+B$$.\n\n\n<iframe src=\"https://leetcode.com/playground/ZEqJDrsq/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"ZEqJDrsq\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. Single pass.\n\n* Space complexity : $$O(1)$$. Constant space required.\n\n---\n\n### Approach 3: Simple One Pass\n\n**Algorithm**\n\nThis solution follows the logic used in [Approach 2](#approach-2-peak-valley-approach) itself, but with only a slight variation. In this case, instead of looking for every peak following a valley, we can simply go on crawling over the slope and keep on adding the profit obtained from every consecutive transaction. In the end,we will be using the peaks and valleys effectively, but we need not track the costs corresponding to the peaks and valleys along with the maximum profit, but we can directly keep on adding the difference between the consecutive numbers of the array if the second number is larger than the first one, and at the total sum we obtain will be the maximum profit. This approach will simplify the solution.\nThis can be made clearer by taking this example:\n\n$$\n\\begin{bmatrix}\n1, & 7, & 2, & 3, & 6, & 7, & 6, & 7\n\\end{bmatrix}\n$$\n\nThe graph corresponding to this array is:\n\n![Profit Graph](https://leetcode.com/media/original_images/122_maxprofit_2.PNG){:width=\"539px\"}\n\n\n\nFrom the above graph, we can observe that the sum $$A+B+C$$ is equal to the difference $$D$$ corresponding to the difference between the heights of the consecutive peak and valley.\n\n<iframe src=\"https://leetcode.com/playground/KFbK7cub/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"KFbK7cub\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. Single pass.\n\n* Space complexity: $$O(1)$$. Constant space needed.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

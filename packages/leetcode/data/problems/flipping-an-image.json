@@ -1,0 +1,145 @@
+{
+  "questionId": "861",
+  "questionFrontendId": "832",
+  "title": "Flipping an Image",
+  "titleSlug": "flipping-an-image",
+  "difficulty": "Easy",
+  "content": "<p>Given an <code>n x n</code> binary matrix <code>image</code>, flip the image <strong>horizontally</strong>, then invert it, and return <em>the resulting image</em>.</p>\n\n<p>To flip an image horizontally means that each row of the image is reversed.</p>\n\n<ul>\n\t<li>For example, flipping <code>[1,1,0]</code> horizontally results in <code>[0,1,1]</code>.</li>\n</ul>\n\n<p>To invert an image means that each <code>0</code> is replaced by <code>1</code>, and each <code>1</code> is replaced by <code>0</code>.</p>\n\n<ul>\n\t<li>For example, inverting <code>[0,1,1]</code> results in <code>[1,0,0]</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> image = [[1,1,0],[1,0,1],[0,0,0]]\n<strong>Output:</strong> [[1,0,0],[0,1,0],[1,1,1]]\n<strong>Explanation:</strong> First reverse each row: [[0,1,1],[1,0,1],[0,0,0]].\nThen, invert the image: [[1,0,0],[0,1,0],[1,1,1]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> image = [[1,1,0,0],[1,0,0,1],[0,1,1,1],[1,0,1,0]]\n<strong>Output:</strong> [[1,1,0,0],[0,1,1,0],[0,0,0,1],[1,0,1,0]]\n<strong>Explanation:</strong> First reverse each row: [[0,0,1,1],[1,0,0,1],[1,1,1,0],[0,1,0,1]].\nThen invert the image: [[1,1,0,0],[0,1,1,0],[0,0,0,1],[1,0,1,0]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == image.length</code></li>\n\t<li><code>n == image[i].length</code></li>\n\t<li><code>1 &lt;= n &lt;= 20</code></li>\n\t<li><code>images[i][j]</code> is either <code>0</code> or <code>1</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"flipAndInvertImage\",\n  \"params\": [\n    {\n      \"name\": \"image\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"553.9K\", \"totalSubmission\": \"662.1K\", \"totalAcceptedRaw\": 553858, \"totalSubmissionRaw\": 662110, \"acRate\": \"83.7%\"}",
+  "likes": 3719,
+  "dislikes": 261,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,1,0],[1,0,1],[0,0,0]]",
+    "[[1,1,0,0],[1,0,0,1],[0,1,1,1],[1,0,1,0]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 17, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> flipAndInvertImage(vector<vector<int>>& image) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] flipAndInvertImage(int[][] image) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def flipAndInvertImage(self, image: List[List[int]]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def flipAndInvertImage(self, image):\n        \"\"\"\n        :type image: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} image\n * @return {number[][]}\n */\nvar flipAndInvertImage = function(image) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function flipAndInvertImage(image: number[][]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] FlipAndInvertImage(int[][] image) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** flipAndInvertImage(int** image, int imageSize, int* imageColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func flipAndInvertImage(image [][]int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun flipAndInvertImage(image: Array<IntArray>): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func flipAndInvertImage(_ image: [[Int]]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn flip_and_invert_image(image: Vec<Vec<i32>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} image\n# @return {Integer[][]}\ndef flip_and_invert_image(image)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $image\n     * @return Integer[][]\n     */\n    function flipAndInvertImage($image) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> flipAndInvertImage(List<List<int>> image) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def flipAndInvertImage(image: Array[Array[Int]]): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec flip_and_invert_image(image :: [[integer]]) :: [[integer]]\n  def flip_and_invert_image(image) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec flip_and_invert_image(Image :: [[integer()]]) -> [[integer()]].\nflip_and_invert_image(Image) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (flip-and-invert-image image)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "467",
+    "content": "[TOC]\n\n---\n### Approach #1: Direct [Accepted]\n\n**Intuition and Algorithm**\n\nWe can do this in place.  In each row, the `i`th value from the left is equal to the inverse of the `i`th value from the right.\n\nWe use `(C+1) / 2` (with floor division) to iterate over all indexes `i` in the first half of the row, including the center.\n\n<iframe src=\"https://leetcode.com/playground/8fjB4LMj/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"8fjB4LMj\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where `N` is the total number of elements in `A`.\n\n* Space Complexity: $$O(1)$$ in *additional* space complexity.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

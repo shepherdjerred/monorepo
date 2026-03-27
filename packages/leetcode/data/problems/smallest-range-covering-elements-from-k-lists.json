@@ -1,0 +1,149 @@
+{
+  "questionId": "632",
+  "questionFrontendId": "632",
+  "title": "Smallest Range Covering Elements from K Lists",
+  "titleSlug": "smallest-range-covering-elements-from-k-lists",
+  "difficulty": "Hard",
+  "content": "<p>You have <code>k</code> lists of sorted integers in <strong>non-decreasing&nbsp;order</strong>. Find the <b>smallest</b> range that includes at least one number from each of the <code>k</code> lists.</p>\n\n<p>We define the range <code>[a, b]</code> is smaller than range <code>[c, d]</code> if <code>b - a &lt; d - c</code> <strong>or</strong> <code>a &lt; c</code> if <code>b - a == d - c</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [[4,10,15,24,26],[0,9,12,20],[5,18,22,30]]\n<strong>Output:</strong> [20,24]\n<strong>Explanation: </strong>\nList 1: [4, 10, 15, 24,26], 24 is in range [20,24].\nList 2: [0, 9, 12, 20], 20 is in range [20,24].\nList 3: [5, 18, 22, 30], 22 is in range [20,24].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [[1,2,3],[1,2,3],[1,2,3]]\n<strong>Output:</strong> [1,1]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>nums.length == k</code></li>\n\t<li><code>1 &lt;= k &lt;= 3500</code></li>\n\t<li><code>1 &lt;= nums[i].length &lt;= 50</code></li>\n\t<li><code>-10<sup>5</sup> &lt;= nums[i][j] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>nums[i]</code>&nbsp;is sorted in <strong>non-decreasing</strong> order.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"smallestRange\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"list<list<integer>>\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer[]\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"241.5K\", \"totalSubmission\": \"344.5K\", \"totalAcceptedRaw\": 241504, \"totalSubmissionRaw\": 344501, \"acRate\": \"70.1%\"}",
+  "likes": 4391,
+  "dislikes": 101,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Window Substring\", \"titleSlug\": \"minimum-window-substring\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[4,10,15,24,26],[0,9,12,20],[5,18,22,30]]",
+    "[[1,2,3],[1,2,3],[1,2,3]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 28, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 12, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 4, \"slug\": \"winzo\", \"name\": \"WinZO\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"lyft\", \"name\": \"Lyft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> smallestRange(vector<vector<int>>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] smallestRange(List<List<Integer>> nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def smallestRange(self, nums: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def smallestRange(self, nums):\n        \"\"\"\n        :type nums: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} nums\n * @return {number[]}\n */\nvar smallestRange = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function smallestRange(nums: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] SmallestRange(IList<IList<int>> nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* smallestRange(int** nums, int numsSize, int* numsColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func smallestRange(nums [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun smallestRange(nums: List<List<Int>>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func smallestRange(_ nums: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn smallest_range(nums: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} nums\n# @return {Integer[]}\ndef smallest_range(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $nums\n     * @return Integer[]\n     */\n    function smallestRange($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> smallestRange(List<List<int>> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def smallestRange(nums: List[List[Int]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec smallest_range(nums :: [[integer]]) :: [integer]\n  def smallest_range(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec smallest_range(Nums :: [[integer()]]) -> [integer()].\nsmallest_range(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (smallest-range nums)\n  (-> (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2527",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe have several lists of sorted integers, and the goal is to find the smallest range that includes at least one number from each list. The range should be as tight as possible, meaning the difference between the smallest and largest number in the range should be minimal.\n\nWe need to compare the two ranges by looking at their lengths first. If two ranges have the same size, we choose the one that starts earlier.\n\nFor example, given the lists:\n\n- List 1: `[4, 10, 15, 24, 26]`\n- List 2: `[0, 9, 12, 20]`\n- List 3: `[5, 18, 22, 30]`\n\nThe smallest range that includes at least one number from each list is `[20, 24]`.\n\nThis range works because it contains `24` from List 1, `20` from List 2, and `22` from List 3.\n\nRemember, the key is that each list is already sorted. We can approach the problem by maintaining a structure that includes one number from each list and using something to track the smallest elements across the lists, adjusting the answer as we explore larger numbers.\n\n---\n\n### Approach 1: Optimal Brute Force\n\n#### Intuition\n\nWe need to find the smallest range that contains at least one number from each of the `k` sorted lists. At first glance, a simple brute force solution comes to mind, i.e., checking every combination of elements from the lists to find the smallest range. However, that would involve too many comparisons and will lead to TLE. Instead, we can refine this process into something more manageable.\n\nAt any moment, we need to select one number from each list. So, to find the smallest range, we need to minimize the difference between the largest and smallest numbers chosen at each step. The important point here is that, at any time, our range is defined by the smallest number chosen and the largest number chosen.\n\nSo we need to select the smallest number among the current numbers picked from each list and move forward by choosing the next number from the same list that gave us this smallest number. This makes sense because moving forward in any other list would only increase the range, which we want to avoid. We repeat this process of updating the smallest number and checking if the new range is smaller than our previously found range. If it is, we update the range.\n\nWe continue this until we reach the end of one of the lists because, at that point, it’s no longer possible to select a number from each list.\n\n#### Algorithm\n\n- Initialize `k` to the number of lists in `nums` and create an array `indices` to keep track of the current index of each list, initializing all to `0`.\n- Initialize an array `range` to store the smallest range, starting with `{0, INT_MAX}`.\n\n- Enter an infinite loop:\n  - Initialize `curMin` to `INT_MAX`, `curMax` to `INT_MIN`, and `minListIndex` to `0`.\n  \n  - Iterate over each list to find the current minimum and maximum values:\n    - For each list `i`, retrieve the current element using `indices[i]`.\n    - Update `curMin` if the current element is less than `curMin`, and set `minListIndex` to `i`.\n    - Update `curMax` if the current element is greater than `curMax`.\n\n  - After checking all lists, if the difference `curMax - curMin` is smaller than the current range (`range[1] - range[0]`), update `range` to `{curMin, curMax}`.\n\n  - Move to the next element in the list that had the minimum value by incrementing `indices[minListIndex]`.\n    - If the updated index equals the size of `nums[minListIndex]`, break the loop (all elements have been processed).\n\n- Return the smallest range stored in `range`.\n\n#### Implementation\n\n> Note: Due to Python's relatively slower execution speed, the optimal brute-force solution will lead to a Time Limit Exceeded (TLE) error when using Python3. However, this same solution will perform adequately in other programming languages.\n\n<iframe src=\"https://leetcode.com/playground/kAyUGxiV/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"kAyUGxiV\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the total number of elements across all lists and $k$ be the number of lists.\n\n- Time complexity: $O(n \\cdot k)$\n\n    In each iteration of the `while (true)` loop, we traverse all $k$ lists to find the current minimum and maximum. This takes $O(k)$ time.\n    \n    The loop continues until at least one of the lists is fully traversed. In the worst case, every element from every list is visited, and the total number of elements across all lists is $n$. Therefore, the loop runs $O(n)$ times.\n\n    Overall, the time complexity becomes $O(n \\cdot k)$.\n\n- Space complexity: $O(k)$\n  \n    The space complexity is dominated by the `indices` array, which has size proportional to $k$, the number of lists.\n\n    The `indices` array stores the current index of each list, so it takes $O(k)$ space.\n\n    The `range` array stores only two integers, so it takes $O(1)$ space.\n\n    Hence, the overall space complexity is $O(k)$.\n\n---\n\n### Approach 2: Priority Queue (Heap)\n\n#### Intuition\n\nWe can build on the idea of always keeping track of the smallest element, but we can make this process more efficient. Instead of scanning all the lists to find the smallest element at every step, we use a min-heap to manage the selection of the smallest element in logarithmic time.\n\nWe start by inserting the first element from each list into the heap. The heap gives us quick access to the smallest element among the current numbers we have selected. Along with this, we also keep track of the largest number among the selected elements because our range depends on both the smallest and largest values.\n\nThe strategy is simple: at each step, we extract the smallest element from the heap (the root of the heap), which corresponds to the current smallest number. This number forms the lower bound of our current range. To continue, we replace this smallest number with the next number from the same list and add it to the heap. After updating the heap, we again check the current range between the smallest element (from the heap) and the largest element (which we track separately). If this new range is smaller than the previous best range, we update it.\n\nWe repeat this process until we can no longer add numbers from one of the lists to the heap.\n\n#### Algorithm\n\n- Initialize a priority queue `pq` to store tuples of the form (value, list_index, element_index) for the smallest elements.\n- Initialize `maxVal` to the minimum integer, `rangeStart` to 0, and `rangeEnd` to the maximum integer.\n\n- Insert the first element from each list into the min-heap:\n  - For each list in `nums`, push the first element into `pq` along with its indices.\n  - Update `maxVal` to be the maximum of itself and the newly inserted element.\n\n- Continue processing while the size of the priority queue equals the number of lists:\n  - Extract the smallest element `minVal` from `pq`, and get its corresponding indices.\n  - Update the smallest range:\n    - If the difference between `maxVal` and `minVal` is smaller than the current range (`rangeEnd - rangeStart`), update `rangeStart` to `minVal` and `rangeEnd` to `maxVal`.\n\n  - If there is a next element in the same list (check using `col + 1`):\n    - Retrieve the next value from the same list.\n    - Push this next value into `pq` along with its indices.\n    - Update `maxVal` to be the maximum of itself and the next value.\n\n- Return an array containing `rangeStart` and `rangeEnd`, which represents the smallest range covering at least one number from each of the `k` lists.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/axpCSS5j/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"axpCSS5j\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the total number of elements across all lists and $k$ be the number of lists.\n\n- Time complexity: $O(n \\log k)$\n\n    The initial loop that inserts the first element from each list into the priority queue runs in $O(k)$. The while loop continues until we have exhausted one of the lists in the priority queue. Each iteration of the loop involves:\n    - Extracting the minimum element from the priority queue, which takes $O(\\log k)$.\n    - Inserting a new element from the same list into the priority queue, which also takes $O(\\log k)$.\n\n    In the worst case, we will process all $n$ elements, leading to a total complexity of $O(n \\log k)$.\n\n- Space complexity: $O(k)$\n\n    The priority queue can hold at most $k$ elements at any time, corresponding to the first elements of each of the $k$ lists. Thus, the space complexity is $O(k)$. Additionally, the space for storing the output range (two integers) is negligible and does not contribute to the overall complexity.\n\n---\n\n### Approach 3: Two Pointer\n\n#### Intuition\n\nSince we need a range that includes one number from each of the `k` lists, we can think of this as a subarray problem. However, the numbers are spread across multiple lists. To simplify, we can combine all the lists into a single sorted list of numbers. When merging, we also keep track of which list each number came from, since the problem requires at least one number from each original list in the final range.\n\nOnce we have the merged list, the problem becomes finding the smallest range (or subarray) in this list that contains at least one element from each of the original `k` lists. This is a common scenario for a sliding window or two-pointer approach: we want to expand and shrink the window (subarray) dynamically to find the minimum range that meets the criteria.\n\nThe right pointer will expand the window by moving forward in the merged list, and the left pointer will shrink the window once we know the window contains at least one element from each list. \n\nAs the right pointer moves through the merged list, we need to ensure that the current subarray includes at least one number from each list. So we keep track of how many lists are \"covered\" by the current subarray (i.e., how many of the `k` lists have at least one number in the current window).\n\nOnce all lists are covered, the window between the left and right pointers represents a valid range. We then check if this range is the smallest we've found so far.\n\nAfter finding a valid range, we need to shrink the window (move the left pointer forward) to see if we can make the range even smaller while still keeping one number from each list in the subarray. As we move the left pointer forward, we check if we lose coverage from any list. If we do, we stop shrinking and start expanding the window again by moving the right pointer.\n\nWe will continue this until we can no longer expand the window (i.e., the right pointer reaches the end of the merged list). By this point, we have explored all possible ranges, and the smallest valid range is our final answer.\n\n</br>\n\nThe algorithm is visualized below:\n\n!?!../Documents/632/twopointer.json:1005,565!?!\n\n#### Algorithm\n\n- Initialize an empty array `merged` to store pairs of numbers and their respective list indices.\n\n- Merge all lists into `merged`:\n  - For each list in `nums`, iterate through its numbers and add each number along with its list index to `merged`.\n\n- Sort the `merged` array to facilitate the two-pointer technique.\n\n- Initialize a frequency map `freq` to keep track of how many times each list is represented in the current window.\n- Set the `left` pointer to `0`, `count` to `0`, and initialize `rangeStart` to `0` and `rangeEnd` to `INT_MAX`.\n\n- Use a `right` pointer to iterate through the `merged` array:\n  - Increment the count for the list index in `freq` for `merged[right]`.\n  - If the count for this list index becomes `1`, increment `count` (indicating a new list is represented).\n\n- When all lists are represented (i.e., `count == nums.size()`):\n  - Calculate the current range as `curRange = merged[right].first - merged[left].first`.\n  - If `curRange` is smaller than the previously found range (`rangeEnd - rangeStart`):\n    - Update `rangeStart` and `rangeEnd` to the current numbers.\n\n  - Decrement the frequency count for the leftmost number (i.e., `merged[left]`).\n  - If this list index's frequency becomes `0`, decrement `count` (indicating that a list is no longer represented).\n  - Move the `left` pointer to the right to attempt shrinking the window.\n\n- After completing the iteration, return the smallest range as a array containing `rangeStart` and `rangeEnd`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7EpgC27i/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7EpgC27i\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the total number of elements across all lists and $k$ be the number of lists.\n\n- Time complexity: $O(n \\log n)$\n\n    The first nested loop iterates over $k$ lists, and for each list, it iterates through its elements. In the worst case, this requires $O(n)$ time since we are processing all elements once. \n\n    After merging, we sort the `merged` array which contains $n$ elements. Sorting has a time complexity of $O(n \\log n)$.\n\n    The two-pointer approach iterates through the `merged` list once (with the right pointer) and may also move the left pointer forward multiple times. In total, each pointer will traverse the `merged` list at most $n$ times.\n\n    Combining these steps, the overall time complexity is: $O(n \\log n)$\n\n- Space complexity: $O(n)$ \n\n    We create a `merged` array to hold $n$ elements, which requires $O(n)$ space.\n\n    We use an unordered map (`freq`) that can potentially store $k$ elements (one for each list). Thus, this requires $O(k)$ space.\n\n    Some extra space is used when we sort an array. The space complexity of the sorting algorithm ($S$) depends on the programming language.\n    - In Python, the sort method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(n)$.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O( \\log n )$.\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$.\n\n    Combining these, the overall space complexity is: $O(n)$ \n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

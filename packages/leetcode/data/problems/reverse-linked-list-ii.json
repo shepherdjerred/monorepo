@@ -1,0 +1,129 @@
+{
+  "questionId": "92",
+  "questionFrontendId": "92",
+  "title": "Reverse Linked List II",
+  "titleSlug": "reverse-linked-list-ii",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>head</code> of a singly linked list and two integers <code>left</code> and <code>right</code> where <code>left &lt;= right</code>, reverse the nodes of the list from position <code>left</code> to position <code>right</code>, and return <em>the reversed list</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/02/19/rev2ex2.jpg\" style=\"width: 542px; height: 222px;\" />\n<pre>\n<strong>Input:</strong> head = [1,2,3,4,5], left = 2, right = 4\n<strong>Output:</strong> [1,4,3,2,5]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> head = [5], left = 1, right = 1\n<strong>Output:</strong> [5]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the list is <code>n</code>.</li>\n\t<li><code>1 &lt;= n &lt;= 500</code></li>\n\t<li><code>-500 &lt;= Node.val &lt;= 500</code></li>\n\t<li><code>1 &lt;= left &lt;= right &lt;= n</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<strong>Follow up:</strong> Could you do it in one pass?",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"reverseBetween\",\n  \"params\": [\n    {\n      \"name\": \"head\",\n      \"type\": \"ListNode\",\n      \"dealloc\": false\n    },\n    {\n      \"name\": \"left\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"right\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"ListNode\",\n    \"dealloc\": true\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1.3M\", \"totalSubmission\": \"2.5M\", \"totalAcceptedRaw\": 1290165, \"totalSubmissionRaw\": 2519592, \"acRate\": \"51.2%\"}",
+  "likes": 12917,
+  "dislikes": 786,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Reverse Linked List\", \"titleSlug\": \"reverse-linked-list\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5]\n2\n4",
+    "[5]\n1\n1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"arista-networks\", \"name\": \"Arista Networks\"}, {\"timesEncountered\": 5, \"slug\": \"revolut\", \"name\": \"Revolut\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}, {\"timesEncountered\": 2, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}]}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    ListNode* reverseBetween(ListNode* head, int left, int right) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public ListNode reverseBetween(ListNode head, int left, int right) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def reverseBetween(self, head: Optional[ListNode], left: int, right: int) -> Optional[ListNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def reverseBetween(self, head, left, right):\n        \"\"\"\n        :type head: Optional[ListNode]\n        :type left: int\n        :type right: int\n        :rtype: Optional[ListNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} head\n * @param {number} left\n * @param {number} right\n * @return {ListNode}\n */\nvar reverseBetween = function(head, left, right) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction reverseBetween(head: ListNode | null, left: number, right: number): ListNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public ListNode ReverseBetween(ListNode head, int left, int right) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\nstruct ListNode* reverseBetween(struct ListNode* head, int left, int right) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc reverseBetween(head *ListNode, left int, right int) *ListNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun reverseBetween(head: ListNode?, left: Int, right: Int): ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func reverseBetween(_ head: ListNode?, _ left: Int, _ right: Int) -> ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn reverse_between(head: Option<Box<ListNode>>, left: i32, right: i32) -> Option<Box<ListNode>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {ListNode} head\n# @param {Integer} left\n# @param {Integer} right\n# @return {ListNode}\ndef reverse_between(head, left, right)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $head\n     * @param Integer $left\n     * @param Integer $right\n     * @return ListNode\n     */\n    function reverseBetween($head, $left, $right) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *   int val;\n *   ListNode? next;\n *   ListNode([this.val = 0, this.next]);\n * }\n */\nclass Solution {\n  ListNode? reverseBetween(ListNode? head, int left, int right) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def reverseBetween(head: ListNode, left: Int, right: Int): ListNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for singly-linked list.\n#\n# defmodule ListNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           next: ListNode.t() | nil\n#         }\n#   defstruct val: 0, next: nil\n# end\n\ndefmodule Solution do\n  @spec reverse_between(head :: ListNode.t | nil, left :: integer, right :: integer) :: ListNode.t | nil\n  def reverse_between(head, left, right) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for singly-linked list.\n%%\n%% -record(list_node, {val = 0 :: integer(),\n%%                     next = null :: 'null' | #list_node{}}).\n\n-spec reverse_between(Head :: #list_node{} | null, Left :: integer(), Right :: integer()) -> #list_node{} | null.\nreverse_between(Head, Left, Right) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n(define/contract (reverse-between head left right)\n  (-> (or/c list-node? #f) exact-integer? exact-integer? (or/c list-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "661",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/782769616\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Approach 1: Recursion\n\n**Intuition**\n\nThe idea for linked list reversal using recursion springs from a similar idea that we use for reversing an array. If we want to reverse an array, the huge advantage that we have is the availability of indexes. So, what we can do there is to simply have two pointers, one at the beginning of the array and one at the end. We repeatedly swap elements pointed to by these two pointers and we move both the pointers towards the center of the array. Let's quickly look at this simple algorithm on a sample array before we move on to linked lists.\n\n<center>\n<img src=\"../Figures/92/d1.png\"/>\n</center>\n\nThe first approach for reversing a portion of the given linked list is based on the similar idea expressed above. Essentially, we want two different pointers, one at the $$m^{th}$$ node from the beginning and another one from the $$n^{th}$$ node from the beginning. Once we have such pointers in place, we can repeatedly swap the data between the nodes and progress these pointers towards each other like we saw in the case of an array.\n\n> However, we don't have any backward pointers in our linked list and neither do we have any indexes. So, we rely on recursion to simulate the backward pointer. Essentially, the backtracking process in a recursion will help us in simulating the backward movement of the pointer from the $$n^{th}$$ node in the linked list towards the center.\n\n**Algorithm**\n\n1. We define a recursion function that will do the job of reversing a portion of the linked list.\n2. Let's call this function `recurse`. The function takes in 3 parameters: `m` being the starting point of the reversal, `n` being the ending point for the reversal, and a pointer `right` which will start at the $$n^{th}$$ node in the linked list and move backwards with the backtracking of the recursion. If this is not clear at the moment, the diagrams that follow will help.\n3. Additionally, we have a pointer called `left` which starts from the $$m^{th}$$ node in the linked list and moves forward. In Python, we have to take a global variable for this which get's changed with recursion. In other languages, where changes made in function calls persist, we can consider this pointer as an additional variable for the function `recurse`.\n4. In a recursion call, given `m`, `n`, and `right`, we check if `n == 1`. If this is the case, we don't need to go any further.\n5. Until we reach `n = 1`, we keep moving the `right` pointer one step forward and after doing that, we make a recursive call with the value of `n` decreased by 1. At the same time, we keep on moving the `left` pointer forward until `m == 1`. When we refer to a pointer being moved forward, it essentially means `pointer.next`.\n6. So we *backtrack* as soon as `n` reaches 1. At that point of time, the `right` pointer is at the last node of the sublist we want to reverse and the `left` has already reached the first node of this sublist. So, we swap out the data and move the left pointer one step forward using `left = left.next`. We need this change to persist across the backtracking process.\n7. From there on, every time we backtrack, the `right` pointer moves one step backwards. This is the simulation we've been mentioning all along. The backward movement is simulated by backtracking.\n8. We stop the swaps when either `right == left`, which happens if the sublist size is odd, or, `right.next == left` which happens when during the backtracking process for an even sized sublist, the `right` pointer crosses `left`. We use a global boolean flag for stopping the swaps once these conditions are met.\n\nLet's look at a series of diagrams explaining the process on a sample linked list. Hopefully, things would be clearer after this.\n\n<center>\n<img src=\"../Figures/92/recursion-1.png\"/>\n</center>\n\nThis is the first step in the recursion process. We have a list given to us and the `left` and the `right` pointers start off from the `head` of the linked list. The first step makes a recursive call with updated values of `m` and `n` i.e. their values each reduced by 1. Also, the `left` and the `right` pointers move one step forward in the linked list.\n\n<center>\n<img src=\"../Figures/92/recursion-2.png\"/>\n</center>\n\nThe next two steps show the movement of the `left` and the `right` pointers in the list. Notice that after the second step, the `left` pointer reaches it's designated spot. So, we don't move it any further. Only the `right` pointer progresses from here on out until it reaches node `6`.\n\n<center>\n<img src=\"../Figures/92/recursion-3.png\"/>\n</center>\n\nAs we can see, after the step 5, both the pointers are in their designated spots in the list and we can start the backtracking process. We don't recurse further. The operation performed during the backtracking is swapping of data between the `left` and `right` nodes.\n\n<center>\n<img src=\"../Figures/92/recursion-4.png\"/>\n</center>\n\nThe `right` pointer *crosses* the `left` pointer after step 3 (backtracking) as can be seen above and by that point, we have already reversed the required portion of the linked list. We needed the output list to be `[7 → 9 → 8 → 1 → 10 → 2 → 6]` and that's what we have. So, we don't perform any more swaps and in the code, we can use a global boolean flag to stop the swapping after a point. We can't really *break out of recursion per say*.\n\n> **Note:** This approach involves swapping the values of the nodes rather than reversing the nodes themselves. This method is generally not acceptable in an interview setting, as it can be misleading and does not truly reverse the linked list structure — it only modifies the values.\n\n<iframe src=\"https://leetcode.com/playground/MWuLdJeX/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"MWuLdJeX\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$ since we process all the nodes at-most twice. Once during the normal recursion process and once during the backtracking process. During the backtracking process we only just swap half of the list if you think about it, but the overall complexity is $$O(N)$$.\n* Space Complexity: $$O(N)$$ in the worst case when we have to reverse the entire list. This is the space occupied by the recursion stack.\n<br/>\n<br/>\n\n---\n\n### Approach 2: Iterative Link Reversal.\n\n**Intuition**\n\nIn the previous approach, we looked at an algorithm for reversing a portion of the given linked list such that the underlying structure doesn't change. We only modified the values of the nodes for achieving the reversal. However, it may so happen that you cannot change the data available in the nodes. In that scenario, we have to modify the links themselves to achieve the reversal.\n\nEssentially, starting from the node at position `m` and all the way up to `n`, we reverse the `next` pointers for all the nodes in between. Let's look at the algorithm for achieving this.\n\n**Algorithm**\n\nBefore looking at the algorithm, it's important to understand how the link reversal will work and what set of pointers will be required for the same. Let's say we have a linked list consisting of three different nodes, `A → B → C` and we want to reverse the links between the nodes and obtain `A ← B ← C`.\n\nSuppose we have at our disposal, two pointers. One of them points to the node `A` and the other one points to the node `B`. Let's call these pointers `prev` and `cur` respectively. We can simply use these two pointers to reverse the link between `A and B`.\n\n<pre>\ncur.next = prev\n</pre>\n\nThe only problem with this is, we don't have a way of progressing further i.e. once we do this, we can't reach the node `C`. That's why we need a third pointer that will help us continue the link reversal process. So, we do the following instead.\n\n<pre>\nthird = cur.next\ncur.next = prev\nprev = cur\ncur = third\n</pre>\n\nWe do the above *iteratively* and we will achieve what the question asks us to do. Let's look at the steps for the algorithm now.\n\n1. We need two pointers, `prev` and `cur` as explained above.\n2. The `prev` pointer should be initialized to `None` initially while `cur` is initialized to the `head` of the linked list.\n3. We progress the `cur` pointer one step at a time and the `prev` pointer follows it.\n4. We keep progressing the two pointers in this way until the `cur` pointer reaches the $$m^{th}$$ node from the beginning of the list. This is the point from where we start reversing our linked list.\n5. An important thing to note here is the usage of two additional pointers which we will call as `tail` and `con`. The `tail` pointer points to the $$m^{th}$$ node from the beginning of the linked list and we call it a *tail* pointer since this node becomes the tail of the reverse sublist. The `con` points to the node one before $$m^{th}$$ node and this connects to the new head of the reversed sublist. Let's take a look at a figure to understand these two pointers better.\n\n    <center>\n    <img src=\"../Figures/92/tail_and_con.png\"/>\n    </center>\n\n6. The `tail` and the `con` pointers are set once initially and then used in the end to finish the linked list reversal.\n7. Once we reach the $$m^{th}$$ node, we iteratively reverse the links as explained before using the two pointers. We keep on doing this until we are done reversing the link (next pointer) for the $$n^{th}$$ node. At that point, the `prev` pointer would point to the $$n^{th}$$ node.\n8. We use the `con` pointer to attach to the `prev` pointer since the node now pointed to by the `prev` pointer (the $$n^{th}$$ node from the beginning) will come in place of the $$m^{th}$$ node due after the reversal. Similarly, we will make use of the `tail` pointer to connect to the node next to the `prev` node i.e. $$(n+1)^{th}$$ node from the beginning.\n\nLet's have a look at the algorithm execute on a sample linked list to make the use case for all these pointers clearer. We are given a linked list initially with elements `7 → 9 → 2 → 10 → 1 → 8 → 6` and we need to reverse the list from node 3 through 6.\n\n<center>\n<img src=\"../Figures/92/iterative-1.png\"/>\n</center>\n\nWe can see the first few steps of our iterative solution above. The first step shows the initialization of the two pointers and the third step shows us the starting point for the list reversal process.\n\n<center>\n<img src=\"../Figures/92/iterative-2.png\"/>\n</center>\n\nThis shows us in detail how the links are reversed and how we move forward after reversing the links between two nodes. This step is done multiple times as shown in the following images.\n\n<center>\n<img src=\"../Figures/92/iterative-3.png\"/>\n</center>\n\n<center>\n<img src=\"../Figures/92/iterative-4.png\"/>\n</center>\n\nAs we can see from the above images, now the two pointers have reached their final positions. We are done reversing the sublist that we were required to do i.e. nodes 3 through 6. However, we still have to fix some connections. The next image explains how we use the `tail` and `con` pointers to make the final connections.\n\n<center>\n<img src=\"../Figures/92/iterative-5.png\"/>\n</center>\n\n<iframe src=\"https://leetcode.com/playground/JaRpzRH6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"JaRpzRH6\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$ considering the list consists of $$N$$ nodes. We process each of the nodes at most once (we don't process the nodes after the $$n^{th}$$ node from the beginning.\n* Space Complexity: $$O(1)$$ since we simply adjust some pointers in the original linked list and only use $$O(1)$$ additional memory for achieving the final result.\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

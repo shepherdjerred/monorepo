@@ -1,0 +1,58 @@
+{
+  "questionId": "175",
+  "questionFrontendId": "175",
+  "title": "Combine Two Tables",
+  "titleSlug": "combine-two-tables",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Person</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| personId    | int     |\n| lastName    | varchar |\n| firstName   | varchar |\n+-------------+---------+\npersonId is the primary key (column with unique values) for this table.\nThis table contains information about the ID of some persons and their first and last names.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Address</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| addressId   | int     |\n| personId    | int     |\n| city        | varchar |\n| state       | varchar |\n+-------------+---------+\naddressId is the primary key (column with unique values) for this table.\nEach row of this table contains information about the city and state of one person with ID = PersonId.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the first name, last name, city, and state of each person in the <code>Person</code> table. If the address of a <code>personId</code> is not present in the <code>Address</code> table, report <code>null</code> instead.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nPerson table:\n+----------+----------+-----------+\n| personId | lastName | firstName |\n+----------+----------+-----------+\n| 1        | Wang     | Allen     |\n| 2        | Alice    | Bob       |\n+----------+----------+-----------+\nAddress table:\n+-----------+----------+---------------+------------+\n| addressId | personId | city          | state      |\n+-----------+----------+---------------+------------+\n| 1         | 2        | New York City | New York   |\n| 2         | 3        | Leetcode      | California |\n+-----------+----------+---------------+------------+\n<strong>Output:</strong> \n+-----------+----------+---------------+----------+\n| firstName | lastName | city          | state    |\n+-----------+----------+---------------+----------+\n| Allen     | Wang     | Null          | Null     |\n| Bob       | Alice    | New York City | New York |\n+-----------+----------+---------------+----------+\n<strong>Explanation:</strong> \nThere is no address in the address table for the personId = 1 so we return null in their city and state.\naddressId = 1 contains information about the address of personId = 2.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Person (personId int, firstName varchar(255), lastName varchar(255))\", \"Create table If Not Exists Address (addressId int, personId int, city varchar(255), state varchar(255))\"], \"mssql\": [\"Create table Person (personId int, firstName varchar(255), lastName varchar(255))\", \"Create table Address (addressId int, personId int, city varchar(255), state varchar(255))\"], \"oraclesql\": [\"Create table Person (personId int, firstName varchar(255), lastName varchar(255))\", \"Create table Address (addressId int, personId int, city varchar(255), state varchar(255))\"], \"database\": true, \"name\": \"combine_two_tables\", \"pythondata\": [\"Person = pd.DataFrame([], columns=['personId', 'firstName', 'lastName']).astype({'personId':'Int64', 'firstName':'object', 'lastName':'object'})\", \"Address = pd.DataFrame([], columns=['addressId', 'personId', 'city', 'state']).astype({'addressId':'Int64', 'personId':'Int64', 'city':'object', 'state':'object'})\"], \"manual\": true, \"database_schema\": {\"Person\": {\"personId\": \"INT\", \"firstName\": \"VARCHAR(255)\", \"lastName\": \"VARCHAR(255)\"}, \"Address\": {\"addressId\": \"INT\", \"personId\": \"INT\", \"city\": \"VARCHAR(255)\", \"state\": \"VARCHAR(255)\"}}}",
+  "stats": "{\"totalAccepted\": \"1.8M\", \"totalSubmission\": \"2.2M\", \"totalAcceptedRaw\": 1757202, \"totalSubmissionRaw\": 2213994, \"acRate\": \"79.4%\"}",
+  "likes": 4337,
+  "dislikes": 257,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Employee Bonus\", \"titleSlug\": \"employee-bonus\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Person\":[\"personId\",\"lastName\",\"firstName\"],\"Address\":[\"addressId\",\"personId\",\"city\",\"state\"]},\"rows\":{\"Person\":[[1,\"Wang\",\"Allen\"],[2,\"Alice\",\"Bob\"]],\"Address\":[[1,2,\"New York City\",\"New York\"],[2,3,\"Leetcode\",\"California\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 21, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"cognizant\", \"name\": \"Cognizant\"}], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef combine_two_tables(person: pd.DataFrame, address: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "206",
+    "content": "[TOC]\n\n# Solution\n---\n\n## pandas\n\n### Approach 1: Using `merge`\n\n**Visualization of approach 1**\n\n![fig](../Figures/175/175-1.png)\n\n#### Intuition\n\nLet's breakdown the steps given the following input DataFrames:\n\n`person`:\n<table>\n  <tr>\n    <th>personId</th>\n    <th>lastName</th>\n    <th>firstName</th>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>Wang</td>\n    <td>Allen</td>\n  </tr>\n  <tr>\n    <td>2</td>\n    <td>Alice</td>\n    <td>Bob</td>\n  </tr>\n</table>\n<br>\n\n`address`:\n<table>\n  <tr>\n    <th>addressId</th>\n    <th>personId</th>\n    <th>city</th>\n    <th>state</th>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>2</td>\n    <td>New York City</td>\n    <td>New York</td>\n  </tr>\n  <tr>\n    <td>2</td>\n    <td>3</td>\n    <td>Leetcode</td>\n    <td>California</td>\n  </tr>\n</table>\n<br>\n\n1. **Merging the DataFrames**\n   \n   ```python\n   result = pd.merge(person, address, on='personId', how='left')\n   ```\n   In this step, we are merging the `person` and `address` dataframes using a left join operation with the `pd.merge()` function. Here:\n   - `on='personId'` specifies that we are using the 'personId' column as the key for merging the data. This column is present in both dataframes, and it holds unique identifiers for the individuals.\n   - `how='left'` specifies that we are performing a left join, meaning all the records from the `person` dataframe (the left dataframe) will be retained, and the matching records from the `address` dataframe (the right dataframe) will be merged where the 'personId' values match. If a 'personId' from the `person` dataframe does not have a matching 'personId' in the `address` dataframe, the 'city' and 'state' columns for that record will contain Null values (representing missing data).\n\n<table>\n  <tr>\n    <th>personId</th>\n    <th>lastName</th>\n    <th>firstName</th>\n    <th>addressId</th>\n    <th>city</th>\n    <th>state</th>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>Wang</td>\n    <td>Allen</td>\n    <td>Null</td>\n    <td>Null</td>\n    <td>Null</td>\n  </tr>\n  <tr>\n    <td>2</td>\n    <td>Alice</td>\n    <td>Bob</td>\n    <td>1.0</td>\n    <td>New York City</td>\n    <td>New York</td>\n  </tr>\n</table>\n<br>\n\n2. **Selecting Relevant Columns**\n\n   ```python\n   result = result[['firstName', 'lastName', 'city', 'state']]\n   ```\n   In this step, we select only the columns that we are interested in for the final output. Since the merging operation can potentially bring in other columns from the `address` dataframe, we are explicitly selecting only the 'firstName', 'lastName', 'city', and 'state' columns to be in our final result. This helps in maintaining a clean and focused dataset which contains only the information we are interested in.\n\n<table>\n  <tr>\n    <th>firstName</th>\n    <th>lastName</th>\n    <th>city</th>\n    <th>state</th>\n  </tr>\n  <tr>\n    <td>Allen</td>\n    <td>Wang</td>\n    <td>Null</td>\n    <td>Null</td>\n  </tr>\n  <tr>\n    <td>Bob</td>\n    <td>Alice</td>\n    <td>New York City</td>\n    <td>New York</td>\n  </tr>\n</table>\n<br>\n\nIn summary, this script is taking two separate dataframes and merging them into a single dataframe where each row represents a person and contains their first name, last name, city, and state. This is done using the person's unique identifier to correctly match each person with their address. It's a common operation when you want to bring together information from different sources into a unified view.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/XRUKdTyk/shared\" frameBorder=\"0\" width=\"100%\" height=\"174\" name=\"XRUKdTyk\"></iframe>\n\n\n---\n\n## Database\n\n### Approach 1: Using `outer join`\n\n#### Intuition\n\nSince the *PersonId* in table **Address** is the foreign key of table **Person**, we can join these two tables to get the address information of a person.\n\nConsidering there might be no address information for every person, we should use `outer join` instead of the default `inner join`.\n\n#### Implementation\n\n> Note: For MySQL, an `outer join` is performed either using `left join` or `right join`. \n\n\n```sql\nselect FirstName, LastName, City, State\nfrom Person left join Address\non Person.PersonId = Address.PersonId\n;\n```\n\n> Note: Using the `where` clause to filter the records will fail if there is no address information for a person because it will not display the name information.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

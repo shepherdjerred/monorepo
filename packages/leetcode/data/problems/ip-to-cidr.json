@@ -1,0 +1,130 @@
+{
+  "questionId": "752",
+  "questionFrontendId": "751",
+  "title": "IP to CIDR",
+  "titleSlug": "ip-to-cidr",
+  "difficulty": "Medium",
+  "content": "<p>An <strong>IP address</strong> is a formatted 32-bit unsigned integer where each group of 8 bits is printed as a decimal number and the dot character <code>&#39;.&#39;</code> splits the groups.</p>\n\n<ul>\n\t<li>For example, the binary number <code>00001111 10001000 11111111 01101011</code> (spaces added for clarity) formatted as an IP address would be <code>&quot;15.136.255.107&quot;</code>.</li>\n</ul>\n\n<p>A <strong>CIDR block</strong> is a format used to denote a specific set of IP addresses. It is a string consisting of a base IP address, followed by a slash, followed by a prefix length <code>k</code>. The addresses it covers are all the IPs whose <strong>first <code>k</code> bits</strong> are the same as the base IP address.</p>\n\n<ul>\n\t<li>For example, <code>&quot;123.45.67.89/20&quot;</code> is a CIDR block with a prefix length of <code>20</code>. Any IP address whose binary representation matches <code>01111011 00101101 0100xxxx xxxxxxxx</code>, where <code>x</code> can be either <code>0</code> or <code>1</code>, is in the set covered by the CIDR block.</li>\n</ul>\n\n<p>You are given a start IP address <code>ip</code> and the number of IP addresses we need to cover <code>n</code>. Your goal is to use <strong>as few CIDR blocks as possible</strong> to cover all the IP addresses in the <strong>inclusive</strong> range <code>[ip, ip + n - 1]</code> <strong>exactly</strong>. No other IP addresses outside of the range should be covered.</p>\n\n<p>Return <em>the <strong>shortest</strong> list of <strong>CIDR blocks</strong> that covers the range of IP addresses. If there are multiple answers, return <strong>any</strong> of them</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> ip = &quot;255.0.0.7&quot;, n = 10\n<strong>Output:</strong> [&quot;255.0.0.7/32&quot;,&quot;255.0.0.8/29&quot;,&quot;255.0.0.16/32&quot;]\n<strong>Explanation:</strong>\nThe IP addresses that need to be covered are:\n- 255.0.0.7  -&gt; 11111111 00000000 00000000 00000111\n- 255.0.0.8  -&gt; 11111111 00000000 00000000 00001000\n- 255.0.0.9  -&gt; 11111111 00000000 00000000 00001001\n- 255.0.0.10 -&gt; 11111111 00000000 00000000 00001010\n- 255.0.0.11 -&gt; 11111111 00000000 00000000 00001011\n- 255.0.0.12 -&gt; 11111111 00000000 00000000 00001100\n- 255.0.0.13 -&gt; 11111111 00000000 00000000 00001101\n- 255.0.0.14 -&gt; 11111111 00000000 00000000 00001110\n- 255.0.0.15 -&gt; 11111111 00000000 00000000 00001111\n- 255.0.0.16 -&gt; 11111111 00000000 00000000 00010000\nThe CIDR block &quot;255.0.0.7/32&quot; covers the first address.\nThe CIDR block &quot;255.0.0.8/29&quot; covers the middle 8 addresses (binary format of 11111111 00000000 00000000 00001xxx).\nThe CIDR block &quot;255.0.0.16/32&quot; covers the last address.\nNote that while the CIDR block &quot;255.0.0.0/28&quot; does cover all the addresses, it also includes addresses outside of the range, so we cannot use it.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> ip = &quot;117.145.102.62&quot;, n = 8\n<strong>Output:</strong> [&quot;117.145.102.62/31&quot;,&quot;117.145.102.64/30&quot;,&quot;117.145.102.68/31&quot;]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>7 &lt;= ip.length &lt;= 15</code></li>\n\t<li><code>ip</code> is a valid <strong>IPv4</strong> on the form <code>&quot;a.b.c.d&quot;</code> where <code>a</code>, <code>b</code>, <code>c</code>, and <code>d</code> are integers in the range <code>[0, 255]</code>.</li>\n\t<li><code>1 &lt;= n &lt;= 1000</code></li>\n\t<li>Every implied address <code>ip + x</code> (for <code>x &lt; n</code>) will be a valid IPv4 address.</li>\n</ul>\n",
+  "hints": [
+    "Convert the ip addresses to and from (long) integers.  You want to know what is the most addresses you can put in this block starting from the \"start\" ip, up to n.  It is the smallest between the lowest bit of start and the highest bit of n.  Then, repeat this process with a new start and n."
+  ],
+  "metaData": "{\n  \"name\": \"ipToCIDR\",\n  \"params\": [\n    {\n      \"name\": \"ip\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<string>\"\n  }\n}\n",
+  "stats": "{\"totalAccepted\": \"39K\", \"totalSubmission\": \"72.5K\", \"totalAcceptedRaw\": 38950, \"totalSubmissionRaw\": 72537, \"acRate\": \"53.7%\"}",
+  "likes": 116,
+  "dislikes": 366,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Restore IP Addresses\", \"titleSlug\": \"restore-ip-addresses\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Validate IP Address\", \"titleSlug\": \"validate-ip-address\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"255.0.0.7\"\n10",
+    "\"117.145.102.62\"\n8"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"databricks\", \"name\": \"Databricks\"}, {\"timesEncountered\": 3, \"slug\": \"openai\", \"name\": \"OpenAI\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> ipToCIDR(string ip, int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> ipToCIDR(String ip, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def ipToCIDR(self, ip: str, n: int) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def ipToCIDR(self, ip, n):\n        \"\"\"\n        :type ip: str\n        :type n: int\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} ip\n * @param {number} n\n * @return {string[]}\n */\nvar ipToCIDR = function(ip, n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function ipToCIDR(ip: string, n: number): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> IpToCIDR(string ip, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** ipToCIDR(char* ip, int n, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func ipToCIDR(ip string, n int) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun ipToCIDR(ip: String, n: Int): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func ipToCIDR(_ ip: String, _ n: Int) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn ip_to_cidr(ip: String, n: i32) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} ip\n# @param {Integer} n\n# @return {String[]}\ndef ip_to_cidr(ip, n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $ip\n     * @param Integer $n\n     * @return String[]\n     */\n    function ipToCIDR($ip, $n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> ipToCIDR(String ip, int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def ipToCIDR(ip: String, n: Int): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec ip_to_cidr(ip :: String.t, n :: integer) :: [String.t]\n  def ip_to_cidr(ip, n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec ip_to_cidr(Ip :: unicode:unicode_binary(), N :: integer()) -> [unicode:unicode_binary()].\nip_to_cidr(Ip, N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (ip-to-cidr ip n)\n  (-> string? exact-integer? (listof string?))\n  )"
+    }
+  ],
+  "solution": null
+}

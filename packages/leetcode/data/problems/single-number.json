@@ -1,0 +1,136 @@
+{
+  "questionId": "136",
+  "questionFrontendId": "136",
+  "title": "Single Number",
+  "titleSlug": "single-number",
+  "difficulty": "Easy",
+  "content": "<p>Given a <strong>non-empty</strong>&nbsp;array of integers <code>nums</code>, every element appears <em>twice</em> except for one. Find that single one.</p>\n\n<p>You must&nbsp;implement a solution with a linear runtime complexity and use&nbsp;only constant&nbsp;extra space.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [2,2,1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [4,1,2,1,2]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">4</span></p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>-3 * 10<sup>4</sup> &lt;= nums[i] &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li>Each element in the array appears twice except for one element which appears only once.</li>\n</ul>\n",
+  "hints": [
+    "Think about the XOR (^) operator's property."
+  ],
+  "metaData": "{\r\n  \"name\": \"singleNumber\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"4.5M\", \"totalSubmission\": \"5.8M\", \"totalAcceptedRaw\": 4477609, \"totalSubmissionRaw\": 5778579, \"acRate\": \"77.5%\"}",
+  "likes": 18787,
+  "dislikes": 895,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Single Number II\", \"titleSlug\": \"single-number-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Single Number III\", \"titleSlug\": \"single-number-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Missing Number\", \"titleSlug\": \"missing-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Duplicate Number\", \"titleSlug\": \"find-the-duplicate-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Difference\", \"titleSlug\": \"find-the-difference\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the XOR of Numbers Which Appear Twice\", \"titleSlug\": \"find-the-xor-of-numbers-which-appear-twice\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,2,1]",
+    "[4,1,2,1,2]",
+    "[1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 15, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 12, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"cognizant\", \"name\": \"Cognizant\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 2, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 2, \"slug\": \"qualcomm\", \"name\": \"Qualcomm\"}, {\"timesEncountered\": 2, \"slug\": \"palantir-technologies\", \"name\": \"Palantir Technologies\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int singleNumber(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int singleNumber(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def singleNumber(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def singleNumber(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar singleNumber = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function singleNumber(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int SingleNumber(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int singleNumber(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func singleNumber(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun singleNumber(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func singleNumber(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn single_number(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef single_number(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function singleNumber($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int singleNumber(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def singleNumber(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec single_number(nums :: [integer]) :: integer\n  def single_number(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec single_number(Nums :: [integer()]) -> integer().\nsingle_number(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (single-number nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "234",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n> **Note:** In this article, only the fourth approach satisfies both the time and space complexity requirements provided in the problem description. However, the first three approaches are included to show a diverse set of ways to approach this problem.\n\n### Approach 1: List operation\n\n**Algorithm**\n\n1. Iterate over all the elements in $$\\text{nums}$$\n2. If some number in $$\\text{nums}$$ is new to array, append it\n3. If some number is already in the array, remove it\n\n<iframe src=\"https://leetcode.com/playground/MRDrhTSf/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"MRDrhTSf\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^2)$$. We iterate through $$\\text{nums}$$, taking $$O(n)$$ time. We search the whole list to find whether there is duplicate number, taking $$O(n)$$ time. Because search is in the `for` loop, so we have to multiply both time complexities which is $$O(n^2)$$.\n\n* Space complexity : $$O(n)$$.  We need a list of size $$n$$ to contain elements in $$\\text{nums}$$.\n<br />\n<br />\n\n\n---\n### Approach 2: Hash Table\n\n**Algorithm**\n\nWe use hash table to avoid the $$O(n)$$ time required for searching the elements.\n\n1. Iterate through all elements in `nums` and set up key/value pair.\n2. Return the element which appeared only once.\n\n<iframe src=\"https://leetcode.com/playground/aSgahdSa/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"aSgahdSa\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n \\cdot 1) = O(n)$$.  Time complexity of `for` loop is $$O(n)$$. Time complexity of hash table(dictionary in python) operation `pop` is $$O(1)$$.\n\n* Space complexity : $$O(n)$$. The space required by $$hash\\_table$$ is equal to the number of elements in $$\\text{nums}$$.\n<br />\n<br />\n\n\n---\n### Approach 3: Math\n\n**Concept**\n\n$$2 * (a + b + c) - (a + a + b + b + c) = c$$\n\n<iframe src=\"https://leetcode.com/playground/6q5J3YmR/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"6q5J3YmR\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n + n) = O(n)$$. `sum` will call `next` to iterate through $$\\text{nums}$$.\nWe can see it as `sum(list(i, for i in nums))` which means the time complexity is $$O(n)$$ because of the number of elements($$n$$) in $$\\text{nums}$$.\n\n* Space complexity : $$O(n + n) = O(n)$$. `set` needs space for the elements in `nums`\n<br />\n<br />\n\n\n---\n### Approach 4: Bit Manipulation\n\n**Concept**\n\n- If we take XOR of zero and some bit, it will return that bit\n    - $$a \\oplus 0 = a$$\n- If we take XOR of two same bits, it will return 0\n    - $$a \\oplus a = 0$$\n- $$a \\oplus b \\oplus a = (a \\oplus a) \\oplus b = 0 \\oplus b = b$$\n\nSo we can XOR all bits together to find the unique number.\n\n<iframe src=\"https://leetcode.com/playground/7o5LdwnU/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"7o5LdwnU\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$.  We only iterate through $$\\text{nums}$$, so the time complexity is the number of elements in $$\\text{nums}$$.\n\n* Space complexity : $$O(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

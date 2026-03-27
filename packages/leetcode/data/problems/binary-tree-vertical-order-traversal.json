@@ -1,0 +1,155 @@
+{
+  "questionId": "314",
+  "questionFrontendId": "314",
+  "title": "Binary Tree Vertical Order Traversal",
+  "titleSlug": "binary-tree-vertical-order-traversal",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary tree, return <em><strong>the vertical order traversal</strong> of its nodes&#39; values</em>. (i.e., from top to bottom, column by column).</p>\n\n<p>If two nodes are in the same row and column, the order should be from <strong>left to right</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/09/23/image1.png\" style=\"width: 400px; height: 273px;\" />\n<pre>\n<strong>Input:</strong> root = [3,9,20,null,null,15,7]\n<strong>Output:</strong> [[9],[3,15],[20],[7]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/09/23/image3.png\" style=\"width: 450px; height: 285px;\" />\n<pre>\n<strong>Input:</strong> root = [3,9,8,4,0,1,7]\n<strong>Output:</strong> [[4],[9],[3,0,1],[8],[7]]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/09/23/image2.png\" style=\"width: 350px; height: 342px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,4,10,9,11,null,5,null,null,null,null,null,null,null,6]\n<strong>Output:</strong> [[4],[2,5],[1,10,9,6],[3],[11]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[0, 100]</code>.</li>\n\t<li><code>-100 &lt;= Node.val &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Do BFS from the root. Let the root be at column 0. In the BFS, keep in the queue the node and its column.",
+    "When you traverse a node, store its value in the column index. For example, the root's value should be stored at index 0.",
+    "If the node has a left node, it column should be col - 1. Similarly, if the node has a right node, its column should be col + 1.",
+    "At the end, check the minimum and maximum col and output their values."
+  ],
+  "metaData": "{\r\n  \"name\": \"verticalOrder\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<list<integer>>\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"594K\", \"totalSubmission\": \"1M\", \"totalAcceptedRaw\": 593998, \"totalSubmissionRaw\": 1027961, \"acRate\": \"57.8%\"}",
+  "likes": 3465,
+  "dislikes": 354,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Binary Tree Level Order Traversal\", \"titleSlug\": \"binary-tree-level-order-traversal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,9,20,null,null,15,7]",
+    "[3,9,8,4,0,1,7]",
+    "[1,2,3,4,10,9,11,null,5,null,null,null,null,null,null,null,6]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 14, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"anduril\", \"name\": \"Anduril\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 12, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    vector<vector<int>> verticalOrder(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public List<List<Integer>> verticalOrder(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def verticalOrder(self, root: Optional[TreeNode]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def verticalOrder(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number[][]}\n */\nvar verticalOrder = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction verticalOrder(root: TreeNode | null): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public IList<IList<int>> VerticalOrder(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** verticalOrder(struct TreeNode* root, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc verticalOrder(root *TreeNode) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun verticalOrder(root: TreeNode?): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func verticalOrder(_ root: TreeNode?) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn vertical_order(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer[][]}\ndef vertical_order(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer[][]\n     */\n    function verticalOrder($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  List<List<int>> verticalOrder(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def verticalOrder(root: TreeNode): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec vertical_order(root :: TreeNode.t | nil) :: [[integer]]\n  def vertical_order(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec vertical_order(Root :: #tree_node{} | null) -> [[integer()]].\nvertical_order(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (vertical-order root)\n  (-> (or/c tree-node? #f) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "939",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nThis is yet another problem about Binary Tree traversals. As one would probably know, the common strategies to traverse a _Tree_ data structure are **_Breadth-First Search_** (_a.k.a_ BFS) and **_Depth-First Search_** (_a.k.a._ DFS).\n\nThe DFS strategy can be further distinguished as _preorder DFS_, _inorder DFS_ and _postorder DFS_, depending on the relative order of visit among the node itself and its child nodes.\n\nIf one is not familiar with the concepts of BFS and DFS, one can find the corresponding problems on LeetCode to practice with. Also, we have an Explore card called [Queue & Stack](https://leetcode.com/explore/learn/card/queue-stack/) where we cover both [the BFS traversal](https://leetcode.com/explore/learn/card/queue-stack/231/practical-application-queue/) as well as [the DFS traversal](https://leetcode.com/explore/learn/card/queue-stack/232/practical-application-stack/).\nHence, in this article, we won't repeat ourselves on these concepts.\n\nIn the problem description, we are asked to return the **_vertical_** order of a binary tree, which actually implies two sub-orders, where each node would have a 2-dimensional index (denoted as `<column, row>`) \n\n![tree in 2D coordinates](../Figures/314/314_coordinates.png)\n\n- **column-wise order**\n    <br/>\n\n    If we look at a binary tree _horizontally_, each node can be aligned to a specific `column`, based on its relative _offset_ to the root node of the tree.\n    <br/>\n\n    Let us assume that the root node has a column index of `0`, then its left child node would have a column index of `-1` and its right child node would have a column index of `+1`, and so on.\n    <br/>\n\n- **row-wise order**\n    <br>\n    Now if we put the nodes into a *vertical* dimension, each node would be assigned to a specific `row`, based on its _level_ (_i.e._ the vertical distance to the root node).\n    <br/>\n\n    Let us assume that the root node has a row index of `0`, then both its child nodes would have the row index of `1`.\n\n>Given the above definitions, we can now formulate the problem as a task to order the nodes based on the 2-dimensional coordinates that we defined above.\n\nMore specifically, the nodes should be ordered by `column` first, and further the nodes on the same column should be ordered _**vertically**_ based on their `row` indices.\n<br/>\n<br/>\n\n---\n### Approach 1: Breadth-First Search (BFS)\n\n**Intuition**\n\nWith the formulation of the problem in the overview section, one of the most intuitive solutions to tackle the problem would be applying the BFS traversal, where the nodes would be visited _level by level_.\n\nWith the BFS traversal, we naturally can guarantee the vertical order of the visits, _i.e._ the nodes at _higher_ levels (large `row` values) would get visited later than the ones at lower levels.\n\nHowever, we are still missing the horizontal order ( the `column` order). To ensure this order, we need to do some additional processing during the BFS traversal.\n\n>The idea is that we keep a hash table (let's denote it as `columnTable<key, value>`), where we keep the node values grouped by the `column` index.\n\nThe `key` in the hash table would be the `column` index, and the corresponding `value` would be a list which contains the values of all the nodes that share the same column index.\n\nIn addition, the values in the corresponding list should be ordered by their `row` indices, which would be guaranteed by the BFS traversal as we mentioned before.\n\n\n**Algorithm**\n\nWe elaborate on the steps to implement the above idea. \n\n- First, we create a hash table named `columnTable` to keep track of the results.\n<br/>\n\n- As to the BFS traversal, a common code pattern would be to use a `queue` data structure to keep track of the order we need to visit nodes.\nWe initialize the queue by putting the root node along with its column index value (`0`).\n<br/>\n\n- We then run the BFS traversal with a loop consuming the elements from the queue.\n<br/>\n\n- At each iteration within the BFS, we pop out an element from the queue. The element consists of a `node` and its corresponding `column` index. If the node is not empty, we then populate the `columnTable` with the value of the node. Subsequently, we then put its child nodes along with their respective column indices (_i.e._ `column-1` and `column+1`) into the queue. \n<br/>\n\n- At the end of the BFS traversal, we obtain a hash table that contains the desired node values grouped by their `column` indices. For each group of values, they are further ordered by their `row` indices.\n<br/>\n\n- We then sort the hash table by its keys, _i.e._ `column` index in ascending order. And finally we return the results _column by column_.\n\n<iframe src=\"https://leetcode.com/playground/CufM8Hj3/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"CufM8Hj3\"></iframe>\n\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(N \\log N)$$ where $$N$$ is the number of nodes in the tree. \n\n    In the first part of the algorithm, we do the BFS traversal, whose time complexity is $$\\mathcal{O}(N)$$ since we traversed each node once and only once.\n\n    In the second part, in order to return the ordered results, we then sort the obtained hash table by its keys, which could result in the $$\\mathcal{O}(N \\log N)$$ time complexity in the worst case scenario where the binary tree is extremely imbalanced (for instance, each node has only left child node.)\n\n    As a result, the overall time complexity of the algorithm would be $$\\mathcal{O}(N \\log N)$$.\n\n\n- Space Complexity: $$\\mathcal{O}(N)$$ where $$N$$ is the number of nodes in the tree.\n\n    First of all, we use a hash table to group the nodes with the same column index. The hash table consists of keys and values. In any case, the values would consume $$\\mathcal{O}(N)$$ memory. While the space for the keys could vary, in the worst case, each node has a unique column index, _i.e._ there would be as many keys as the values. Hence, the total space complexity for the hash table would still be $$\\mathcal{O}(N)$$.\n\n    During the BFS traversal, we use a `queue` data structure to keep track of the next nodes to visit. At any given moment, the queue would hold no more two levels of nodes. For a binary tree, the maximum number of nodes at a level would be $$\\frac{N+1}{2}$$ which is also the number of leafs in a full binary tree. As a result, in the worst case, our queue would consume at most $$\\mathcal{O}(\\frac{N+1}{2} \\cdot 2) = \\mathcal{O}(N) $$ space.\n\n    Lastly, we also need some space to hold the results, which is basically a reordered hash table of size $$\\mathcal{O}(N)$$ as we discussed before.\n\n    To sum up, the overall space complexity of our algorithm would be $$\\mathcal{O}(N)$$.\n\n<br/>\n<br/>\n\n---\n### Approach 2: BFS without Sorting\n\n**Intuition**\n\nIn the previous approach, it is a pity that the sorting of results overshadows the main part of the algorithm which is the BFS traversal. One might wonder if we have a way to eliminate the need for sorting. And the answer is yes.\n\n>The key insight is that we only need to know the **range** of the column index (_i.e._ `[min_column, max_column]`). Then we can simply _**iterate**_ through this range to generate the outputs without the need for sorting.\n\nThe above insight would work under the _condition_ that there won't be any missing column index in the given range. And the condition always holds, since there won't be any broken branch in a binary tree.\n\n**Algorithm**\n\nTo implement this optimization, it suffices to make some small modifications to our previous BFS approach.\n\nDuring the BFS traversal, we could obtain the range of the column indices, _i.e._ with the variable of `min_column` and `max_column`.\n\nAt the end of the BFS traversal, we would then walk through the column range `[min_column, max_column]` and retrieve the results accordingly.\n\n!?!../Documents/314_LIS.json:1000,570!?!\n\n<iframe src=\"https://leetcode.com/playground/86BoXdhW/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"86BoXdhW\"></iframe>\n\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(N)$$ where $$N$$ is the number of nodes in the tree. \n    <br/>\n    Following the same analysis in the previous BFS approach, the only difference is that this time we don't need the costy sorting operation (_i.e._ $$\\mathcal{O}(N \\log N)$$).\n\n- Space Complexity: $$\\mathcal{O}(N)$$ where $$N$$ is the number of nodes in the tree. The analysis follows the same logic as in the previous BFS approach.\n<br/>\n<br/>\n\n---\n### Approach 3: Depth-First Search (DFS)\n\n**Intuition**\n\nAlthough we applied a BFS traversal in both of the previous approaches, it is not impossible to solve the problem with a DFS traversal.\n\n>As we discussed in the overview section, once we assign a 2-dimensional index (_i.e._ `<column, row>`) for each node in the binary tree, to output the tree in _**vertical**_ order is to sort the nodes based on the 2-dimensional index, firstly by `column` then by `row`, as shown in the following graph.\n\n![tree to table](../Figures/314/314_table.png)\n\nCompared to the DFS traversal, the BFS traversal gives us a head start, since the nodes in higher rows would be visited later than the ones in the lower lows. As a result, we only need to focus on the `column` order.\n\nThat being said, we could simply traverse the tree in any DFS order (preorder, inorder or postorder), then we sort the resulting list strictly based on two keys `<column, row>`, which would give us the same results as the BFS traversal.\n\n>An important note is that two nodes might share the same `<column, row>`, in the case, as stated in the problem, the order between these two nodes should be from **left** to **right** as we did for BFS traversals.\nAs a result, to ensure such a priority, one should make sure to visit the left child node before the right child node during the DFS traversal.\n\n\n**Algorithm**\n\n- Here we implement the above algorithm, with the trick that we applied in Approach 2 (BFS without sorting) where we obtained the range of `column` during the traversal.\n<br/>\n\n- First, we conduct a DFS traversal on the input tree. During the traversal, we would then build a similar `columnTable` with the `column` index as the key and the list of `(row, val)` tuples as the value. \n<br/>\n\n- At the end of the DFS traversal, we iterate through the `columnTable` via the key of `column` index. Accordingly, we have a list of `(row, val)` tuples associated with each key. We then sort this list, based on the `row` index.\n<br/>\n\n- After the above steps, we would then obtain a list of node values ordered firstly by its `column` index and then by its `row` index, which is exactly the the _vertical_ order traversal of binary tree as defined in the problem.\n\n<iframe src=\"https://leetcode.com/playground/4unzzfEk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4unzzfEk\"></iframe>\n\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}\\big(W \\cdot H \\log{H})\\big)$$ where $$W$$ is the width of the binary tree (_i.e._ the number of columns in the result) and $$H$$ is the height of the tree. \n    <br/>\n    In the first part of the algorithm, we traverse the tree in DFS, which results in $$\\mathcal{O}(N)$$ time complexity.\n    <br/>\n\n    Once we build the `columnTable`, we then have to sort it _column by column_.\n    <br/>\n\n    Let us assume the time complexity of the sorting algorithm to be $$\\mathcal{O}(K \\log K)$$ where $$K$$ is the length of the input. The maximal number of nodes in a column would be $$\\frac{H}{2}$$ where $$H$$ is the height of the tree, due to the zigzag nature of the node distribution. As a result, the upper bound of time complexity to sort a column in a binary tree would be $$\\mathcal{O}(\\frac{H}{2} \\log \\frac{H}{2})$$. \n    <br/>\n\n    Since we need to sort $$W$$ columns, the total time complexity of the sorting operation would then be $$\\mathcal{O}\\big(W \\cdot (\\frac{H}{2} \\log{\\frac{H}{2}})\\big) = \\mathcal{O}(W \\cdot H \\log{H}) $$. Note that, the total number of nodes $$N$$ in a tree is bounded by $$W \\cdot H$$, _i.e._ $$ N < W \\cdot H $$. As a result, the time complexity of $$\\mathcal{O}\\big(W \\cdot H \\log{H}\\big)$$ will dominate the $$\\mathcal{O}(N)$$ of the DFS traversal in the first part.\n    <br/>\n\n    At the end of the DFS traversal, we have to iterate through the `columnTable` in order to retrieve the values, which will take another $$\\mathcal{O}(N)$$ time.\n    <br/>\n\n    To sum up, the overall time complexity of the algorithm would be $$\\mathcal{O}\\big(W \\cdot H \\log{H}\\big)$$.\n    <br/>\n    \n    An interesting thing to note is that in the case where the binary tree is completely imbalanced (_e.g._ node has only left child.), this DFS approach would have the $$\\mathcal{O}(N)$$ time complexity, since the sorting takes no time on columns that contains only a single node. While the time complexity for our first BFS approach would be $$\\mathcal{O}{(N \\log N)}$$, since we have to sort the $$N$$ keys in the `columnTable`.\n\n- Space Complexity: $$\\mathcal{O}(N)$$ where $$N$$ is the number of nodes in the tree.\n\n    We kept the `columnTable` which contains all the node values in the binary tree. Together with the keys, it would consume $$\\mathcal{O}(N)$$ space as we discussed in previous approaches.\n    <br/>\n\n    Since we apply the recursion for our DFS traversal, it would incur additional space consumption on the function call stack. In the worst case where the tree is completely imbalanced, we would have the size of call stack up to $$\\mathcal{O}(N)$$.\n    <br/>\n\n    Finally, we have the output which contains all the values in the binary tree, thus $$\\mathcal{O}(N)$$ space.\n    <br/>\n\n    So in total, the overall space complexity of this algorithm remains $$\\mathcal{O}(N)$$.\n<br/>\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

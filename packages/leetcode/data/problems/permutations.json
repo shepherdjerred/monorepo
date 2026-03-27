@@ -1,0 +1,134 @@
+{
+  "questionId": "46",
+  "questionFrontendId": "46",
+  "title": "Permutations",
+  "titleSlug": "permutations",
+  "difficulty": "Medium",
+  "content": "<p>Given an array <code>nums</code> of distinct integers, return all the possible <span data-keyword=\"permutation-array\">permutations</span>. You can return the answer in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> nums = [1,2,3]\n<strong>Output:</strong> [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> nums = [0,1]\n<strong>Output:</strong> [[0,1],[1,0]]\n</pre><p><strong class=\"example\">Example 3:</strong></p>\n<pre><strong>Input:</strong> nums = [1]\n<strong>Output:</strong> [[1]]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 6</code></li>\n\t<li><code>-10 &lt;= nums[i] &lt;= 10</code></li>\n\t<li>All the integers of <code>nums</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"permute\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<list<integer>>\",\r\n    \"colsize\": \"size_1\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"3M\", \"totalSubmission\": \"3.7M\", \"totalAcceptedRaw\": 3034200, \"totalSubmissionRaw\": 3711218, \"acRate\": \"81.8%\"}",
+  "likes": 20825,
+  "dislikes": 384,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Next Permutation\", \"titleSlug\": \"next-permutation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Permutations II\", \"titleSlug\": \"permutations-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Permutation Sequence\", \"titleSlug\": \"permutation-sequence\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Combinations\", \"titleSlug\": \"combinations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3]",
+    "[0,1]",
+    "[1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 12, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 5, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 4, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 4, \"slug\": \"bookingcom\", \"name\": \"Booking.com\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"epic-systems\", \"name\": \"Epic Systems\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 2, \"slug\": \"arista-networks\", \"name\": \"Arista Networks\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> permute(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> permute(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def permute(self, nums: List[int]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def permute(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number[][]}\n */\nvar permute = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function permute(nums: number[]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> Permute(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** permute(int* nums, int numsSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func permute(nums []int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun permute(nums: IntArray): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func permute(_ nums: [Int]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn permute(nums: Vec<i32>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer[][]}\ndef permute(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer[][]\n     */\n    function permute($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> permute(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def permute(nums: Array[Int]): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec permute(nums :: [integer]) :: [[integer]]\n  def permute(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec permute(Nums :: [integer()]) -> [[integer()]].\npermute(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (permute nums)\n  (-> (listof exact-integer?) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1945",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Backtracking\n\n**Intuition**\n\nWe are given that `n <= 6`. Typically, problems that ask you to find **all** of something with low bounds can be solved with backtracking.\n\nIn backtracking, we generate all solutions one element at a time. This problem is asking us to generate all possible permutations, so we will generate permutations one element at a time.\n\nTo generate a permutation one element at a time, we will use an array `curr` that represents the current permutation we are building. To start, we add the first element in `nums`. We have `curr = [nums[0]]`. We are **locking** in this first value and we will now find all permutations that start with `nums[0]`.\n\nTo find all permutations that start with `nums[0]`, we start by adding the next element, which is `nums[1]`. We now have `curr = [nums[0], nums[1]]`. We are **locking** in this second element and we will now find all permutations that start with `nums[0], nums[1]`.\n\nThis continues until we use all elements, i.e. `curr.length == nums.length`. Let's say that we have finished finding all permutations that start with `[nums[0], nums[1]]`. Now what? We **backtrack** by removing the `nums[1]`, and we have `curr = [nums[0]]` again. Now, we add the second element that comes after `nums[0]`, which is `nums[2]`. We have `curr = [nums[0], nums[2]]`, and now we need to find all permutations that start with `[nums[0], nums[2]]`.\n\nOnce we find all the permutations that start with `[nums[0]]`, we backtrack by removing `nums[0]` from `curr` and adding the next element. We have `curr = [nums[1]]`, and now we need to find all permutations that start with `nums[1]`.\n\nThis process is very recursive in nature. Each time we add an element, we solve a new version of the problem (find all permutations that start with `curr`). The initial version of the problem is to find all permutations that start with `[]`, which represents all possible permutations.\n\n> To summarize: try all numbers in the first position. For each number in the first position, try all other numbers in the second position. For each pair of numbers in the first and second positions, try all other numbers in the third position, and so on.\n\n**Trees**\n\nThe best way to think about the backtracking process is by modeling it as a tree. You can imagine the solution space as a tree, with each node representing a version of `curr`. Label each node with a number that represents the last number in `curr`. Moving to a child is like adding the child's label to `curr`.\n\nA permutation uses each element exactly once. A node should only have children with labels representing elements that haven't been used yet in the current path.\n\nGiven `nums = [1, 2, 3]`, here is the backtracking tree:\n\n<img src=\"../Figures/46/1.png\" width=\"960\"> <br>\n\nThe root node represents an empty `curr` `[]`. From the root, every node's `curr` represents the path taken from the root. The nodes at depth `nums.length` represent the answer permutations (the leaf nodes).\n\nSolving this problem is equivalent to \"traversing\" this tree. The easiest way to perform the traversal is by using recursion and passing `curr` as an argument.\n\nThink of each call to the recursive function as being a node in the tree. In each call, we need to iterate over the numbers that haven't been used yet (not currently in `curr`).\n\nFor each `num` that isn't already in `curr`, we add it to `curr` and then make a recursive call passing `curr`. Modifying `curr` and making a recursive call is equivalent to \"traversing\" to a child node in the tree.\n\nWhen we return from a function call, it's equivalent to moving back up the tree (exactly like in a DFS). When we moved from a parent to a child, we added an element to `curr`. When we move from a child back to its parent, we need to remove the element we added from `curr`. This is the \"backtracking\" step.\n\n**Algorithm**\n\n1. Initialize an answer array `ans` and an array `curr` to build permutations with.\n2. Create a `backtrack` function that takes `curr` as an argument:\n    - If `curr.length == nums.length`, add a copy of `curr` to `ans` and return.\n    - Iterate over `nums`. For each `num`, if `num` is not in `curr`, do the following:\n        - Add `num` to `curr` and call `backtrack(curr)`, then remove `num` from `curr`.\n3. Call `backtrack` with an initially empty `curr`.\n4. Return `ans`.\n\n> Note that we are essentially implementing a DFS traversal of an imaginary tree. The children of a node are all the numbers that haven't been used yet.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/m7HbK8DJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"m7HbK8DJ\"></iframe>\n\n**Complexity Analysis**\n\n> Note: most backtracking problems, including this one, have extremely difficult time complexities to derive. Don't be discouraged if you can't derive it on your own - most of the time, the analysis requires an esoteric understanding of math.\n\nGiven $$n$$ as the length of `nums`,\n\n* Time complexity, **what you should say in an interview:** $$O(n \\cdot n!)$$\n\n    Finding permutations is a [well-studied problem in combinatorics](https://en.wikipedia.org/wiki/Permutation). Given a set of length `n`, the number of permutations is $$n!$$ (n factorial). There are $$n$$ options for the first number, $$n - 1$$ for the second, and so on.\n\n    For each of the $$n!$$ permutations, we need $$O(n)$$ work to copy `curr` into the answer. This gives us $$O(n \\cdot n!)$$ work.\n\n* Time complexity, **better approximation:** $$O(n^2 \\cdot (e \\cdot \\Gamma (n + 1, 1) - n!))$$\n\n    **The analysis used to derive this time complexity is way out of the scope of an interview. We have included it for the sake of completeness. In an interview, you can use the explanation above while explaining that it is an approximation, and then mention that the true time complexity would involve calculating the number of nodes in the tree, which is very difficult to do analytically.**\n\n    What about the work required to perform the traversal? First, let's determine how many nodes are in the tree. A [k-permutation of n](https://en.wikipedia.org/wiki/Permutation#k-permutations_of_n) is a permutation that doesn't use all $$n$$ elements. The first level in the tree holds all 1-permutations, the second level holds all 2-permutations, and so on.\n\n    Thus, the number of nodes in the tree is equal to the sum of the number of k-permutations, where k is in the range [1, n]. The number of k-permutations can be calculated as:\n\n    $\\Large{\\frac{n!}{(n - k)!}}$\n\n    The number of the nodes in the tree is therefore:\n\n    $\\Large{\\sum_{k=1}^{n}{\\frac{n!}{(n - k)!}}}$\n\n    This sum is difficult to compute and requires higher-level mathematics. It is equal to:\n\n    $\\Large{e \\cdot \\Gamma (n + 1, 1) - 1}$ where $\\Large{\\Gamma}$ is the [incomplete gamma function](https://en.wikipedia.org/wiki/Incomplete_gamma_function).\n\n    Using this function, we can empirically determine that the number of nodes in the tree grows faster than $$n!$$ but slower than $$n \\cdot n!$$.\n\n    | n | n! |  $e \\cdot \\Gamma (n + 1, 1) - 1$ |  n * n!\n    |:---:|:---:|:--------:|:-----------:|\n    |  1  | 1  | 1 | 1 |\n    |  2  |  2  | 4 | 4 |\n    |  3  | 6  | 15 | 18 |\n    |  4  | 24  | 64 | 96 |\n    |  5  | 120 | 325 | 600 |\n    |  6  |  720  | 1956 | 4320 |\n    |  7  |  5040   | 13,699 | 35,280 |\n    |  8  |  40,320  | 109,600 | 322,560 |\n    |  9  |   362,880  | 986,409 | 3,265,920 |\n    |  10  |  3,628,800   | 9,864,100 | 36,288,000 |\n\n    <br>\n\n    You may be thinking: it grows slower than $$n \\cdot n!$$, that's great! The work required to copy `curr` into `ans` would dominate it. Unfortunately, this is not true because the work done at each node is not constant. We have a for loop over `nums`, and each iteration of the loop checks if an element is in `curr`. As such, the work done at each node is approximately $$O(n^2)$$. Because the number of nodes grows faster than $$n!$$, the work done for the traversal grows faster than $$n^2 \\cdot n!$$, and it becomes the dominating term.\n\n    Wait a second, the $$n^2$$ work is not done for the final level (the n-permutations) because we immediately return from the function after adding `curr` to the answer. There are $$n!$$ nodes in the final level, so the number of nodes that go through the $$n^2$$ work is $$e \\cdot \\Gamma (n + 1, 1) - 1 - n!$$.\n\n    The work done for the traversal is therefore approximately $$n^2 \\cdot (e \\cdot \\Gamma (n + 1, 1) - n!)$$. Using a script, we can empirically determine that this function grows much faster than $$n \\cdot n!$$, and thus the work for the traversal is the dominating term. This is the \"official\" time complexity of the approach.\n\n    > Notice that we haven't been wrapping the terms in Big O. In terms of big O, the number of nodes would be $$O(\\Gamma (n + 1, 1))$$ because the $$e$$ drops as a constant. We also determined that the number of nodes grows faster than $$n!$$, so we would drop the $$- n!$$ as well using normal big O rules, and the result would be $$O(n^2 \\cdot \\Gamma (n + 1, 1))$$ for the traversal.\n    >\n    > There is some nuance here. First of all, notice that $$\\Gamma (n + 1, 1) \\approx n!$$. When making comparisons, the $$e$$ term is significant. In fact, dropping the $$e$$ term leads $$\\Gamma (n + 1, 1) - n!$$ to be negative for many values of $$n$$. Second, it is too much of a simplification to say the work done at each node is $$O(n^2)$$ since the cost of checking if a number is in `curr` is a function of the depth.\n    >\n    > The truth is, all this analysis is undoubtedly flawed mathematically as we are making assumptions and not strictly following the rules of Big O. However, it still makes for an interesting analysis that helps us understand the nature of the problem better.\n\n    We're already come this far, let's delve deeper! What if we used a set as well, so we had `backtrack(curr, used)` where `used` is a set of the elements in `curr`. Then, we can reduce the work done at each node by a factor of $$n$$. In that case, the work for the traversal would be approximate $$n \\cdot (e \\cdot \\Gamma (n + 1, 1) - n!)$$.\n\n    Believe it or not, this function appears to grow at the **exact same rate** as $$n \\cdot n!$$. For $$n > 5$$, we have:\n\n    $$\\Large{\\frac{n \\cdot n!}{n \\cdot (e \\cdot \\Gamma (n + 1, 1) - n!)}} \\approx 0.582$$\n\n    In which case all the analysis we just did was pointless because the work done to add `curr` to the answer would be enough to determine the time complexity.\n\n* Space complexity: $$O(n)$$\n\n    We don't count the answer as part of the space complexity. The extra space we use here is for `curr` and the recursion call stack. The depth of the call stack is equal to the length of `curr`, which is limited to $$n$$.\n\n    Fortunately, this analysis was simpler than the time complexity one.\n\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

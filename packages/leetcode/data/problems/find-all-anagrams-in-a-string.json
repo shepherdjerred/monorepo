@@ -1,0 +1,137 @@
+{
+  "questionId": "438",
+  "questionFrontendId": "438",
+  "title": "Find All Anagrams in a String",
+  "titleSlug": "find-all-anagrams-in-a-string",
+  "difficulty": "Medium",
+  "content": "<p>Given two strings <code>s</code> and <code>p</code>, return an array of all the start indices of <code>p</code>&#39;s <span data-keyword=\"anagram\">anagrams</span> in <code>s</code>. You may return the answer in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;cbaebabacd&quot;, p = &quot;abc&quot;\n<strong>Output:</strong> [0,6]\n<strong>Explanation:</strong>\nThe substring with start index = 0 is &quot;cba&quot;, which is an anagram of &quot;abc&quot;.\nThe substring with start index = 6 is &quot;bac&quot;, which is an anagram of &quot;abc&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abab&quot;, p = &quot;ab&quot;\n<strong>Output:</strong> [0,1,2]\n<strong>Explanation:</strong>\nThe substring with start index = 0 is &quot;ab&quot;, which is an anagram of &quot;ab&quot;.\nThe substring with start index = 1 is &quot;ba&quot;, which is an anagram of &quot;ab&quot;.\nThe substring with start index = 2 is &quot;ab&quot;, which is an anagram of &quot;ab&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length, p.length &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>s</code> and <code>p</code> consist of lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findAnagrams\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    },\r\n    {\r\n        \"name\": \"p\",\r\n        \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<integer>\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.2M\", \"totalSubmission\": \"2.2M\", \"totalAcceptedRaw\": 1181230, \"totalSubmissionRaw\": 2208611, \"acRate\": \"53.5%\"}",
+  "likes": 13200,
+  "dislikes": 375,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Valid Anagram\", \"titleSlug\": \"valid-anagram\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Permutation in String\", \"titleSlug\": \"permutation-in-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"cbaebabacd\"\n\"abc\"",
+    "\"abab\"\n\"ab\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"databricks\", \"name\": \"Databricks\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"revolut\", \"name\": \"Revolut\"}, {\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"bolt\", \"name\": \"Bolt\"}, {\"timesEncountered\": 2, \"slug\": \"splunk\", \"name\": \"Splunk\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"syfe\", \"name\": \"Syfe\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> findAnagrams(string s, string p) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> findAnagrams(String s, String p) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findAnagrams(self, s: str, p: str) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findAnagrams(self, s, p):\n        \"\"\"\n        :type s: str\n        :type p: str\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string} p\n * @return {number[]}\n */\nvar findAnagrams = function(s, p) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findAnagrams(s: string, p: string): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> FindAnagrams(string s, string p) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* findAnagrams(char* s, char* p, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findAnagrams(s string, p string) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findAnagrams(s: String, p: String): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findAnagrams(_ s: String, _ p: String) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_anagrams(s: String, p: String) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String} p\n# @return {Integer[]}\ndef find_anagrams(s, p)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String $p\n     * @return Integer[]\n     */\n    function findAnagrams($s, $p) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> findAnagrams(String s, String p) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findAnagrams(s: String, p: String): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_anagrams(s :: String.t, p :: String.t) :: [integer]\n  def find_anagrams(s, p) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_anagrams(S :: unicode:unicode_binary(), P :: unicode:unicode_binary()) -> [integer()].\nfind_anagrams(S, P) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-anagrams s p)\n  (-> string? string? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "863",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Solution Template\n\n![traversal](../Figures/438/snake3.png)\n\nThis is a problem of multiple pattern searches in a string. All such problems usually could be solved by a sliding window approach in a linear time. The challenge here is how to implement a constant-time slice to fit into this linear time. \n\nIf the patterns are not known in advance, i.e. it's a \"find duplicates\" problem, one could use one of two ways to implement constant-time slice: Bitmasks or Rabin-Karp. Please check the article [Repeated DNA Sequences](https://leetcode.com/articles/repeated-dna-sequences/) for a detailed comparison of these two algorithms. \n\nHere the situation is more simple: patterns are known in advance, and the set of characters in the patterns is very limited as well: 26 lowercase English letters. Hence one could allocate an array or hashmap with 26 elements and use it as a letter counter in the sliding window. \n\n![traversal](../Figures/438/anagrams2.png)\n<br />\n<br />\n\n\n---\n### Approach 1: Sliding Window with HashMap\n\nLet's start from the simplest approach: sliding window + two counter hashmaps `letter -> its count`. The first hashmap is a reference counter `pCount` for string `p`, and the second one is a counter `sCount` for a string in the sliding window.\n\nThe idea is to move the sliding window along the string `s`, recompute the second hashmap `sCount` in a constant time, and compare it with the first hashmap `pCount`. If `sCount == pCount`, then the string in the sliding window is a permutation of string `p`, and one could add its start position in the output list. \n\n**Algorithm**\n\n- Build reference counter `pCount` for string `p`. \n\n- Move the sliding window along the string `s`:\n\n    - Recompute sliding window counter `sCount` at each step by adding one letter on the right and removing one letter on the left. \n    \n    - If `sCount == pCount`, update the output list.\n    \n- Return output list.   \n\n**Implementation**\n\n!?!../Documents/438_LIS.json:1000,535!?!\n\n<iframe src=\"https://leetcode.com/playground/M7qbAEwN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"M7qbAEwN\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N_s$$ and $$N_p$$ be the length of `s` and `p` respectively. Let $$K$$ be the maximum possible number of distinct characters. In this problem, $$K$$ equals $$26$$ because `s` and `p` consist of lowercase English letters.\n\n* Time complexity: $$O(N_s)$$\n\n  We perform one pass along each string when $$N_s \\geq N_p$$ which costs $$O(N_s + N_p)$$ time.  Since we only perform this step when $$N_s \\geq N_p$$ the time complexity simplifies to $$O(N_s)$$. \n\n* Space complexity: $$O(K)$$\n\n  `pCount` and `sCount` will contain at most $$K$$ elements each. Since $$K$$ is fixed at $$26$$ for this problem, this can be considered as $$O(1)$$ space.\n  \n<br /> \n<br />\n\n\n---\n### Approach 2: Sliding Window with Array\n\n**Algorithm**\n\nHashmap is quite complex structure, \n[with known performance issues in Java](https://github.com/vavr-io/vavr/issues/571).\nLet's implement approach 1 using 26-elements array instead of hashmap: \n\n- Element number 0 contains count of letter `a`.\n\n- Element number 1 contains count of letter `b`.\n\n- ...\n\n- Element number 25 contains count of letter `z`.\n\n**Algorithm**\n\n- Build reference array `pCount` for string `p`. \n\n- Move sliding window along the string `s`:\n\n    - Recompute sliding window array `sCount` at each step by adding \n    one letter on the right and removing one letter on the left. \n    \n    - If `sCount == pCount`, update the output list.\n    \n- Return output list. \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/Yhrsijqx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Yhrsijqx\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N_s$$ and $$N_p$$ be the length of `s` and `p` respectively. Let $$K$$ be the maximum possible number of distinct characters. In this problem, $$K$$ equals $$26$$ because `s` and `p` consist of lowercase English letters.\n\n* Time complexity: $$O(N_s)$$\n\n  We perform one pass along each string when $$N_s \\geq N_p$$ which costs $$O(N_s + N_p)$$ time.  Since we only perform this step when $$N_s \\geq N_p$$ the time complexity simplifies to $$O(N_s)$$. \n\n* Space complexity: $$O(K)$$\n\n  `pCount` and `sCount` contain $$K$$ elements each. Since $$K$$ is fixed at $$26$$ for this problem, this can be considered as $$O(1)$$ space.\n  \n<br /> \n<br />",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

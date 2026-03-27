@@ -1,0 +1,145 @@
+{
+  "questionId": "241",
+  "questionFrontendId": "241",
+  "title": "Different Ways to Add Parentheses",
+  "titleSlug": "different-ways-to-add-parentheses",
+  "difficulty": "Medium",
+  "content": "<p>Given a string <code>expression</code> of numbers and operators, return <em>all possible results from computing all the different possible ways to group numbers and operators</em>. You may return the answer in <strong>any order</strong>.</p>\n\n<p>The test cases are generated such that the output values fit in a 32-bit integer and the number of different results does not exceed <code>10<sup>4</sup></code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> expression = &quot;2-1-1&quot;\n<strong>Output:</strong> [0,2]\n<strong>Explanation:</strong>\n((2-1)-1) = 0 \n(2-(1-1)) = 2\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> expression = &quot;2*3-4*5&quot;\n<strong>Output:</strong> [-34,-14,-10,-10,10]\n<strong>Explanation:</strong>\n(2*(3-(4*5))) = -34 \n((2*3)-(4*5)) = -14 \n((2*(3-4))*5) = -10 \n(2*((3-4)*5)) = -10 \n(((2*3)-4)*5) = 10\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= expression.length &lt;= 20</code></li>\n\t<li><code>expression</code> consists of digits and the operator <code>&#39;+&#39;</code>, <code>&#39;-&#39;</code>, and <code>&#39;*&#39;</code>.</li>\n\t<li>All the integer values in the input expression are in the range <code>[0, 99]</code>.</li>\n\t<li>The integer values in the input expression do not have a leading <code>&#39;-&#39;</code> or <code>&#39;+&#39;</code> denoting the sign.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"diffWaysToCompute\",\n  \"params\": [\n    {\n      \"name\": \"expression\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"376.1K\", \"totalSubmission\": \"514.1K\", \"totalAcceptedRaw\": 376063, \"totalSubmissionRaw\": 514121, \"acRate\": \"73.1%\"}",
+  "likes": 6325,
+  "dislikes": 398,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Unique Binary Search Trees II\", \"titleSlug\": \"unique-binary-search-trees-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Basic Calculator\", \"titleSlug\": \"basic-calculator\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Expression Add Operators\", \"titleSlug\": \"expression-add-operators\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"The Score of Students Solving Math Expression\", \"titleSlug\": \"the-score-of-students-solving-math-expression\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimize Result by Adding Parentheses to Expression\", \"titleSlug\": \"minimize-result-by-adding-parentheses-to-expression\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"2-1-1\"",
+    "\"2*3-4*5\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"deutsche-bank\", \"name\": \"Deutsche Bank\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"deltax\", \"name\": \"DeltaX\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    },
+    {
+      "name": "Memoization",
+      "slug": "memoization"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> diffWaysToCompute(string expression) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> diffWaysToCompute(String expression) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def diffWaysToCompute(self, expression: str) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def diffWaysToCompute(self, expression):\n        \"\"\"\n        :type expression: str\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} expression\n * @return {number[]}\n */\nvar diffWaysToCompute = function(expression) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function diffWaysToCompute(expression: string): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> DiffWaysToCompute(string expression) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* diffWaysToCompute(char* expression, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func diffWaysToCompute(expression string) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun diffWaysToCompute(expression: String): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func diffWaysToCompute(_ expression: String) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn diff_ways_to_compute(expression: String) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} expression\n# @return {Integer[]}\ndef diff_ways_to_compute(expression)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $expression\n     * @return Integer[]\n     */\n    function diffWaysToCompute($expression) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> diffWaysToCompute(String expression) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def diffWaysToCompute(expression: String): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec diff_ways_to_compute(expression :: String.t) :: [integer]\n  def diff_ways_to_compute(expression) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec diff_ways_to_compute(Expression :: unicode:unicode_binary()) -> [integer()].\ndiff_ways_to_compute(Expression) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (diff-ways-to-compute expression)\n  (-> string? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2438",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a string `expression` containing:\n1. Numbers from 0 - 99.\n2. Operators (+, -, *)  \n\nOur task is to determine all possible results obtainable by grouping the numbers and operators in various ways.\n    \n---\n\n### Approach 1: Recursion\n\n#### Intuition\n\nWhen we add parentheses to an expression, they group parts of the expression, telling us to evaluate those parts first. To decide where to place these parentheses, we look at each operator in the expression. Each operator offers a chance to split the expression into two smaller parts: everything before the operator and everything after it. These smaller parts are similar to our original problem, so we use recursion to solve them.\n\nWe start by defining our base cases, where we can return a result without further recursion:\n1. If the expression is empty, return an empty list.\n2. If the expression is a single digit, return a list with that number.\n3. If the expression has two characters and the first is a digit, the second must also be a digit. We convert the expression to a number and return it in a list.\n\nFor longer expressions, we find operators to split the expression. We iterate through each character, and when we find an operator, we recursively evaluate the parts before and after it. We store the results of these evaluations in separate lists. Then, we combine the results from the left and right parts using the operator and store the final values in a list.\n\nHere’s a visual example of how a recursion subtree might look:\n\n![](../Figures/241/subtree.png)\n\nBy the end of the process, the `results` list will contain all possible results from grouping the numbers and operators in the expression.\n\n#### Algorithm\n\n- Initialize a list `results` to store the possible outcomes.\n- If the input string is empty, return the empty `results` list.\n- Check if `expression` is a single character:\n  - If so, convert it to an integer and add it to `results`.\n  - Return `results`.\n- Check if `expression` has only two characters and starts with a digit:\n  - If so, convert the entire string to an integer and add it to `results`.\n  - Return `results`.\n- Iterate through each character of `expression`:\n  - Set the current character as `currentChar`.\n  - If `currentChar` is a digit, continue to the next iteration.\n  - Recursively call `diffWaysToCompute` for the left part of `expression` (from indices `0` to `i-1`) and set it to a list `leftResults`.\n  - Recursively call `diffWaysToCompute` for the right part of `expression` (from indices `i+1` to the end) and set it to a list `rightResults`.\n  - Iterate through `leftValue` in `leftResults`:\n    - For each `leftValue`, iterate through each `rightValue` in the `rightResults`:\n      - Initialize a variable `computedResult` to store the result of the current operation.\n      - Perform the operation (addition, subtraction, or multiplication) based on the current character.\n      - Add the `computedResult` to the `results` list.\n- Return `results` as our answer.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/a5L9xDMj/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"a5L9xDMj\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the the length of the input string `expression`.\n\n- Time complexity: $O(n \\cdot 2^n)$\n\n    For each sub-expression, we iterate through the string to identify the operators, which takes $O(n)$ time. However, the key aspect is the recursive combination of results from the left and right sub-expressions. The number of results grows exponentially because each sub-expression produces multiple results, and combining these results takes $O(k \\times l)$, where $k$ and $l$ are the numbers of results from the left and right sub-problems, respectively.\n\n    There were some suggestions to model the number of results using Catalan numbers which we deemed as incorrect. Catalan numbers apply when counting distinct ways to fully parenthesize an expression or structure. In this problem, however, we're not just counting valid ways to split the expression but also calculating and combining all possible results. This introduces exponential growth in the number of possible results, not the polynomial growth typical of Catalan numbers. The number of combinations grows exponentially with the depth of recursive splitting, which means the overall complexity is driven by the exponential growth in results.\n\n    Thus, the time complexity of the algorithm is $O(n \\cdot 2^n)$, where the $O(2^n)$ factor reflects the exponential growth in the number of ways to combine results from sub-expressions.\n\n- Space complexity: $O(2^n)$\n\n    The algorithm stores the intermediate results at each step. Since the total number of results can be equal to the $O(2^n)$, the space complexity of the algorithm is $O(2^n)$.\n\n---\n\n### Approach 2: Memoization\n\n#### Intuition\n\nWhen dealing with complex expressions, we often find ourselves repeating the same calculations. Take the expression `2 + 2 - 2 - 2 - 2`. You could group it in different ways:\n\n1. `((2 + 2) - (2 - 2) - 2)`\n2. `((2 + 2) - 2 - (2 - 2))`\n\nAs you can see, the sub-expression (2 + 2) is evaluated more than once.\n\nTo avoid this, we can store the results of these sub-calculations. This way, if we hit the same sub-problem again, we can use the stored result instead of recalculating it, which speeds things up.\n\nAnother issue with the previous method was that it repeatedly created substrings of the expression. Since creating a substring takes $O(n)$ time, where $n$ is the length of the string, this can be quite slow. Instead, we’ll pass the entire `expression` to each recursive call and use `start` and `end` indices to specify the part we're interested in. This avoids the costly substring operations.\n\nIn our updated approach, each state in the recursion is defined by the `start` and `end` indices. We use a 2D array for memoization, where each cell `memo[i][j]` holds the list of possible results for the sub-expression from index `i` to index `j`.\n\n> Note: There is an alternative way to apply memoization in this problem. Consider the expression \"2-2-2\". This can be grouped in two ways: `(2 - 2) - 2` and `2 - (2 - 2)`. As you can see, the expression \"2 - 2\" is being evaluated repeatedly, even though the instances do not share the same indices.\n>\n> To memoize this, we need to store the substring itself as the state of the sub-problem. This can be achieved by using a map with the substring as the key and the list of results as the value. Whenever we encounter the same substring, we can return the result from the map.\n>\n> While this approach leads us to identify and cache more sub-problems, it forces us to use substrings in our recursion. In an interview setting, you can highlight both approaches and discuss their advantages and disadvantages for extra credit.\n\n#### Algorithm\n \nMain method `diffWaysToCompute`:\n\n- Initialize a 2D array `memo` to store computed results for sub-expressions.\n- Call the `computeResults` method with the full expression range and return the result.\n\nHelper method `computeResults(expression, memo, start, end)`:\n\n- Check if the result for the range `[start, end]` is memoized. If so, return the memoized result.\n- Initialize a list `results` to store computed values for the current sub-expression.\n- Check if the current range is a single digit:\n  - - If so, convert `expression` to an integer and add it to `results`.\n  - Return `results`.\n- Check if the current range is a two-digit number:\n  -  If so, compute its value and add it to `results`.\n  -  Return `results`.\n- Iterate through each character in the current range of the expression:\n  - Skip the current iteration if the character is a digit.\n  - Recursively call `computeResults` for the left part of the expression up to the current character (from `start` to `i-1`). Store the result in `leftResults`.\n  - Recursively call `computeResults` for the right part of the expression after the current character (from `i+1` to `end`). Store the result in `rightResults`.\n  - Iterate through each `leftValue` in the `leftResults`:\n    - For each `leftValue`, iterate through each `rightValue` in `rightResults`:\n      - Perform the operation (addition, subtraction, or multiplication) based on the current character.\n      - Add the computed result to the `results` list.\n  - Store the result in `memo` for the range `[start, end]`.\n- Return the `results` list.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4xf4Rnor/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4xf4Rnor\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the the length of the input string `expression`.\n\n* Time complexity: $O(n \\cdot 2^n)$\n\n    The algorithm uses memoization to store the results of sub-problems, ensuring that each sub-problem is evaluated exactly once. There are at most $O(n^2)$ possible sub-problems, as each sub-problem is defined by its start and end indices, both ranging from $0$ to $n-1$. \n\n    Despite the efficiency gains from memoization, the time complexity is still dominated by the recursive nature of the algorithm. The recursion tree expands exponentially, with a growth factor of $O(2^n)$.\n\n    Thus, the overall time complexity remains $O(n \\cdot 2^n)$.\n\n* Space complexity: $O(n^2 \\cdot 2^n)$\n\n    The space complexity is $O(n^2 \\cdot 2^n)$, where $O(n^2)$ comes from the memoization table storing results for all sub-problems, and $O(2^n)$ accounts for the space required to store the exponentially growing number of results for each sub-problem. The recursion stack depth is at most $O(n)$, which is dominated by the exponential complexity and can therefore be omitted from the overall space complexity analysis.\n\n---\n\n### Approach 3: Tabulation\n\n#### Intuition\n\nRecursive solutions can use up a lot of stack space, which might lead to stack overflow errors. To avoid this, we'll switch to an iterative approach and build our solution step by step.\n\nWe’ll use a 2-D array, called `dp`, to keep track of intermediate results. This table will have dimensions `n x n`, where `n` is the length of our input `expression`. Each cell `dp[i][j]` will store all possible results for the sub-expression starting at index `i` and ending at index `j`. For instance, `dp[0][2]` will hold all possible results for the first three characters of the expression.\n\nFirst, we need to fill in our base cases. We loop through the `expression` to identify all single-digit and double-digit numbers.\n1. For single-digit numbers, add the digit's value to `dp[i][i]`.\n2. For double-digit numbers, add the number's value to `dp[i][i+1]`.\n\nNext, we handle longer sub-expressions. We start with lengths of 3 and go up to the length of the `expression`. For each length, we consider all possible starting points in the expression. This double loop structure ensures we consider all possible substrings of `expression`. For each sub-expression, we try different ways to split it. We go through each character and, when we find an operator, split the expression at that point. We then combine the results from the left and right parts using the operator.\n\nAfter we've filled our entire `dp` table, the cell `dp[0][n-1]` contains all possible results for the entire expression. We can return this list as our final answer.\n\n#### Algorithm\n\nMain method `diffWaysToCompute`:\n\n- Initialize a variable `n` to store the length of the input string `expression`.\n- Create a 2D array `dp` of lists to store the results of sub-problems.\n- Initialize the base cases using the `initializeBaseCases` method.\n- Iterate through all possible sub-expression lengths, starting from `3` up to `n`.\n  - For each length, iterate through all possible `start` positions of the sub-expression.\n  - Set `end` as `start + length - 1`.\n  - Calculate the results for the sub-expression `[start, end]` using the `processSubexpression` method.\n- Return `dp[0][n-1]`, which contains all possible results for the entire `expression`.\n\nHelper method `initializeBaseCases(expression, dp)`:\n\n- Initialize the `dp` array.\n- Handle base cases by iterating through the `expression`:\n  - For single digits, add the digit value to `dp[i][i]`.\n  - For two-digit numbers, add the number value to `dp[i][i+1]`.\n\nHelper method `processSubexpression(expression, dp, start, end)`:\n\n- Try all possible `split` positions from `start` to `end`:\n  - If the character is numeric, continue to the next iteration\n  - If not, retrieve the results of the left sub-expression from `dp[start][split-1]` and assign it to `leftResults`.\n  - Retrieve the results of the right sub-expression from `dp[split+1][end]` and assign it to `rightResults`.\n  - Call `computeResults` with `leftResults`, `rightResults`, and the operator at the `split` position.\n\nHelper method `computeResults(op, leftResults, rightResults, results)`:\n\n- For each combination of `leftResults` and `rightResults`:\n  - Perform the operation specified by `op`.\n  - Add the result to `results`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3Gw7Y5ZR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3Gw7Y5ZR\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the the length of the input string `expression`.\n\n* Time complexity: $O(n \\cdot 2^n)$\n\n    Similar to the memoization approach, the algorithm evaluates each sub-problem exactly once. Thus, the time complexity remains the same as Approach 2: $O(n \\cdot 2^n)$.\n\n* Space complexity: $O(n^2 \\cdot 2^n)$\n\n    The space complexity is similar to the previous approach, with one key difference: the absence of the recursive stack space. \n\n    However, the `dp` table dominates the space complexity anyway, keeping the overall space complexity as $O(n^2 \\cdot 2^n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "questionId": "162",
+  "questionFrontendId": "162",
+  "title": "Find Peak Element",
+  "titleSlug": "find-peak-element",
+  "difficulty": "Medium",
+  "content": "<p>A peak element is an element that is strictly greater than its neighbors.</p>\n\n<p>Given a <strong>0-indexed</strong> integer array <code>nums</code>, find a peak element, and return its index. If the array contains multiple peaks, return the index to <strong>any of the peaks</strong>.</p>\n\n<p>You may imagine that <code>nums[-1] = nums[n] = -&infin;</code>. In other words, an element is always considered to be strictly greater than a neighbor that is outside the array.</p>\n\n<p>You must write an algorithm that runs in <code>O(log n)</code> time.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,1]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> 3 is a peak element and your function should return the index number 2.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,1,3,5,6,4]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> Your function can return either index number 1 where the peak element is 2, or index number 5 where the peak element is 6.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 1000</code></li>\n\t<li><code>-2<sup>31</sup> &lt;= nums[i] &lt;= 2<sup>31</sup> - 1</code></li>\n\t<li><code>nums[i] != nums[i + 1]</code> for all valid <code>i</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findPeakElement\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"2.4M\", \"totalSubmission\": \"5M\", \"totalAcceptedRaw\": 2365955, \"totalSubmissionRaw\": 5049952, \"acRate\": \"46.9%\"}",
+  "likes": 14567,
+  "dislikes": 4953,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Peak Index in a Mountain Array\", \"titleSlug\": \"peak-index-in-a-mountain-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find a Peak Element II\", \"titleSlug\": \"find-a-peak-element-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Pour Water Between Buckets to Make Water Levels Equal\", \"titleSlug\": \"pour-water-between-buckets-to-make-water-levels-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Hills and Valleys in an Array\", \"titleSlug\": \"count-hills-and-valleys-in-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Peaks\", \"titleSlug\": \"find-the-peaks\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,1]",
+    "[1,2,1,3,5,6,4]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 14, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"ixl\", \"name\": \"IXL\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"samsung\", \"name\": \"Samsung\"}, {\"timesEncountered\": 5, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 4, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 4, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 4, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 3, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 3, \"slug\": \"zepto\", \"name\": \"Zepto\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findPeakElement(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findPeakElement(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findPeakElement(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findPeakElement(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar findPeakElement = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findPeakElement(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindPeakElement(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findPeakElement(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findPeakElement(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findPeakElement(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findPeakElement(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_peak_element(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef find_peak_element(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function findPeakElement($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findPeakElement(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findPeakElement(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_peak_element(nums :: [integer]) :: integer\n  def find_peak_element(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_peak_element(Nums :: [integer()]) -> integer().\nfind_peak_element(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-peak-element nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "149",
+    "content": "[TOC]\n\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/797541480\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Approach 1: Linear Scan\n\nIn this approach, we make use of the fact that two consecutive numbers $$nums[j]$$ and $$nums[j + 1]$$ are never equal. Thus, we can traverse over the $$nums$$ array starting from the beginning. Whenever, we find a number $$nums[i]$$, we only need to check if it is larger than the next number $$nums[i+1]$$ for determining if $$nums[i]$$ is the peak element. The reasoning behind this can be understood by taking the following three cases which cover every case into which any problem can be divided.\n\n\nCase 1. All the numbers appear in a descending order. In this case, the first element corresponds to the peak element. We start off by checking if the current element is larger than the next one. The first element satisfies this criteria, and is hence identified as the peak correctly. In this case, we didn't reach a point where we needed to compare $$nums[i]$$ with $$nums[i-1]$$ also, to determine if it is the peak element or not.\n\n![Graph](../Figures/162/Find_Peak_Case1.PNG)\n\n\nCase 2. All the elements appear in ascending order. In this case, we keep on comparing $$nums[i]$$ with $$nums[i+1]$$ to determine if $$nums[i]$$ is the peak element or not. None of the elements satisfy this criteria, indicating that we are currently on a rising slope and not on a peak. Thus, at the end, we need to return the last element as the peak element, which turns out to be correct. In this case also, we need not compare $$nums[i]$$ with $$nums[i-1]$$, since being on the rising slope is a sufficient condition to ensure that $$nums[i]$$ isn't the peak element.\n\n![Graph](../Figures/162/Find_Peak_Case2.PNG)\n\n\nCase 3. The peak appears somewhere in the middle. In this case, when we are traversing on the rising edge, as in Case 2, none of the elements will satisfy $$nums[i] > nums[i + 1]$$. We need not compare $$nums[i]$$ with $$nums[i-1]$$ on the rising slope as discussed above. When we finally reach the peak element, the condition $$nums[i] > nums[i + 1]$$ is satisfied. We again, need not compare $$nums[i]$$ with $$nums[i-1]$$. This is because, we could reach $$nums[i]$$ as the current element only when the check $$nums[i] > nums[i + 1]$$ failed for the previous($$(i-1)^{th}$$ element, indicating that $$nums[i-1] < nums[i]$$. Thus, we are able to identify the peak element correctly in this case as well.\n\n![Graph](../Figures/162/Find_Peak_Case3.PNG)\n\n\n<iframe src=\"https://leetcode.com/playground/Myo4zUS6/shared\" frameBorder=\"0\" width=\"100%\" height=\"225\" name=\"Myo4zUS6\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. We traverse the $$nums$$ array of size $$n$$ once only.\n\n* Space complexity : $$O(1)$$. Constant extra space is used.\n<br />\n<br />\n\n---\n\n### Approach 2: Recursive Binary Search\n\n**Algorithm**\n\nWe can view any given sequence in $$nums$$ array as alternating ascending and descending sequences. By making use of this, and the fact that we can return any peak as the result, we can make use of Binary Search to find the required peak element.\n\nIn case of simple Binary Search, we work on a sorted sequence of numbers and try to find out the required number by reducing the search space at every step. In this case, we use a modification of this simple Binary Search to our advantage. We start off by finding the middle element, $$mid$$ from the given $$nums$$ array. If this element happens to be lying in a descending sequence of numbers. or a local falling slope(found by comparing $$nums[i]$$ to its right neighbour), it means that the peak will always lie towards the left of this element. Thus, we reduce the search space to the left of $$mid$$(including itself) and perform the same process on left subarray.\n\nIf the middle element, $$mid$$ lies in an ascending sequence of numbers, or a rising slope(found by comparing $$nums[i]$$ to its right neighbour), it obviously implies that the peak lies towards the right of this element. Thus, we reduce the search space to the right of $$mid$$ and perform the same process on the right subarray.\n\nIn this way, we keep on reducing the search space till we eventually reach a state where only one element is remaining in the search space. This single element is the peak element.\n\nTo see how it works, let's consider the three cases discussed above again.\n\nCase 1. In this case, we firstly find $$3$$ as the middle element. Since it lies on a falling slope, we reduce the search space to `[5, 4, 3]`. For this subarray, $$2$$ happens to be the middle element, which again lies on a falling slope, reducing the search space to `[5, 4]`. Now, $$1$$ acts as the middle element and it lies on a falling slope, reducing the search space to `[5]` only. Thus, $$1$$ is returned as the peak correctly.\n\n!?!../Documents/Find_Peak_Case1.json:1000,563!?!\n\nCase 2. In this case, we firstly find $$3$$ as the middle element. Since it lies on a rising slope, we reduce the search space to `[4, 5]`. Now, $$4$$ acts as the middle element for this subarray and it lies on a rising slope, reducing the search space to `[5]` only. Thus, $$5$$ is returned as the peak correctly.\n\n!?!../Documents/Find_Peak_Case2.json:1000,563!?!\n\nCase 3. In this case, the peak lies somewhere in the middle. The first middle element is $$4$$. It lies on a rising slope, indicating that the peak lies towards its right. Thus, the search space is reduced to `[5, 1]`. Now, $$5$$ happens to be the on a falling slope(relative to its right neighbour), reducing the search space to `[5]` only. Thus, $$5$$ is identified as the peak element correctly.\n\n!?!../Documents/Find_Peak_Case3.json:1000,563!?!\n\nCase 4. In this case, the sequence starts by descending and then ascends later, meaning the valley lies somewhere in the middle. For example, consider `[4, 3, 2, 1, 5]`. The first middle element is `2`. It lies on a falling slope (relative to its right neighbor), indicating that the lowest point is to its right. Thus, we reduce the search space to `[1, 5]`. Now, `1` lies on a rising slope (relative to its right neighbor), reducing the search space to `[5]` only. Thus, $$5$$ is identified as the peak element correctly.\n\n![Find_Peak_Case4](../Figures/162/Find_Peak_Case4.PNG)\n\n<iframe src=\"https://leetcode.com/playground/a5BQdyWE/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"a5BQdyWE\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O\\big(log_2(n)\\big)$$. We reduce the search space in half at every step. Thus, the total search space will be consumed in $$log_2(n)$$ steps. Here, $$n$$ refers to the size of $$nums$$ array.\n\n* Space complexity : $$O\\big(log_2(n)\\big)$$. We reduce the search space in half at every step. Thus, the total search space will be consumed in $$log_2(n)$$ steps. Thus, the depth of recursion tree will go upto $$log_2(n)$$.\n<br />\n<br />\n\n---\n\n### Approach 3: Iterative Binary Search\n\n**Algorithm**\n\nThe binary search discussed in the previous approach used a recursive method. We can do the same process in an iterative fashion also. This is done in the current approach.\n\n<iframe src=\"https://leetcode.com/playground/PrpqKWUM/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"PrpqKWUM\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O\\big(log_2(n)\\big)$$. We reduce the search space in half at every step. Thus, the total search space will be consumed in $$log_2(n)$$ steps. Here, $$n$$ refers to the size of $$nums$$ array.\n\n* Space complexity : $$O(1)$$. Constant extra space is used.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

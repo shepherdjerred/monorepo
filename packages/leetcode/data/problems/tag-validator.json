@@ -1,0 +1,134 @@
+{
+  "questionId": "591",
+  "questionFrontendId": "591",
+  "title": "Tag Validator",
+  "titleSlug": "tag-validator",
+  "difficulty": "Hard",
+  "content": "<p>Given a string representing a code snippet, implement a tag validator to parse the code and return whether it is valid.</p>\n\n<p>A code snippet is valid if all the following rules hold:</p>\n\n<ol>\n\t<li>The code must be wrapped in a <b>valid closed tag</b>. Otherwise, the code is invalid.</li>\n\t<li>A <b>closed tag</b> (not necessarily valid) has exactly the following format : <code>&lt;TAG_NAME&gt;TAG_CONTENT&lt;/TAG_NAME&gt;</code>. Among them, <code>&lt;TAG_NAME&gt;</code> is the start tag, and <code>&lt;/TAG_NAME&gt;</code> is the end tag. The TAG_NAME in start and end tags should be the same. A closed tag is <b>valid</b> if and only if the TAG_NAME and TAG_CONTENT are valid.</li>\n\t<li>A <b>valid</b> <code>TAG_NAME</code> only contain <b>upper-case letters</b>, and has length in range [1,9]. Otherwise, the <code>TAG_NAME</code> is <b>invalid</b>.</li>\n\t<li>A <b>valid</b> <code>TAG_CONTENT</code> may contain other <b>valid closed tags</b>, <b>cdata</b> and any characters (see note1) <b>EXCEPT</b> unmatched <code>&lt;</code>, unmatched start and end tag, and unmatched or closed tags with invalid TAG_NAME. Otherwise, the <code>TAG_CONTENT</code> is <b>invalid</b>.</li>\n\t<li>A start tag is unmatched if no end tag exists with the same TAG_NAME, and vice versa. However, you also need to consider the issue of unbalanced when tags are nested.</li>\n\t<li>A <code>&lt;</code> is unmatched if you cannot find a subsequent <code>&gt;</code>. And when you find a <code>&lt;</code> or <code>&lt;/</code>, all the subsequent characters until the next <code>&gt;</code> should be parsed as TAG_NAME (not necessarily valid).</li>\n\t<li>The cdata has the following format : <code>&lt;![CDATA[CDATA_CONTENT]]&gt;</code>. The range of <code>CDATA_CONTENT</code> is defined as the characters between <code>&lt;![CDATA[</code> and the <b>first subsequent</b> <code>]]&gt;</code>.</li>\n\t<li><code>CDATA_CONTENT</code> may contain <b>any characters</b>. The function of cdata is to forbid the validator to parse <code>CDATA_CONTENT</code>, so even it has some characters that can be parsed as tag (no matter valid or invalid), you should treat it as <b>regular characters</b>.</li>\n</ol>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> code = &quot;&lt;DIV&gt;This is the first line &lt;![CDATA[&lt;div&gt;]]&gt;&lt;/DIV&gt;&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> \nThe code is wrapped in a closed tag : &lt;DIV&gt; and &lt;/DIV&gt;. \nThe TAG_NAME is valid, the TAG_CONTENT consists of some characters and cdata. \nAlthough CDATA_CONTENT has an unmatched start tag with invalid TAG_NAME, it should be considered as plain text, not parsed as a tag.\nSo TAG_CONTENT is valid, and then the code is valid. Thus return true.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> code = &quot;&lt;DIV&gt;&gt;&gt;  ![cdata[]] &lt;![CDATA[&lt;div&gt;]&gt;]]&gt;]]&gt;&gt;]&lt;/DIV&gt;&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong>\nWe first separate the code into : start_tag|tag_content|end_tag.\nstart_tag -&gt; <b>&quot;&lt;DIV&gt;&quot;</b>\nend_tag -&gt; <b>&quot;&lt;/DIV&gt;&quot;</b>\ntag_content could also be separated into : text1|cdata|text2.\ntext1 -&gt; <b>&quot;&gt;&gt;  ![cdata[]] &quot;</b>\ncdata -&gt; <b>&quot;&lt;![CDATA[&lt;div&gt;]&gt;]]&gt;&quot;</b>, where the CDATA_CONTENT is <b>&quot;&lt;div&gt;]&gt;&quot;</b>\ntext2 -&gt; <b>&quot;]]&gt;&gt;]&quot;</b>\nThe reason why start_tag is NOT <b>&quot;&lt;DIV&gt;&gt;&gt;&quot;</b> is because of the rule 6.\nThe reason why cdata is NOT <b>&quot;&lt;![CDATA[&lt;div&gt;]&gt;]]&gt;]]&gt;&quot;</b> is because of the rule 7.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> code = &quot;&lt;A&gt;  &lt;B&gt; &lt;/A&gt;   &lt;/B&gt;&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> Unbalanced. If &quot;&lt;A&gt;&quot; is closed, then &quot;&lt;B&gt;&quot; must be unmatched, and vice versa.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= code.length &lt;= 500</code></li>\n\t<li><code>code</code> consists of English letters, digits, <code>&#39;&lt;&#39;</code>, <code>&#39;&gt;&#39;</code>, <code>&#39;/&#39;</code>, <code>&#39;!&#39;</code>, <code>&#39;[&#39;</code>, <code>&#39;]&#39;</code>, <code>&#39;.&#39;</code>, and <code>&#39; &#39;</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"isValid\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"code\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"20.7K\", \"totalSubmission\": \"51K\", \"totalAcceptedRaw\": 20671, \"totalSubmissionRaw\": 51046, \"acRate\": \"40.5%\"}",
+  "likes": 181,
+  "dislikes": 654,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Add Bold Tag in String\", \"titleSlug\": \"add-bold-tag-in-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"<DIV>This is the first line <![CDATA[<div>]]></DIV>\"",
+    "\"<DIV>>>  ![cdata[]] <![CDATA[<div>]>]]>]]>>]</DIV>\"",
+    "\"<A>  <B> </A>   </B>\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"faire\", \"name\": \"Faire\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isValid(string code) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isValid(String code) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isValid(self, code: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isValid(self, code):\n        \"\"\"\n        :type code: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} code\n * @return {boolean}\n */\nvar isValid = function(code) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isValid(code: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsValid(string code) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isValid(char* code) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isValid(code string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isValid(code: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isValid(_ code: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_valid(code: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} code\n# @return {Boolean}\ndef is_valid(code)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $code\n     * @return Boolean\n     */\n    function isValid($code) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isValid(String code) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isValid(code: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_valid(code :: String.t) :: boolean\n  def is_valid(code) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_valid(Code :: unicode:unicode_binary()) -> boolean().\nis_valid(Code) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-valid code)\n  (-> string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "153",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach 1: Stack\n\nSummarizing the given problem, we can say that we need to determine whether a tag is valid or not, by checking the following properties.\n\n1. The code should be wrapped in a valid closed tag.\n\n2. The `TAG_NAME` should be valid.\n\n3. The `TAG_CONTENT` should be valid.\n\n4. The **cdata** should be valid.\n\n5. All the tags should be closed. i.e. each start-tag should have a corresponding end-tag and vice-versa and the order of the tags should be correct as well.\n\nIn order to check the validity of all these, firstly, we need to identify which parts of the given $$code$$ string act as which part from the above-mentioned categories. To understand how it's done, we'll go through the implementation and the reasoning behind it step by step.\n\nWe iterate over the given $$code$$ string. Whenever a `<` is encountered(unless we are currently inside `<![CDATA[...]]>`), it indicates the beginning of either a `TAG_NAME`(start tag or end tag) or the beginning of cdata as per the conditions given in the problem statement. \n\nIf the character immediately following this `<` is an `!`, the characters following this `<` can't be a part of a valid `TAG_NAME`, since only upper-case letters(in case of a start tag) or `/` followed by upper-case letters(in the case of an end tag). Thus, the choice now narrows down to only **cdata**. Thus, we need to check if the current bunch of characters following `<!`(including it) constitute a valid **cdata**. To do this, firstly we find out the first matching `]]>` following the current `<!` to mark the ending of **cdata**. If no such matching `]]>` exists, the $$code$$ string is considered as invalid. Apart from this, the `<!` should also be immediately followed by `CDATA[` for the **cdata** to be valid. The characters lying inside the  `<![CDATA[` and `]]>` do not have any constraints on them.\n\nIf the character immediately following the `<` encountered isn't an `!`, this `<` can only mark the beginning of `TAG_NAME`. Now, since a valid start tag can't contain anything except upper-case letters if a `/` is found after `<`, the `</` pair indicates the beginning of an end tag. Now, when a `<` refers to the beginning of a `TAG_NAME`(either start-tag or end-tag), we find out the first closing `>` following the `<` to find out the substring(say $$s$$), that constitutes the `TAG_NAME`. This $$s$$ should satisfy all the criteria to constitute a valid `TAG_NAME`. Thus, for every such $$s$$, we check if it contains all upper-case letters and also check its length(It should be between 1 to 9). If any of the criteria isn't fulfilled, $$s$$ doesn't constitute a valid `TAG_NAME`. Hence, the $$code$$ string turns out to be invalid as well.\n\nApart from checking the validity of the `TAG_NAME`, we also need to ensure that the tags always exist in pairs. i.e. for every start-tag, a corresponding end-tag should always exist. Further, we can note that in case of multiple `TAG_NAME`'s, the `TAG_NAME` whose start-tag comes later than the other ones, should have its end-tag appearing before the end-tags of those other `TAG_NAME`'s. i.e. the tag that starts later should end first. \n\nFrom this, we get the intuition that we can make use of a $$stack$$ to check the existence of matching start and end-tags. Thus, whenever we find out a valid start-tag, as mentioned above, we push its `TAG_NAME` string onto a $$stack$$. Now, whenever an end-tag is found, we compare its `TAG_NAME` with the `TAG_NAME` at the top of the $$stack$$ and remove this element from the $$stack$$. If the two don't match, this implies that either the current end-tag has no corresponding start-tag or there is a problem with the ordering of the tags. The two need to match for the tag-pair to be valid since there can't exist an end-tag without a corresponding start-tag and vice-versa. Thus, if a match isn't found, we can conclude that the given $$code$$ string is invalid.\n\nNow, after the complete $$code$$ string has been traversed, the $$stack$$ should be empty if all the start-tags have their corresponding end-tags as well. If the $$stack$$ isn't empty, this implies that some start-tag doesn't have the corresponding end-tag, violating the closed-tag's validity condition.\n\nFurther, we also need to ensure that the given $$code$$ is completely enclosed within closed tags. For this, we need to ensure that the first **cdata** found is also inside the closed tags. Thus, when we find a possibility of the presence of **cdata**, we proceed further only if we've already found a start tag, indicated by a non-empty stack. Further, to ensure that no data lies after the last end-tag, we need to ensure that the $$stack$$ doesn't become empty before we reach the end of the given $$code$$ string since an empty $$stack$$ indicates that the last end-tag has been encountered.\n\nThe following animation depicts the process.\n\n!?!../Documents/Tag_Validator_Stack.json:1000,563!?!\n\n\n<iframe src=\"https://leetcode.com/playground/akLDftNr/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"akLDftNr\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. We traverse over the given $$code$$ string of length $$n$$.\n\n* Space complexity : $$O(n)$$. The stack can grow upto a size of $$n/3$$ in the worst case. e.g. In case of `<A><B><C><D>`, $$n$$=12 and number of tags = 12/3 = 4.\n<br>\n<br>\n\n---\n### Approach 2: Regex\n\nInstead of manually checking the given $$code$$ string for checking the validity of `TAG_NAME`, `TAG_CONTENT` and **cdata**, we can make use of an inbuilt java functionality known as regular expressions.\n\nA regular expression is a special sequence of characters that helps you match or find other strings or sets of strings, using a specialized syntax held in a pattern. They can be used to search, edit, or manipulate text and data. The most common quantifiers used in regular expressions are listed below. A quantifier after a token (such as a character) or group specifies how often that preceding element is allowed to occur.\n\n`?`\tThe question mark indicates zero or one occurrence of the preceding element. For example, colou?r matches both \"color\" and \"colour\".\n\n`*`\tThe asterisk indicates zero or more occurrences of the preceding element. For example, ab*c matches \"ac\", \"abc\", \"abbc\", \"abbbc\", and so on.\n\n`+`\tThe plus sign indicates one or more occurrences of the preceding element. For example, ab+c matches \"abc\", \"abbc\", \"abbbc\", and so on, but not \"ac\".\n\n`{n}` The preceding item is matched exactly **n** times.\n\n`{min,}` The preceding item is matched **min** or more times.\n\n`{min,max}`\tThe preceding item is matched at least **min** times, but not more than **max** times.\n\n`|` A vertical bar separates alternatives. For example, gray|grey can match \"gray\" or \"grey\".\n\n`()` Parentheses are used to define the scope and precedence of the operators (among other uses). For example, gray|grey and gr(a|e)y are equivalent patterns that both describe the set of \"gray\" or \"grey\".\n\n`[...]`\tMatches any single character in brackets.\n\n`[^...]`\tMatches any single character not in brackets.\n\nThus, by making use of regex, we can directly check the validity of the $$code$$ string directly(except the nesting of the inner tags) by using the regex expression below:\n\n`<([A-Z]{1,9})>([^<]*((<\\/?[A-Z]{1,9}>)|(<!\\[CDATA\\[(.*?)]]>))?[^<]*)*<\\/\\1>`\n\nThe image below shows the portion of the string that each part of the expression helps to match:\n\n![Regex](../Figures/591/591_Tag_Validator.PNG)\n\n\n\nBut, if we make use of back-referencing as mentioned above, the matching process takes a very large amount of CPU time. Thus, we use the regex only to check the validity of the `TAG_CONTENT`, `TAG_NAME` and the **cdata**. We check the presence of the outermost closed tags by making use of a $$stack$$ as done in the last approach.\n\nThe rest of the process remains the same as in the last approach, except that we need not manually check the validity of `TAG_CONTENT`, `TAG_NAME`, and the **cdata**, since it is already done by the regex expression. We only need to check the presence of inner closed tags.\n\nCheck [this](http://regexr.com/) link for testing any regular expression on a sample text.\n\n<iframe src=\"https://leetcode.com/playground/Pzdftc9z/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Pzdftc9z\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: Regular Expressions are/can be implemented in the form of finite-state machines. Thus, the time complexity is dependent on the internal representation. In the case of any suggestions, please comment below.\n\n* Space complexity: $$O(n)$$. The stack can grow up to a size of $$n/3$$ in the worst case. e.g. In case of `<A><B><C><D>`, $$n$$=12 and number of tags = 12/3 = 4.\n<br>\n<br>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

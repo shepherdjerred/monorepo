@@ -1,0 +1,136 @@
+{
+  "questionId": "238",
+  "questionFrontendId": "238",
+  "title": "Product of Array Except Self",
+  "titleSlug": "product-of-array-except-self",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code>, return <em>an array</em> <code>answer</code> <em>such that</em> <code>answer[i]</code> <em>is equal to the product of all the elements of</em> <code>nums</code> <em>except</em> <code>nums[i]</code>.</p>\n\n<p>The product of any prefix or suffix of <code>nums</code> is <strong>guaranteed</strong> to fit in a <strong>32-bit</strong> integer.</p>\n\n<p>You must write an algorithm that runs in&nbsp;<code>O(n)</code>&nbsp;time and without using the division operation.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> nums = [1,2,3,4]\n<strong>Output:</strong> [24,12,8,6]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> nums = [-1,1,0,-3,3]\n<strong>Output:</strong> [0,0,9,0,0]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-30 &lt;= nums[i] &lt;= 30</code></li>\n\t<li>The input is generated such that <code>answer[i]</code> is <strong>guaranteed</strong> to fit in a <strong>32-bit</strong> integer.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong>&nbsp;Can you solve the problem in <code>O(1)</code>&nbsp;extra&nbsp;space complexity? (The output array <strong>does not</strong> count as extra space for space complexity analysis.)</p>\n",
+  "hints": [
+    "Think how you can efficiently utilize prefix and suffix products to calculate the product of all elements except self for each index. Can you pre-compute the prefix and suffix products in linear time to avoid redundant calculations?",
+    "Can you minimize additional space usage by reusing memory or modifying the input array to store intermediate results?"
+  ],
+  "metaData": "{\r\n  \"name\": \"productExceptSelf\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer[]\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"4.4M\", \"totalSubmission\": \"6.5M\", \"totalAcceptedRaw\": 4440114, \"totalSubmissionRaw\": 6460848, \"acRate\": \"68.7%\"}",
+  "likes": 25876,
+  "dislikes": 1694,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Trapping Rain Water\", \"titleSlug\": \"trapping-rain-water\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Product Subarray\", \"titleSlug\": \"maximum-product-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Paint House II\", \"titleSlug\": \"paint-house-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Difference in Sums After Removal of Elements\", \"titleSlug\": \"minimum-difference-in-sums-after-removal-of-elements\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Construct Product Matrix\", \"titleSlug\": \"construct-product-matrix\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Sum of Array Product of Magical Sequences\", \"titleSlug\": \"find-sum-of-array-product-of-magical-sequences\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4]",
+    "[-1,1,0,-3,3]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"asana\", \"name\": \"Asana\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"more_than_six_months\": [{\"timesEncountered\": 27, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 8, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 8, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 6, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 6, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 5, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 4, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 4, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 4, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] productExceptSelf(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def productExceptSelf(self, nums: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def productExceptSelf(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number[]}\n */\nvar productExceptSelf = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function productExceptSelf(nums: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] ProductExceptSelf(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* productExceptSelf(int* nums, int numsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func productExceptSelf(nums []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun productExceptSelf(nums: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func productExceptSelf(_ nums: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn product_except_self(nums: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer[]}\ndef product_except_self(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer[]\n     */\n    function productExceptSelf($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> productExceptSelf(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def productExceptSelf(nums: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec product_except_self(nums :: [integer]) :: [integer]\n  def product_except_self(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec product_except_self(Nums :: [integer()]) -> [integer()].\nproduct_except_self(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (product-except-self nums)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "727",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/574160642\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution\n\nFrom the looks of it, this seems like a simple enough problem to solve in linear time and space. We can simply take the product of all the elements in the given array and then, for each of the elements $$x$$ of the array, we can simply find `product of array except self` value by dividing the product by $$x$$. \n\nDoing this for each of the elements would solve the problem. However, there's a note in the problem which says that we are not allowed to use division operation. That makes solving this problem a bit harder. \n<br/>\n<br/>\n\n---\n\n### Approach 1: Left and Right product lists\n\nIt's much easier to build an intuition for solving this problem without division once you visualize how the different `products except self` look like for each of the elements. So, let's take a look at an example array and the different products.\n\n<center>\n<img src=\"../Figures/238/diag-1.png\" width=\"700\"></center>\n\nLooking at the figure about we can figure another way of computing those different product values. \n\n>Instead of dividing the product of all the numbers in the array by the number at a given index to get the corresponding product, we can make use of the product of all the numbers to the left and all the numbers to the right of the index. Multiplying these two individual products would give us the desired result as well.\n\nFor every given index, $$i$$, we will make use of the product of all the numbers to the left of it and multiply it by the product of all the numbers to the right. This will give us the product of all the numbers except the one at the given index $$i$$. Let's look at a formal algorithm describing this idea more concretely.\n\n**Algorithm**\n\n1. Initialize two empty arrays, `L` and `R` where for a given index `i`, `L[i]` would contain the product of all the numbers to the left of `i` and `R[i]` would contain the product of all the numbers to the right of `i`. \n2. We would need two different loops to fill in values for the two arrays. For the array `L`, $$L[0]$$ would be `1` since there are no elements to the left of the first element. For the rest of the elements, we simply use $$L[i] = L[i - 1] * nums[i - 1]$$. Remember that `L[i]` represents product of all the elements *to the left of element at index i*.\n3. For the other array, we do the same thing but in reverse i.e. we start with the initial value of `1` in $$R[length - 1]$$ where $$length$$ is the number of elements in the array, and keep updating `R[i]` in reverse. Essentially, $$R[i] = R[i + 1] * nums[i + 1]$$. Remember that `R[i]` represents product of all the elements *to the right of element at index i*.\n4. Once we have the two arrays set up properly, we simply iterate over the input array one element at a time, and for each element at index `i`, we find the `product except self` as $$L[i] * R[i]$$. \n\nLet's go over a simple run of the algorithm that clearly depicts the construction of the two intermediate arrays and finally the answer array.\n\n!?!../Documents/238_anim1.json:770,460!?!\n\nFor the given array $$[4,5,1,8,2]$$, the `L` and `R` arrays would finally be:\n\n<center>\n<img src=\"../Figures/238/products.png\" width=\"700\"></center>\n\n<iframe src=\"https://leetcode.com/playground/HrzFCqDu/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HrzFCqDu\"></iframe>\n\n**Complexity analysis**\n\n* Time complexity : $$O(N)$$ where $$N$$ represents the number of elements in the input array. We use one iteration to construct the array $$L$$, one to construct the array $$R$$ and one last to construct the $$answer$$ array using $$L$$ and $$R$$.\n* Space complexity : $$O(N)$$ used up by the two intermediate arrays that we constructed to keep track of product of elements to the left and right.\n<br/>\n<br/>\n\n---\n\n### Approach 2: O(1) space approach\n\nAlthough the above solution is good enough to solve the problem since we are not using division anymore, there's a follow-up component as well which asks us to solve this using constant space. Understandably so, the output array *does not* count towards the space complexity. This approach is essentially an extension of the approach above. Basically, we will be using the output array as one of `L` or `R` and we will be constructing the other one on the fly. Let's look at the algorithm based on this idea.\n\n**Algorithm**\n\n1. Initialize the empty `answer` array where for a given index `i`, `answer[i]` would contain the product of all the numbers to the left of `i`. \n2. We construct the `answer` array the same way we constructed the `L` array in the previous approach. These two algorithms are exactly the same except that we are trying to save up on space.\n3. The only change in this approach is that we don't explicitly build the `R` array from before. Instead, we simply use a variable to keep track of the running product of elements to the right and we keep updating the `answer` array by doing $$answer[i] = answer[i] * R$$. For a given index `i`, `answer[i]` contains the product of all the elements to the left and `R` would contain product of all the elements to the right. We then update `R` as $$R = R * nums[i]$$\n\n<iframe src=\"https://leetcode.com/playground/dX9Dpc64/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dX9Dpc64\"></iframe>\n\n**Complexity analysis**\n\n* Time complexity : $$O(N)$$ where $$N$$ represents the number of elements in the input array. We use one iteration to construct the array $$L$$, one to update the array $$answer$$.\n* Space complexity : $$O(1)$$ since don't use any additional array for our computations. The problem statement mentions that using the $$answer$$ array doesn't add to the space complexity.\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

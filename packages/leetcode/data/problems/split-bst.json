@@ -1,0 +1,143 @@
+{
+  "questionId": "791",
+  "questionFrontendId": "776",
+  "title": "Split BST",
+  "titleSlug": "split-bst",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary search tree (BST) and an integer <code>target</code>, split the tree into two subtrees where the first subtree has nodes that are all smaller or equal to the target value, while the second subtree has all nodes that are greater than the target value. It is not necessarily the case that the tree contains a node with the value <code>target</code>.</p>\n\n<p>Additionally, most of the structure of the original tree should remain. Formally, for any child <code>c</code> with parent <code>p</code> in the original tree, if they are both in the same subtree after the split, then node <code>c</code> should still have the parent <code>p</code>.</p>\n\n<p>Return <em>an array of the two roots of the two subtrees in order</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/13/split-tree.jpg\" style=\"width: 600px; height: 193px;\" />\n<pre>\n<strong>Input:</strong> root = [4,2,6,1,3,5,7], target = 2\n<strong>Output:</strong> [[2,1],[4,3,6,null,null,5,7]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [1], target = 1\n<strong>Output:</strong> [[1],[]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 50]</code>.</li>\n\t<li><code>0 &lt;= Node.val, target &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Use recursion.  If root.val <= V, you split root.right into two halves, then join it's left half back on root.right."
+  ],
+  "metaData": "{\n  \"name\": \"splitBST\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"name\": \"target\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"TreeNode[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"112.3K\", \"totalSubmission\": \"136.6K\", \"totalAcceptedRaw\": 112258, \"totalSubmissionRaw\": 136571, \"acRate\": \"82.2%\"}",
+  "likes": 1092,
+  "dislikes": 105,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Delete Node in a BST\", \"titleSlug\": \"delete-node-in-a-bst\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,2,6,1,3,5,7]\n2",
+    "[1]\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"coupang\", \"name\": \"Coupang\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Binary Search Tree",
+      "slug": "binary-search-tree"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    vector<TreeNode*> splitBST(TreeNode* root, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public TreeNode[] splitBST(TreeNode root, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def splitBST(self, root: Optional[TreeNode], target: int) -> List[Optional[TreeNode]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def splitBST(self, root, target):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type target: int\n        :rtype: List[Optional[TreeNode]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {number} target\n * @return {TreeNode[]}\n */\nvar splitBST = function(root, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction splitBST(root: TreeNode | null, target: number): Array<TreeNode | null> {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public TreeNode[] SplitBST(TreeNode root, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nstruct TreeNode** splitBST(struct TreeNode* root, int target, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc splitBST(root *TreeNode, target int) []*TreeNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun splitBST(root: TreeNode?, target: Int): Array<TreeNode?> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func splitBST(_ root: TreeNode?, _ target: Int) -> [TreeNode?] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn split_bst(root: Option<Rc<RefCell<TreeNode>>>, target: i32) -> Vec<Option<Rc<RefCell<TreeNode>>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @param {Integer} target\n# @return {TreeNode[]}\ndef split_bst(root, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @param Integer $target\n     * @return TreeNode[]\n     */\n    function splitBST($root, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  List<TreeNode?> splitBST(TreeNode? root, int target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def splitBST(root: TreeNode, target: Int): Array[TreeNode] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec split_bst(root :: TreeNode.t | nil, target :: integer) :: [TreeNode.t | nil]\n  def split_bst(root, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec split_bst(Root :: #tree_node{} | null, Target :: integer()) -> [#tree_node{} | null].\nsplit_bst(Root, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (split-bst root target)\n  (-> (or/c tree-node? #f) exact-integer? (listof (or/c tree-node? #f)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2357",
+    "content": "[TOC]\n\n## Solution \n\n---\n\n### Overview\n\nWe need to split a binary search tree (BST) into two subtrees based on a given integer `target`. The goal is to create one subtree with nodes that are all less than or equal to the `target` value, and another subtree with nodes that are greater than the `target` value. The input may not necessarily include a node with the exact `target` value and both subtrees should be BSTs.\n\nTo solve this problem, we need to understand the properties of a Binary Search Tree (BST). For any parent node in a BST, all values in the left subtree are less than the value of the parent node, and all values in the right subtree are greater. \n\nGiven this property, if we find a node with a value less than or equal to the `target`, we know this node and its left subtree should belong to the subtree containing nodes less than or equal to the `target`. We then recursively adjust its right subtree to ensure it is correctly split according to the `target`. This means the right subtree may contain nodes that are both less than and greater than the `target`, ensuring the binary search tree property is maintained throughout.\n\nConversely, if a node's value is greater than the `target`, this node and its right subtree should be in the subtree with nodes greater than the `target`. In this case, we recursively adjust the left subtree to separate the nodes correctly.\n\nThe recursive process involves visiting each node and deciding how to split its left or right subtree, maintaining the original parent-child relationship as much as possible. When we reach a null node, which is our base case, we return a pair of null nodes, indicating the end of that branch.\n\nTherefore, for each node, we return a pair:\n\n1. The first element is the root of the subtree with nodes less than or equal to the `target`.\n2. The second element is the root of the subtree with nodes greater than the `target`.\n\nSo now we can think, \"What if we start from the root and recursively split the tree into two subtrees based on the `target` value? That way, we can maintain the BST property in each subtree.\"\n\nThis leads us to the idea of using a depth-first search (DFS) approach with recursion.\n\n---\n\n### Approach 1: Recursive Traversal (DFS)\n\n#### Intuition\n\nWe want to split BST into two separate BSTs based on a `target` value and we are going to use the DFS approach. \n\nIn our problem statement, we have three conditions:\n1. Base case.\n2. If the current node's value is less than or equal to the `target`.\n3. If the current node's value is greater than the `target`.`\n\nLet's discuss each one of them in detail:\n\n1. If the current node is `null` (base case), it means we've reached the end of a branch, so we can just return a pair of `null` nodes.\n\n2. Now, let's consider the case where the current node's value is less than or equal to the `target`. In this case, we realize that all the nodes in the left subtree are guaranteed to be less than or equal to the `target` (because of the BST property). So, we only need to worry about splitting the right subtree.\n    - We recursively call DFS on the right subtree, which will give us two new roots: one for the nodes less than or equal to the `target`, and one for the nodes greater than the `target`.\n    - Since the current node and its left subtree are all less than or equal to the `target`, we can update the current node's right child to the root of the subtree with nodes less than or equal to the `target` (from the recursive call).\n    - Finally, we return the current node as the root of the subtree with values less than or equal to the `target`, and the root of the subtree with values greater than the `target` (from the recursive call).\n\n3. Now, consider the case where the current node's value is greater than the `target`. In this case, we realize that all the nodes in the right subtree are guaranteed to be greater than the `target` (because of the BST property). So, we only need to worry about splitting the left subtree.\n    - We recursively call dfs on the left subtree, which will give us two new roots: one for the nodes less than or equal to the `target`, and one for the nodes greater than the `target` (up to this point).\n    - Since the current node and its right subtree are all greater than the `target`, we can update the current node's left child to the root of the subtree with nodes greater than the `target` (from the recursive call).\n    - Finally, we return the root of the subtree with values less than or equal to the `target` (from the recursive call), and the current node as the root of the subtree with values greater than the `target`.\n\nAs the recursion unwinds, each node processes its left or right subtrees depending on its value relative to the `target`, while maintaining the BST property in each subtree.\n\nThe algorithm is visualized below:\n\n!?!../Documents/776/approach1.json:975,555!?!\n\n#### Algorithm\n\n- Base case: If the `root` is `null`, return an array containing two null pointers.\n- Check if the root's value is greater than the `target` value:\n  - If true, recursively split the left subtree by calling `splitBST(root->left, target)`.\n  - Attach the right part of the split (`result[1]`) to the root's left subtree (`root->left = result[1]`).\n  - Return an array containing the left part of the split (`result[0]`) and the current root.\n- If the root's value is less than or equal to the `target` value:\n  - Recursively split the right subtree by calling `splitBST(root->right, target)`.\n  - Attach the left part of the split (`result[0]`) to the root's right subtree (`root->right = result[0]`).\n  - Return an array containing the left part of the split (`result[0]`) and the current root.\n\n<iframe src=\"https://leetcode.com/playground/oVNZbmqw/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"oVNZbmqw\"></iframe>\n\n#### Complexity Analysis\n\nLet $h$ be the height of the tree. \n\n- Time complexity: $O(h)$\n\n    The time complexity is $O(h)$ because each recursive call performs a constant amount of work, and the number of recursive calls corresponds to the height of the tree.\n\n- Space complexity: $O(h)$\n\n    The space complexity is $O(h)$ because this includes the space used by the recursive call stack, which can grow up to the height of the tree. Additionally, constant space is used to store the output array in each recursive call.\n\n---\n\n### Approach 2: Iterative Traversal\n\n#### Intuition\n\nSince the concept of recursion winding/unwinding is based on a stack, there is a thumb rule that every recursive solution can be converted to an iterative approach by using a stack.\n\nNow recall that in a BST, all the nodes in the left subtree of a node have values less than or equal to the node's value, and all the nodes in the right subtree have values greater than the node's value. This property gives us an idea.\n\nWhat if we traverse the tree in an in-order fashion (left subtree, current node, right subtree)? \nThe nodes will be visited in increasing order of their values. If we keep track of the nodes as we traverse, we can separate them based on the `target` value.\n\nSo, we start by pushing the root node onto the stack. If the current node's value is greater than the `target`, we move to the left subtree because all nodes there will be less than or equal to the `target` (by the BST property). If vice-versa, we move to the right subtree.\n\nAt this point, the stack will contain all the nodes in increasing order of their values. We can observe that the nodes with values less than or equal to the `target` will be at the bottom of the stack, and the nodes with values greater than the `target` will be at the top.\n\nNow, if we pop the nodes from the stack one by one, we can update their left and right pointers based on the `target` value, effectively separating them into two BSTs i.e., \n1. If the node's value is greater than the `target`, we set its left child to the previously popped node (which will be the root of the right BST), and update the root of the right BST.\n2. If the node's value is less than or equal to the `target`, we set its right child to the previously popped node (which will be the root of the left BST), and update the root of the left BST.\n\n#### Algorithm\n\n- Initialize an array `ans` with two `null` pointers to store the split trees.\n- Base case: If the root is `null`, return `ans`.\n- Create a stack to traverse the tree and find the split point.\n- Traverse the tree using a loop:\n  - Push the current node onto the stack.\n  - If the current node's value is greater than the `target` value, move to the left subtree.\n  - Otherwise, move to the right subtree.\n- Process nodes in reverse order from the stack to perform the split:\n  - Pop a node from the stack.\n  - If the node's value is greater than the `target` value:\n     - Assign the node's left child to the subtree containing nodes greater than the target (`curr->left = ans[1]`).\n     - Update the root of the subtree containing nodes greater than the target (`ans[1] = curr`).\n  - Otherwise:\n     - Assign the node's right child to the subtree containing nodes less than or equal to the target (`curr->right = ans[0]`).\n     - Update the root of the subtree containing nodes less than or equal to the target (`ans[0] = curr`).\n- Return the array `ans` containing the split trees.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/VhdLuMV7/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VhdLuMV7\"></iframe>\n\n#### Complexity Analysis\n\nLet $h$ be the height of the tree. \n\n- Time complexity: $O(h)$\n\n    The time complexity is $O(h)$ because of the iterative traversal of the tree using a stack, where each node is processed exactly once.\n\n- Space complexity: $O(h)$\n\n    The space complexity is $O(h)$ due to the stack space used for iterative traversal. Additionally, a constant amount of space is used by the output array.\n\n---\n\n### Approach 3: Iterative Approach with Dummy Heads\n\n#### Intuition\n\nWe can further optimize the space by solving it without any stack. The key is to create two [dummy/sentinel heads](https://en.wikipedia.org/wiki/Sentinel_node). This way, we don't have to worry about whether the heads of the two split new trees might be null. This way, we can easily manage the trees without worrying about null values.\n\nWe need two pointers, `curSm` and `curLg`, to keep track of our current positions in the trees with values less than or equal to the target and greater than the target, respectively. These pointers help us iterate through the nodes efficiently.\n\nWe need two current pointers to iterate the nodes around the split line as follows.\n\n![img](../Figures/776/split_BST.png)\n\n> The grey line is original edge, the colored lines are edges after splitting. With divide and conquer, we need to think about what to do after splitting. Suppose we can get the split result from root.right. Then connect root.right to result[0]. Then root itself becomes result[0].\n\n- **If the root node belongs to the tree with values less than or equal to the target:**\n  1. Set the right child of `curSm` to the root node.\n  2. Move `curSm` to its right child (which is now the root).\n  3. Set the right child of the root to null. This is because the right child might be updated later. If it isn't, it must be null to prevent two parents from pointing to the same node.\n  4. Move the root to its original right child (Remember, we always move down along the split line without changing the root node anymore).\n\nWe repeat the above steps, iterating around the split line, using the root pointer to traverse through the nodes. \n\nFor a cleaner code, we will introduce a separate current node (`nextNode`) for traversal instead of modifying the root directly.\n\n#### Algorithm\n \n- Create two dummy nodes, `dummySm` and `dummyLg`, to hold the parts of the tree with values less than or equal to the `target` and greater than the `target`, respectively. Initialize two pointers, `curSm` and `curLg`, to track the last nodes in these parts.\n- Start traversing the tree from the `root`.\n- Declare a pointer `nextNode` to temporarily store the next node to be visited.\n- While the `current` node is not `null`:\n  - If the current node's value is less than or equal to the `target` value:\n    - Attach the current node to the tree with values less than or equal to the `target` by updating `curSm->right = current`.\n    - Move `curSm` to the current node.\n    - Save the right subtree in `nextNode`.\n    - Clear the right pointer of the current node by setting it to `null`.\n    - Move to the right subtree using `nextNode`.\n  - Otherwise:\n    - Attach the current node to the tree with values greater than the `target` by updating `curLg->left = current`.\n    - Move `curLg` to the current node.\n    - Save the left subtree in `nextNode`.\n    - Clear the left pointer of the current node by setting it to `null`.\n    - Move to the left subtree using `nextNode`.\n- Return an array containing the roots of the split tree (`dummySm->right` and `dummyLg->left`).\n\nThe algorithm is visualized below:\n\n!?!../Documents/776/approach3.json:976,555!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/QkzW8ra6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QkzW8ra6\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n- Time complexity: $O(n)$\n\n    The time complexity is $O(n)$ because it involves iterating through all nodes in the tree once.\n\n- Space complexity: $O(1)$\n\n    The space complexity is $O(1)$ since it uses only a few variables that do not increase with the input size.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "questionId": "509",
+  "questionFrontendId": "510",
+  "title": "Inorder Successor in BST II",
+  "titleSlug": "inorder-successor-in-bst-ii",
+  "difficulty": "Medium",
+  "content": "<p>Given a <code>node</code> in a binary search tree, return <em>the in-order successor of that node in the BST</em>. If that node has no in-order successor, return <code>null</code>.</p>\n\n<p>The successor of a <code>node</code> is the node with the smallest key greater than <code>node.val</code>.</p>\n\n<p>You will have direct access to the node but not to the root of the tree. Each node will have a reference to its parent node. Below is the definition for <code>Node</code>:</p>\n\n<pre>\nclass Node {\n    public int val;\n    public Node left;\n    public Node right;\n    public Node parent;\n}\n</pre>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/01/23/285_example_1.PNG\" style=\"width: 122px; height: 117px;\" />\n<pre>\n<strong>Input:</strong> tree = [2,1,3], node = 1\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> 1&#39;s in-order successor node is 2. Note that both the node and the return value is of Node type.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/01/23/285_example_2.PNG\" style=\"width: 246px; height: 229px;\" />\n<pre>\n<strong>Input:</strong> tree = [5,3,6,2,4,null,null,1], node = 6\n<strong>Output:</strong> null\n<strong>Explanation:</strong> There is no in-order successor of the current node, so the answer is null.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 10<sup>4</sup>]</code>.</li>\n\t<li><code>-10<sup>5</sup> &lt;= Node.val &lt;= 10<sup>5</sup></code></li>\n\t<li>All Nodes will have unique values.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> Could you solve it without looking up any of the node&#39;s values?</p>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"inorderSuccessor\",\n  \"params\": [\n    {\n      \"name\": \"tree\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"name\": \"node\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"TreeNode\"\n  },\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"csharp\",\n    \"javascript\",\n    \"python3\",\n    \"kotlin\",\n    \"ruby\",\n    \"scala\",\n    \"c\",\n    \"golang\",\n    \"swift\",\n    \"php\",\n    \"typescript\"\n  ],\n  \"manual\": true, \"typescriptCustomType\" : \"class _Node {\\n    val: number\\n    left: _Node | null\\n    right: _Node | null\\n    parent: _Node | null\\n    \\n    constructor(v: number) {\\n        this.val = v;\\n        this.left = null;\\n        this.right = null;\\n        this.parent = null;\\n    }\\n}\\n\"\n\n}",
+  "stats": "{\"totalAccepted\": \"75.8K\", \"totalSubmission\": \"124.1K\", \"totalAcceptedRaw\": 75839, \"totalSubmissionRaw\": 124148, \"acRate\": \"61.1%\"}",
+  "likes": 890,
+  "dislikes": 44,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Inorder Successor in BST\", \"titleSlug\": \"inorder-successor-in-bst\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,1,3]\n1",
+    "[5,3,6,2,4,null,null,1]\n6"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"arista-networks\", \"name\": \"Arista Networks\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Binary Search Tree",
+      "slug": "binary-search-tree"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/*\n// Definition for a Node.\nclass Node {\npublic:\n    int val;\n    Node* left;\n    Node* right;\n    Node* parent;\n};\n*/\n\nclass Solution {\npublic:\n    Node* inorderSuccessor(Node* node) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/*\n// Definition for a Node.\nclass Node {\n    public int val;\n    public Node left;\n    public Node right;\n    public Node parent;\n};\n*/\n\nclass Solution {\n    public Node inorderSuccessor(Node node) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "\"\"\"\n# Definition for a Node.\nclass Node:\n    def __init__(self, val):\n        self.val = val\n        self.left = None\n        self.right = None\n        self.parent = None\n\"\"\"\n\nclass Solution:\n    def inorderSuccessor(self, node: 'Node') -> 'Optional[Node]':\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "\"\"\"\n# Definition for a Node.\nclass Node:\n    def __init__(self, val):\n        self.val = val\n        self.left = None\n        self.right = None\n        self.parent = None\n\"\"\"\n\nclass Solution(object):\n    def inorderSuccessor(self, node):\n        \"\"\"\n        :type node: Node\n        :rtype: Node\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * // Definition for a _Node.\n * function _Node(val) {\n *    this.val = val;\n *    this.left = null;\n *    this.right = null;\n *    this.parent = null;\n * };\n */\n\n/**\n * @param {_Node} node\n * @return {_Node}\n */\nvar inorderSuccessor = function(node) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for _Node.\n * class _Node {\n *     val: number\n *     left: _Node | null\n *     right: _Node | null\n *     parent: _Node | null\n *     \n *     constructor(v: number) {\n *         this.val = v;\n *         this.left = null;\n *         this.right = null;\n *         this.parent = null;\n *     }\n * }\n */\n\nfunction inorderSuccessor(node: _Node | null): _Node | null {\n\t\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/*\n// Definition for a Node.\npublic class Node {\n    public int val;\n    public Node left;\n    public Node right;\n    public Node parent;\n}\n*/\n\npublic class Solution {\n    public Node InorderSuccessor(Node x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/*\n// Definition for a Node.\nstruct Node {\n    int val;\n    struct Node* left;\n    struct Node* right;\n    struct Node* parent;\n};\n*/\n\nstruct Node* inorderSuccessor(struct Node* node) {\n\t\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for Node.\n * type Node struct {\n *     Val int\n *     Left *Node\n *     Right *Node\n *     Parent *Node\n * }\n */\n\nfunc inorderSuccessor(node *Node) *Node {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Definition for a Node.\n * class Node(var `val`: Int) {\n *\t\tvar left: Node? = null\n *\t\tvar right: Node? = null\n *\t\tvar parent: Node? = null\n * }\n */\n\nclass Solution {\n    fun inorderSuccessor(node: Node?): Node? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a Node.\n * public class Node {\n *     public var val: Int\n *     public var left: Node?\n *     public var right: Node?\n *     public var parent: Node?\n *     public init(_ val: Int) {\n *         self.val = val\n *         self.left = nil\n *         self.right = nil\n *         self.parent = nil\n *     }\n * }\n */\n\nclass Solution {\n    func inorderSuccessor(_ node: Node?) -> Node? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a Node.\n# class Node\n#     attr_accessor :val, :left, :right, :parent\n#     def initialize(val=0)\n#         @val = val\n#         @left, @right, parent = nil, nil, nil\n#     end\n# end\n\n# @param {Node} root\n# @return {Node}\ndef inorderSuccessor(node)\n\t\nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a Node.\n * class Node {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     public $parent = null;\n *     function __construct($val = 0) {\n *         $this->val = $val;\n *         $this->left = null;\n *         $this->right = null;\n *         $this->parent = null;\n *     }\n * }\n */\n\nclass Solution {\n    /**\n     * @param Node $node\n     * @return Node\n     */\n    function inorderSuccessor($node) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a Node.\n * class Node(var _value: Int) {\n *   var value: Int = _value\n *   var left: Node = null\n *   var right: Node = null\n *   var parent: Node = null\n * }\n */\n\nobject Solution {\n    def inorderSuccessor(node: Node): Node = {\n\t\t\n\t}\n}"
+    }
+  ],
+  "solution": {
+    "id": "736",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Successor and Predecessor\n\n> Successor = \"after node\", i.e. the next node in the inorder traversal, or the smallest node _after_ the current one.  \n\n> Predecessor = \"before node\", i.e. the previous node in the inorder traversal, or the largest node _before_ the current one.  \n\n![img](../Figures/510/succ.png)\n<br />\n<br />\n\n\n---\n### Approach 1: Iteration\n\n**Intuition**\n\nThere are two possible situations here :\n\n- Node has a right child, and hence its successor is somewhere lower in the tree. To find the successor, go to the right once and then as many times to the left as you could.\n\n![pic](../Figures/510/right_child2.png)\n\n- Node has no right child, then its successor is somewhere upper in the tree. To find the successor, go up to the node that is _left_ child of its parent. The answer is the parent. Beware that there could be no successor (= null successor) in such a situation.\n\n![pac](../Figures/510/case.png)\n\n---\n\n![fic](../Figures/510/casenull.png)\n\n\n**Algorithm**\n\n1. If the node has a right child, and its successor is somewhere lower in the tree. Go to the right once and then as many times to the left as you can. Return the node you end up with.\n\n2. Node has no right child, and hence its successor is somewhere upper in the tree. Go up till the node that is _left_ child of its parent. The answer is the parent.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/HnfA9735/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"HnfA9735\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(H)$$, where $$H$$ is the height of the tree. That means $$\\mathcal{O}(\\log N)$$ in the average case, and $$\\mathcal{O}(N)$$ in the worst case, where $$N$$ is the number of nodes in the tree.\n* Space complexity: $$\\mathcal{O}(1)$$, since no additional space is allocated during the calculation.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

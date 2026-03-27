@@ -1,0 +1,140 @@
+{
+  "questionId": "304",
+  "questionFrontendId": "304",
+  "title": "Range Sum Query 2D - Immutable",
+  "titleSlug": "range-sum-query-2d-immutable",
+  "difficulty": "Medium",
+  "content": "<p>Given a 2D matrix <code>matrix</code>, handle multiple queries of the following type:</p>\n\n<ul>\n\t<li>Calculate the <strong>sum</strong> of the elements of <code>matrix</code> inside the rectangle defined by its <strong>upper left corner</strong> <code>(row1, col1)</code> and <strong>lower right corner</strong> <code>(row2, col2)</code>.</li>\n</ul>\n\n<p>Implement the <code>NumMatrix</code> class:</p>\n\n<ul>\n\t<li><code>NumMatrix(int[][] matrix)</code> Initializes the object with the integer matrix <code>matrix</code>.</li>\n\t<li><code>int sumRegion(int row1, int col1, int row2, int col2)</code> Returns the <strong>sum</strong> of the elements of <code>matrix</code> inside the rectangle defined by its <strong>upper left corner</strong> <code>(row1, col1)</code> and <strong>lower right corner</strong> <code>(row2, col2)</code>.</li>\n</ul>\n\n<p>You must design an algorithm where <code>sumRegion</code> works on <code>O(1)</code> time complexity.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/14/sum-grid.jpg\" style=\"width: 415px; height: 415px;\" />\n<pre>\n<strong>Input</strong>\n[&quot;NumMatrix&quot;, &quot;sumRegion&quot;, &quot;sumRegion&quot;, &quot;sumRegion&quot;]\n[[[[3, 0, 1, 4, 2], [5, 6, 3, 2, 1], [1, 2, 0, 1, 5], [4, 1, 0, 1, 7], [1, 0, 3, 0, 5]]], [2, 1, 4, 3], [1, 1, 2, 2], [1, 2, 2, 4]]\n<strong>Output</strong>\n[null, 8, 11, 12]\n\n<strong>Explanation</strong>\nNumMatrix numMatrix = new NumMatrix([[3, 0, 1, 4, 2], [5, 6, 3, 2, 1], [1, 2, 0, 1, 5], [4, 1, 0, 1, 7], [1, 0, 3, 0, 5]]);\nnumMatrix.sumRegion(2, 1, 4, 3); // return 8 (i.e sum of the red rectangle)\nnumMatrix.sumRegion(1, 1, 2, 2); // return 11 (i.e sum of the green rectangle)\nnumMatrix.sumRegion(1, 2, 2, 4); // return 12 (i.e sum of the blue rectangle)\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == matrix.length</code></li>\n\t<li><code>n == matrix[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 200</code></li>\n\t<li><code>-10<sup>4</sup> &lt;= matrix[i][j] &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= row1 &lt;= row2 &lt; m</code></li>\n\t<li><code>0 &lt;= col1 &lt;= col2 &lt; n</code></li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>sumRegion</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"NumMatrix\",\n  \"maxbytesperline\": 150000,\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer[][]\",\n        \"name\": \"matrix\"\n      },\n      {\n        \"type\": \"integer\",\n        \"name\": \"matrixRowSize\",\n        \"lang\": \"c\",\n        \"value\": \"size_1\"\n      },\n      {\n        \"type\": \"integer\",\n        \"name\": \"matrixColSize\",\n        \"lang\": \"c\",\n        \"value\": \"col_size_1\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"name\": \"sumRegion\",\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"row1\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"col1\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"row2\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"col2\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"systemdesign\": true,\n  \"params\": [\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<String>\",\n    \"dealloc\": true\n  }\n}",
+  "stats": "{\"totalAccepted\": \"475.5K\", \"totalSubmission\": \"819.1K\", \"totalAcceptedRaw\": 475459, \"totalSubmissionRaw\": 819073, \"acRate\": \"58.0%\"}",
+  "likes": 5396,
+  "dislikes": 371,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Range Sum Query - Immutable\", \"titleSlug\": \"range-sum-query-immutable\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Range Sum Query 2D - Mutable\", \"titleSlug\": \"range-sum-query-2d-mutable\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Grid of Region Average\", \"titleSlug\": \"find-the-grid-of-region-average\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"NumMatrix\",\"sumRegion\",\"sumRegion\",\"sumRegion\"]\n[[[[3,0,1,4,2],[5,6,3,2,1],[1,2,0,1,5],[4,1,0,1,7],[1,0,3,0,5]]],[2,1,4,3],[1,1,2,2],[1,2,2,4]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 2, \"slug\": \"upstart\", \"name\": \"Upstart\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class NumMatrix {\npublic:\n    NumMatrix(vector<vector<int>>& matrix) {\n        \n    }\n    \n    int sumRegion(int row1, int col1, int row2, int col2) {\n        \n    }\n};\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * NumMatrix* obj = new NumMatrix(matrix);\n * int param_1 = obj->sumRegion(row1,col1,row2,col2);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class NumMatrix {\n\n    public NumMatrix(int[][] matrix) {\n        \n    }\n    \n    public int sumRegion(int row1, int col1, int row2, int col2) {\n        \n    }\n}\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * NumMatrix obj = new NumMatrix(matrix);\n * int param_1 = obj.sumRegion(row1,col1,row2,col2);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class NumMatrix:\n\n    def __init__(self, matrix: List[List[int]]):\n        \n\n    def sumRegion(self, row1: int, col1: int, row2: int, col2: int) -> int:\n        \n\n\n# Your NumMatrix object will be instantiated and called as such:\n# obj = NumMatrix(matrix)\n# param_1 = obj.sumRegion(row1,col1,row2,col2)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class NumMatrix(object):\n\n    def __init__(self, matrix):\n        \"\"\"\n        :type matrix: List[List[int]]\n        \"\"\"\n        \n\n    def sumRegion(self, row1, col1, row2, col2):\n        \"\"\"\n        :type row1: int\n        :type col1: int\n        :type row2: int\n        :type col2: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your NumMatrix object will be instantiated and called as such:\n# obj = NumMatrix(matrix)\n# param_1 = obj.sumRegion(row1,col1,row2,col2)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} matrix\n */\nvar NumMatrix = function(matrix) {\n    \n};\n\n/** \n * @param {number} row1 \n * @param {number} col1 \n * @param {number} row2 \n * @param {number} col2\n * @return {number}\n */\nNumMatrix.prototype.sumRegion = function(row1, col1, row2, col2) {\n    \n};\n\n/** \n * Your NumMatrix object will be instantiated and called as such:\n * var obj = new NumMatrix(matrix)\n * var param_1 = obj.sumRegion(row1,col1,row2,col2)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class NumMatrix {\n    constructor(matrix: number[][]) {\n        \n    }\n\n    sumRegion(row1: number, col1: number, row2: number, col2: number): number {\n        \n    }\n}\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * var obj = new NumMatrix(matrix)\n * var param_1 = obj.sumRegion(row1,col1,row2,col2)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class NumMatrix {\n\n    public NumMatrix(int[][] matrix) {\n        \n    }\n    \n    public int SumRegion(int row1, int col1, int row2, int col2) {\n        \n    }\n}\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * NumMatrix obj = new NumMatrix(matrix);\n * int param_1 = obj.SumRegion(row1,col1,row2,col2);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} NumMatrix;\n\n\nNumMatrix* numMatrixCreate(int** matrix, int matrixSize, int* matrixColSize) {\n    \n}\n\nint numMatrixSumRegion(NumMatrix* obj, int row1, int col1, int row2, int col2) {\n    \n}\n\nvoid numMatrixFree(NumMatrix* obj) {\n    \n}\n\n/**\n * Your NumMatrix struct will be instantiated and called as such:\n * NumMatrix* obj = numMatrixCreate(matrix, matrixSize, matrixColSize);\n * int param_1 = numMatrixSumRegion(obj, row1, col1, row2, col2);\n \n * numMatrixFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type NumMatrix struct {\n    \n}\n\n\nfunc Constructor(matrix [][]int) NumMatrix {\n    \n}\n\n\nfunc (this *NumMatrix) SumRegion(row1 int, col1 int, row2 int, col2 int) int {\n    \n}\n\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * obj := Constructor(matrix);\n * param_1 := obj.SumRegion(row1,col1,row2,col2);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class NumMatrix(matrix: Array<IntArray>) {\n\n    fun sumRegion(row1: Int, col1: Int, row2: Int, col2: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * var obj = NumMatrix(matrix)\n * var param_1 = obj.sumRegion(row1,col1,row2,col2)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass NumMatrix {\n\n    init(_ matrix: [[Int]]) {\n        \n    }\n    \n    func sumRegion(_ row1: Int, _ col1: Int, _ row2: Int, _ col2: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * let obj = NumMatrix(matrix)\n * let ret_1: Int = obj.sumRegion(row1, col1, row2, col2)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct NumMatrix {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl NumMatrix {\n\n    fn new(matrix: Vec<Vec<i32>>) -> Self {\n        \n    }\n    \n    fn sum_region(&self, row1: i32, col1: i32, row2: i32, col2: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * let obj = NumMatrix::new(matrix);\n * let ret_1: i32 = obj.sum_region(row1, col1, row2, col2);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class NumMatrix\n\n=begin\n    :type matrix: Integer[][]\n=end\n    def initialize(matrix)\n        \n    end\n\n\n=begin\n    :type row1: Integer\n    :type col1: Integer\n    :type row2: Integer\n    :type col2: Integer\n    :rtype: Integer\n=end\n    def sum_region(row1, col1, row2, col2)\n        \n    end\n\n\nend\n\n# Your NumMatrix object will be instantiated and called as such:\n# obj = NumMatrix.new(matrix)\n# param_1 = obj.sum_region(row1, col1, row2, col2)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class NumMatrix {\n    /**\n     * @param Integer[][] $matrix\n     */\n    function __construct($matrix) {\n        \n    }\n  \n    /**\n     * @param Integer $row1\n     * @param Integer $col1\n     * @param Integer $row2\n     * @param Integer $col2\n     * @return Integer\n     */\n    function sumRegion($row1, $col1, $row2, $col2) {\n        \n    }\n}\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * $obj = NumMatrix($matrix);\n * $ret_1 = $obj->sumRegion($row1, $col1, $row2, $col2);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class NumMatrix {\n\n  NumMatrix(List<List<int>> matrix) {\n    \n  }\n  \n  int sumRegion(int row1, int col1, int row2, int col2) {\n    \n  }\n}\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * NumMatrix obj = NumMatrix(matrix);\n * int param1 = obj.sumRegion(row1,col1,row2,col2);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class NumMatrix(_matrix: Array[Array[Int]]) {\n\n    def sumRegion(row1: Int, col1: Int, row2: Int, col2: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * val obj = new NumMatrix(matrix)\n * val param_1 = obj.sumRegion(row1,col1,row2,col2)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule NumMatrix do\n  @spec init_(matrix :: [[integer]]) :: any\n  def init_(matrix) do\n    \n  end\n\n  @spec sum_region(row1 :: integer, col1 :: integer, row2 :: integer, col2 :: integer) :: integer\n  def sum_region(row1, col1, row2, col2) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# NumMatrix.init_(matrix)\n# param_1 = NumMatrix.sum_region(row1, col1, row2, col2)\n\n# NumMatrix.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_matrix_init_(Matrix :: [[integer()]]) -> any().\nnum_matrix_init_(Matrix) ->\n  .\n\n-spec num_matrix_sum_region(Row1 :: integer(), Col1 :: integer(), Row2 :: integer(), Col2 :: integer()) -> integer().\nnum_matrix_sum_region(Row1, Col1, Row2, Col2) ->\n  .\n\n\n%% Your functions will be called as such:\n%% num_matrix_init_(Matrix),\n%% Param_1 = num_matrix_sum_region(Row1, Col1, Row2, Col2),\n\n%% num_matrix_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define num-matrix%\n  (class object%\n    (super-new)\n    \n    ; matrix : (listof (listof exact-integer?))\n    (init-field\n      matrix)\n    \n    ; sum-region : exact-integer? exact-integer? exact-integer? exact-integer? -> exact-integer?\n    (define/public (sum-region row1 col1 row2 col2)\n      )))\n\n;; Your num-matrix% object will be instantiated and called as such:\n;; (define obj (new num-matrix% [matrix matrix]))\n;; (define param_1 (send obj sum-region row1 col1 row2 col2))"
+    }
+  ],
+  "solution": {
+    "id": "10",
+    "content": "[TOC]\n\n## Video Solution\n\n ---\n\n <div>\n   <div class=\"video-container\">\n     <iframe src=\"https://player.vimeo.com/video/731152296?texttrack=en-x-autogenerated\" frameborder=\"0\"\n       allow=\"autoplay; fullscreen\"></iframe>\n   </div>\n </div>\n \n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n**Algorithm**\n\nEach time *sumRegion* is called, we use a double for loop to sum all elements from $$(row1, col1) \\rightarrow (row2, col2)$$.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/XRYLUGoX/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"XRYLUGoX\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(mn)$$ time per query.\nAssume that $$m$$ and $$n$$ represents the number of rows and columns respectively, each *sumRegion* query can go through at most $$m \\times n$$ elements.\n\n* Space complexity: $$O(1)$$. Note that `data` is a *reference* to `matrix` and is not a copy of it.\n\n---\n\n### Approach 2: Caching [Memory Limit Exceeded]\n\n**Intuition**\n\nSince *sumRegion* could be called many times, we definitely need to do some pre-processing.\n\n**Algorithm**\n\nWe could trade in extra space for speed by pre-calculating all possible rectangular region sum and store them in a hash table. Each *sumRegion* query now takes only constant time complexity.\n\n**Complexity Analysis**\n\n* Time complexity: $$O(1)$$ time per query, $$O(m^2n^2)$$ time pre-computation.\nEach *sumRegion* query takes $$O(1)$$ time as the hash table lookup's time complexity is constant. The pre-computation will take $$O(m^2n^2)$$ time as there are a total of $$m^2 \\times n^2$$ possibilities need to be cached.\n\n* Space complexity: $$O(m^2n^2)$$.\nSince there are $$mn$$ different possibilities for both top left and bottom right points of the rectangular region, the extra space required is $$O(m^2n^2)$$.\n\n---\n\n### Approach 3: Caching Rows\n\n**Intuition**\n\nRemember from the [1D version](https://leetcode.com/problems/range-sum-query-immutable/) where we used a cumulative sum array? Could we apply that directly to solve this 2D version?\n\n**Algorithm**\n\nTry to see the 2D matrix as $$m$$ rows of 1D arrays. To find the region sum, we just accumulate the sum in the region row by row.\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/XEjRuMif/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"XEjRuMif\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(m)$$ time per query, $$O(mn)$$ time pre-computation.\nThe pre-computation in the constructor takes $$O(mn)$$ time. The *sumRegion* query takes $$O(m)$$ time.\n\n* Space complexity: $$O(mn)$$.\nThe algorithm uses $$O(mn)$$ space to store the cumulative sum of all rows.\n\n---\n### Approach 4: Caching Smarter\n\n**Algorithm**\n\nWe used a cumulative sum array in the [1D version](https://leetcode.com/problems/range-sum-query-immutable/). We notice that the cumulative sum is computed with respect to the origin at index 0. Extending this analogy to the 2D case, we could pre-compute a cumulative region sum with respect to the origin at $$(0, 0)$$.\n\n![Sum OD](https://leetcode.com/static/images/courses/sum_od.png)  \n<small>Sum(OD) is the cumulative region sum with respect to the origin at (0, 0).</small>\n\nHow do we derive $$Sum(ABCD)$$ using the pre-computed cumulative region sum?\n\n![Sum OB](https://leetcode.com/static/images/courses/sum_ob.png)  \n<small>Sum(OB) is the cumulative region sum on top of the rectangle.</small>\n\n![Sum OC](https://leetcode.com/static/images/courses/sum_oc.png)  \n<small>Sum(OC) is the cumulative region sum to the left of the rectangle.</small>\n\n![Sum OA](https://leetcode.com/static/images/courses/sum_oa.png)  \n<small>Sum(OA) is the cumulative region sum to the top left corner of the rectangle.</small>\n\nNote that the region $$Sum(OA)$$ is covered twice by both $$Sum(OB)$$ and $$Sum(OC)$$. We could use the principle of inclusion-exclusion to calculate $$Sum(ABCD)$$ as following:\n\n$$\nSum(ABCD) = Sum(OD) - Sum(OB) - Sum(OC) + Sum(OA)\n$$\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/2JerEwYd/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"2JerEwYd\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(1)$$ time per query, $$O(mn)$$ time pre-computation.\nThe pre-computation in the constructor takes $$O(mn)$$ time. Each *sumRegion* query takes $$O(1)$$ time.\n\n* Space complexity: $$O(mn)$$.\nThe algorithm uses $$O(mn)$$ space to store the cumulative region sum.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

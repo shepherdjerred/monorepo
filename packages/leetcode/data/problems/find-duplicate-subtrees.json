@@ -1,0 +1,142 @@
+{
+  "questionId": "652",
+  "questionFrontendId": "652",
+  "title": "Find Duplicate Subtrees",
+  "titleSlug": "find-duplicate-subtrees",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code>&nbsp;of a binary tree, return all <strong>duplicate subtrees</strong>.</p>\n\n<p>For each kind of duplicate subtrees, you only need to return the root node of any <b>one</b> of them.</p>\n\n<p>Two trees are <strong>duplicate</strong> if they have the <strong>same structure</strong> with the <strong>same node values</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/16/e1.jpg\" style=\"width: 450px; height: 354px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,4,null,2,4,null,null,4]\n<strong>Output:</strong> [[2,4],[4]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/16/e2.jpg\" style=\"width: 321px; height: 201px;\" />\n<pre>\n<strong>Input:</strong> root = [2,1,1]\n<strong>Output:</strong> [[1]]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/16/e33.jpg\" style=\"width: 450px; height: 303px;\" />\n<pre>\n<strong>Input:</strong> root = [2,2,2,3,null,3,null]\n<strong>Output:</strong> [[2,3],[3]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of the nodes in the tree will be in the range <code>[1, 5000]</code></li>\n\t<li><code>-200 &lt;= Node.val &lt;= 200</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findDuplicateSubtrees\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<TreeNode>\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"313.8K\", \"totalSubmission\": \"517.4K\", \"totalAcceptedRaw\": 313770, \"totalSubmissionRaw\": 517408, \"acRate\": \"60.6%\"}",
+  "likes": 6122,
+  "dislikes": 503,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Serialize and Deserialize Binary Tree\", \"titleSlug\": \"serialize-and-deserialize-binary-tree\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Serialize and Deserialize BST\", \"titleSlug\": \"serialize-and-deserialize-bst\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Construct String from Binary Tree\", \"titleSlug\": \"construct-string-from-binary-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Delete Duplicate Folders in System\", \"titleSlug\": \"delete-duplicate-folders-in-system\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,null,2,4,null,null,4]",
+    "[2,1,1]",
+    "[2,2,2,3,null,3,null]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    vector<TreeNode*> findDuplicateSubtrees(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public List<TreeNode> findDuplicateSubtrees(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def findDuplicateSubtrees(self, root: Optional[TreeNode]) -> List[Optional[TreeNode]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def findDuplicateSubtrees(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: List[Optional[TreeNode]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {TreeNode[]}\n */\nvar findDuplicateSubtrees = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction findDuplicateSubtrees(root: TreeNode | null): Array<TreeNode | null> {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public IList<TreeNode> FindDuplicateSubtrees(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nstruct TreeNode** findDuplicateSubtrees(struct TreeNode* root, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc findDuplicateSubtrees(root *TreeNode) []*TreeNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun findDuplicateSubtrees(root: TreeNode?): List<TreeNode?> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func findDuplicateSubtrees(_ root: TreeNode?) -> [TreeNode?] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn find_duplicate_subtrees(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<Option<Rc<RefCell<TreeNode>>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {TreeNode[]}\ndef find_duplicate_subtrees(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return TreeNode[]\n     */\n    function findDuplicateSubtrees($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  List<TreeNode?> findDuplicateSubtrees(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def findDuplicateSubtrees(root: TreeNode): List[TreeNode] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec find_duplicate_subtrees(root :: TreeNode.t | nil) :: [TreeNode.t | nil]\n  def find_duplicate_subtrees(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec find_duplicate_subtrees(Root :: #tree_node{} | null) -> [#tree_node{} | null].\nfind_duplicate_subtrees(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (find-duplicate-subtrees root)\n  (-> (or/c tree-node? #f) (listof (or/c tree-node? #f)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1677",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### A String Representation Approach\n\n#### Intuition\n\nOne may represent a tree with a string. There exist different ways to do so. One of the possible representations of a tree is the following: `(representation of the left subtree) root.val (representation of the right subtree)`. It is a recursive representation because the parts in the brackets are representations of smaller subtrees.\n\n![Example](../Figures/652/652_example_1.jpg)\n\nFor example, the representation of the tree in the picture is `((4)2())1(((4)2())3(4))`.\n\nEqual subtrees have equal string representations, and different trees have different ones. To solve the problem, one represents each subtree with a string. Duplicate representations mean duplicate subtrees.\n\n>**Note.** If you do not know how to traverse a tree, we highly recommend you visit the [Binary Tree Explore Card](https://leetcode.com/explore/learn/card/data-structure-tree/134/traverse-a-tree/) as this is used frequently in tree problems. In this article, we will assume that you already understand how to traverse a tree.\n\nWe find a string representation for each subtree during the postorder tree traversal. With postorder, at the moment we handle a `node` we have already traversed its left and right subtrees. Therefore we can compose a string for the subtree of the `node` using the representations of its left and right subtrees.\n\nWe maintain a hash map that tracks how many times each string occurred during the traversal. If one occurs more than once, it represents duplicate subtrees.\n\n#### Algorithm\n\nThe function `traverse(node)` traverses the subtree of the `node` and adds duplicate subtrees to the answer. The return value is the string representation of the subtree.\n\nThe function works as follows:\n\n1. Traverse the left subtree of the `node` and get its representation (call recursively `traverse(node->left)`).\n2. Traverse the right subtree of the `node` and get its representation (call recursively `traverse(node->right)`).\n3. Compose the representation of the current subtree using the left subtree representation, the value of the `node`, and the right subtree representation.\n4. If the string occurs for the second time, it means there already was the same subtree as the current one (the subtree of the `node`). In this case, we add the `node` to the answer.\n5. Return the string from the function.\n\nWe only need to call `traverse(root)` to solve the problem.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/RrKEMoBX/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"RrKEMoBX\"></iframe>\n\n\n#### Complexity Analysis\n\nLet `n` denote the number of nodes.\n\n* Time complexity: $O(n^2)$.\n\nThe string representation of each subtree can have a length up to $O(n)$. Creating each representation therefore costs up to $O(n)$, and we find string representations for all $O(n)$ subtrees during the traversal.\n\n* Space complexity: $O(n^2)$.\n\nWe store all string representations in the hash map. There are $O(n)$ subtrees, and each subtree representation has the length of $O(n)$.\n\n---\n\n### An Optimized Approach\n\n#### Intuition\n\nWe can solve the problem more efficiently. Instead of representing a subtree with a string, we will use non-negative integer IDs: 0, 1, 2, and so on.\n\nWe want IDs to satisfy the same property as in the previous approach: equal subtrees have equal IDs, and different trees have different IDs.\n\nTwo subtrees are equal when they have equal root values, equal left subtrees, and equal right subtrees. Thus one can characterize a tree with the triplet `(ID of the left subtree, root value, ID of the right subtree)`. Equal subtrees have the same triplets.\n\nEach subtree has its triplet and also its ID. We will maintain a hash map `tripletToID` that maps a triplet to an ID.\n\nWe find a triplet and an ID for each subtree during the postorder tree traversal. Again, at the moment when we are handling a `node` in postorder, its left and right subtrees are already visited, and we can compose a triplet for the subtree of the `node` using the IDs of the left and right subtrees.\n\nIf this triplet occurs for the first time, we assign the smallest available ID to this subtree. Otherwise, the triplet occurred earlier, and we get the ID from the hash map `tripletToID`.\n\nWe maintain one more hash map `cnt` (similar to the previous approach), that tracks how many times each ID occurred. When we at some point encounter an ID for the second time, we found duplicate subtrees and can add to the answer.\n\n#### Algorithm\n\nThe function `traverse(node)` traverses the subtree of `node` and adds duplicate subtrees to the answer. The return value is the ID of the subtree.\n\nThe function works as follows:\n\n1. Traverse the left subtree of the `node` and get its ID (call recursively `traverse(node->left)`).\n2. Traverse the right subtree of the `node` and get its ID (call recursively `traverse(node->right)`).\n3. Compose a triplet of the following values: the left subtree ID, the value of the `node`, and the right subtree ID.\n4. If the triplet is not in the hash map `tripletToID`, we assign a new ID to this triplet – the smallest unused non-negative integer value (we can use the length of the map for this). Otherwise, get the ID from `tripletToID`.\n5. If the ID occurs for the second time, it means there was already the same subtree as the current one (the subtree of `node`). In this case, we add `node` to the answer.\n6. Return the ID from the function.\n\nWe only need to call `traverse(root)` to solve the problem.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/UKZc9SZh/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UKZc9SZh\"></iframe>\n\n\n#### Complexity Analysis\n\nLet `n` denote the number of nodes.\n\n* Time complexity: $O(n)$.\n\nWe traverse the tree with $n$ nodes and, for each subtree, find a triplet and an ID. We perform operations with the hash maps `tripletToID` and `cnt`. Since an ID is an integer and a triplet has a length of 3 ($O(1)$), these operations take $O(1)$ time for each of the $n$ nodes.\n\n* Space complexity: $O(n)$.\n\nWe store the hash maps `tripletToID` and `cnt`, which take $O(n)$ memory. Also, the recursion stack takes $O(n)$ memory.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

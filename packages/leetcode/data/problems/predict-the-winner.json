@@ -1,0 +1,145 @@
+{
+  "questionId": "486",
+  "questionFrontendId": "486",
+  "title": "Predict the Winner",
+  "titleSlug": "predict-the-winner",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code>. Two players are playing a game with this array: player 1 and player 2.</p>\n\n<p>Player 1 and player 2 take turns, with player 1 starting first. Both players start the game with a score of <code>0</code>. At each turn, the player takes one of the numbers from either end of the array (i.e., <code>nums[0]</code> or <code>nums[nums.length - 1]</code>) which reduces the size of the array by <code>1</code>. The player adds the chosen number to their score. The game ends when there are no more elements in the array.</p>\n\n<p>Return <code>true</code> if Player 1 can win the game. If the scores of both players are equal, then player 1 is still the winner, and you should also return <code>true</code>. You may assume that both players are playing optimally.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,5,2]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> Initially, player 1 can choose between 1 and 2. \nIf he chooses 2 (or 1), then player 2 can choose from 1 (or 2) and 5. If player 2 chooses 5, then player 1 will be left with 1 (or 2). \nSo, final score of player 1 is 1 + 2 = 3, and player 2 is 5. \nHence, player 1 will never be the winner and you need to return false.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,5,233,7]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> Player 1 first chooses 1. Then player 2 has to choose between 5 and 7. No matter which number player 2 choose, player 1 can choose 233.\nFinally, player 1 has more score (234) than player 2 (12), so you need to return True representing player1 can win.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 20</code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 10<sup>7</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"predictTheWinner\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"288.6K\", \"totalSubmission\": \"514.1K\", \"totalAcceptedRaw\": 288590, \"totalSubmissionRaw\": 514116, \"acRate\": \"56.1%\"}",
+  "likes": 6163,
+  "dislikes": 295,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Can I Win\", \"titleSlug\": \"can-i-win\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Winning Player in Coin Game\", \"titleSlug\": \"find-the-winning-player-in-coin-game\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Number of Winning Players\", \"titleSlug\": \"find-the-number-of-winning-players\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count The Number of Winning Sequences\", \"titleSlug\": \"count-the-number-of-winning-sequences\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,5,2]",
+    "[1,5,233,7]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    },
+    {
+      "name": "Game Theory",
+      "slug": "game-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool predictTheWinner(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean predictTheWinner(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def predictTheWinner(self, nums: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def predictTheWinner(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {boolean}\n */\nvar predictTheWinner = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function predictTheWinner(nums: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool PredictTheWinner(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool predictTheWinner(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func predictTheWinner(nums []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun predictTheWinner(nums: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func predictTheWinner(_ nums: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn predict_the_winner(nums: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Boolean}\ndef predict_the_winner(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Boolean\n     */\n    function predictTheWinner($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool predictTheWinner(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def predictTheWinner(nums: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec predict_the_winner(nums :: [integer]) :: boolean\n  def predict_the_winner(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec predict_the_winner(Nums :: [integer()]) -> boolean().\npredict_the_winner(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (predict-the-winner nums)\n  (-> (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1876",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n <div>\n    <div class=\"video-container\">\n      <iframe src=\"https://player.vimeo.com/video/873446093?texttrack=en-x-autogenerated\" frameborder=\"0\"\n        allow=\"autoplay; fullscreen\"></iframe>\n    </div>\n</div>\n\n\n\n## Solution\n\n--- \n\n### Overview\n\nBefore introducing the following approaches, we need to clarify the requirements of the problem. The problem isn't asking for what the final scores will be, but only if Player 1 will have a score greater than or equal to Player 2. Thus, to make the task easier, we can focus only on the **score difference**.\n\n> - 10 points for Player 1 and 10 points for Player 2 \n>or \n>- 100 points for Player 1 and 10 points for Player 2\n>\n>There is no difference, as long as Player 1's score is greater than or equal to Player 2's, Player 1 has won.\n\nDuring Player 1's turn, if he scores `x` points, his score difference to Player 2 will increase by `x`. \n\nConversely, if Player 2 scores `y` points during his turn, it will **decrease** the score difference between Player 1 and Player 2 by `y` points.\n\n---\n\n### Approach 1: Recursion\n\n#### Intuition   \n\nWe can define a recursive function `maxDiff(left, right)` that takes the starting and ending indices `left` and `right` of the list as input to maximize the current score difference between the two players. \n\nAt each step, we simulate the current player selecting a number from the list and then call the function recursively to determine the optimal move for the next player. We update the score difference based on the player's move, and then return the maximum score difference that the first player can achieve.\n\n\n\n![img](../Figures/486/d1.png)\n\n> Please note that: Both players play optimally, meaning they will choose the move that maximizes the score difference of himself from the other. \n\n\nTaking the example in the figure, when it is the green player's turn for the subarray `nums[left ~ right]`, his maximum score difference is denoted by `maxDiff(left, right)`. He has two choices: `nums[left]` and `nums[right]`. \n\nIf he chooses `nums[left]` and increases the score difference by `nums[left]`, then the next move will be made by the red player on the remaining array `nums[left + 1 ~ right]`, and `maxDiff(left + 1, right)` represents the max score difference that the red player could lead the green player by. \n\n\nHowever, this subproblem `maxDiff(left + 1, right)` is from the perspective of the red player, and the positive gain for the red player is exactly the negative gain for the green player. Therefore, in our formula for counting the current score gain of green player, the impact factor of the red player's gain is -1.\n\n![img](../Figures/486/d2.png)\n\nTherefore, by picking `nums[left]`, the green player's maximum score difference is `nums[left]` **minus** `maxDiff(left + 1, right)`. Likewise, by picking `nums[right]`, his maximum score difference is `nums[right]` **minus** `maxDiff(left, right - 1)`.\n\nThe green player shall pick the larger one of the two, that is:\n\n`maxDiff(left, right) = max(nums[left] - maxDiff(left + 1, right), nums[right] - maxDiff(left, right - 1))`. We can recursively solve the problem until we reach the base case `left = right`, where the game ends after the last player picks the final number and the maximum score difference he can make is `nums[left]`.\n\n\n\n<br>\n\n#### Algorithm\n\n1) Define `maxDiff(left, right)` as the maximum score difference the current player can achieve.\n    - If `left = right`, return `nums[left]`.\n    - Otherwise, the current player can pick `nums[left]` or `nums[right]`, the maximum score difference he can get is the larger one from `nums[left] - maxDiff(left + 1, right)` and `nums[right] - maxDiff(left, right - 1)`.\n\n2) Return if `maxDiff(0, n - 1) >= 0`. This call is from the perspective of the first player, and the first player is the winner if the players have the same score (difference of 0).\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Ndrs2fcv/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"Ndrs2fcv\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input array `nums`.\n\n* Time complexity: $$O(2^n)$$ \n\n\n    - The depth of the call stack will be $n$ once the base cases are reached because each call moves `left` and `right` closer by one.\n    - For each problem except the base case, the current player can either pick an element from the front or end. That means each call to `maxDiff` creates two more calls to `maxDiff`.\n\n    Thus the recursion tree having a depth of $$n$$ has $$O(2^n)$$ nodes, which is the time it takes to finish the search. **Note that the constraints have `n <= 20`. This approach would not be feasible for larger values of `n`.** \n\n\n    \n\n* Space complexity: $$O(n)$$\n\n    - The space complexity depends on the number of recursive calls of `maxDiff`. It takes $$n$$ recursion steps to reach the base case, thus the space complexity is $$O(n)$$.\n\n<br/>\n\n---\n\n### Approach 2: Dynamic Programming, Top-Down\n\n\n#### Intuition   \n\n> If you are not familiar with Dynamic Programming (DP), you can refer to our [Dynamic Programming Explore Card](https://leetcode.com/explore/featured/card/dynamic-programming/) for more information.\n\nIn the previous solution, we were calculating all encountered `maxScore(left, right)` recursively. However, this included a lot of redundant calculations (as highlighted by colors in the figure below). Considering the total number of combinations that left and right can form is only $$O(n^2)$$, if we use a cache to store the calculated `maxScore(left, right)`, we do not need to repeatedly calculate the same function from then on.\n\n![img](../Figures/486/d3.png)\n\nTherefore, we can use a hashmap or a two-dimensional array `memo` as a cache. Every time we calculate the value of `maxScore(left, right)`, we store it in `memo`. During the subsequent calculation process, if we find that `maxScore(left, right)` has already been calculated, we can simply retrieve its value `memo[(left, right)]` from the `memo`.\n\n<br>\n\n#### Algorithm\n\n1) Initialize a 2D array or a hash map `memo` as a cache.\n\n2) Define `maxDiff(left, right)` as the maximum score difference the current player can achieve. If the state `(left, right)` is already stored in `memo`, we can just return `memo[(left, right)]`. Otherwise:\n    - If `left = right`, return `nums[left]`.\n    - Otherwise, the current player can pick `nums[left]` or `nums[right]`, the maximum score difference he can get is the larger one from `nums[left] - maxDiff(left + 1, right)` and `nums[right] - maxDiff(left, right - 1)`.\n    - Store this result in `memo` to avoid repeated calculations.\n    - Return `memo[(left, right)]`.\n\n3) Return if `maxDiff(0, n - 1) >= 0`. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3JteddHw/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3JteddHw\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input array `nums`.\n\n* Time complexity: $$O(n^2)$$\n\n    - We use a cache `memo` to store the computed states. During the recursion, the cache makes sure we don't calculate a state more than once. The number of states `(left, right)` is $$O(n^2)$$.\n\n\n    \n\n* Space complexity: $$O(n^2)$$\n\n    - We use a hashmap or a two-dimensional array `memo` as memory, it contains at most $$O(n^2)$$ distinct states.\n\n<br/>\n\n\n\n---\n\n### Approach 3: Dynamic Programming, Bottom-Up\n\n\n#### Intuition   \n\nWith recursion, we start at the original problem `(left = 0, right = n - 1)` and move down the tree, combining answers to smaller subproblems to eventually form the answer to the original problem. We can also start with the smaller subproblems and build up the solution for the larger problem. We represent all subproblems using a 2D array `dp`, where `dp[left][right]` indicates the maximum score that the current player can get by playing on the subarray `nums[left ~ right]`. We start filling up the 2D array from the base cases, solving smaller subproblems and using their solutions to solve larger subproblems until we reach the final problem `dp[0][n - 1]`.\n\n> Note that `dp[left][right]` is analogous to what `maxDiff(left, right)` was in the previous approaches.\n\n\n![img](../Figures/486/1.png)\n\nFirst, we fill up the diagonal elements of the 2D array `dp[left][left]` with the value `nums[left]`, since the player can only choose one number from this subarray (this is the base case). Then, we move to the next diagonal elements `dp[left][left + 1]`, where we calculate the maximum score that the current player can get by choosing either `nums[left]` or `nums[left + 1]`. After that, we move on to larger subarrays `dp[left][left + 2]`, `dp[left][left + 3]`, and so on until we reach the final subarray `dp[0][n - 1]`. To fill `dp[left][right]`, we consider two cases: either the current player chooses the number `nums[left]` or the number `nums[right]`. \n\n\n- If he selects `nums[left]`, his score difference is increased by `nums[left] - dp[left + 1][right]`.\n- If he selects `nums[right]`, his score difference is increased by `nums[right] - dp[left][right - 1]`.\n\nSince we are filling the `dp` table in a bottom-up manner, both `dp[left + 1][right]` and `dp[left][right - 1]` have been solved previously.\n\n\n\n\n![img](../Figures/486/2.png)\n\n\nWhen the iteration ends, `dp[0][n - 1]` depicts the maximum score difference achieved by the first player, and we can determine if he wins by comparing it with 0.\n\n\n<br>\n\n\n#### Algorithm\n\n1) Initialize an empty array `dp` of size `n * n`.\n\n2) Fill each diagonal value `dp[i][i]` with `nums[i]`. \n\n3) Start with smaller subarrays `nums[left ~ left + diff] = nums[left][right]`, for each `diff` from `1` to `n - 1`, fill the diagonal cells `dp[left][right]` as the larger one from:\n\n    - `nums[left] - dp[left + 1][right]`\n    - `nums[right] - dp[left][right - 1]`\n\n4) Return if `dp[0][n - 1] >= 0` when the iteration is complete.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/bw54EcQ9/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"bw54EcQ9\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input array `nums`.\n\n* Time complexity: $$O(n^2)$$\n\n    - We create a 2D array of size $$n\\times n$$ as memory. The value of each cell is computed once, which takes $$O(1)$$ time.\n    \n\n* Space complexity: $$O(n^2)$$\n\n    - We create a 2D array of size $$n\\times n$$ as memory.\n\n<br/>\n\n\n\n\n---\n\n### Approach 4: Dynamic Programming, Space-Optimized\n\n\n#### Intuition   \n\nRecall the order of filling in `dp` in the previous approach. We fill the first diagonal which stands for all subarrays of length 1 in the 1st round, then move on to the upper secondary diagonal that represent all subarrays of length 2, and so on.\n\n![img](../Figures/486/3.png)\n\n> We only need the previous (lower) diagonal to fill the current (upper) diagonal.\n\nBy observing the pattern of filling `dp`, we can optimize the space complexity to $O(n)$ by only storing the previous diagonal of `dp`, and updating `new_dp` of shorter length. Then we can reset `dp` as `dp = new_dp` and reuse it for the next round.\n\n\n![img](../Figures/486/4.png)\n\nFurthermore, we don't even need to create `new_dp`. We can simply update `dp` in-place repeatedly:\n\n- Begin with: `[dp[0], dp[1], dp[2], dp[3]]`\n- Update the 1st element: `[new_dp[0], dp[1], dp[2], dp[3]]`.\n- Update the 2nd element: `[new_dp[0], new_dp[1], dp[2], dp[3]]`\n- Update the 3rd element: `[new_dp[0], new_dp[1], new_dp[2], dp[3]]`\n\nnow the first 3 elements in `dp` will represent `new_dp`.\n\n![img](../Figures/486/5.png)\n\nWe continue this updating process for `n` rounds, and the first element in the array represents `dp[0][n-1]` in the 2D array, which is the maximum score difference achieved by Player 1.\n\n\n<br>\n\n#### Algorithm\n\n1) Initialize an empty array `dp` of size `n`.\n\n2) Set each value `dp[i]` as `nums[i]`. \n\n3) Start with each shorter diagonal, for each `diff` from `1` to `n - 1`, update the first `n - diff` cells in place using every two adjacent cells in `dp`. `dp[left]` equals the larger one of:\n    - `nums[left] - dp[left + 1]`\n    - `nums[right] - dp[left]`\n\n4) Return if `dp[0] >= 0` after the iteration is complete.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/oSYHMMxq/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"oSYHMMxq\"></iframe>\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input array `nums`.\n\n* Time complexity: $$O(n^2)$$\n\n    - We fill `n` cells of `dp` in the 1st round, then `n - 1` cells in the 2nd round, and so on. The total number of updated cells is $$O(n^2)$$, each cell takes constant time. \n\n    \n\n* Space complexity: $$O(n)$$\n\n    - We only use an array of size $$n$$.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

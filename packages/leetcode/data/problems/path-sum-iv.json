@@ -1,0 +1,145 @@
+{
+  "questionId": "666",
+  "questionFrontendId": "666",
+  "title": "Path Sum IV",
+  "titleSlug": "path-sum-iv",
+  "difficulty": "Medium",
+  "content": "<p>If the depth of a tree is smaller than <code>5</code>, then this tree can be represented by an array of three-digit integers. You are given an <strong>ascending </strong>array <code>nums</code> consisting of three-digit integers representing a binary tree with a depth smaller than <code>5</code>, where for each integer:</p>\n\n<ul>\n\t<li>The hundreds digit represents the depth <code>d</code> of this node, where <code>1 &lt;= d &lt;= 4</code>.</li>\n\t<li>The tens digit represents the position <code>p</code> of this node within its level, where <code>1 &lt;= p &lt;= 8</code>, corresponding to its position in a <strong>full binary tree</strong>.</li>\n\t<li>The units digit represents the value <code>v</code> of this node, where <code>0 &lt;= v &lt;= 9</code>.</li>\n</ul>\n\n<p>Return the <strong>sum</strong> of <strong>all paths</strong> from the <strong>root</strong> towards the <strong>leaves</strong>.</p>\n\n<p>It is <strong>guaranteed</strong> that the given array represents a valid connected binary tree.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/30/pathsum4-1-tree.jpg\" style=\"width: 212px; height: 183px;\" /></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [113,215,221]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">12</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The tree that the list represents is shown.<br />\nThe path sum is (3 + 5) + (3 + 1) = 12.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/30/pathsum4-2-tree.jpg\" style=\"width: 132px; height: 183px;\" /></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [113,221]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">4</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The tree that the list represents is shown.&nbsp;<br />\nThe path sum is (3 + 1) = 4.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 15</code></li>\n\t<li><code>110 &lt;= nums[i] &lt;= 489</code></li>\n\t<li><code>nums</code> represents a valid binary tree with depth less than <code>5</code>.</li>\n\t<li><code>nums</code> is sorted in ascending order.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"pathSum\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"41.6K\", \"totalSubmission\": \"66.2K\", \"totalAcceptedRaw\": 41578, \"totalSubmissionRaw\": 66163, \"acRate\": \"62.8%\"}",
+  "likes": 428,
+  "dislikes": 522,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Path Sum\", \"titleSlug\": \"path-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Path Sum II\", \"titleSlug\": \"path-sum-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Binary Tree Maximum Path Sum\", \"titleSlug\": \"binary-tree-maximum-path-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Path Sum III\", \"titleSlug\": \"path-sum-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[113,215,221]",
+    "[113,221]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"alibaba\", \"name\": \"Alibaba\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int pathSum(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int pathSum(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def pathSum(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def pathSum(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar pathSum = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function pathSum(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int PathSum(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int pathSum(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func pathSum(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun pathSum(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func pathSum(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn path_sum(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef path_sum(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function pathSum($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int pathSum(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def pathSum(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec path_sum(nums :: [integer]) :: integer\n  def path_sum(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec path_sum(Nums :: [integer()]) -> integer().\npath_sum(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (path-sum nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2419",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview:\n\nWe are given a tree represented as a list of three-digit numbers, where each number is defined as follows:\n\n- The first digit indicates the node's depth (1-4).\n- The second digit specifies the node's position at its level (1-8).\n- The third digit represents the node's value (0-9).\n\nWe need to calculate the sum of all path values from the root to the leaves and return the total sum.\n\nFor tree traversal, we'll be using DFS or BFS. If you're unfamiliar with these concepts, you can learn more from the following [DFS](https://leetcode.com/explore/learn/card/queue-stack/232/practical-application-stack/) and [BFS](https://leetcode.com/explore/learn/card/queue-stack/231/practical-application-queue/) explore cards.\n\n\n### Approach 1: Depth First Search\n\n#### Intuition\n\nIn this approach, we will use the DFS algorithm. The DFS algorithm explores as far as possible along each branch before backing up, which mirrors the path-like exploration from root to leaf. The figure below illustrates the paths:\n\n![fig](../Figures/666/slide1.png)\n\nAs we observe from the image, the depth of the nodes increases with each DFS iteration. For example, if a node is at depth 2, its children will be at depth 3, meaning the depth of each child is the current node's depth plus one.\n\nTo determine the horizontal position of the child nodes, if a node is at position `p`, its left child will be at `2*p - 1`, and its right child at `2*p`. This calculation is based on the properties of a full binary tree, where positions double as you move deeper. It's a standard formula that you can remember for future use.\n\nEach node is uniquely identified by its depth and position, which we can map to the node's value. Using a hashmap, where the key is the node's depth and position, and the value is the node's value, we can efficiently retrieve any node's value using its coordinates.\n\n#### Algorithm\n\n**Main function - `pathSum(nums)`**\n\n1. Initialize a hashmap `map` to store tree nodes.\n2. Iterate through each element in `nums`:\n    - Calculate `coordinates` by dividing the current element by 10.\n    - Calculate `value` by taking the remainder of the element when divided by 10.\n    - Store the `coordinates` as the key and `value` as the value in map.\n3. Initialize an integer variable `sum` with 0.\n4. Call the helper function `dfs(rootCoordinates, preSum, sum, map)` with:\n    - `rootCoordinates` set to nums[0] / 10.\n    - `preSum` set to 0.\n    - `sum` passed by reference.\n5. Return the value of `sum`.\n\n**Helper function - `dfs(rootCoordinates, preSum, sum, map)`**\n\n1. Calculate the `level` and `position` from `rootCoordinates`:\n    - `level` is obtained by dividing `rootCoordinates` by 10.\n    - `position` is obtained by taking the remainder of `rootCoordinates` when divided by 10.\n2. Determine the coordinates of the `left` and `right` children:\n    - `left` is calculated as `(level + 1) * 10 + position * 2 - 1`.\n    - `right` is calculated as `(level + 1) * 10 + position * 2`.\n3. Update `currSum` by adding the value of the current node to `preSum`.\n4. If map does not contain both `left` and `right` coordinates:\n    - Add `currSum` to `sum`.\n    - Return from the function.\n5. If `left` exists in `map`, call `dfs(left, currSum, sum, map)`.\n6. If `right` exists in `map`, call `dfs(right, currSum, sum, map)`.\n\n!?!../Documents/666/slideshow.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/BvSNZ3Gy/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"BvSNZ3Gy\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n- Time complexity: $O(n)$\n\n    All hashmap insertion and search operations take constant time. Apart from this, in the `dfs` function, we visit all the nodes of the tree exactly once. Therefore, the time complexity is given by $O(n)$.\n\n- Space complexity: $O(n)$\n\n    We perform exactly $n$ insertion operations in the hashmap. For the `dfs` function, the stack space can go up to $n$ in the worst case. Therefore, the total space complexity is given by $O(n)$.\n\n---\n\n### Approach 2: Breadth First Search\n\n#### Intuition\n\nIn this approach, we use the breadth-first search algorithm to explore all root-to-leaf paths in the tree. Unlike depth-first search, where we explore each path from root to leaf before moving on, BFS processes all nodes at the current level before proceeding to the next.\n\nTo track the running sum as we reach leaf nodes, we initialize a queue that stores pairs of `coordinates` and the current sum up to each node. We start by enqueuing the `root` node. While the queue is not empty, we process each node by checking if it is a leaf. If it is not a leaf, we enqueue its children with updated sums by adding the current node's value to the running sum. If the node is a leaf, we add the current sum to the total sum.\n\n#### Algorithm\n\n1. Initialize `map` as an empty hashmap, and `q` as an empty queue that stores a pair of integers.\n2. Initialize `totalSum` as 0.\n3. For each element in `nums`:\n    - Compute `coordinates` as `element / 10`.\n    - Compute `value` as `element % 10`. \n    - Store `value` in the map with key `coordinates`.\n4. Compute `rootCoordinates` as `nums[0] / 10`.\n5. Enqueue `rootCoordinates` and `map[rootCoordinates]` into `q`.\n6. While `q` is not empty:\n    - Dequeue `coordinates` and `currentSum`.\n    - Compute `level` as `coordinates / 10` and `position` as `coordinates % 10`.\n    - Compute `left` as `(level + 1) * 10 + position * 2 - 1` and `right` as `(level + 1) * 10 + position * 2`.\n    - If the current node is a leaf node:\n        - Add `currentSum` to `totalSum`.\n    - If `map` contains `left`:\n        - Enqueue `left` and `currentSum + map[left]` into `q`.\n    - If `map` contains `right`:\n        - Enqueue `right` and `currentSum + map[right]` into `q`.\n7. Return `totalSum`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/eueezib5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"eueezib5\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n- Time complexity: $O(n)$\n\n    All hashmap insertion and search operations take constant time. Apart from this, in the breadth-first search, we visit all the nodes of the tree exactly once. Therefore, the time complexity is given by $O(n)$.\n\n- Space complexity: $O(n)$\n\n    We perform exactly $n$ insertion operations in the hashmap. For the breadth-first search, the queue `q` stores all the elements exactly once. Therefore, the total space complexity is given by $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

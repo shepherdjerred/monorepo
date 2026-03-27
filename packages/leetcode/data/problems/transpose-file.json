@@ -1,0 +1,33 @@
+{
+  "questionId": "194",
+  "questionFrontendId": "194",
+  "title": "Transpose File",
+  "titleSlug": "transpose-file",
+  "difficulty": "Medium",
+  "content": "<p>Given a text file <code>file.txt</code>, transpose its content.</p>\n\n<p>You may assume that each row has the same number of columns, and each field is separated by the <code>&#39; &#39;</code> character.</p>\n\n<p><strong class=\"example\">Example:</strong></p>\n\n<p>If <code>file.txt</code> has the following content:</p>\n\n<pre>\nname age\nalice 21\nryan 30\n</pre>\n\n<p>Output the following:</p>\n\n<pre>\nname alice ryan\nage 21 30\n</pre>\n",
+  "hints": [],
+  "metaData": "{\n  \"shell\": true,\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"42K\", \"totalSubmission\": \"135.1K\", \"totalAcceptedRaw\": 42023, \"totalSubmissionRaw\": 135128, \"acRate\": \"31.1%\"}",
+  "likes": 164,
+  "dislikes": 290,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "a"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Shell",
+      "slug": "shell"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "Bash",
+      "langSlug": "bash",
+      "code": "# Read from the file file.txt and print its transposed content to stdout.\n"
+    }
+  ],
+  "solution": null
+}

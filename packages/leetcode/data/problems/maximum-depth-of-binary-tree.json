@@ -1,0 +1,141 @@
+{
+  "questionId": "104",
+  "questionFrontendId": "104",
+  "title": "Maximum Depth of Binary Tree",
+  "titleSlug": "maximum-depth-of-binary-tree",
+  "difficulty": "Easy",
+  "content": "<p>Given the <code>root</code> of a binary tree, return <em>its maximum depth</em>.</p>\n\n<p>A binary tree&#39;s <strong>maximum depth</strong>&nbsp;is the number of nodes along the longest path from the root node down to the farthest leaf node.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/11/26/tmp-tree.jpg\" style=\"width: 400px; height: 277px;\" />\n<pre>\n<strong>Input:</strong> root = [3,9,20,null,null,15,7]\n<strong>Output:</strong> 3\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [1,null,2]\n<strong>Output:</strong> 2\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[0, 10<sup>4</sup>]</code>.</li>\n\t<li><code>-100 &lt;= Node.val &lt;= 100</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"maxDepth\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"4.7M\", \"totalSubmission\": \"6M\", \"totalAcceptedRaw\": 4688799, \"totalSubmissionRaw\": 6009589, \"acRate\": \"78.0%\"}",
+  "likes": 14287,
+  "dislikes": 291,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Balanced Binary Tree\", \"titleSlug\": \"balanced-binary-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Depth of Binary Tree\", \"titleSlug\": \"minimum-depth-of-binary-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Maximum Depth of N-ary Tree\", \"titleSlug\": \"maximum-depth-of-n-ary-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Time Needed to Inform All Employees\", \"titleSlug\": \"time-needed-to-inform-all-employees\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Amount of Time for Binary Tree to Be Infected\", \"titleSlug\": \"amount-of-time-for-binary-tree-to-be-infected\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Height of Binary Tree After Subtree Removal Queries\", \"titleSlug\": \"height-of-binary-tree-after-subtree-removal-queries\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,9,20,null,null,15,7]",
+    "[1,null,2]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"yahoo\", \"name\": \"Yahoo\"}, {\"timesEncountered\": 3, \"slug\": \"arista-networks\", \"name\": \"Arista Networks\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"qualcomm\", \"name\": \"Qualcomm\"}]}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int maxDepth(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int maxDepth(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def maxDepth(self, root: Optional[TreeNode]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def maxDepth(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number}\n */\nvar maxDepth = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction maxDepth(root: TreeNode | null): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int MaxDepth(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint maxDepth(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc maxDepth(root *TreeNode) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun maxDepth(root: TreeNode?): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func maxDepth(_ root: TreeNode?) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn max_depth(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer}\ndef max_depth(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer\n     */\n    function maxDepth($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int maxDepth(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def maxDepth(root: TreeNode): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec max_depth(root :: TreeNode.t | nil) :: integer\n  def max_depth(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec max_depth(Root :: #tree_node{} | null) -> integer().\nmax_depth(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (max-depth root)\n  (-> (or/c tree-node? #f) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "575",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n <div>\n    <div class=\"video-container\">\n      <iframe src=\"https://player.vimeo.com/video/888870976?texttrack=en-x-autogenerated\" frameborder=\"0\"\n        allow=\"autoplay; fullscreen\"></iframe>\n    </div>\n</div>\n\n\n## Solution\n\n**Tree definition**\n\nFirst of all, here is the definition of the ```TreeNode``` which we would use.\n\n<iframe src=\"https://leetcode.com/playground/ZRCgNmEJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"225\" name=\"ZRCgNmEJ\"></iframe>\n<br />\n<br />\n\n\n---\n### Approach 1: Recursion\n\n**Intuition**\nBy definition, the maximum depth of a binary tree is the maximum number of steps to reach a leaf node from the root node.\n\n>From the definition, an intuitive idea would be to traverse the tree and record the maximum depth during the traversal. \n\n**Algorithm**\n\n<!--![LIS](../Figures/104/104_tr.gif)-->\n!?!../Documents/104_LIS.json:1000,500!?!\n\nOne could traverse the tree either by Depth-First Search (DFS) strategy or Breadth-First Search (BFS) strategy.\nFor this problem, either way would do.\nHere we demonstrate a solution that is implemented with the **DFS** strategy and **recursion**.\n\n<iframe src=\"https://leetcode.com/playground/mcYyWmzG/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"mcYyWmzG\"></iframe>\n\n**Complexity analysis**\n\n* Time complexity: we visit each node exactly once, thus the time complexity is $$\\mathcal{O}(N)$$, where $$N$$ is the number of nodes.\n\n* Space complexity: in the worst case, the tree is completely unbalanced, *e.g.* each node has only left child node, the recursion call would occur $$N$$ times (the height of the tree), therefore the storage to keep the call stack would be $$\\mathcal{O}(N)$$. But in the best case (the tree is completely balanced), the height of the tree would be $$\\log(N)$$. Therefore, the space complexity in this case would be $$\\mathcal{O}(\\log(N))$$.\n<br />\n<br />\n\n---\n### Approach 2: Tail Recursion + BFS\n\nOne might have noticed that the above recursion solution is probably not the most optimal one in terms of space complexity, and in the extreme case, the overhead of the call stack might even lead to *stack overflow*.\n\nTo address the issue, one can tweak the solution a bit to make it **tail recursion**, which is a specific form of recursion where the recursive call is the last action in the function. \n\nThe benefit of having tail recursion is that for certain programming languages (*e.g.* `C++`) the compiler could optimize the memory allocation of the call stack by reusing the same space for every recursive call, rather than creating the space for each one. As a result, one could obtain the constant space complexity $$\\mathcal{O}(1)$$ for the overhead of the recursive calls.\n\nHere is a sample solution. Note that the optimization of tail recursion is not supported by Python or Java.\n\n<iframe src=\"https://leetcode.com/playground/iXs6ymgF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"iXs6ymgF\"></iframe>\n\n\n**Complexity analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$, still we visit each node once and only once.\n\n* Space complexity: $$\\mathcal{O}(2^{(log_2N-1)})=\\mathcal{O}(N/2)=\\mathcal{O}(N)$$, *i.e.* the maximum number of nodes at the same level (the number of leaf nodes in a full binary tree), since we traverse the tree in the **BFS** manner.\n \nAs one can see, this probably is not the best example to apply the *tail recursion* technique. Because though we did gain the constant space complexity for the recursive calls, we pay the price of $$\\mathcal{O}(N)$$ complexity to maintain the state information for recursive calls. This defeats the purpose of applying tail recursion.\n\nHowever, we would like to stress the point that the tail recursion is a useful form of recursion that could eliminate the space overhead incurred by the recursive function calls.\n\n*Note: a function cannot be tail recursion if there are multiple occurrences of recursive calls in the function, even if the last action is the recursive call.* Because the system has to maintain the function call stack for the sub-function calls that occur within the same function. \n<br />\n<br />\n\n---\n### Approach 3: Iteration\n\n**Intuition**\n\nWe could also convert the above recursion into iteration, with the help of the *stack* data structure. Similar to the behaviors of the function call stack, the stack data structure follows the pattern of FILO (First-In-Last-Out), *i.e.* the last element that is added to a stack would come out first.\n\nWith the help of the *stack* data structure, one could mimic the behaviors of the function call stack that is involved in the recursion, to convert a recursive function to a function with iteration.\n\n**Algorithm**\n\n>The idea is to keep the next nodes to visit in a stack.\nDue to the FILO behavior of the stack, one would get the order of visits the same as the one in recursion.\n\nWe start from a stack that contains the root node and the corresponding depth which is ```1```. Then we proceed to the iterations: pop the current node out of the stack and push the child nodes. The depth is updated at each step. \n\n<iframe src=\"https://leetcode.com/playground/Aw3EFpSY/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Aw3EFpSY\"></iframe>  \n\n**Complexity analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$.\n\n* Space complexity: in the worst case, the tree is completely unbalanced, *e.g.* each node has only the left child node, the recursion call would occur $$N$$ times (the height of the tree), the storage to keep the call stack would be $$\\mathcal{O}(N)$$. But in the average case (the tree is balanced), the height of the tree would be $$\\log(N)$$. Therefore, the space complexity in this case would be $$\\mathcal{O}(\\log(N))$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "questionId": "790",
+  "questionFrontendId": "775",
+  "title": "Global and Local Inversions",
+  "titleSlug": "global-and-local-inversions",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code> of length <code>n</code> which represents a permutation of all the integers in the range <code>[0, n - 1]</code>.</p>\n\n<p>The number of <strong>global inversions</strong> is the number of the different pairs <code>(i, j)</code> where:</p>\n\n<ul>\n\t<li><code>0 &lt;= i &lt; j &lt; n</code></li>\n\t<li><code>nums[i] &gt; nums[j]</code></li>\n</ul>\n\n<p>The number of <strong>local inversions</strong> is the number of indices <code>i</code> where:</p>\n\n<ul>\n\t<li><code>0 &lt;= i &lt; n - 1</code></li>\n\t<li><code>nums[i] &gt; nums[i + 1]</code></li>\n</ul>\n\n<p>Return <code>true</code> <em>if the number of <strong>global inversions</strong> is equal to the number of <strong>local inversions</strong></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,0,2]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> There is 1 global inversion and 1 local inversion.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,0]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> There are 2 global inversions and 1 local inversion.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt; n</code></li>\n\t<li>All the integers of <code>nums</code> are <strong>unique</strong>.</li>\n\t<li><code>nums</code> is a permutation of all the numbers in the range <code>[0, n - 1]</code>.</li>\n</ul>\n",
+  "hints": [
+    "Where can the 0 be placed in an ideal permutation?  What about the 1?"
+  ],
+  "metaData": "{\n  \"name\": \"isIdealPermutation\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"85.6K\", \"totalSubmission\": \"200.3K\", \"totalAcceptedRaw\": 85621, \"totalSubmissionRaw\": 200319, \"acRate\": \"42.7%\"}",
+  "likes": 1876,
+  "dislikes": 382,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,0,2]",
+    "[1,2,0]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isIdealPermutation(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isIdealPermutation(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isIdealPermutation(self, nums: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isIdealPermutation(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {boolean}\n */\nvar isIdealPermutation = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isIdealPermutation(nums: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsIdealPermutation(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isIdealPermutation(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isIdealPermutation(nums []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isIdealPermutation(nums: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isIdealPermutation(_ nums: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_ideal_permutation(nums: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Boolean}\ndef is_ideal_permutation(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Boolean\n     */\n    function isIdealPermutation($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isIdealPermutation(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isIdealPermutation(nums: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_ideal_permutation(nums :: [integer]) :: boolean\n  def is_ideal_permutation(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_ideal_permutation(Nums :: [integer()]) -> boolean().\nis_ideal_permutation(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-ideal-permutation nums)\n  (-> (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "403",
+    "content": "[TOC]\n\n---\n### Approach #1: Brute Force [Time Limit Exceeded]\n\n**Intuition and Algorithm**\n\nA local inversion is also a global inversion.  Thus, we only need to check if our permutation has any non-local inversion (`A[i] > A[j], i < j`) with `j - i > 1`.\n\nTo do this, we can check every `i, j` directly.\n\n\n<iframe src=\"https://leetcode.com/playground/TZ8KPDdQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"208\" name=\"TZ8KPDdQ\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N^2)$$, where $$N$$ is the length of `A`.\n\n* Space Complexity: $$O(1)$$.\n\n---\n### Approach #2: Remember Minimum [Accepted]\n\n**Intuition**\n\nIn performing a brute force, we repeatedly want to check whether there is some `j >= i+2` for which `A[i] > A[j]`.  This is the same as checking for `A[i] > min(A[i+2:])`.  If we knew these minimums `min(A[0:]), min(A[1:]), min(A[2:]), ...` we could make this check quickly.\n\n**Algorithm**\n\nLet's iterate through `A` from right to left, remembering the minimum value we've seen.  If we remembered the minimum `floor = min(A[i:])` and `A[i-2] > floor`, then we should return `False`.  This search is exhaustive, so if we don't find anything after iterating through `A`, we should return `True`.\n\n<iframe src=\"https://leetcode.com/playground/Bu9jopE2/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"Bu9jopE2\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `A`.\n\n* Space Complexity: $$O(1)$$.\n\n---\n### Approach #3: Linear Scan [Accepted]\n\n**Intuition and Algorithm**\n\nLet's try to characterize all *ideal* permutations: ones that do not have non-local inversions.  Where does the `0` go?\n\nIf the `0` occurs at index `2` or greater, then `A[0] > A[2] = 0` is a non-local inversion.  So `0` can only occur at index `0` or `1`.  If `A[1] = 0`, then we must have `A[0] = 1` otherwise `A[0] > A[j] = 1` is a non-local inversion.  Otherwise, `A[0] = 0`.  To recap, the possibilities are either `A = [0] + (ideal permutation of 1...N-1)` or `A = [1, 0] + (ideal permutation of 2...N-1)`.\n\nA necessary and sufficient condition for these possibilities is that `Math.abs(A[i] - i) <= 1`.  So we check this for every `i`.\n\n<iframe src=\"https://leetcode.com/playground/5di8DnrG/shared\" frameBorder=\"0\" width=\"100%\" height=\"191\" name=\"5di8DnrG\"></iframe>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

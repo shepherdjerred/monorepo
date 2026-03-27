@@ -1,0 +1,141 @@
+{
+  "questionId": "5",
+  "questionFrontendId": "5",
+  "title": "Longest Palindromic Substring",
+  "titleSlug": "longest-palindromic-substring",
+  "difficulty": "Medium",
+  "content": "<p>Given a string <code>s</code>, return <em>the longest</em> <span data-keyword=\"palindromic-string\"><em>palindromic</em></span> <span data-keyword=\"substring-nonempty\"><em>substring</em></span> in <code>s</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;babad&quot;\n<strong>Output:</strong> &quot;bab&quot;\n<strong>Explanation:</strong> &quot;aba&quot; is also a valid answer.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;cbbd&quot;\n<strong>Output:</strong> &quot;bb&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 1000</code></li>\n\t<li><code>s</code> consist of only digits and English letters.</li>\n</ul>\n",
+  "hints": [
+    "How can we reuse a previously computed palindrome to compute a larger palindrome?",
+    "If “aba” is a palindrome, is “xabax” a palindrome? Similarly is “xabay” a palindrome?",
+    "Complexity based hint:</br>\r\nIf we use brute-force and check whether for every start and end position a substring is a palindrome we have O(n^2) start - end pairs and O(n) palindromic checks. Can we reduce the time for palindromic checks to O(1) by reusing some previous computation."
+  ],
+  "metaData": "{ \n  \"name\": \"longestPalindrome\",\n  \"params\": [\n    { \n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"4.6M\", \"totalSubmission\": \"12.3M\", \"totalAcceptedRaw\": 4630946, \"totalSubmissionRaw\": 12338761, \"acRate\": \"37.5%\"}",
+  "likes": 32555,
+  "dislikes": 2003,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Shortest Palindrome\", \"titleSlug\": \"shortest-palindrome\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Palindrome Permutation\", \"titleSlug\": \"palindrome-permutation\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Palindrome Pairs\", \"titleSlug\": \"palindrome-pairs\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Longest Palindromic Subsequence\", \"titleSlug\": \"longest-palindromic-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Palindromic Substrings\", \"titleSlug\": \"palindromic-substrings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Non-overlapping Palindrome Substrings\", \"titleSlug\": \"maximum-number-of-non-overlapping-palindrome-substrings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"babad\"",
+    "\"cbbd\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 28, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 18, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 16, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 4, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 2, \"slug\": \"cognizant\", \"name\": \"Cognizant\"}, {\"timesEncountered\": 2, \"slug\": \"bitgo\", \"name\": \"BitGo\"}], \"more_than_six_months\": [{\"timesEncountered\": 42, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 22, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 8, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 7, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 7, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 6, \"slug\": \"deloitte\", \"name\": \"Deloitte\"}, {\"timesEncountered\": 6, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 5, \"slug\": \"epam-systems\", \"name\": \"EPAM Systems\"}, {\"timesEncountered\": 4, \"slug\": \"accolite\", \"name\": \"Accolite\"}, {\"timesEncountered\": 4, \"slug\": \"pure-storage\", \"name\": \"Pure Storage\"}]}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string longestPalindrome(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String longestPalindrome(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestPalindrome(self, s: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestPalindrome(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {string}\n */\nvar longestPalindrome = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestPalindrome(s: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string LongestPalindrome(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* longestPalindrome(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestPalindrome(s string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestPalindrome(s: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestPalindrome(_ s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_palindrome(s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {String}\ndef longest_palindrome(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return String\n     */\n    function longestPalindrome($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String longestPalindrome(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestPalindrome(s: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_palindrome(s :: String.t) :: String.t\n  def longest_palindrome(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_palindrome(S :: unicode:unicode_binary()) -> unicode:unicode_binary().\nlongest_palindrome(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-palindrome s)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1938",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n <div>\n    <div class=\"video-container\">\n      <iframe src=\"https://player.vimeo.com/video/879874209?texttrack=en-x-autogenerated\" frameborder=\"0\"\n        allow=\"autoplay; fullscreen\"></iframe>\n    </div>\n</div>\n\n\n## Solution\n\n---\n\n### Approach 1: Check All Substrings\n\n**Intuition**\n\nWe can start with a brute-force approach. We will simply check if each substring is a palindrome, and take the longest one that is.\n\nFirst, let's talk about how we can check if a given string is a palindrome. This is a classic problem and we can do it using two pointers. If a string is a palindrome, the first character is equal to the last character. The second character is equal to the second last character, and so on.\n\n![Palindrome Check](../Figures/5/1.png)\n\nWe initialize two pointers: one at the start of the string and another at the end of it. We check if the characters at the pointers are equal - if they aren't, we know the string cannot be a palindrome. If they are equal, we move to the next pair of characters by moving the pointers toward each other. We continue until we either find a mismatch or the pointers meet. If the pointers meet, then we have checked all pairs and we know the string is a palindrome.\n\nOne bonus to using this algorithm is that we frequently exit early on strings that are not palindromes. If you had a string of length `1000` and the third and third last characters did not match, we would exit the algorithm after only 3 iterations.\n\nThere's another optimization that we can do. Because the problem wants the longest palindrome, we can start by checking the longest-length substrings and iterate toward the shorter-length substrings. This way, the first time we find a substring that is a palindrome, we can immediately return it as the answer.\n\n**Algorithm**\n\n1. Create a helper method `check(i, j)` to determine if a substring is a palindrome.\n    - To save space, we will not pass the substring itself. Instead, we will pass two indices that represent the substring in question. The first character will be `s[i]` and the last character will be `s[j - 1]`.\n    - In this function, declare two pointers `left = i` and `right = j - 1`.\n    - While `left < right`, do the following steps:\n    - If `s[left] != s[right]`, return `false`.\n    - Otherwise, increment `left` and decrement `right`.\n    - If we get through the while loop, return `true`.\n2. Use a for loop to iterate a variable `length` starting from `s.length` until `1`. This variable represents the length of the substrings we are currently considering.\n3. Use a for loop to iterate a variable `start` starting from `0` until and including `s.length - length`. This variable represents the starting point of the substring we are currently considering.\n4. In each inner loop iteration, we are considering the substring starting at `start` until `start + length`. Pass these values into `check` to see if this substring is a palindrome. If it is, return the substring.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/PMqPSHFX/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PMqPSHFX\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `s`,\n\n* Time complexity: $$O(n^3)$$\n\n    The two nested for loops iterate $$O(n^2)$$ times. We check one substring of length `n`, two substrings of length `n - 1`, three substrings of length `n - 2`, and so on.\n\n    There are `n` substrings of length 1, but we don't check them all since any substring of length 1 is a palindrome, and we will return immediately.\n\n    Therefore, the number of substrings that we check in the worst case is `1 + 2 + 3 + ... + n - 1`. This is the partial sum of [this series](https://en.wikipedia.org/wiki/1_%2B_2_%2B_3_%2B_4_%2B_%E2%8B%AF#Partial_sums) for `n - 1`, which is equal to $$\\frac{n \\cdot (n - 1)}{2} = O(n^2)$$.\n\n    In each iteration of the while loop, we perform a palindrome check. The cost of this check is linear with `n` as well, giving us a time complexity of $$O(n^3)$$.\n\n    Note that this time complexity is in the worst case and has a significant constant divisor that is dropped by big O. Due to the optimizations of checking the longer length substrings first and exiting the palindrome check early if we determine that a substring cannot be a palindrome, the practical runtime of this algorithm is not too bad.\n\n* Space complexity: $$O(1)$$\n\n    We don't count the answer as part of the space complexity. Thus, all we use are a few integer variables. \n    \n<br/>\n\n---\n\n### Approach 2: Dynamic Programming\n\n**Intuition**\n\nLet's say that we knew the substring with inclusive bounds `i, j` was a palindrome. If `s[i - 1] == s[j + 1]`, then we know the substring with inclusive bounds `i - 1, j + 1` must also be a palindrome, and this check can be done in constant time.\n\nWe can flip the direction of this logic as well - if `s[i] == s[j]` and the substring `i + 1, j - 1` is a palindrome, then the substring `i, j` must also be a palindrome.\n\n![DP Example](../Figures/5/2.png)\n\nWe know that all substrings of length 1 are palindromes. From this, we can check if each substring of length 3 is a palindrome using the above fact. We just need to check every `i, j` pair where `j - i = 2`. Once we know all palindromes of length 3, we can use that information to find all palindromes of length 5, and then 7, and so on.\n\nWhat about even-length palindromes? A substring of length 2 is a palindrome if both characters are equal. That is, `i, i + 1` is a palindrome if `s[i] == s[i + 1]`. From this, we can use the earlier logic to find all palindromes of length 4, then 6, and so on.\n\nLet's use a table `dp` with dimensions of `n * n`. `dp[i][j]` is a boolean representing if the substring with inclusive bounds `i, j` is a palindrome. We initialize `dp[i][i] = true` for the substrings of length 1, and then `dp[i][i + 1] = (s[i] == s[i + 1])` for the substrings of length 2.\n\nNow, we need to populate the table. We iterate over all `i, j` pairs, starting with pairs that have a difference of 2 (representing substrings of length 3), then pairs with a difference of 3, then 4, and so on. For each `i, j` pair, we check the condition from earlier:\n\n`s[i] == s[j] && dp[i + 1][j - 1]`\n\nIf this condition is true, then the substring with inclusive bounds `i, j` must be a palindrome. We set `dp[i][j] = true`.\n\nBecause we are starting with the shortest substrings and iterating toward the longest substrings, every time we find a new palindrome, it must be the longest one we have seen so far. We can use this fact to keep track of the answer on the fly.\n\n**Algorithm**\n\n1. Initialize `n = s.length` and a boolean table `dp` with size `n * n`, and all values to `false`.\n2. Initialize `ans = [0, 0]`. This will hold the inclusive bounds of the answer.\n3. Set all `dp[i][i] = true`.\n4. Iterate over all pairs `i, i + 1`. For each one, if `s[i] == s[i + 1]`, then set `dp[i][i + 1] = true` and update `ans = [i, i + 1]`.\n5. Now, we populate the `dp` table. Iterate over `diff` from `2` until `n`. This variable represents the difference `j - i`.\n6. In a nested for loop, iterate over `i` from `0` until `n - diff`.\n    - Set `j = i + diff`.\n    - Check the condition: if `s[i] == s[j] && dp[i + 1][j - 1]`, we found a palindrome.\n    - In that case, set `dp[i][j] = true` and `ans = [i, j]`\n\n7. Retrieve the answer bounds from `ans` as `i, j`. Return the substring of `s` starting at index `i` and ending with index `j`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/VMs3My7i/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VMs3My7i\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `s`,\n\n* Time complexity: $$O(n^2)$$\n\n    We declare an `n * n` table `dp`, which takes $$O(n^2)$$ time. We then populate $$O(n^2)$$ states `i, j` - each state takes $$O(1)$$ time to compute.\n\n* Space complexity: $$O(n^2)$$\n\n    The table `dp` takes $$O(n^2)$$ space.\n    \n<br/>\n\n---\n\n### Approach 3: Expand From Centers\n\n**Intuition**\n\nIn the first approach, the palindrome check cost $$O(n)$$. In the second approach, the palindrome check cost $$O(1)$$. This allowed us to improve the time complexity from $$O(n^3)$$ to $$O(n^2)$$.\n\nThe problem with the second approach is that we **always** iterated over $$O(n^2)$$ states of `i, j`. Can we optimize further to minimize the number of iterations required?\n\nIn the first approach, we implemented a palindrome check using two pointers. We started by checking the first and last characters, then the second and second last characters, and so on.\n\nInstead of starting the pointers at the edges and moving inwards, the same logic can be applied when starting the pointers at the center and moving outwards. A palindrome mirrors around its center. Let's say you had `s = \"racecar\"`. If we start both pointers at the middle (`\"e\"`) and move them away from each other, we can see that at every iteration, the characters match: `e -> c -> a -> r`.\n\nThe previous two approaches focused on the bounds of a substring - `i, j`. There are $$O(n^2)$$ bounds, but only $$O(n)$$ centers. For each index `i`, we can consider odd-length palindromes by starting the pointers at `i, i`. To consider the even length palindromes, we can start the pointers at `i, i + 1`. There are $$n$$ starting points for the odd-length palindromes and $$n - 1$$ starting points for the even-length palindromes - that's $$2n - 1 = O(n)$$ starting points in total.\n\nThis is very promising - we can lower the minimum iterations required if we focus on the centers instead of on the bounds. Let's use a helper method `expand(i, j)` that starts two pointers `left = i` and `right = j`. In this method, we will consider `i, j` as a center. When `i == j`, we are considering odd-length palindromes. When `i != j`, we are considering even-length palindromes. We will expand from the center as far as we can to find the longest palindrome, and then return the length of this palindrome.\n\nLet's say that we have a center `i, i`. We call `expand` and find a length of `length`. What are the bounds of the palindrome? Because we are centered at `i, i`, it means `length` must be odd. If we perform floor division of `length` by 2, we will get the number of characters `dist` on each side of the palindrome. For example, given `s = \"racecar\"`, we have `length = 7` and `dist = 7 / 2 = 3`. There are 3 characters on each side - `\"rac\"` on the left and `\"car\"` on the right. Therefore, we can determine that the bounds of the palindrome are `i - dist, i + dist`.\n\nWhat about a center at `i, i + 1`? `length` must be even now. If we have a palindrome with length `2`, then `length / 2 = 1`, but there are zero characters on each side of the center. We can see that `dist` is too large by 1. Therefore, we will calculate `dist` as `(length / 2) - 1` instead. Now, `dist` correctly represents the number of characters on each side. The bounds of the palindrome are `i - dist, i + 1 + dist`.\n\n**Algorithm**\n\n1. Create a helper method `expand(i, j)` to find the length of the longest palindrome centered at `i, j`.\n    - Set `left = i` and `right = j`.\n    - While `left` and `right` are both in bounds and `s[left] == s[right]`, move the pointers away from each other.\n    - The formula for the length of a substring starting at `left` and ending at `right` is `right - left + 1`.\n    - However, when the while loop ends, it implies `s[left] != s[right]`. Therefore, we need to subtract `2`. Return `right - left - 1`.\n2. Initialize `ans = [0, 0]`. This will hold the inclusive bounds of the answer.\n3. Iterate `i` over all indices of `s`.\n    - Find the length of the longest odd-length palindrome centered at `i`: `oddLength = expand(i, i)`.\n    - If `oddLength` is the greatest length we have seen so far, i.e. `oddLength > ans[1] - ans[0] + 1`, update `ans`.\n    - Find the length of the longest even-length palindrome centered at `i`: `evenLength = expand(i, i + 1)`.\n    - If `evenLength` is the greatest length we have seen so far, update `ans`.\n4. Retrieve the answer bounds from `ans` as `i, j`. Return the substring of `s` starting at index `i` and ending with index `j`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/AFGFqkbR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"AFGFqkbR\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `s`,\n\n* Time complexity: $$O(n^2)$$\n\n    There are $$2n - 1 = O(n)$$ centers. For each center, we call `expand`, which costs up to $$O(n)$$.\n\n    Although the time complexity is the same as in the DP approach, the average/practical runtime of the algorithm is much faster. This is because most centers will not produce long palindromes, so most of the $$O(n)$$ calls to `expand` will cost far less than $$n$$ iterations.\n\n    The worst case scenario is when every character in the string is the same.\n\n* Space complexity: $$O(1)$$\n\n    We don't use any extra space other than a few integers. This is a big improvement on the DP approach.\n    \n<br/>\n\n---\n\n### Approach 4: Manacher's Algorithm\n\nBelieve it or not, this problem can be solved in linear time.\n\n[Manacher's algorithm](https://en.wikipedia.org/wiki/Longest_palindromic_substring#Manacher's_algorithm) finds the longest palindromic substring in $$O(n)$$ time and space.\n\nNote: this algorithm is completely out of scope for coding interviews. Because of this, we will not be talking about the algorithm in detail. This approach has been included for the sake of completeness and for those who are curious about algorithms beyond the scope of interviews.\n\nIf you wish to learn more about Manacher's algorithm, please reference the above link.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/8Zsn7Mso/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8Zsn7Mso\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `s`,\n\n* Time complexity: $$O(n)$$\n\n    From Wikipedia (the implementation they describe is slightly different from the above code, but it's the same algorithm):\n\n    > The algorithm runs in linear time. This can be seen by noting that Center strictly increases after each outer loop and the sum Center + Radius is non-decreasing. Moreover, the number of operations in the first inner loop is linear in the increase of the sum Center + Radius while the number of operations in the second inner loop is linear in the increase of Center. Since Center $$\\leq$$ 2n+1 and Radius $$\\leq$$ n, the total number of operations in the first and second inner loops is $$O(n)$$ and the total number of operations in the outer loop, other than those in the inner loops, is also $$O(n)$$. The overall running time is therefore $$O(n)$$.\n\n* Space complexity: $$O(n)$$\n\n    We use `sPrime` and `palindromeRadii`, both of length $$O(n)$$.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

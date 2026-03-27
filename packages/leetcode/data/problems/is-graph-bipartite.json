@@ -1,0 +1,141 @@
+{
+  "questionId": "801",
+  "questionFrontendId": "785",
+  "title": "Is Graph Bipartite?",
+  "titleSlug": "is-graph-bipartite",
+  "difficulty": "Medium",
+  "content": "<p>There is an <strong>undirected</strong> graph with <code>n</code> nodes, where each node is numbered between <code>0</code> and <code>n - 1</code>. You are given a 2D array <code>graph</code>, where <code>graph[u]</code> is an array of nodes that node <code>u</code> is adjacent to. More formally, for each <code>v</code> in <code>graph[u]</code>, there is an undirected edge between node <code>u</code> and node <code>v</code>. The graph has the following properties:</p>\n\n<ul>\n\t<li>There are no self-edges (<code>graph[u]</code> does not contain <code>u</code>).</li>\n\t<li>There are no parallel edges (<code>graph[u]</code> does not contain duplicate values).</li>\n\t<li>If <code>v</code> is in <code>graph[u]</code>, then <code>u</code> is in <code>graph[v]</code> (the graph is undirected).</li>\n\t<li>The graph may not be connected, meaning there may be two nodes <code>u</code> and <code>v</code> such that there is no path between them.</li>\n</ul>\n\n<p>A graph is <strong>bipartite</strong> if the nodes can be partitioned into two independent sets <code>A</code> and <code>B</code> such that <strong>every</strong> edge in the graph connects a node in set <code>A</code> and a node in set <code>B</code>.</p>\n\n<p>Return <code>true</code><em> if and only if it is <strong>bipartite</strong></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/10/21/bi2.jpg\" style=\"width: 222px; height: 222px;\" />\n<pre>\n<strong>Input:</strong> graph = [[1,2,3],[0,2],[0,1,3],[0,2]]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> There is no way to partition the nodes into two independent sets such that every edge connects a node in one and a node in the other.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/10/21/bi1.jpg\" style=\"width: 222px; height: 222px;\" />\n<pre>\n<strong>Input:</strong> graph = [[1,3],[0,2],[1,3],[0,2]]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> We can partition the nodes into two sets: {0, 2} and {1, 3}.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>graph.length == n</code></li>\n\t<li><code>1 &lt;= n &lt;= 100</code></li>\n\t<li><code>0 &lt;= graph[u].length &lt; n</code></li>\n\t<li><code>0 &lt;= graph[u][i] &lt;= n - 1</code></li>\n\t<li><code>graph[u]</code>&nbsp;does not contain&nbsp;<code>u</code>.</li>\n\t<li>All the values of <code>graph[u]</code> are <strong>unique</strong>.</li>\n\t<li>If <code>graph[u]</code> contains <code>v</code>, then <code>graph[v]</code> contains <code>u</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"isBipartite\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"graph\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"858.5K\", \"totalSubmission\": \"1.5M\", \"totalAcceptedRaw\": 858522, \"totalSubmissionRaw\": 1454090, \"acRate\": \"59.0%\"}",
+  "likes": 9214,
+  "dislikes": 420,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Divide Nodes Into the Maximum Number of Groups\", \"titleSlug\": \"divide-nodes-into-the-maximum-number-of-groups\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,2,3],[0,2],[0,1,3],[0,2]]",
+    "[[1,3],[0,2],[1,3],[0,2]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"more_than_six_months\": [{\"timesEncountered\": 19, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 5, \"slug\": \"samsung\", \"name\": \"Samsung\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"lime\", \"name\": \"Lime\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isBipartite(vector<vector<int>>& graph) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isBipartite(int[][] graph) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isBipartite(self, graph: List[List[int]]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isBipartite(self, graph):\n        \"\"\"\n        :type graph: List[List[int]]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} graph\n * @return {boolean}\n */\nvar isBipartite = function(graph) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isBipartite(graph: number[][]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsBipartite(int[][] graph) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isBipartite(int** graph, int graphSize, int* graphColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isBipartite(graph [][]int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isBipartite(graph: Array<IntArray>): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isBipartite(_ graph: [[Int]]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_bipartite(graph: Vec<Vec<i32>>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} graph\n# @return {Boolean}\ndef is_bipartite(graph)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $graph\n     * @return Boolean\n     */\n    function isBipartite($graph) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isBipartite(List<List<int>> graph) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isBipartite(graph: Array[Array[Int]]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_bipartite(graph :: [[integer]]) :: boolean\n  def is_bipartite(graph) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_bipartite(Graph :: [[integer()]]) -> boolean().\nis_bipartite(Graph) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-bipartite graph)\n  (-> (listof (listof exact-integer?)) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "417",
+    "content": "[TOC]\n\n---\n### Approach #1: Coloring by Depth-First Search [Accepted]\n\n**Intuition**\n\nColor a node blue if it is part of the first set, else red.  We should be able to greedily color the graph if and only if it is bipartite: one node being blue implies all it's neighbors are red, all those neighbors are blue, and so on.\n\n<br />\n<center>\n    <img src=\"../Figures/785/color.png\" alt=\"Diagram of coloring neighbors of nodes\" width=\"350\"/>\n</center>\n<br />\n\n**Algorithm**\n\nWe'll keep an array (or hashmap) to lookup the color of each node: `color[node]`.  The colors could be `0`, `1`, or uncolored (`-1` or `null`).\n\nWe should be careful to consider disconnected components of the graph, by searching each node.  For each uncolored node, we'll start the coloring process by doing a depth-first-search on that node.  Every neighbor gets colored the opposite color from the current node.  If we find a neighbor colored the same color as the current node, then our coloring was impossible.\n\nTo perform the depth-first search, we use a `stack`.  For each uncolored neighbor in `graph[node]`, we'll color it and add it to our `stack`, which acts as a sort of \"todo list\" of nodes to visit next.  Our larger loop `for start...` ensures that we color every node. Here is a visual dry-run of the algorithm whose Python code is below.\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/810324729\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n<iframe src=\"https://leetcode.com/playground/dfpsTjvp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dfpsTjvp\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N + E)$$, where $$N$$ is the number of nodes in the graph, and $$E$$ is the number of edges.  We explore each node once when we transform it from uncolored to colored, traversing all its edges in the process.\n\n* Space Complexity:  $$O(N)$$, the space used to store the `color`.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

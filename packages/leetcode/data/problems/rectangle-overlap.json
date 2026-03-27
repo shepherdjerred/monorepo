@@ -1,0 +1,134 @@
+{
+  "questionId": "866",
+  "questionFrontendId": "836",
+  "title": "Rectangle Overlap",
+  "titleSlug": "rectangle-overlap",
+  "difficulty": "Easy",
+  "content": "<p>An axis-aligned rectangle is represented as a list <code>[x1, y1, x2, y2]</code>, where <code>(x1, y1)</code> is the coordinate of its bottom-left corner, and <code>(x2, y2)</code> is the coordinate of its top-right corner. Its top and bottom edges are parallel to the X-axis, and its left and right edges are parallel to the Y-axis.</p>\n\n<p>Two rectangles overlap if the area of their intersection is <strong>positive</strong>. To be clear, two rectangles that only touch at the corner or edges do not overlap.</p>\n\n<p>Given two axis-aligned rectangles <code>rec1</code> and <code>rec2</code>, return <code>true</code><em> if they overlap, otherwise return </em><code>false</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> rec1 = [0,0,2,2], rec2 = [1,1,3,3]\n<strong>Output:</strong> true\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> rec1 = [0,0,1,1], rec2 = [1,0,2,1]\n<strong>Output:</strong> false\n</pre><p><strong class=\"example\">Example 3:</strong></p>\n<pre><strong>Input:</strong> rec1 = [0,0,1,1], rec2 = [2,2,3,3]\n<strong>Output:</strong> false\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>rec1.length == 4</code></li>\n\t<li><code>rec2.length == 4</code></li>\n\t<li><code>-10<sup>9</sup> &lt;= rec1[i], rec2[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>rec1</code> and <code>rec2</code> represent a valid rectangle with a non-zero area.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"isRectangleOverlap\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"rec1\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"rec2\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"182.1K\", \"totalSubmission\": \"391.2K\", \"totalAcceptedRaw\": 182060, \"totalSubmissionRaw\": 391209, \"acRate\": \"46.5%\"}",
+  "likes": 2091,
+  "dislikes": 483,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Rectangle Area\", \"titleSlug\": \"rectangle-area\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[0,0,2,2]\n[1,1,3,3]",
+    "[0,0,1,1]\n[1,0,2,1]",
+    "[0,0,1,1]\n[2,2,3,3]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"qualcomm\", \"name\": \"Qualcomm\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Geometry",
+      "slug": "geometry"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isRectangleOverlap(vector<int>& rec1, vector<int>& rec2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isRectangleOverlap(int[] rec1, int[] rec2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isRectangleOverlap(self, rec1: List[int], rec2: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isRectangleOverlap(self, rec1, rec2):\n        \"\"\"\n        :type rec1: List[int]\n        :type rec2: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} rec1\n * @param {number[]} rec2\n * @return {boolean}\n */\nvar isRectangleOverlap = function(rec1, rec2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isRectangleOverlap(rec1: number[], rec2: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsRectangleOverlap(int[] rec1, int[] rec2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isRectangleOverlap(int* rec1, int rec1Size, int* rec2, int rec2Size) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isRectangleOverlap(rec1 []int, rec2 []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isRectangleOverlap(rec1: IntArray, rec2: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isRectangleOverlap(_ rec1: [Int], _ rec2: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_rectangle_overlap(rec1: Vec<i32>, rec2: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} rec1\n# @param {Integer[]} rec2\n# @return {Boolean}\ndef is_rectangle_overlap(rec1, rec2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $rec1\n     * @param Integer[] $rec2\n     * @return Boolean\n     */\n    function isRectangleOverlap($rec1, $rec2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isRectangleOverlap(List<int> rec1, List<int> rec2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isRectangleOverlap(rec1: Array[Int], rec2: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_rectangle_overlap(rec1 :: [integer], rec2 :: [integer]) :: boolean\n  def is_rectangle_overlap(rec1, rec2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_rectangle_overlap(Rec1 :: [integer()], Rec2 :: [integer()]) -> boolean().\nis_rectangle_overlap(Rec1, Rec2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-rectangle-overlap rec1 rec2)\n  (-> (listof exact-integer?) (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "468",
+    "content": "[TOC]\n\n### Approach #1: Check Position [Accepted]\n\n**Intuition**\n\nIf the rectangles do not overlap, then `rec1` must either be higher, lower, to the left, or to the right of `rec2`.\n\n**Algorithm**\n\nThe answer for whether they *don't* overlap is `LEFT OR RIGHT OR UP OR DOWN`, where `OR` is the logical OR, and `LEFT` is a boolean that represents whether `rec1` is to the left of `rec2`.  The answer for whether they do overlap is the negation of this.\n\nThe condition \"`rec1` is to the left of `rec2`\" is `rec1[2] <= rec2[0]`, that is the right-most x-coordinate of `rec1` is left of the left-most x-coordinate of `rec2`.  The other cases are similar.\n\n_Note: we should also check if either of the rectangle is actually a line._\nIf this is the case, then we cannot have any positive overlapping according to the definition.\n\n<iframe src=\"https://leetcode.com/playground/CBPGcFQb/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"CBPGcFQb\"></iframe>\n\n**Complexity Analysis**\n\n* Time and Space Complexity:  $$O(1)$$.\n\n---\n### Approach #2: Check Area [Accepted]\n\n**Intuition**\n\nIf the rectangles overlap, they have positive area.  This area must be a rectangle where both dimensions are positive, since the boundaries of the intersection are axis aligned.\n\nThus, we can reduce the problem to the one-dimensional problem of determining whether two line segments overlap.\n\n**Algorithm**\n\nSay the area of the intersection is `width * height`, where `width` is the intersection of the rectangles projected onto the x-axis, and `height` is the same for the y-axis.  We want both quantities to be positive.\n\nThe `width` is positive when `min(rec1[2], rec2[2]) > max(rec1[0], rec2[0])`, that is when the smaller of (the largest x-coordinates) is larger than the larger of (the smallest x-coordinates).  The `height` is similar.\n\n<iframe src=\"https://leetcode.com/playground/d3aBUe4T/shared\" frameBorder=\"0\" width=\"100%\" height=\"157\" name=\"d3aBUe4T\"></iframe>\n\n**Complexity Analysis**\n\n* Time and Space Complexity:  $$O(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

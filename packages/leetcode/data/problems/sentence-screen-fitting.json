@@ -1,0 +1,133 @@
+{
+  "questionId": "418",
+  "questionFrontendId": "418",
+  "title": "Sentence Screen Fitting",
+  "titleSlug": "sentence-screen-fitting",
+  "difficulty": "Medium",
+  "content": "<p>Given a&nbsp;<code>rows x cols</code> screen and a <code>sentence</code> represented as a list of strings, return <em>the number of&nbsp;times the given sentence can be fitted on the screen</em>.</p>\n\n<p>The order of words in the sentence must remain unchanged, and a word cannot be split into two lines. A single space must separate two consecutive words in a line.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence = [&quot;hello&quot;,&quot;world&quot;], rows = 2, cols = 8\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>\nhello---\nworld---\nThe character &#39;-&#39; signifies an empty space on the screen.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence = [&quot;a&quot;, &quot;bcd&quot;, &quot;e&quot;], rows = 3, cols = 6\n<strong>Output:</strong> 2\n<strong>Explanation:</strong>\na-bcd- \ne-a---\nbcd-e-\nThe character &#39;-&#39; signifies an empty space on the screen.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence = [&quot;i&quot;,&quot;had&quot;,&quot;apple&quot;,&quot;pie&quot;], rows = 4, cols = 5\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>\ni-had\napple\npie-i\nhad--\nThe character &#39;-&#39; signifies an empty space on the screen.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= sentence.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= sentence[i].length &lt;= 10</code></li>\n\t<li><code>sentence[i]</code> consists of lowercase English letters.</li>\n\t<li><code>1 &lt;= rows, cols &lt;= 2 * 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{ \r\n  \"name\": \"wordsTyping\",\r\n  \"params\": [\r\n    { \r\n      \"name\": \"sentence\",\r\n      \"type\": \"string[]\"\r\n    },\r\n    { \r\n      \"name\": \"rows\",\r\n      \"type\": \"integer\"\r\n    },\r\n    {\r\n        \"name\": \"cols\",\r\n        \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"106.9K\", \"totalSubmission\": \"293.7K\", \"totalAcceptedRaw\": 106885, \"totalSubmissionRaw\": 293666, \"acRate\": \"36.4%\"}",
+  "likes": 1143,
+  "dislikes": 543,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Minimum Cost to Separate Sentence Into Rows\", \"titleSlug\": \"minimum-cost-to-separate-sentence-into-rows\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Split Message Based on Limit\", \"titleSlug\": \"split-message-based-on-limit\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"hello\",\"world\"]\n2\n8",
+    "[\"a\", \"bcd\", \"e\"]\n3\n6",
+    "[\"i\",\"had\",\"apple\",\"pie\"]\n4\n5"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int wordsTyping(vector<string>& sentence, int rows, int cols) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int wordsTyping(String[] sentence, int rows, int cols) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def wordsTyping(self, sentence: List[str], rows: int, cols: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def wordsTyping(self, sentence, rows, cols):\n        \"\"\"\n        :type sentence: List[str]\n        :type rows: int\n        :type cols: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} sentence\n * @param {number} rows\n * @param {number} cols\n * @return {number}\n */\nvar wordsTyping = function(sentence, rows, cols) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function wordsTyping(sentence: string[], rows: number, cols: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int WordsTyping(string[] sentence, int rows, int cols) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int wordsTyping(char** sentence, int sentenceSize, int rows, int cols) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func wordsTyping(sentence []string, rows int, cols int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun wordsTyping(sentence: Array<String>, rows: Int, cols: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func wordsTyping(_ sentence: [String], _ rows: Int, _ cols: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn words_typing(sentence: Vec<String>, rows: i32, cols: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} sentence\n# @param {Integer} rows\n# @param {Integer} cols\n# @return {Integer}\ndef words_typing(sentence, rows, cols)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $sentence\n     * @param Integer $rows\n     * @param Integer $cols\n     * @return Integer\n     */\n    function wordsTyping($sentence, $rows, $cols) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int wordsTyping(List<String> sentence, int rows, int cols) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def wordsTyping(sentence: Array[String], rows: Int, cols: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec words_typing(sentence :: [String.t], rows :: integer, cols :: integer) :: integer\n  def words_typing(sentence, rows, cols) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec words_typing(Sentence :: [unicode:unicode_binary()], Rows :: integer(), Cols :: integer()) -> integer().\nwords_typing(Sentence, Rows, Cols) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (words-typing sentence rows cols)\n  (-> (listof string?) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

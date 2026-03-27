@@ -1,0 +1,136 @@
+{
+  "questionId": "401",
+  "questionFrontendId": "401",
+  "title": "Binary Watch",
+  "titleSlug": "binary-watch",
+  "difficulty": "Easy",
+  "content": "<p>A binary watch has 4 LEDs on the top to represent the hours (0-11), and 6 LEDs on the bottom to represent&nbsp;the minutes (0-59). Each LED represents a zero or one, with the least significant bit on the right.</p>\n\n<ul>\n\t<li>For example, the below binary watch reads <code>&quot;4:51&quot;</code>.</li>\n</ul>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/08/binarywatch.jpg\" style=\"width: 500px; height: 500px;\" /></p>\n\n<p>Given an integer <code>turnedOn</code> which represents the number of LEDs that are currently on (ignoring the PM), return <em>all possible times the watch could represent</em>. You may return the answer in <strong>any order</strong>.</p>\n\n<p>The hour must not contain a leading zero.</p>\n\n<ul>\n\t<li>For example, <code>&quot;01:00&quot;</code> is not valid. It should be <code>&quot;1:00&quot;</code>.</li>\n</ul>\n\n<p>The minute must&nbsp;consist of two digits and may contain a leading zero.</p>\n\n<ul>\n\t<li>For example, <code>&quot;10:2&quot;</code> is not valid. It should be <code>&quot;10:02&quot;</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> turnedOn = 1\n<strong>Output:</strong> [\"0:01\",\"0:02\",\"0:04\",\"0:08\",\"0:16\",\"0:32\",\"1:00\",\"2:00\",\"4:00\",\"8:00\"]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> turnedOn = 9\n<strong>Output:</strong> []\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= turnedOn &lt;= 10</code></li>\n</ul>\n",
+  "hints": [
+    "Simplify by seeking for solutions that involve comparing set bit counts.",
+    "Consider precomputing all possible times for comparison."
+  ],
+  "metaData": "{\n  \"name\": \"readBinaryWatch\",\n  \"params\": [\n    {\n      \"name\": \"turnedOn\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<string>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"279.2K\", \"totalSubmission\": \"427.5K\", \"totalAcceptedRaw\": 279156, \"totalSubmissionRaw\": 427474, \"acRate\": \"65.3%\"}",
+  "likes": 1964,
+  "dislikes": 3072,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Letter Combinations of a Phone Number\", \"titleSlug\": \"letter-combinations-of-a-phone-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of 1 Bits\", \"titleSlug\": \"number-of-1-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "1",
+    "9"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> readBinaryWatch(int turnedOn) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> readBinaryWatch(int turnedOn) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def readBinaryWatch(self, turnedOn: int) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def readBinaryWatch(self, turnedOn):\n        \"\"\"\n        :type turnedOn: int\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} turnedOn\n * @return {string[]}\n */\nvar readBinaryWatch = function(turnedOn) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function readBinaryWatch(turnedOn: number): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> ReadBinaryWatch(int turnedOn) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** readBinaryWatch(int turnedOn, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func readBinaryWatch(turnedOn int) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun readBinaryWatch(turnedOn: Int): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func readBinaryWatch(_ turnedOn: Int) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn read_binary_watch(turned_on: i32) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} turned_on\n# @return {String[]}\ndef read_binary_watch(turned_on)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $turnedOn\n     * @return String[]\n     */\n    function readBinaryWatch($turnedOn) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> readBinaryWatch(int turnedOn) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def readBinaryWatch(turnedOn: Int): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec read_binary_watch(turned_on :: integer) :: [String.t]\n  def read_binary_watch(turned_on) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec read_binary_watch(TurnedOn :: integer()) -> [unicode:unicode_binary()].\nread_binary_watch(TurnedOn) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (read-binary-watch turnedOn)\n  (-> exact-integer? (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2922",
+    "content": "### Approach 1: Enumerating Hours and Minutes\n\n#### Intuition\n\nFrom the problem statement, we know that the hour is represented using 4 bits and the minute is represented using 6 bits. A bit value of `0` indicates that the light is off, while a bit value of `1` indicates that the light is on.\n\nWe can enumerate all possible hour values in the range $[0, 11]$ and all possible minute values in the range $[0, 59]$. For each combination, we compute the total number of `1`s in their binary representations. If this total equals $\\textit{turnedOn}$, we add the corresponding time to the answer.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/jAqK5dFi/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"jAqK5dFi\"></iframe>\n\n### Approach 2: Binary Enumeration\n\n#### Intuition\n\nAnother way to enumerate valid times is to consider all $2^{10} = 1024$ possible configurations of the lights. Each configuration can be represented by a 10-bit binary number, where the higher 4 bits represent the hour and the lower 6 bits represent the minute.\n\nFor each configuration, we extract the hour and minute values using bitwise operations. If both values fall within their valid ranges and the total number of `1`s in the binary representation equals $\\textit{turnedOn}$, we add the corresponding time to the answer.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/FXRGR7jJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"FXRGR7jJ\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity $O(1)$.\n  \n  The total number of enumerations is constant and independent of the input.\n\n- Space complexity: $O(1)$.\n  \n  Only constant extra space is used. The space required for the output is not counted toward the space complexity.\n\nThere is also an approach that uses bit manipulation to directly enumerate binary numbers with exactly $\\textit{turnedOn}$ bits set, but it is beyond the scope of this solution. Interested readers may explore related materials for further details.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

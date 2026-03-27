@@ -1,0 +1,150 @@
+{
+  "questionId": "139",
+  "questionFrontendId": "139",
+  "title": "Word Break",
+  "titleSlug": "word-break",
+  "difficulty": "Medium",
+  "content": "<p>Given a string <code>s</code> and a dictionary of strings <code>wordDict</code>, return <code>true</code> if <code>s</code> can be segmented into a space-separated sequence of one or more dictionary words.</p>\n\n<p><strong>Note</strong> that the same word in the dictionary may be reused multiple times in the segmentation.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;leetcode&quot;, wordDict = [&quot;leet&quot;,&quot;code&quot;]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> Return true because &quot;leetcode&quot; can be segmented as &quot;leet code&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;applepenapple&quot;, wordDict = [&quot;apple&quot;,&quot;pen&quot;]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> Return true because &quot;applepenapple&quot; can be segmented as &quot;apple pen apple&quot;.\nNote that you are allowed to reuse a dictionary word.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;catsandog&quot;, wordDict = [&quot;cats&quot;,&quot;dog&quot;,&quot;sand&quot;,&quot;and&quot;,&quot;cat&quot;]\n<strong>Output:</strong> false\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 300</code></li>\n\t<li><code>1 &lt;= wordDict.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= wordDict[i].length &lt;= 20</code></li>\n\t<li><code>s</code> and <code>wordDict[i]</code> consist of only lowercase English letters.</li>\n\t<li>All the strings of <code>wordDict</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"wordBreak\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    },\r\n    {\r\n      \"name\": \"wordDict\",\r\n      \"type\": \"list<string>\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"2.3M\", \"totalSubmission\": \"4.8M\", \"totalAcceptedRaw\": 2346173, \"totalSubmissionRaw\": 4763769, \"acRate\": \"49.3%\"}",
+  "likes": 18653,
+  "dislikes": 902,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Word Break II\", \"titleSlug\": \"word-break-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Extra Characters in a String\", \"titleSlug\": \"extra-characters-in-a-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"leetcode\"\n[\"leet\",\"code\"]",
+    "\"applepenapple\"\n[\"apple\",\"pen\"]",
+    "\"catsandog\"\n[\"cats\",\"dog\",\"sand\",\"and\",\"cat\"]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"zeta\", \"name\": \"Zeta\"}, {\"timesEncountered\": 2, \"slug\": \"mongodb\", \"name\": \"MongoDB\"}], \"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 8, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 8, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 5, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 4, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 4, \"slug\": \"coupang\", \"name\": \"Coupang\"}, {\"timesEncountered\": 3, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 3, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 3, \"slug\": \"netflix\", \"name\": \"Netflix\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    },
+    {
+      "name": "Memoization",
+      "slug": "memoization"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool wordBreak(string s, vector<string>& wordDict) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean wordBreak(String s, List<String> wordDict) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def wordBreak(self, s: str, wordDict: List[str]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def wordBreak(self, s, wordDict):\n        \"\"\"\n        :type s: str\n        :type wordDict: List[str]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string[]} wordDict\n * @return {boolean}\n */\nvar wordBreak = function(s, wordDict) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function wordBreak(s: string, wordDict: string[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool WordBreak(string s, IList<string> wordDict) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool wordBreak(char* s, char** wordDict, int wordDictSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func wordBreak(s string, wordDict []string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun wordBreak(s: String, wordDict: List<String>): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func wordBreak(_ s: String, _ wordDict: [String]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn word_break(s: String, word_dict: Vec<String>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String[]} word_dict\n# @return {Boolean}\ndef word_break(s, word_dict)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String[] $wordDict\n     * @return Boolean\n     */\n    function wordBreak($s, $wordDict) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool wordBreak(String s, List<String> wordDict) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def wordBreak(s: String, wordDict: List[String]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec word_break(s :: String.t, word_dict :: [String.t]) :: boolean\n  def word_break(s, word_dict) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec word_break(S :: unicode:unicode_binary(), WordDict :: [unicode:unicode_binary()]) -> boolean().\nword_break(S, WordDict) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (word-break s wordDict)\n  (-> string? (listof string?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1950",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/487458046\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Approach 1: Breadth-First Search\n\n**Intuition**\n\nLet's imagine the indices of `s` as a graph. Each index can be thought of as a node, which represents building `s` up to the index.\n\nAdding a word to an existing string is like an edge between nodes. For a node `start`, we can move to node `end` if the substring of `s` between `start, end` exists in `wordDict`.\n\nFor example, let's say we have `s = \"leetcode\"` and `wordDict = [\"leet\", \"code\"]`. We are currently at node `4`, which implies that we have built `\"leet\"` (the first 4 characters of `s`). We can move to node `8`, because the substring of `s` with indices `[4, 8)` is `\"code\"`, which is in `wordDict`.\n\nWe start at node `0`, which represents the empty string. We want to reach node `s.length`, which implies that we have built the entire string. We can run a BFS to accomplish this traversal. If you're not familiar with BFS, check out the relevant [Explore Card](https://leetcode.com/explore/learn/card/graph/620/breadth-first-search-in-graph/).\n\nAt each node `start`, we iterate over all the nodes `end` that come after `start`. For each `end`, we check if the substring between `start, end` is in `wordDict`. If it is, we can add `end` to the queue.\n\nWe will first convert `wordDict` into a set so that we can perform the checks in constant time. We will also use a data structure `seen` to prevent us from visiting a node more than once.\n\n**Algorithm**\n\n1. Convert `wordDict` into a set `words`.\n2. Initialize a `queue` with `0` and a set `seen`.\n3. While the `queue` is not empty:\n    - Remove the first element, `start`.\n    - If `start == s.length`, return `true`.\n    - Iterate `end` from `start + 1` up to and including `s.length`. For each `end`, if `end` has not been visited yet,\n        - Check the substring starting at `start` and ending before `end`. If it is in `words`, add `end` to the queue and mark it in `seen`.\n4. Return `false` if the BFS finishes without reaching the final node.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/evkSf6sx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"evkSf6sx\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `s`, $$m$$ as the length of `wordDict`, and $$k$$ as the average length of the words in `wordDict`,\n\n* Time complexity: $$O(n^3 + m \\cdot k)$$\n\n    There are $$O(n)$$ nodes. Because of `seen`, we never visit a node more than once. At each node, we iterate over the nodes in front of the current node, of which there are $$O(n)$$. For each node `end`, we create a substring, which also costs $$O(n)$$.\n\n    Therefore, handling a node costs $$O(n^2)$$, so the BFS could cost up to $$O(n^3)$$. Finally, we also spent $$O(m \\cdot k)$$ to create the set `words`.\n\n* Space complexity: $$O(n + m \\cdot k)$$\n\n    We use $$O(n)$$ space for `queue` and `seen`. We use $$O(m \\cdot k)$$ space for the set `words`.\n    \n<br/>\n\n---\n\n### Approach 2: Top-Down Dynamic Programming \n\n**Intuition**\n\n> If you're not familiar with dynamic programming, we recommend checking out the [Dynamic Programming explore card](https://leetcode.com/explore/featured/card/dynamic-programming/). This problem is on the difficult side, so we will assume that readers are already familiar with the principles of DP.\n\nLet's have a function `dp` that returns a boolean indicating if it is possible to build `s` up to and including the index `i`.\n\nFor example, given `s = \"leetcode\"` and `wordDict = [\"leet\", \"code\"]`, `dp(3)` would return `true`. `s` up to index `3` is `\"leet\"`, and we can build `\"leet\"` using the words in `wordDict`. The answer to the problem would be `dp(s.length - 1)`, which represents if we can build `s`.\n\nThe base case of this function is when `i < 0`. This would represent an empty string, and we can always build an empty string by doing nothing. Therefore, `dp(i) = true` for `i < 0`.\n\nGiven an index `i`, we need a recurrence relation to determine if `dp(i)` is `true` or `false`. For `dp(i)` to be `true`, there are two requirements:\n\n1. First, there needs to be a `word` from `wordDict` that **ends** at index `i`. Given a `word`, the substring of `s` from indices `i - word.length + 1` up to and including `i` should match `word`. We can check every `word` for this.\n2. If we manage to find a `word` that **ends** at index `i`, we would need to add it on top of another string (since we are building `s` by joining words together one by one). We need to make sure that the string we are adding onto is also buildable. If we find a `word` that passes the first check, it means `word` would start at index `i - word.length + 1`. The index before that is `i - word.length`. To check if the string ending at that index is buildable, we can refer to `dp(i - word.length)`.\n\nThis gives us our recurrence relation:\n\n$$\\large{\\text{dp(i)} = \\text{any}(\\text{s}[\\text{i - word.length + 1, i}] == \\text{word \\&\\& dp(i - \\text{word.length})})}$$\n\nThat is, there exists any `word` that satisfies both of the listed conditions.\n\nWe can implement a recursive function `dp(i)` that implements the base cases and recurrence. We need to use memoization to avoid repeated computation.\n\n!?!../Documents/139.json:960,540!?!\n\n**Algorithm**\n\n1. Declare a data structure `memo` that stores the values of `dp` for each index.\n2. Create a function `dp(i)`:\n    - If `i < 0`, return `true`.\n    - If we already calculated `i`, return the value stored in `memo`.\n    - Iterate over `wordDict`. For each `word`:\n        - Check the substring of `s` ending at `i` with the same length as `word`. If the substring matches, and `dp(i - word.length)` is `true`, return `true`.\n    - If no `word` satisfying the criteria was found, return `false`.\n3. Return `dp(s.length - 1)`.\n\n**Implementation**\n\n> In Python, the <a href=\"https://docs.python.org/3/library/functools.html\" target=\"_blank\" rel=\"noopener noreferrer\">functools</a> module provides super handy tools that automatically memoize a function for us. We're going to use the `@cache` decorator in the Python implementation.\n>\n> In Java and C++, we will use an array `memo` to save values. `memo[i] = -1` if we haven't calculated yet, `memo[i] = 0` if `dp(i) = false`, and `memo[i] = 1` if `dp(i) = true`.\n\n<iframe src=\"https://leetcode.com/playground/4pvUY8Eg/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4pvUY8Eg\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `s`, $$m$$ as the length of `wordDict`, and $$k$$ as the average length of the words in `wordDict`,\n\n* Time complexity: $$O(n \\cdot m \\cdot k)$$\n\n    There are $$n$$ states of `dp(i)`. Because of memoization, we only calculate each state once. To calculate a state, we iterate over $$m$$ words, and for each word perform some substring operations which costs $$O(k)$$. Therefore, calculating a state costs $$O(m \\cdot k)$$, and we need to calculate $$O(n)$$ states. \n\n* Space complexity: $$O(n)$$\n\n    The data structure we use for memoization and the recursion call stack can use up to $$O(n)$$ space.\n    \n<br/>\n\n---\n\n### Approach 3: Bottom-Up Dynamic Programming\n\n**Intuition**\n\nThe same algorithm can be implemented iteratively. Instead of using a function `dp(i)`, we will use an array `dp` where `dp[i]` represents the same thing that `dp(i)` did. We can use the same recurrence relation:\n\n$$\\large{\\text{dp[i]} = \\text{any}(\\text{s}[\\text{i - word.length + 1, i}] == \\text{word \\&\\& dp[i - \\text{word.length}]})}$$\n\nIn top-down, we started at the top (`s.length - 1`) and work our way down to the base cases. In bottom-up, we start at the bottom `(i = 0)` and work our way up to the top.\n\nBefore we check `dp[i - word.length]`, we should check if `i == word.length - 1`. This would mean that the current `word` we are placing to end at index `i` is the first word. `i - word.length` would be negative, so we need to separately check this case.\n\n**Algorithm**\n\n1. Initialize an array `dp` with the same length as `s` and all values initially set to `false`.\n2. Iterate `i` over the indices of `s`. At each `i`:\n    - Iterate over each `word` in `wordDict`:\n        - Check if `i == word.length - 1` or `dp[i - word.length] = true`.\n        - If so, and the substring of `s` ending at `i` with the same length as `word` matches, set `dp[i] = true` and `break`.\n3. Return `dp[s.length - 1]`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/EWiwhkJC/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"EWiwhkJC\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `s`, $$m$$ as the length of `wordDict`, and $$k$$ as the average length of the words in `wordDict`,\n\n* Time complexity: $$O(n \\cdot m \\cdot k)$$\n\n    The logic behind the time complexity is identical to the previous approach. It costs us $$O(m \\cdot k)$$ to calculate each state, and we calculate $$O(n)$$ states in total. \n\n* Space complexity: $$O(n)$$\n\n    We use an array `dp` of length $$n$$.\n    \n<br/>\n\n---\n\n### Approach 4: Trie Optimization \n\n**Intuition**\n\nIn the previous approach, we iterated over each state `i` and then calculated `dp[i]`. To calculate a given `dp[i]`, we did the following:\n\n- Iterate over every `word` in `wordDict`\n- Check if each `word` ended at the current index\n\nThis cost us $$O(m \\cdot k)$$. In the problem constraints, we can see that the maximum value of $$m \\cdot k$$ is `20,000`, so this is expensive. We can optimize the time it takes to calculate a given `dp[i]` by using a trie.\n\nA trie is a data structure that can be used to efficiently search for strings. If you are not familiar with tries, we highly recommend you read the official solution to [this problem](https://leetcode.com/problems/implement-trie-prefix-tree/solution) before proceeding with this approach.\n\nTo summarize, a trie is a tree where each node is labeled. Here, we label each node with a character. The path from the root to any node represents the string that is built by the nodes on the path. The root represents the empty string.\n\n<img src=\"../Figures/139/4.png\" width=\"960\"> <br>\n\nWe can start by building a trie from the words in `wordDict`. Each trie node will have an additional attribute `isWord` which indicates if the current node represents a word from `wordDict`. Then, we will calculate the same `dp` array as in the previous approach. We will calculate each state as follows:\n\n- First, check if `i == 0` (placing first word) or `dp[i - 1]` (we could build the string up to this point). If neither are true, move on to the next state `i + 1`.\n- Otherwise, we see if `dp[i]` can be `true`. Initialize a node `curr` at the `root` of the trie.\n- Start iterating with a variable `j` from index `i`. For each character `s[j]`, check if we can traverse the trie.\n- If we can't traverse the trie, it means no words exist starting at index `i` and ending at index `j` or beyond. We can break from the loop and move on to the next state `i + 1`.\n- If we can traverse the trie, we move to the child node. We check the child's `isWord` attribute. If it is `true`, it means there is a word in `wordDict` starting at index `i` and ending at index `j`. We set `dp[j] = true`.\n- We continue traversing the trie until we reach a dead end or `j` reaches the end of the string.\n\nThis allows us to handle each state in $$O(n)$$ instead of $$O(m \\cdot k)$$, which is a big improvement since $$n \\leq 300$$.\n\n**Algorithm**\n\n1. Build a trie from `wordDict`. Each node should also have an `isWord` attribute. Store the root of the trie in `root`.\n2. Initialize an array `dp` with the same length as `s` and all values initially set to `false`.\n3. Iterate `i` over the indices of `s`. At each `i`:\n    - Check if `i == 0` or `dp[i - 1] = true`. If not, continue to the next `i`.\n    - Set `curr = root`. Iterate `j` over the indices of `s`, starting from `i`. At each `j`,\n        - Get the character at index `j` as `c = s[j]`.\n        - If `c` is not in the children of `curr`, we can `break` from the loop.\n        - Otherwise, move `curr` to the child labeled `c`.\n        - If `curr.isWord`, set `dp[j] = true`.\n4. Return `dp[s.length - 1]`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/FhHxmwHE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FhHxmwHE\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `s`, $$m$$ as the length of `wordDict`, and $$k$$ as the average length of the words in `wordDict`,\n\n* Time complexity: $$O(n^2 + m \\cdot k)$$\n\n    Building the trie involves iterating over all characters of all words. This costs $$O(m \\cdot k)$$.\n\n    Once we build the trie, we calculate `dp`. For each `i`, we iterate over all the indices after `i`. We have a basic nested for loop which costs $$O(n^2)$$ to handle all `dp[i]`.\n\n* Space complexity: $$O(n + m \\cdot k)$$\n\n    The `dp` array takes $$O(n)$$ space. The trie can have up to $$m \\cdot k$$ nodes in it.\n    \n<br/>\n\n---\n\n### Approach 5: A Different DP\n\n**Intuition**\n\n> In this approach, we will take a look at another way to implement the DP algorithm. Note that this approach is the one covered in the video.\n\nHere, we let `dp[i]` hold the answer to the question: \"is it possible to form `s` up to a length of `i`? To find the answer for each index, instead of iterating over the words in `wordDict` and checking if a `word` ends at the current index `i`, we will instead iterate over **all substrings that end before index `i`**. If we find one of these substrings is in `wordDict` **and** we can form the string prior to the substring, then `dp[i] = true`.\n\nThe reason we are checking for **before** index `i` is because we have slightly changed our `dp` definition here. In the previous problem, `i` represented the index of the last character. Here, `i` represents the length, so we are offset by one.\n\nBefore starting the DP, we first convert `wordsDict` to a set so that we can perform the checks in $O(1)$. The rest of the algorithm follows similarly to the previous approaches.\n\n**Algorithm**\n\n1. Convert `wordsDict` to a set `words`.\n2. Initialize an array `dp` of length `n + 1` with all values set to `false`.\n3. Iterate `i` from `1` until and including `n`. Here, `i` represents the length of the string starting from the beginning.\n    - Iterate `j` from `0` until `i`. Here, `j` represents the first index of the substring we are checking.\n    - If `dp[j]` is true AND the substring `s[j:i]` is in `words`, set `dp[i] = true` and break. Note that `s[j:i]` represents the substring starting at `j` and ending at `i - 1`.\n4. Return `dp[n]`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/eiTDAMA4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"eiTDAMA4\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `s`, $$m$$ as the length of `wordDict`, and $$k$$ as the average length of the words in `wordDict`,\n\n* Time complexity: $$O(n^3 + m \\cdot k)$$\n\n    First, we spend $$O(m \\cdot k)$$ to convert `wordDict` into a set. Then we have a nested loop over `n`, which iterates $$O(n^2)$$ times. For each iteration, we have a substring operation which could cost up to $$O(n)$$. Thus this nested loop costs $$O(n^3)$$.\n\n* Space complexity: $$O(n + m \\cdot k)$$\n\n    The `dp` array takes $$O(n)$$ space. The set `words` takes up $$O(m \\cdot k)$$ space.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

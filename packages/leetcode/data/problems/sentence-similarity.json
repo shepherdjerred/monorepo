@@ -1,0 +1,140 @@
+{
+  "questionId": "734",
+  "questionFrontendId": "734",
+  "title": "Sentence Similarity",
+  "titleSlug": "sentence-similarity",
+  "difficulty": "Easy",
+  "content": "<p>We can represent a sentence as an array of words, for example, the sentence <code>&quot;I am happy with leetcode&quot;</code> can be represented as <code>arr = [&quot;I&quot;,&quot;am&quot;,happy&quot;,&quot;with&quot;,&quot;leetcode&quot;]</code>.</p>\n\n<p>Given two sentences <code>sentence1</code> and <code>sentence2</code> each represented as a string array and given an array of string pairs <code>similarPairs</code> where <code>similarPairs[i] = [x<sub>i</sub>, y<sub>i</sub>]</code> indicates that the two words <code>x<sub>i</sub></code> and <code>y<sub>i</sub></code> are similar.</p>\n\n<p>Return <em><code>true</code> if <code>sentence1</code> and <code>sentence2</code> are similar, or <code>false</code> if they are not similar</em>.</p>\n\n<p>Two sentences are similar if:</p>\n\n<ul>\n\t<li>They have <strong>the same length</strong> (i.e., the same number of words)</li>\n\t<li><code>sentence1[i]</code> and <code>sentence2[i]</code> are similar.</li>\n</ul>\n\n<p>Notice that a word is always similar to itself, also notice that the similarity relation is not transitive. For example, if the words <code>a</code> and <code>b</code> are similar, and the words <code>b</code> and <code>c</code> are similar, <code>a</code> and <code>c</code> are <strong>not necessarily similar</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence1 = [&quot;great&quot;,&quot;acting&quot;,&quot;skills&quot;], sentence2 = [&quot;fine&quot;,&quot;drama&quot;,&quot;talent&quot;], similarPairs = [[&quot;great&quot;,&quot;fine&quot;],[&quot;drama&quot;,&quot;acting&quot;],[&quot;skills&quot;,&quot;talent&quot;]]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The two sentences have the same length and each word i of sentence1 is also similar to the corresponding word in sentence2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence1 = [&quot;great&quot;], sentence2 = [&quot;great&quot;], similarPairs = []\n<strong>Output:</strong> true\n<strong>Explanation:</strong> A word is similar to itself.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence1 = [&quot;great&quot;], sentence2 = [&quot;doubleplus&quot;,&quot;good&quot;], similarPairs = [[&quot;great&quot;,&quot;doubleplus&quot;]]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> As they don&#39;t have the same length, we return false.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= sentence1.length, sentence2.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= sentence1[i].length, sentence2[i].length &lt;= 20</code></li>\n\t<li><code>sentence1[i]</code> and <code>sentence2[i]</code> consist of English letters.</li>\n\t<li><code>0 &lt;= similarPairs.length &lt;= 1000</code></li>\n\t<li><code>similarPairs[i].length == 2</code></li>\n\t<li><code>1 &lt;= x<sub>i</sub>.length, y<sub>i</sub>.length &lt;= 20</code></li>\n\t<li><code>x<sub>i</sub></code> and <code>y<sub>i</sub></code> consist of lower-case and upper-case English letters.</li>\n\t<li>All the pairs <code>(x<sub>i</sub>,<sub> </sub>y<sub>i</sub>)</code> are <strong>distinct</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Two words w1 and w2 are similar if and only if w1 == w2, (w1, w2) was a pair, or (w2, w1) was a pair."
+  ],
+  "metaData": "{\n  \"name\": \"areSentencesSimilar\",\n  \"params\": [\n    {\n      \"name\": \"sentence1\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"name\": \"sentence2\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"name\": \"similarPairs\",\n      \"type\": \"list<list<string>>\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"75.5K\", \"totalSubmission\": \"168.5K\", \"totalAcceptedRaw\": 75508, \"totalSubmissionRaw\": 168491, \"acRate\": \"44.8%\"}",
+  "likes": 68,
+  "dislikes": 72,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Number of Provinces\", \"titleSlug\": \"number-of-provinces\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Accounts Merge\", \"titleSlug\": \"accounts-merge\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sentence Similarity II\", \"titleSlug\": \"sentence-similarity-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"great\",\"acting\",\"skills\"]\n[\"fine\",\"drama\",\"talent\"]\n[[\"great\",\"fine\"],[\"drama\",\"acting\"],[\"skills\",\"talent\"]]",
+    "[\"great\"]\n[\"great\"]\n[]",
+    "[\"great\"]\n[\"doubleplus\",\"good\"]\n[[\"great\",\"doubleplus\"]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool areSentencesSimilar(vector<string>& sentence1, vector<string>& sentence2, vector<vector<string>>& similarPairs) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean areSentencesSimilar(String[] sentence1, String[] sentence2, List<List<String>> similarPairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def areSentencesSimilar(self, sentence1: List[str], sentence2: List[str], similarPairs: List[List[str]]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def areSentencesSimilar(self, sentence1, sentence2, similarPairs):\n        \"\"\"\n        :type sentence1: List[str]\n        :type sentence2: List[str]\n        :type similarPairs: List[List[str]]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} sentence1\n * @param {string[]} sentence2\n * @param {string[][]} similarPairs\n * @return {boolean}\n */\nvar areSentencesSimilar = function(sentence1, sentence2, similarPairs) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function areSentencesSimilar(sentence1: string[], sentence2: string[], similarPairs: string[][]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool AreSentencesSimilar(string[] sentence1, string[] sentence2, IList<IList<string>> similarPairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool areSentencesSimilar(char** sentence1, int sentence1Size, char** sentence2, int sentence2Size, char*** similarPairs, int similarPairsSize, int* similarPairsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func areSentencesSimilar(sentence1 []string, sentence2 []string, similarPairs [][]string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun areSentencesSimilar(sentence1: Array<String>, sentence2: Array<String>, similarPairs: List<List<String>>): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func areSentencesSimilar(_ sentence1: [String], _ sentence2: [String], _ similarPairs: [[String]]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn are_sentences_similar(sentence1: Vec<String>, sentence2: Vec<String>, similar_pairs: Vec<Vec<String>>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} sentence1\n# @param {String[]} sentence2\n# @param {String[][]} similar_pairs\n# @return {Boolean}\ndef are_sentences_similar(sentence1, sentence2, similar_pairs)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $sentence1\n     * @param String[] $sentence2\n     * @param String[][] $similarPairs\n     * @return Boolean\n     */\n    function areSentencesSimilar($sentence1, $sentence2, $similarPairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool areSentencesSimilar(List<String> sentence1, List<String> sentence2, List<List<String>> similarPairs) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def areSentencesSimilar(sentence1: Array[String], sentence2: Array[String], similarPairs: List[List[String]]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec are_sentences_similar(sentence1 :: [String.t], sentence2 :: [String.t], similar_pairs :: [[String.t]]) :: boolean\n  def are_sentences_similar(sentence1, sentence2, similar_pairs) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec are_sentences_similar(Sentence1 :: [unicode:unicode_binary()], Sentence2 :: [unicode:unicode_binary()], SimilarPairs :: [[unicode:unicode_binary()]]) -> boolean().\nare_sentences_similar(Sentence1, Sentence2, SimilarPairs) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (are-sentences-similar sentence1 sentence2 similarPairs)\n  (-> (listof string?) (listof string?) (listof (listof string?)) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1663",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given two sentences, `sentence1` and `sentence2` which are each represented as a string array. We are also given an array of string pairs, `similarPairs` where `similarPairs[i] = [xi, yi]` indicates that the two words `xi` and `yi` are similar.\n\nThe problem describes two sentences are similar if:\n\n1. They have the same length (i.e., the same number of words).\n2. `sentence1[i]` and `sentence2[i]` are similar (words corresponding to each index are similar).\n\nOur task is to determine whether `sentence1` is similar to `sentence2` or not.\n\n---\n\n### Approach: Using Hash Map and Hash Set\n\n#### Intuition\n\nTo check whether `sentence1` is similar to `sentence2`, we would first check the number of words in both sentences. If the number of words in both of the sentences is not equal, the sentences cannot be similar, so we return `false` in such a case.\n\nIf the number of words in both sentences is equal, we need to check if all the words corresponding to each index of the sentences are similar, i.e., whether `sentence1[i]` and `sentence2[i]` are similar. These two words can be similar only if either they are the same word, i.e., `sentence1[i] = sentence2[i]`, or `(sentence1[i], sentence2[i])` or `(sentence2[i], sentence1[i])` appear in `similarPairs`.\n\nTo keep track of similar words for a word, we can think of creating a hash map, say `wordToSimilarWords` with a word as the key that stores a list of all the words that are similar to the key.\n\nSo, for every word at index `i` of the given sentences, we check if the words are the same, i.e., `sentence1[i] = sentence2[i]` or if the words form a similar pair, i.e., `wordToSimilarWords[sentence1[i]]` contains `sentence2[i]`.\n\nHow can we check whether `sentence2[i]` is present in the list received from `wordToSimilarWords[sentence1[i]]`? We might have to iterate through the entire list of similar words for `sentence1[i]`, which could, in the worst case, grow to the number of pairs in `similarPair`. This is definitely not a good approach.\n\nWhat if we use a hash set, say `set` to store similar words for a given word? The advantage of using a hash set over a list is that searching is much faster. In a list, searching costs $O(n \\cdot m)$, where $n$ is the number of similar words and $m$ is the length of the word. With a hash set, it's $O(m)$, where $m$ is the length of the word. We need to spend some time to hash the strings which would also require $O(m)$ time per word.\n\nThis takes us to the solution of the problem. We define a hash map where a string is the key and the value is a hash set of strings. For each `word1, word2` pair in `similarPairs`, we add `word2` to `wordToSimilarWords[word1]` and `word1` to `wordToSimilarWords[word2]`.\n\nWe then iterate over all the words in one of the sentences, say `sentence1`. For every word at index `i`, we would check if the words in both sentences at this index are the same word, i.e., `sentence1[i] == sentence2[i]` or if they are similar by checking if `sentence2[i]` is present in the `wordToSimilarWords[sentence[i]]` set.\n\n#### Algorithm\n\n1. Check if the number of words in `sentence1` and `sentence2` are equal. If the number of words is not equal, return `false`.\n2. Create a `wordToSimilarWords` hash map with string as the key and hash set of strings as the value such that `wordToSimilarWords[x]` contains all the similar words corresponding to the word `x`.\n3. For each `pair` in `similarPair`, insert the similar words represented by `pair` in `wordToSimilarWords`.\n4. Iterate through each word of `sentence1`. For every word at index `i`:\n    - If the words are equal, i.e., `sentence1[i] == sentence2[i]`, continue to check the next word.\n    - If the words are similar, i.e., `wordToSimilarWords[sentence1[i]]` contains `sentence2[i]`, continue to check the next word.\n    - Otherwise, the words are neither equal nor similar, so return `false`. The given sentences cannot be similar.\n5. We were able to match all the corresponding words of the sentences, thus we return `true`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/HqVD5qMe/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HqVD5qMe\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number of words in `sentence1` and `sentence2` and $k$ is the length of similar pairs. Let $m$ be the average length of words in `sentence1` as well as `similarPairs.`\n\n* Time complexity: $O((n + k) \\cdot m)$\n    - We iterate over all the elements of `similarPairs` and insert a pair twice into `wordToSimilarWords`. To hash each word of length $m$, we need $O(m)$ time, and to put the same length word in the hash set, we need $O(m)$ time again. Because there are $k$ pairs of words, there can be at most $2 \\cdot k$ words that can be hashed and added to the set. As a result, we require $O(k \\cdot m)$ time.\n    - We also iterate over all of `sentence1`'s words to see if `sentence1[i] == sentence2[i]`. Because each word is $m$ long, checking words at a specific index would take $O(m)$ time. It will take $O(n \\cdot m)$ time in total because there are $n$ words. For each word `sentence1[i]`, we check if this word is present as the key in `wordToSimilarWords` which takes $O(m)$ time per word, and searching for the similar word `sentence2[i]` in the `wordToSimilarWords[sentence1[i]]` set also takes $O(m)$ time. As a result, for $n$ words, performing the key lookup followed by searching in the set would take $O(n \\cdot m)$ time.\n    - The overall time required is $O((n + k) \\cdot m)$.\n\n* Space complexity: $O(k \\cdot m)$\n\n    - We are using `wordToSimilarWords` to store all the similar words for a given word. There are $k$ pairs of similar words, so there could be $O(k)$ words that are inserted into `wordToSimilarWords`. Because the average length of each word is $m$, the required space is $O(k \\cdot m)$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,152 @@
+{
+  "questionId": "718",
+  "questionFrontendId": "718",
+  "title": "Maximum Length of Repeated Subarray",
+  "titleSlug": "maximum-length-of-repeated-subarray",
+  "difficulty": "Medium",
+  "content": "<p>Given two integer arrays <code>nums1</code> and <code>nums2</code>, return <em>the maximum length of a subarray that appears in <strong>both</strong> arrays</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [1,2,3,2,1], nums2 = [3,2,1,4,7]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The repeated subarray with maximum length is [3,2,1].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [0,0,0,0,0], nums2 = [0,0,0,0,0]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The repeated subarray with maximum length is [0,0,0,0,0].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums1.length, nums2.length &lt;= 1000</code></li>\n\t<li><code>0 &lt;= nums1[i], nums2[i] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Use dynamic programming.  dp[i][j] will be the longest common prefix of A[i:] and B[j:].",
+    "The answer is max(dp[i][j]) over all i, j."
+  ],
+  "metaData": "{\n  \"name\": \"findLength\",\n  \"params\": [\n    {\n      \"name\": \"nums1\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"nums2\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"362.6K\", \"totalSubmission\": \"706.8K\", \"totalAcceptedRaw\": 362590, \"totalSubmissionRaw\": 706808, \"acRate\": \"51.3%\"}",
+  "likes": 7080,
+  "dislikes": 180,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Size Subarray Sum\", \"titleSlug\": \"minimum-size-subarray-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Common Subpath\", \"titleSlug\": \"longest-common-subpath\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Maximum Length of a Good Subsequence II\", \"titleSlug\": \"find-the-maximum-length-of-a-good-subsequence-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Maximum Length of a Good Subsequence I\", \"titleSlug\": \"find-the-maximum-length-of-a-good-subsequence-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,2,1]\n[3,2,1,4,7]",
+    "[0,0,0,0,0]\n[0,0,0,0,0]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 2, \"slug\": \"palantir-technologies\", \"name\": \"Palantir Technologies\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Rolling Hash",
+      "slug": "rolling-hash"
+    },
+    {
+      "name": "Hash Function",
+      "slug": "hash-function"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findLength(vector<int>& nums1, vector<int>& nums2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findLength(int[] nums1, int[] nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findLength(self, nums1: List[int], nums2: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findLength(self, nums1, nums2):\n        \"\"\"\n        :type nums1: List[int]\n        :type nums2: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums1\n * @param {number[]} nums2\n * @return {number}\n */\nvar findLength = function(nums1, nums2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findLength(nums1: number[], nums2: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindLength(int[] nums1, int[] nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findLength(int* nums1, int nums1Size, int* nums2, int nums2Size) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findLength(nums1 []int, nums2 []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findLength(nums1: IntArray, nums2: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findLength(_ nums1: [Int], _ nums2: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_length(nums1: Vec<i32>, nums2: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums1\n# @param {Integer[]} nums2\n# @return {Integer}\ndef find_length(nums1, nums2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums1\n     * @param Integer[] $nums2\n     * @return Integer\n     */\n    function findLength($nums1, $nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findLength(List<int> nums1, List<int> nums2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findLength(nums1: Array[Int], nums2: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_length(nums1 :: [integer], nums2 :: [integer]) :: integer\n  def find_length(nums1, nums2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_length(Nums1 :: [integer()], Nums2 :: [integer()]) -> integer().\nfind_length(Nums1, Nums2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-length nums1 nums2)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "269",
+    "content": "[TOC]\n\n\n### Approach #1: Brute Force with Initial Character Map [Time Limit Exceeded]\n\n**Intuition and Algorithm**\n\nIn a typical brute force, for all starting indices `i` of `A` and `j` of `B`, we will check for the longest matching subarray `A[i: i+k] == B[j: j+k]` of length `k`. This would look roughly like the following pseudocode:\n\n```python\nans = 0\nfor i in [0 .. A.length - 1]:\n    for j in [0 .. B.length - 1]:\n        k = 0\n        while (A[i + k] == B[j + k]): k += 1 #and i + k < A.length etc.\n        ans = max(ans, k)\n```\n\nOur insight is that in typical cases, most of the time `A[i] != B[j]`.  We could instead keep a hashmap `Bstarts[A[i]] = all j such that B[j] == A[i]`, and only loop through those in our `j` loop.\n\n**Python**\n```python\nclass Solution(object):\n    def findLength(self, A, B):\n        ans = 0\n        Bstarts = collections.defaultdict(list)\n        for j, y in enumerate(B):\n            Bstarts[y].append(j)\n\n        for i, x in enumerate(A):\n            for j in Bstarts[x]:\n                k = 0\n                while i + k < len(A) and j + k < len(B) and A[i + k] == B[j + k]:\n                    k += 1\n                ans = max(ans, k)\n        return ans\n```\n\n**Java**\n```java\nclass Solution {\n    public int findLength(int[] A, int[] B) {\n        int ans = 0;\n        Map<Integer, ArrayList<Integer>> Bstarts = new HashMap();\n        for (int j = 0; j < B.length; j++) {\n            Bstarts.computeIfAbsent(B[j], x -> new ArrayList()).add(j);\n        }\n\n        for (int i = 0; i < A.length; i++) if (Bstarts.containsKey(A[i])) {\n            for (int j: Bstarts.get(A[i])) {\n                int k = 0;\n                while (i+k < A.length && j+k < B.length && A[i+k] == B[j+k]) {\n                    k++;\n                }\n                ans = Math.max(ans, k);\n            }\n        }\n        return ans;\n    }\n}\n```\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(M*N*\\min(M, N))$$, where $$M, N$$ are the lengths of `A, B`. The worst case is when all the elements are equal.\n\n* Space Complexity: $$O(N)$$, the space used by `Bstarts` (Of course, we could amend our algorithm to make this $$O(\\min(M, N))$$).\n\n---\n\n### Approach #2: Binary Search with Naive Check [Time Limit Exceeded]\n\n**Intuition**\n\nIf there is a length `k` subarray common to `A` and `B`, then there is a length `j <= k` subarray as well.  \n\nLet `check(length)` be the answer to the question \"Is there a subarray with `length` length, common to `A` and `B`?\"  This is a function with a range that must take the form `[True, True, ..., True, False, False, ..., False]` with at least one `True`.  We can binary search on this function.\n\n**Algorithm**\n\nFocusing on the binary search, our invariant is that `check(hi)` will always be `False`. We'll start with `hi = min(len(A), len(B)) + 1`, clearly `check(hi) is False`.\n\nNow we perform our check in the midpoint `mi` of `lo` and `hi`. When it is possible, then `lo = mi + 1`, and when it isn't, `hi = mi`. This maintains the invariant. At the end of our binary search, `hi == lo` and `lo` is the lowest value such that `check(lo) is False`, so we want `lo - 1`.\n\nAs for the check itself, we can naively check whether any `A[i:i+k] == B[j:j+k]` using set structures.\n\n**Python**\n```python\nclass Solution(object):\n    def findLength(self, A, B):\n        def check(length):\n            seen = set(tuple(A[i:i+length]) \n                       for i in range(len(A) - length + 1))\n            return any(tuple(B[j:j+length]) in seen \n                       for j in range(len(B) - length + 1))\n\n        lo, hi = 0, min(len(A), len(B)) + 1\n        while lo < hi:\n            mi = (lo + hi) // 2\n            if check(mi):\n                lo = mi + 1\n            else:\n                hi = mi\n        return lo - 1\n```\n\n**Java**\n```java\nclass Solution {\n    public boolean check(int length, int[] A, int[] B) {\n        Set<String> seen = new HashSet();\n        for (int i = 0; i + length <= A.length; ++i) {\n            seen.add(Arrays.toString(Arrays.copyOfRange(A, i, i+length)));\n        }\n        for (int j = 0; j + length <= B.length; ++j) {\n            if (seen.contains(Arrays.toString(Arrays.copyOfRange(B, j, j+length)))) {\n                return true;\n            }\n        }\n        return false;\n    }\n\n    public int findLength(int[] A, int[] B) {\n        int lo = 0, hi = Math.min(A.length, B.length) + 1;\n        while (lo < hi) {\n            int mi = (lo + hi) / 2;\n            if (check(mi, A, B)) {\n                lo = mi + 1;\n            }\n            else hi = mi;\n        }\n        return lo - 1;\n    }\n}\n```\n\n**Complexity Analysis**\n\n* Time Complexity: $$O((M + N) * \\min(M, N) * \\log{(\\min(M, N))})$$, where $$M, N$$ are the lengths of `A, B`. The log factor comes from the binary search. The complexity of our naive check of a given $$\\text{length}$$ is $$O((M+N) * \\text{length})$$, as we will create the `seen` strings with complexity $$O(M * \\text{length})$$, then search for them with complexity $$O(N * \\text{length})$$, and our total complexity when performing our `check` is the addition of these two.\n\n* Space Complexity: $$O(M^2)$$, the space used by `seen`.\n\n---\n\n### Approach #3: Dynamic Programming [Accepted]\n\n**Intuition and Algorithm**\n\nSince a common subarray of `A` and `B` must start at some `A[i]` and `B[j]`, let `dp[i][j]` be the longest common prefix of `A[i:]` and `B[j:]`. Whenever `A[i] == B[j]`, we know `dp[i][j] = dp[i+1][j+1] + 1`.  Also, the answer is `max(dp[i][j])` over all `i, j`.\n\nWe can perform bottom-up dynamic programming to find the answer based on this recurrence. Our loop invariant is that the answer is already calculated correctly and stored in `dp` for any larger `i, j`.\n\n**Python**\n\n```python\nclass Solution(object):\n    def findLength(self, A, B):\n        memo = [[0] * (len(B) + 1) for _ in range(len(A) + 1)]\n        for i in range(len(A) - 1, -1, -1):\n            for j in range(len(B) - 1, -1, -1):\n                if A[i] == B[j]:\n                    memo[i][j] = memo[i + 1][j + 1] + 1\n        return max(max(row) for row in memo)\n```\n\n**Java**\n\n```java\nclass Solution {\n    public int findLength(int[] A, int[] B) {\n        int ans = 0;\n        int[][] memo = new int[A.length + 1][B.length + 1];\n        for (int i = A.length - 1; i >= 0; --i) {\n            for (int j = B.length - 1; j >= 0; --j) {\n                if (A[i] == B[j]) {\n                    memo[i][j] = memo[i+1][j+1] + 1;\n                    if (ans < memo[i][j]) {\n                        ans = memo[i][j];\n                    }\n                }\n            }\n        }\n        return ans;\n    }\n}\n```\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(M*N)$$, where $$M, N$$ are the lengths of `A, B`.\n\n* Space Complexity: $$O(M*N)$$, the space used by `dp`.\n\n---\n\n### Approach #4: Binary Search with Rolling Hash [Accepted]\n\n**Intuition**\n\nAs in *Approach #2*, we will binary search for the answer.  However, we will use a *rolling hash* (Rabin-Karp algorithm) to store hashes in our set structure.\n\n**Algorithm**\n\nFor some prime $$p$$, consider the following function modulo some prime modulus $$\\mathcal{M}$$:\n\n$$\\text{hash}(S) = \\sum_{0 \\leq i < len(S)} p^i * S[i]$$\n\nNotably, $$\\text{hash}(S[1:] + x) = \\frac{(\\text{hash}(S) - S[0])}{p} + p^{n-1} x$$. This shows we can get the hash of all $$A[i:i+\\text{guess}]$$ in linear time.  We will also use the fact that $$p^{-1} = p^{\\mathcal{M}-2} \\mod \\mathcal{M}$$.\n\nFor every `i >= length - 1`, we will want to record the hash of `A[i-length+1], A[i-length+2], ..., A[i]`. After, we will truncate the first element by `h = (h - A[i - (length - 1)]) * Pinv % MOD` to get ready to add the next element.\n\nTo make our algorithm airtight, we also make a naive check when our work with rolling hashes says that we have found a match.\n\n```python\nclass Solution(object):\n    def findLength(self, A, B):\n        P, MOD = 113, 10**9 + 7\n        Pinv = pow(P, MOD - 2, MOD)\n        def check(guess):\n            def rolling(A, length):\n                if length == 0:\n                    yield 0, 0\n                    return\n\n                h, power = 0, 1\n                for i, x in enumerate(A):\n                    h = (h + x * power) % MOD\n                    if i < length - 1:\n                        power = (power * P) % MOD\n                    else:\n                        yield h, i - (length - 1)\n                        h = (h - A[i - (length - 1)]) * Pinv % MOD\n\n            hashes = collections.defaultdict(list)\n            for ha, start in rolling(A, guess):\n                hashes[ha].append(start)\n            for ha, start in rolling(B, guess):\n                iarr = hashes.get(ha, [])\n                if any(A[i: i + guess] == B[start: start + guess] for i in iarr):\n                    return True\n            return False\n\n        lo, hi = 0, min(len(A), len(B)) + 1\n        while lo < hi:\n            mi = (lo + hi) // 2\n            if check(mi):\n                lo = mi + 1\n            else:\n                hi = mi\n        return lo - 1\n```\n\n**Java**\n```java\nimport java.math.BigInteger;\n\nclass Solution {\n    int P = 113;\n    int MOD = 1_000_000_007;\n    int Pinv = BigInteger.valueOf(P).modInverse(BigInteger.valueOf(MOD)).intValue();\n\n    private int[] rolling(int[] source, int length) {\n        int[] ans = new int[source.length - length + 1];\n        long h = 0, power = 1;\n        if (length == 0) {\n            return and;\n        }\n        for (int i = 0; i < source.length; ++i) {\n            h = (h + source[i] * power) % MOD;\n            if (i < length - 1) {\n                power = (power * P) % MOD;\n            } else {\n                ans[i - (length - 1)] = (int) h;\n                h = (h - source[i - (length - 1)]) * Pinv % MOD;\n                if (h < 0) h += MOD;\n            }\n        }\n        return ans;\n    }\n\n    private boolean check(int guess, int[] A, int[] B) {\n        Map<Integer, List<Integer>> hashes = new HashMap();\n        int k = 0;\n        for (int x: rolling(A, guess)) {\n            hashes.computeIfAbsent(x, z -> new ArrayList()).add(k++);\n        }\n        int j = 0;\n        for (int x: rolling(B, guess)) {\n            for (int i: hashes.getOrDefault(x, new ArrayList<Integer>()))\n                if (Arrays.equals(Arrays.copyOfRange(A, i, i+guess),\n                                  Arrays.copyOfRange(B, j, j+guess))) {\n                    return true;\n                }\n            j++;\n        }\n        return false;\n    }\n\n    public int findLength(int[] A, int[] B) {\n        int lo = 0, hi = Math.min(A.length, B.length) + 1;\n        while (lo < hi) {\n            int mi = (lo + hi) / 2;\n            if (check(mi, A, B)) {\n                lo = mi + 1;\n            }\n            else hi = mi;\n        }\n        return lo - 1;\n    }\n}\n```\n\n**Complexity Analysis**\n\n* Time Complexity: $$O((M+N) * \\log{(\\min(M, N))})$$, where $$M, N$$ are the lengths of `A, B`. The log factor contributed by the binary search while creating the rolling hashes is $$O(M + N)$$. The checks for duplicate hashes are $$O(1)$$. If we perform a naive check to make sure our answer is correct, it adds a factor of $$O(\\min(M, N))$$ to our cost of `check`, which keeps the complexity the same.\n\n* Space Complexity: $$O(M)$$, the space used to store `hashes` and the subarrays in our final naive check.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

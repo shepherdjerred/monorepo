@@ -1,0 +1,137 @@
+{
+  "questionId": "299",
+  "questionFrontendId": "299",
+  "title": "Bulls and Cows",
+  "titleSlug": "bulls-and-cows",
+  "difficulty": "Medium",
+  "content": "<p>You are playing the <strong><a href=\"https://en.wikipedia.org/wiki/Bulls_and_Cows\" target=\"_blank\">Bulls and Cows</a></strong> game with your friend.</p>\n\n<p>You write down a secret number and ask your friend to guess what the number is. When your friend makes a guess, you provide a hint with the following info:</p>\n\n<ul>\n\t<li>The number of &quot;bulls&quot;, which are digits in the guess that are in the correct position.</li>\n\t<li>The number of &quot;cows&quot;, which are digits in the guess that are in your secret number but are located in the wrong position. Specifically, the non-bull digits in the guess that could be rearranged such that they become bulls.</li>\n</ul>\n\n<p>Given the secret number <code>secret</code> and your friend&#39;s guess <code>guess</code>, return <em>the hint for your friend&#39;s guess</em>.</p>\n\n<p>The hint should be formatted as <code>&quot;xAyB&quot;</code>, where <code>x</code> is the number of bulls and <code>y</code> is the number of cows. Note that both <code>secret</code> and <code>guess</code> may contain duplicate digits.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> secret = &quot;1807&quot;, guess = &quot;7810&quot;\n<strong>Output:</strong> &quot;1A3B&quot;\n<strong>Explanation:</strong> Bulls are connected with a &#39;|&#39; and cows are underlined:\n&quot;1807&quot;\n  |\n&quot;<u>7</u>8<u>10</u>&quot;</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> secret = &quot;1123&quot;, guess = &quot;0111&quot;\n<strong>Output:</strong> &quot;1A1B&quot;\n<strong>Explanation:</strong> Bulls are connected with a &#39;|&#39; and cows are underlined:\n&quot;1123&quot;        &quot;1123&quot;\n  |      or     |\n&quot;01<u>1</u>1&quot;        &quot;011<u>1</u>&quot;\nNote that only one of the two unmatched 1s is counted as a cow since the non-bull digits can only be rearranged to allow one 1 to be a bull.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= secret.length, guess.length &lt;= 1000</code></li>\n\t<li><code>secret.length == guess.length</code></li>\n\t<li><code>secret</code> and <code>guess</code> consist of digits only.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{ \r\n  \"name\": \"getHint\",\r\n  \"params\": [\r\n    { \r\n      \"name\": \"secret\",\r\n      \"type\": \"string\"\r\n    },\r\n    { \r\n      \"name\": \"guess\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"444.2K\", \"totalSubmission\": \"849.3K\", \"totalAcceptedRaw\": 444240, \"totalSubmissionRaw\": 849304, \"acRate\": \"52.3%\"}",
+  "likes": 2625,
+  "dislikes": 1816,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Make Number of Distinct Characters Equal\", \"titleSlug\": \"make-number-of-distinct-characters-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"1807\"\n\"7810\"",
+    "\"1123\"\n\"0111\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"zopsmart\", \"name\": \"Zopsmart\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"epic-systems\", \"name\": \"Epic Systems\"}, {\"timesEncountered\": 2, \"slug\": \"cars24\", \"name\": \"CARS24\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string getHint(string secret, string guess) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String getHint(String secret, String guess) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def getHint(self, secret: str, guess: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def getHint(self, secret, guess):\n        \"\"\"\n        :type secret: str\n        :type guess: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} secret\n * @param {string} guess\n * @return {string}\n */\nvar getHint = function(secret, guess) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function getHint(secret: string, guess: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string GetHint(string secret, string guess) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* getHint(char* secret, char* guess) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func getHint(secret string, guess string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun getHint(secret: String, guess: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func getHint(_ secret: String, _ guess: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn get_hint(secret: String, guess: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} secret\n# @param {String} guess\n# @return {String}\ndef get_hint(secret, guess)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $secret\n     * @param String $guess\n     * @return String\n     */\n    function getHint($secret, $guess) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String getHint(String secret, String guess) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def getHint(secret: String, guess: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec get_hint(secret :: String.t, guess :: String.t) :: String.t\n  def get_hint(secret, guess) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec get_hint(Secret :: unicode:unicode_binary(), Guess :: unicode:unicode_binary()) -> unicode:unicode_binary().\nget_hint(Secret, Guess) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (get-hint secret guess)\n  (-> string? string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "987",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nAt first glance, this popular Google question seems to be easy. The only difficulty here is to define how to count.\n\n- To count bulls, one could parse both strings and count the matches, and that's the correct way to do things.\n\n![img](../Figures/299/bulls2.png)\n*Figure 1. Count bulls.*\n\n\n- To count cows, one could parse `guess` string and count the characters which are present in the string `secret` but located in the wrong positions. Though the cows are more complicated creatures than bulls. For some test cases, it might work.\n\n![img](../Figures/299/bulls2.png)\n*Figure 2. Count cows.*\n\n\n- Although, in general, one has to count the characters as well. For example, if `secret` contains just one digit \"4\" then the maximum number of 4-cows is 1. Even if `guess` contains many \"4\"s. In the following example, only one of two \"4\"s should be counted as a cow. \n\n![img](../Figures/299/cows.png)\n*Figure 3. Only one of two \"4\"s should be counted as \"4-cow\".*\n\n \nTo figure out these three points is enough to solve the problem. \n   \nIn this article, we start from a straightforward two-pass solution that already has the best time ($$\\mathcal{O}(N)$$) and space complexity ($$\\mathcal{O}(1)$$).\n\nAs a follow-up, we implement a one-pass solution and discuss some Java-related optimizations in approach 2. \n\n### Approach 1: HashMap: Two Passes\n\n**Algorithm**\n\n- Initialize the number of bulls and cows to zero.\n\n- Initialize the hashmap `character -> its frequency` for the string `secret`. This hashmap could be later used during the iteration over the string `guess` to keep the available characters. \n\n- It's time to iterate over the string `guess`.\n\n    - If the current character `ch` of the string `guess` is in the string `secret`: `if ch in h`, then there could be two situations.\n        \n        - The corresponding characters of two strings match: `ch == secret[idx]`.\n        \n            - Then it's time to update the bulls: `bulls += 1`. \n            \n            - The update of the cows is needed if the count for the current character in the hashmap is negative or equal to zero. That means that before it was already used for cows, and the cows counter should be decreased: `cows -= int(h[ch] <= 0)`.\n        \n        - The corresponding characters of two strings don't match: `ch != secret[idx]`. Then increase the cows counter: `cows += int(h[ch] > 0)`.\n        \n        - In both cases, one has to update the hashmap, marking the current character as used: `h[ch] -= 1`.\n\n- Return the number of bulls and cows.\n\n!?!../Documents/299_LIS.json:1000,371!?!\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/AiDvzbGo/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"AiDvzbGo\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$, we pass over the strings two times.\n\n* Space complexity: $$\\mathcal{O}(1)$$ to keep hashmap `h` which contains at most 10 elements.\n\n<br />\n<br />\n\n\n---\n### Approach 2: One Pass\n\n**Intuition**\n\nLet's optimize approach 1 by building the hashmap during the strings' parsing. That would allow us to reduce the number of passes to one.\n\n**Algorithm**\n\n- Initialize the number of bulls and cows to zero.\n\n- Initialize the hashmap to count characters. During the iteration, `secret` string gives a positive contribution, and `guess` - negative contribution. \n\n- Iterate over the strings: `s` is the current character in the string `secret` and `g` - the current character in the string `guess`.\n\n    - If `s == g`, update bulls counter: `bulls += 1`.\n    \n    - Otherwise, if `s != g`:\n    \n        - Update `cows` by adding 1 if so far `guess` contains more `s` characters than `secret`: `h[s] < 0`.\n        \n        - Update `cows` by adding 1 if so far `secret` contains more `g` characters than `guess`: `h[g] > 0`.\n        \n        - Update the hashmap by marking the presence of `s` character in the string `secret`: `h[s] += 1`.\n        \n        - Update the hashmap by marking the presence of `g` character in the string `guess`: `h[g] -= 1`.\n\n- Return the number of bulls and cows.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/FQWGcGFh/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"FQWGcGFh\"></iframe>\n\nTo further optimize the Java solution, one could use an array instead of a hashmap because there are known problems with [Java HashMap performance](https://github.com/vavr-io/vavr/issues/571). Another small improvement is to replace string concatenation with a StringBuilder.\n\n<iframe src=\"https://leetcode.com/playground/PoJsYBpF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PoJsYBpF\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$, we do one pass over the strings.\n\n* Space complexity: $$\\mathcal{O}(1)$$ to keep hashmap (or array) `h` which contains at most 10 elements.\n\n<br />\n<br />\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

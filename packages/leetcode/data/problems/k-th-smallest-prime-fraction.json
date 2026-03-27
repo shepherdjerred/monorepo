@@ -1,0 +1,145 @@
+{
+  "questionId": "802",
+  "questionFrontendId": "786",
+  "title": "K-th Smallest Prime Fraction",
+  "titleSlug": "k-th-smallest-prime-fraction",
+  "difficulty": "Medium",
+  "content": "<p>You are given a sorted integer array <code>arr</code> containing <code>1</code> and <strong>prime</strong> numbers, where all the integers of <code>arr</code> are unique. You are also given an integer <code>k</code>.</p>\n\n<p>For every <code>i</code> and <code>j</code> where <code>0 &lt;= i &lt; j &lt; arr.length</code>, we consider the fraction <code>arr[i] / arr[j]</code>.</p>\n\n<p>Return <em>the</em> <code>k<sup>th</sup></code> <em>smallest fraction considered</em>. Return your answer as an array of integers of size <code>2</code>, where <code>answer[0] == arr[i]</code> and <code>answer[1] == arr[j]</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,2,3,5], k = 3\n<strong>Output:</strong> [2,5]\n<strong>Explanation:</strong> The fractions to be considered in sorted order are:\n1/5, 1/3, 2/5, 1/2, 3/5, and 2/3.\nThe third fraction is 2/5.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,7], k = 1\n<strong>Output:</strong> [1,7]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= arr.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= arr[i] &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>arr[0] == 1</code></li>\n\t<li><code>arr[i]</code> is a <strong>prime</strong> number for <code>i &gt; 0</code>.</li>\n\t<li>All the numbers of <code>arr</code> are <strong>unique</strong> and sorted in <strong>strictly increasing</strong> order.</li>\n\t<li><code>1 &lt;= k &lt;= arr.length * (arr.length - 1) / 2</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<strong>Follow up:</strong> Can you solve the problem with better than <code>O(n<sup>2</sup>)</code> complexity?",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"kthSmallestPrimeFraction\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"171.7K\", \"totalSubmission\": \"248.8K\", \"totalAcceptedRaw\": 171671, \"totalSubmissionRaw\": 248784, \"acRate\": \"69.0%\"}",
+  "likes": 2139,
+  "dislikes": 121,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Kth Smallest Element in a Sorted Matrix\", \"titleSlug\": \"kth-smallest-element-in-a-sorted-matrix\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Kth Smallest Number in Multiplication Table\", \"titleSlug\": \"kth-smallest-number-in-multiplication-table\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find K-th Smallest Pair Distance\", \"titleSlug\": \"find-k-th-smallest-pair-distance\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,5]\n3",
+    "[1,7]\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"ponyai\", \"name\": \"Pony.ai\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> kthSmallestPrimeFraction(vector<int>& arr, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] kthSmallestPrimeFraction(int[] arr, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def kthSmallestPrimeFraction(self, arr: List[int], k: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def kthSmallestPrimeFraction(self, arr, k):\n        \"\"\"\n        :type arr: List[int]\n        :type k: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @param {number} k\n * @return {number[]}\n */\nvar kthSmallestPrimeFraction = function(arr, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function kthSmallestPrimeFraction(arr: number[], k: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] KthSmallestPrimeFraction(int[] arr, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* kthSmallestPrimeFraction(int* arr, int arrSize, int k, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func kthSmallestPrimeFraction(arr []int, k int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun kthSmallestPrimeFraction(arr: IntArray, k: Int): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func kthSmallestPrimeFraction(_ arr: [Int], _ k: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn kth_smallest_prime_fraction(arr: Vec<i32>, k: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @param {Integer} k\n# @return {Integer[]}\ndef kth_smallest_prime_fraction(arr, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @param Integer $k\n     * @return Integer[]\n     */\n    function kthSmallestPrimeFraction($arr, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> kthSmallestPrimeFraction(List<int> arr, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def kthSmallestPrimeFraction(arr: Array[Int], k: Int): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec kth_smallest_prime_fraction(arr :: [integer], k :: integer) :: [integer]\n  def kth_smallest_prime_fraction(arr, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec kth_smallest_prime_fraction(Arr :: [integer()], K :: integer()) -> [integer()].\nkth_smallest_prime_fraction(Arr, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (kth-smallest-prime-fraction arr k)\n  (-> (listof exact-integer?) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2308",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe need to find the <code class=\"\">k<sup>th</sup></code> smallest fraction formed by dividing elements at different indices of a sorted array containing only `1` and prime numbers. The task is to return an array of two elements representing the numerator and denominator of the <code class=\"\">k<sup>th</sup></code> smallest fraction.\n\n---\n\n### Approach 1: Binary Search\n\n#### Intuition\n\nTo count the number of fractions smaller than a given fraction, we can iterate through the array and consider all possible pairs of indices `(i, j)` where `i < j`. For each pair, we check if the fraction formed by `arr[i] / arr[j]` is smaller than the given fraction. If it is, we increment the count.\n\nSince the array is sorted, we notice that if `arr[i] / arr[j]` is smaller than the given fraction, then all subsequent fractions formed by `arr[i] / arr[k]` where `k > j` will also be smaller than the given fraction.\n\nIf we apply the above strategy, the fractions formed by dividing elements at different indices in the sorted array will maintain their sorted order. This enables us to efficiently solve the problem using binary search.\n\nNow, the key question arises: How can we determine how many fractions are smaller than a given value? Since the array is sorted, we can count fractions by comparing their values against a reference value.\n\nThis reference value can be any fraction between `0` and `1`. As the array contains only `1` and prime numbers, we know that all the fractions will be between `0` and `1`. Therefore, we can set the initial search range to `[0, 1)`. We initialize two pointers, `left` and `right`, representing the lower and upper bounds of the possible fractions.\n\nWe use binary search to iteratively narrow down the search space for the <code class=\"\">k<sup>th</sup></code> smallest fraction. At each step, we calculate the midpoint of the range (`mid`). Using a two-pointer approach, we compare each element of the array to `mid` and keep a count of how many fractions are smaller than or equal to it. This count helps in evaluating whether to adjust the left or right bounds of our search range and also ensures that we methodically pinpoint the precise <code class=\"\">k<sup>th</sup></code> fraction by reducing the interval based on the number of smaller fractions found.\n\nHowever, while iterating through the array, we're also exploring the set of possible fractions, gradually revealing the smallest fractions first. During this exploration, we maintain a record of the maximum fraction encountered so far within the current search range.\n\nNow, why is this maximum fraction significant? In a sorted array of unique numbers, the fractions increase gradually as we move left to right. If we've encountered `k` or more fractions smaller than or equal to this maximum fraction, then this maximum fraction is the <code class=\"\">k<sup>th</sup></code> smallest fraction.\n\nFinally, we adjust the search range based on the count of smaller fractions. If the count equals `k`, we return the current maximum fraction as the <code class=\"\">k<sup>th</sup></code> smallest fraction. If the count is greater than `k`, we move the right pointer to `mid`. Else, we move the left pointer to `mid`.\n\n#### Algorithm\n\n- Initialize the variable `n` to store the size of the input array `arr`. Set `left` to 0 and `right` to 1.0 to establish the initial range for binary search.\n- Enter a binary search loop while the left boundary (`left`) is less than the right boundary (`right`).\n    - Calculate the midpoint of the current range, denoted as `mid`, by averaging `left` and `right`.\n    - Create variables to keep track of key metrics: `maxFraction` to store the maximum fraction encountered, `totalSmallerFractions` to count the number of fractions smaller than `mid`, and `numeratorIdx` and `denominatorIdx` to record the indices of the numerator and denominator of the maximum fraction.\n    - Initialize `j` to 1, representing the index for the denominator in the array.\n    - Iterate through the array `arr` to identify fractions smaller than `mid`.\n        - Increment `j` until the fraction (`arr[i] / arr[j]`) is less than or equal to `mid`, effectively finding the right boundary for the current numerator.\n        - Increment `totalSmallerFractions` by the count of elements between `j` and `n`.\n        - Exit the loop if `j` reaches the end of the array `arr`.\n        - Calculate the fraction `arr[i] / arr[j]` and update `maxFraction`, `numeratorIdx`, and `denominatorIdx` if the calculated fraction exceeds the current maximum fraction.\n    - Check if `totalSmallerFractions` equals `k`. If it does, return the fraction with the numerator at index `numeratorIdx` and the denominator at index `denominatorIdx`.\n    - If `totalSmallerFractions` exceeds `k`, update the right boundary of the search range (`right`) to `mid` to focus on the left portion of the range.\n    - If `totalSmallerFractions` is less than `k`, update the left boundary of the search range (`left`) to `mid` to focus on the right portion of the range.\n- If the loop concludes without finding the <code class=\"\">k<sup>th</sup></code> smallest prime fraction, return an empty array.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/NesZhUEz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"NesZhUEz\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input array and $m$ be the maximum value in the array.\n\n- Time complexity: $O(n \\cdot log(m))$\n\n    The algorithm uses binary search. Within each iteration of the binary search, we perform a linear scan through the array to count the number of fractions smaller than the current `mid` value. Since the array is sorted, this linear scan takes $O(n)$ time. \n    \n    Binary search takes $O(\\log x )$ where $x$ is the number of elements in the search space because each iteration reduces the size of the search space by half. We will stop generating fractions and terminate the search when the total number of smaller fractions equals `k`. This will happen when the size of the search space becomes smaller than the smallest possible difference between two fractions, which is $\\frac{1}{m^2}$. \n    \n    This means the size of the search space can be up to ${m^2}$. Therefore, the total time complexity is $O(n \\cdot log(m^2))$, which simplifies to $O(n \\cdot log(m))$.\n\n- Space complexity: $O(1)$\n\n    The algorithm uses constant space becuase we only use a constant amount of extra space for storing variables regardless of the input size. We don't use any additional data structures whose size depends on the input size.\n\n---\n\n### Approach 2: Priority Queue\n\n#### Intuition\n\nThe binary search approach involves iterating through the array for each fraction being tested, which can be time-consuming, especially for large arrays.\n\nTo optimize this process, we can leverage the property that the smallest fractions will be formed by dividing each element by the largest element in the array. This observation leads us to the idea of using a priority queue data structure, which can efficiently maintain and update the smallest fractions as we explore the search space.\n\nConsider an input array $[n_1, n_2, n_3, n_4, n_5]$, where $n_1 < n_2 < n_3 < n_4 < n_5$. The possible fractions that can be formed from different indices of the input are:\n\n$\n\\begin{array}{cccccc}\n\\Large{\\frac{n_1}{n_5}} & \\Large{\\frac{n_1}{n_4}} & \\Large{\\frac{n_1}{n_3}} & \\Large{\\frac{n_1}{n_2}} \\\\\n\\\\\n\\Large{\\frac{n_2}{n_5}} & \\Large{\\frac{n_2}{n_4}} & \\Large{\\frac{n_2}{n_3}} \\\\\n\\\\\n\\Large{\\frac{n_3}{n_5}} & \\Large{\\frac{n_3}{n_4}} \\\\\n\\\\\n\\Large{\\frac{n_4}{n_5}} \\\\\n\\\\\n\\\\\n\\end{array}\n$\n\nWe can observe that for each numerator, the smallest fraction will be formed by dividing by the largest element ($n_5$).\n\nThe first step is to initialize a priority queue that stores pairs in the form `{-fraction, {numerator_index, denominator_index}}`. The negative sign is used to make the priority queue sort the fractions in ascending order (smallest fraction first).\n\nAfter that, we can start by pushing all possible fractions formed by dividing each element by the last element of the array into the priority queue. This is because the last element of the sorted array is the largest.\n\nAfter populating the priority queue, we observe that the top element of the queue will be the smallest fraction among all fractions formed by dividing each element by the last element.\n\nNow, to find the <code class=\"\">k<sup>th</sup></code> smallest fraction, we can iteratively remove the top element from the priority queue and replace it with a new fraction formed by dividing the same numerator by the next smaller denominator. This is done by decrementing the denominator index and pushing the new fraction into the priority queue.\n\nThe reason we decrement the denominator is that, suppose we have an array `[1, 2, 3, 4, 5]`. If we start with the largest denominator (`5`) and keep the numerator fixed (`1`), then decrement the denominator in each iteration, we will explore fractions in ascending order:\n\n$\\frac{1}{5}, \\frac{1}{4}, \\frac{1}{3}, \\frac{1}{2} $\n\nIf we were to keep the denominator fixed and increment the numerator instead, we would explore fractions in descending order:\n\n$ \\frac{4}{5}, \\frac{3}{5}, \\frac{2}{5}, \\frac{1}{5}$\n\nWhile both ways eventually cover all fractions formed by dividing each element by the largest element, the priority queue requires fractions to be explored in ascending order to ensure that the <code class=\"\">k<sup>th</sup></code> smallest fraction is found efficiently.\n\nBy decrementing the denominator, we maintain the property that the top element of the priority queue always represents the smallest fraction among those formed by dividing each element by the largest element. This helps us identify the <code class=\"\">k<sup>th</sup></code> smallest fraction more effectively, as the priority queue naturally orders fractions from smallest to largest\n\nEssentially, we replace the smallest fraction with the next smallest fraction having the same numerator. Repeating this `k - 1` times leaves the <code class=\"\">k<sup>th</sup></code> smallest fraction at the top of the priority queue. In a nutshell, it's about finding the `k` smallest elements in `n` sorted linked lists.\n\nThe following is an illustration demonstrating the priority queue approach:\n\n!?!../Documents/786/pq.json:978,439!?!\n\n#### Algorithm\n \n- Initialize an empty priority queue `pq` to store pairs of fractions and their corresponding indices.\n- Iterate through the input array `arr` using a loop variable `i`.\n  - For each element `arr[i]`, calculate the fraction formed by dividing it by the largest element in the array (`arr[arr.size() - 1]`).\n  - Push a pair consisting of the negative fraction value (`-1.0 * arr[i] / arr[arr.size() - 1]`) and the corresponding indices (`i` for the numerator and `arr.size() - 1` for the denominator) into the priority queue `pq`.\n- The priority queue `pq` now contains all the fractions formed by dividing each element by the largest element in the array, sorted in ascending order based on the fraction values.\n- Repeat the following steps `k - 1` times:\n  - Remove the top element (smallest fraction) from the priority queue `pq` and store its indices in the `cur` variable.\n  - Decrement the denominator index (`cur[1]--`).\n  - Calculate the new fraction formed by dividing the numerator at `cur[0]` by the decremented denominator (`arr[cur[1]]`).\n  - Push the new fraction value (`-1.0 * arr[cur[0]] / arr[cur[1]]`) and its corresponding indices (`cur[0]` for the numerator and `cur[1]` for the denominator) into the priority queue `pq`.\n- After `k - 1` iterations, the top element of the priority queue `pq` will be the <code class=\"\">k<sup>th</sup></code> smallest fraction.\n- Extract the numerator and denominator indices from the top element of the priority queue and store them in `result`.\n- Return a array containing the numerator (`arr[result[0]]`) and denominator (`arr[result[1]]`) values corresponding to the <code class=\"\">k<sup>th</sup></code> smallest fraction.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/M8yvD79e/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"M8yvD79e\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input array and $k$ be the integer `k`.\n\n* Time complexity: $O((n + k) \\cdot \\log n)$ \n\n    Pushing the initial fractions into the priority queue takes $O(n \\log n)$.\n\n    Iteratively removing and replacing fractions takes $O(k \\log n)$ and retrieving the <code class=\"\">k<sup>th</sup></code> smallest fraction takes $O(\\log n)$.\n    \n    Thus the overall time complexity of the algorithm is $O(n \\log n + k \\log n)$, which can write as $O((n + k) \\cdot \\log n)$ \n\n* Space complexity: $O(n)$\n\n    The space required by the priority queue to store fractions is $O(n)$ since it can potentially hold all fractions formed by dividing each element by the largest element.\n\n    The additional space used by other variables like `cur`, `numeratorIndex`, `denominatorIndex`, etc., is constant and doesn't depend on the size of the input array.\n\n    Thus the overall space complexity of the algorithm is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

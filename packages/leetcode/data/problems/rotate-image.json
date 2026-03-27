@@ -1,0 +1,122 @@
+{
+  "questionId": "48",
+  "questionFrontendId": "48",
+  "title": "Rotate Image",
+  "titleSlug": "rotate-image",
+  "difficulty": "Medium",
+  "content": "<p>You are given an <code>n x n</code> 2D <code>matrix</code> representing an image, rotate the image by <strong>90</strong> degrees (clockwise).</p>\n\n<p>You have to rotate the image <a href=\"https://en.wikipedia.org/wiki/In-place_algorithm\" target=\"_blank\"><strong>in-place</strong></a>, which means you have to modify the input 2D matrix directly. <strong>DO NOT</strong> allocate another 2D matrix and do the rotation.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/28/mat1.jpg\" style=\"width: 500px; height: 188px;\" />\n<pre>\n<strong>Input:</strong> matrix = [[1,2,3],[4,5,6],[7,8,9]]\n<strong>Output:</strong> [[7,4,1],[8,5,2],[9,6,3]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/28/mat2.jpg\" style=\"width: 500px; height: 201px;\" />\n<pre>\n<strong>Input:</strong> matrix = [[5,1,9,11],[2,4,8,10],[13,3,6,7],[15,14,12,16]]\n<strong>Output:</strong> [[15,13,2,5],[14,3,4,1],[12,6,8,9],[16,7,10,11]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == matrix.length == matrix[i].length</code></li>\n\t<li><code>1 &lt;= n &lt;= 20</code></li>\n\t<li><code>-1000 &lt;= matrix[i][j] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"rotate\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"matrix\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"void\"\r\n  },\r\n  \"output\": {\r\n    \"paramindex\": 0\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"2.8M\", \"totalSubmission\": \"3.5M\", \"totalAcceptedRaw\": 2769017, \"totalSubmissionRaw\": 3482836, \"acRate\": \"79.5%\"}",
+  "likes": 19840,
+  "dislikes": 964,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Determine Whether Matrix Can Be Obtained By Rotation\", \"titleSlug\": \"determine-whether-matrix-can-be-obtained-by-rotation\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,2,3],[4,5,6],[7,8,9]]",
+    "[[5,1,9,11],[2,4,8,10],[13,3,6,7],[15,14,12,16]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}, {\"timesEncountered\": 2, \"slug\": \"sig\", \"name\": \"SIG\"}], \"more_than_six_months\": [{\"timesEncountered\": 20, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 15, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}, {\"timesEncountered\": 12, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 11, \"slug\": \"capital-one\", \"name\": \"Capital One\"}, {\"timesEncountered\": 7, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 6, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 4, \"slug\": \"tinkoff\", \"name\": \"Tinkoff\"}, {\"timesEncountered\": 4, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 4, \"slug\": \"qualcomm\", \"name\": \"Qualcomm\"}, {\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    void rotate(vector<vector<int>>& matrix) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public void rotate(int[][] matrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def rotate(self, matrix: List[List[int]]) -> None:\n        \"\"\"\n        Do not return anything, modify matrix in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def rotate(self, matrix):\n        \"\"\"\n        :type matrix: List[List[int]]\n        :rtype: None Do not return anything, modify matrix in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} matrix\n * @return {void} Do not return anything, modify matrix in-place instead.\n */\nvar rotate = function(matrix) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n Do not return anything, modify matrix in-place instead.\n */\nfunction rotate(matrix: number[][]): void {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public void Rotate(int[][] matrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "void rotate(int** matrix, int matrixSize, int* matrixColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func rotate(matrix [][]int)  {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun rotate(matrix: Array<IntArray>): Unit {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func rotate(_ matrix: inout [[Int]]) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn rotate(matrix: &mut Vec<Vec<i32>>) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} matrix\n# @return {Void} Do not return anything, modify matrix in-place instead.\ndef rotate(matrix)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $matrix\n     * @return NULL\n     */\n    function rotate(&$matrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  void rotate(List<List<int>> matrix) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def rotate(matrix: Array[Array[Int]]): Unit = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "637",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Rotate Groups of Four Cells\n\n**Intuition**\n\nObserve how the cells move in groups when we rotate the image.\n\n![The corners all move](../Figures/48/48_angles.png)\n\nWe can iterate over each group of four cells and rotate them.\n\n**Implementation**\n\nHere is a visualization of the algorithm in action.\n\n<div class=\"video-container\">\n    <iframe src=\"https://player.vimeo.com/video/484247719\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n</div>\n\n<iframe src=\"https://leetcode.com/playground/DwpcHZ58/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"DwpcHZ58\"></iframe>\n\n**Complexity Analysis**\n\nLet $$M$$ be the number of cells in the matrix.\n\n* Time complexity: $$\\mathcal{O}(M)$$, as each cell is getting read once and written once.\n\n* Space complexity: $$\\mathcal{O}(1)$$ because we do not use any other additional data structures.\n\n<br/>\n\n---\n\n\n### Approach 2: Reverse on the Diagonal and then Reverse Left to Right\n\n**Intuition**\n\nThe most elegant solution for rotating the matrix is to first reverse the matrix around the main diagonal, and then reverse it from left to right. These operations are called **transpose** and **reflect** in linear algebra.\n\nHere is a visualization to help you see why this works.\n\n<div class=\"video-container\">\n    <iframe src=\"https://player.vimeo.com/video/484247738\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n</div>\n\n\n> **Bonus Question:** What would happen if you reflect and *then* transpose? Would you still get the correct answer?\n\nEven though this approach does twice as many reads and writes as approach 1, most people would consider it a better approach because the code is simpler, and it is built with standard matrix operations that can be found in any matrix library.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/L4wL5MUY/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"L4wL5MUY\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$M$$ be the number of cells in the grid.\n\n* Time complexity: $$\\mathcal{O}(M)$$. We perform two steps; transposing the matrix, and then reversing each row. Transposing the matrix has a cost of $$\\mathcal{O}(M)$$ because we're moving the value of each cell once. Reversing each row also has a cost of $$\\mathcal{O}(M)$$, because again we're moving the value of each cell once.\n\n* Space complexity: $$\\mathcal{O}(1)$$ because we do not use any other additional data structures.\n\n<br/>\n\n> **Bonus Question:** If you're not too confident with matrices and linear algebra, get some more practice by also coding a method that transposes the matrix on the *other* diagonal, and another that reflects from top to bottom. You can test your functions by printing out the matrix before and after each operation. Finally, use your functions to find *three more solutions to this problem*. Each solution uses two matrix operations.\n\n<br/>\n\n> **Interview Tip**: Terrified of being asked this question in an interview? Many people are: it can be intimidating due to the fiddly logic. Unfortunately, if you do a lot of interviewing, the probability of seeing it at least once is high, and some people have claimed to have seen it multiple times! This is one of the few questions that I recommend practicing until you can confidently code it and explain it without thinking too much.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

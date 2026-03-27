@@ -1,0 +1,141 @@
+{
+  "questionId": "126",
+  "questionFrontendId": "126",
+  "title": "Word Ladder II",
+  "titleSlug": "word-ladder-ii",
+  "difficulty": "Hard",
+  "content": "<p>A <strong>transformation sequence</strong> from word <code>beginWord</code> to word <code>endWord</code> using a dictionary <code>wordList</code> is a sequence of words <code>beginWord -&gt; s<sub>1</sub> -&gt; s<sub>2</sub> -&gt; ... -&gt; s<sub>k</sub></code> such that:</p>\n\n<ul>\n\t<li>Every adjacent pair of words differs by a single letter.</li>\n\t<li>Every <code>s<sub>i</sub></code> for <code>1 &lt;= i &lt;= k</code> is in <code>wordList</code>. Note that <code>beginWord</code> does not need to be in <code>wordList</code>.</li>\n\t<li><code>s<sub>k</sub> == endWord</code></li>\n</ul>\n\n<p>Given two words, <code>beginWord</code> and <code>endWord</code>, and a dictionary <code>wordList</code>, return <em>all the <strong>shortest transformation sequences</strong> from</em> <code>beginWord</code> <em>to</em> <code>endWord</code><em>, or an empty list if no such sequence exists. Each sequence should be returned as a list of the words </em><code>[beginWord, s<sub>1</sub>, s<sub>2</sub>, ..., s<sub>k</sub>]</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> beginWord = &quot;hit&quot;, endWord = &quot;cog&quot;, wordList = [&quot;hot&quot;,&quot;dot&quot;,&quot;dog&quot;,&quot;lot&quot;,&quot;log&quot;,&quot;cog&quot;]\n<strong>Output:</strong> [[&quot;hit&quot;,&quot;hot&quot;,&quot;dot&quot;,&quot;dog&quot;,&quot;cog&quot;],[&quot;hit&quot;,&quot;hot&quot;,&quot;lot&quot;,&quot;log&quot;,&quot;cog&quot;]]\n<strong>Explanation:</strong>&nbsp;There are 2 shortest transformation sequences:\n&quot;hit&quot; -&gt; &quot;hot&quot; -&gt; &quot;dot&quot; -&gt; &quot;dog&quot; -&gt; &quot;cog&quot;\n&quot;hit&quot; -&gt; &quot;hot&quot; -&gt; &quot;lot&quot; -&gt; &quot;log&quot; -&gt; &quot;cog&quot;\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> beginWord = &quot;hit&quot;, endWord = &quot;cog&quot;, wordList = [&quot;hot&quot;,&quot;dot&quot;,&quot;dog&quot;,&quot;lot&quot;,&quot;log&quot;]\n<strong>Output:</strong> []\n<strong>Explanation:</strong> The endWord &quot;cog&quot; is not in wordList, therefore there is no valid transformation sequence.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= beginWord.length &lt;= 5</code></li>\n\t<li><code>endWord.length == beginWord.length</code></li>\n\t<li><code>1 &lt;= wordList.length &lt;= 500</code></li>\n\t<li><code>wordList[i].length == beginWord.length</code></li>\n\t<li><code>beginWord</code>, <code>endWord</code>, and <code>wordList[i]</code> consist of lowercase English letters.</li>\n\t<li><code>beginWord != endWord</code></li>\n\t<li>All the words in <code>wordList</code> are <strong>unique</strong>.</li>\n\t<li>The <strong>sum</strong> of all shortest transformation sequences does not exceed <code>10<sup>5</sup></code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findLadders\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"beginWord\",\r\n      \"type\": \"string\"\r\n    },\r\n    {\r\n      \"name\": \"endWord\",\r\n      \"type\": \"string\"\r\n    },\r\n    {\r\n      \"name\": \"wordList\",\r\n      \"type\": \"list<string>\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<list<string>>\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"456.9K\", \"totalSubmission\": \"1.7M\", \"totalAcceptedRaw\": 456916, \"totalSubmissionRaw\": 1655798, \"acRate\": \"27.6%\"}",
+  "likes": 6548,
+  "dislikes": 834,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Word Ladder\", \"titleSlug\": \"word-ladder\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Groups of Strings\", \"titleSlug\": \"groups-of-strings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"hit\"\n\"cog\"\n[\"hot\",\"dot\",\"dog\",\"lot\",\"log\",\"cog\"]",
+    "\"hit\"\n\"cog\"\n[\"hot\",\"dot\",\"dog\",\"lot\",\"log\"]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"okta\", \"name\": \"Okta\"}], \"more_than_six_months\": [{\"timesEncountered\": 27, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 9, \"slug\": \"lyft\", \"name\": \"Lyft\"}, {\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 2, \"slug\": \"yelp\", \"name\": \"Yelp\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<string>> findLadders(string beginWord, string endWord, vector<string>& wordList) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<String>> findLadders(String beginWord, String endWord, List<String> wordList) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findLadders(self, beginWord: str, endWord: str, wordList: List[str]) -> List[List[str]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findLadders(self, beginWord, endWord, wordList):\n        \"\"\"\n        :type beginWord: str\n        :type endWord: str\n        :type wordList: List[str]\n        :rtype: List[List[str]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} beginWord\n * @param {string} endWord\n * @param {string[]} wordList\n * @return {string[][]}\n */\nvar findLadders = function(beginWord, endWord, wordList) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findLadders(beginWord: string, endWord: string, wordList: string[]): string[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<string>> FindLadders(string beginWord, string endWord, IList<string> wordList) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nchar*** findLadders(char* beginWord, char* endWord, char** wordList, int wordListSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findLadders(beginWord string, endWord string, wordList []string) [][]string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findLadders(beginWord: String, endWord: String, wordList: List<String>): List<List<String>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findLadders(_ beginWord: String, _ endWord: String, _ wordList: [String]) -> [[String]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_ladders(begin_word: String, end_word: String, word_list: Vec<String>) -> Vec<Vec<String>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} begin_word\n# @param {String} end_word\n# @param {String[]} word_list\n# @return {String[][]}\ndef find_ladders(begin_word, end_word, word_list)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $beginWord\n     * @param String $endWord\n     * @param String[] $wordList\n     * @return String[][]\n     */\n    function findLadders($beginWord, $endWord, $wordList) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<String>> findLadders(String beginWord, String endWord, List<String> wordList) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findLadders(beginWord: String, endWord: String, wordList: List[String]): List[List[String]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_ladders(begin_word :: String.t, end_word :: String.t, word_list :: [String.t]) :: [[String.t]]\n  def find_ladders(begin_word, end_word, word_list) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_ladders(BeginWord :: unicode:unicode_binary(), EndWord :: unicode:unicode_binary(), WordList :: [unicode:unicode_binary()]) -> [[unicode:unicode_binary()]].\nfind_ladders(BeginWord, EndWord, WordList) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-ladders beginWord endWord wordList)\n  (-> string? string? (listof string?) (listof (listof string?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1148",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nThis problem is an extension of the problem [Word Ladder](https://leetcode.com/problems/word-ladder/), where we only need to find the minimum number of words in the transformation from `beginWord` to `endWord`. Here, we need to find all the transformations that exist between `beginWord` and `endWord` that are the minimum length. We can use BFS to find the minimum number of words in the transformation, however, finding all such transformations is tricky because the number of transformations may be enormous.\n</br>\n\n---\n\n### Approach 1: Breadth-First Search (BFS) + Backtracking\n\n#### Intuition\n\nThe problem can be correlated with the graph data structure. We can represent the words as the vertices and an edge can be used to connect two words which differ by a single letter.\n\nBefore diving further let's see how we can find all the direct connections of a particular word. To find the adjacent words for a particular word, one approach is to traverse all of the other words and add an edge for those that differ by a single letter. This approach requires $$O(N\\cdot K)$$ time where $$N$$ is the number of words given and $$K$$ is the maximum length of a word. The observation behind the optimal approach is that the words only consist of lowercase English letters. Hence we can change each character of the word to all other English lowercase characters and check whether or not that word exists in the `wordList`(this particular check operation takes $$O(1)$$ in C++ while in Java it will take $$O(K)$$ due to the immutable nature of Strings).This way the number of operations will be $$(25\\cdot K*K + 1)$$, hence the time complexity will be $$O(K^2)$$.\n\nThus we can find all the words that are directly connected.  Now, the task is to find all of the shortest paths from `beginWord` to `endWord`. \n\nThe naive way to do this is to use backtracking. We will start from `beginWord`, then traverse all the adjacent words until we reach the `endWord`. When we reach the `endWord`, we can compare the path length and find all the paths that have the minimum path length. This method however is extremely inefficient because the number of paths between two vertices can be enormous.\n\nLet's try to optimize our approach. Somehow, we need to reduce the number of traversed paths. Let's say the number of shortest paths that exist between `beginWord` and `endWord` is `x` and the number of paths that we must traverse to find these shortest paths is `y`. The closer the value `y` gets to the value `x`,  the more efficient our approach will be.\n\nThe diagram below shows the graph that represents the connectivity among words. As shown in the diagram we want to go from `red` to `tax`.  While backtracking on this graph, we will also cover the edges upwards that is from the `tad` to `ted` similarly from `tex` we will traverse to `ted` as well as `rex`. The key observation here is that going back in the upward direction will never lead us to the shortest path. We should always traverse the edges in the direction of `beginWord` to `endWord`. \n![fig](../Figures/126/126A.png)\nTo ensure that we never traverse up the ladder, let's use directed edges to connect the words. The edges in the graph below are all directed towards `endWord`. Also, notice that graphs produced by BFS do not contain cycles.  Thus, the graph will be a Directed Acyclic Graph (DAG).\n![fig](../Figures/126/126B.png)\nNow for the easy part, think of the previous graph as a bunch of layers and observe that once we reach a particular layer we don't want the future words to have the connection back to this layer. We will build our DAG using BFS.  We will then add all the directed edges from the words present in the current layer and once all words in this layer have been traversed, we will remove them from the `wordList`. This way we will avoid adding any edges that point towards `beginWord`.\n\nAfter constructing the graph, we can use our same backtracking approach to find the shortest paths between `beginWord` and `endWord`. Also, note that in the graph all paths between `beginWord` and `endWord`, obtained through BFS, will be the shortest possible. This is because all the edges in the graph will be directed in the direction of `beginWord` to `endWord`. Furthermore, there will not be any edge between the words that are on the same level.  Therefore, iterating over any edge will bring us one step closer to the `endWord`, thus there is no need to compare the length of the path each time we reach the `endWord`.\n\n#### Algorithm\n\n1. Store the words present in `wordList` in an unordered set so that the words can be efficiently removed during the breadth-first search.\n\n2. Perform the BFS, and add the edges to the adjacency list `adjList`. Also once a level is finished remove the `visited` words from the `wordList`.\n\n3. Start from `beginWord` and while keep tracking of the current path as `currPath` traverse all the possible paths, whenever the path leads to the `endWord` store the path in `shortestPaths`.\n\n#### Implementation\n\n> **NOTE:**\n>\n> In the following implementation, for convineince, instead for go from `beginWord` to `endWord`, we go from `endWord` to `beginWord`.\n\n<iframe src=\"https://leetcode.com/playground/U2AzNMfC/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"U2AzNMfC\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $$O(NK^2 + α)$$.\n\n    Here $$N$$ is the number of words in `wordList`, $$K$$ is the maximum length of a word, $$α$$ is the number of possible paths from `beginWord` to `endWord` in the directed graph we have.\n\n    Copying the `wordList` into the set will take $${O}(N)$$.\n\n    In BFS, every word will be traversed and for each word, we will find the neighbors using the function `findNeighbors` which has a time complexity of $$O(K^2)$$. Therefore the total complexity for all the `N` words will be $$O(NK^2)$$. Also, each word will be enqueued and will be removed from the set hence it will take $${O}(N)$$. The total time complexity of BFS will therefore be equal to $$O(NK^2)$$.\n\n    While backtracking, we will essentially be finding all the paths from `beginWord` to \n    `endWord`. Thus the time complexity will be equal to $$O(α)$$.\n\n    We can estimate the upper bound for $$α$$ by assuming that every layer except the first and the last layer in the DAG has $$x$$ number of words and is fully connected to the next layer. Let $$h$$ represent the height of the DAG, so the total number of paths will be $$x^h$$ (because we can choose any one word out of $$x$$ words in each layer and each choice will be part of a valid shortest path that leads to the `endWord`). Here, $$h$$ equals $$(N-2)/x$$. This would result in $$x^{(N-2)/x}$$ total paths, which is maximized when $$x = 2.718$$, which we will round to $$3$$ because $$x$$ must be an integer. Thus the upper bound for $$α$$ is $$3^{(N/3)}$$, however, this is a very loose bound because the nature of this problem precludes the possibility of a DAG where every layer is fully connected to the next layer.\n\n  The total time complexity is therefore equal to $$O(NK^2 + α)$$.\n\n* Space complexity: $${O}(NK)$$.\n  \n    Here $$N$$ is the Number of words in `wordList`, $$K$$ is the Maximum length of a word.\n    \n    Storing the words in a set will take $${O}(NK)$$ space.\n    \n    To build the adjacency list $${O}(N)$$ space is required as the BFS will produce a directed \n    graph and hence there will be at max $$(N - 1)$$ edges.\n    \n    In backtracking, stack space will be consumed which will be equal to the maximum number of active functions in the stack which is equal to the $N$ as the path can have all the words in the `wordList`. Hence space required is $${O}(N)$$.\n\n    The total space complexity is therefore equal to $${O}(NK)$$.\n\n---\n\n### Approach 2: Bidirectional Breadth-First Search (BFS) + Backtracking (**Time Limit Exceeded**)\n\n#### Intuition\n\nThis approach is very similar to the previous one in that both approaches will use the same Directed Acyclic Graph (DAG). The difference lies in the way that the graph is produced, which is better optimized in this case.\n\nBegin by storing all the words in `wordList` in an unordered set. This allows for efficient lookups and removal of words during the BFS traversal. Using a set ensures that checking whether a word exists in the list is $O(1)$, which is crucial for the performance of the BFS.\n\nWe perform a bidirectional breadth-first search (BFS). Initialize two queues: `forwardQueue`, which starts with the `beginWord`, and `backwardQueue`, which starts with the `endWord`. The idea is to explore the graph from both ends, meeting somewhere in the middle. This helps to reduce the search space compared to a traditional unidirectional BFS.\n\nIn each BFS iteration, we always expand the smaller of the two queues, i.e., if `forwardQueue` is larger, we swap the queues so that we expand from the smaller queue. This minimizes the number of words to process at each level, improving efficiency.\n\nFor each word processed from the queue, we find all its valid neighbors (words that differ by exactly one character). We then add these neighbors to the adjacency list (`adjList`) as edges, and the direction of edges depends on which queue is being expanded:\n\n* If expanding from the `forwardQueue`, the edge points toward the `endWord` (down the ladder).\n* If expanding from the `backwardQueue`, the edge points toward the `beginWord` (up the ladder).\n\nAfter each level of BFS, we also remove the processed words from the `wordList` to avoid revisiting them and to prevent infinite loops.\n\nAfter performing the bidirectional BFS, check if the two queues have intersected. If they haven’t, it means no valid transformation sequence exists between `beginWord` and `endWord`, and we can return an empty list immediately.\n\nIf the queues do overlap, it indicates that a path between `beginWord` and `endWord` exists, and we can proceed to reconstruct the shortest paths.\n\nOnce the BFS completes and the graph is fully constructed, we backtrack from `beginWord` to `endWord` to find all possible shortest transformation sequences. Starting from the `beginWord`, we recursively explore the graph, keeping track of the current path (`currPath`). Each time we reach the `endWord`, we store the current path in the `shortestPaths` list.\n\nThis backtracking step ensures that all valid paths are found, and since BFS guarantees that the first time we reach the `endWord` we’re on the shortest path, no need to worry about longer paths being included. Once all paths are found, we return `shortestPaths`.\n\n##### Time Limit Exceeded Root Cause Analysis:\n\nAlthough this is more optimized than the previous approach we still encounter a Time Limit Exceeded (TLE). In theory, bidirectional BFS should help by reducing the search space, since we’re expanding from both `beginWord` and `endWord` towards the middle. However, there are some real-world challenges that makes this approach inefficient.\n\nEven though we’re halving the search space, each BFS iteration still involves checking all the neighbors for every word in the queue. The operation of finding these neighbors can be costly because we need to compare every word in the word list to see if it differs by exactly one letter. This can add up quickly, especially if the word list is large.\n\nAdditionally, managing the two queues (`forwardQueue` and `backwardQueue`), as well as maintaining the adjacency list (`adjList`), comes with its own overhead. For each level in BFS, we have to carefully update these structures, and in some cases, we might revisit the same words multiple times. The complexity of these updates can slow down the process, especially if we’re working with a large number of words.\n\nWhile we try to optimize by always expanding the smaller queue, there’s still a significant amount of work happening behind the scenes. The cost of traversing neighbors, updating our adjacency list, and managing the state of both queues starts to build up. This leads to performance issues when we’re dealing with large inputs.\n\nLastly, once the BFS traversal is done, we still need to backtrack to find all possible paths. If there are many valid paths, this backtracking step can add more time, particularly when the graph is large.\n\n#### Algorithm\n\n1. Store the words present in `wordList` in an unordered set so that the words can be efficiently removed during the breadth-first search.\n\n2. Perform a bidirectional BFS. Initialize two queues, `forwardQueue` with `beginWord` and `backwardQueue` with `endWord`. At each iteration add the edges to the adjacency list `adjList` by extending the shorter queue. The parameter `direction` is used to decide in which direction the edges should be connected, where `1` indicates towards `endWord` (down the ladder) and vice versa. Also once a level is finished, remove the `forwardQueue` words from the `wordList`.\n\n3. If a sequence connecting `beginWord` to `endWord` does not exist, return an empty list. Otherwise, start from `beginWord` and while keeping track of the current path as `currPath` traverse all the possible paths, whenever the path leads to the `endWord` store the path in `shortestPaths`.\n\n#### Implementation\n\n> **NOTE:**\n>\n> Due to the larger constant factor, this approach is likely to yield *Time Limit Exceeded* in the current platform.\n\n<iframe src=\"https://leetcode.com/playground/DCrsZz7X/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DCrsZz7X\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $$O(NK^2 + α)$$.\n\n    Here $$N$$ is the Number of words in `wordList`, $$K$$ is the maximum length of a word, $$α$$ is the Number of possible paths from `beginWord` to `endWord` in the directed graph we have.\n\n    Copying the `wordList` into the set will take $${O}(N)$$.\n\n    In the worst-case scenario, the number of operations in the bidirectional BFS will be equal to the BFS approach discussed before. However, in some cases, this approach will perform better because the search space is reduced by selecting the shorter queue at each iteration. In bidirectional BFS, at most, every word will be traversed once, and for each word, we will find the neighbors using the function `findNeighbors` which has a time complexity of $$O(K^2)$$. Therefore the total complexity for all the $$N$$ words will be $$O(NK^2)$$. Also, each word will be enqueued and will be removed from the set which will take $${O}(N)$$. Thus, the total time complexity of bidirectional BFS will be $$O(NK^2)$$.\n\n    In the backtracking process, we will essentially find all of the paths from `beginWord` to `endWord`. Thus, the time complexity is equal to $$O(α)$$.\n\n    We can estimate the upper bound for $$α$$ by assuming that every layer except the first and the last layer in the DAG has $$x$$ number of words and is fully connected to the next layer. Let $$h$$ represent the height of the DAG, so the total number of paths will be $$x^h$$ (because we can choose any one word out of $$x$$ words in each layer and each choice will be part of a valid shortest path that leads to the `endWord`). Here, $$h$$ equals $$(N-2)/x$$. This would result in $$x^{(N-2)/x}$$ total paths, which is maximized when $$x = 2.718$$, which we will round to $$3$$ because $$x$$ must be an integer. Thus the upper bound for $$α$$ is $$3^{(N/3)}$$, however, this is a very loose bound because the nature of this problem precludes the possibility of a DAG where every layer is fully connected to the next layer.\n\n    The total time complexity is therefore equal to $$O(NK^2 + α)$$.\n\n* Space complexity: $${O}(NK)$$.\n  \n    Here $$N$$ is the Number of words in `wordList`, $$K$$ is the Maximum length of a word.\n    \n    Storing the words in a set will take $${O}(NK)$$ space.\n    \n    To build the adjacency list $${O}(N)$$ space is required as the BFS will produce a directed graph and hence there will be at most $$(N - 1)$$ edges. Also, in the worst-case scenario, the combined size of both queues will be equal to $$N$$.\n    \n    In backtracking, stack space will be consumed which will be equal to the maximum number of active functions in the stack, which is equal to the $$N$$ as the path can have all the words in the `wordList`. Hence the space required is $${O}(N)$$.\n\n    The total space complexity is therefore equal to $${O}(NK)$$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

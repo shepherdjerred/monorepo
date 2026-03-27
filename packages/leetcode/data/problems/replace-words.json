@@ -1,0 +1,141 @@
+{
+  "questionId": "648",
+  "questionFrontendId": "648",
+  "title": "Replace Words",
+  "titleSlug": "replace-words",
+  "difficulty": "Medium",
+  "content": "<p>In English, we have a concept called <strong>root</strong>, which can be followed by some other word to form another longer word - let&#39;s call this word <strong>derivative</strong>. For example, when the <strong>root</strong> <code>&quot;help&quot;</code> is followed by the word <code>&quot;ful&quot;</code>, we can form a derivative <code>&quot;helpful&quot;</code>.</p>\n\n<p>Given a <code>dictionary</code> consisting of many <strong>roots</strong> and a <code>sentence</code> consisting of words separated by spaces, replace all the derivatives in the sentence with the <strong>root</strong> forming it. If a derivative can be replaced by more than one <strong>root</strong>, replace it with the <strong>root</strong> that has <strong>the shortest length</strong>.</p>\n\n<p>Return <em>the <code>sentence</code></em> after the replacement.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> dictionary = [&quot;cat&quot;,&quot;bat&quot;,&quot;rat&quot;], sentence = &quot;the cattle was rattled by the battery&quot;\n<strong>Output:</strong> &quot;the cat was rat by the bat&quot;\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> dictionary = [&quot;a&quot;,&quot;b&quot;,&quot;c&quot;], sentence = &quot;aadsfasf absbs bbab cadsfafs&quot;\n<strong>Output:</strong> &quot;a a b c&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= dictionary.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= dictionary[i].length &lt;= 100</code></li>\n\t<li><code>dictionary[i]</code> consists of only lower-case letters.</li>\n\t<li><code>1 &lt;= sentence.length &lt;= 10<sup>6</sup></code></li>\n\t<li><code>sentence</code> consists of only lower-case letters and spaces.</li>\n\t<li>The number of words in <code>sentence</code> is in the range <code>[1, 1000]</code></li>\n\t<li>The length of each word in <code>sentence</code> is in the range <code>[1, 1000]</code></li>\n\t<li>Every two consecutive words in <code>sentence</code> will be separated by exactly one space.</li>\n\t<li><code>sentence</code> does not have leading or trailing spaces.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"replaceWords\",\n  \"params\": [\n    {\n      \"name\": \"dictionary\",\n      \"type\": \"list<string>\"\n    },\n    {\n      \"name\": \"sentence\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"317.9K\", \"totalSubmission\": \"462.8K\", \"totalAcceptedRaw\": 317891, \"totalSubmissionRaw\": 462829, \"acRate\": \"68.7%\"}",
+  "likes": 3109,
+  "dislikes": 219,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Implement Trie (Prefix Tree)\", \"titleSlug\": \"implement-trie-prefix-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"cat\",\"bat\",\"rat\"]\n\"the cattle was rattled by the battery\"",
+    "[\"a\",\"b\",\"c\"]\n\"aadsfasf absbs bbab cadsfafs\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string replaceWords(vector<string>& dictionary, string sentence) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String replaceWords(List<String> dictionary, String sentence) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def replaceWords(self, dictionary: List[str], sentence: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def replaceWords(self, dictionary, sentence):\n        \"\"\"\n        :type dictionary: List[str]\n        :type sentence: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} dictionary\n * @param {string} sentence\n * @return {string}\n */\nvar replaceWords = function(dictionary, sentence) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function replaceWords(dictionary: string[], sentence: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string ReplaceWords(IList<string> dictionary, string sentence) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* replaceWords(char** dictionary, int dictionarySize, char* sentence) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func replaceWords(dictionary []string, sentence string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun replaceWords(dictionary: List<String>, sentence: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func replaceWords(_ dictionary: [String], _ sentence: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn replace_words(dictionary: Vec<String>, sentence: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} dictionary\n# @param {String} sentence\n# @return {String}\ndef replace_words(dictionary, sentence)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $dictionary\n     * @param String $sentence\n     * @return String\n     */\n    function replaceWords($dictionary, $sentence) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String replaceWords(List<String> dictionary, String sentence) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def replaceWords(dictionary: List[String], sentence: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec replace_words(dictionary :: [String.t], sentence :: String.t) :: String.t\n  def replace_words(dictionary, sentence) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec replace_words(Dictionary :: [unicode:unicode_binary()], Sentence :: unicode:unicode_binary()) -> unicode:unicode_binary().\nreplace_words(Dictionary, Sentence) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (replace-words dictionary sentence)\n  (-> (listof string?) string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2333",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Hash Set\n\n#### Intuition\n\nA brute force approach of searching the entire dictionary for every possible root of every word in the sentence would be inefficient. Instead, we can preprocess the dictionary by creating a hash set, `dictSet`, containing all the words from the dictionary. The `dictSet` will allow us to check if a word has a root in the dictionary in constant time.\n\nFor a word in the sentence, its root will be found at the beginning of the word. This means that a word's root is a prefix of the word. The possible prefixes for a word are the set of substrings that start at the beginning of the word and end at any index of the word. For example, the prefixes for \"cat\" are \"c\", \"ca\", and \"cat\".\n\nTo solve the problem, we break it down into two sub-problems:\n\n1. Finding the shortest root in the `dictSet` that matches a prefix of a given word.\n\n2. Replacing the word with its shortest root.\n\nWe can create a helper function, `shortestRoot`, to solve the first subproblem. For each word in the sentence, we check if the `dictSet` contains any words that qualify as roots for the word. If any of the prefixes of the word matches a root word, we return the shortest one. If not, we return the full word.\n\nBelow is an image showing the process for finding the shortest root:\n\n![Shortest Root A](../Figures/648/shortest_rootA.png)\n\nBelow is an image showing the process for finding the shortest root when the `word` has no corresponding root:\n\n![Shortest Root B](../Figures/648/shortest_rootB.png)\n\nTo solve the second subproblem, we will create a data structure to store each word from the sentence. Then, we use the `shortestRoot` function to find the corresponding shortest root for each word and replace the word with the root.\n\n#### Algorithm\n\n1. Create a data structure `wordArray` that contains each word from the `sentence`.\n2. Create a hash set `dictSet` containing each word from the dictionary.\n3. Define a helper function `shortestRoot` that finds the shortest corresponding root word in the given dictionary for a given `word`.\n    - For each index of `word`, save the substring of `word` that starts at the beginning of `word` and ends at the index as `root`. If the `dictSet` contains `root`, return `root`.\n    - Return `word` if there is not a corresponding root in the dictionary.\n4. For each index `word` in `wordArray`:\n    - Search for the corresponding shortest root using the helper function and set `wordArray[word]` to the shortest root.\n5. Convert `wordArray` to a string and return.\n\n#### Implementation\n\n**Note:** The C++ implementation uses `istringstream` instead of an array to store the words in the sentence because there is no built-in way to create an array of words from a string by splitting at the spaces. It also uses a string to build the result.\n\n<iframe src=\"https://leetcode.com/playground/cjSqDM4T/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"cjSqDM4T\"></iframe>\n\n#### Complexity Analysis\n\nLet $d$ be the number of words in the dictionary, $s$ be the number of words in the sentence, and $w$ be the average length of each word. \n\n* Time complexity: $O(d \\cdot w + s \\cdot w^2)$\n\n    Creating a set from the dictionary takes $O(d \\cdot w)$. Creating the data structure that stores the words in the sentence takes $O(s \\cdot w)$.\n\n    The loop in the helper function runs once for each letter in the word. Building each substring takes the helper function $O(w)$. Hash set lookups take $O(1)$ in the average case. Therefore, the time complexity of the helper function is $O(w^2)$.\n\n    The main loop calls the helper function once for each word in the sentence, so it takes $O(s \\cdot w^2)$.\n\n    Converting the result to a string takes $O(s \\cdot w)$.\n\n    Therefore, the overall time complexity is $O(d \\cdot w + s \\cdot w^2)$\n\n* Space complexity: $O(d \\cdot w + s \\cdot w)$\n\n    The set that stores the dictionary requires $O(d \\cdot w)$ space. The data structure that stores the words in the sentence uses $O(s \\cdot w)$ space.\n\n---\n\n### Approach 2: Prefix Trie\n\n#### Intuition\n\nIn the above approach, we searched for each prefix of each word separately in the hash set. We created a new substring for each prefix, which is inefficient because each prefix differs from the previous by just one letter.\n\nInstead of using a hashmap to store the dictionary, we can use a Trie, sometimes known as a Prefix Trie.\n\n> A Trie is a tree-based data structure where each node represents a character in a word, and the path from the root to a leaf node represents a complete word. Tries allow for efficient word lookup and prefix matching.\n\nBelow is an image of a Trie storing the dictionary [\"to\", \"too\", \"the\", \"that\", \"toe\", \"theatre\", \"apple\", \"pen\", \"pencil\", \"pineapple\", \"pine\"]:\n\n![Trie](../Figures/648/prefix_trie.png)\n\nIf you are unfamiliar with the Trie data structure, we recommend you read our [Trie Explore Card](https://leetcode.com/explore/learn/card/trie/)\n\nThe Trie is made up of TrieNodes, which each consist of a boolean flag that is set to `true` when the node represents the end of a word and an array with pointers to the child nodes.\n\nSome implementations of Trie use a hashmap to store pointers to the children nodes instead, which uses less space but may take more time. We chose to use an array because we are working with a relatively small set of characters, the lowercase English alphabet.\n\nA Trie has a root and a constructor. Our implementation of Trie uses two additional functions:\n\n1. `insert`, which inserts a word into the Trie.\n\n2. `shortestRoot`, which finds the shortest corresponding root for a given `word`.\n\nWe will focus our discussion on the `shortestRoot` function because it is unique to this problem. This function is similar to searching in a Trie.\n\nThe basic idea is to start at the root and progress to the child node that corresponds to the next character in `word` until we either reach the end of the given `word`, or the current character in the `word` is not in the Trie. In either case, we return `word`.\n\nDuring the search process, the first node with the `isEnd` flag set to `true` is the shortest root. We return the substring of the word that ends after the current index.\n\nThe `replaceWords` function is very similar to the previous approach, except we use our Trie class and its `shortestRoot` function instead of a hash set and a helper function.\n\n#### Algorithm\n\n**A. Implement the `TrieNode` class:**\n\nProperties:\n`isEnd`: A boolean value indicating whether the node marks the end of a word.\n`children`: An array of size 26 (the number of lowercase English letters) to store pointers to child nodes.\n\nConstructor:\nThe constructor initializes `isEnd` to false and all elements in the `children` array to `null`.\n\n**B. Implement the `Trie` class:**\n\nProperties:\n`root`: A `TrieNode` that points to the root of the Trie.\n\nConstructor:\nThe constructor initializes the `root` with a new TrieNode object. The `root` is associated with an empty string.\n\n`insert` function:\nInserts the given `word` in the `Trie`.\n1. Set a TrieNode `current` to `root`.\n2. For each character `c` in the `word`:\n    - If the child node for `c` doesn't exist, create a new TrieNode and insert it into the `children` array.\n    - Move to the child node for `c`.\n3. After processing all the characters, mark `isEnd` as true for the current node.\n\n`shortestRoot` function:\nFinds the shortest corresponding root for a given `word`.\n1. Set a TrieNode `current` to `root`.\n2. For each index in the word:\n    - Set a character `c` to the current character.\n    - If the child node for `c` doesn't exist, return `word`.\n    - Move to the child node for `c`.\n    - If `current` is the end of a word, return the substring of `word` from the start of the word through the current index.\n3. After processing all the characters, return `word` if there is no corresponding root.\n\n**C. Implement the `replaceWords` function:**\n\n1. Create a data structure `wordArray` that contains each word from the `sentence`.\n2. Create a Trie `dictTree` and insert each word from the dictionary.\n3. For each index `word` in `wordArray`:\n    - Search for the corresponding shortest root using `dictTree.shortestRoot` and set `wordArray[word]` to the shortest root.\n4. Convert `wordArray` to a string and return.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/W5cSaBcY/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"W5cSaBcY\"></iframe>\n\n#### Complexity Analysis\n\nLet $d$ be the number of words in the dictionary, $s$ be the number of words in the sentence, and $w$ be the average length of each word. \n\n* Time complexity: $O(d \\cdot w + s \\cdot w)$\n\n    Creating the Trie takes $O(d \\cdot w)$. Creating the data structure that stores the words in the sentence takes $O(s \\cdot w)$.\n\n    The loop in the `shortestRoot` function runs once for each letter in the word. If a corresponding prefix is found, it creates one substring, which takes $O(w)$. Therefore, the time complexity of finding the shortest root is $O(w)$.\n\n    The main loop calls the `shortestRoot` function once for each word in the sentence, so it takes $O(s \\cdot w)$.\n\n    Converting the result to a string takes $O(s \\cdot w)$.\n\n    Therefore, the overall time complexity is $O(d \\cdot w + 2 \\cdot s \\cdot w)$, which we can simplify to $O(d \\cdot w + s \\cdot w)$.\n\n* Space complexity: $O(d \\cdot w + s \\cdot w)$\n\n    The Trie may store up to $O(d \\cdot w)$ nodes, and each node stores an array with $26$ pointers, so the Trie requires $O(d \\cdot w \\cdot 26)$ space. $26$ is a constant factor, so we can simplify this to $O(d \\cdot w)$. The data structure that stores the words in the sentence uses $O(s \\cdot w)$ space.\n\n    > Note: Though the space complexity looks similar to the above approach, this approach will usually require less space because when any words have the same prefix, it stores the prefix only once, while the hash set stores words like \"semicircle\" and \"semitruck\" separately.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

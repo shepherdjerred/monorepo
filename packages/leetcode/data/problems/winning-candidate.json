@@ -1,0 +1,58 @@
+{
+  "questionId": "574",
+  "questionFrontendId": "574",
+  "title": "Winning Candidate",
+  "titleSlug": "winning-candidate",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Candidate</code></p>\n\n<pre>\n+-------------+----------+\n| Column Name | Type     |\n+-------------+----------+\n| id          | int      |\n| name        | varchar  |\n+-------------+----------+\nid is the column with unique values for this table.\nEach row of this table contains information about the id and the name of a candidate.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Vote</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| id          | int  |\n| candidateId | int  |\n+-------------+------+\nid is an auto-increment primary key (column with unique values).\ncandidateId is a foreign key (reference column) to id from the Candidate table.\nEach row of this table determines the candidate who got the i<sup>th</sup> vote in the elections.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the name of the winning candidate (i.e., the candidate who got the largest number of votes).</p>\n\n<p>The test cases are generated so that <strong>exactly one candidate wins</strong> the elections.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nCandidate table:\n+----+------+\n| id | name |\n+----+------+\n| 1  | A    |\n| 2  | B    |\n| 3  | C    |\n| 4  | D    |\n| 5  | E    |\n+----+------+\nVote table:\n+----+-------------+\n| id | candidateId |\n+----+-------------+\n| 1  | 2           |\n| 2  | 4           |\n| 3  | 3           |\n| 4  | 2           |\n| 5  | 5           |\n+----+-------------+\n<strong>Output:</strong> \n+------+\n| name |\n+------+\n| B    |\n+------+\n<strong>Explanation:</strong> \nCandidate B has 2 votes. Candidates C, D, and E have 1 vote each.\nThe winner is candidate B.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Candidate (id int, name varchar(255))\", \"Create table If Not Exists Vote (id int, candidateId int)\"], \"mssql\": [\"Create table Candidate (id int, name varchar(255))\", \"Create table Vote (id int, candidateId int)\"], \"oraclesql\": [\"Create table Candidate (id int, name varchar(255))\", \"Create table Vote (id int, candidateId int)\"], \"database\": true, \"name\": \"winning_candidate\", \"pythondata\": [\"Candidate = pd.DataFrame([], columns=['id', 'name']).astype({'id':'Int64', 'name':'object'})\", \"Vote = pd.DataFrame([], columns=['id', 'candidateId']).astype({'id':'Int64', 'candidateId':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Candidate (id int, name varchar(255))\\n\", \"Create table If Not Exists Vote (id int, candidateId int)\"], \"database_schema\": {\"Candidate\": {\"id\": \"INT\", \"name\": \"VARCHAR(255)\"}, \"Vote\": {\"id\": \"INT\", \"candidateId\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"77.5K\", \"totalSubmission\": \"123.7K\", \"totalAcceptedRaw\": 77480, \"totalSubmissionRaw\": 123747, \"acRate\": \"62.6%\"}",
+  "likes": 184,
+  "dislikes": 414,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Candidate\":[\"id\",\"name\"],\"Vote\":[\"id\",\"candidateId\"]},\"rows\":{\"Candidate\":[[1,\"A\"],[2,\"B\"],[3,\"C\"],[4,\"D\"],[5,\"E\"]],\"Vote\":[[1,2],[2,4],[3,3],[4,2],[5,5]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef winning_candidate(candidate: pd.DataFrame, vote: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "208",
+    "content": "[TOC]\n\n# Solution\n---\n\n### Overview\n\n **Visualization of approach**\n![fig](../Figures/574/574-1.png)\n\n---\n\n## pandas\n\n### Approach: Group and Aggregate for Maximum\n\n#### Intuition\n\nLet's break down the intuition behind the algorithm:\n\n1. **Counting Votes for Each Candidate**:\n   ```python\n   vote_counter = vote.groupby('candidateId').size().reset_index(name='vote_count')\n   ```\n   - `groupby('candidateId')`: This method is grouping the `vote` DataFrame by the `candidateId`. This will create a grouping for each unique `candidateId`, where each group contains the rows (votes) for that candidate.\n   - `size()`: After grouping, this method is used to count the number of elements (votes) in each group (candidate).\n   - `reset_index(name='vote_count')`: This is resetting the index of the resulting Series to convert it into a DataFrame. The counts are placed in a new column named `vote_count`.\n\n2. **Finding the ID of the Winning Candidate**:\n   ```python\n   winner_id = vote_counter.loc[vote_counter['vote_count'].idxmax(), 'candidateId']\n   ```\n   - `vote_counter['vote_count'].idxmax()`: This is finding the index of the maximum value in the `vote_count` column of the `vote_counter` DataFrame, which corresponds to the ID of the candidate with the most votes.\n   - `.loc`: This indexer is used to access a group of rows and columns by labels or booleans. In this case, it is used to access the `candidateId` of the row with the maximum `vote_count`.\n\n3. **Retrieving the Name of the Winning Candidate**:\n   ```python\n   return candidate[candidate['id'] == winner_id][['name']]\n   ```\n   - `candidate['id'] == winner_id`: This is creating a boolean mask, where each element is `True` if the `id` of the candidate matches the `winner_id` and `False` otherwise.\n   - `candidate[candidate['id'] == winner_id]`: This is filtering the `candidate` DataFrame using the boolean mask to get the row of the winning candidate.\n   - `[['name']]`: This is selecting only the `name` column from the filtered DataFrame, thus retrieving the name of the winning candidate.\n\nThe result is a DataFrame containing the name of the candidate who has received the most votes.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/P7WB5A97/shared\" frameBorder=\"0\" width=\"100%\" height=\"0\" name=\"P7WB5A97\"></iframe>\n\n---\n\n## Database\n\n### Approach: Group and Find the Maximum using the `ORDER BY` Clause\n\n#### Intuition\n\nLet's break down the intuition behind the query:\n\n1. **Subquery**:\n   - **`SELECT candidateId, COUNT(*) AS vote_count`**: This part of the subquery is counting the number of rows (votes) for each `candidateId` in the `Vote` table. The result is a list of `candidateId`s along with their respective vote counts.\n   - **`FROM Vote`**: This specifies that we are selecting from the `Vote` table.\n   - **`GROUP BY candidateId`**: We are grouping the results by `candidateId` so that we can count the number of votes each candidate received.\n   - **`ORDER BY COUNT(*) DESC`**: After grouping, we are ordering the candidates based on their vote count in descending order, so the candidate with the most votes will be ranked first.\n   - **`LIMIT 1`**: We only want the top candidate (the one with the most votes), so we limit the results to 1.\n\n2. **Main Query**:\n   - **`SELECT c.name`**: We are interested in the name of the winning candidate.\n   - **`FROM Candidate AS c`**: We are selecting from the `Candidate` table and aliasing it as `c` for brevity.\n   - **`JOIN ( ... ) v ON c.id = v.candidateId`**: We are joining the `Candidate` table with the results of our subquery (aliased as `v`) based on the `id` from the `Candidate` table and `candidateId` from the subquery. This is done to fetch the name of the candidate who has the most votes.\n\nBy combining the subquery and the main query in this way, we are able to determine the name of the candidate who received the highest number of votes, fulfilling the requirement of reporting the name of the winning candidate.\n\n#### Implementation\n\n**MySQL**\n\n```sql\nSELECT \n  c.name \nFROM \n  Candidate AS c \n  JOIN (\n    SELECT \n      candidateId, \n      COUNT(*) AS vote_count \n    FROM \n      Vote \n    GROUP BY \n      candidateId \n    ORDER BY \n      COUNT(*) DESC \n    LIMIT \n      1\n  ) AS v \n  ON c.id = v.candidateId;\n\n\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "questionId": "812",
+  "questionFrontendId": "796",
+  "title": "Rotate String",
+  "titleSlug": "rotate-string",
+  "difficulty": "Easy",
+  "content": "<p>Given two strings <code>s</code> and <code>goal</code>, return <code>true</code> <em>if and only if</em> <code>s</code> <em>can become</em> <code>goal</code> <em>after some number of <strong>shifts</strong> on</em> <code>s</code>.</p>\n\n<p>A <strong>shift</strong> on <code>s</code> consists of moving the leftmost character of <code>s</code> to the rightmost position.</p>\n\n<ul>\n\t<li>For example, if <code>s = &quot;abcde&quot;</code>, then it will be <code>&quot;bcdea&quot;</code> after one shift.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> s = \"abcde\", goal = \"cdeab\"\n<strong>Output:</strong> true\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> s = \"abcde\", goal = \"abced\"\n<strong>Output:</strong> false\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length, goal.length &lt;= 100</code></li>\n\t<li><code>s</code> and <code>goal</code> consist of lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"rotateString\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"goal\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"795.8K\", \"totalSubmission\": \"1.2M\", \"totalAcceptedRaw\": 795785, \"totalSubmissionRaw\": 1219669, \"acRate\": \"65.2%\"}",
+  "likes": 4839,
+  "dislikes": 426,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"abcde\"\n\"cdeab\"",
+    "\"abcde\"\n\"abced\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 17, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 17, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"wells-fargo\", \"name\": \"Wells Fargo\"}, {\"timesEncountered\": 3, \"slug\": \"natwest\", \"name\": \"NatWest\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"rivian\", \"name\": \"Rivian\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "String Matching",
+      "slug": "string-matching"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool rotateString(string s, string goal) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean rotateString(String s, String goal) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def rotateString(self, s: str, goal: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def rotateString(self, s, goal):\n        \"\"\"\n        :type s: str\n        :type goal: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string} goal\n * @return {boolean}\n */\nvar rotateString = function(s, goal) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function rotateString(s: string, goal: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool RotateString(string s, string goal) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool rotateString(char* s, char* goal) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func rotateString(s string, goal string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun rotateString(s: String, goal: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func rotateString(_ s: String, _ goal: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn rotate_string(s: String, goal: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String} goal\n# @return {Boolean}\ndef rotate_string(s, goal)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String $goal\n     * @return Boolean\n     */\n    function rotateString($s, $goal) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool rotateString(String s, String goal) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def rotateString(s: String, goal: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec rotate_string(s :: String.t, goal :: String.t) :: boolean\n  def rotate_string(s, goal) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec rotate_string(S :: unicode:unicode_binary(), Goal :: unicode:unicode_binary()) -> boolean().\nrotate_string(S, Goal) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (rotate-string s goal)\n  (-> string? string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2552",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nA rotation shifts the characters of the string to the right, one by one. The simplest way to solve this problem is to simulate each possible rotation of the string `s` and compare the result to the `goal`.\n\nIf the lengths of `s` and `goal` are not equal, there's no way `s` can be rotated to become `goal`. This is the base case. If they are of equal length, we can then proceed with checking each rotation.\n\nTo simulate a rotation, we move the first character of `s` to the end and compare the new string with `goal`. We repeat this process for every possible rotation. If at any point, `s` matches `goal`, we can conclude that the rotation works, and we return `true`. If none of the rotations match the `goal`, we return `false`.\n\n#### Algorithm\n\n- Check if the lengths of `s` and `goal` are different:\n  - If they are not equal, return `false` since one string cannot be a rotation of the other.\n\n- Initialize `length` to store the length of string `s`.\n\n- Use a loop to attempt all possible rotations of `s`:\n  - For each possible rotation count from `0` to `length - 1`:\n    - Perform one left rotation on `s`, moving the first character to the end of the string.\n    - Check if the rotated string `s` is equal to `goal`:\n      - If they are equal, return `true`, indicating that `goal` is a rotation of `s`.\n\n- If all rotations have been checked and none match `goal`, return `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/UhNHsCyD/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"UhNHsCyD\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of string $s$ (and also the size of string $goal$, since they must be of equal length to be rotations).\n\n- Time complexity: $O(n^2)$\n\n    Checking if the lengths of both strings are different takes $O(1)$.\n\n    The loop iterates $n$ times (for each possible rotation).\n\n    Inside the loop, the `rotate` function performs a rotation, which takes $O(n)$, and comparing two strings $s$ and $goal$ also takes $O(n)$.\n\n    Therefore, for each of the $n$ rotations, we are performing operations that take $O(n)$, leading to an overall time complexity of $O(n^2)$.\n\n- Space complexity: $O(n)$ or $O(1)$\n\n    Each rotation creates a new string $s$ of length $n$, so the additional space for each new string is $O(n)$.\n\n    Java and Python’s string immutability means that every new rotation stores a new string in memory, leading to $O(n)$ space complexity for each rotation.\n\n    Therefore, the overall space complexity is $O(n)$ for Java and Python, as we maintain the current rotated string in memory and for CPP its $O(1)$.\n\n---\n\n### Approach 2: Concatenation Check\n\n#### Intuition\n\nInstead of rotating the string and checking after each rotation, we can observe a relationship between `s` and `goal`. If `goal` can be formed by rotating `s`, it must be possible to find `goal` as a substring in some version of `s`.\n\nA clever way to exploit this is by concatenating `s` with itself. Why? Because this effectively creates a string that contains all possible rotations of `s` within it. For example, if `s = \"abcde\"`, then `s + s = \"abcdeabcde\"`. Notice how every possible rotation of `s` appears somewhere in this concatenated string.\n\nSo, if `goal` can be obtained by rotating `s`, it must be a substring of `s + s`. To implement this, we simply check if `goal` is a substring of the concatenated string. If it is, we return `true`; otherwise, we return `false`.\n\n![Concatenation Check](../Figures/796/796_rotate.png)\n\n#### Algorithm\n\n- Check if the lengths of strings `s` and `goal` are different:\n  - If they are, return `false` because a rotation of `s` cannot match `goal`.\n\n- Create a new string `doubledString` by concatenating `s` with itself.\n\n- Use a string search method to find the substring `goal` within `doubledString`:\n  - If `goal` is found, check if this index is less than the length of `doubledString`.\n  - If it is, return `true`, indicating that `goal` is a valid rotation of `s`. Otherwise, return `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/9FJaUG6S/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"9FJaUG6S\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of string $s$ (and also the size of string $goal$, since they must be of equal length to be rotations).\n\n- Time complexity: $O(n)$\n\n    Checking if the lengths of both strings are different takes $O(1)$.\n\n    Concatenating the string $s$ with itself to create `doubledString` takes $O(n)$ because we are creating a new string that is twice the length of $s$.\n\n    The substring find function is typically implemented using an algorithm that runs in $O(n)$. This involves scanning the `doubledString` of length $2n$ for the substring `goal` of length $n$. Since the search occurs in a string of size $2n$, the overall complexity for this operation remains $O(n)$.\n\n    Overall, the most significant operations are linear in terms of $n$, resulting in a total time complexity of $O(n)$.\n\n- Space complexity: $O(n)$\n\n    The space used for the `doubledString` is $O(n)$ since it stores a string that is double the size of $s$ (specifically, $O(2 \\cdot n) \\approx O(n)$).\n\n    Thus, the overall space complexity is $O(n)$ due to the concatenated string.\n\n---\n\n### Approach 3: KMP Algorithm\n\n#### Intuition\n\nWe can refine the substring search using the [Knuth-Morris-Pratt (KMP) algorithm](https://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm). This follows the same intuition as the concatenation approach but improves how we search for `goal` within the concatenated string `s + s`.\n\nThe KMP algorithm allows us to search for substrings in linear time by preprocessing the pattern (in this case, `goal`) to identify where matches might fail early. The idea is to avoid rechecking characters we’ve already confirmed don’t match.\n\nFirst, we preprocess `goal` to create the longest prefix suffix (LPS) array. The LPS array stores the lengths of the longest proper prefix of the substring that matches a proper suffix for every prefix of `goal`. For example, if a mismatch occurs after matching a certain number of characters, the LPS array tells us how many characters we can skip and where to resume checking in the pattern. This way we don't need to start from the beginning of `goal` each time a mismatch happens.\n\nOnce the LPS array is ready, we scan through the concatenated string `s + s` and use the LPS array to efficiently find the `goal`. As we iterate through `s + s`, we compare characters from `goal` against the characters of the concatenated string. If we find a match, we continue comparing; however, if a mismatch occurs, we use the value from the LPS array to determine the next position in `goal` to check.\n\n> Note: This approach doesn't change much in terms of time complexity and space complexity compared to the previous approach, but we included it as we thought it could be a good problem to demonstrate the use of KMP in general.\n\n#### Algorithm\n\n- Check if the lengths of strings `s` and `goal` are different:\n  - If they are, return `false` (they can't be rotations).\n\n- Concatenate `s` with itself to create `doubledString`, which contains all possible rotations of `s`.\n\n- Call the `kmpSearch` function to check if `goal` is a substring of `doubledString`.\n\n- In the `kmpSearch` function:\n  - Precompute the LPS (Longest Prefix Suffix) array for the `pattern` (which is `goal`).\n\n  - Initialize indices `textIndex` and `patternIndex` to track positions in `text` and `pattern`, respectively.\n\n  - Loop through `text`:\n    - If the characters at `text[textIndex]` and `pattern[patternIndex]` match:\n      - Increment both indices.\n      - If `patternIndex` equals the length of the pattern, return `true` (the pattern has been found).\n\n    - If there's a mismatch after some matches:\n      - Use the LPS array to update `patternIndex` to skip unnecessary comparisons.\n\n    - If there are no matches:\n      - Move `textIndex` to the next character.\n\n  - If the loop finishes without finding the pattern, return `false`.\n\n- In the `computeLPS` function:\n  - Initialize the LPS array with zeros.\n\n  - Build the LPS array to store the lengths of the longest prefix that is also a suffix for each position in the pattern:\n    - While the `index` is less than the length of the pattern:\n      - If characters match, increment the length and set the corresponding LPS value.\n      - If there's a mismatch, update the length using the previous LPS value.\n      - If there's no match and the length is zero, set the LPS value to zero.\n\n- Return the constructed LPS array.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7SUakKWm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7SUakKWm\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of string $s$ (and also the size of string $goal$, since they must be of equal length to be rotations).\n\n- Time complexity: $O(n)$\n\n    Checking if the lengths of both strings are different takes $O(1)$.\n\n    Concatenating the string $s$ with itself to create `doubledString` takes $O(n)$ because we are creating a new string that is twice the length of $s$.\n\n    The KMP substring search involves computing the LPS array for the `goal`, which takes $O(n)$, and the search process itself also runs in $O(n)$. Thus, the total time for KMP is $O(n)$.\n\n    Overall, the most significant operation is linear in terms of $n$, resulting in a total time complexity of $O(n)$.\n\n- Space complexity: $O(n)$\n\n    The space used for the `doubledString` is $O(n)$ since it stores a string that is double the size of $s$.\n\n    The LPS array in the `computeLPS` function is of size $n$, which contributes $O(n)$ space.\n\n    Thus, the overall space complexity is $O(n)$ due to the concatenated string and the LPS array.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

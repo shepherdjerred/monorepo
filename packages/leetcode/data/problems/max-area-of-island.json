@@ -1,0 +1,145 @@
+{
+  "questionId": "695",
+  "questionFrontendId": "695",
+  "title": "Max Area of Island",
+  "titleSlug": "max-area-of-island",
+  "difficulty": "Medium",
+  "content": "<p>You are given an <code>m x n</code> binary matrix <code>grid</code>. An island is a group of <code>1</code>&#39;s (representing land) connected <strong>4-directionally</strong> (horizontal or vertical.) You may assume all four edges of the grid are surrounded by water.</p>\n\n<p>The <strong>area</strong> of an island is the number of cells with a value <code>1</code> in the island.</p>\n\n<p>Return <em>the maximum <strong>area</strong> of an island in </em><code>grid</code>. If there is no island, return <code>0</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/05/01/maxarea1-grid.jpg\" style=\"width: 500px; height: 310px;\" />\n<pre>\n<strong>Input:</strong> grid = [[0,0,1,0,0,0,0,1,0,0,0,0,0],[0,0,0,0,0,0,0,1,1,1,0,0,0],[0,1,1,0,1,0,0,0,0,0,0,0,0],[0,1,0,0,1,1,0,0,1,0,1,0,0],[0,1,0,0,1,1,0,0,1,1,1,0,0],[0,0,0,0,0,0,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,1,1,1,0,0,0],[0,0,0,0,0,0,0,1,1,0,0,0,0]]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> The answer is not 11, because the island must be connected 4-directionally.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[0,0,0,0,0,0,0,0]]\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 50</code></li>\n\t<li><code>grid[i][j]</code> is either <code>0</code> or <code>1</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"maxAreaOfIsland\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"grid\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"1.2M\", \"totalSubmission\": \"1.7M\", \"totalAcceptedRaw\": 1223532, \"totalSubmissionRaw\": 1656473, \"acRate\": \"73.9%\"}",
+  "likes": 10604,
+  "dislikes": 222,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Islands\", \"titleSlug\": \"number-of-islands\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Battleships in a Board\", \"titleSlug\": \"battleships-in-a-board\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Island Perimeter\", \"titleSlug\": \"island-perimeter\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Largest Submatrix With Rearrangements\", \"titleSlug\": \"largest-submatrix-with-rearrangements\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Detonate the Maximum Bombs\", \"titleSlug\": \"detonate-the-maximum-bombs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Fish in a Grid\", \"titleSlug\": \"maximum-number-of-fish-in-a-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,0,1,0,0,0,0,1,0,0,0,0,0],[0,0,0,0,0,0,0,1,1,1,0,0,0],[0,1,1,0,1,0,0,0,0,0,0,0,0],[0,1,0,0,1,1,0,0,1,0,1,0,0],[0,1,0,0,1,1,0,0,1,1,1,0,0],[0,0,0,0,0,0,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,1,1,1,0,0,0],[0,0,0,0,0,0,0,1,1,0,0,0,0]]",
+    "[[0,0,0,0,0,0,0,0]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 11, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 7, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 7, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"grubhub\", \"name\": \"Grubhub\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 2, \"slug\": \"roku\", \"name\": \"Roku\"}, {\"timesEncountered\": 2, \"slug\": \"schlumberger\", \"name\": \"Schlumberger\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxAreaOfIsland(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxAreaOfIsland(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxAreaOfIsland(self, grid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxAreaOfIsland(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number}\n */\nvar maxAreaOfIsland = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxAreaOfIsland(grid: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxAreaOfIsland(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxAreaOfIsland(int** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxAreaOfIsland(grid [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxAreaOfIsland(grid: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxAreaOfIsland(_ grid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_area_of_island(grid: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer}\ndef max_area_of_island(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer\n     */\n    function maxAreaOfIsland($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxAreaOfIsland(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxAreaOfIsland(grid: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_area_of_island(grid :: [[integer]]) :: integer\n  def max_area_of_island(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_area_of_island(Grid :: [[integer()]]) -> integer().\nmax_area_of_island(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-area-of-island grid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "260",
+    "content": "[TOC]\n\n### Approach #1: Depth-First Search (Recursive) [Accepted]\n\n**Intuition and Algorithm**\n\nWe want to know the area of each connected shape in the grid, then take the maximum of these.\n\nIf we are on a land square and explore every square connected to it 4-directionally (and recursively squares connected to those squares, and so on), then the total number of squares explored will be the area of that connected shape.\n\nTo ensure we don't count squares in a shape more than once, let's use `seen` to keep track of squares we haven't visited before. It will also prevent us from counting the same shape more than once.\n\n<iframe src=\"https://leetcode.com/playground/CQGNqDhr/shared\" frameBorder=\"0\" name=\"CQGNqDhr\" width=\"100%\" height=\"479\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(R*C)$$, where $$R$$ is the number of rows in the given `grid`, and $$C$$ is the number of columns.  We visit every square once.\n\n* Space complexity: $$O(R*C)$$, the space used by `seen` to keep track of visited squares and the space used by the call stack during our recursion.\n\n---\n### Approach #2: Depth-First Search (Iterative) [Accepted]\n\n**Intuition and Algorithm**\n\nWe can try the same approach using a stack-based, (or \"iterative\") depth-first search.\n\nHere, `seen` will represent squares that have either been visited or are added to our list of squares to visit (`stack`). For every starting land square that hasn't been visited, we will explore 4-directionally around it, adding land squares that haven't been added to `seen` to our `stack`.\n\nOn the side, we'll keep a count `shape` of the total number of squares seen during the exploration of this shape. We'll want the running max of these counts.\n\n<iframe src=\"https://leetcode.com/playground/khZHhSir/shared\" frameBorder=\"0\" name=\"khZHhSir\" width=\"100%\" height=\"515\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(R*C)$$, where $$R$$ is the number of rows in the given `grid`, and $$C$$ is the number of columns. We visit every square once.\n\n* Space complexity: $$O(R*C)$$, the space used by `seen` to keep track of visited squares and the space used by `stack`.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

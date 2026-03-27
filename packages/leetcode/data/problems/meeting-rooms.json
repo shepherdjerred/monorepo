@@ -1,0 +1,133 @@
+{
+  "questionId": "252",
+  "questionFrontendId": "252",
+  "title": "Meeting Rooms",
+  "titleSlug": "meeting-rooms",
+  "difficulty": "Easy",
+  "content": "<p>Given an array of meeting time <code>intervals</code>&nbsp;where <code>intervals[i] = [start<sub>i</sub>, end<sub>i</sub>]</code>, determine if a person could attend all meetings.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> intervals = [[0,30],[5,10],[15,20]]\n<strong>Output:</strong> false\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> intervals = [[7,10],[2,4]]\n<strong>Output:</strong> true\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= intervals.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>intervals[i].length == 2</code></li>\n\t<li><code>0 &lt;= start<sub>i</sub> &lt;&nbsp;end<sub>i</sub> &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"canAttendMeetings\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"intervals\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"514.4K\", \"totalSubmission\": \"866.4K\", \"totalAcceptedRaw\": 514432, \"totalSubmissionRaw\": 866447, \"acRate\": \"59.4%\"}",
+  "likes": 2121,
+  "dislikes": 117,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Merge Intervals\", \"titleSlug\": \"merge-intervals\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Meeting Rooms II\", \"titleSlug\": \"meeting-rooms-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Meeting Rooms III\", \"titleSlug\": \"meeting-rooms-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Points That Intersect With Cars\", \"titleSlug\": \"points-that-intersect-with-cars\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,30],[5,10],[15,20]]",
+    "[[7,10],[2,4]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 9, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 9, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"palo-alto-networks\", \"name\": \"Palo Alto Networks\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool canAttendMeetings(vector<vector<int>>& intervals) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean canAttendMeetings(int[][] intervals) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def canAttendMeetings(self, intervals: List[List[int]]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def canAttendMeetings(self, intervals):\n        \"\"\"\n        :type intervals: List[List[int]]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} intervals\n * @return {boolean}\n */\nvar canAttendMeetings = function(intervals) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function canAttendMeetings(intervals: number[][]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CanAttendMeetings(int[][] intervals) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool canAttendMeetings(int** intervals, int intervalsSize, int* intervalsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func canAttendMeetings(intervals [][]int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun canAttendMeetings(intervals: Array<IntArray>): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func canAttendMeetings(_ intervals: [[Int]]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn can_attend_meetings(intervals: Vec<Vec<i32>>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} intervals\n# @return {Boolean}\ndef can_attend_meetings(intervals)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $intervals\n     * @return Boolean\n     */\n    function canAttendMeetings($intervals) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool canAttendMeetings(List<List<int>> intervals) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def canAttendMeetings(intervals: Array[Array[Int]]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec can_attend_meetings(intervals :: [[integer]]) :: boolean\n  def can_attend_meetings(intervals) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec can_attend_meetings(Intervals :: [[integer()]]) -> boolean().\ncan_attend_meetings(Intervals) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (can-attend-meetings intervals)\n  (-> (listof (listof exact-integer?)) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "39",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/474301408\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n---\n\n### Approach 1: Brute Force\nThe straight-forward solution is to compare every two meetings in the array, and see if they conflict with each other (i.e. if they overlap). Two meetings overlap if one of them starts while the other is still taking place.\n\n\n<iframe src=\"https://leetcode.com/playground/C9LkCdas/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"C9LkCdas\"></iframe>\n\n**Overlap Condition**\n\nThe overlap condition in the code above can be written in a more concise way. Consider two non-overlapping meetings. The earlier meeting ends before the later meeting begins. Therefore, the *minimum* end time of the two meetings (which is the end time of the earlier meeting) is smaller than or equal the *maximum* start time of the two meetings (which is the start time of the later meeting).\n\n![Two non-overlapping intervals](https://leetcode.com/media/original_images/252_NonOverlappingIntervals.png \"Odd Even Linked List\"){:width=\"300px\"}\n\n\n*Figure 1. Two non-overlapping intervals.*\n\n\n![Two overlapping intervals](https://leetcode.com/media/original_images/252_OverlappingIntervals.png \"Odd Even Linked List\"){:width=\"280px\"}\n\n\n*Figure 2. Two overlapping intervals.*\n\n\nSo the condition can be rewritten as follows.\n\n<iframe src=\"https://leetcode.com/playground/PiBGhH4o/shared\" frameBorder=\"0\" width=\"100%\" height=\"123\" name=\"PiBGhH4o\"></iframe>\n\n#### Complexity Analysis\n\nBecause we have to check every meeting against every other meeting, the total run time is $O(n^2)$. No additional space is used, so the space complexity is $O(1)$.\n\n---\n\n### Approach 2: Sorting\n\nThe idea here is to sort the meetings by starting time. Then, go through the meetings one by one and make sure that each meeting ends before the next one starts.\n\n<iframe src=\"https://leetcode.com/playground/Y5jxFX5k/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"Y5jxFX5k\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $O(n \\log n)$.\n    \n    The time complexity is dominated by the sorting step. Once the array has been sorted, only $O(n)$ time is required to go through the array and determine if there is any overlap.\n\n* Space complexity: $O( \\log n)$ or $O(n)$\n\n    Note that some extra space is used when we sort an array in place. The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the `sort` method sorts a list using the Tim Sort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(n)$ additional space. Additionally, Tim Sort is designed to be a stable algorithm.\n    - In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$ for sorting an array.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

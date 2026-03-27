@@ -1,0 +1,33 @@
+{
+  "questionId": "193",
+  "questionFrontendId": "193",
+  "title": "Valid Phone Numbers",
+  "titleSlug": "valid-phone-numbers",
+  "difficulty": "Easy",
+  "content": "<p>Given a text file <code>file.txt</code> that contains a list of phone numbers (one per line), write a one-liner bash script to print all valid phone numbers.</p>\n\n<p>You may assume that a valid phone number must appear in one of the following two formats: (xxx) xxx-xxxx or xxx-xxx-xxxx. (x means a digit)</p>\n\n<p>You may also assume each line in the text file must not contain leading or trailing white spaces.</p>\n\n<p><strong class=\"example\">Example:</strong></p>\n\n<p>Assume that <code>file.txt</code> has the following content:</p>\n\n<pre>\n987-123-4567\n123 456 7890\n(123) 456-7890\n</pre>\n\n<p>Your script should output the following valid phone numbers:</p>\n\n<pre>\n987-123-4567\n(123) 456-7890\n</pre>\n",
+  "hints": [],
+  "metaData": "{\n  \"shell\": true,\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"127.3K\", \"totalSubmission\": \"435.2K\", \"totalAcceptedRaw\": 127340, \"totalSubmissionRaw\": 435203, \"acRate\": \"29.3%\"}",
+  "likes": 484,
+  "dislikes": 983,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "0"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Shell",
+      "slug": "shell"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "Bash",
+      "langSlug": "bash",
+      "code": "# Read from the file file.txt and output all valid phone numbers to stdout.\n"
+    }
+  ],
+  "solution": null
+}

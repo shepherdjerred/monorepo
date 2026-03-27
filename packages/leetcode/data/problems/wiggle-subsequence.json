@@ -1,0 +1,138 @@
+{
+  "questionId": "376",
+  "questionFrontendId": "376",
+  "title": "Wiggle Subsequence",
+  "titleSlug": "wiggle-subsequence",
+  "difficulty": "Medium",
+  "content": "<p>A <strong>wiggle sequence</strong> is a sequence where the differences between successive numbers strictly alternate between positive and negative. The first difference (if one exists) may be either positive or negative. A sequence with one element and a sequence with two non-equal elements are trivially wiggle sequences.</p>\n\n<ul>\n\t<li>For example, <code>[1, 7, 4, 9, 2, 5]</code> is a <strong>wiggle sequence</strong> because the differences <code>(6, -3, 5, -7, 3)</code> alternate between positive and negative.</li>\n\t<li>In contrast, <code>[1, 4, 7, 2, 5]</code> and <code>[1, 7, 4, 5, 5]</code> are not wiggle sequences. The first is not because its first two differences are positive, and the second is not because its last difference is zero.</li>\n</ul>\n\n<p>A <strong>subsequence</strong> is obtained by deleting some elements (possibly zero) from the original sequence, leaving the remaining elements in their original order.</p>\n\n<p>Given an integer array <code>nums</code>, return <em>the length of the longest <strong>wiggle subsequence</strong> of </em><code>nums</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,7,4,9,2,5]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> The entire sequence is a wiggle sequence with differences (6, -3, 5, -7, 3).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,17,5,10,13,15,10,5,16,8]\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> There are several subsequences that achieve this length.\nOne is [1, 17, 10, 13, 10, 16, 8] with differences (16, -7, 3, -3, 6, -8).\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4,5,6,7,8,9]\n<strong>Output:</strong> 2\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 1000</code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 1000</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> Could you solve this in <code>O(n)</code> time?</p>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"wiggleMaxLength\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"291.3K\", \"totalSubmission\": \"590.7K\", \"totalAcceptedRaw\": 291337, \"totalSubmissionRaw\": 590651, \"acRate\": \"49.3%\"}",
+  "likes": 5310,
+  "dislikes": 169,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Rearrange Array Elements by Sign\", \"titleSlug\": \"rearrange-array-elements-by-sign\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,7,4,9,2,5]",
+    "[1,17,5,10,13,15,10,5,16,8]",
+    "[1,2,3,4,5,6,7,8,9]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"electronic-arts\", \"name\": \"Electronic Arts\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int wiggleMaxLength(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int wiggleMaxLength(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def wiggleMaxLength(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def wiggleMaxLength(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar wiggleMaxLength = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function wiggleMaxLength(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int WiggleMaxLength(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int wiggleMaxLength(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func wiggleMaxLength(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun wiggleMaxLength(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func wiggleMaxLength(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn wiggle_max_length(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef wiggle_max_length(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function wiggleMaxLength($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int wiggleMaxLength(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def wiggleMaxLength(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec wiggle_max_length(nums :: [integer]) :: integer\n  def wiggle_max_length(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec wiggle_max_length(Nums :: [integer()]) -> integer().\nwiggle_max_length(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (wiggle-max-length nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "60",
+    "content": "[TOC]\n\n## Summary\n\nWe need to find the length of the longest wiggle subsequence. A wiggle subsequence consists of a subsequence with numbers which appears in alternating ascending / descending order.\n\n\n## Solution\n### Approach #1 Brute Force\n\nHere, we can find the length of every possible wiggle subsequence and find the maximum length out of them. To implement this, we use a recursive function, $$\\text{calculate}(\\text{nums}, \\text{index}, \\text{isUp})$$ which takes the array $$\\text{nums}$$, the $$\\text{index}$$ from which we need to find the length of the longest wiggle subsequence, boolean variable $$\\text{isUp}$$ to tell whether we need to find an increasing wiggle or decreasing wiggle respectively. If the function $$\\text{calculate}$$ is called after an increasing wiggle, we need to find the next decreasing wiggle with the same function. If the function $$\\text{calculate}$$ is called after a decreasing wiggle, we need to find the next increasing wiggle with the same function.\n\n\n<iframe src=\"https://leetcode.com/playground/JXWefkVB/shared\" frameBorder=\"0\" name=\"JXWefkVB\" width=\"100%\" height=\"326\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n!)$$. $$\\text{calculate}()$$ will be called maximum $$n!$$ times.\n* Space complexity : $$O(n)$$. Recursion of depth $$n$$ is used.\n\n---\n### Approach #2  Dynamic Programming \n\n**Algorithm**\n\nTo understand this approach, take two arrays for dp named $$up$$ and $$down$$.\n\nWhenever we pick up any element of the array to be a part of the wiggle subsequence, that element could be a part of a rising wiggle or a falling wiggle depending upon which element we have taken prior to it.\n\n$$up[i]$$ refers to the length of the longest wiggle subsequence obtained so far considering $$i^{th}$$ element as the last element of the wiggle subsequence and ending with a rising wiggle.\n\nSimilarly, $$down[i]$$ refers to the length of the longest wiggle subsequence obtained so far considering $$i^{th}$$ element as the last element of the wiggle subsequence and ending with a falling wiggle.\n\n$$up[i]$$ will be updated every time we find a rising wiggle ending with the $$i^{th}$$ element. Now, to find $$up[i]$$, we need to consider the maximum out of all the previous wiggle subsequences ending with a falling wiggle i.e. $$down[j]$$, for every $$j&lt;i$$ and $$nums[i]&gt;nums[j]$$. Similarly, $$down[i]$$ will be updated.\n\n\n\n<iframe src=\"https://leetcode.com/playground/5DeX9SiP/shared\" frameBorder=\"0\" name=\"5DeX9SiP\" width=\"100%\" height=\"360\"></iframe>\n**Complexity Analysis**\n\n* Time complexity : $$O(n^2)$$. Loop inside a loop.\n* Space complexity : $$O(n)$$. Two arrays of the same length are used for dp.\n\n---\n### Approach #3 Linear Dynamic Programming \n\n**Algorithm**\n\nAny element in the array could correspond to only one of the three possible states:\n\n1. up position, it means $$nums[i] > nums[i-1]$$\n2. down position, it means $$nums[i] < nums[i-1]$$\n3. equals to position, $$nums[i] == nums[i-1]$$\n\nThe updates are done as:\n\nIf $$nums[i] > nums[i-1]$$, that means it wiggles up. The element before it must be a down position. So $$up[i] = down[i-1] + 1$$, $$down[i]$$ remains the same as $$down[i-1]$$.\nIf $$nums[i] < nums[i-1]$$, that means it wiggles down. The element before it must be a up position. So $$down[i] = up[i-1] + 1$$, $$up[i]$$ remains the same as $$up[i-1]$$.\nIf $$nums[i] == nums[i-1]$$, that means it will not change anything becaue it didn't wiggle at all. So both $$down[i]$$ and $$up[i]$$ remain the same as $$down[i-1]$$ and $$up[i-1]$$.\n\nAt the end, we can find the larger out of $$up[length-1]$$ and $$down[length-1]$$ to find the max. wiggle subsequence length, where $$length$$ refers to the number of elements in the given array.\n\nThe process can be illustrated with the following example:\n\n<!--![Wiggle gif](https://leetcode.com/media/original_images/376_Wiggle_Subsequence.gif)-->\n!?!../Documents/376_Wiggle.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/iKGkFpFG/shared\" frameBorder=\"0\" name=\"iKGkFpFG\" width=\"100%\" height=\"428\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. Only one pass over the array length.\n* Space complexity : $$O(n)$$. Two arrays of the same length are used for dp.\n\n---\n\n### Approach #4 Space-Optimized Dynamic Programming \n\n**Algorithm**\n\nThis approach relies on the same concept as [Approach #3](https://leetcode.com/articles/wiggle-subsequence/#approach-3-linear-dynamic-programming-accepted). But we can observe that in the DP approach, for updating elements $$up[i]$$ and $$down[i]$$, we need only the elements $$up[i-1]$$ and $$down[i-1]$$. Thus, we can save space by not using the whole array, but only the last elements.\n\n\n<iframe src=\"https://leetcode.com/playground/hUCEjR4D/shared\" frameBorder=\"0\" name=\"hUCEjR4D\" width=\"100%\" height=\"292\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. Only one pass over the array length.\n* Space complexity : $$O(1)$$. Constant space is used.\n\n---\n\n### Approach #5 Greedy Approach \n\n**Algorithm**\n\nWe need not necessarily need dp to solve this problem. This problem is equivalent to finding the number of alternating max. and min. peaks in the array. Since, if we choose any other intermediate number to be a part of the current wiggle subsequence, the maximum length of that wiggle subsequence will always be less than or equal to the one obtained by choosing only the consecutive max. and min. elements.\n\nThis can be clarified by looking at the following figure:\n![Wiggle Peaks](https://leetcode.com/media/original_images/376_Wiggle_Subsequence.PNG)\n\nFrom the above figure, we can see that if we choose **C** instead of **D** as the 2nd point in the wiggle subsequence, we can't include the point **E**. Thus, we won't obtain the maximum length wiggle subsequence.\n\nThus, to solve this problem, we maintain a variable $$\\text{prevdiff}$$, where $$\\text{prevdiff}$$ is used to indicate whether the current subsequence of numbers lies in an increasing or decreasing wiggle. If $$\\text{prevdiff} > 0$$, it indicates that we have found the increasing wiggle and are looking for a decreasing wiggle now. Thus, we update the length of the found subsequence when $$\\text{diff}$$ ($$nums[i]-nums[i-1]$$) becomes negative. Similarly, if $$\\text{prevdiff} < 0$$, we will update the count when $$\\text{diff}$$ ($$nums[i]-nums[i-1]$$) becomes positive.\n\nWhen the complete array has been traversed, we get the required count, which represents the length of the longest wiggle subsequence.\n\n\n<iframe src=\"https://leetcode.com/playground/AqoaR5Ks/shared\" frameBorder=\"0\" name=\"AqoaR5Ks\" width=\"100%\" height=\"326\"></iframe>\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. We traverse the given array once.\n\n* Space complexity : $$O(1)$$. No extra space is used.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "questionId": "167",
+  "questionFrontendId": "167",
+  "title": "Two Sum II - Input Array Is Sorted",
+  "titleSlug": "two-sum-ii-input-array-is-sorted",
+  "difficulty": "Medium",
+  "content": "<p>Given a <strong>1-indexed</strong> array of integers <code>numbers</code> that is already <strong><em>sorted in non-decreasing order</em></strong>, find two numbers such that they add up to a specific <code>target</code> number. Let these two numbers be <code>numbers[index<sub>1</sub>]</code> and <code>numbers[index<sub>2</sub>]</code> where <code>1 &lt;= index<sub>1</sub> &lt; index<sub>2</sub> &lt;= numbers.length</code>.</p>\n\n<p>Return<em> the indices of the two numbers&nbsp;</em><code>index<sub>1</sub></code><em> and </em><code>index<sub>2</sub></code><em>, <strong>each incremented by one,</strong> as an integer array </em><code>[index<sub>1</sub>, index<sub>2</sub>]</code><em> of length 2.</em></p>\n\n<p>The tests are generated such that there is <strong>exactly one solution</strong>. You <strong>may not</strong> use the same element twice.</p>\n\n<p>Your solution must use only constant extra space.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> numbers = [<u>2</u>,<u>7</u>,11,15], target = 9\n<strong>Output:</strong> [1,2]\n<strong>Explanation:</strong> The sum of 2 and 7 is 9. Therefore, index<sub>1</sub> = 1, index<sub>2</sub> = 2. We return [1, 2].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> numbers = [<u>2</u>,3,<u>4</u>], target = 6\n<strong>Output:</strong> [1,3]\n<strong>Explanation:</strong> The sum of 2 and 4 is 6. Therefore index<sub>1</sub> = 1, index<sub>2</sub> = 3. We return [1, 3].\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> numbers = [<u>-1</u>,<u>0</u>], target = -1\n<strong>Output:</strong> [1,2]\n<strong>Explanation:</strong> The sum of -1 and 0 is -1. Therefore index<sub>1</sub> = 1, index<sub>2</sub> = 2. We return [1, 2].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= numbers.length &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>-1000 &lt;= numbers[i] &lt;= 1000</code></li>\n\t<li><code>numbers</code> is sorted in <strong>non-decreasing order</strong>.</li>\n\t<li><code>-1000 &lt;= target &lt;= 1000</code></li>\n\t<li>The tests are generated such that there is <strong>exactly one solution</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"twoSum\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"numbers\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"target\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer[]\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"3.3M\", \"totalSubmission\": \"5.1M\", \"totalAcceptedRaw\": 3310772, \"totalSubmissionRaw\": 5109005, \"acRate\": \"64.8%\"}",
+  "likes": 13463,
+  "dislikes": 1536,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Two Sum\", \"titleSlug\": \"two-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Two Sum IV - Input is a BST\", \"titleSlug\": \"two-sum-iv-input-is-a-bst\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Two Sum Less Than K\", \"titleSlug\": \"two-sum-less-than-k\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,7,11,15]\n9",
+    "[2,3,4]\n6",
+    "[-1,0]\n-1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 15, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"epam-systems\", \"name\": \"EPAM Systems\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 2, \"slug\": \"zomato\", \"name\": \"Zomato\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> twoSum(vector<int>& numbers, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] twoSum(int[] numbers, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def twoSum(self, numbers: List[int], target: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def twoSum(self, numbers, target):\n        \"\"\"\n        :type numbers: List[int]\n        :type target: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} numbers\n * @param {number} target\n * @return {number[]}\n */\nvar twoSum = function(numbers, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function twoSum(numbers: number[], target: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] TwoSum(int[] numbers, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* twoSum(int* numbers, int numbersSize, int target, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func twoSum(numbers []int, target int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun twoSum(numbers: IntArray, target: Int): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func twoSum(_ numbers: [Int], _ target: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn two_sum(numbers: Vec<i32>, target: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} numbers\n# @param {Integer} target\n# @return {Integer[]}\ndef two_sum(numbers, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $numbers\n     * @param Integer $target\n     * @return Integer[]\n     */\n    function twoSum($numbers, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> twoSum(List<int> numbers, int target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def twoSum(numbers: Array[Int], target: Int): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec two_sum(numbers :: [integer], target :: integer) :: [integer]\n  def two_sum(numbers, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec two_sum(Numbers :: [integer()], Target :: integer()) -> [integer()].\ntwo_sum(Numbers, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (two-sum numbers target)\n  (-> (listof exact-integer?) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "20",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Two Pointers\n\n**Algorithm**\n\nWe can apply [Two Sum's solutions](https://leetcode.com/articles/two-sum/) directly to get $$O(n^2)$$ time, $$O(1)$$ space using brute force and $$O(n)$$ time, $$O(n)$$ space using hash table. However, both existing solutions do not make use of the property that the input array is sorted. We can do better.\n\nWe use two indices, initially pointing to the first and the last element, respectively. Compare the sum of these two elements with `target`. If the sum is equal to `target`, we found the exactly only solution. If it is less than `target`, we increase the smaller index by one. If it is greater than `target`, we decrease the larger index by one. Move the indices and repeat the comparison until the solution is found.\n\nLet $$[... , a, b, c, ... , d, e, f, ...]$$ be the input array that is sorted in ascending order and let the elements $$b$$ and $$e$$ be the exactly only solution. Because we are moving the smaller index from left to right, and the larger index from right to left, at some point, one of the indices must reach either $$b$$ or $$e$$. Without loss of generality, suppose the smaller index reaches $$b$$ first. At this time, the sum of these two elements must be greater than `target`. Based on our algorithm, we will keep moving the larger index to the left until we reach the solution.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/75vUvf5c/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"75vUvf5c\"></iframe>\n\n**Follow-Up**\n    \nWhat if the problem constraints were different and we needed to consider integer overflow when adding $$numbers[low]$$ and $$numbers[high]$$? In that case, to prevent an overflow error, we could cast our numbers from `int` data type to `long` data type before adding them together, e.g.: `long sum = static_cast<long>(numbers[low]) + numbers[high]` for C++. Casting ensures that we will not get the overflow error since the signed `long` data type supports numbers up to `2^63 - 1`. Alternatively, if we cannot use long integers, then we can check if `numbers[low] > (1 << 31) - 1 - numbers[high]` at the beginning of each iteration. If this condition is true, then `numbers[low] + numbers[high]` will result in integer overflow, and so we would move the larger index to the left.\n\n**Complexity Analysis**\n\n* Time complexity: $$O(n)$$.\nThe input array is traversed at most once. Thus the time complexity is $$O(n)$$.\n\n* Space complexity: $$O(1)$$.\nWe only use additional space to store two indices and the sum, so the space complexity is $$O(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

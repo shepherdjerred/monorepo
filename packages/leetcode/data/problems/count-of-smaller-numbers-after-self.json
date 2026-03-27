@@ -1,0 +1,154 @@
+{
+  "questionId": "315",
+  "questionFrontendId": "315",
+  "title": "Count of Smaller Numbers After Self",
+  "titleSlug": "count-of-smaller-numbers-after-self",
+  "difficulty": "Hard",
+  "content": "<p>Given an integer array <code>nums</code>, return<em> an integer array </em><code>counts</code><em> where </em><code>counts[i]</code><em> is the number of smaller elements to the right of </em><code>nums[i]</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,2,6,1]\n<strong>Output:</strong> [2,1,1,0]\n<strong>Explanation:</strong>\nTo the right of 5 there are <b>2</b> smaller elements (2 and 1).\nTo the right of 2 there is only <b>1</b> smaller element (1).\nTo the right of 6 there is <b>1</b> smaller element (1).\nTo the right of 1 there is <b>0</b> smaller element.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [-1]\n<strong>Output:</strong> [0]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [-1,-1]\n<strong>Output:</strong> [0,0]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>4</sup> &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"countSmaller\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\",\n    \"dealloc\": true\n  }\n}",
+  "stats": "{\"totalAccepted\": \"385.4K\", \"totalSubmission\": \"888.7K\", \"totalAcceptedRaw\": 385441, \"totalSubmissionRaw\": 888688, \"acRate\": \"43.4%\"}",
+  "likes": 9247,
+  "dislikes": 252,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count of Range Sum\", \"titleSlug\": \"count-of-range-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Queue Reconstruction by Height\", \"titleSlug\": \"queue-reconstruction-by-height\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Reverse Pairs\", \"titleSlug\": \"reverse-pairs\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"How Many Numbers Are Smaller Than the Current Number\", \"titleSlug\": \"how-many-numbers-are-smaller-than-the-current-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count Good Triplets in an Array\", \"titleSlug\": \"count-good-triplets-in-an-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count the Number of K-Big Indices\", \"titleSlug\": \"count-the-number-of-k-big-indices\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,2,6,1]",
+    "[-1]",
+    "[-1,-1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Binary Indexed Tree",
+      "slug": "binary-indexed-tree"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    },
+    {
+      "name": "Merge Sort",
+      "slug": "merge-sort"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> countSmaller(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> countSmaller(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countSmaller(self, nums: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countSmaller(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number[]}\n */\nvar countSmaller = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countSmaller(nums: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> CountSmaller(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* countSmaller(int* nums, int numsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countSmaller(nums []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countSmaller(nums: IntArray): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countSmaller(_ nums: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_smaller(nums: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer[]}\ndef count_smaller(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer[]\n     */\n    function countSmaller($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> countSmaller(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countSmaller(nums: Array[Int]): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_smaller(nums :: [integer]) :: [integer]\n  def count_smaller(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_smaller(Nums :: [integer()]) -> [integer()].\ncount_smaller(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-smaller nums)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1138",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThe problem is straightforward. For each `num` in `nums`, we need to obtain the number of smaller elements after `num`.\n\nA straightforward approach is to use brute force with two for-loops. The first loop iterates over all `num` in `nums`, and the second loop iterates over all elements after `num`. However, this approach costs $$O(N^2)$$ and yields _Time Limit Exceed_, given that $$N$$ is the length of `nums`.\n\nLuckily, there are two helpful data structures: [segment tree](https://en.wikipedia.org/wiki/Segment_tree) and [binary indexed tree](https://en.wikipedia.org/wiki/Fenwick_tree), which are able to do the range query in logarithmic time.\n\nAlso, a solution based on [Merge Sort](https://en.wikipedia.org/wiki/Merge_sort) is available.\n\nBelow, we will discuss each of the three approaches: _Segment Tree_, _Binary Indexed Tree_, and _Merge Sort_.\n\n> After you finish, you can practice by solving some similar questions:\n>\n> - [Reverse Pairs](https://leetcode.com/problems/reverse-pairs/solution/)\n> - [Create Sorted Array through Instructions](https://leetcode.com/problems/create-sorted-array-through-instructions/)\n\n</br>\n\n---\n\n### Approach 1: Segment Tree\n\n**Intuition**\n\n> **Prerequisite: segment tree**\n>\n> If you are not familiar with segment trees, you should check out our [Recursive Approach to segment trees](https://leetcode.com/articles/a-recursive-approach-to-segment-trees-range-sum-queries-lazy-propagation/) tutorial before continuing.\n>\n> Also, here are some relevant applications for segment trees that you can practice on:\n>\n> - [Range Sum Query - Mutable](https://leetcode.com/problems/range-sum-query-mutable/)\n> - [Count of Range Sum](https://leetcode.com/problems/count-of-range-sum/)\n>\n> For a full list, check out the [segment tree Tag](https://leetcode.com/tag/segment-tree/).\n\nFor a particular element in `nums`, located at index `i`, we want to count how many of the numbers on the right side of index `i` are smaller than `nums[i]`. Notice that the value of the smaller numbers must be in the range $$(-\\infty, \\text{nums[i]}-1]$$.\n\nHence, if we can find the count of **each number** in the range $$(-\\infty, \\text{nums[i]}-1]$$ on the right side of index `i`, then the answer will be the sum of those counts.\n\nTherefore, for each index `i`, we need a query to find the sum of those counts. Recall that the segment tree and the binary indexed tree are two data structures that are generally helpful when solving range query problems.\n\nSince we need counts of values, we can use an approach similar to [bucket sort](https://en.wikipedia.org/wiki/Bucket_sort), where we have buckets of values and `buckets[value]` stores the count of `value`. For each value, we increment `buckets[value]` by 1. With this approach, the number of elements smaller than `nums[i]` is the range sum of $$(-\\infty, \\text{num}-1]$$ in buckets.\n\nWith the help of a segment tree or binary indexed tree, we can perform the range sum query in logarithmic time.\n\n![Figure 1](../Documents/315/315_bucket1.drawio.svg)\n\n![Figure 2](../Documents/315/315_bucket2.drawio.svg)\n\nWith the given constraint `-10^4 <= nums[i] <= 10^4`, we can initialize buckets from `-10^4` to `10^4`.\n\nWait, there is a problem: Usually, we store buckets in an array, so the indices of buckets are non-negative. However, here we need to store some **negative** values. How can we resolve this problem?\n\nThere are two solutions:\n\n1. Use a map rather than an array.\n2. Shift all numbers to non-negative.\n\nBoth solutions work, and here we have chosen the second one since it is easier to implement. Interested readers are welcome to try the first one on their own.\n\nTo shift all numbers to non-negative, we simply add a constant. Here we chose the constant `offset = 10^4` and increase each number by `offset`:\n\n```python\nnums[i] = nums[i] + offset\n```\n\nThe smallest number `-10^4` becomes `0` under this shift.\n\n![Figure 3](../Documents/315/315_shift.drawio.svg)\n\nNote that while querying a particular index, we only need to consider elements that are on the right side of the index. Therefore we need to make sure that when we query an index, say `i`, only elements from index `i+1` to the end of the array are present in the buckets.\n\nTo achieve this, we need to traverse `nums` from **right to left**, while performing range sum queries and updating the counts.\n\nSimilarly, with the help of a segment tree or binary indexed tree, we can perform the updates in logarithmic time.\n\n![Figure 4](../Documents/315/315_right_to_left.drawio.svg)\n\n(For convenience, the offset is not included in the above picture.)\n\n**Algorithm**\n\n- Implement the segment tree. Since the tree is initialized with all zeros, only `update` and `query` need to be implemented. Set `offset = 10^4`.\n\n- Iterate over each `num` in `nums` in reverse. For each `num`:\n\n  - Shift `num` to `num + offset`.\n  - Query the number of elements in the segment tree smaller than `num`.\n  - Update the count of `num` in the segment tree.\n\n- Return the result.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/XLuKKjYp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XLuKKjYp\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the length of `nums` and $$M$$ be the difference between the maximum and minimum values in `nums`.\n\nNote that for convenience, we fix $$M=2*10^4$$ in the above implementations.\n\n- Time Complexity: $$O(N\\log(M))$$.  \n  We need to iterate over `nums`. For each element, we spend $$O(\\log(M))$$ to find the number of smaller elements after it, and spend $$O(\\log(M))$$ time to update the counts. In total, we need $$O(N \\cdot \\log(M)) = O(N\\log(M))$$ time.\n\n- Space Complexity: $$O(M)$$, since we need, at most, an array of size $$2M+2$$ to store the segment tree.  \n  We need at most $$M+1$$ buckets, where the extra $$1$$ is for the value $$0$$. For the segment tree, we need twice the number of buckets, which is $$(M+1)\\times 2 = 2M+2$$.\n\n\n</br>\n\n---\n\n### Approach 2: Binary Indexed Tree (Fenwick Tree)\n\n**Intuition**\n\n> **Prerequisite: binary indexed tree**\n>\n> If you are not familiar with binary indexed tree (BIT), you should check relevant tutorials, such as [Range Sum Query 2D - Mutable](https://leetcode.com/problems/range-sum-query-2d-mutable/solution/) before continuing.\n>\n> Also, here are some relevant applications for binary indexed trees that you can practice on:\n>\n> - [Range Sum Query - Mutable](https://leetcode.com/problems/range-sum-query-mutable/)\n> - [Count of Range Sum](https://leetcode.com/problems/count-of-range-sum/)\n>\n> (Yes, many problems which can be solved by segment tree can also be solved by binary indexed tree.)\n>\n> For a full list, you can check the [binary indexed tree Tag](https://leetcode.com/tag/binary-indexed-tree/).\n\nBinary indexed tree is similar to segment tree. It allows us to perform a prefix query, such as prefix sum, in $$\\log$$ time. Can we transform this problem into a **prefix sum** problem?\n\nYes, using the same tricks that we used in approach 1, buckets and shift, we can transform the number of smaller elements into a prefix sum for the range $$[0, \\text{num}+\\text{offset}-1]$$, where $$\\text{offset}=10^4$$.\n\n![Figure 5](../Documents/315/315_bit.drawio.svg)\n\nSimilarly, when querying, we need to traverse `nums` from right to left in order to ensure that only the elements to the right are in the buckets.\n\n**Algorithm**\n\n- Implement the binary indexed tree. Since the tree is initialized with all zeros, only `update` and `query` need to be implemented. Set `offset = 10^4`.\n\n- Iterate over each `num` in `nums` in reverse. For each `num`:\n\n  - Shift `num` to `num + offset`.\n  - Query the number of elements in the BIT that are smaller than `num`.\n  - Update the count of `num` in the BIT.\n\n- Return the result.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/PUH9tdLe/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PUH9tdLe\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the length of `nums` and $$M$$ be the difference between the maximum and minimum values in `nums`.\n\nNote that for convenience, we fix $$M=2*10^4$$ in the above implementations.\n\n- Time Complexity: $$O(N\\log(M))$$.  \n  We need to iterate over `nums`. For each element, we spend $$O(\\log(M))$$ to find the number of smaller elements after it, and spend $$O(\\log(M))$$ time to update the counts. In total, we need $$O(N \\cdot \\log(M)) = O(N\\log(M))$$ time.\n\n- Space Complexity: $$O(M)$$, since we need, at most, an array of size $$M+2$$ to store the BIT.  \nWe need at most $$M+1$$ buckets, where the extra $$1$$ is for the value $$0$$. The BIT requires an extra dummy node, so the size is $$(M+1)+1 = M+2$$.\n\n</br>\n\n---\n\n### Approach 3: Merge Sort\n\n**Intuition**\n\n> **Prerequisite: Merge Sort**\n>\n> If you are not familiar with Merge Sort, you should check relevant tutorials before continuing.\n>\n> Also, here is a basic application of Merge Sort that you can practice on:\n>\n> - [Sort an Array](https://leetcode.com/problems/sort-an-array/)\n\nTo apply merge sort, one key observation is that:\n\n> The smaller elements on the right of a number will **jump from its right to its left** during the sorting process.\n\n![Figure 6](../Documents/315/315_jumping.drawio.svg)\n\nIf we can record the numbers of those elements during sorting, then the problem is solved.\n\nCan we modify the merge sort a little to meet our needs?\n\nConsider when merging two sorted list\n\n![Figure 7](../Documents/315/315_merging.drawio.svg)\n\nYes! When we select an element `i` on the left array, we know that elements selected previously from the right array **jump** from `i`'s right to `i`'s left.\n\nBy adding the counts of those elements in every merge step, we get the total number of elements that jumped from `i`'s right to `i`'s left.\n\n**Algorithm**\n\n- Implement a merge sort function.\n\n  - For each element `i`, the function records the number of elements jumping from `i`'s right to `i`'s left during the merge sort.\n\n- Merge sort `nums`, store the number of elements jumping from right to left in `result`.\n\n  - Alternatively, one can sort the _indices_ with corresponding values in `nums`. That is to say, we are going to sort list `[0, 1, ..., n-1]` according to the comparator `nums[i]`. This helps to track the indices and update `result`. You can find additional details in the implementations below.\n\n- Return `result`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/nnsvXAd9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nnsvXAd9\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the length of `nums`.\n\n- Time Complexity: $$O(N\\log(N))$$. We need to perform a merge sort which takes $$O(N\\log(N))$$ time. All other operations take at most $$O(N)$$ time.\n\n- Space Complexity: $$O(N)$$, since we need a constant number of arrays of size $$O(N)$$.\n\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

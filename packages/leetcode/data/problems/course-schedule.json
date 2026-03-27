@@ -1,0 +1,145 @@
+{
+  "questionId": "207",
+  "questionFrontendId": "207",
+  "title": "Course Schedule",
+  "titleSlug": "course-schedule",
+  "difficulty": "Medium",
+  "content": "<p>There are a total of <code>numCourses</code> courses you have to take, labeled from <code>0</code> to <code>numCourses - 1</code>. You are given an array <code>prerequisites</code> where <code>prerequisites[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> indicates that you <strong>must</strong> take course <code>b<sub>i</sub></code> first if you want to take course <code>a<sub>i</sub></code>.</p>\n\n<ul>\n\t<li>For example, the pair <code>[0, 1]</code>, indicates that to take course <code>0</code> you have to first take course <code>1</code>.</li>\n</ul>\n\n<p>Return <code>true</code> if you can finish all courses. Otherwise, return <code>false</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> numCourses = 2, prerequisites = [[1,0]]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> There are a total of 2 courses to take. \nTo take course 1 you should have finished course 0. So it is possible.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> numCourses = 2, prerequisites = [[1,0],[0,1]]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> There are a total of 2 courses to take. \nTo take course 1 you should have finished course 0, and to take course 0 you should also have finished course 1. So it is impossible.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= numCourses &lt;= 2000</code></li>\n\t<li><code>0 &lt;= prerequisites.length &lt;= 5000</code></li>\n\t<li><code>prerequisites[i].length == 2</code></li>\n\t<li><code>0 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt; numCourses</code></li>\n\t<li>All the pairs prerequisites[i] are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [
+    "This problem is equivalent to finding if a cycle exists in a directed graph. If a cycle exists, no topological ordering exists and therefore it will be impossible to take all courses.",
+    "<a href=\"https://www.cs.princeton.edu/~wayne/kleinberg-tardos/pdf/03Graphs.pdf\" target=\"_blank\">Topological Sort via DFS</a> - A great tutorial explaining the basic concepts of Topological Sort.",
+    "Topological sort could also be done via <a href=\"http://en.wikipedia.org/wiki/Topological_sorting#Algorithms\" target=\"_blank\">BFS</a>."
+  ],
+  "metaData": "{\r\n  \"name\": \"canFinish\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"numCourses\",\r\n      \"type\": \"integer\"\r\n    },\r\n    {\r\n      \"name\": \"prerequisites\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"2.5M\", \"totalSubmission\": \"5M\", \"totalAcceptedRaw\": 2529495, \"totalSubmissionRaw\": 4954432, \"acRate\": \"51.1%\"}",
+  "likes": 17933,
+  "dislikes": 870,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Course Schedule II\", \"titleSlug\": \"course-schedule-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Graph Valid Tree\", \"titleSlug\": \"graph-valid-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Height Trees\", \"titleSlug\": \"minimum-height-trees\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Course Schedule III\", \"titleSlug\": \"course-schedule-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Build a Matrix With Conditions\", \"titleSlug\": \"build-a-matrix-with-conditions\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2\n[[1,0]]",
+    "2\n[[1,0],[0,1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"cloudflare\", \"name\": \"Cloudflare\"}, {\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 5, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 3, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"anduril\", \"name\": \"Anduril\"}, {\"timesEncountered\": 7, \"slug\": \"coupang\", \"name\": \"Coupang\"}, {\"timesEncountered\": 4, \"slug\": \"nordstrom\", \"name\": \"Nordstrom\"}, {\"timesEncountered\": 4, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 4, \"slug\": \"ebay\", \"name\": \"eBay\"}, {\"timesEncountered\": 3, \"slug\": \"swiggy\", \"name\": \"Swiggy\"}, {\"timesEncountered\": 3, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 3, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}]}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean canFinish(int numCourses, int[][] prerequisites) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def canFinish(self, numCourses, prerequisites):\n        \"\"\"\n        :type numCourses: int\n        :type prerequisites: List[List[int]]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} numCourses\n * @param {number[][]} prerequisites\n * @return {boolean}\n */\nvar canFinish = function(numCourses, prerequisites) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function canFinish(numCourses: number, prerequisites: number[][]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CanFinish(int numCourses, int[][] prerequisites) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool canFinish(int numCourses, int** prerequisites, int prerequisitesSize, int* prerequisitesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func canFinish(numCourses int, prerequisites [][]int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun canFinish(numCourses: Int, prerequisites: Array<IntArray>): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func canFinish(_ numCourses: Int, _ prerequisites: [[Int]]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn can_finish(num_courses: i32, prerequisites: Vec<Vec<i32>>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num_courses\n# @param {Integer[][]} prerequisites\n# @return {Boolean}\ndef can_finish(num_courses, prerequisites)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $numCourses\n     * @param Integer[][] $prerequisites\n     * @return Boolean\n     */\n    function canFinish($numCourses, $prerequisites) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool canFinish(int numCourses, List<List<int>> prerequisites) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def canFinish(numCourses: Int, prerequisites: Array[Array[Int]]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec can_finish(num_courses :: integer, prerequisites :: [[integer]]) :: boolean\n  def can_finish(num_courses, prerequisites) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec can_finish(NumCourses :: integer(), Prerequisites :: [[integer()]]) -> boolean().\ncan_finish(NumCourses, Prerequisites) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (can-finish numCourses prerequisites)\n  (-> exact-integer? (listof (listof exact-integer?)) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1921",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a total of `numCourses` courses one has to take, labeled from `0` to `numCourses - 1`. We are also given an array `prerequisites` where `prerequisites[i]` = [$a_i$, $b_i$] indicates that course $b_i$ must be taken first if you want to take course $a_i$.\n\nOur task is to return a boolean indicating whether it is possible to complete all the courses or not.\n\n---\n\n### Approach 1: Topological Sort Using Kahn's Algorithm\n\n#### Intuition\n\nWe can see that we have been given certain courses with some dependencies between them. The dependencies are expressed as pairs, which provides some hints for framing the problem in terms of a graph.\n\nIf we regard each course as a node and draw an edge from $b_i$ to $a_i$ for any prerequisite [$a_i$, $b_i$] (to indicate that course $b_i$ should be completed before taking course $a_i$), we get a directed graph.\n\nIf there is a cycle in this directed graph, it suggests that we will not be able to finish all of the courses. Otherwise, we can perform a **topological sort** of the graph to determine the order in which all of the courses can be finished.\n\nAs a result, the problem is reduced to determining whether a cycle occurs in a graph. If there is a cycle, we must return `false`. If not, we return `true`.\n\nA topological sort or topological ordering of a directed graph is a linear ordering of its vertices such that for every directed edge `u -> v` from vertex `u` to vertex `v`, `u` comes before `v` in the ordering.\n\nIn a directed acyclic graph, we can use Kahn's algorithm to get the topological ordering. Kahn’s algorithm works by keeping track of the number of incoming edges into each node (indegree). It works by repeatedly visiting the nodes with an indegree of zero and deleting all the edges associated with it leading to a decrement of indegree for the nodes whose incoming edges are deleted. This process continues until no elements with zero indegree can be found.\n\nIf you are not familiar with Kahn's algorithm, we suggest you read our [LeetCode Explore Card](https://leetcode.com/explore/learn/card/graph/623/kahns-algorithm-for-topological-sorting/3886/).\n\nThe advantage of using Kahn's algorithm is that it also aids in the detection of graph cycles.\n\nLet's perform Kahn's algorithm on a directed graph having a cycle. Here's a visual step-by-step representation of how it would work:\n\n![img](../Figures/207/207-1.png)\n\nWe can see that if there is a cycle, the indegree of nodes in the cycle cannot be set to `0` due to cyclic dependency. We are unable to visit the cycle's nodes. So, if the number of visited nodes is less than the total number of nodes in the graph, we have a cycle. \n\n#### Algorithm\n\n1. Create an array `indegree` of length `n` where `indegree[x]` stores the number of edges entering node `x`.\n2. We create an adjacency list `adj` in which `adj[x]` contains all the nodes with an incoming edge from node `x`, i.e., neighbors of node `x`. We create this adjacency list by iterating over `prerequisites`. For every `prerequisite` in `prerequisites`, we add an edge from `prerequisite[1]` to `prerequisite[0]` and increment the indegree of `prerequisite[0]` by `1`.\n3. Initialize a queue of integers `q` and start a BFS algorithm moving from the leaf nodes to the parent nodes. \n4. Begin the BFS traversal by pushing all of the leaf nodes (`indegree` equal to `0`) in the queue.\n5. Create an integer variable `nodesVisited = 0` to count the number of visited nodes.\n6. While the queue is not empty;\n    - Dequeue the first `node` from the queue.\n    - Increment `nodesVisited` by `1`.\n    - For each `neighbor` (nodes that have an incoming edge from `node`) of `node`, we decrement `indegree[neighbor]`by `1` to delete the `node -> neighbor` edge.\n    - If `indegree[neighbor] == 0`, it means that `neighbor` behaves as a leaf node, so we push `neighbor` in the queue.\n7. If the number of nodes visited is less than the total number of nodes, i.e., `nodesVisited < n` we return `false` as there must be a cycle. Otherwise, if `nodesVisited == numCourses`, we return `true`. We can shorten it to just return `nodesVisited == numCourses`. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/SU2rGjpU/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"SU2rGjpU\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ be the number of courses and $m$ be the size of `prerequisites`.\n\n* Time complexity: $O(m + n)$\n\n    - Initializing the `adj` list takes $O(m)$ time as we go through all the edges. The `indegree` array take $O(n)$ time.\n    - Each queue operation takes $O(1)$ time, and a single node will be pushed once, leading to $O(n)$ operations for $n$ nodes. We iterate over the neighbors of each node that is popped out of the queue iterating over all the edges once. Since there are total of `m` edges, it would take $O(m)$ time to iterate over the edges.\n\n* Space complexity: $O(m + n)$\n\n    - The `adj` arrays takes $O(m)$ space. The `indegree` array takes $O(n)$ space.\n    - The queue can have no more than $n$ elements in the worst-case scenario. It would take up $O(n)$ space in that case.\n\n---\n\n### Approach 2: Depth First Search\n\n#### Intuition\n\nWe can also use a depth-first search (DFS) traversal to detect a cycle in a directed graph.\n\nIn DFS, we use a recursive function to explore nodes as far as possible along each branch. Upon reaching the end of a branch, we backtrack to the previous node and continue exploring the next branches.\n\nOnce we encounter an unvisited node, we will take one of its neighbor nodes (if exists) as the next node on this branch. Recursively call the function to take the next node as the 'starting node' and solve the subproblem.\n\nA node remains in the DFS recursion stack until all of its branches (all nodes in its subtree) have been explored. When we have examined all of a node's branches, i.e. visited all of the nodes in its subtree, the node is removed from the DFS recursive stack.\n\nIf you are new to Depth First Search, please see our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/619/depth-first-search-in-graph/3882/) for more information on it!\n\nIf the graph has a cycle, we must have a **back edge** connecting a node to one of its ancestors while traversing nodes in the DFS manner.\n\nLet's think how we can establish whether or not a node's neighbor is an ancestor when navigating from one node to another. \n\nIf the neighboring node has not yet been visited, it cannot be an ancestor (it is a child node).\n\nOtherwise, if a neighboring node is visited, it may or may not be an ancestor. If the neighboring node is an ancestor, i.e. there is a back edge, it means that we visited this ancestor node first in the DFS traversal, then visited and explored some other nodes, and eventually visited a node that connects back to the ancestor node. As we are still exploring the ancestor node's subtree while iterating over this path, hence this node must be in the current DFS recursive stack.\n\nHowever, if a neighboring node is visited but not in the recursion stack, it signifies we have previously explored that node in a different branch, and it does not form a cycle in the current branch.\n\nAs a result, to detect the cycle we must keep track of the visited nodes (like in a normal DFS) and also the nodes in the function's recursion call stack for DFS traversal. The nodes in the stack store the current path that we are on. There is a cycle in the graph if a node is reached that is already in the recursion stack. We use a boolean array of length `n` to track which nodes are in the call stack so we can check if a node exists in $O(1)$.\n\n#### Algorithm\n\n1. We create an adjacency list `adj` in which `adj[x]` contains all the nodes with an incoming edge from node `x`, i.e., neighbors of node `x`. We create this adjacency list by iterating over `prerequisites`. For every `prerequisite` in `prerequisites`, we add an edge from `prerequisite[1]` to `prerequisite[0]`.\n2. Create two boolean arrays, `visit` and `inStack`, each of size `n`. The `visit` array keeps track of visited nodes and `inStack` keeps track of nodes that are currently in the ongoing DFS stack. It will help us to detect a cycle in the graph.\n3. For each node we begin a DFS traversal. We implement the `dfs` method which takes four parameters: an integer `node` from which the current traversal begins, `adj`, `visit`, and `inStack`. It returns a boolean indicating whether there is a cycle in the graph. If any `dfs` call returns `true`, we have a cycle. In such a case, we return `false` immediately as our answer to the problem. Otherwise, if no `dfs` call from all the nodes result in a cycle, we return `true`. We perform the following in this method:\n    - If `node` is already present in `inStack`, we have a cycle. We return `true`.\n    - If `node` is already visited, we return `false` because we already visited this `node` and didn't find a cycle earlier.\n    - We mark `node` as visited and also set `inStack[node] = true`.\n    - We iterate over all the outgoing edges of `node` and for each `neighbor`, we recursively call `dfs(neighbor, adj, visit, inStack)`. If we get a cycle from `neighbor`, we return `true`.\n    - After we have processed all the outgoing edges of `node`, we mark `inStack[node] = false` to mark `node` as out of stack. We also return `false` as we didn't find any cycle.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7aTZRqhv/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7aTZRqhv\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ be the number of courses and $m$ be the size of `prerequisites`.\n\n* Time complexity: $O(m + n)$\n\n    - Initializing `adj` takes $O(m)$ time as we go through all the edges.\n    - Initializing the `visit` and `inStack` arrays take $O(n)$ time each.\n    - The `dfs` function handles each node once, which takes $O(n)$ time in total. From each node, we iterate over all the outgoing edges, which further takes $O(m)$ time to iterate over all the edges as there are a total of `m` edges.\n\n* Space complexity: $O(m + n)$\n\n    - The `adj` arrays takes $O(m)$ space.\n    - The `visit` and `inStack` arrays take $O(n)$ space each.\n    - The recursion call stack used by `dfs` can have no more than $n$ elements in the worst-case scenario. It would take up $O(n)$ space in that case.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

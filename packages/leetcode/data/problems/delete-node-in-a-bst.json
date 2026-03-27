@@ -1,0 +1,138 @@
+{
+  "questionId": "450",
+  "questionFrontendId": "450",
+  "title": "Delete Node in a BST",
+  "titleSlug": "delete-node-in-a-bst",
+  "difficulty": "Medium",
+  "content": "<p>Given a root node reference of a BST and a key, delete the node with the given key in the BST. Return <em>the <strong>root node reference</strong> (possibly updated) of the BST</em>.</p>\n\n<p>Basically, the deletion can be divided into two stages:</p>\n\n<ol>\n\t<li>Search for a node to remove.</li>\n\t<li>If the node is found, delete the node.</li>\n</ol>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/04/del_node_1.jpg\" style=\"width: 800px; height: 214px;\" />\n<pre>\n<strong>Input:</strong> root = [5,3,6,2,4,null,7], key = 3\n<strong>Output:</strong> [5,4,6,2,null,null,7]\n<strong>Explanation:</strong> Given key to delete is 3. So we find the node with value 3 and delete it.\nOne valid answer is [5,4,6,2,null,null,7], shown in the above BST.\nPlease notice that another valid answer is [5,2,6,null,4,null,7] and it&#39;s also accepted.\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/04/del_node_supp.jpg\" style=\"width: 350px; height: 255px;\" />\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [5,3,6,2,4,null,7], key = 0\n<strong>Output:</strong> [5,3,6,2,4,null,7]\n<strong>Explanation:</strong> The tree does not contain a node with value = 0.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [], key = 0\n<strong>Output:</strong> []\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[0, 10<sup>4</sup>]</code>.</li>\n\t<li><code>-10<sup>5</sup> &lt;= Node.val &lt;= 10<sup>5</sup></code></li>\n\t<li>Each node has a <strong>unique</strong> value.</li>\n\t<li><code>root</code> is a valid binary search tree.</li>\n\t<li><code>-10<sup>5</sup> &lt;= key &lt;= 10<sup>5</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> Could you solve it with time complexity <code>O(height of tree)</code>?</p>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"deleteNode\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\",\r\n      \"dealloc\": false\r\n    },\r\n    {\r\n      \"name\": \"key\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"TreeNode\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"849K\", \"totalSubmission\": \"1.6M\", \"totalAcceptedRaw\": 848987, \"totalSubmissionRaw\": 1561211, \"acRate\": \"54.4%\"}",
+  "likes": 10414,
+  "dislikes": 385,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Split BST\", \"titleSlug\": \"split-bst\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,3,6,2,4,null,7]\n3",
+    "[5,3,6,2,4,null,7]\n0",
+    "[]\n0"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 26, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 9, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}]}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Binary Search Tree",
+      "slug": "binary-search-tree"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    TreeNode* deleteNode(TreeNode* root, int key) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public TreeNode deleteNode(TreeNode root, int key) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def deleteNode(self, root: Optional[TreeNode], key: int) -> Optional[TreeNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def deleteNode(self, root, key):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type key: int\n        :rtype: Optional[TreeNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {number} key\n * @return {TreeNode}\n */\nvar deleteNode = function(root, key) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction deleteNode(root: TreeNode | null, key: number): TreeNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public TreeNode DeleteNode(TreeNode root, int key) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nstruct TreeNode* deleteNode(struct TreeNode* root, int key) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc deleteNode(root *TreeNode, key int) *TreeNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun deleteNode(root: TreeNode?, key: Int): TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func deleteNode(_ root: TreeNode?, _ key: Int) -> TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn delete_node(root: Option<Rc<RefCell<TreeNode>>>, key: i32) -> Option<Rc<RefCell<TreeNode>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @param {Integer} key\n# @return {TreeNode}\ndef delete_node(root, key)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @param Integer $key\n     * @return TreeNode\n     */\n    function deleteNode($root, $key) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  TreeNode? deleteNode(TreeNode? root, int key) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def deleteNode(root: TreeNode, key: Int): TreeNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec delete_node(root :: TreeNode.t | nil, key :: integer) :: TreeNode.t | nil\n  def delete_node(root, key) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec delete_node(Root :: #tree_node{} | null, Key :: integer()) -> #tree_node{} | null.\ndelete_node(Root, Key) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (delete-node root key)\n  (-> (or/c tree-node? #f) exact-integer? (or/c tree-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "722",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview: Three Facts to Know about BST\n\nHere is a list of facts that are better to know before the interview.\n\n> Inorder traversal of BST is an array sorted in ascending order.\n\nTo compute inorder traversal follow the direction `Left -> Node -> Right`.\n\n<iframe src=\"https://leetcode.com/playground/Hrtr3H6E/shared\" frameBorder=\"0\" width=\"100%\" height=\"174\" name=\"Hrtr3H6E\"></iframe>\n\n![traversal](../Figures/450/450_inorder.png)\n\n> Successor = \"after node\", i.e. the next node, or the smallest node _after_ the current one.  \n\nIt's also the _next_ node in the inorder traversal. To find a successor, go to the right once and then as many times to the left as you could.\n\n<iframe src=\"https://leetcode.com/playground/Z5eQMuTX/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"Z5eQMuTX\"></iframe>\n\n> Predecessor = \"before node\", i.e. the previous node, or the largest node _before_ the current one.  \n\nIt's also the _previous_ node in the inorder traversal. To find a predecessor, go to the left once and then as many times to the right as you could.\n\n<iframe src=\"https://leetcode.com/playground/WNxaJ6wx/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"WNxaJ6wx\"></iframe>\n\n![bla](../Figures/450/succ2.png)\n\n<br />\n<br />\n\n\n---\n\n### Approach 1: Recursion\n\n#### Intuition\n\nThere are three possible situations here :\n\n- Node is a leaf, and one could delete it straightforwardly: `node = null`.\n\n![bla](../Figures/450/del_leaf.png)\n\n- Node is not a leaf and has a right child. Then the node could be replaced by its\n_successor_ which is somewhere lower in the right subtree. Then one could proceed down recursively to delete the successor.\n\n![bla](../Figures/450/del_succ.png)\n\n- Node is not a leaf, has no right child, and has a left child. That means that its _successor_ is somewhere upper in the tree but we don't want to go back. Let's use the _predecessor_ here which is somewhere lower in the left subtree. The node could be replaced by its _predecessor_ and then one could proceed down recursively to delete the predecessor.\n\n![bla](../Figures/450/del_pred.png)\n\n#### Algorithm\n\n- If `key > root.val` then delete the node to delete is in the right subtree `root.right = deleteNode(root.right, key)`.\n\n- If `key < root.val` then delete the node to delete is in the left subtree `root.left = deleteNode(root.left, key)`.  \n\n- If `key == root.val` then the node to delete is right here. Let's do it :\n\n    - If the node is a leaf, the delete process is straightforward: `root = null`.\n    \n    - If the node is not a leaf and has the right child, then replace the node value with a successor value `root.val = successor.val`, and then recursively delete, the successor in the right subtree `root.right = deleteNode(root.right, root.val)`.\n    \n    - If the node is not a leaf and has only the left child, then replace the node value with a predecessor value `root.val = predecessor.val`, and then recursively delete the predecessor in the left subtree `root.left = deleteNode(root.left, root.val)`.\n    \n- Return `root`.\n\n#### Implementation\n\n![bla](../Figures/450/implem2.png)\n\n> Note that in our implementation, `successor`/`predecessor` has a different function signature from what we define above because we only need the value of the returned node when replacing the current node with its `successor` or `predecessor`. But we still provide a full definition and algorithm to locate those nodes in case of encountering a similar problem and need to get the `TreeNode` object instead of just a value.\n\n<iframe src=\"https://leetcode.com/playground/azEMKmrE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"azEMKmrE\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $\\mathcal{O}(\\log N)$. During the algorithm execution we go down the tree all the time - on the left or on the right, first to search the node to delete ($\\mathcal{O}(H_1)$ time complexity as already [discussed](https://leetcode.com/articles/insert-into-a-bst/)) and then to actually delete it. $H_1$ is a tree height from the root to the node to delete. The delete process takes $\\mathcal{O}(H_2)$ time, where $H_2$ is a tree height from the root to delete to the leaves. That in total results in $\\mathcal{O}(H_1 + H_2) = \\mathcal{O}(H)$ time complexity, where $H$ is a tree height, equal to $\\log N$ in the case of the balanced tree.    \n    \n* Space complexity : $\\mathcal{O}(H)$ to keep the recursion stack, where $H$ is a tree height. $H = \\log N$ for the balanced tree.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

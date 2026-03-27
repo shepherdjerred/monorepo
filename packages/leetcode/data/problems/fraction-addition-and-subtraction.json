@@ -1,0 +1,138 @@
+{
+  "questionId": "592",
+  "questionFrontendId": "592",
+  "title": "Fraction Addition and Subtraction",
+  "titleSlug": "fraction-addition-and-subtraction",
+  "difficulty": "Medium",
+  "content": "<p>Given a string <code>expression</code> representing an expression of fraction addition and subtraction, return the calculation result in string format.</p>\n\n<p>The final result should be an <a href=\"https://en.wikipedia.org/wiki/Irreducible_fraction\" target=\"_blank\">irreducible fraction</a>. If your final result is an integer, change it to the format of a fraction that has a denominator <code>1</code>. So in this case, <code>2</code> should be converted to <code>2/1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> expression = &quot;-1/2+1/2&quot;\n<strong>Output:</strong> &quot;0/1&quot;\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> expression = &quot;-1/2+1/2+1/3&quot;\n<strong>Output:</strong> &quot;1/3&quot;\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> expression = &quot;1/3-1/2&quot;\n<strong>Output:</strong> &quot;-1/6&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The input string only contains <code>&#39;0&#39;</code> to <code>&#39;9&#39;</code>, <code>&#39;/&#39;</code>, <code>&#39;+&#39;</code> and <code>&#39;-&#39;</code>. So does the output.</li>\n\t<li>Each fraction (input and output) has the format <code>&plusmn;numerator/denominator</code>. If the first input fraction or the output is positive, then <code>&#39;+&#39;</code> will be omitted.</li>\n\t<li>The input only contains valid <strong>irreducible fractions</strong>, where the <strong>numerator</strong> and <strong>denominator</strong> of each fraction will always be in the range <code>[1, 10]</code>. If the denominator is <code>1</code>, it means this fraction is actually an integer in a fraction format defined above.</li>\n\t<li>The number of given fractions will be in the range <code>[1, 10]</code>.</li>\n\t<li>The numerator and denominator of the <strong>final result</strong> are guaranteed to be valid and in the range of <strong>32-bit</strong> int.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"fractionAddition\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"expression\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"137.5K\", \"totalSubmission\": \"207K\", \"totalAcceptedRaw\": 137497, \"totalSubmissionRaw\": 206960, \"acRate\": \"66.4%\"}",
+  "likes": 891,
+  "dislikes": 696,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Solve the Equation\", \"titleSlug\": \"solve-the-equation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"-1/2+1/2\"",
+    "\"-1/2+1/2+1/3\"",
+    "\"1/3-1/2\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"zopsmart\", \"name\": \"Zopsmart\"}, {\"timesEncountered\": 5, \"slug\": \"ixl\", \"name\": \"IXL\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"trilogy\", \"name\": \"Trilogy\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string fractionAddition(string expression) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String fractionAddition(String expression) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def fractionAddition(self, expression: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def fractionAddition(self, expression):\n        \"\"\"\n        :type expression: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} expression\n * @return {string}\n */\nvar fractionAddition = function(expression) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function fractionAddition(expression: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string FractionAddition(string expression) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* fractionAddition(char* expression) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func fractionAddition(expression string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun fractionAddition(expression: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func fractionAddition(_ expression: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn fraction_addition(expression: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} expression\n# @return {String}\ndef fraction_addition(expression)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $expression\n     * @return String\n     */\n    function fractionAddition($expression) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String fractionAddition(String expression) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def fractionAddition(expression: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec fraction_addition(expression :: String.t) :: String.t\n  def fraction_addition(expression) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec fraction_addition(Expression :: unicode:unicode_binary()) -> unicode:unicode_binary().\nfraction_addition(Expression) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (fraction-addition expression)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2415",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a string `expression` that contains a series of fraction additions and subtractions. Our task is to evaluate the expression and return the result as a simplified fraction in its irreducible form, meaning the fraction cannot be reduced further.  \n\nTo achieve this, we need to:  \n1. Parse the string `expression` to extract individual fractions and their corresponding operators (addition or subtraction).  \n2. Perform the arithmetic operations on these fractions.  \n3. Simplify the resulting fraction to its irreducible form using the greatest common divisor (GCD).  \n\n### Approach 1: Manual Parsing + Common Denominator \n\n### Intuition\n\nOne way to approach this question is to manually parse the `expression` string to extract each fraction’s numerator and denominator. As we parse each fraction, we can update a running total of the result fraction by adding or subtracting the current fraction from it.  \n\nTo add or subtract fractions, we need to find a common denominator between the currently parsed fraction and the running result. A straightforward approach is to use the product of the two denominators as the common denominator. This allows us to rewrite both fractions with this common denominator and then perform the addition or subtraction.  \n\nFor example, given two fractions:  \n- Current fraction: $\\frac{\\text{currNum}}{\\text{currDenom}}$  \n\n- Running result: $\\frac{\\text{num}}{\\text{denom}}$  \n\nWe can express their sum as:  \n\n$\\text{newNum} = \\text{currNum} \\times \\text{denom} + \\text{num} \\times \\text{currDenom}$\n\n$\\text{newDenom} = \\text{currDenom} \\times \\text{denom}$\n\nAfter we finish processing all fractions, the resulting fraction may not be in its simplest form. To simplify it, we divide the numerator and the denominator by their greatest common divisor (GCD). The GCD can be efficiently calculated using Euclid’s Algorithm, which is based on the recursive formula: \n \n$\\text{gcd}(a, b) = \\text{gcd}(b \\mod a, a)$\nwith base case $\\text{gcd}(0, b) = b$.  \n\nGiven `expression = \"1/3-1/2+1/6\"`, we parse and calculate as follows:\n- First fraction parsed: $\\frac{1}{3}$  \n- Second fraction parsed: $\\frac{-1}{2}$  \n- Subtract $\\frac{1}{2}$ using a common denominator of 6: $\\frac{2}{6} - \\frac{3}{6} = \\frac{-1}{6}$  \n- Third fraction parsed: $\\frac{1}{6}$\n- Add $\\frac{1}{6}$ using a common denominator of $36$: $\\frac{-6}{36} + \\frac{6}{36} = \\frac{0}{36}$\n\nThe final result is $\\frac{0}{36}$, which will be reduced to $\\frac{0}{1}$\n\n### Algorithm \n\n1. Define helper function `FindGCD(a, b)` to find the greatest common divisor:\n    * If `a == 0` return `b`\n    * Return `FindGCD(b % a, a)`\n2. Initialize our running result fraction with  numerator `num = 0` and denominator `denom = 1`\n3. Iterate through each character in `expression`:\n    * Initialize numerator `currNum = 0` and denominator `currDenom = 0` for the current fraction being parsed.\n    * Initialize a boolean `isNegative = false` to account for negative fractions.\n    * If current character is a negative sign or positive sign:\n        * Set `isNegative` to `true` if character is negative sign\n        * Move on to next character\n    * Build the current numerator - While the current character is a number: \n        * Convert the character to its numerical value `val`\n        * Append the digit to `currNum` by performing `currNum = currNum * 10 + val`\n    * If `isNegative = true`, we set `currNum *= -1` to make it negative\n    * At this point, we are done iterating through the numerator, and can skip the divisor character to begin parsing the denominator\n    * Build the current denominator - While the current character is a number:\n        * Convert the character to its numerical value `val`\n        * Append the digit to `currDenom` by performing `currDenom = currDenom * 10 + val`\n    * Add the current fraction with the running result fraction:\n        * `num` is updated to `num * currDenom + currNum * denom`\n        * `denom` is updated to `denom * currDenom`\n4. Call `FindGCD(num, denom)` and store result in `gcd`.\n5. Reduce the result fraction by dividing `num` and `denom` by `gcd`\n6. Return `num + \"/\" + denom` to return the resulting fraction in string format\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/h4zAuuef/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"h4zAuuef\"></iframe>\n\n### Complexity Analysis\n\n* Time Complexity: $O(n)$\n\n    The loop to parse through `expression` runs $O(n)$ times. Inside the loop, the math operations to combine fractions and find a common denominator is done in $O(1)$ time. Thus, the loop in total takes $O(n)$ time. \n\n    The `FindGCD` function uses Euclid's algorithm, which runs in $\\log(\\min(a, b))$ time. \n\n    Thus, the total time complexity is $O(n)$.\n\n* Space Complexity: $O(\\log(\\min(a, b)))$\n\n    The space complexity is determined by the recursive overhead from the `FindGCD` algorithm. The max depth of the call stack would be $O(\\log(\\min(a, b)))$. Thus, the total space complexity is $O(\\log(\\min(a, b)))$.\n\n### Approach 2 - Parsing with Regular Expressions\n\n### Intuition\n\n> **Note:** We understand that most people are not familiar with the intricacies of regular expressions. We include this approach for the sake of article completeness, but we recognize most interviewers will not expect you to know the exact regex patterns needed without additional help.\n\nIn the first approach, we manually parsed the `expression` string, which can be tedious and error-prone. A more efficient and reliable method is to use regular expressions (regex) to tokenize the string. Most languages provide utility functions that will tokenize a string based on a given delimiter expression written in regex. For example, if we are given a string `3a5a10`, and we provide `a` as our delimiter, then the string will be separated into `3`, `5`, and `10`. For this approach, we will come up with a regex expression to match the delimiters needed to split `expression`.\n\n##### Regular Expression Breakdown\n\nWe would like to break down `expression` into segments representing individual numbers (either numerator or denominator) along with their corresponding signs. We observe that each fraction is separated by a `/` character, so let's start by simply using `/` as our delimiter expression. The breakdown for `expression` using this regex is shown below: \n\n![Tokenizing with first regex expression](../Figures/592/first_regex.png)\n\nWe notice that this isn't a sufficient regex expression to match our desired delimiters, as `2 + 1` should ideally be two separate tokens: `2` and `+1`. To address this, we can add in a regex \"lookahead\" expression that will create a new token if the next character is a `+` or a `-`, and will add the character to the new token. This lookahead expression can be expressed as `(?=[-+])`. Here, the `(?=)` portion indicates looking ahead at the next character, and the `[-+]` argument indicates that the lookahead should be done for either the `-` character or `+` character.\n\nCombining these two expressions with the logical OR operator (`|`), the resulting regex pattern becomes: `/|(?=[-+])`. With this, we can properly split `expression` using `/`, `+`, and `-` as delimiters. The final breakdown is shown below:\n\n![Tokenizing with second regex expression](../Figures/592/second_regex.png)\n\nThis pattern allows us to tokenize the string into manageable parts, making it easier to iterate through each fraction and apply the arithmetic operations as in Approach 1.  \n\n### Algorithm\n\n1. Define helper function `FindGCD(a, b)` to find the greatest common divisor:\n    * If `a == 0` return `b`\n    * Return `FindGCD(b % a, a)`\n2. Separate `expression` into tokens by using the regex `/|(?=[-+])` as the delimiter. Store the tokens into array `nums`\n3. Initialize our running result fraction with  numerator `num = 0` and denominator `denom = 0`\n4. Initialize `i = 0` to iterate through `nums`\n5. While `i < nums.length`:\n    * **Get the numerator and denominator of next fraction**: `currNum = nums[i]` and `currDenom=nums[i+1]`\n    * **Perform fraction addition/subtraction**: \n        * `num` is updated to `num * currDenom + currNum * denom`\n        * `denom` is updated to `denom * currDenom`\n    * **Update iterator**: `i += 2`\n6. Call `FindGCD(num, denom)` and store result in `gcd`.\n7. Reduce the result fraction by dividing `num` and `denom` by `gcd`\n8. Return `num + \"/\" + denom` to return the resulting fraction in string format\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/dswBCwud/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dswBCwud\"></iframe>\n\n### Complexity Analysis\n\n* Time Complexity: $O(n)$\n\n    The regex parsing will take $O(n)$ time. Processing the `nums` array and performing the fraction math will take a total of $O(n)$ time as well. The `FindGCD` function runs in $\\log(\\min(a, b))$ time. \n\n    Thus, the total time complexity is $O(n)$.\n\n* Space Complexity: $O(\\log(\\min(a, b)))$\n\n    Like before, the space complexity is determined by the recursive overhead from the `FindGCD` algorithm. The max depth of the call stack would be $O(\\log(\\min(a, b)))$. Thus, the total space complexity is $O(\\log(\\min(a, b)))$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

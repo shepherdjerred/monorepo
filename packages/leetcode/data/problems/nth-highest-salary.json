@@ -1,0 +1,59 @@
+{
+  "questionId": "177",
+  "questionFrontendId": "177",
+  "title": "Nth Highest Salary",
+  "titleSlug": "nth-highest-salary",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Employee</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| id          | int  |\n| salary      | int  |\n+-------------+------+\nid is the primary key (column with unique values) for this table.\nEach row of this table contains information about the salary of an employee.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the <code>n<sup>th</sup></code> highest <strong>distinct</strong> salary from the <code>Employee</code> table. If there are less than <code>n</code> distinct salaries, return&nbsp;<code>null</code>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nEmployee table:\n+----+--------+\n| id | salary |\n+----+--------+\n| 1  | 100    |\n| 2  | 200    |\n| 3  | 300    |\n+----+--------+\nn = 2\n<strong>Output:</strong> \n+------------------------+\n| getNthHighestSalary(2) |\n+------------------------+\n| 200                    |\n+------------------------+\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nEmployee table:\n+----+--------+\n| id | salary |\n+----+--------+\n| 1  | 100    |\n+----+--------+\nn = 2\n<strong>Output:</strong> \n+------------------------+\n| getNthHighestSalary(2) |\n+------------------------+\n| null                   |\n+------------------------+\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Employee (Id int, Salary int)\"], \"mssql\": [\"Create table Employee (Id int, Salary int)\"], \"oraclesql\": [\"Create table Employee (Id int, Salary int)\"], \"database\": true, \"manual\": true, \"name\": \"nth_highest_salary\", \"pythondata\": [\"Employee = pd.DataFrame([], columns=['Id', 'Salary']).astype({'Id':'Int64', 'Salary':'Int64'})\"], \"database_schema\": {\"Employee\": {\"Id\": \"INT\", \"Salary\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"648K\", \"totalSubmission\": \"1.7M\", \"totalAcceptedRaw\": 648043, \"totalSubmissionRaw\": 1664138, \"acRate\": \"38.9%\"}",
+  "likes": 2305,
+  "dislikes": 1121,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"The Number of Users That Are Eligible for Discount\", \"titleSlug\": \"the-number-of-users-that-are-eligible-for-discount\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Employee\": [\"id\", \"salary\"]}, \"argument\": 2, \"rows\": {\"Employee\": [[1, 100], [2, 200], [3, 300]]}}",
+    "{\"headers\": {\"Employee\": [\"id\", \"salary\"]}, \"argument\": 2, \"rows\": {\"Employee\": [[1, 100]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}, {\"timesEncountered\": 2, \"slug\": \"deloitte\", \"name\": \"Deloitte\"}, {\"timesEncountered\": 2, \"slug\": \"zs-associates\", \"name\": \"ZS Associates\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}]}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "CREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT\nBEGIN\n  RETURN (\n      # Write your MySQL query statement below.\n\n  );\nEND"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "CREATE FUNCTION getNthHighestSalary(@N INT) RETURNS INT AS\nBEGIN\n    RETURN (\n        /* Write your T-SQL query statement below. */\n\n    );\nEND"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "CREATE OR REPLACE FUNCTION NthHighestSalary(N INT) RETURNS TABLE (Salary INT) AS $$\nBEGIN\n  RETURN QUERY (\n    -- Write your PostgreSQL query statement below.\n    \n      \n  );\nEND;\n$$ LANGUAGE plpgsql;"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "CREATE FUNCTION getNthHighestSalary(N IN NUMBER) RETURN NUMBER IS\nresult NUMBER;\nBEGIN\n    /* Write your PL/SQL query statement below */\n\n    RETURN result;\nEND;"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef nth_highest_salary(employee: pd.DataFrame, N: int) -> pd.DataFrame:"
+    }
+  ],
+  "solution": {
+    "id": "2008",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Overview\n\nRetrieve the $n^{th}$ highest salary from the `Employee` table. If there is no nth highest salary, we will return `null`.\n\n---\n\n### Approach: Rank-Based Filtering\n\n#### Algorithm\n\nTo identify the $n^{th}$ highest salary (after removing duplicates), we apply a **ranking** approach using `pandas`. This is more flexible than sorting alone and handles ties automatically.\n\nHere is an example to help solidify the intuition behind the algorithm:\n\nThe original table `employee` with `N = 2`:\n\n<table>\n    <tr>\n        <th>id</th>\n        <th>salary</th>\n    </tr>\n    <tr>\n        <td>1</td>\n        <td>100</td>\n    </tr>\n    <tr>\n        <td>2</td>\n        <td>200</td>\n    </tr>\n    <tr>\n        <td>3</td>\n        <td>300</td>\n    </tr>\n    <tr>\n        <td>4</td>\n        <td>500</td>\n    </tr>\n    <tr>\n        <td>5</td>\n        <td>500</td>\n    </tr>\n</table>\n\n<br>\n\n**Step 1: Remove Duplicate Salaries**  \nWe only care about unique salaries, so we drop duplicate values in the `salary` column:\n```python\ndist = employee.drop_duplicates(subset='salary')\n```\n\n<table>\n    <tr>\n        <th>id</th>\n        <th>salary</th>\n    </tr>\n    <tr>\n        <td>1</td>\n        <td>100</td>\n    </tr>\n    <tr>\n        <td>2</td>\n        <td>200</td>\n    </tr>\n    <tr>\n        <td>3</td>\n        <td>300</td>\n    </tr>\n    <tr>\n        <td>4</td>\n        <td>500</td>\n    </tr>\n</table>\n\n<br>\n\n**Step 2: Rank Salaries in Descending Order**  \nWe assign ranks to the salaries using `rank(method='dense', ascending=False)`. This ensures:\n\n  - Higher salaries have lower rank values.\n  - Equal salaries receive the same rank.\n  - Gaps in ranks are avoided.\n\n```python\ndist['rnk'] = dist['salary'].rank(method='dense', ascending=False)\n```\n\n<table>\n    <tr>\n        <th>salary</th>\n        <th>rnk</th>\n    </tr>\n    <tr>\n        <td>500</td>\n        <td>1</td>\n    </tr>\n    <tr>\n        <td>300</td>\n        <td>2</td>\n    </tr>\n    <tr>\n        <td>200</td>\n        <td>3</td>\n    </tr>\n    <tr>\n        <td>100</td>\n        <td>4</td>\n    </tr>\n</table>\n\n<br>\n\n**Step 3: Filter by Rank**  \nWe then select the row(s) where `rnk == N`. If none exist, we return `null`.\n\nIn this case `N = 2`, so after filtering and selecting relevant columns we end up with:\n\n<table>\n    <tr>\n        <th>salary</th>\n    </tr>\n    <tr>\n        <td>500</td>\n    </tr>\n    <tr>\n        <td>300</td>\n    </tr>\n</table>\n\n<br>\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/a879iCKY/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"a879iCKY\"></iframe>\n\n---\n<br>\n\n## Database\n\n### Approach: Sort and Limit\n#### Algorithm\nIn SQL, the query to find the $n^{th}$ highest salary involves sorting the distinct salaries in descending order and limiting the result to the nth row. Here we subtract 1 from N because SQL indexing starts from 0.\n\nThis task requires to find the nth highest salary from the Employee table. If there is no nth highest salary, the query should return null. This implies that we have to order the salary column in descending order and pick the nth entry.\n\nHere is an example to help solidify the intuition behind the algorithm:\n\nOriginal Employee table with `N = 2`:\n\n<table>\n    <tr>\n        <th>id</th>\n        <th>salary</th>\n    </tr>\n    <tr>\n        <td>1</td>\n        <td>100</td>\n    </tr>\n    <tr>\n        <td>2</td>\n        <td>200</td>\n    </tr>\n    <tr>\n        <td>3</td>\n        <td>300</td>\n    </tr>\n    <tr>\n        <td>4</td>\n        <td>500</td>\n    </tr>\n    <tr>\n        <td>5</td>\n        <td>500</td>\n    </tr>\n</table>\n<br>\n\nSub-Table after removing duplicates via `SELECT DISTINCT`:\n<table>\n    <tr>\n        <th>id</th>\n        <th>salary</th>\n    </tr>\n    <tr>\n        <td>1</td>\n        <td>100</td>\n    </tr>\n    <tr>\n        <td>2</td>\n        <td>200</td>\n    </tr>\n    <tr>\n        <td>3</td>\n        <td>300</td>\n    </tr>\n    <tr>\n        <td>4</td>\n        <td>500</td>\n    </tr>\n</table>\n<br>\n\nSub-Table after sorting in descending order via `ORDER BY salary DESC`:\n<table>\n    <tr>\n        <th>id</th>\n        <th>salary</th>\n    </tr>\n    <tr>\n        <td>4</td>\n        <td>500</td>\n    </tr>\n    <tr>\n        <td>3</td>\n        <td>300</td>\n    </tr>\n    <tr>\n        <td>2</td>\n        <td>200</td>\n    </tr>\n    <tr>\n        <td>1</td>\n        <td>100</td>\n    </tr>\n</table>\n<br>\n\nAnd the 2nd highest salary is `300`, which can be found by taking the second row in the descendingly-ordered table! We do this with `LIMIT M, 1` which takes the next `1` row starting from the `M`th row (indexed from 0).\n\nNote that in SQL, the order of execution for the clauses in a query is generally as follows:\n\n1. FROM clause: This specifies the tables from which data will be retrieved.\n1. WHERE clause: This filters the rows based on a specified condition.\n1. GROUP BY clause: This groups rows based on a specified column or expression.\n1. HAVING clause: This filters the grouped rows based on a condition.\n1. SELECT clause: This selects the columns or expressions that will be returned in the result set.\n1. ORDER BY clause: This sorts the result set based on a specified column or expression.\n1. LIMIT/OFFSET clause: This limits the number of rows returned in the result set.\n\nNote: Your DBMS may execute a query in an equivalent but *different* order.\n\n#### Implementation\n\n```sql\nCREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT\nBEGIN\nDECLARE M INT; \n    SET M = N-1; \n  RETURN (\n      SELECT DISTINCT salary\n      FROM Employee\n      ORDER BY salary DESC\n      LIMIT M, 1\n  );\nEND\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

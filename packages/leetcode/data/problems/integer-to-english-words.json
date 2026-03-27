@@ -1,0 +1,142 @@
+{
+  "questionId": "273",
+  "questionFrontendId": "273",
+  "title": "Integer to English Words",
+  "titleSlug": "integer-to-english-words",
+  "difficulty": "Hard",
+  "content": "<p>Convert a non-negative integer <code>num</code> to its English words representation.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 123\n<strong>Output:</strong> &quot;One Hundred Twenty Three&quot;\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 12345\n<strong>Output:</strong> &quot;Twelve Thousand Three Hundred Forty Five&quot;\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 1234567\n<strong>Output:</strong> &quot;One Million Two Hundred Thirty Four Thousand Five Hundred Sixty Seven&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= num &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n",
+  "hints": [
+    "Did you see a pattern in dividing the number into chunk of words? For example, 123 and 123000.",
+    "Group the number by thousands (3 digits). You can write a helper function that takes a number less than 1000 and convert just that chunk to words.",
+    "There are many edge cases. What are some good test cases? Does your code work with input such as 0? Or 1000010? (middle chunk is zero and should not be printed out)"
+  ],
+  "metaData": "{\r\n  \"name\": \"numberToWords\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"num\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"579K\", \"totalSubmission\": \"1.7M\", \"totalAcceptedRaw\": 579049, \"totalSubmissionRaw\": 1659531, \"acRate\": \"34.9%\"}",
+  "likes": 3848,
+  "dislikes": 6838,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Integer to Roman\", \"titleSlug\": \"integer-to-roman\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "123",
+    "12345",
+    "1234567"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"six_months\": [{\"timesEncountered\": 14, \"slug\": \"gusto\", \"name\": \"Gusto\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"faire\", \"name\": \"Faire\"}], \"more_than_six_months\": [{\"timesEncountered\": 16, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 9, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 7, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 5, \"slug\": \"warnermedia\", \"name\": \"Warnermedia\"}, {\"timesEncountered\": 4, \"slug\": \"palantir-technologies\", \"name\": \"Palantir Technologies\"}, {\"timesEncountered\": 4, \"slug\": \"fractal-analytics\", \"name\": \"Fractal Analytics\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 3, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}]}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string numberToWords(int num) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String numberToWords(int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberToWords(self, num: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberToWords(self, num):\n        \"\"\"\n        :type num: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} num\n * @return {string}\n */\nvar numberToWords = function(num) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberToWords(num: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string NumberToWords(int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* numberToWords(int num) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberToWords(num int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberToWords(num: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberToWords(_ num: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_to_words(num: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num\n# @return {String}\ndef number_to_words(num)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $num\n     * @return String\n     */\n    function numberToWords($num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String numberToWords(int num) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberToWords(num: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_to_words(num :: integer) :: String.t\n  def number_to_words(num) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_to_words(Num :: integer()) -> unicode:unicode_binary().\nnumber_to_words(Num) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-to-words num)\n  (-> exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2395",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe need to create a program that converts any non-negative integer into its English word representation. The program must handle the English numbering system accurately, including terms like thousands, millions, and billions, and must follow the rules for numbers below one hundred to ensure correct phrasing.  \n\n**Key Points:**\n- The input can range from `0` to `2,147,483,647` (i.e., the maximum value for a 32-bit signed integer).\n- The first letter of each word must be capitalized.\n- Words should be separated by a single space, with no trailing spaces.\n\nObserve the tree diagram below to understand how numbers are spelled out in English, along with their corresponding units and scales. This will help us see the repetitive patterns and their resemblance to a tree data structure, which lends itself to a recursive approach.\n\n![Number_Tree](../Figures/273/273_Integer_to_english.png)\n\n---\n\n### Approach 1: Recursive Approach\n\n#### Intuition\n\nIn the recursive approach, we break down the number into smaller parts based on place values such as ones, tens, hundreds, thousands, millions, and so on.\n\nWe start with the largest place value and proceed downward. For example, with the number `1234567`, we first handle the millions part (`1 Million`).\n\nWe use a helper function that recursively breaks down the number. If the number is less than `10`, we return the corresponding word from a predefined list (`belowTen`). For numbers less than `20`, we use another list (`belowTwenty`) due to their unique names.\n\nFor numbers below `100`, we combine the word for the tens place (from `belowHundred`) with the word for the ones place, using further recursive calls. For numbers below `1000`, we break the number into hundreds and the remainder, processing each part recursively.\n\nFor larger numbers like `1234567`, the function handles the millions part (`1 Million`), then the thousands (`234 Thousand`), and finally the hundreds and smaller units (`567`). Each chunk is processed using recursive calls, building the final English representation from smallest to largest units.\n\nThe recursive function works as follows:\n- **Base Case**: For numbers less than 10, the function directly maps to a word using `belowTen`. For numbers between 10 and 19, `belowTwenty` handles these unique cases. For numbers between 20 and 99, it combines words from `belowHundred` for tens and recursively processes the remainder for units.\n- **Recursive Case**: For numbers 100 and above, the function processes hundreds, thousands, millions, and billions by breaking the number into smaller parts. For example, for `1234567`, it processes the millions part (`1 Million`), then the thousands part (`234 Thousand`), and finally the remainder (`567`). Each part is processed recursively to ensure accurate conversion.\n\nAfter processing each chunk, we combine the results, handling the hierarchical structure from the smallest unit up to the largest (like billions), ensuring that each segment is correctly represented in English.\n\n#### Algorithm\n\n- Initialize arrays to store words for different ranges of numbers:\n  - `belowTen` for numbers 1-9.\n  - `belowTwenty` for numbers 10-19.\n  - `belowHundred` for multiples of ten from 20-90.\n\n- Define the main function `numberToWords` to handle the conversion:\n  - If the number is zero, return `\"Zero\"`.\n  - Otherwise, call the helper function `convertToWords` to start the conversion process.\n\n- Implement the helper function `convertToWords` to convert numbers to words recursively:\n  - Base Case 1: Numbers less than 10:\n    - Return the corresponding word from `belowTen`.\n  - Base Case 2: Numbers less than 20:\n    - Return the corresponding word from `belowTwenty`.\n  - Numbers from 20 to 99:\n    - Combine the word for the tens place from `belowHundred` with the recursive result for the units place.\n  - Numbers from 100 to 999:\n    - Combine the recursive result for the hundreds place with `\"Hundred\"`, and the recursive result for the remaining part.\n  - Numbers from 1000 to 999,999:\n    - Combine the recursive result for thousands with `\"Thousand\"`, and the recursive result for the remaining part.\n  - Numbers from 1,000,000 to 999,999,999:\n    - Combine the recursive result for millions with `\"Million\"`, and the recursive result for the remaining part.\n  - Numbers 1,000,000,000 and above:\n    - Combine the recursive result for billions with `\"Billion\"`, and the recursive result for the remaining part.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/gWF2VCjV/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"gWF2VCjV\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number.\n\n- Time complexity: $O(\\log_{10} N)$\n\n    The time complexity is $O(\\log_{10} N)$ because the number of recursive calls is proportional to the number of digits in the number, which grows logarithmically with the size of the number.\n\n- Space complexity: $O(\\log_{10} N)$\n\n    The space complexity is $O(\\log_{10} N)$, mainly because of the recursion stack. Each recursive call adds a frame to the stack until the base case is reached, leading to space usage proportional to the number of digits in the number.\n\n---\n\n### Approach 2: Iterative Approach\n\n#### Intuition\n\nIn the iterative approach, we convert a number into English words by processing it in chunks of three digits, corresponding to thousands, millions, billions, etc.\n\nWe initialize arrays for place value words (like thousand, million, billion) and for digit and tens names. A loop processes the number from the least significant chunk (ones, tens, hundreds) to the most significant chunk (thousands, millions, billions).\n\nFor instance, with the number `1234567`, we repeatedly use the modulus operation `% 1000` to extract chunks of three digits. We start by using `1234567 % 1000` to get `567`, then `1234 % 1000` to get `234`, and finally `1 % 1000` to get `1`. Each chunk is then converted to English words.\"\n\nTo convert each chunk:\n1. Handle the hundreds place if present (e.g., `567` becomes \"Five Hundred\").\n2. Process the tens and ones (e.g., `67` becomes \"Sixty-Seven\").\n3. Append the appropriate scale word (e.g., thousand, million) based on the chunk's position (e.g., `234` becomes \"Two Hundred Thirty-Four Thousand\").\n\nWe track the scale by using an index (`groupIndex`) that increments with each chunk processed. This index is used to fetch the correct scale word (thousand, million, billion) from the thousands array. For example:\n\n- `groupIndex = 0`: No scale word (ones place).\n- `groupIndex = 1`: \"Thousand\".\n- `groupIndex = 2`: \"Million\".\n- `groupIndex = 3`: \"Billion\".\n\nWe build the final result by concatenating the words for each chunk, starting from the least significant chunk and moving to the most significant. This ensures the correct placement of scale words and produces the final English representation of the entire number.\n\n#### Algorithm\n \n- Handle the special case where the number is zero by returning `\"Zero\"`.\n- Initialize arrays to store words for single digits, tens, and thousands:\n  - `ones` for numbers 1-19.\n  - `tens` for multiples of ten from 20-90.\n  - `thousands` for scales (`\"Thousand\"`, `\"Million\"`, `\"Billion\"`).\n- Process the number in chunks of 1000.\n  - Extract the last three digits of the number and handle hundreds, tens, and units:\n    - Handle hundreds place by adding the corresponding word from `ones` and `\"Hundred\"`.\n    - Handle tens and units place by combining the word from `tens` and `ones`.\n  - Append the scale (`\"Thousand\"`, `\"Million\"`, `\"Billion\"`) for the current group.\n  - Insert the group result at the beginning of the final result.\n- Move to the next chunk of 1000 by dividing the number by 1000.\n- Return the result after removing trailing spaces. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Zu9faq2G/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Zu9faq2G\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number.\n\n* Time complexity: $O(\\log_{10} N)$\n\n    $O(\\log_{10} N)$, because the number is divided by 1000 in each iteration, making the number of iterations proportional to the number of chunks, which is logarithmic.\n\n* Space complexity: $O(1)$\n\n    $O(1)$, constant space. The space used is independent of the number's size, as it involves only a few string builders and arrays.\n\n---\n\n### Approach 3: Pair-Based Approach\n\n#### Intuition\n\nIn the pair-based approach, we use a predefined list of numeric values and their corresponding English words to convert a number. We process the number by matching it against these pairs from largest to smallest, dividing the number, and converting each part recursively.\n\nWe start by defining a list of pairs where each pair consists of a numeric value and its English word, such as `1000000000` for \"Billion\", `1000000` for \"Million\", and down to `1` for \"One\". This list facilitates conversion by identifying which value fits into the current number.\n\nFor a number like `1234567`, we iterate through the list from the largest value to the smallest. We check if the number is greater than or equal to each value. If it is:\n- **Divide the Number**: Determine how many times the value fits into the number (the quotient) and calculate the remainder. For `1234567`, we match `1 Million`, resulting in \"One Million\", and then process the remainder (`234567`).\n- **Recursive Conversion**: Convert the quotient to words and recursively process the remainder using the same list of pairs.\n\nWe concatenate the word for the current pair with the results from the recursive call for the remainder. This process builds the final English word representation from the largest units (like billion) to the smallest (like one), ensuring an accurate representation of every part of the number.\n\n#### Algorithm\n\n- Initialize a pair `numberToWordsMap` that maps numeric values to their corresponding English words:\n  - Includes large scales (`\"Billion\"`, `\"Million\"`, `\"Thousand\"`, `\"Hundred\"`) and individual numbers (1-19, and multiples of ten from 20 to 90).\n\n- Handle the special case where the number is zero by returning `\"Zero\"`.\n\n- Call the function `numberToWords` to convert the number to English words:\n  - Iterate over the `numberToWordsMap`:\n    - For each pair `(value, word)` in `numberToWordsMap`, check if the number `num` is greater than or equal to `value`.\n      - If `num` is greater than or equal to `value`:\n        - Compute the `prefix`:\n          - If `num` is 100 or greater, recursively convert the quotient (`num / value`) to words and append `\" \"` (a space). If `num` is less than 100, set `prefix` to an empty string.\n        - Get the `unit` as the current `word` from `numberToWordsMap`.\n        - Compute the `suffix`:\n          - If the remainder (`num % value`) is zero, set `suffix` to an empty string. Otherwise, recursively convert the remainder to words and prepend `\" \"` (a space).\n        - Return the combined result: `prefix + unit + suffix`.\n\n- If the number is not zero, the function will return the complete English representation by combining the `prefix`, `unit`, and `suffix`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KJL7Kbac/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KJL7Kbac\"></iframe>\n\n#### Complexity Analysis\n\nLet $K$ be the number of pairs in `numberToWordsMap` and $N$ be the number.\n\n- Time complexity: $O(K)$\n\n    The time complexity is $O(K)$ because the loop iterates through the pairs until it finds a match. This complexity is linear with respect to the number of pairs, which is constant in practice as the number of pairs is fixed.\n\n- Space complexity: $O(\\log_{10} N)$\n\n    $O(\\log_{10} N)$, mainly due to the recursion stack in the `convert` function. The space used is proportional to the number of recursive calls made.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

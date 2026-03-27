@@ -1,0 +1,138 @@
+{
+  "questionId": "342",
+  "questionFrontendId": "342",
+  "title": "Power of Four",
+  "titleSlug": "power-of-four",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer <code>n</code>, return <em><code>true</code> if it is a power of four. Otherwise, return <code>false</code></em>.</p>\n\n<p>An integer <code>n</code> is a power of four, if there exists an integer <code>x</code> such that <code>n == 4<sup>x</sup></code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> n = 16\n<strong>Output:</strong> true\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> n = 5\n<strong>Output:</strong> false\n</pre><p><strong class=\"example\">Example 3:</strong></p>\n<pre><strong>Input:</strong> n = 1\n<strong>Output:</strong> true\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>-2<sup>31</sup> &lt;= n &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<strong>Follow up:</strong> Could you solve it without loops/recursion?",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"isPowerOfFour\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1.1M\", \"totalSubmission\": \"2.1M\", \"totalAcceptedRaw\": 1086323, \"totalSubmissionRaw\": 2094164, \"acRate\": \"51.9%\"}",
+  "likes": 4480,
+  "dislikes": 422,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Power of Two\", \"titleSlug\": \"power-of-two\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Power of Three\", \"titleSlug\": \"power-of-three\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "16",
+    "5",
+    "1"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"wix\", \"name\": \"Wix\"}, {\"timesEncountered\": 2, \"slug\": \"qualcomm\", \"name\": \"Qualcomm\"}, {\"timesEncountered\": 2, \"slug\": \"two-sigma\", \"name\": \"Two Sigma\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isPowerOfFour(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isPowerOfFour(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isPowerOfFour(self, n: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isPowerOfFour(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {boolean}\n */\nvar isPowerOfFour = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isPowerOfFour(n: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsPowerOfFour(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isPowerOfFour(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isPowerOfFour(n int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isPowerOfFour(n: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isPowerOfFour(_ n: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_power_of_four(n: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Boolean}\ndef is_power_of_four(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Boolean\n     */\n    function isPowerOfFour($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isPowerOfFour(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isPowerOfFour(n: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_power_of_four(n :: integer) :: boolean\n  def is_power_of_four(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_power_of_four(N :: integer()) -> boolean().\nis_power_of_four(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-power-of-four n)\n  (-> exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "767",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\n**Prerequisites**\n\nThis bitwise trick will be used as something already known:\n\n- How to check if the number is a power of two : `x > 0 and x & (x - 1) == 0`.\n\n    Please check the article [Power of Two](https://leetcode.com/articles/power-of-two/)\n    for the detailed explanation.\n\n**Intuition**\n\nThere is an obvious $$\\mathcal{O}(\\log N)$$ time solution\nand we're not going to discuss it here.\n\n<iframe src=\"https://leetcode.com/playground/kBwkCQug/shared\" frameBorder=\"0\" width=\"100%\" height=\"174\" name=\"kBwkCQug\"></iframe>\n\nLet's discuss $$\\mathcal{O}(1)$$ time and $$\\mathcal{O}(1)$$ space solutions only.\n<br />\n<br />\n\n\n---\n### Approach 1: Brute Force + Precomputations\n\nLet's precompute all possible answers, as we once did for the problem \n[Nth Tribonacci Number](https://leetcode.com/articles/n-th-tribonacci-number/).\n\nInput number is known to be [signed 32 bits integer](https://en.wikipedia.org/wiki/Integer_(computer_science)#Common_long_integer_sizes),\ni.e. $$x \\le 2^{31} - 1$$. Hence the max power of four to be considered is\n$$[\\log_4\\left(2^{31} - 1\\right)] = 15$$. \nVoila, here is all 16 possible \nanswers: $$4^0$$, $$4^1$$, $$4^2$$, ..., $$4^{15}$$. Let's precompute them all,\nand then during the runtime just check if input number is in the list of answers. \n\n<iframe src=\"https://leetcode.com/playground/DngXqVYu/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"DngXqVYu\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(1)$$.\n\n* Space complexity: $$\\mathcal{O}(1)$$.\n<br />\n<br />\n\n\n---\n### Approach 2: Math\n\nIf num is a power of four $$x = 4^a$$, then \n$$a = \\log_4 x = \\frac{1}{2}\\log_2 x$$ is an integer. \nHence let's simply check if $$\\log_2 x$$ is an even number.\n\n<iframe src=\"https://leetcode.com/playground/2H6eahtj/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"2H6eahtj\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(1)$$.\n\n* Space complexity : $$\\mathcal{O}(1)$$.\n<br />\n<br />\n\n\n---\n### Approach 3: Bit Manipulation\n\nLet's first check if num is a power of two: \n`x > 0 and x & (x - 1) == 0`. \n\nNow the problem is to distinguish between even powers of two (when $$x$$ \nis a power of four) and odd powers of two (when $$x$$ is _not_ a power of four).\nIn binary representation both cases are single 1-bit followed by zeros.\n\n> What is the difference? In the first case (power of four), \n1-bit is at even position: bit 0, bit 2, bit 4, etc. In the\nsecond case, at odd position. \n  \n![fig](../Figures/342/odd_even.png)\n\nHence power of four would make a zero in a bitwise AND with number \n$$(101010...10)_2$$:\n\n$$4^a \\land (101010...10)_2 == 0$$\n\n> How long should be $$(101010...10)_2$$ if $$x$$ is a signed integer?\n32 bits. To write shorter, in 8 charaters instead of 32, it's common to use \n[hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) representation:\n$$(101010...10)_2 = (aaaaaaaa)_{16}$$.\n\n$$x \\land (aaaaaaaa)_{16} == 0$$\n\n<iframe src=\"https://leetcode.com/playground/C4tgMnm5/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"C4tgMnm5\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(1)$$.\n\n* Space complexity : $$\\mathcal{O}(1)$$.\n<br />\n<br />\n\n\n---\n### Approach 4: Bit Manipulation + Math\n\nLet's first check if $$x$$ is a power of two: \n`x > 0 and x & (x - 1) == 0`. \nNow one could be sure that $$x = 2^a$$.\nThough $$x$$ is a power of four only if $$a$$ is even.\n\nNext step is to consider both cases $$a = 2k$$ and $$a = 2k + 1$$,\nand to compute $$x$$ modulo after division by three:\n\n$$(2^{2k} \\mod 3) = (4^k \\mod 3) = ((3 + 1)^k \\mod 3) = 1$$\n\n$$((2^{2k + 1}) \\mod 3) = ((2 \\times 4^k) \\mod 3) = ((2 \\times(3 + 1)^k) \\mod 3) = 2$$\n\n> If $$x$$ is a power of two and `x % 3 == 1`, then $$x$$ _is_ a power of four.\n\n<iframe src=\"https://leetcode.com/playground/5vq3RSaj/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"5vq3RSaj\"></iframe>\n\n**How this works: mod arithmetic**\n\nTo show the idea, let's compute $$x = 2^{2k} \\mod 3$$.\n\nFirst, $$2^{2k} = {2^2}^k = 4^k$$. Second, since $$4 = 3 + 1$$, $$x$$\ncould be rewritten as \n\n$$x = ((3 + 1)^k \\mod 3)$$\n\nLet's decompose \n\n$$(3 + 1)^k = (3 + 1) \\times (3 + 1)^{k - 1} = 3 \\times (3 + 1)^{k - 1} + (3 + 1)^{k - 1}$$. \n\nThe first term is divisible by 3, i.e. $$(3 \\times (3 + 1)^{k - 1}) \\mod 3 = 0$$. Hence\n\n$$x = ((3 + 1)^{k - 1} \\mod 3)$$\n\nOne could continue like this k -> k - 1 -> k - 2 -> ... -> 1 and finally rewrite $$x$$ as\n\n$$x = ((3 + 1)^1 \\mod 3) = 1$$. \n\nThe job is done. Now $$y = 2^{2k + 1} \\mod 3$$ is simple, because if $$x \\mod 3 = 1$$,\nthen $$y \\mod 3 = 2x \\mod 3 = 2$$.\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(1)$$.\n\n* Space complexity : $$\\mathcal{O}(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

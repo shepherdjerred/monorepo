@@ -1,0 +1,141 @@
+{
+  "questionId": "111",
+  "questionFrontendId": "111",
+  "title": "Minimum Depth of Binary Tree",
+  "titleSlug": "minimum-depth-of-binary-tree",
+  "difficulty": "Easy",
+  "content": "<p>Given a binary tree, find its minimum depth.</p>\n\n<p>The minimum depth is the number of nodes along the shortest path from the root node down to the nearest leaf node.</p>\n\n<p><strong>Note:</strong>&nbsp;A leaf is a node with no children.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/10/12/ex_depth.jpg\" style=\"width: 432px; height: 302px;\" />\n<pre>\n<strong>Input:</strong> root = [3,9,20,null,null,15,7]\n<strong>Output:</strong> 2\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [2,null,3,null,4,null,5,null,6]\n<strong>Output:</strong> 5\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[0, 10<sup>5</sup>]</code>.</li>\n\t<li><code>-1000 &lt;= Node.val &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"minDepth\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.6M\", \"totalSubmission\": \"3.1M\", \"totalAcceptedRaw\": 1648553, \"totalSubmissionRaw\": 3135692, \"acRate\": \"52.6%\"}",
+  "likes": 7834,
+  "dislikes": 1365,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Binary Tree Level Order Traversal\", \"titleSlug\": \"binary-tree-level-order-traversal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Depth of Binary Tree\", \"titleSlug\": \"maximum-depth-of-binary-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,9,20,null,null,15,7]",
+    "[2,null,3,null,4,null,5,null,6]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"livspace\", \"name\": \"Livspace\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int minDepth(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int minDepth(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def minDepth(self, root: Optional[TreeNode]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def minDepth(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number}\n */\nvar minDepth = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction minDepth(root: TreeNode | null): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int MinDepth(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint minDepth(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc minDepth(root *TreeNode) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun minDepth(root: TreeNode?): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func minDepth(_ root: TreeNode?) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn min_depth(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer}\ndef min_depth(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer\n     */\n    function minDepth($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int minDepth(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def minDepth(root: TreeNode): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec min_depth(root :: TreeNode.t | nil) :: integer\n  def min_depth(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec min_depth(Root :: #tree_node{} | null) -> integer().\nmin_depth(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (min-depth root)\n  (-> (or/c tree-node? #f) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1927",
+    "content": "[TOC]\n\n## Solution\n\n### Approach 1: Depth-First Search (DFS)\n\n**Intuition**\n\n> If you're not familiar with DFS, check out our [Explore Card](https://leetcode.com/explore/learn/card/graph/619/depth-first-search-in-graph/).\n\nWe are given a binary tree; we must return the minimum number of nodes between the root and any leaf node, including both. Let's try to break this problem into subproblems; we need to return the answer from the root of the current tree; what if we know the answer considering the left and right child of the root node? If the minimum depth for the root node's left child is `x` and the minimum depth for the root node's right child is `y`, then the minimum depth for the whole tree with the root node will be `1 + min(x, y)`. The additional `+1` is for the current root node.\n\nThis way, we can divide the current problem into subproblems and then solve them using recursion. The base condition of this recursion would be when the node is `NULL`, in which case we should return `0`. One tricky thing that we need to consider is when one of the children is `NULL` and the other one isn't. We shouldn't move forward with recursion on the `NULL` child; if we do, we would return `0` due to the base condition and the count of nodes from the leaf node on the other side would be discarded as we are taking the minimum of the two. In case both children are `NULL`, it's fine to go into recursion as both would return `0`, and the minimum of the two won't cause an issue.\n\nIf we observe closely, we are first traversing to the deepest node and then backtracking to the parent node to find the minimum depth for it; hence, this process is actually Depth-First Search (DFS).\n\n![fig](../Figures/111/111A.png)\n\n**Algorithm**\n\n1. We will use the `dfs` method with `root` as an argument.\n2. The base condition of the recursion would be for the `NULL` node, in which case we should return `0`.\n3. If the left child of `root` is `NULL`, then we should return `1` + minimum depth for the right child of the root node, which is `1 + dfs(root.right)`.\n4. If the right child of `root` is `NULL`, then we should return `1` + minimum depth for the left child of the root node, which is `1 + dfs(root.left)`.\n5. If both child are non-null, then return `1 + min(dfs(root.left), dfs(root.right))`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/ivTiCTE5/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"ivTiCTE5\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $N$ is the number of nodes in the binary tree.\n\n* Time complexity: $O(N)$\n\n  We will traverse each node in the tree only once; hence, the total time complexity would be $O(N)$.\n\n* Space complexity: $O(N)$\n\n  The only space required is the stack space; the maximum number of active stack calls would equal the maximum depth of the tree, which could equal the total number of nodes in the tree. Hence, the space complexity would equal $O(N)$.\n  <br/>\n\n---\n\n### Approach 2: Breadth-First Search (BFS)\n\n**Intuition**\n\n> If you're not familiar with BFS, check out our [Explore Card](https://leetcode.com/explore/learn/card/graph/620/breadth-first-search-in-graph/).\n\nWe traversed the tree depth-wise in the previous approach; the other way to iterate it is in a breadth-wise manner using BFS. BFS uses FIFO, i.e. first in, first out approach using a queue, and hence we are able to traverse all the nodes at a level first before going further down.\n\nWe will use a queue to store all the nodes that are there at the same level. Starting with the root node, we will store the root node in the queue. Then we will iterate over all the current nodes in the queue and for each node we will add its left and right child to the queue. The important point to note here is that since we are traversing nodes level-wise, the first node which is a leaf, i.e. both left and right children are null; We will know that this is the node with the minimum depth.\n\n**Algorithm**\n\n1. Return `0` if the root is `NULL`.\n2. Initialize the queue `q` with the root node and `depth` to `1`.\n3. Do the following while the queue isn't empty:\n\n   i. Iterate over all the nodes that are currently in the queue.\n\n   ii. Skip the node if it's null; otherwise, if it's a leaf node, then return `depth`.\n\n   iii. For each node, add the left and right child to the queue.\n\n   iv. Increment the `depth` once the level is fully iterated.\n\n4. Ideally, our code shouldn't reach here, so return any value once the queue is empty.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/43vhEWu9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"43vhEWu9\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $N$ is the number of nodes in the binary tree.\n\n* Time complexity: $O(N)$\n\n  We will be iterating over each node in the tree only once; therefore, the total time complexity would be $O(N)$.\n\n* Space complexity: $O(N)$\n\n  The only space required is the queue; the maximum number of nodes in the queue would be $N$. Hence, the space complexity would equal $O(N)$.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "questionId": "618",
+  "questionFrontendId": "618",
+  "title": "Students Report By Geography",
+  "titleSlug": "students-report-by-geography",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Student</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| name        | varchar |\n| continent   | varchar |\n+-------------+---------+\nThis table may contain duplicate rows.\nEach row of this table indicates the name of a student and the continent they came from.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>A school has students from Asia, Europe, and America.</p>\n\n<p>Write a solution to <a href=\"https://en.wikipedia.org/wiki/Pivot_table\" target=\"_blank\">pivot</a> the continent column in the <code>Student</code> table so that each name is <strong>sorted alphabetically</strong> and displayed underneath its corresponding continent. The output headers should be <code>America</code>, <code>Asia</code>, and <code>Europe</code>, respectively.</p>\n\n<p>The test cases are generated so that the student number from America is not less than either Asia or Europe.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nStudent table:\n+--------+-----------+\n| name   | continent |\n+--------+-----------+\n| Jane   | America   |\n| Pascal | Europe    |\n| Xi     | Asia      |\n| Jack   | America   |\n+--------+-----------+\n<strong>Output:</strong> \n+---------+------+--------+\n| America | Asia | Europe |\n+---------+------+--------+\n| Jack    | Xi   | Pascal |\n| Jane    | null | null   |\n+---------+------+--------+\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> If it is unknown which continent has the most students, could you write a solution to generate the student report?</p>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Student (name varchar(50), continent varchar(7))\"], \"mssql\": [\"Create table Student (name varchar(50), continent varchar(7))\"], \"oraclesql\": [\"Create table Student (name varchar(50), continent varchar(7))\"], \"database\": true, \"name\": \"geography_report\", \"pythondata\": [\"Student = pd.DataFrame([], columns=['name', 'continent']).astype({'name':'object', 'continent':'object'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Student (name varchar(50), continent varchar(7))\"], \"database_schema\": {\"Student\": {\"name\": \"VARCHAR(50)\", \"continent\": \"VARCHAR(7)\"}}}",
+  "stats": "{\"totalAccepted\": \"29.2K\", \"totalSubmission\": \"46.1K\", \"totalAcceptedRaw\": 29243, \"totalSubmissionRaw\": 46054, \"acRate\": \"63.5%\"}",
+  "likes": 192,
+  "dislikes": 170,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Student\":[\"name\",\"continent\"]},\"rows\":{\"Student\":[[\"Jane\",\"America\"],[\"Pascal\",\"Europe\"],[\"Xi\",\"Asia\"],[\"Jack\",\"America\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef geography_report(student: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "175",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach: Using \"session variables\" and `join` [Accepted]\n\n**Intuition**\n\nAssign a separate auto increment row id to each of the continent, and then join them together.\n\n**Algorithm**\n\nTo set the row id for each continent, we need to use session variables.\nFor example, we can use the following statement to assign a auto increment row number for students in America.\n\n```sql\nSELECT \n    row_id, America\nFROM\n    (SELECT @am:=0) t,\n    (SELECT \n        @am:=@am + 1 AS row_id, name AS America\n    FROM\n        student\n    WHERE\n        continent = 'America'\n    ORDER BY America) AS t2\n;\n```\n\n    | row_id | America |\n    |--------|---------|\n    | 1      | Jack    |\n    | 2      | Jane    |\n\nSimilarly, we can assign other dedicated row id for other continents as the following result.\n\n    | row_id | Asia |\n    |--------|------|\n    | 1      | Xi   |\n\n    | row_id | Europe |\n    |--------|--------|\n    | 1      | Jesper |\n\n\nThen if we join these 3 temp tables together and using the same row_id as the condition, we can have the following table.\n\n    | row_id | America | Asia | Europe |\n    |--------|---------|------|--------|\n    | 1      | Jack    | Xi   | Pascal |\n    | 2      | Jane    |      |        |\n\nOne issue you may encounter is the student list for America is not complete if you use regular inner join since there are more records in this list comparing with the other two. So you may have a solution to use the `outer join`. Correct! But how to arrange the 3 tables? The trick is to put the America list in the middle so that we can use `right (outer) join` and `right (outer) join` to connect with other two tables.\n\n**MySQL**\n\n```sql\nSELECT \n    America, Asia, Europe\nFROM\n    (SELECT @as:=0, @am:=0, @eu:=0) t,\n    (SELECT \n        @as:=@as + 1 AS asid, name AS Asia\n    FROM\n        student\n    WHERE\n        continent = 'Asia'\n    ORDER BY Asia) AS t1\n        RIGHT JOIN\n    (SELECT \n        @am:=@am + 1 AS amid, name AS America\n    FROM\n        student\n    WHERE\n        continent = 'America'\n    ORDER BY America) AS t2 ON asid = amid\n        LEFT JOIN\n    (SELECT \n        @eu:=@eu + 1 AS euid, name AS Europe\n    FROM\n        student\n    WHERE\n        continent = 'Europe'\n    ORDER BY Europe) AS t3 ON amid = euid\n;\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "questionId": "570",
+  "questionFrontendId": "570",
+  "title": "Managers with at Least 5 Direct Reports",
+  "titleSlug": "managers-with-at-least-5-direct-reports",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Employee</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| id          | int     |\n| name        | varchar |\n| department  | varchar |\n| managerId   | int     |\n+-------------+---------+\nid is the primary key (column with unique values) for this table.\nEach row of this table indicates the name of an employee, their department, and the id of their manager.\nIf managerId is null, then the employee does not have a manager.\nNo employee will be the manager of themself.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find managers with at least <strong>five direct reports</strong>.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nEmployee table:\n+-----+-------+------------+-----------+\n| id  | name  | department | managerId |\n+-----+-------+------------+-----------+\n| 101 | John  | A          | null      |\n| 102 | Dan   | A          | 101       |\n| 103 | James | A          | 101       |\n| 104 | Amy   | A          | 101       |\n| 105 | Anne  | A          | 101       |\n| 106 | Ron   | B          | 101       |\n+-----+-------+------------+-----------+\n<strong>Output:</strong> \n+------+\n| name |\n+------+\n| John |\n+------+\n</pre>\n",
+  "hints": [
+    "Try to get all the mangerIDs that have count bigger than 5",
+    "Use the last hint's result as a table and do join with origin table at id equals to managerId",
+    "This is a very good example to show the performance of SQL code. Try to work out other solutions and you may be surprised by running time difference.",
+    "If your solution uses 'IN' function and runs more than 5 seconds, try to optimize it by using 'JOIN' instead."
+  ],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Employee (id int, name varchar(255), department varchar(255), managerId int)\"], \"mssql\": [\"Create table Employee (id int, name varchar(255), department varchar(255), managerId int)\"], \"oraclesql\": [\"Create table Employee (id int, name varchar(255), department varchar(255), managerId int)\"], \"database\": true, \"name\": \"find_managers\", \"pythondata\": [\"Employee = pd.DataFrame([], columns=['id', 'name', 'department', 'managerId']).astype({'id':'Int64', 'name':'object', 'department':'object', 'managerId':'Int64'})\"], \"manual\": false, \"postgresql\": [\"\\nCreate table If Not Exists Employee (id int, name varchar(255), department varchar(255), managerId int)\"], \"database_schema\": {\"Employee\": {\"id\": \"INT\", \"name\": \"VARCHAR(255)\", \"department\": \"VARCHAR(255)\", \"managerId\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"941K\", \"totalSubmission\": \"1.9M\", \"totalAcceptedRaw\": 940977, \"totalSubmissionRaw\": 1921440, \"acRate\": \"49.0%\"}",
+  "likes": 1756,
+  "dislikes": 190,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Employee\": [\"id\", \"name\", \"department\", \"managerId\"]}, \"rows\": {\"Employee\": [[101, \"John\", \"A\", null],[102, \"Dan\", \"A\", 101], [103, \"James\", \"A\", 101], [104, \"Amy\", \"A\", 101], [105, \"Anne\", \"A\", 101], [106, \"Ron\", \"B\", 101]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"deloitte\", \"name\": \"Deloitte\"}, {\"timesEncountered\": 2, \"slug\": \"wells-fargo\", \"name\": \"Wells Fargo\"}]}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_managers(employee: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "209",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Approach: Group By and Join\n\n#### Algorithm\n\nWe are asked to find the managers having at least 5 direct reports, which involves counting the number of reports for each manager ID. This can be done by grouping the orders by each unique manager ID. Hence, we group the DataFrame `Employee` by the column `managerId` and apply the `size()` method to calculate the number of reports of each unique value in `managerId`, which represents the number of employees reporting to each manager.\n\n`reset_index(name='count')` is used to assign a new name `count` to the resulting column that represents the count of reports. This step ensures that the resulting DataFrame `df` has two columns: `managerId` and `count`.\n\n```python\ndf = employee.groupby('managerId').size().reset_index(name='count')\n```\n\nWe can obtain the following DataFrame `df`:\n\n<table>\n  <tr>\n    <th>managerId</th>\n    <th>count</th>\n  </tr>\n  <tr>\n    <td>101</td>\n    <td>5</td>\n  </tr>\n</table>\n\n<br>\n\nThen, we filter the rows having `count` equal to or at least 5, which represent managers having 5 or more reports.\n\n```python\nmanagers = managers[managers['count'] >= 5]\n```\n\n<table>\n  <tr>\n    <th>managerId</th>\n    <th>count</th>\n  </tr>\n  <tr>\n    <td>101</td>\n    <td>5</td>\n  </tr>\n</table>\n\n<br>\n\n\nNext, we can get the name of these managers by joining `df` with `employee` on the common column (`managerId` in `df`, and `id` in `employee`). Note that we use set the method as `how = 'inner'`, which selects the managers that have matching values in both two DataFrames. Therefore, we would not select an employee who is not a valid manager, nor would we select a manager who is not in `employee`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/38YGVvFa/shared\" frameBorder=\"0\" width=\"100%\" height=\"174\" name=\"38YGVvFa\"></iframe>\n\nWe can obtain the following table as the answer:\n\n<table>\n  <tr>\n    <th>name</th>\n  </tr>\n  <tr>\n    <td>John</td>\n  </tr>\n</table>\n\n\n\n<br>\n\n\n## Database\n\n### Approach: Group By and Join\n\n#### Algorithm\n\nThe subquery selects the manager IDs from the employee and groups them based on the number of reports they have. The `HAVING` clause filters out the `managerId` having a count of reports greater than or equal to 5.\n\n```sql\nSELECT \n    ManagerId\nFROM \n    Employee\nGROUP BY ManagerId\nHAVING COUNT(ManagerId) >= 5\n```\n\nNext, we perform an inner join `JOIN` between the table from this subquery and the table `employee` to obtain all the manager names.\n\n#### Implementation\n\n```sql\nSELECT\n    Name\nFROM\n    Employee AS t1 \nJOIN\n    (SELECT \n        ManagerId\n    FROM \n        Employee\n    GROUP BY ManagerId\n    HAVING COUNT(ManagerId) >= 5) AS t2\nON \n    t1.Id = t2.ManagerId\n;\n```\n\n<br>\n\n---\n\n### Approach 2: `IN` Clause with Subquery\n\n#### Algorithm\n\nWe can also use the `IN` clause in combination with a subquery. \n\nSimilar to the previous approach, the subquery selects the manager IDs from the `employee` and groups them based on the number of reports they have. The HAVING clause is then used to filter out the `managerId` having 5 or more reports.\n\n```sql\nSELECT \n    ManagerId\nFROM \n    Employee\nGROUP BY ManagerId\nHAVING COUNT(ManagerId) >= 5\n```\n\nNext, we select the names from the `employee`, where the `ManagerId` is present in the table obtained from the subquery using the keyword `IN`. This way, we retrieve the names of managers having at least 5 reports.\n\n#### Implementation\n\n```sql\nSELECT\n    name\nFROM\n    employee\nWHERE\n    id IN (\n        SELECT\n            managerId\n        FROM\n            employee\n        GROUP BY\n            managerId\n        HAVING COUNT(*) >= 5\n    );\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

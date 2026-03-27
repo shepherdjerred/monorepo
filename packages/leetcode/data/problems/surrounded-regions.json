@@ -1,0 +1,130 @@
+{
+  "questionId": "130",
+  "questionFrontendId": "130",
+  "title": "Surrounded Regions",
+  "titleSlug": "surrounded-regions",
+  "difficulty": "Medium",
+  "content": "<p>You are given an <code>m x n</code> matrix <code>board</code> containing <strong>letters</strong> <code>&#39;X&#39;</code> and <code>&#39;O&#39;</code>, <strong>capture regions</strong> that are <strong>surrounded</strong>:</p>\n\n<ul>\n\t<li><strong>Connect</strong>: A cell is connected to adjacent cells horizontally or vertically.</li>\n\t<li><strong>Region</strong>: To form a region <strong>connect every</strong> <code>&#39;O&#39;</code> cell.</li>\n\t<li><strong>Surround</strong>: A region is surrounded if none of the <code>&#39;O&#39;</code> cells in that region are on the edge of the board. Such regions are <strong>completely enclosed </strong>by <code>&#39;X&#39;</code> cells.</li>\n</ul>\n\n<p>To capture a <strong>surrounded region</strong>, replace all <code>&#39;O&#39;</code>s with <code>&#39;X&#39;</code>s <strong>in-place</strong> within the original board. You do not need to return anything.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">board = [[&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;O&quot;,&quot;O&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;X&quot;,&quot;O&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;O&quot;,&quot;X&quot;,&quot;X&quot;]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[[&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;X&quot;,&quot;X&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;O&quot;,&quot;X&quot;,&quot;X&quot;]]</span></p>\n\n<p><strong>Explanation:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/02/19/xogrid.jpg\" style=\"width: 367px; height: 158px;\" />\n<p>In the above diagram, the bottom region is not captured because it is on the edge of the board and cannot be surrounded.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">board = [[&quot;X&quot;]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[[&quot;X&quot;]]</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == board.length</code></li>\n\t<li><code>n == board[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 200</code></li>\n\t<li><code>board[i][j]</code> is <code>&#39;X&#39;</code> or <code>&#39;O&#39;</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"solve\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"board\",\r\n      \"type\": \"character[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"void\"\r\n  },\r\n  \"output\": {\r\n    \"paramindex\": 0\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.2M\", \"totalSubmission\": \"2.6M\", \"totalAcceptedRaw\": 1166941, \"totalSubmissionRaw\": 2595812, \"acRate\": \"45.0%\"}",
+  "likes": 9862,
+  "dislikes": 2229,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Islands\", \"titleSlug\": \"number-of-islands\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Walls and Gates\", \"titleSlug\": \"walls-and-gates\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[\"X\",\"X\",\"X\",\"X\"],[\"X\",\"O\",\"O\",\"X\"],[\"X\",\"X\",\"O\",\"X\"],[\"X\",\"O\",\"X\",\"X\"]]",
+    "[[\"X\"]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    void solve(vector<vector<char>>& board) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public void solve(char[][] board) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def solve(self, board: List[List[str]]) -> None:\n        \"\"\"\n        Do not return anything, modify board in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def solve(self, board):\n        \"\"\"\n        :type board: List[List[str]]\n        :rtype: None Do not return anything, modify board in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {character[][]} board\n * @return {void} Do not return anything, modify board in-place instead.\n */\nvar solve = function(board) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n Do not return anything, modify board in-place instead.\n */\nfunction solve(board: string[][]): void {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public void Solve(char[][] board) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "void solve(char** board, int boardSize, int* boardColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func solve(board [][]byte)  {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun solve(board: Array<CharArray>): Unit {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func solve(_ board: inout [[Character]]) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn solve(board: &mut Vec<Vec<char>>) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Character[][]} board\n# @return {Void} Do not return anything, modify board in-place instead.\ndef solve(board)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[][] $board\n     * @return NULL\n     */\n    function solve(&$board) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  void solve(List<List<String>> board) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def solve(board: Array[Array[Char]]): Unit = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "857",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nThis problem is _almost_ identical as the [capture rule](https://en.wikipedia.org/wiki/Rules_of_Go#Capture) of the Go game, where one captures the opponent's stones by surrounding them. The difference is that in the Go game the borders of the board are considered to the walls that surround the stones, while in this problem a group of cells (_i.e._ region) is considered to be _**escaped**_ from the surrounding if it reaches any border.\n\n![pic](../Figures/130/130_eg.png)\n\nThis problem is yet another problem concerning the _**traversal of 2D grid**_, _e.g._ [Robot room cleaner](https://leetcode.com/articles/robot-room-cleaner/).\n\n>As similar to the traversal problems in a tree structure, there are generally two approaches in terms of solution: _**DFS**_ (Depth-First Search) and _**BFS**_ (Breadth-First Search).\n\nOne can apply either of the above strategies to traverse the 2D grid, while taking some specific actions to resolve the problems.\n\nGiven a traversal strategy (_DFS_ or _BFS_), there could be a thousand implementations for a thousand people, if we indulge ourselves to exaggerate a bit. However, there are some common neat _**techniques**_ that we could apply along with both of the strategies, in order to obtain a more optimized solution.\n<br/>\n<br/>\n\n---\n### Approach 1: DFS (Depth-First Search)\n\n**Intuition**\n\n>The goal of this problem is to mark those _**captured**_ cells. \n\nIf we are asked to summarize the algorithm in one sentence, it would be that we enumerate all those candidate cells (_i.e._ the ones filled with `O`), and check _one by one_ if they are _captured_ or not, _i.e._ we start with a candidate cell (`O`), and then apply either DFS or BFS strategy to explore its surrounding cells.\n\n**Algorithm**\n\nLet us start with the DFS algorithm, which usually results in a more concise code than the BFS algorithm. The algorithm consists of three steps:\n\n- Step 1). We select all the cells that are located on the borders of the board.\n\n- Step 2). Start from each of the above selected cell, we then perform the _DFS_ traversal.\n\n    - If a cell on the border happens to be `O`, then we know that this cell is _alive_, together with the other `O` cells that are _connected_ to this border cell, based on the description of the problem. Two cells are _connected_, if there exists a path consisting of only `O` letter that bridges between the two cells.\n\n    - Based on the above conclusion, the goal of our DFS traversal would be to _mark_ out all those _**connected**_ `O` cells that is originated from the border, with any distinguished letter such as `E`.\n\n- Step 3). Once we iterate through all border cells, we would then obtain three types of cells:\n\n    - The one with the `X` letter: the cell that we could consider as the wall.\n\n    - The one with the `O` letter: the cells that are spared in our _DFS_ traversal, _i.e._ these cells has no connection to the border, therefore they are _**captured**_. We then should replace these cell with `X` letter.\n\n    - The one with the `E` letter: these are the cells that are marked during our DFS traversal, _i.e._ these are the cells that has at least one connection to the borders, therefore they are not _captured_. As a result, we would revert the cell to its original letter `O`.\n \n We demonstrate how the DFS works with an example in the following animation. \n\n!?!../Documents/130_LIS.json:1000,521!?!\n\n<iframe src=\"https://leetcode.com/playground/WnMgmfsF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WnMgmfsF\"></iframe>\n\n**Optimizations**\n\nIn the above implementation, there are a few techniques that we applied _**under the hood**_, in order to further optimize our solution. Here we list them one by one.\n\n>Rather than iterating all candidate cells (the ones filled with `O`), we check only the ones on the **_borders_**.\n\nIn the above implementation, our starting points of _DFS_ are those cells that meet two conditions: 1). on the border. 2). filled with `O`.\n\n_As an alternative solution, one might decide to iterate all `O` cells, which is less optimal compared to our starting points._\n\nAs one can see, during DFS traversal, the alternative solution would traverse the cells that eventually might be captured, which is not necessary in our approach.\n\n>Rather than using a sort of `visited[cell_index]` map to keep track of the visited cells, we simply mark visited cell _**in place**_.\n\n_This technique helps us gain both in the space and time complexity._\n\nAs an alternative approach, one could use a additional data structure to keep track of the visited cells, which goes without saying would require additional memory. And also it requires additional calculation for the comparison. Though one might argue that we could use the hash table data structure for the `visited[]` map, which has the $$\\mathcal{O}(1)$$ asymptotic time complexity, but it is still more expensive than the simple comparison on the value of cell.\n\n>Rather than doing the boundary check within the `DFS()` function, we do it _**before**_ the invocation of the function. \n\nAs a comparison, here is the implementation where we do the boundary check within the `DFS()` function.\n\n```python3\ndef DFS(self, board, row, col):\n    if row < 0 or row >= self.ROWS or col < 0 or col >= self.COLS:\n        return\n    if board[row][col] != \"O\":\n        return\n    board[row][col] = \"E\"\n    # jump to the neighbors without boundary checks\n    for ro, co in [(0, 1), (1, 0), (0, -1), (-1, 0)]:\n        self.DFS(board, row + ro, col + co)\n```\n\n_This measure reduces the number of recursion, therefore it reduces the overheads with the function calls._\n\nAs trivial as this modification might seem to be, it actually reduces the runtime of the Python implementation from _148 ms_ to _124 ms_, _i.e._ _16%_ of reduction, which beats 97% of submissions instead of 77% at the moment.\n\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(N)$$ where $$N$$ is the number of cells in the board. In the worst case where it contains only the `O` cells on the board, we would traverse each cell twice: once during the DFS traversal and the other time during the cell reversion in the last step.\n\n- Space Complexity: $$\\mathcal{O}(N)$$ where $$N$$ is the number of cells in the board. There are mainly two places that we consume some additional memory.\n\n    - We keep a list of border cells as starting points for our traversal. We could consider the number of border cells is proportional to the total number ($$N$$) of cells.\n\n    - During the recursive calls of `DFS()` function, we would consume some space in the function call stack, _i.e._ the call stack will pile up along with the depth of recursive calls. And the maximum depth of recursive calls would be $$N$$ as in the worst scenario mentioned in the time complexity.\n\n    - As a result, the overall space complexity of the algorithm is $$\\mathcal{O}(N)$$.\n<br/>\n<br/>\n\n---\n### Approach 2: BFS (Breadth-First Search)\n\n**Intuition**\n\n>In contrary to the DFS strategy, in BFS (Breadth-First Search) we prioritize the visit of a cell's neighbors before moving further (deeper) into the neighbor's neighbor. \n\nThough the order of visit might differ between DFS and BFS, eventually both strategies would visit the same set of cells, for most of the 2D grid traversal problems. This is also the case for this problem.\n\n**Algorithm**\n\nWe could reuse the bulk of the DFS approach, while simply replacing the `DFS()` function with a `BFS()` function.\nHere we just elaborate the implementation of the `BFS()` function.\n\n- Essentially we can implement the BFS with the help of queue data structure, which could be of `Array` or more preferably `LinkedList` in Java or `Deque` in Python.\n\n- Through the queue, we maintain the order of visit for the cells. Due to the **FIFO** (First-In First-Out) property of the queue, the one at the head of the queue would have the highest priority to be visited. \n\n- The main logic of the algorithm is a loop that iterates through the above-mentioned queue. At each iteration of the loop, we _pop out_ the **head** element from the queue.\n\n    - If the popped element is of the candidate cell (_i.e._ `O`), we mark it as escaped, otherwise we skip this iteration.\n\n    - For a candidate cell, we then simply append its neighbor cells into the queue, which would get their turns to be visited in the next iterations.\n\nAs comparison, we demonstrate how BFS works with the same example in DFS, in the following animation. \n\n!?!../Documents/130_SEC.json:1000,533!?!\n\n<iframe src=\"https://leetcode.com/playground/AKqp9Qhx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"AKqp9Qhx\"></iframe>\n\n\n**From BFS to DFS**\n\nIn the above implementation of BFS, the fun part is that we could easily convert the BFS strategy to DFS by changing one single line of code. And the obtained DFS implementation is done in iteration, instead of recursion.\n\n>The key is that instead of using the _**queue**_ data structure which follows the principle of FIFO (First-In First-Out), if we use the _**stack**_ data structure which follows the principle of LIFO (Last-In First-Out), we then switch the strategy from BFS to DFS.\n\nSpecifically, at the moment we pop an element from the queue, instead of popping out the _head_ element, we pop the _tail_ element, which then changes the behavior of the container from queue to stack. Here is how it looks like.\n\n<iframe src=\"https://leetcode.com/playground/bERFUXoC/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"bERFUXoC\"></iframe>\n\nNote that, though the above implementations indeed follow the DFS strategy, they are NOT equivalent to the previous _**recursive**_ version of DFS, _i.e._ they do not produce the exactly same sequence of visit.\n\nIn the recursive DFS, we would visit the _right-hand side_ neighbor `(row, col+1)` first, while in the iterative DFS, we would visit the _up_ neighbor `(row-1, col)` first.\n\nIn order to obtain the same order of visit as the recursive DFS, one should _reverse_ the processing order of neighbors in the above iterative DFS.\n\n**Complexity**\n\n- Time Complexity: $$\\mathcal{O}(N)$$ where $$N$$ is the number of cells in the board. In the worst case where it contains only the `O` cells on the board, we would traverse each cell twice: once during the BFS traversal and the other time during the cell reversion in the last step.\n\n- Space Complexity: $$\\mathcal{O}(N)$$ where $$N$$ is the number of cells in the board. There are mainly two places that we consume some additional memory.\n\n    - We keep a list of border cells as starting points for our traversal. We could consider the number of border cells is proportional to the total number ($$N$$) of cells.\n\n    - Within each invocation of `BFS()` function, we use a queue data structure to hold the cells to be visited. We then need to estimate the upper bound on the size of the queue. _Intuitively we could imagine the unfold of BFS as the structure of an onion._\n    Each layer of the onion represents the cells that has the same distance to the starting point. \n    Any given moment the queue would contain no more than two layers of _onion_, which in the worst case might cover _almost_ all cells in the board.\n\n    - As a result, the overall space complexity of the algorithm is $$\\mathcal{O}(N)$$.\n<br/>\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

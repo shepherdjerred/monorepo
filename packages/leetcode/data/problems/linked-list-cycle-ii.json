@@ -1,0 +1,113 @@
+{
+  "questionId": "142",
+  "questionFrontendId": "142",
+  "title": "Linked List Cycle II",
+  "titleSlug": "linked-list-cycle-ii",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>head</code> of a linked list, return <em>the node where the cycle begins. If there is no cycle, return </em><code>null</code>.</p>\n\n<p>There is a cycle in a linked list if there is some node in the list that can be reached again by continuously following the <code>next</code> pointer. Internally, <code>pos</code> is used to denote the index of the node that tail&#39;s <code>next</code> pointer is connected to (<strong>0-indexed</strong>). It is <code>-1</code> if there is no cycle. <strong>Note that</strong> <code>pos</code> <strong>is not passed as a parameter</strong>.</p>\n\n<p><strong>Do not modify</strong> the linked list.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2018/12/07/circularlinkedlist.png\" style=\"height: 145px; width: 450px;\" />\n<pre>\n<strong>Input:</strong> head = [3,2,0,-4], pos = 1\n<strong>Output:</strong> tail connects to node index 1\n<strong>Explanation:</strong> There is a cycle in the linked list, where tail connects to the second node.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2018/12/07/circularlinkedlist_test2.png\" style=\"height: 105px; width: 201px;\" />\n<pre>\n<strong>Input:</strong> head = [1,2], pos = 0\n<strong>Output:</strong> tail connects to node index 0\n<strong>Explanation:</strong> There is a cycle in the linked list, where tail connects to the first node.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2018/12/07/circularlinkedlist_test3.png\" style=\"height: 65px; width: 65px;\" />\n<pre>\n<strong>Input:</strong> head = [1], pos = -1\n<strong>Output:</strong> no cycle\n<strong>Explanation:</strong> There is no cycle in the linked list.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of the nodes in the list is in the range <code>[0, 10<sup>4</sup>]</code>.</li>\n\t<li><code>-10<sup>5</sup> &lt;= Node.val &lt;= 10<sup>5</sup></code></li>\n\t<li><code>pos</code> is <code>-1</code> or a <strong>valid index</strong> in the linked-list.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> Can you solve it using <code>O(1)</code> (i.e. constant) memory?</p>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"detectCycle\",\n  \"params\": [\n    {\n      \"name\": \"head\",\n      \"type\": \"ListNode\"\n    },\n    {\n      \"name\": \"pos\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"ListNode\"\n  },\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"c\",\n    \"csharp\",\n    \"javascript\",\n    \"golang\",\n    \"python3\",\n    \"swift\",\n    \"kotlin\",\n    \"php\",\n    \"ruby\",\n    \"scala\",\n    \"typescript\"\n  ],\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"2M\", \"totalSubmission\": \"3.4M\", \"totalAcceptedRaw\": 1976840, \"totalSubmissionRaw\": 3436792, \"acRate\": \"57.5%\"}",
+  "likes": 15128,
+  "dislikes": 1088,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Linked List Cycle\", \"titleSlug\": \"linked-list-cycle\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Duplicate Number\", \"titleSlug\": \"find-the-duplicate-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,2,0,-4]\n1",
+    "[1,2]\n0",
+    "[1]\n-1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"paytm\", \"name\": \"Paytm\"}, {\"timesEncountered\": 3, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"american-express\", \"name\": \"American Express\"}, {\"timesEncountered\": 2, \"slug\": \"vmware\", \"name\": \"VMware\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode(int x) : val(x), next(NULL) {}\n * };\n */\nclass Solution {\npublic:\n    ListNode *detectCycle(ListNode *head) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode(int x) {\n *         val = x;\n *         next = null;\n *     }\n * }\n */\npublic class Solution {\n    public ListNode detectCycle(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, x):\n#         self.val = x\n#         self.next = None\n\nclass Solution:\n    def detectCycle(self, head: Optional[ListNode]) -> Optional[ListNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, x):\n#         self.val = x\n#         self.next = None\n\nclass Solution(object):\n    def detectCycle(self, head):\n        \"\"\"\n        :type head: ListNode\n        :rtype: ListNode\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val) {\n *     this.val = val;\n *     this.next = null;\n * }\n */\n\n/**\n * @param {ListNode} head\n * @return {ListNode}\n */\nvar detectCycle = function(head) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction detectCycle(head: ListNode | null): ListNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int x) {\n *         val = x;\n *         next = null;\n *     }\n * }\n */\npublic class Solution {\n    public ListNode DetectCycle(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\nstruct ListNode *detectCycle(struct ListNode *head) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc detectCycle(head *ListNode) *ListNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\n\nclass Solution {\n    fun detectCycle(head: ListNode?): ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init(_ val: Int) {\n *         self.val = val\n *         self.next = nil\n *     }\n * }\n */\n\nclass Solution {\n    func detectCycle(_ head: ListNode?) -> ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val)\n#         @val = val\n#         @next = nil\n#     end\n# end\n\n# @param {ListNode} head\n# @return {ListNode}\ndef detectCycle(head)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val) { $this->val = $val; }\n * }\n */\n\nclass Solution {\n    /**\n     * @param ListNode $head\n     * @return ListNode\n     */\n    function detectCycle($head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(var _x: Int = 0) {\n *   var next: ListNode = null\n *   var x: Int = _x\n * }\n */\n\nobject Solution {\n    def detectCycle(head: ListNode): ListNode = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "1954",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Hash Set\n\n>**Note.** For this approach, we assume that you already know what a hash table is and are figuring out how to apply it to a wide range of problems, such as this one. If you are not yet at this stage, we recommend checking out our relevant [Explore Card content on hash table](https://leetcode.com/explore/learn/card/hash-table/) before coming back to this article.\n\n#### Intuition\n\nThe fundamental concept behind this approach is that a cycle in a linked list means visiting a node we've already seen before. By keeping track of each node we visit and checking whether we've seen it before, we can identify whether a cycle exists.\n\nA hash set is a data structure that allows us to efficiently check if an element is already present (visited) and also to insert new elements (mark as visited).\n\nSo, our strategy here is to traverse the linked list one node at a time and, for each $\\text{node}$, check if it is in our hash set $\\text{nodes\\_seen}$. If we come across a node that is already in our set, then we have encountered a cycle. If not, we add this new node to the set $\\text{nodes\\_seen}$ and proceed to the next one.\n\nIf we manage to reach the end of the list (a null node), then we can conclude that no cycle exists. This is because we would have been stuck in a loop and wouldn't reach the end if there was a cycle.\n\n#### Algorithm\n\n1. Initialize the $\\text{node}$ to the head of the linked list and an empty hash set, $\\text{nodes\\_seen}$.\n2. Start from the head of the linked list, and move the $\\text{node}$ one step at a time.\n3. For each $\\text{node}$ that we visit, check if it's already in the $\\text{nodes\\_seen}$.\n\t* If it is, it means we've found a cycle. Return the current node as the entry point of the cycle.\n\t* If it's not in $\\text{nodes\\_seen}$, then add the current node to $\\text{nodes\\_seen}$, and move on to the next node.\n4. If $\\text{node}$ becomes `null` (the end of the list), then return `null`. There's no cycle in the list because we would have been stuck in a loop and wouldn't reach the end if there was a cycle.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/WThoJ2tt/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WThoJ2tt\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n$ be the total number of nodes in the linked list.\n\n* Time complexity: $O(n)$.\n\nWe have to visit all nodes once.\n\n* Space complexity: $O(n)$.\n\nWe have to store all nodes in the hash set.\n\n---\n\n### Approach 2: Floyd's Tortoise and Hare Algorithm\n\n#### Intuition\n\n> This algorithm is very difficult to derive on your own and you would not be expected to do so in an interview without any help.\n\n![Tortoise and Hare](../Figures/142/142_tortoise_and_hare.png)​\n\nFloyd's Tortoise and Hare Algorithm is a clever technique that is used to detect cycles in sequences or linked lists. You can imagine it as a race between a fast \"hare\" and a slow \"tortoise.\" We will explain it in a beginner-friendly way:\n\nImagine you're in a park, where there is a circular path inside the park and a straight path leading to the circular path. If you start walking on the straight path into the circular path, you'll eventually start walking in a cycle around the circular path.\n\nNow imagine two people: a fast runner (the \"hare\") and a slow walker (the \"tortoise\"). They both start at the beginning of the path (the start of the linked list). The hare starts running twice as fast as the tortoise.\n\nIf the path does not contain a cycle (no circular path), the hare will reach the end of the straight path first. Let's focus on the case where the cycle exists.\n\nAt some point, if there is a cycle (a circular path) in the park, the hare will enter this cycle earlier due to its speed. Eventually, the tortoise will also enter the cycle. Since the hare is moving faster, it will lap the tortoise at some point inside the cycle.\n\n![Cycle](../Figures/142/142_cycle.drawio.png)​\n\n* Let's define $a$ as the length of the path from the start of the list to the entrance of the cycle.\n* Let's define $b$ as the length of the path from the cycle's entrance to the meeting point of the hare and the tortoise inside the cycle.\n* Let's define $c$ as the total length of the cycle.\n\nThe hare could lap the cycle multiple times before it meets the tortoise, especially if the cycle's size is relatively small compared to the distance from the start to the cycle's entrance, or if the cycle's size is big, and the hare enters it significantly before the tortoise does.\n\nWhen the tortoise and the hare meet inside the cycle, the tortoise has walked $a+b$ distance.\n\nOn the other hand, the hare, which moves twice as fast, has covered this distance and maybe a few more laps around the cycle. So, the total distance the hare ran is $a+b$ plus $k \\cdot c$, where $k$ is the number of times it lapped the cycle. Because the hare moves twice as fast, this total distance is also equal to $2(a+b)$.\n\nIf we set these two equal: $a + b + k \\cdot c = 2(a+b)$, we obtain $k \\cdot c = a + b$.\n\nThis tells us that the number of times the hare laps the cycle times the length of the cycle equals the distance from the head of the list to the meeting point.\n\nThe question now is where is the entrance to the cycle?\n\nHere is where the second part of the algorithm comes in: after finding a meeting point inside the cycle, you'll leave the tortoise there and move the hare back to the starting point of the park (or the head of the linked list). Then, have both the hare and the tortoise move at the same pace (one step at a time). When they meet again, that meeting point is the entrance to the cycle.\n\nYou may ask, \"Why is this the entrance to the cycle?\" Well, let's consider the distances each has traveled.\n\nThe first time that the hare and the tortoise meet within the cycle, we have established that:\n* The tortoise has travelled $a + b$ distance.\n* The hare has traveled $a + b + k \\cdot c$ distance, where $k$ represents how many times the hare has lapped the cycle.\n* Because the hare moves at twice the speed, $a + b + k \\cdot c = 2(a+b)$, rearrange for $k \\cdot c = a + b$.\n\nIf we move the hare back to the start of the straight path and make it move at the same speed as the tortoise, here's what happens:\n* The hare has $a$ distance to travel to reach the entrance of the cycle. We can rearrange the above equation to say that the hare will reach the entrance of the cycle in $a = k \\cdot c - b$ steps.\n* Currently, the tortoise is $b$ away from the entrance of the cycle. In $k \\cdot c - b$ steps, where will the tortoise be? Relative to the entrance of the cycle, the tortoise will be at $(k \\cdot c - b) + b = k \\cdot c$. Because $k$ is an integer, $c$ is defined as the length of the cycle, and this distance is relative to the entrance of the cycle, the tortoise will be at the entrance!\n\nBecause the tortoise and hare are now moving at the same speed, after $k \\cdot c - b$ steps, they will meet again at the entrance of the cycle. This must be the first time they meet again because the hare has just entered the cycle again for the first time. Therefore, to find the entrance of the cycle, we don't actually need the values of $a, b, c, k$. We can just return the node at which they meet again.\n\n#### Algorithm\n\n1. Initialize the `tortoise` and `hare` pointers to the head of the linked list.\n2. Move the `tortoise` one step and the `hare` two steps at a time until they meet or either `hare` or `hare.next` becomes `null`.\n3. If the `hare` or `hare.next` pointer is `null`, it means the hare came to the dead end and we return `null` as there is no cycle.\n4. Reset the `hare` pointer to the head of the linked list.\n5. Move both pointers one step at a time until they meet again. The meeting point is the node where the cycle begins.\n6. Return the meeting point node.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/bSJBqJQR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bSJBqJQR\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n$ be the total number of nodes in the linked list.\n\n* Time complexity: $O(n)$.\n\nThe algorithm consists of two phases. In the first phase, we use two pointers (the \"hare\" and the \"tortoise\") to traverse the list. The slow pointer (tortoise) will go through the list only once until it meets the hare. Therefore, this phase runs in $O(n)$ time.\n\nIn the second phase, we again have two pointers traversing the list at the same speed until they meet. The maximum distance to be covered in this phase will not be greater than the length of the list (recall that the hare just needs to get back to the entrance of the cycle). So, this phase also runs in $O(n)$ time.\n\nAs a result, the total time complexity of the algorithm is $O(n) + O(n)$, which simplifies to $O(n)$.\n\n* Space complexity: $O(1)$.\n\nThe space complexity is constant, $O(1)$, because we are only using a fixed amount of space to store the slow and fast pointers. No additional space is used that scales with the input size. So the space complexity of the algorithm is $O(1)$, which means it uses constant space.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

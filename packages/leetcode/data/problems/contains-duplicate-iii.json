@@ -1,0 +1,148 @@
+{
+  "questionId": "220",
+  "questionFrontendId": "220",
+  "title": "Contains Duplicate III",
+  "titleSlug": "contains-duplicate-iii",
+  "difficulty": "Hard",
+  "content": "<p>You are given an integer array <code>nums</code> and two integers <code>indexDiff</code> and <code>valueDiff</code>.</p>\n\n<p>Find a pair of indices <code>(i, j)</code> such that:</p>\n\n<ul>\n\t<li><code>i != j</code>,</li>\n\t<li><code>abs(i - j) &lt;= indexDiff</code>.</li>\n\t<li><code>abs(nums[i] - nums[j]) &lt;= valueDiff</code>, and</li>\n</ul>\n\n<p>Return <code>true</code><em> if such pair exists or </em><code>false</code><em> otherwise</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,1], indexDiff = 3, valueDiff = 0\n<strong>Output:</strong> true\n<strong>Explanation:</strong> We can choose (i, j) = (0, 3).\nWe satisfy the three conditions:\ni != j --&gt; 0 != 3\nabs(i - j) &lt;= indexDiff --&gt; abs(0 - 3) &lt;= 3\nabs(nums[i] - nums[j]) &lt;= valueDiff --&gt; abs(1 - 1) &lt;= 0\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,5,9,1,5,9], indexDiff = 2, valueDiff = 3\n<strong>Output:</strong> false\n<strong>Explanation:</strong> After trying all the possible pairs (i, j), we cannot satisfy the three conditions, so we return false.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= indexDiff &lt;= nums.length</code></li>\n\t<li><code>0 &lt;= valueDiff &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Time complexity O(n logk)  - This will give an indication that sorting is involved for k elements.",
+    "Use already existing state to evaluate next state  -  Like, a set of k sorted numbers are only needed to be tracked. When we are processing the next number in array, then we can utilize the existing sorted state and it is not necessary to sort next overlapping set of k numbers again."
+  ],
+  "metaData": "{\n  \"name\": \"containsNearbyAlmostDuplicate\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"indexDiff\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"valueDiff\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"313.9K\", \"totalSubmission\": \"1.3M\", \"totalAcceptedRaw\": 313896, \"totalSubmissionRaw\": 1276588, \"acRate\": \"24.6%\"}",
+  "likes": 1296,
+  "dislikes": 146,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Contains Duplicate\", \"titleSlug\": \"contains-duplicate\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Contains Duplicate II\", \"titleSlug\": \"contains-duplicate-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,1]\n3\n0",
+    "[1,5,9,1,5,9]\n2\n3"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"netflix\", \"name\": \"Netflix\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 2, \"slug\": \"palantir-technologies\", \"name\": \"Palantir Technologies\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Bucket Sort",
+      "slug": "bucket-sort"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool containsNearbyAlmostDuplicate(vector<int>& nums, int indexDiff, int valueDiff) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean containsNearbyAlmostDuplicate(int[] nums, int indexDiff, int valueDiff) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def containsNearbyAlmostDuplicate(self, nums: List[int], indexDiff: int, valueDiff: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def containsNearbyAlmostDuplicate(self, nums, indexDiff, valueDiff):\n        \"\"\"\n        :type nums: List[int]\n        :type indexDiff: int\n        :type valueDiff: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} indexDiff\n * @param {number} valueDiff\n * @return {boolean}\n */\nvar containsNearbyAlmostDuplicate = function(nums, indexDiff, valueDiff) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function containsNearbyAlmostDuplicate(nums: number[], indexDiff: number, valueDiff: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool ContainsNearbyAlmostDuplicate(int[] nums, int indexDiff, int valueDiff) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool containsNearbyAlmostDuplicate(int* nums, int numsSize, int indexDiff, int valueDiff) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func containsNearbyAlmostDuplicate(nums []int, indexDiff int, valueDiff int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun containsNearbyAlmostDuplicate(nums: IntArray, indexDiff: Int, valueDiff: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func containsNearbyAlmostDuplicate(_ nums: [Int], _ indexDiff: Int, _ valueDiff: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn contains_nearby_almost_duplicate(nums: Vec<i32>, index_diff: i32, value_diff: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} index_diff\n# @param {Integer} value_diff\n# @return {Boolean}\ndef contains_nearby_almost_duplicate(nums, index_diff, value_diff)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $indexDiff\n     * @param Integer $valueDiff\n     * @return Boolean\n     */\n    function containsNearbyAlmostDuplicate($nums, $indexDiff, $valueDiff) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool containsNearbyAlmostDuplicate(List<int> nums, int indexDiff, int valueDiff) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def containsNearbyAlmostDuplicate(nums: Array[Int], indexDiff: Int, valueDiff: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec contains_nearby_almost_duplicate(nums :: [integer], index_diff :: integer, value_diff :: integer) :: boolean\n  def contains_nearby_almost_duplicate(nums, index_diff, value_diff) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec contains_nearby_almost_duplicate(Nums :: [integer()], IndexDiff :: integer(), ValueDiff :: integer()) -> boolean().\ncontains_nearby_almost_duplicate(Nums, IndexDiff, ValueDiff) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (contains-nearby-almost-duplicate nums indexDiff valueDiff)\n  (-> (listof exact-integer?) exact-integer? exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "25",
+    "content": "[TOC]\n\n## Summary\nThis article is for intermediate readers. It introduces the following ideas:\nBinary Search Tree, HashMap, and Buckets.\n\n## Solutions\n---\n### Approach #1 (Naive Linear Search) [Time Limit Exceeded]\n\n**Intuition**\n\nCompare each element with the previous $$k$$ elements and see if their difference is at most $$t$$.\n\n**Algorithm**\n\nThis problem requires us to find $$i$$ and $$j$$ such that the following conditions are satisfied:\n\n1. <a name=\"condition-1\"></a>$$\\bigl| i-j \\bigr| \\le k$$\n2. <a name=\"condition-2\"></a>$$\\bigl| \\mathrm{nums}[i] - \\mathrm{nums}[j] \\bigr| \\le t$$\n\nThe naive approach is the same as [Approach #1 in Contains Duplicate II solution](https://leetcode.com/articles/contains-duplicate-ii/#approach-1-naive-linear-search-time-limit-exceeded), which keeps a virtual sliding window that holds the newest $$k$$ elements. In this way, [Condition 1](#condition-1) above is always satisfied. We then check if [Condition 2](#condition-2) is also satisfied by applying linear search.\n\n<iframe src=\"https://leetcode.com/playground/QfuCkHiP/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"QfuCkHiP\"></iframe>\n\n\n\n**Complexity Analysis**\n\n* Time complexity: $$O(n \\min(k,n))$$.\nIt costs $$O(\\min(k, n))$$ time for each linear search. Note that we do at most $$n$$ comparisons in one search even if $$k$$ can be larger than $$n$$.\n\n* Space complexity: $$O(1)$$.\nWe only used constant auxiliary space.\n\n\n---\n### Approach #2 (Binary Search Tree) [Accepted]\n\n**Intuition**\n\n* If elements in the window are maintained in sorted order, we can apply binary search twice to check if [Condition 2](#condition-2) is satisfied.\n\n* By utilizing self-balancing Binary Search Tree, one can keep the window ordered at all times with logarithmic time `insert` and `delete`.\n\n**Algorithm**\n\nThe real bottleneck of [Approach #1](#approach-1-naive-linear-search-time-limit-exceeded) is due to all elements in the sliding window are being scanned to check if [Condition 2](#condition-2) is satisfied. Could we do better?\n\nIf elements in the window are in sorted order, we can apply Binary Search twice to search for the two boundaries $$x+t$$ and $$x-t$$ for each element $$x$$.\n\nUnfortunately, the window is unsorted. A common mistake here is attempting to maintain a sorted array. Although searching in a sorted array costs only logarithmic time, keeping the order of the elements after `insert` and `delete` operation is not as efficient. Imagine you have a sorted array with $$k$$ elements and you are adding a new item $$x$$. Even if you can find the correct position in $$O(\\log k)$$ time, you still need $$O(k)$$ time to insert $$x$$ into the sorted array. The reason is that you need to shift all elements after the insert position one step backward. The same reasoning applies to removal as well. After removing an item from position $$i$$, you need to shift all elements after $$i$$ one step forward. Thus, we gain nothing in speed compared to the [naive linear search approach](#approach-1-naive-linear-search-time-limit-exceeded) above.\n\nTo gain an actual speedup, we need a *dynamic* data structure that supports faster `insert`, `search` and `delete`. Self-balancing Binary Search Tree (BST) is the right data structure. The term *Self-balancing* means the tree automatically keeps its height small after arbitrary `insert` and `delete` operations. Why does self-balancing matter? That is because most operations on a BST take time directly proportional to the height of the tree. Take a look at the following non-balanced BST which is skewed to the left:\n\n```\n            6\n           /\n          5\n         /\n        4\n       /\n      3\n     /\n    2\n   /\n  1\n```\n*Figure 1. A non-balanced BST that is skewed to the left.*\n\nSearching in the above BST degrades to *linear* time, which is like searching in a linked list. Now compare to the BST below which is balanced:\n\n```\n          4\n        /   \\\n       2     6\n      / \\   /\n     1   3  5\n```\n\n*Figure 2. A balanced BST.*\n\nAssume that $$n$$ is the total number of nodes in the tree, a balanced binary tree maintains its height in the order of $$h = \\log n$$. Thus it supports $$O(h) = O(\\log n)$$ time for each of `insert`, `search` and `delete` operations.\n\nHere is the entire algorithm in pseudocode:\n\n* Initialize an empty BST `set`\n* Loop through the array, for each element $$x$$\n    * Find the *smallest* element $$s$$ in `set` that is *greater* than or equal to $$x$$, return true if $$s - x \\leq t$$\n    * Find the *greatest* element $$g$$ in `set` that is *smaller* than or equal to $$x$$, return true if $$x - g \\leq t$$\n    * Put $$x$$ in `set`\n    * If the size of the set is larger than $$k$$, remove the oldest item.\n* Return false\n\nOne may consider the smallest element $$s$$ that is greater or equal to $$x$$ as the *successor* of $$x$$ in the BST, as in: \"What is the next greater value of $$x$$?\". Similarly, we consider the greatest element $$g$$ that is smaller or equal to $$x$$ as the *predecessor* of $$x$$ in the BST, as in: \"What is the previous smaller value of $$x$$?\". These two values $$s$$ and $$g$$ are the two closest neighbors from $$x$$. Thus by checking the distance from them to $$x$$, we can conclude if [Condition 2](#condition-2) is satisfied.\n\n<iframe src=\"https://leetcode.com/playground/kra4kpEq/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"kra4kpEq\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(n \\log (\\min(n,k)))$$.\nWe iterate through the array of size $$n$$. For each iteration, it costs $$O(\\log \\min(k, n))$$ time (`search`, `insert` or `delete`) in the BST, since the size of the BST is upper bounded by both $$k$$ and $$n$$.\n\n* Space complexity: $$O(\\min(n,k))$$.\nSpace is dominated by the size of the BST, which is upper bounded by both $$k$$ and $$n$$.\n\n**Note**\n\n* When the array's elements and $$t$$'s value are large, they can cause overflow in arithmetic operation. Consider using a larger size data type instead, such as *long*.\n\n* C++'s `std::set`, `std::set::upper_bound` and `std::set::lower_bound` are equivalent to Java's `TreeSet`, `TreeSet::ceiling` and `TreeSet::floor`, respectively. Python does not provide a Self-balancing BST through its library.\n\n---\n### Approach #3 (Buckets) [Accepted]\n\n**Intuition**\n\nInspired by `bucket sort`, we can achieve linear time complexity in our problem using *buckets* as window.\n\n**Algorithm**\n\nBucket sort is a sorting algorithm that works by distributing the elements of an array into a number of buckets. Each bucket is then sorted individually, using a different sorting algorithm. Here is an illustration of buckets.\n\n![Illustration of buckets](../Figures/220/220_Buckets.png \"Illustration of buckets\"){:width=\"539px\"}\n\n\n*Figure 3. Illustration of buckets.*\n\n\nFrom the above example, we have 8 unsorted integers. We create 5 buckets covering the inclusive ranges of $$[0,9], [10,19], [20, 29], [30, 39], [40, 49]$$ individually. Each of the eight elements is in a particular bucket. For element with value $$x$$, its bucket label is $$x / w$$ and here we have $$w = 10$$. Sort each bucket using some other sorting algorithm and then collect all of them bucket by bucket.\n\nBack to our problem, the critical issue we are trying to solve is:\n\n> 1. For a given element $$x$$ is there an item in the window that is within the range of $$[x-t, x+t]$$?\n> 2. Could we do this in constant time?\n\nLet us consider an example where each element is a person's birthday. Your birthday, say some day in *March*, is the new element $$x$$. Suppose that each month has $$30$$ days and you want to know if anyone has a birthday within $$t = 30$$ days of yours. Immediately, we can rule out all other months except *February, March, April*.\n\nThe reason we know this is because each birthday belongs to a *bucket* we called *month*! And the range covered by the buckets are the same as distance $$t$$ which simplifies things a lot. Any two elements that are not in the same or adjacent buckets must have a distance greater than $$t$$.\n\nWe apply the above bucketing principle and design buckets covering the ranges of $$..., [0,t], [t+1, 2t+1], ...$$. We keep the window using this buckets. Then, each time, all we need to check is the bucket that $$x$$ belongs to and its two adjacent buckets. Thus, we have a constant time algorithm for searching almost duplicate in the window.\n\nOne thing worth mentioning is the difference from bucket sort – Each of our buckets contains at most one element at any time, because two elements in a bucket means \"almost duplicate\" and we can return early from the function. Therefore, a HashMap with an element associated with a bucket label is enough for our purpose.\n\n<iframe src=\"https://leetcode.com/playground/3b5UKBvm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3b5UKBvm\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(n)$$.\nFor each of the $$n$$ elements, we do at most three searches, one insert, and one delete on the HashMap, which costs constant time on average. Thus, the entire algorithm costs $$O(n)$$ time.\n\n* Space complexity: $$O(\\min(n,k))$$.\nSpace is dominated by the HashMap, which is linear to the size of its elements. The size of the HashMap is upper bounded by both $$n$$ and $$k$$. Thus the space complexity is $$O(\\min(n, k))$$.\n\n## See Also\n\n* [Problem 217 Contains Duplicate](https://leetcode.com/articles/contains-duplicate/)\n* [Problem 219 Contains Duplicate II](https://leetcode.com/articles/contains-duplicate-ii/)",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

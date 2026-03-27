@@ -1,0 +1,134 @@
+{
+  "questionId": "459",
+  "questionFrontendId": "459",
+  "title": "Repeated Substring Pattern",
+  "titleSlug": "repeated-substring-pattern",
+  "difficulty": "Easy",
+  "content": "<p>Given a string <code>s</code>, check if it can be constructed by taking a substring of it and appending multiple copies of the substring together.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abab&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> It is the substring &quot;ab&quot; twice.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aba&quot;\n<strong>Output:</strong> false\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abcabcabcabc&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> It is the substring &quot;abc&quot; four times or the substring &quot;abcabc&quot; twice.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"repeatedSubstringPattern\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"604.5K\", \"totalSubmission\": \"1.3M\", \"totalAcceptedRaw\": 604485, \"totalSubmissionRaw\": 1259341, \"acRate\": \"48.0%\"}",
+  "likes": 6860,
+  "dislikes": 567,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find the Index of the First Occurrence in a String\", \"titleSlug\": \"find-the-index-of-the-first-occurrence-in-a-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Repeated String Match\", \"titleSlug\": \"repeated-string-match\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abab\"",
+    "\"aba\"",
+    "\"abcabcabcabc\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"myntra\", \"name\": \"Myntra\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"ebay\", \"name\": \"eBay\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "String Matching",
+      "slug": "string-matching"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool repeatedSubstringPattern(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean repeatedSubstringPattern(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def repeatedSubstringPattern(self, s: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def repeatedSubstringPattern(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {boolean}\n */\nvar repeatedSubstringPattern = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function repeatedSubstringPattern(s: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool RepeatedSubstringPattern(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool repeatedSubstringPattern(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func repeatedSubstringPattern(s string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun repeatedSubstringPattern(s: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func repeatedSubstringPattern(_ s: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn repeated_substring_pattern(s: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Boolean}\ndef repeated_substring_pattern(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Boolean\n     */\n    function repeatedSubstringPattern($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool repeatedSubstringPattern(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def repeatedSubstringPattern(s: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec repeated_substring_pattern(s :: String.t) :: boolean\n  def repeated_substring_pattern(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec repeated_substring_pattern(S :: unicode:unicode_binary()) -> boolean().\nrepeated_substring_pattern(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (repeated-substring-pattern s)\n  (-> string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1981",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nGiven a string `s`, our task is to check whether it can be constructed by taking a substring of it and appending multiple copies of the substring together.\n\n---\n\n### Approach 1: Using Divisors\n\n#### Intuition\n\nWe may realize that it is impossible to construct `s` by repeating substrings whose length is not a divisor of the length of `s`.\n\nWe only need to look at substrings where the length divides `n`, where `n` is the length of `s`. Another thing that we can notice is that the substring would need to be a prefix of `s`, otherwise there would be an immediate mismatch.\n\nFor each prefix of length `i` that divides `n`, we would concatenate the prefix `n / i` times to generate another string. If this string generated by repeated substrings equals `s`, we return `true`.\n\nIf no prefix is found that when repeated equals `s`, we return `false`. \n\n#### Algorithm\n\n1. Create an integer variable `n` equal to the length of `s`.\n2. Iterate over all the prefix substrings of length `i = 1` to `n / 2`:\n    - If `i` divides `n`, we declare an empty string `pattern`. Use an inner loop that iterates `n / i` times to concatenate the substring formed from the first `i` characters of `s`.\n    - If `pattern` equals `s`, we return `true`.\n3. There is no substring that can be repeated to form `s`. As a result, we return `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/erkpgYbw/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"erkpgYbw\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the length of `s`.\n\n* Time complexity: $O(n \\cdot \\sqrt{n})$.\n    - A number `n` can have a maximum of $2 \\cdot \\sqrt{n}$ number of divisors. As a result, we would execute the inner loop that concatenates the substring $O(\\sqrt{n})$ times. In the inner loop, we concatenate a substring of length `i` for `n / i` times to generate a string of length `n`, which would require $O(n)$ time for each iteration. As a result, it would take $O(n \\cdot \\sqrt{n})$ in total.\n\n* Space complexity: $O(n)$.\n    - We used another string variable, `pattern`, which is initialized to an empty string before the inner loop iteration and grows up to a length of $n$ after the inner loop iteration.\n\n---\n\n### Approach 2: String Concatenation\n\n> Note: This is a very advanced approach and might not be expected in an interview.\n\n#### Intuition\n\nConsider a string `S = \"helloworld\"`. Now, given another string `T = \"lloworldhe\"`, can we figure out if `T` is a rotated version of `S`? By rotated version, we mean taking `S` and shifting it any number of spaces (with wrap around). For example, if `S = \"abc\"` and we shifted it to the left once, we would have `\"bca\"`.\n\nYes, we check if `T` is a rotated version of `S` by checking if it is a substring of `S + S`. This is because `S + S` contains all of the rotations of `S`.\n\nLet's try to use this fact to solve our problem.\n\nWe consider every rotation of string `S` such that it's rotated by `k` units (where `k < s.length`) to the left. Specifically, we're looking at strings `elloworldh`, `lloworldhe`, `loworldhel`, etc.\n\nIf a string can be constructed by taking a substring of it and appending multiple copies of the substring together, **it must be a rotation of itself**. However, it would be inefficient to check all rotations.\n\nLet `t = s + s`. We can easily and efficiently check all possible rotations by removing the first and last character of `t`, then checking if `s` is a substring of `t`.\n\nWe can prove that the solution works mathematically.\n\nLet's assume `s = p * k` where `p` is a pattern that has been repeated `k` times. If there is no repeating pattern in `s`, `k` would be `1` and `p = s`. If there is a repeating pattern, then `k > 1`.\n\nIf we concatenate `s` twice, i.e., form another string `t` where `t = s + s` and remove the first and last character from it, `t` would look like `t = (head + p * (k - 1)) + (p * (k - 1) + tail)` where `head` is `p` without first character, `tail` is `p` without last character and `p * (k - 1)` denotes `p` repeated `k - 1` times.\n\nAs a result, `t = head + p * (2k - 2) + tail`. We now have 2 possibilities: either `k = 1` and the answer is false, or `k > 1` and the answer is true.\n\nIf `k = 1`, then `2k - 2 = 0` and `t = head + tail`. Remember, `head` is equal to `p` with the first character removed, and `tail` is equal to `p` with the last character removed. We can simplify this as `t` is equal to `p + p` with the first and last characters removed. Now, `s` cannot possibly be a substring of `t` because `s = p` and we removed the first and last character.\n- Thus, if `k = 1`, then `s` cannot be a substring of `t` and the answer is false. Here's a visual representation where `k = 1`:\n\n![img](../Figures/459/459-1.png)\n\n- If `k > 1`, then `2k - 2` is some nonzero integer `x`. This means `t = head + p * x + tail`.\n- Remember: by definition, `s = p * k`. This means that as long as `x >= k`, `s` must be contained within `p * x`, and thus within `t`.\n- We have `x = 2k - 2`, so the inequality becomes `2k - 2 >= k`. We can rearrange this to `k >= 2`, which is the same thing as `k > 1`.\n- In conclusion, if `k > 1`, it implies two things: first, the answer to the problem is true. Second, `x >= k` and thus `s` must be a substring of `p * x`, and thus a substring of `t`. Here's a visual representation where `k > 1`:\n\n![img](../Figures/459/459-2.png)\n\nSo, concatenate `s` twice and then remove the first and last characters from it. The answer to the problem is the answer to \"does this new string contain `s` as a substring\"?\n\n#### Algorithm\n\n1. Create a string variable `t` and set it to `s + s`.\n2. If the substring formed by removing the first and last character of `t` contains `s`, we return `true`. Otherwise, return `false`. Note in our implementation, the `substr` function in `C++` and the `substring` method in `Java` both take two parameters. In both languages, the first parameter is the initial index from which our substring begins, while the second parameter works differently. It is the length of the substring in `C++` and the index of the last character in `Java`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/8BJAgyWz/shared\" frameBorder=\"0\" width=\"100%\" height=\"191\" name=\"8BJAgyWz\"></iframe>\n\n\n#### Complexity Analysis\n\nHere $n$ is the length of `s`.\n\n* Time complexity: $O(n)$.\n    - It takes $O(n)$ time to form string `t` followed by its substring by eliminating the first and final character.\n    - Due to implementation differences of the underlying methods, finding `s` in `t` takes $O(n^2)$ in `Java` and `Python3` but $O(n)$ in `C++`. However, one can use algorithms like KMP to solve it in linear time.\n\n* Space complexity: $O(n)$.\n    - We used a string variable `t` that takes $O(n)$ space.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

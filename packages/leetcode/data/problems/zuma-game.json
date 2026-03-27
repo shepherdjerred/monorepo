@@ -1,0 +1,141 @@
+{
+  "questionId": "488",
+  "questionFrontendId": "488",
+  "title": "Zuma Game",
+  "titleSlug": "zuma-game",
+  "difficulty": "Hard",
+  "content": "<p>You are playing a variation of the game Zuma.</p>\n\n<p>In this variation of Zuma, there is a <strong>single row</strong> of colored balls on a board, where each ball can be colored red <code>&#39;R&#39;</code>, yellow <code>&#39;Y&#39;</code>, blue <code>&#39;B&#39;</code>, green <code>&#39;G&#39;</code>, or white <code>&#39;W&#39;</code>. You also have several colored balls in your hand.</p>\n\n<p>Your goal is to <strong>clear all</strong> of the balls from the board. On each turn:</p>\n\n<ul>\n\t<li>Pick <strong>any</strong> ball from your hand and insert it in between two balls in the row or on either end of the row.</li>\n\t<li>If there is a group of <strong>three or more consecutive balls</strong> of the <strong>same color</strong>, remove the group of balls from the board.\n\t<ul>\n\t\t<li>If this removal causes more groups of three or more of the same color to form, then continue removing each group until there are none left.</li>\n\t</ul>\n\t</li>\n\t<li>If there are no more balls on the board, then you win the game.</li>\n\t<li>Repeat this process until you either win or do not have any more balls in your hand.</li>\n</ul>\n\n<p>Given a string <code>board</code>, representing the row of balls on the board, and a string <code>hand</code>, representing the balls in your hand, return <em>the <strong>minimum</strong> number of balls you have to insert to clear all the balls from the board. If you cannot clear all the balls from the board using the balls in your hand, return </em><code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> board = &quot;WRRBBW&quot;, hand = &quot;RB&quot;\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> It is impossible to clear all the balls. The best you can do is:\n- Insert &#39;R&#39; so the board becomes WRR<u>R</u>BBW. W<u>RRR</u>BBW -&gt; WBBW.\n- Insert &#39;B&#39; so the board becomes WBB<u>B</u>W. W<u>BBB</u>W -&gt; WW.\nThere are still balls remaining on the board, and you are out of balls to insert.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> board = &quot;WWRRBBWW&quot;, hand = &quot;WRBRW&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> To make the board empty:\n- Insert &#39;R&#39; so the board becomes WWRR<u>R</u>BBWW. WW<u>RRR</u>BBWW -&gt; WWBBWW.\n- Insert &#39;B&#39; so the board becomes WWBB<u>B</u>WW. WW<u>BBB</u>WW -&gt; <u>WWWW</u> -&gt; empty.\n2 balls from your hand were needed to clear the board.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> board = &quot;G&quot;, hand = &quot;GGGGG&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> To make the board empty:\n- Insert &#39;G&#39; so the board becomes G<u>G</u>.\n- Insert &#39;G&#39; so the board becomes GG<u>G</u>. <u>GGG</u> -&gt; empty.\n2 balls from your hand were needed to clear the board.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= board.length &lt;= 16</code></li>\n\t<li><code>1 &lt;= hand.length &lt;= 5</code></li>\n\t<li><code>board</code> and <code>hand</code> consist of the characters <code>&#39;R&#39;</code>, <code>&#39;Y&#39;</code>, <code>&#39;B&#39;</code>, <code>&#39;G&#39;</code>, and <code>&#39;W&#39;</code>.</li>\n\t<li>The initial row of balls on the board will <strong>not</strong> have any groups of three or more consecutive balls of the same color.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"findMinStep\",\n  \"params\": [\n    {\n      \"name\": \"board\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"hand\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}\n",
+  "stats": "{\"totalAccepted\": \"29.5K\", \"totalSubmission\": \"98.2K\", \"totalAcceptedRaw\": 29476, \"totalSubmissionRaw\": 98245, \"acRate\": \"30.0%\"}",
+  "likes": 496,
+  "dislikes": 516,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"WRRBBW\"\n\"RB\"",
+    "\"WWRRBBWW\"\n\"WRBRW\"",
+    "\"G\"\n\"GGGGG\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"inmobi\", \"name\": \"InMobi\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"baidu\", \"name\": \"Baidu\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Memoization",
+      "slug": "memoization"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findMinStep(string board, string hand) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findMinStep(String board, String hand) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findMinStep(self, board: str, hand: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findMinStep(self, board, hand):\n        \"\"\"\n        :type board: str\n        :type hand: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} board\n * @param {string} hand\n * @return {number}\n */\nvar findMinStep = function(board, hand) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findMinStep(board: string, hand: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindMinStep(string board, string hand) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findMinStep(char* board, char* hand) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findMinStep(board string, hand string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findMinStep(board: String, hand: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findMinStep(_ board: String, _ hand: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_min_step(board: String, hand: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} board\n# @param {String} hand\n# @return {Integer}\ndef find_min_step(board, hand)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $board\n     * @param String $hand\n     * @return Integer\n     */\n    function findMinStep($board, $hand) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findMinStep(String board, String hand) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findMinStep(board: String, hand: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_min_step(board :: String.t, hand :: String.t) :: integer\n  def find_min_step(board, hand) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_min_step(Board :: unicode:unicode_binary(), Hand :: unicode:unicode_binary()) -> integer().\nfind_min_step(Board, Hand) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-min-step board hand)\n  (-> string? string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

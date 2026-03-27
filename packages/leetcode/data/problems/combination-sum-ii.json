@@ -1,0 +1,133 @@
+{
+  "questionId": "40",
+  "questionFrontendId": "40",
+  "title": "Combination Sum II",
+  "titleSlug": "combination-sum-ii",
+  "difficulty": "Medium",
+  "content": "<p>Given a collection of candidate numbers (<code>candidates</code>) and a target number (<code>target</code>), find all unique combinations in <code>candidates</code>&nbsp;where the candidate numbers sum to <code>target</code>.</p>\n\n<p>Each number in <code>candidates</code>&nbsp;may only be used <strong>once</strong> in the combination.</p>\n\n<p><strong>Note:</strong>&nbsp;The solution set must not contain duplicate combinations.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> candidates = [10,1,2,7,6,1,5], target = 8\n<strong>Output:</strong> \n[\n[1,1,6],\n[1,2,5],\n[1,7],\n[2,6]\n]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> candidates = [2,5,2,1,2], target = 5\n<strong>Output:</strong> \n[\n[1,2,2],\n[5]\n]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;=&nbsp;candidates.length &lt;= 100</code></li>\n\t<li><code>1 &lt;=&nbsp;candidates[i] &lt;= 50</code></li>\n\t<li><code>1 &lt;= target &lt;= 30</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"combinationSum2\",\n  \"params\": [\n    {\n      \"name\": \"candidates\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"target\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<list<integer>>\",\n    \"dealloc\": true\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1.7M\", \"totalSubmission\": \"2.8M\", \"totalAcceptedRaw\": 1670133, \"totalSubmissionRaw\": 2822788, \"acRate\": \"59.2%\"}",
+  "likes": 12233,
+  "dislikes": 385,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Combination Sum\", \"titleSlug\": \"combination-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[10,1,2,7,6,1,5]\n8",
+    "[2,5,2,1,2]\n5"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 5, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 3, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"rakuten\", \"name\": \"Rakuten\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> combinationSum2(vector<int>& candidates, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> combinationSum2(int[] candidates, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def combinationSum2(self, candidates: List[int], target: int) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def combinationSum2(self, candidates, target):\n        \"\"\"\n        :type candidates: List[int]\n        :type target: int\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} candidates\n * @param {number} target\n * @return {number[][]}\n */\nvar combinationSum2 = function(candidates, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function combinationSum2(candidates: number[], target: number): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> CombinationSum2(int[] candidates, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** combinationSum2(int* candidates, int candidatesSize, int target, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func combinationSum2(candidates []int, target int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun combinationSum2(candidates: IntArray, target: Int): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func combinationSum2(_ candidates: [Int], _ target: Int) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn combination_sum2(candidates: Vec<i32>, target: i32) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} candidates\n# @param {Integer} target\n# @return {Integer[][]}\ndef combination_sum2(candidates, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $candidates\n     * @param Integer $target\n     * @return Integer[][]\n     */\n    function combinationSum2($candidates, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> combinationSum2(List<int> candidates, int target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def combinationSum2(candidates: Array[Int], target: Int): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec combination_sum2(candidates :: [integer], target :: integer) :: [[integer]]\n  def combination_sum2(candidates, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec combination_sum2(Candidates :: [integer()], Target :: integer()) -> [[integer()]].\ncombination_sum2(Candidates, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (combination-sum2 candidates target)\n  (-> (listof exact-integer?) exact-integer? (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2402",
+    "content": "[TOC]  \n\n## Solution\n\n---\n\n### Overview\n\nThis is one of the problems in the series of combination sums. All these problems can be solved with the same backtracking algorithm.\n\nWe recommend trying these similar problems before tackling this one: [Combination Sum](https://leetcode.com/problems/combination-sum/description/) and [Combination Sum III](https://leetcode.com/problems/combination-sum-iii/description/), which are arguably easier and one can tweak the solution a bit to solve this problem.\n\nWe also listed some follow-up problems at the end of the article if you are interested in exploring the bactracking algorithm further.\n\n---\n\n### Approach: Backtracking\n\n#### Intuition\n\nIn this problem, we need to generate unique combinations with the given sum value. In the worst case, we might need to generate the sum of all combinations in the array. Backtracking can be effectively used to generate all the possible combinations recursively. Backtracking incrementally builds candidates to the solutions and abandons a candidate (backtracks) as soon as it determines that this candidate can't lead to a final solution. For example, in the given problem, we can discard the candidate solution when it exceeds the sum value, provided the array contains non-negative values. Refer to this [backtracking explore card](https://leetcode.com/explore/learn/card/recursion-ii/472/backtracking/2654/) to read more about backtracking.\n\nUsing backtracking, we could incrementally build the combinations. When we find the current combination is not valid, we backtrack and try another option. For the first option, we add the current array element to the current combination array and move this combination to the next index recursively. Similarly, for the second option, we remove the element from the current combination array and move this combination to the next index. Therefore, for every index, we explored two possibilities of including and excluding that value and calculated the combination sum of the maintained combination array. If the desired sum is reached, we can append the list to the answer list. To demonstrate the idea, we showcase how it works with a concrete example in the following tree:\n\n![fig](../Figures/40/40.png)\n\nAre there any optimizations to reduce the backtracking calls? Since we need to return unique combinations, we can group equal values of the array together. The simplest way to group all elements together is by sorting them. Now, suppose the frequency of an element is `freq`, and you need to make backtracking calls for all its possible frequencies between `0` and `freq`, then we can simply pick them from the beginning of its group in the sorted array.\n\n#### Algorithm\n\n- Create a list `list` to store all the unique combinations that sum up to the target.\n- Sort the `candidates` array to handle duplicates and facilitate the backtracking process.\n- Call the `backtrack` function with the following parameters:\n  - `answer`: List to store the final combinations.\n  - `tempList`: Temporary list to store the current combination.\n  - `candidates`: Input array of numbers.\n  - `totalLeft`: Remaining sum to reach the target.\n  - `index`: Starting index for the current recursion.\n\n- Within the `backtrack` function:\n  - If `totalLeft` is less than 0, return immediately (invalid path).\n  - If `totalLeft` equals 0:\n    - Add a copy of `tempList` to `answer` (valid combination found).\n  - Otherwise:\n    - Iterate over `candidates` starting from `index`:\n      - Skip duplicate numbers by checking if `candidates[i] == candidates[i - 1]` for `i > index`.\n      - Add `candidates[i]` to `tempList`.\n      - Recursively call `backtrack` with:\n        - Updated `totalLeft` reduced by `candidates[i]`.\n        - Updated `index` as `i + 1` to avoid reusing the same element.\n      - Remove the last element from `tempList` to backtrack and explore other possibilities.\n\n- Return `list` containing all unique combinations after the recursive calls complete.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/SGfPMJBF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"SGfPMJBF\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of $candidates$ in the array.\n\n- Time complexity: $O(2^N)$\n\n    In the worst case, our algorithm will exhaust all possible combinations from the input array. Again, in the worst case, let us assume that each number is unique. The number of combinations for an array of size $N$ would be $2^N$, i.e. each number is included or excluded in a combination. \n    \n    Additionally, it takes $O(N)$ time to build a counter table out of the input array.\n    \n    Therefore, the overall time complexity of the algorithm is dominated by the backtracking process, which is $O(2^N)$.\n\n    You must think about how the solution passes the test cases when the value of $N$ goes up to 100. [Pruning](https://en.wikipedia.org/wiki/Decision_tree_pruning) is the process of writing some additional conditions within our recursion code that help us to reduce the size of our recursion trees by removing redundant sections. For example, in this problem, the maximum value of any `candidates` element is given by 50, whereas the maximum `target` value is 30. So, we can stop the recursion when the value of candidates exceeds the `target` value. Sorting the array is another way to prune the recursion tree. Checkout the image for an explanation:\n\n    ![fig](../Figures/40/image.png)\n   \n- Space complexity: $O(N)$\n   \n    We first create a `tempList`, which in the worst case will consume $O(N)$ space to keep track of the combinations. In addition, we apply recursion in the algorithm, which will incur additional memory consumption in the function call stack. In the worst case, the stack will pile up to $O(N)$ space.\n\n    To sum up, the overall space complexity of the algorithm is $O(N)$.\n\n    Note: we did not take into account the space needed to hold the final results of the combination in the above analysis.\n\n---\n\nHere are a series of problems you can solve, with some tweaks of the backtracking algorithm presented in this article.\n\n[Subsets](https://leetcode.com/problems/subsets/description/)\n[Subsets II](https://leetcode.com/problems/subsets-ii/description/)\n[Permutations](https://leetcode.com/problems/permutations/description/)\n[Permutations II](https://leetcode.com/problems/permutations-ii/description/)\n[Combinations](https://leetcode.com/problems/combinations/description/)\n[Combination Sum](https://leetcode.com/problems/combination-sum/description/)\n[Combination Sum III](https://leetcode.com/problems/combination-sum-iii/description/)\n[Palindrome Partition](https://leetcode.com/problems/palindrome-partitioning/description/)\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "questionId": "733",
+  "questionFrontendId": "733",
+  "title": "Flood Fill",
+  "titleSlug": "flood-fill",
+  "difficulty": "Easy",
+  "content": "<p>You are given an image represented by an <code>m x n</code> grid of integers <code>image</code>, where <code>image[i][j]</code> represents the pixel value of the image. You are also given three integers <code>sr</code>, <code>sc</code>, and <code>color</code>. Your task is to perform a <strong>flood fill</strong> on the image starting from the pixel <code>image[sr][sc]</code>.</p>\n\n<p>To perform a <strong>flood fill</strong>:</p>\n\n<ol>\n\t<li>Begin with the starting pixel and change its color to <code>color</code>.</li>\n\t<li>Perform the same process for each pixel that is <strong>directly adjacent</strong> (pixels that share a side with the original pixel, either horizontally or vertically) and shares the <strong>same color</strong> as the starting pixel.</li>\n\t<li>Keep <strong>repeating</strong> this process by checking neighboring pixels of the <em>updated</em> pixels&nbsp;and modifying their color if it matches the original color of the starting pixel.</li>\n\t<li>The process <strong>stops</strong> when there are <strong>no more</strong> adjacent pixels of the original color to update.</li>\n</ol>\n\n<p>Return the <strong>modified</strong> image after performing the flood fill.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">image = [[1,1,1],[1,1,0],[1,0,1]], sr = 1, sc = 1, color = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[[2,2,2],[2,2,0],[2,0,1]]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/01/flood1-grid.jpg\" style=\"width: 613px; height: 253px;\" /></p>\n\n<p>From the center of the image with position <code>(sr, sc) = (1, 1)</code> (i.e., the red pixel), all pixels connected by a path of the same color as the starting pixel (i.e., the blue pixels) are colored with the new color.</p>\n\n<p>Note the bottom corner is <strong>not</strong> colored 2, because it is not horizontally or vertically connected to the starting pixel.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">image = [[0,0,0],[0,0,0]], sr = 0, sc = 0, color = 0</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[[0,0,0],[0,0,0]]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The starting pixel is already colored with 0, which is the same as the target color. Therefore, no changes are made to the image.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == image.length</code></li>\n\t<li><code>n == image[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 50</code></li>\n\t<li><code>0 &lt;= image[i][j], color &lt; 2<sup>16</sup></code></li>\n\t<li><code>0 &lt;= sr &lt; m</code></li>\n\t<li><code>0 &lt;= sc &lt; n</code></li>\n</ul>\n",
+  "hints": [
+    "Write a recursive function that paints the pixel if it's the correct color, then recurses on neighboring pixels."
+  ],
+  "metaData": "{\n  \"name\": \"floodFill\",\n  \"params\": [\n    {\n      \"name\": \"image\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"name\": \"sr\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"sc\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"color\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1.4M\", \"totalSubmission\": \"2M\", \"totalAcceptedRaw\": 1375821, \"totalSubmissionRaw\": 2023514, \"acRate\": \"68.0%\"}",
+  "likes": 9452,
+  "dislikes": 955,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Island Perimeter\", \"titleSlug\": \"island-perimeter\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,1,1],[1,1,0],[1,0,1]]\n1\n1\n2",
+    "[[0,0,0],[0,0,0]]\n0\n0\n0"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"criteo\", \"name\": \"Criteo\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"capital-one\", \"name\": \"Capital One\"}, {\"timesEncountered\": 2, \"slug\": \"openai\", \"name\": \"OpenAI\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> floodFill(vector<vector<int>>& image, int sr, int sc, int color) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] floodFill(int[][] image, int sr, int sc, int color) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def floodFill(self, image: List[List[int]], sr: int, sc: int, color: int) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def floodFill(self, image, sr, sc, color):\n        \"\"\"\n        :type image: List[List[int]]\n        :type sr: int\n        :type sc: int\n        :type color: int\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} image\n * @param {number} sr\n * @param {number} sc\n * @param {number} color\n * @return {number[][]}\n */\nvar floodFill = function(image, sr, sc, color) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function floodFill(image: number[][], sr: number, sc: number, color: number): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] FloodFill(int[][] image, int sr, int sc, int color) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** floodFill(int** image, int imageSize, int* imageColSize, int sr, int sc, int color, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func floodFill(image [][]int, sr int, sc int, color int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun floodFill(image: Array<IntArray>, sr: Int, sc: Int, color: Int): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func floodFill(_ image: [[Int]], _ sr: Int, _ sc: Int, _ color: Int) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn flood_fill(image: Vec<Vec<i32>>, sr: i32, sc: i32, color: i32) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} image\n# @param {Integer} sr\n# @param {Integer} sc\n# @param {Integer} color\n# @return {Integer[][]}\ndef flood_fill(image, sr, sc, color)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $image\n     * @param Integer $sr\n     * @param Integer $sc\n     * @param Integer $color\n     * @return Integer[][]\n     */\n    function floodFill($image, $sr, $sc, $color) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> floodFill(List<List<int>> image, int sr, int sc, int color) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def floodFill(image: Array[Array[Int]], sr: Int, sc: Int, color: Int): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec flood_fill(image :: [[integer]], sr :: integer, sc :: integer, color :: integer) :: [[integer]]\n  def flood_fill(image, sr, sc, color) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec flood_fill(Image :: [[integer()]], Sr :: integer(), Sc :: integer(), Color :: integer()) -> [[integer()]].\nflood_fill(Image, Sr, Sc, Color) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (flood-fill image sr sc color)\n  (-> (listof (listof exact-integer?)) exact-integer? exact-integer? exact-integer? (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "307",
+    "content": "[TOC]\n\n### Approach #1: Depth-First Search [Accepted]\n\n**Intuition**\n\nWe perform the algorithm explained in the problem description: paint the starting pixels, plus adjacent pixels of the same color, and so on.\n\n**Algorithm**\n\nSay `color` is the color of the starting pixel. Let's flood fill the starting pixel: we change the color of that pixel to the new color, then check the 4 neighboring pixels to make sure they are valid pixels of the same `color`, and of the valid ones, we flood fill those, and so on.\n\nWe can use a function `dfs` to perform a flood fill on a target pixel.\n\n<iframe src=\"https://leetcode.com/playground/StwTP8bA/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"StwTP8bA\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$, where $$N$$ is the number of pixels in the image. We might process every pixel.\n\n* Space Complexity: $$O(N)$$, the size of the implicit call stack when calling `dfs`.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

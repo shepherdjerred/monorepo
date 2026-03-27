@@ -1,0 +1,141 @@
+{
+  "questionId": "417",
+  "questionFrontendId": "417",
+  "title": "Pacific Atlantic Water Flow",
+  "titleSlug": "pacific-atlantic-water-flow",
+  "difficulty": "Medium",
+  "content": "<p>There is an <code>m x n</code> rectangular island that borders both the <strong>Pacific Ocean</strong> and <strong>Atlantic Ocean</strong>. The <strong>Pacific Ocean</strong> touches the island&#39;s left and top edges, and the <strong>Atlantic Ocean</strong> touches the island&#39;s right and bottom edges.</p>\n\n<p>The island is partitioned into a grid of square cells. You are given an <code>m x n</code> integer matrix <code>heights</code> where <code>heights[r][c]</code> represents the <strong>height above sea level</strong> of the cell at coordinate <code>(r, c)</code>.</p>\n\n<p>The island receives a lot of rain, and the rain water can flow to neighboring cells directly north, south, east, and west if the neighboring cell&#39;s height is <strong>less than or equal to</strong> the current cell&#39;s height. Water can flow from any cell adjacent to an ocean into the ocean.</p>\n\n<p>Return <em>a <strong>2D list</strong> of grid coordinates </em><code>result</code><em> where </em><code>result[i] = [r<sub>i</sub>, c<sub>i</sub>]</code><em> denotes that rain water can flow from cell </em><code>(r<sub>i</sub>, c<sub>i</sub>)</code><em> to <strong>both</strong> the Pacific and Atlantic oceans</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/08/waterflow-grid.jpg\" style=\"width: 400px; height: 400px;\" />\n<pre>\n<strong>Input:</strong> heights = [[1,2,2,3,5],[3,2,3,4,4],[2,4,5,3,1],[6,7,1,4,5],[5,1,1,2,4]]\n<strong>Output:</strong> [[0,4],[1,3],[1,4],[2,2],[3,0],[3,1],[4,0]]\n<strong>Explanation:</strong> The following cells can flow to the Pacific and Atlantic oceans, as shown below:\n[0,4]: [0,4] -&gt; Pacific Ocean \n&nbsp;      [0,4] -&gt; Atlantic Ocean\n[1,3]: [1,3] -&gt; [0,3] -&gt; Pacific Ocean \n&nbsp;      [1,3] -&gt; [1,4] -&gt; Atlantic Ocean\n[1,4]: [1,4] -&gt; [1,3] -&gt; [0,3] -&gt; Pacific Ocean \n&nbsp;      [1,4] -&gt; Atlantic Ocean\n[2,2]: [2,2] -&gt; [1,2] -&gt; [0,2] -&gt; Pacific Ocean \n&nbsp;      [2,2] -&gt; [2,3] -&gt; [2,4] -&gt; Atlantic Ocean\n[3,0]: [3,0] -&gt; Pacific Ocean \n&nbsp;      [3,0] -&gt; [4,0] -&gt; Atlantic Ocean\n[3,1]: [3,1] -&gt; [3,0] -&gt; Pacific Ocean \n&nbsp;      [3,1] -&gt; [4,1] -&gt; Atlantic Ocean\n[4,0]: [4,0] -&gt; Pacific Ocean \n       [4,0] -&gt; Atlantic Ocean\nNote that there are other possible paths for these cells to flow to the Pacific and Atlantic oceans.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> heights = [[1]]\n<strong>Output:</strong> [[0,0]]\n<strong>Explanation:</strong> The water can flow from the only cell to the Pacific and Atlantic oceans.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == heights.length</code></li>\n\t<li><code>n == heights[r].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 200</code></li>\n\t<li><code>0 &lt;= heights[r][c] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"pacificAtlantic\",\n  \"params\": [\n    {\n      \"name\": \"heights\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<list<integer>>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"794.5K\", \"totalSubmission\": \"1.3M\", \"totalAcceptedRaw\": 794474, \"totalSubmissionRaw\": 1308230, \"acRate\": \"60.7%\"}",
+  "likes": 8696,
+  "dislikes": 1831,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,2,2,3,5],[3,2,3,4,4],[2,4,5,3,1],[6,7,1,4,5],[5,1,1,2,4]]",
+    "[[1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 5, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}, {\"timesEncountered\": 2, \"slug\": \"urban-company\", \"name\": \"Urban Company\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> pacificAtlantic(vector<vector<int>>& heights) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> pacificAtlantic(int[][] heights) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def pacificAtlantic(self, heights: List[List[int]]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def pacificAtlantic(self, heights):\n        \"\"\"\n        :type heights: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} heights\n * @return {number[][]}\n */\nvar pacificAtlantic = function(heights) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function pacificAtlantic(heights: number[][]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> PacificAtlantic(int[][] heights) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** pacificAtlantic(int** heights, int heightsSize, int* heightsColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func pacificAtlantic(heights [][]int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun pacificAtlantic(heights: Array<IntArray>): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func pacificAtlantic(_ heights: [[Int]]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn pacific_atlantic(heights: Vec<Vec<i32>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} heights\n# @return {Integer[][]}\ndef pacific_atlantic(heights)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $heights\n     * @return Integer[][]\n     */\n    function pacificAtlantic($heights) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> pacificAtlantic(List<List<int>> heights) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def pacificAtlantic(heights: Array[Array[Int]]): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec pacific_atlantic(heights :: [[integer]]) :: [[integer]]\n  def pacific_atlantic(heights) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec pacific_atlantic(Heights :: [[integer()]]) -> [[integer()]].\npacific_atlantic(Heights) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (pacific-atlantic heights)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1113",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nMatrices such as this one are a type of **graph** representation. Standard graph traversal algorithms such as BFS and DFS can be used to solve this problem. If you aren't familiar with these algorithms, check out the [Explore Card on BFS](https://leetcode.com/explore/learn/card/queue-stack/231/practical-application-queue/).\n\nThe naive approach would be to check every cell - that is, iterate through every cell, and at each one, start a traversal that follows the problem's conditions. That is, find every cell that manages to reach both oceans.\n\nThis approach, however, is extremely slow, as it repeats a ton of computation. Instead of looking for every path from cell to ocean, let's start at the oceans and try to work our way to the cells. This will be much faster because when we start a traversal at a cell, whatever result we end up with can be applied to only that cell. However, when we start from the ocean and work backwards, we already know that every cell we visit must be connected to the ocean.\n\n</br>\n\n---\n\n### Approach 1: Breadth First Search (BFS)\n\n**Intuition**\n\nIf we start traversing from the ocean and flip the condition (check for higher height instead of lower height), then we know that every cell we visit during the traversal can flow into that ocean. Let's start a BFS traversal from every cell that is immediately beside the Pacific ocean, and figure out what cells can flow into the Pacific. Then, let's do the exact same thing with the Atlantic ocean. At the end, the cells that end up connected to both oceans will be our answer.\n\n!?!../Documents/417_Pacific_Atlantic.json:960,540!?!\n\n<br/>\n\n**Algorithm**\n\n1. If the input is empty, immediately return an empty array.\n\n2. Initialize variables that we will use to solve the problem:\n    - Number of rows and columns in our matrix;\n    - 2 queues, one for the Atlantic Ocean and one for the Pacific Ocean that will be used for BFS;\n    - 2 data structures, again one for each ocean, that we'll use to keep track of cells we already visited, to avoid infinite loops;\n    - A small array `[(0, 1), (1, 0), (-1, 0), (0, -1)]` that will help with BFS.\n\n3. Figure out all the cells that are adjacent to each ocean, and fill the respective data structures with them.\n\n4. Perform BFS from each ocean. The data structure used to keep track of cells already visited has a double purpose - it also\ncontains every cell that can flow into that ocean.\n\n5. Find the intersection, that is all cells that can flow into both oceans.\n\n**Implementation**\n\nPutting it all together for the final solution:\n\n<iframe src=\"https://leetcode.com/playground/MLsVi8WR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"MLsVi8WR\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity: $$O(M \\cdot N)$$, where $$M$$ is the number of rows and $$N$$ is the number of columns.\n    \n    In the worst case, such as a matrix where every value is equal, we would visit every cell twice. This is because we perform 2 traversals, and during each traversal, we visit each cell exactly once. There are $$M \\cdot N$$ cells total, which gives us a time complexity of $$O(2 \\cdot M \\cdot N) = O(M \\cdot N)$$.\n\n* Space complexity: $$O(M \\cdot N)$$, where $$M$$ is the number of rows and $$N$$ is the number of columns.\n    \n    The extra space we use comes from our queues, and the data structure we use to keep track of what cells have been visited. Similar to the time complexity, for a given ocean, the amount of space we will use scales linearly with the number of cells. For example, in the Java implementation, to keep track of what cells have been visited, we simply used 2 matrices that have the same dimensions as the input matrix.\n\n    The same logic follows for the queues - we can't have more cells in the queue than there are cells in the matrix!\n\n<br/>\n\n---\n\n### Approach 2: Depth First Search (DFS)\n\nIntuitively, BFS makes more sense for this problem since water flows in the same manner. However, we can also use DFS, and it doesn't really make much of a difference. So, if you prefer DFS, then that's perfectly fine for this problem. Additionally, it's possible that your interviewer will ask you to implement the problem recursively instead of iteratively. Recursion must be DFS, not BFS.\n\n**Algorithm**\n\nDFS is very similar to BFS. Instead of using a queue and working iteratively, we'll use recursion. Our `dfs` method will be called for every reachable cell. Note: we could also work iteratively with DFS, in which case we would simply use a stack instead of a queue like in the Approach 1 code, with mostly everything else being identical to the BFS approach.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/oJrfHQzz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"oJrfHQzz\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity: $$O(M \\cdot N)$$, where $$M$$ is the number of rows and $$N$$ is the number of columns.\n    \n    Similar to approach 1. The `dfs` function runs exactly once for each cell accessible from an ocean.\n\n* Space complexity: $$O(M \\cdot N)$$, where $$M$$ is the number of rows and $$N$$ is the number of columns.\n    \n    Similar to approach 1. Space that was used by our queues is now occupied by `dfs` calls on the recursion stack.\n\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

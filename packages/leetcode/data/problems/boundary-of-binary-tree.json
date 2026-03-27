@@ -1,0 +1,137 @@
+{
+  "questionId": "545",
+  "questionFrontendId": "545",
+  "title": "Boundary of Binary Tree",
+  "titleSlug": "boundary-of-binary-tree",
+  "difficulty": "Medium",
+  "content": "<p>The <strong>boundary</strong> of a binary tree is the concatenation of the <strong>root</strong>, the <strong>left boundary</strong>, the <strong>leaves</strong> ordered from left-to-right, and the <strong>reverse order</strong> of the <strong>right boundary</strong>.</p>\n\n<p>The <strong>left boundary</strong> is the set of nodes defined by the following:</p>\n\n<ul>\n\t<li>The root node&#39;s left child is in the left boundary. If the root does not have a left child, then the left boundary is <strong>empty</strong>.</li>\n\t<li>If a node is in the left boundary and has a left child, then the left child is in the left boundary.</li>\n\t<li>If a node is in the left boundary, has <strong>no</strong> left child, but has a right child, then the right child is in the left boundary.</li>\n\t<li>The leftmost leaf is <strong>not</strong> in the left boundary.</li>\n</ul>\n\n<p>The <strong>right boundary</strong> is similar to the <strong>left boundary</strong>, except it is the right side of the root&#39;s right subtree. Again, the leaf is <strong>not</strong> part of the <strong>right boundary</strong>, and the <strong>right boundary</strong> is empty if the root does not have a right child.</p>\n\n<p>The <strong>leaves</strong> are nodes that do not have any children. For this problem, the root is <strong>not</strong> a leaf.</p>\n\n<p>Given the <code>root</code> of a binary tree, return <em>the values of its <strong>boundary</strong></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/11/11/boundary1.jpg\" style=\"width: 299px; height: 290px;\" />\n<pre>\n<strong>Input:</strong> root = [1,null,2,3,4]\n<strong>Output:</strong> [1,3,4,2]\n<b>Explanation:</b>\n- The left boundary is empty because the root does not have a left child.\n- The right boundary follows the path starting from the root&#39;s right child 2 -&gt; 4.\n  4 is a leaf, so the right boundary is [2].\n- The leaves from left to right are [3,4].\nConcatenating everything results in [1] + [] + [3,4] + [2] = [1,3,4,2].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/11/11/boundary2.jpg\" style=\"width: 599px; height: 411px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,4,5,6,null,null,null,7,8,9,10]\n<strong>Output:</strong> [1,2,4,7,8,9,10,6,3]\n<b>Explanation:</b>\n- The left boundary follows the path starting from the root&#39;s left child 2 -&gt; 4.\n  4 is a leaf, so the left boundary is [2].\n- The right boundary follows the path starting from the root&#39;s right child 3 -&gt; 6 -&gt; 10.\n  10 is a leaf, so the right boundary is [3,6], and in reverse order is [6,3].\n- The leaves from left to right are [4,7,8,9,10].\nConcatenating everything results in [1] + [2] + [4,7,8,9,10] + [6,3] = [1,2,4,7,8,9,10,6,3].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 10<sup>4</sup>]</code>.</li>\n\t<li><code>-1000 &lt;= Node.val &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"boundaryOfBinaryTree\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<integer>\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"174.8K\", \"totalSubmission\": \"364.4K\", \"totalAcceptedRaw\": 174840, \"totalSubmissionRaw\": 364409, \"acRate\": \"48.0%\"}",
+  "likes": 1420,
+  "dislikes": 2346,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Binary Tree Right Side View\", \"titleSlug\": \"binary-tree-right-side-view\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,null,2,3,4]",
+    "[1,2,3,4,5,6,null,null,null,7,8,9,10]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"more_than_six_months\": [{\"timesEncountered\": 16, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 3, \"slug\": \"geico\", \"name\": \"Geico\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"blackrock\", \"name\": \"BlackRock\"}, {\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> boundaryOfBinaryTree(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public List<Integer> boundaryOfBinaryTree(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def boundaryOfBinaryTree(self, root: Optional[TreeNode]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def boundaryOfBinaryTree(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number[]}\n */\nvar boundaryOfBinaryTree = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction boundaryOfBinaryTree(root: TreeNode | null): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public IList<int> BoundaryOfBinaryTree(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* boundaryOfBinaryTree(struct TreeNode* root, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc boundaryOfBinaryTree(root *TreeNode) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun boundaryOfBinaryTree(root: TreeNode?): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func boundaryOfBinaryTree(_ root: TreeNode?) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn boundary_of_binary_tree(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer[]}\ndef boundary_of_binary_tree(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer[]\n     */\n    function boundaryOfBinaryTree($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  List<int> boundaryOfBinaryTree(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def boundaryOfBinaryTree(root: TreeNode): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec boundary_of_binary_tree(root :: TreeNode.t | nil) :: [integer]\n  def boundary_of_binary_tree(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec boundary_of_binary_tree(Root :: #tree_node{} | null) -> [integer()].\nboundary_of_binary_tree(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (boundary-of-binary-tree root)\n  (-> (or/c tree-node? #f) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "97",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach #1 Simple Solution [Accepted]\n\n**Algorithm**\n\nOne simple approach is to divide this problem into three subproblems- left boundary, leaves and right boundary.\n\n* Left Boundary: We keep on traversing the tree towards the left and keep on adding the nodes in the $$res$$ array, provided the current node isn't a leaf node. If at any point, we can't find the left child of a node, but its right child exists, we put the right child in the $$res$$ and continue the process. The following animation depicts the process.\n\n<!--![Left_Boundary](../Figures/545_Boundary_Left.gif)-->\n\n!?!../Documents/545_Boundary_Of_Binary_Tree1.json:1000,563!?!\n\n* Leaf Nodes: We make use of a recursive function `addLeaves(res,root)`, in which we change the root node for every recursive call. If the current root node happens to be a leaf node, it is added to the $$res$$ array. Otherwise, we make the recursive call using the left child of the current node as the new root. After this, we make the recursive call using the right child of the current node as the new root. The following animation depicts the process.\n\n<!--![Leaf_Boundary](../Figures/545_Boundary_Leaf.gif)-->\n!?!../Documents/545_Boundary_Of_Binary_Tree2.json:1000,563!?!\n\n* Right Boundary: We perform the same process as the left boundary. But, this time, we traverse towards the right. If the right child doesn't exist, we move towards the left child. Also, instead of putting the traversed nodes in the $$res$$ array, we push them over a stack during the traversal. After the complete traversal is done, we pop the element from over the stack and append them to the $$res$$ array. The following animation depicts the process.\n\n<!--![Right_Boundary](../Figures/545_Boundary_Right.gif)-->\n!?!../Documents/545_Boundary_Of_Binary_Tree3.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/De94qHAF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"De94qHAF\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$ One complete traversal for leaves and two traversals upto depth of binary tree for left and right boundary.\n\n* Space complexity : $$O(n)$$ $$res$$ and $$stack$$ is used.\n\n---\n\n### Approach #2 Using PreOrder Traversal [Accepted]\n\n**Algorithm**\n\nBefore we dive into this approach, let's look at the preorder traversal of a simple Binary Tree as shown below:\n\n![Preorder Traversal](../Figures/545_Preorder.png)\n\nFrom the above figure, we can observe that our problem statement is very similar to the Preorder traversal. Actually, the order of traversal is the same(except for the right boundary nodes, for which it is the reverse), but we need to selectively include the nodes in the return result list. Thus, we need to include only those nodes in the result, which are either on the left boundary, the leaves or the right boundary.\n\nIn order to distinguish between the various kinds of nodes, we make use of a $$flag$$ as follows:\n\n* Flag=0: Root Node.\n\n* Flag=1: Left Boundary Node.\n\n* Flag=2: Right Boundary Node.\n\n* Flag=3: Others(Middle Node).\n\nWe make use of three lists $$\\text{left\\_boundary}$$, $$\\text{right\\_boundary}$$, $$\\text{leaves}$$ to store the appropriate nodes and append the three lists at the end.\n\nWe go for the normal preorder traversal, but while calling the recursive function for preorder traversal using the left child or the right child of the current node, we also pass the $$flag$$ information indicating the type of node that the current child behaves like.\n\nFor obtaining the flag information about the left child of the current node, we make use of the function `leftChildFlag(node, flag)`. In the case of a left child, the following cases are possible, as can be verified by looking at the figure above:\n\n* The current node is a left boundary node: In this case, the left child will always be a left boundary node. e.g. relationship between E & J in the above figure.\n\n* The current node is a root node: In this case, the left child will always be a left boundary node. e.g. relationship between A & B in the above figure.\n\n* The current node is a right boundary node: In this case, if the right child of the current node doesn't exist, the left child always acts as the right boundary node. e.g. G & N. But, if the right child exists, the left child always acts as the middle node. e.g. C & F.\n\nSimilarly, for obtaining the flag information about the right child of the current node, we make use of the function `rightChildFlag(node, flag)`. In the case of a right child, the following cases are possible, as can be verified by looking at the figure above:\n\n* The current node is a right boundary node: In this case, the right child will always be a right boundary node. e.g. relationship between C & G in the above figure.\n\n* The current node is a root node: In this case, the right child will always be a left boundary node. e.g. relationship between A & C in the above figure.\n\n* The current node is a left boundary node: In this case, if the left child of the current node doesn't exist, the right child always acts as the left boundary node. e.g. B & E. But, if the left child exists, the left child always acts as the middle node.\n\nMaking use of the above information, we set the $$flag$$ appropriately, which is used to determine the list in which the current node has to be appended.\n\n<iframe src=\"https://leetcode.com/playground/cfFjCy7u/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"cfFjCy7u\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$ One complete traversal of the tree is done.\n\n* Space complexity : $$O(n)$$ The recursive stack can grow upto a depth of $$n$$. Further, $$\\text{left\\_boundary}$$, $$\\text{right\\_boundary}$$ and $$\\text{leaves}$$ combined together can be of size $$n$$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

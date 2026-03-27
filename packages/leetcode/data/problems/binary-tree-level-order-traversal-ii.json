@@ -1,0 +1,138 @@
+{
+  "questionId": "107",
+  "questionFrontendId": "107",
+  "title": "Binary Tree Level Order Traversal II",
+  "titleSlug": "binary-tree-level-order-traversal-ii",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary tree, return <em>the bottom-up level order traversal of its nodes&#39; values</em>. (i.e., from left to right, level by level from leaf to root).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/02/19/tree1.jpg\" style=\"width: 277px; height: 302px;\" />\n<pre>\n<strong>Input:</strong> root = [3,9,20,null,null,15,7]\n<strong>Output:</strong> [[15,7],[9,20],[3]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [1]\n<strong>Output:</strong> [[1]]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = []\n<strong>Output:</strong> []\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[0, 2000]</code>.</li>\n\t<li><code>-1000 &lt;= Node.val &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"levelOrderBottom\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<list<integer>>\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"821.8K\", \"totalSubmission\": \"1.2M\", \"totalAcceptedRaw\": 821803, \"totalSubmissionRaw\": 1211010, \"acRate\": \"67.9%\"}",
+  "likes": 5167,
+  "dislikes": 335,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Binary Tree Level Order Traversal\", \"titleSlug\": \"binary-tree-level-order-traversal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Average of Levels in Binary Tree\", \"titleSlug\": \"average-of-levels-in-binary-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,9,20,null,null,15,7]",
+    "[1]",
+    "[]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    vector<vector<int>> levelOrderBottom(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public List<List<Integer>> levelOrderBottom(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def levelOrderBottom(self, root: Optional[TreeNode]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def levelOrderBottom(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number[][]}\n */\nvar levelOrderBottom = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction levelOrderBottom(root: TreeNode | null): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public IList<IList<int>> LevelOrderBottom(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** levelOrderBottom(struct TreeNode* root, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc levelOrderBottom(root *TreeNode) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun levelOrderBottom(root: TreeNode?): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func levelOrderBottom(_ root: TreeNode?) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn level_order_bottom(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer[][]}\ndef level_order_bottom(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer[][]\n     */\n    function levelOrderBottom($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  List<List<int>> levelOrderBottom(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def levelOrderBottom(root: TreeNode): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec level_order_bottom(root :: TreeNode.t | nil) :: [[integer]]\n  def level_order_bottom(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec level_order_bottom(Root :: #tree_node{} | null) -> [[integer()]].\nlevel_order_bottom(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (level-order-bottom root)\n  (-> (or/c tree-node? #f) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "955",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### How to traverse the tree\n\nThere are two general strategies to traverse a tree:\n     \n- *Depth First Search* (`DFS`)\n\n    In this strategy, we adopt the `depth` as the priority, so that one\n    would start from a root and reach all the way down to a certain leaf,\n    and then back to root to reach another branch.\n\n    The DFS strategy can further be distinguished as\n    `preorder`, `inorder`, and `postorder` depending on the relative order\n    among the root node, left node, and right node.\n    \n- *Breadth First Search* (`BFS`)\n\n    We scan through the tree level by level, following the order of height,\n    from top to bottom. The nodes on a higher level would be visited before the ones \n    on lower levels.\n    \nIn the following figure the nodes are enumerated in the order you visit them,\nplease follow ```1-2-3-4-5``` to compare different strategies.\n\n![postorder](../Figures/107/ddfs.png)\n\nHere the problem is to implement split-level BFS traversal : `[[4, 5], [2, 3], [1]]`.\nThat means we could use one of the `Node->Left->Right` techniques: BFS or DFS Preorder.\n\nWe already discussed [three different ways](https://leetcode.com/articles/binary-tree-right-side-view/) \nto implement iterative BFS traversal with the queue, and compared \n[iterative BFS vs. iterative DFS](https://leetcode.com/problems/deepest-leaves-sum/solution/).\nLet's use this article to discuss the two most simple and fast techniques:\n\n- Recursive DFS.\n\n- Iterative BFS with two queues.\n\n> Note, that both approaches are root-to-bottom traversals, and we're asked to provide \nbottom-up output. To achieve that, the final result should be reversed. \n\n<br /> \n<br />\n\n\n---\n### Approach 1: Recursion: DFS Preorder Traversal\n\n**Intuition**\n\nThe first step is to ensure that the tree is not empty. \nThe second step is to implement the recursive function \n`helper(node, level)`, which takes the current node and its level as the arguments.\n\n**Algorithm for the Recursive Function**\n\nHere is its implementation:\n\n- Initialize the output list `levels`. \nThe length of this list determines which level is currently updated.\nYou should compare this level `len(levels)` with a node level `level`, \nto ensure that you add the node on the correct level.\nIf you're still on the previous level - \nadd the new level by adding a new list into `levels`.\n\n- Append the node value to the last level in `levels`.\n\n- Process recursively child nodes if they are not `None`: \n`helper(node.left / node.right, level + 1)`.\n\n**Implementation**\n\n!?!../Documents/107_LIS.json:1000,406!?!\n\n<iframe src=\"https://leetcode.com/playground/WnZgJXy9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WnZgJXy9\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ since each node is processed\nexactly once.\n \n* Space complexity: $$\\mathcal{O}(N)$$ to keep the output structure \nwhich contains $$N$$ node values.\n<br />\n<br />\n\n\n---\n### Approach 2: Iteration: BFS Traversal\n\n**Algorithm**\n\nThe recursion above could be rewritten in the iteration form.\n\nLet's keep each tree level in the _queue_ structure,\nwhich typically orders elements in a FIFO (first-in-first-out) manner.\nIn Java one could use [`ArrayDeque` implementation of the `Queue` interface](https://docs.oracle.com/javase/8/docs/api/java/util/ArrayDeque.html).\nIn Python using [`Queue` structure](https://docs.python.org/3/library/queue.html)\nwould be an overkill since it's designed for a safe exchange between multiple threads\nand hence requires locking which leads to a performance downgrade. \nIn Python the queue implementation with a fast atomic `append()`\nand `popleft()` is [`deque`](https://docs.python.org/3/library/collections.html#collections.deque).\n\n**Algorithm**\n\n- Initialize two queues: one for the current level, \nand one for the next. Add root into `nextLevel` queue.\n\n- While `nextLevel` queue is not empty:\n\n    - Initialize the current level `currLevel = nextLevel`,\n    and empty the next level `nextLevel`. \n    \n    - Iterate over the current level queue:\n\n        - Append the node value to the last level in `levels`.\n        \n        - Add first _left_ and then _right_ child node into `nextLevel`\n        queue.\n    \n- Return reversed `levels`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/jZc8ypmQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jZc8ypmQ\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ since each node is processed\nexactly once.\n \n* Space complexity: $$\\mathcal{O}(N)$$ to keep the output structure which\ncontains $$N$$ node values.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

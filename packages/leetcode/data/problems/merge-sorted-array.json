@@ -1,0 +1,126 @@
+{
+  "questionId": "88",
+  "questionFrontendId": "88",
+  "title": "Merge Sorted Array",
+  "titleSlug": "merge-sorted-array",
+  "difficulty": "Easy",
+  "content": "<p>You are given two integer arrays <code>nums1</code> and <code>nums2</code>, sorted in <strong>non-decreasing order</strong>, and two integers <code>m</code> and <code>n</code>, representing the number of elements in <code>nums1</code> and <code>nums2</code> respectively.</p>\n\n<p><strong>Merge</strong> <code>nums1</code> and <code>nums2</code> into a single array sorted in <strong>non-decreasing order</strong>.</p>\n\n<p>The final sorted array should not be returned by the function, but instead be <em>stored inside the array </em><code>nums1</code>. To accommodate this, <code>nums1</code> has a length of <code>m + n</code>, where the first <code>m</code> elements denote the elements that should be merged, and the last <code>n</code> elements are set to <code>0</code> and should be ignored. <code>nums2</code> has a length of <code>n</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [1,2,3,0,0,0], m = 3, nums2 = [2,5,6], n = 3\n<strong>Output:</strong> [1,2,2,3,5,6]\n<strong>Explanation:</strong> The arrays we are merging are [1,2,3] and [2,5,6].\nThe result of the merge is [<u>1</u>,<u>2</u>,2,<u>3</u>,5,6] with the underlined elements coming from nums1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [1], m = 1, nums2 = [], n = 0\n<strong>Output:</strong> [1]\n<strong>Explanation:</strong> The arrays we are merging are [1] and [].\nThe result of the merge is [1].\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [0], m = 0, nums2 = [1], n = 1\n<strong>Output:</strong> [1]\n<strong>Explanation:</strong> The arrays we are merging are [] and [1].\nThe result of the merge is [1].\nNote that because m = 0, there are no elements in nums1. The 0 is only there to ensure the merge result can fit in nums1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>nums1.length == m + n</code></li>\n\t<li><code>nums2.length == n</code></li>\n\t<li><code>0 &lt;= m, n &lt;= 200</code></li>\n\t<li><code>1 &lt;= m + n &lt;= 200</code></li>\n\t<li><code>-10<sup>9</sup> &lt;= nums1[i], nums2[j] &lt;= 10<sup>9</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up: </strong>Can you come up with an algorithm that runs in <code>O(m + n)</code> time?</p>\n",
+  "hints": [
+    "You can easily solve this problem if you simply think about two elements at a time rather than two arrays. We know that each of the individual arrays is sorted. What we don't know is how they will intertwine. Can we take a local decision and arrive at an optimal solution?",
+    "If you simply consider one element each at a time from the two arrays and make a decision and proceed accordingly, you will arrive at the optimal solution."
+  ],
+  "metaData": "{\r\n  \"name\": \"merge\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums1\",\r\n      \"type\": \"integer[]\",\r\n      \"implicitsizeparam\": false\r\n    },\r\n    {\r\n      \"name\": \"m\",\r\n      \"type\": \"integer\"\r\n    },\r\n    {\r\n      \"name\": \"nums2\",\r\n      \"type\": \"integer[]\",\r\n      \"implicitsizeparam\": false\r\n    },\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"void\"\r\n  },\r\n  \"output\": {\r\n    \"paramindex\": 0\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"5.6M\", \"totalSubmission\": \"10.2M\", \"totalAcceptedRaw\": 5563911, \"totalSubmissionRaw\": 10194836, \"acRate\": \"54.6%\"}",
+  "likes": 18906,
+  "dislikes": 2648,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Merge Two Sorted Lists\", \"titleSlug\": \"merge-two-sorted-lists\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Squares of a Sorted Array\", \"titleSlug\": \"squares-of-a-sorted-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Interval List Intersections\", \"titleSlug\": \"interval-list-intersections\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Take K of Each Character From Left and Right\", \"titleSlug\": \"take-k-of-each-character-from-left-and-right\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,0,0,0]\n3\n[2,5,6]\n3",
+    "[1]\n1\n[]\n0",
+    "[0]\n0\n[1]\n1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 15, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"squarespace\", \"name\": \"Squarespace\"}, {\"timesEncountered\": 2, \"slug\": \"palo-alto-networks\", \"name\": \"Palo Alto Networks\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"epam-systems\", \"name\": \"EPAM Systems\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 2, \"slug\": \"cognizant\", \"name\": \"Cognizant\"}], \"more_than_six_months\": [{\"timesEncountered\": 16, \"slug\": \"hubspot\", \"name\": \"Hubspot\"}, {\"timesEncountered\": 14, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 6, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 5, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 5, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 5, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 4, \"slug\": \"swiggy\", \"name\": \"Swiggy\"}, {\"timesEncountered\": 3, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    void merge(vector<int>& nums1, int m, vector<int>& nums2, int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public void merge(int[] nums1, int m, int[] nums2, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def merge(self, nums1: List[int], m: int, nums2: List[int], n: int) -> None:\n        \"\"\"\n        Do not return anything, modify nums1 in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def merge(self, nums1, m, nums2, n):\n        \"\"\"\n        :type nums1: List[int]\n        :type m: int\n        :type nums2: List[int]\n        :type n: int\n        :rtype: None Do not return anything, modify nums1 in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums1\n * @param {number} m\n * @param {number[]} nums2\n * @param {number} n\n * @return {void} Do not return anything, modify nums1 in-place instead.\n */\nvar merge = function(nums1, m, nums2, n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n Do not return anything, modify nums1 in-place instead.\n */\nfunction merge(nums1: number[], m: number, nums2: number[], n: number): void {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public void Merge(int[] nums1, int m, int[] nums2, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "void merge(int* nums1, int nums1Size, int m, int* nums2, int nums2Size, int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func merge(nums1 []int, m int, nums2 []int, n int)  {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun merge(nums1: IntArray, m: Int, nums2: IntArray, n: Int): Unit {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func merge(_ nums1: inout [Int], _ m: Int, _ nums2: [Int], _ n: Int) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn merge(nums1: &mut Vec<i32>, m: i32, nums2: &mut Vec<i32>, n: i32) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums1\n# @param {Integer} m\n# @param {Integer[]} nums2\n# @param {Integer} n\n# @return {Void} Do not return anything, modify nums1 in-place instead.\ndef merge(nums1, m, nums2, n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums1\n     * @param Integer $m\n     * @param Integer[] $nums2\n     * @param Integer $n\n     * @return NULL\n     */\n    function merge(&$nums1, $m, $nums2, $n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  void merge(List<int> nums1, int m, List<int> nums2, int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def merge(nums1: Array[Int], m: Int, nums2: Array[Int], n: Int): Unit = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "686",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n\n<div>\n  <div class=\"video-container\">\n    <iframe src=\"https://player.vimeo.com/video/731843777?texttrack=en-x-autogenerated\" frameborder=\"0\"\n      allow=\"autoplay; fullscreen\"></iframe>\n  </div>\n</div>\n\n## Solution\n\n---\n\n\n### Approach 1: Merge and sort\n\n**Intuition**\n\nA naive approach would be to simply write the values from `nums2` into the end of `nums1`, and then sort `nums1`. Remember that we do not need to return a value, as we should modify `nums1` in-place. While straightforward to code, this approach has a high time complexity as we're not taking advantage of the existing sorting.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/DYGiwK3m/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"DYGiwK3m\"></iframe>\n\n\n* Time complexity: $$\\mathcal{O}((n + m)\\log(n + m))$$. \n\n    The cost of sorting a list of length $$x$$ using a built-in sorting algorithm is $$\\mathcal{O}(x \\log x)$$. Because in this case, we're sorting a list of length $$m + n$$, we get a total time complexity of $$\\mathcal{O}((n + m) \\log (n + m))$$.\n\n* Space complexity: $$\\mathcal{O}(n)$$, but it can vary.\n\n    Most programming languages have a built-in sorting algorithm that uses $$\\mathcal{O}(n)$$ space.\n\n<br />\n\n---\n\n### Approach 2: Three Pointers (Start From the Beginning)\n\n**Intuition**\n\nBecause each array is already sorted, we can achieve an $$\\mathcal{O}(n + m)$$ time complexity with the help of the _two-pointer technique_.\n\n**Algorithm**\n\nThe simplest implementation would be to make a *copy* of the values in `nums1`, called `nums1Copy`, and then use two __read__ pointers and one __write__ pointer to read values from `nums1Copy` and `nums2` and write them into `nums1`.\n\n- Initialize `nums1Copy` to a new array containing the first `m` values of `nums1`.\n- Initialize the read pointer `p1` to the beginning of `nums1Copy`.\n- Initialize the read pointer `p2` to the beginning of `nums2`.\n- Initialize the write pointer `p` to the beginning of `nums1`.\n- While `p` is still within `nums1`: \n  - If `nums1Copy[p1]` exists and is less than or equal to `nums2[p2]`:\n    - Write `nums1Copy[p1]` into `nums1[p]`, and increment `p1` by `1`.\n  - Else \n    - Write `nums2[p2]` into `nums1[p]`, and increment `p2` by `1`.\n  - Increment `p` by `1`.\n\n![compute](../Figures/88/88_beginning.png)\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/cAk9vQdz/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"cAk9vQdz\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(n + m)$$. \n    \n    We are performing $$n + 2 \\cdot m$$ reads and $$n + 2 \\cdot m$$ writes. Because constants are ignored in Big O notation, this gives us a time complexity of $$\\mathcal{O}(n + m)$$.\n\n* Space complexity: $$\\mathcal{O}(m)$$. \n    \n    We are allocating an additional array of length $$m$$.\n\n<br />\n\n---\n\n### Approach 3: Three Pointers (Start From the End)\n\n**Intuition**\n\n> **Interview Tip**: This is a medium-level solution to an easy-level problem. Many of LeetCode's easy-level problems have more difficult solutions, and good candidates are expected to find them.\n\nApproach 2 already demonstrates the best possible time complexity, $$\\mathcal{O}(n + m)$$, but still uses additional space. This is because the elements of array `nums1` have to be stored somewhere so that they aren't overwritten.\n\nSo, what if instead we start to overwrite `nums1` from the end, where there is no information yet?\n\nThe algorithm is similar to before, except this time we set `p1` to point at index `m - 1` of `nums1`, `p2` to point at index `n - 1` of `nums2`, and `p` to point at index `m + n - 1` of `nums1`. This way, it is guaranteed that once we start overwriting the first `m` values in `nums1`, we will have already written each into its new position. In this way, we can eliminate the additional space.\n\n> **Interview Tip**: Whenever you're trying to solve an array problem in place, always consider the possibility of iterating backwards instead of forwards through the array. It can completely change the problem, and make it a lot easier. \n\n![compute](../Figures/88/88_end.png)\n\n**Implementation**\n\n!?!../Documents/88_LIS.json:1000,470!?!\n\n<iframe src=\"https://leetcode.com/playground/J2HehwCQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"J2HehwCQ\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(n + m)$$. \n    \n    Same as Approach 2.\n\n* Space complexity: $$\\mathcal{O}(1)$$.\n    \n    Unlike Approach 2, we're not using an extra array.\n\n**Proof (optional)**\n\nYou might be a bit skeptical of this claim. Does it really work in every case? Is it safe to be making such a bold claim?\n\n> This way, it is guaranteed that once we start overwriting the first `m` values in `nums1`, \nwe will have already written each into its new position. In this way, we can eliminate the additional space.\n\nGreat question! So, why does this work? To prove it, we need to ensure that `p` never overwrites a value in `nums1` that `p1` hasn't yet read from `nums1`.\n\n> **Words of Advice**: Terrified of proofs? Many software engineers are. Good proofs are simply a series of logical assertions, each building on the next. In this way, we can go from \"obvious\" statements, all the way to the one we want to prove. I recommend reading each statement one by one, ensuring that you understand each before moving to the next.\n\n1. *We know that* upon initialization, `p` is `n` steps ahead of `p1` (in other words, `p1 + n = p`).\n\n2. *We also know that* during each of the `p` iterations this algorithm performs, `p` is always decremented by `1`, and *either* `p1` *or* `p2` is decremented by `1`.\n\n3. *We can deduce that* when `p1` decremented, the gap between `p` and `p1` stays the same, so there can't be an \"overtake\" in that case.\n\n4. *We can also deduce that* when `p2` is decremented though, the gap between `p` and `p1` shrinks by `1` as `p` moves, but not `p1`.\n\n5. *And from that, we can deduce that* the maximum number of times that `p2` can be decremented is `n`. In other words, the gap between `p` and `p1` can shrink by `1`, at most `n` times.\n\n6. *In conclusion*, it's impossible for an overtake to occur, as they started `n` apart. And when `p = p1`, the gap has to have shrunk `n` times. This means that all of `nums2` have been merged in, so there is nothing more to do.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

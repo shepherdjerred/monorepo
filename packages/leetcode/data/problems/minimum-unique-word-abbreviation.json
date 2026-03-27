@@ -1,0 +1,136 @@
+{
+  "questionId": "411",
+  "questionFrontendId": "411",
+  "title": "Minimum Unique Word Abbreviation",
+  "titleSlug": "minimum-unique-word-abbreviation",
+  "difficulty": "Hard",
+  "content": "<p>A string can be <strong>abbreviated</strong> by replacing any number of <strong>non-adjacent</strong> substrings with their lengths. For example, a string such as <code>&quot;substitution&quot;</code> could be abbreviated as (but not limited to):</p>\n\n<ul>\n\t<li><code>&quot;s10n&quot;</code> (<code>&quot;s <u>ubstitutio</u> n&quot;</code>)</li>\n\t<li><code>&quot;sub4u4&quot;</code> (<code>&quot;sub <u>stit</u> u <u>tion</u>&quot;</code>)</li>\n\t<li><code>&quot;12&quot;</code> (<code>&quot;<u>substitution</u>&quot;</code>)</li>\n\t<li><code>&quot;su3i1u2on&quot;</code> (<code>&quot;su <u>bst</u> i <u>t</u> u <u>ti</u> on&quot;</code>)</li>\n\t<li><code>&quot;substitution&quot;</code> (no substrings replaced)</li>\n</ul>\n\n<p>Note that <code>&quot;s55n&quot;</code> (<code>&quot;s <u>ubsti</u> <u>tutio</u> n&quot;</code>) is not a valid abbreviation of <code>&quot;substitution&quot;</code> because the replaced substrings are adjacent.</p>\n\n<p>The <strong>length</strong> of an abbreviation is the number of letters that were not replaced plus the number of substrings that were replaced. For example, the abbreviation <code>&quot;s10n&quot;</code> has a length of <code>3</code> (<code>2</code> letters + <code>1</code> substring) and <code>&quot;su3i1u2on&quot;</code> has a length of <code>9</code> (<code>6</code> letters + <code>3</code> substrings).</p>\n\n<p>Given a target string <code>target</code> and an array of strings <code>dictionary</code>, return <em>an <strong>abbreviation</strong> of </em><code>target</code><em> with the <strong>shortest possible length</strong> such that it is <strong>not an abbreviation</strong> of <strong>any</strong> string in </em><code>dictionary</code><em>. If there are multiple shortest abbreviations, return any of them</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> target = &quot;apple&quot;, dictionary = [&quot;blade&quot;]\n<strong>Output:</strong> &quot;a4&quot;\n<strong>Explanation:</strong> The shortest abbreviation of &quot;apple&quot; is &quot;5&quot;, but this is also an abbreviation of &quot;blade&quot;.\nThe next shortest abbreviations are &quot;a4&quot; and &quot;4e&quot;. &quot;4e&quot; is an abbreviation of blade while &quot;a4&quot; is not.\nHence, return &quot;a4&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> target = &quot;apple&quot;, dictionary = [&quot;blade&quot;,&quot;plain&quot;,&quot;amber&quot;]\n<strong>Output:</strong> &quot;1p3&quot;\n<strong>Explanation:</strong> &quot;5&quot; is an abbreviation of both &quot;apple&quot; but also every word in the dictionary.\n&quot;a4&quot; is an abbreviation of &quot;apple&quot; but also &quot;amber&quot;.\n&quot;4e&quot; is an abbreviation of &quot;apple&quot; but also &quot;blade&quot;.\n&quot;1p3&quot;, &quot;2p2&quot;, and &quot;3l1&quot; are the next shortest abbreviations of &quot;apple&quot;.\nSince none of them are abbreviations of words in the dictionary, returning any of them is correct.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == target.length</code></li>\n\t<li><code>n == dictionary.length</code></li>\n\t<li><code>1 &lt;= m &lt;= 21</code></li>\n\t<li><code>0 &lt;= n &lt;= 1000</code></li>\n\t<li><code>1 &lt;= dictionary[i].length &lt;= 100</code></li>\n\t<li><code>log<sub>2</sub>(n) + m &lt;= 21</code> if <code>n &gt; 0</code></li>\n\t<li><code>target</code> and <code>dictionary[i]</code> consist of lowercase English letters.</li>\n\t<li><code>dictionary</code> does not contain <code>target</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"minAbbreviation\",\n  \"params\": [\n    {\n        \"name\": \"target\",\n        \"type\": \"string\"\n    },\n    {\n        \"name\": \"dictionary\",\n        \"type\": \"string[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"15.7K\", \"totalSubmission\": \"38.8K\", \"totalAcceptedRaw\": 15718, \"totalSubmissionRaw\": 38828, \"acRate\": \"40.5%\"}",
+  "likes": 184,
+  "dislikes": 146,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Generalized Abbreviation\", \"titleSlug\": \"generalized-abbreviation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Valid Word Abbreviation\", \"titleSlug\": \"valid-word-abbreviation\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Word Abbreviation\", \"titleSlug\": \"word-abbreviation\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"apple\"\n[\"blade\"]",
+    "\"apple\"\n[\"blade\",\"plain\",\"amber\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string minAbbreviation(string target, vector<string>& dictionary) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String minAbbreviation(String target, String[] dictionary) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minAbbreviation(self, target: str, dictionary: List[str]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minAbbreviation(self, target, dictionary):\n        \"\"\"\n        :type target: str\n        :type dictionary: List[str]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} target\n * @param {string[]} dictionary\n * @return {string}\n */\nvar minAbbreviation = function(target, dictionary) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minAbbreviation(target: string, dictionary: string[]): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string MinAbbreviation(string target, string[] dictionary) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* minAbbreviation(char* target, char** dictionary, int dictionarySize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minAbbreviation(target string, dictionary []string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minAbbreviation(target: String, dictionary: Array<String>): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minAbbreviation(_ target: String, _ dictionary: [String]) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_abbreviation(target: String, dictionary: Vec<String>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} target\n# @param {String[]} dictionary\n# @return {String}\ndef min_abbreviation(target, dictionary)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $target\n     * @param String[] $dictionary\n     * @return String\n     */\n    function minAbbreviation($target, $dictionary) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String minAbbreviation(String target, List<String> dictionary) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minAbbreviation(target: String, dictionary: Array[String]): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_abbreviation(target :: String.t, dictionary :: [String.t]) :: String.t\n  def min_abbreviation(target, dictionary) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_abbreviation(Target :: unicode:unicode_binary(), Dictionary :: [unicode:unicode_binary()]) -> unicode:unicode_binary().\nmin_abbreviation(Target, Dictionary) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-abbreviation target dictionary)\n  (-> string? (listof string?) string?)\n  )"
+    }
+  ],
+  "solution": null
+}

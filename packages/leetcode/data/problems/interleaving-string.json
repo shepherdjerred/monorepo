@@ -1,0 +1,134 @@
+{
+  "questionId": "97",
+  "questionFrontendId": "97",
+  "title": "Interleaving String",
+  "titleSlug": "interleaving-string",
+  "difficulty": "Medium",
+  "content": "<p>Given strings <code>s1</code>, <code>s2</code>, and <code>s3</code>, find whether <code>s3</code> is formed by an <strong>interleaving</strong> of <code>s1</code> and <code>s2</code>.</p>\n\n<p>An <strong>interleaving</strong> of two strings <code>s</code> and <code>t</code> is a configuration where <code>s</code> and <code>t</code> are divided into <code>n</code> and <code>m</code> <span data-keyword=\"substring-nonempty\">substrings</span> respectively, such that:</p>\n\n<ul>\n\t<li><code>s = s<sub>1</sub> + s<sub>2</sub> + ... + s<sub>n</sub></code></li>\n\t<li><code>t = t<sub>1</sub> + t<sub>2</sub> + ... + t<sub>m</sub></code></li>\n\t<li><code>|n - m| &lt;= 1</code></li>\n\t<li>The <strong>interleaving</strong> is <code>s<sub>1</sub> + t<sub>1</sub> + s<sub>2</sub> + t<sub>2</sub> + s<sub>3</sub> + t<sub>3</sub> + ...</code> or <code>t<sub>1</sub> + s<sub>1</sub> + t<sub>2</sub> + s<sub>2</sub> + t<sub>3</sub> + s<sub>3</sub> + ...</code></li>\n</ul>\n\n<p><strong>Note:</strong> <code>a + b</code> is the concatenation of strings <code>a</code> and <code>b</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/02/interleave.jpg\" style=\"width: 561px; height: 203px;\" />\n<pre>\n<strong>Input:</strong> s1 = &quot;aabcc&quot;, s2 = &quot;dbbca&quot;, s3 = &quot;aadbbcbcac&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> One way to obtain s3 is:\nSplit s1 into s1 = &quot;aa&quot; + &quot;bc&quot; + &quot;c&quot;, and s2 into s2 = &quot;dbbc&quot; + &quot;a&quot;.\nInterleaving the two splits, we get &quot;aa&quot; + &quot;dbbc&quot; + &quot;bc&quot; + &quot;a&quot; + &quot;c&quot; = &quot;aadbbcbcac&quot;.\nSince s3 can be obtained by interleaving s1 and s2, we return true.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s1 = &quot;aabcc&quot;, s2 = &quot;dbbca&quot;, s3 = &quot;aadbbbaccc&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> Notice how it is impossible to interleave s2 with any other string to obtain s3.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s1 = &quot;&quot;, s2 = &quot;&quot;, s3 = &quot;&quot;\n<strong>Output:</strong> true\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= s1.length, s2.length &lt;= 100</code></li>\n\t<li><code>0 &lt;= s3.length &lt;= 200</code></li>\n\t<li><code>s1</code>, <code>s2</code>, and <code>s3</code> consist of lowercase English letters.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> Could you solve it using only <code>O(s2.length)</code> additional memory space?</p>\n",
+  "hints": [],
+  "metaData": "{ \r\n  \"name\": \"isInterleave\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s1\",\r\n      \"type\": \"string\"\r\n    },\r\n    {\r\n      \"name\": \"s2\",\r\n      \"type\": \"string\"\r\n    },\r\n    {\r\n      \"name\": \"s3\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"771.1K\", \"totalSubmission\": \"1.8M\", \"totalAcceptedRaw\": 771089, \"totalSubmissionRaw\": 1764349, \"acRate\": \"43.7%\"}",
+  "likes": 8834,
+  "dislikes": 553,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"aabcc\"\n\"dbbca\"\n\"aadbbcbcac\"",
+    "\"aabcc\"\n\"dbbca\"\n\"aadbbbaccc\"",
+    "\"\"\n\"\"\n\"\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"axon\", \"name\": \"Axon\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"zeta\", \"name\": \"Zeta\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"nuro\", \"name\": \"Nuro\"}, {\"timesEncountered\": 2, \"slug\": \"ebay\", \"name\": \"eBay\"}, {\"timesEncountered\": 2, \"slug\": \"thoughtspot\", \"name\": \"thoughtspot\"}]}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isInterleave(string s1, string s2, string s3) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isInterleave(String s1, String s2, String s3) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isInterleave(self, s1: str, s2: str, s3: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isInterleave(self, s1, s2, s3):\n        \"\"\"\n        :type s1: str\n        :type s2: str\n        :type s3: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s1\n * @param {string} s2\n * @param {string} s3\n * @return {boolean}\n */\nvar isInterleave = function(s1, s2, s3) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isInterleave(s1: string, s2: string, s3: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsInterleave(string s1, string s2, string s3) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isInterleave(char* s1, char* s2, char* s3) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isInterleave(s1 string, s2 string, s3 string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isInterleave(s1: String, s2: String, s3: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isInterleave(_ s1: String, _ s2: String, _ s3: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_interleave(s1: String, s2: String, s3: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s1\n# @param {String} s2\n# @param {String} s3\n# @return {Boolean}\ndef is_interleave(s1, s2, s3)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s1\n     * @param String $s2\n     * @param String $s3\n     * @return Boolean\n     */\n    function isInterleave($s1, $s2, $s3) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isInterleave(String s1, String s2, String s3) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isInterleave(s1: String, s2: String, s3: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_interleave(s1 :: String.t, s2 :: String.t, s3 :: String.t) :: boolean\n  def is_interleave(s1, s2, s3) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_interleave(S1 :: unicode:unicode_binary(), S2 :: unicode:unicode_binary(), S3 :: unicode:unicode_binary()) -> boolean().\nis_interleave(S1, S2, S3) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-interleave s1 s2 s3)\n  (-> string? string? string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "91",
+    "content": "[TOC]\n## Summary\n\nWe need to determine whether a given string can be formed by interleaving the other two strings.\n\n## Solution\n\n---\n### Approach 1: Brute Force\n\nThe most basic idea is to find every string possible by all interleavings of the two given strings $$s1$$ and $$s2$$.\nIn order to implement this method, we are using recursion. We start by taking the current character of the\nfirst string $$s1$$ and then appending all possible interleavings of the remaining portion of the first string $$s1$$ and the second string $$s2$$ and comparing each result formed with the required interleaved string $$s3$$.\nSimilarly, we choose one character from the second string $$s2$$ and form all the interleavings with the remaining portion of $$s2$$ and $$s1$$ to check if the required string $$s3$$ can be formed.\n\nFor implementing the recursive function, we make the function call recursively as\n$$is\\_Interleave(s1,i+1,s2,j,res+s1.charAt(i),s3)$$, in which we have chosen the current character from $$s1$$ and then make another function call $$is\\_Interleave(s1,i,s2,j+1,res+s2.charAt(j),s3)$$, in which the current character of $$s2$$ is chosen. Here, $$res$$ refers to that portion(interleaved) of $$s1$$ and $$s2$$ which has already been processed. If anyone of these calls return the result as $$True$$, it means that atleast one interleaving gives the required result $$s3$$. The recursive calls end when both the strings $$s1$$ and $$s2$$ have been fully processed.\n\nLet's look at a small example to see how the execution proceeds.\n\n```\ns1=\"abc\"\ns2=\"bcd\"\ns3=\"abcbdc\"\n```\n\nFirstly we choose 'a' of $$s1$$ as the processed part i.e. res and call the recursive function considering the new strings as $$s1$$=\"bc\",\n$$s2$$=\"bcd\", $$s3$$=\"abcbdc\". When this function returns a result, we again call the recursive function but with the new strings as $$s1$$=\"abc\", $$s2$$=\"cd\", $$s3$$=\"abcbdc\"\n\n\n<iframe src=\"https://leetcode.com/playground/VkyhGFF7/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VkyhGFF7\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(2^{m+n})$$. $$m$$ is the length of $$s1$$ and $$n$$ is the length of $$s2$$.\n\n* Space complexity : $$O(m+n)$$. The size of stack for recursive calls can go upto $$m+n$$.\n\n---\n\n### Approach 2: Recursion with memoization\n\n**Algorithm**\n\nIn the recursive approach discussed above, we are considering every possible string formed by interleaving the two given\nstrings. But, there will be cases encountered in which, the same portion of $$s1$$ and $$s2$$ would have been processed already\nbut in different orders(permutations). But irrespective of the order of processing, if the resultant string formed till now\nis matching with the required string($$s3$$), the final result is dependent only on the remaining portions of $$s1$$ and $$s2$$, but\nnot on the already processed portion. Thus, the recursive approach leads to redundant computations.\n\nThis redundancy can be removed by making use of memoization along with recursion. For this, we maintain 3 pointers $$i, j, k$$\n which correspond to the index of the current character of $$s1, s2, s3$$ respectively. Also, we maintain a 2D memo array to keep a track of the substrings processed so far. $$memo[i][j]$$ stores a 1/0 or -1 depending on\n whether the current portion of strings i.e. upto $$i^{th}$$ index for $$s1$$ and upto $$j^{th}$$ index for s2 has already been evaluated. Again, we start by selecting the current character of $$s1$$ (pointed by $$i$$). If it matches the current character\n of $$s3$$ (pointed by $$k$$), we include it in the processed string and call the same function recurively as:\n $$is\\_Interleave(s1, i+1, s2, j, s3, k+1,memo)$$\n\nThus, here we have called the function by incrementing the pointers $$i$$ and $$k$$ since the portion of strings upto those indices\n has already been processed. Similarly, we choose one character from the second string and continue. The recursive function\n ends when either of the two strings $$s1$$ or $$s2$$ has been fully processed. If, let's say, the string $$s1$$ has been fully processed,\n we directly compare the remaining portion of $$s2$$ with the remaining portion of $$s3$$. When the backtrack occurs from the recursive\n calls, we store the value returned by the recursive functions in the memoization array memo appropriatelys so that when it is encountered the next time, the recursive function won't be called, but the memoization array itself will return the previous generated result.\n\n <iframe src=\"https://leetcode.com/playground/RHyJky8k/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RHyJky8k\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(m \\cdot n)$$, where \n$$m$$ is the length of $$s1$$ and $$n$$ is the length of $$s2$$.\nThat's a consequence of the fact that each `(i, j)` combination is computed only once.\n\n* Space complexity: $$\\mathcal{O}(m \\cdot n)$$ to keep double array `memo`.\n\n---\n\n### Approach 3: Using 2D Dynamic Programming\n\n**Algorithm**\n\n\nThe recursive approach discussed in above solution included a character from one of the strings $$s1$$ or $$s2$$ in the resultant\ninterleaved string and called a recursive function to check whether the remaining portions of $$s1$$ and $$s2$$ can be interleaved\nto form the remaining portion of $$s3$$. In the current approach, we\n look at the same problem the other way around. Here, we include one character from $$s1$$ or $$s2$$ and check whether the\n resultant string formed so far by one particular interleaving of the the current prefix of $$s1$$ and $$s2$$ form a prefix of $$s3$$.\n\n Thus, this approach relies on the fact that the in order to determine whether a substring\n of $$s3$$(upto index $$k$$), can be formed by interleaving strings $$s1$$ and $$s2$$ upto indices $$i$$ and $$j$$ respectively, solely depends\n on the characters of $$s1$$ and $$s2$$ upto indices $$i$$ and $$j$$ only and not on the characters coming afterwards.\n\n To implement this method, we'll make use of a 2D boolean array $$dp$$. In this array $$dp[i][j]$$ implies if it is possible to\n obtain a substring of length $$(i+j+2)$$ which is a prefix of $$s3$$ by some interleaving of prefixes of strings $$s1$$ and $$s2$$ having\n lengths $$(i+1)$$ and $$(j+1)$$ respectively. For filling in the entry of $$dp[i][j]$$, we need to consider two cases:\n\n 1. The character\n just included i.e. either at $$i^{th}$$ index of $$s1$$ or at $$j^{th}$$ index of $$s2$$ doesn't match the character at $$k^{th}$$ index of $$s3$$, where $$k=i+j+1$$.\n In this case, the resultant string formed using some interleaving of prefixes of $$s1$$ and $$s2$$ can never result in a prefix of length $$k+1$$ in $$s3$$. Thus, we enter $$False$$ at the character $$dp[i][j]$$.\n\n 2. The character\n just included i.e. either at $$i^{th}$$ index of $$s1$$ or at $$j^{th}$$ index of $$s2$$  matches the character at $$k^{th}$$ index of $$s3$$, where $$k=i+j+1$$.\nNow, if the character just included(say $$x$$) which matches the character at $$k^{th}$$ index of $$s3$$, is the character at $$i^{th}$$ index of $$s1$$, we need to keep $$x$$ at the last position in the resultant interleaved string formed so far. Thus, in order to use string $$s1$$ and $$s2$$ upto indices $$i$$ and $$j$$ to form a resultant string of length $$(i+j+2)$$ which is a prefix of $$s3$$, we need to ensure that the strings $$s1$$ and $$s2$$ upto indices $$(i-1)$$ and $$j$$ respectively obey the same property.\n\n Similarly, if we just included the $$j^{th}$$ character of $$s2$$, which matches with the $$k^{th}$$ character of $$s3$$, we need to ensure that the strings $$s1$$ and $$s2$$ upto indices $$i$$ and $$(j-1)$$ also obey the same\nproperty to enter a $$true$$ at $$dp[i][j]$$.\n\nThis can be made clear with the following example:\n\n```\ns1=\"aabcc\"\ns2=\"dbbca\"\ns3=\"aadbbcbcac\"\n```\n\n<!--![97_Interleaving](../Figures/97_Interleaving.gif)-->\n!?!../Documents/97_Interleaving.json:1000,563!?!\n\n\n<iframe src=\"https://leetcode.com/playground/oE5HXDHm/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"oE5HXDHm\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(m \\cdot n)$$. dp array of size $$m*n$$ is filled.\n\n* Space complexity : $$O(m \\cdot n)$$. 2D dp of size $$(m+1)*(n+1)$$ is required. $$m$$ and $$n$$ are the lengths of strings $$s1$$ and $$s2$$ respectively.\n\n---\n\n### Approach 4: Using 1D Dynamic Programming\n\n**Algorithm**\n\nThis approach is the same as the previous approach except that we have used only 1D $$dp$$ array to store the results of the\n prefixes of the strings processed so far. Instead of maintaining a 2D array, we can maintain a 1D array only and update the\n array's element $$dp[i]$$ when needed using $$dp[i-1]$$ and the previous value of $$dp[i]$$.\n\n <iframe src=\"https://leetcode.com/playground/YgViuQ2J/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"YgViuQ2J\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(m \\cdot n)$$. dp array of size $$n$$ is filled $$m$$ times.\n\n* Space complexity : $$O(n)$$. $$n$$ is the length of the string $$s1$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

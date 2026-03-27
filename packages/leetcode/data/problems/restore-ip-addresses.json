@@ -1,0 +1,134 @@
+{
+  "questionId": "93",
+  "questionFrontendId": "93",
+  "title": "Restore IP Addresses",
+  "titleSlug": "restore-ip-addresses",
+  "difficulty": "Medium",
+  "content": "<p>A <strong>valid IP address</strong> consists of exactly four integers separated by single dots. Each integer is between <code>0</code> and <code>255</code> (<strong>inclusive</strong>) and cannot have leading zeros.</p>\n\n<ul>\n\t<li>For example, <code>&quot;0.1.2.201&quot;</code> and <code>&quot;192.168.1.1&quot;</code> are <strong>valid</strong> IP addresses, but <code>&quot;0.011.255.245&quot;</code>, <code>&quot;192.168.1.312&quot;</code> and <code>&quot;192.168@1.1&quot;</code> are <strong>invalid</strong> IP addresses.</li>\n</ul>\n\n<p>Given a string <code>s</code> containing only digits, return <em>all possible valid IP addresses that can be formed by inserting dots into </em><code>s</code>. You are <strong>not</strong> allowed to reorder or remove any digits in <code>s</code>. You may return the valid IP addresses in <strong>any</strong> order.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;25525511135&quot;\n<strong>Output:</strong> [&quot;255.255.11.135&quot;,&quot;255.255.111.35&quot;]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;0000&quot;\n<strong>Output:</strong> [&quot;0.0.0.0&quot;]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;101023&quot;\n<strong>Output:</strong> [&quot;1.0.10.23&quot;,&quot;1.0.102.3&quot;,&quot;10.1.0.23&quot;,&quot;10.10.2.3&quot;,&quot;101.0.2.3&quot;]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 20</code></li>\n\t<li><code>s</code> consists of digits only.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{ \r\n  \"name\": \"restoreIpAddresses\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<string>\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"616.4K\", \"totalSubmission\": \"1.1M\", \"totalAcceptedRaw\": 616430, \"totalSubmissionRaw\": 1108954, \"acRate\": \"55.6%\"}",
+  "likes": 5649,
+  "dislikes": 820,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"IP to CIDR\", \"titleSlug\": \"ip-to-cidr\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"25525511135\"",
+    "\"0000\"",
+    "\"101023\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 13, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 12, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 8, \"slug\": \"arista-networks\", \"name\": \"Arista Networks\"}, {\"timesEncountered\": 7, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 4, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 3, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 3, \"slug\": \"palo-alto-networks\", \"name\": \"Palo Alto Networks\"}]}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> restoreIpAddresses(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> restoreIpAddresses(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def restoreIpAddresses(self, s: str) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def restoreIpAddresses(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {string[]}\n */\nvar restoreIpAddresses = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function restoreIpAddresses(s: string): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> RestoreIpAddresses(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** restoreIpAddresses(char* s, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func restoreIpAddresses(s string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun restoreIpAddresses(s: String): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func restoreIpAddresses(_ s: String) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn restore_ip_addresses(s: String) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {String[]}\ndef restore_ip_addresses(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return String[]\n     */\n    function restoreIpAddresses($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> restoreIpAddresses(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def restoreIpAddresses(s: String): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec restore_ip_addresses(s :: String.t) :: [String.t]\n  def restore_ip_addresses(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec restore_ip_addresses(S :: unicode:unicode_binary()) -> [unicode:unicode_binary()].\nrestore_ip_addresses(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (restore-ip-addresses s)\n  (-> string? (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1629",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Backtracking\n\n#### Intuition\n\n\nSince a valid IP address consists of 4 integers, that means we need to place 3 dots. We can try putting dots at all possible different positions using backtracking. If an invalid number is formed then we backtrack to try out another combination.\n\n> Backtracking can be defined as a general algorithmic technique that considers searching every possible combination to solve a computational problem. It incrementally builds candidates to the solution and abandons a candidate (\"backtracks\") when it determines that the candidate cannot lead to the solution.\n\nWe will recursively enumerate all the possibilities and whenever we get a new integer because of a dot (or 2 integers for the last dot), we check whether the integer(s) is valid, i.e the integer cannot have leading 0s other than being 0 itself and it's no larger than 255.\nThere are 3 possibilities to add each dot, namely it can be added after 1, 2, or 3 digits from the last dot or the beginning of the string, so there are at most $3 ^ 3 = 27$ possibilities to add all 3 dots.\n\nAn optimization is to return an empty result if the input string's length is longer than 12 since each integer can have 3 digits at most (any more and it would either have leading zeroes or be greater than 255).\n\nWe can create a helper function `valid(s, start, length)` to check whether the substring from index `start` to `start + length` is a valid number from range 0-255. The logic is to check both the conditions (the caller guarantees that the length is in the range of [1, 3]):\n\n1. If the substring's first character is `0` (i.e. `s[start]` is '0'), then `length` must be 1.\n2. If `length` is `3`, the substring should no larger than \"255\" lexically. If the length is 1 or 2 and the first case was not triggered, then it will be in the acceptable range.\n\n#### Algorithm\n\nCreate a function `helper` which takes the original string `s`, the processing index `startIndex` (i.e we only consider the substring starting from `startIndex` and the prefix part is already separated into valid integers.), a list of integers `dots` which saves distances for the dots we have added so far and a list of strings `ans` to save the answers.\n\n1. Set `remainingLength` to `length of s - startIndex` which is the string length we want to process.\n2. Set `remainingNumberOfIntegers` to `4 - dots.length`. This is how many integers we have left to form.\n3. Return if `remainingLength` is larger than `remainingNumberOfIntegers * 3` or smaller than `remainingNumberOfIntegers`, since each integer has 1-3 digits. Also note that this catches the case where `s.length() > 12` since at the very beginning `remainingLength` is `s.length()` and `remainingNumberOfIntegers` is 4.\n4. If `remainingNumberOfIntegers = 1`,\n    * if the last integer `s.substring(startIndex, startIndex + remainingLength)` is valid\n        * Create an empty string to save this answer using the following steps.\n        * Set `last` to `0`.\n        * Iterate over all elements `dot` in the list `dots`.\n            * Append `s.substring(last, last + dot)` and a '.' into the answer string.\n            * Increase `last` by `dot` and repeat these steps for each dot.\n       * Append `s.substring(last, s.length)`. This is the final integer after the last dot.\n       * Add the answer string into `ans`.\n    * Return.\n5. Iterate over `curPos` from `1` to `min(3, remainingLength)`. `curPos` is the number of digits we are including before placing a dot.\n    * Place a dot by adding `curPos` into `dots`.\n    * If the integer `s.substring(startIndex, startIndex + curPos)` is valid\n        * Call helper(s, startIndex + curPos, dots, ans)\n    * Remove the dot that we placed to backtrack.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DYStKNxi/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DYStKNxi\"></iframe>\n\n\n#### Complexity Analysis\n\nLet's assume we need to separate the input string into $N$ integers, each integer is at most $M$ digits.\n\n* Time complexity: $O(M ^ N \\cdot N)$.\n\n There are at most $M ^ {N - 1}$ possibilities, and for each possibility checking whether all parts are valid takes $O(M \\cdot N)$ time, so the final time complexity is $O(M ^ {N - 1}) \\cdot O(M \\cdot N)$ = $O(M ^ N \\cdot N)$.\n\nFor this question, M = 3, N = 4, so the time complexity is $O(1)$.\n\n* Space complexity: $O(M \\cdot N)$.\n\n  For each possibility, we save (N - 1) numbers (the number of digits before each dot) which takes $O(N)$ space. And we need temporary space to save a solution before putting it into the answer list. The length of each solution string is $M \\cdot N + M - 1$ = $O(M \\cdot N)$, so the total space complexity is $O(M \\cdot N)$ if we don't take the output space into consideration.\n\nFor this question, M = 3, N = 4, so the space complexity is $O(1)$.\n\n\n### Approach 2: Iterative\n\n#### Intuition\nWe need to separate the input string into 4 integers, so we can enumerate the length of the first 3 integers, `len1`, `len2`, `len3`. We could iterate over `len1`, `len2`, `len3` with 3 nested loops and the last integer is the remaining part after separating out the first 3.\n\nWe can make the ranges of `len1`, `len2`, `len3` tighter:\n\n* `len1` should be in the range `[max(1, s.length() - 9), min(3, s.length() - 3]` since we need to separate 3 more integers after it and the length of each integer is in [1..3].\n* Similarly, `len2` should be in the range `[max(1, s.length() - len1 - 6, min(3, s.length() - len1 - 2]`\n* `len3` should be in the range `[max(1, s.length() - len1 - len2 - 3), min(3, s.length() - len1 - len2 - 1]`\n\nIn this way, the last part's length is always in the range of `[1..3]`, then we can split each substring out based on the lengths and check whether they are valid. Each integer can be validated before starting the loop of the next part to prevent wasting time.\n\n\n#### Algorithm\n\n1. Initialize an array of strings `ans`.\n2. Iterate over the range of `len1`, the length of the first integer.\n    * If the first integer is valid, then we iterate over `len2`'s range. \n        * If the second integer is also valid, then we iterate over `len3`'s range.\n           * If both third and fourth integers are valid, concatenate all four integers together with a character `'.'` between any 2 neighbors, and add the result string to `ans`.\n3. Return `ans`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/mcmi5hLS/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"mcmi5hLS\"></iframe>\n\n\n#### Complexity Analysis\n\n\nLet's assume we need to separate the input string into $N$ integers, each integer is at most $M$ digits.\n\n* Time complexity: $O(M ^ N \\cdot N)$.\n\n  We have $(N - 1)$ nested loops and each of them iterates at most $M$ times, so the total number of iterations is at most  $M ^ {N - 1}$ .\n\n  In each iteration we split $N$ substrings out to check whether they are valid, each substring's length is at most $M$, so the time complexity to separate out all of them is $O(M \\cdot N)$.\n\nFor this question, M = 3, N = 4, so the time complexity is $O(1)$.\n\n* Space complexity: $O(M \\cdot N)$.\n \nThe algorithm saves (N - 1) numbers (the number of digits before each dot) which takes $O(N)$ space. And we need temporary space to save a solution before putting it into the answer list. The length of each solution string is $M \\cdot N + M - 1$ = $O(M \\cdot N)$, so the total space complexity is $O(M \\cdot N)$ if we don't take the output space into consideration.\n\nFor this question, M = 3, N = 4, so the space complexity is $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

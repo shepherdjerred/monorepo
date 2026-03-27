@@ -1,0 +1,150 @@
+{
+  "questionId": "581",
+  "questionFrontendId": "581",
+  "title": "Shortest Unsorted Continuous Subarray",
+  "titleSlug": "shortest-unsorted-continuous-subarray",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code>, you need to find one <b>continuous subarray</b> such that if you only sort this subarray in non-decreasing order, then the whole array will be sorted in non-decreasing order.</p>\n\n<p>Return <em>the shortest such subarray and output its length</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,6,4,8,10,9,15]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> You need to sort [6, 4, 8, 10, 9] in ascending order to make the whole array sorted in ascending order.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4]\n<strong>Output:</strong> 0\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1]\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>-10<sup>5</sup> &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<strong>Follow up:</strong> Can you solve it in <code>O(n)</code> time complexity?",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findUnsortedSubarray\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"390.4K\", \"totalSubmission\": \"1M\", \"totalAcceptedRaw\": 390391, \"totalSubmissionRaw\": 1025458, \"acRate\": \"38.1%\"}",
+  "likes": 8026,
+  "dislikes": 276,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Smallest Subarray to Sort in Every Sliding Window\", \"titleSlug\": \"smallest-subarray-to-sort-in-every-sliding-window\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,6,4,8,10,9,15]",
+    "[1,2,3,4]",
+    "[1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"deloitte\", \"name\": \"Deloitte\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"ebay\", \"name\": \"eBay\"}, {\"timesEncountered\": 2, \"slug\": \"liveramp\", \"name\": \"LiveRamp\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Monotonic Stack",
+      "slug": "monotonic-stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findUnsortedSubarray(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findUnsortedSubarray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findUnsortedSubarray(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findUnsortedSubarray(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar findUnsortedSubarray = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findUnsortedSubarray(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindUnsortedSubarray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findUnsortedSubarray(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findUnsortedSubarray(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findUnsortedSubarray(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findUnsortedSubarray(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_unsorted_subarray(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef find_unsorted_subarray(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function findUnsortedSubarray($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findUnsortedSubarray(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findUnsortedSubarray(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_unsorted_subarray(nums :: [integer]) :: integer\n  def find_unsorted_subarray(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_unsorted_subarray(Nums :: [integer()]) -> integer().\nfind_unsorted_subarray(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-unsorted-subarray nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "136",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach 1: Brute Force\n\n**Algorithm**\n\nIn the brute force approach, we consider every possible subarray that can be formed from the given array $$nums$$. For every subarray $$nums[i:j]$$ considered, we need to check whether this is the smallest unsorted subarray or not. Thus, for every such subarray considered, we find out the maximum and minimum values lying in that subarray given by $$max$$ and $$min$$ respectively.\n\nIf the subarrays $$nums[0:i-1]$$ and $$nums[j:n-1]$$ are correctly sorted, then only $$nums[i:j]$$ could be the required subarray. Further, the elements in $$nums[0:i-1]$$ all need to be lesser than the $$min$$ for satisfying the required condition. Similarly, all the elements in $$nums[j:n-1]$$ need to be larger than $$max$$. We check for these conditions for every possible $$i$$ and $$j$$ selected.\n\nFurther, we also need to check if $$nums[0:i-1]$$ and $$nums[j:n-1]$$ are sorted correctly. If all the above conditions are satisfied, we determine the length of the unsorted subarray as $$j-i$$. We do the same process for every subarray chosen and determine the length of the smallest unsorted subarray found.\n\n<iframe src=\"https://leetcode.com/playground/Kxxfo8gQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Kxxfo8gQ\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^3)$$. Three nested loops are there.\n\n* Space complexity : $$O(1)$$. Constant space is used.\n<br>\n<br>\n\n---\n\n### Approach 2: Better Brute Force\n\n**Algorithm**\n\nIn this approach, we make use of an idea based on selection sort. We can traverse over the given $$nums$$ array choosing the elements $$nums[i]$$. For every such element chosen, we try to determine its correct position in the sorted array. For this, we compare $$nums[i]$$ with every $$nums[j]$$, such that $$i < j < n$$. Here, $$n$$ refers to the length of $$nums$$ array.\n\nIf any $$nums[j]$$ happens to be lesser than $$nums[i]$$, it means both $$nums[i]$$ and $$nums[j]$$ aren't at their correct position for the sorted array. Thus, we need to swap the two elements to bring them at their correct positions. Here, instead of swapping, we just note the position of $$nums[i]$$(given by $$i$$) and $$nums[j]$$(given by $$j$$). These two elements now mark the boundary of the unsorted subarray (at least for the time being).\n\nThus, out of all the $$nums[i]$$ chosen, we determine the leftmost $$nums[i]$$ which isn't at its correct position. This marks the left boundary of the smallest unsorted subarray($$l$$). Similarly, out of all the $$nums[j]$$'s considered for all $$nums[i]$$'s we determine the rightmost $$nums[j]$$ which isn't at its correct position. This marks the right boundary of the smallest unsorted subarray($$r$$).\n\n![Unsorted_subarray](../Figures/581/Unsorted_subarray_1.PNG)\n\nThus, we can determine the length of the smallest unsorted subarray as $$r - l + 1$$.\n\n<iframe src=\"https://leetcode.com/playground/N7P4yoLG/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"N7P4yoLG\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^2)$$. Two nested loops are there.\n\n* Space complexity : $$O(1)$$. Constant space is used.\n<br>\n<br>\n\n---\n### Approach 3: Using Sorting\n\n**Algorithm**\n\nAnother very simple idea is as follows. We can sort a copy of the given array $$nums$$, say given by $$nums\\_sorted$$. Then, if we compare the elements of $$nums$$ and $$nums\\_sorted$$, we can determine the leftmost and rightmost elements which mismatch. The subarray lying between them is, then, the required shorted unsorted subarray.\n\n<iframe src=\"https://leetcode.com/playground/RwHAikPD/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"RwHAikPD\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n\\log n)$$. Sorting takes $$n\\log n$$ time.\n\n* Space complexity : $$O(n)$$. We are making copy of original array.\n<br>\n<br>\n\n---\n### Approach 4: Using Stack\n\n**Algorithm**\n\nThe idea behind this approach is also based on selective sorting. We need to determine the correct position of the minimum and the maximum element in the unsorted subarray to determine the boundaries of the required unsorted subarray.\n\nTo do so, in this implementation, we make use of a $$stack$$. We traverse over the $$nums$$ array starting from the beginning. As we go on facing elements in ascending order(a rising slope), we keep on pushing the elements' indices over the $$stack$$. This is done because such elements are in the correct sorted order(as it seems till now). As soon as we encounter a falling slope, i.e. an element $$nums[j]$$ which is smaller than the element on the top of the $$stack$$, we know that $$nums[j]$$ isn't at its correct position.\n\nIn order to determine the correct position of $$nums[j]$$, we keep on popping the elements from the top of the $$stack$$ until we reach the stage where the element(corresponding to the index) on the top of the $$stack$$ is lesser than $$nums[j]$$. Let's say the popping stops when the index on $$stack$$'s top is $$k$$. Now, $$nums[j]$$ has found its correct position. It needs to lie at an index $$k + 1$$.\n\nWe follow the same process while traversing over the whole array, and determine the value of minimum such $$k$$. This marks the left boundary of the unsorted subarray.\n\nSimilarly, to find the right boundary of the unsorted subarray, we traverse over the $$nums$$ array backwards. This time we keep on pushing the elements if we see a falling slope. As soon as we find a rising slope, we trace forwards now and determine the larger element's correct position. We do so for the complete array and thus, determine the right boundary.\n\nWe can look at the figure below for reference. We can observe that the slopes directly indicate the relative ordering. We can also observe that the point $$b$$ needs to lie just after index 0 marking the left boundary and the point $$a$$ needs to lie just before index 7 marking the right boundary of the unsorted subarray.\n\n![Unsorted_subarray](../Figures/581/Unsorted_subarray_2.PNG)\n\nBelow code is inspired by [@fallcreek](http://leetcode.com/fallcreek)\n\n<iframe src=\"https://leetcode.com/playground/V8w46EMS/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"V8w46EMS\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. Stack of size $$n$$ is filled.\n\n* Space complexity : $$O(n)$$. Stack size grows up to $$n$$.\n<br>\n<br>\n\n---\n### Approach 5: Without Using Extra Space\n\n**Algorithm**\n\nThe idea behind this method is that the correct position of the minimum element in the unsorted subarray helps to determine the required left boundary. Similarly, the correct position of the maximum element in the unsorted subarray helps to determine the required right boundary.\n\nThus, firstly we need to determine when the correctly sorted array goes wrong. We keep a track of this by observing rising slope starting from the beginning of the array. Whenever the slope falls, we know that the unsorted array has surely started. Thus, now we determine the minimum element found till the end of the array $$nums$$, given by $$min$$.\n\nSimilarly, we scan the array $$nums$$ in the reverse order and when the slope becomes rising instead of falling, we start looking for the maximum element till we reach the beginning of the array, given by $$max$$.\n\nThen, we traverse over $$nums$$ and determine the correct position of $$min$$ and $$max$$ by comparing these elements with the other array elements. e.g. To determine the correct position of $$min$$, we know the initial portion of $$nums$$ is already sorted. Thus, we need to find the first element which is just larger than $$min$$. Similarly, for $$max$$'s position, we need to find the first element which is just smaller than $$max$$ searching in $$nums$$ backwards.\n\nWe can take this figure for reference again:\n\n![Unsorted_subarray](../Figures/581/Unsorted_subarray_2.PNG)\n\nWe can observe that the point $$b$$ needs to lie just after index 0 marking the left boundary and the point $$a$$ needs to lie just before index 7 marking the right boundary of the unsorted subarray.\n\n<iframe src=\"https://leetcode.com/playground/m9yKLzXu/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"m9yKLzXu\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. Four $$O(n)$$ loops are used.\n\n* Space complexity : $$O(1)$$. Constant space is used.\n<br>\n<br>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

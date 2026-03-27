@@ -1,0 +1,136 @@
+{
+  "questionId": "19",
+  "questionFrontendId": "19",
+  "title": "Remove Nth Node From End of List",
+  "titleSlug": "remove-nth-node-from-end-of-list",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>head</code> of a linked list, remove the <code>n<sup>th</sup></code> node from the end of the list and return its head.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/10/03/remove_ex1.jpg\" style=\"width: 542px; height: 222px;\" />\n<pre>\n<strong>Input:</strong> head = [1,2,3,4,5], n = 2\n<strong>Output:</strong> [1,2,3,5]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> head = [1], n = 1\n<strong>Output:</strong> []\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> head = [1,2], n = 1\n<strong>Output:</strong> [1]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the list is <code>sz</code>.</li>\n\t<li><code>1 &lt;= sz &lt;= 30</code></li>\n\t<li><code>0 &lt;= Node.val &lt;= 100</code></li>\n\t<li><code>1 &lt;= n &lt;= sz</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> Could you do this in one pass?</p>\n",
+  "hints": [
+    "Maintain two pointers and update one with a delay of n steps."
+  ],
+  "metaData": "{\r\n  \"name\": \"removeNthFromEnd\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"head\",\r\n      \"type\": \"ListNode\",\r\n      \"dealloc\": false\r\n    },\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"ListNode\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"4.1M\", \"totalSubmission\": \"8M\", \"totalAcceptedRaw\": 4122952, \"totalSubmissionRaw\": 8049602, \"acRate\": \"51.2%\"}",
+  "likes": 21208,
+  "dislikes": 904,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Swapping Nodes in a Linked List\", \"titleSlug\": \"swapping-nodes-in-a-linked-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Delete N Nodes After M Nodes of a Linked List\", \"titleSlug\": \"delete-n-nodes-after-m-nodes-of-a-linked-list\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Delete the Middle Node of a Linked List\", \"titleSlug\": \"delete-the-middle-node-of-a-linked-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5]\n2",
+    "[1]\n1",
+    "[1,2]\n1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}], \"six_months\": [{\"timesEncountered\": 10, \"slug\": \"symantec\", \"name\": \"Symantec\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 4, \"slug\": \"qualcomm\", \"name\": \"Qualcomm\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 3, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 2, \"slug\": \"tinkoff\", \"name\": \"Tinkoff\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"josh-technology\", \"name\": \"josh technology\"}]}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    ListNode* removeNthFromEnd(ListNode* head, int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public ListNode removeNthFromEnd(ListNode head, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def removeNthFromEnd(self, head: Optional[ListNode], n: int) -> Optional[ListNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def removeNthFromEnd(self, head, n):\n        \"\"\"\n        :type head: Optional[ListNode]\n        :type n: int\n        :rtype: Optional[ListNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} head\n * @param {number} n\n * @return {ListNode}\n */\nvar removeNthFromEnd = function(head, n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction removeNthFromEnd(head: ListNode | null, n: number): ListNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public ListNode RemoveNthFromEnd(ListNode head, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\nstruct ListNode* removeNthFromEnd(struct ListNode* head, int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc removeNthFromEnd(head *ListNode, n int) *ListNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun removeNthFromEnd(head: ListNode?, n: Int): ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func removeNthFromEnd(_ head: ListNode?, _ n: Int) -> ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn remove_nth_from_end(head: Option<Box<ListNode>>, n: i32) -> Option<Box<ListNode>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {ListNode} head\n# @param {Integer} n\n# @return {ListNode}\ndef remove_nth_from_end(head, n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $head\n     * @param Integer $n\n     * @return ListNode\n     */\n    function removeNthFromEnd($head, $n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *   int val;\n *   ListNode? next;\n *   ListNode([this.val = 0, this.next]);\n * }\n */\nclass Solution {\n  ListNode? removeNthFromEnd(ListNode? head, int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def removeNthFromEnd(head: ListNode, n: Int): ListNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for singly-linked list.\n#\n# defmodule ListNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           next: ListNode.t() | nil\n#         }\n#   defstruct val: 0, next: nil\n# end\n\ndefmodule Solution do\n  @spec remove_nth_from_end(head :: ListNode.t | nil, n :: integer) :: ListNode.t | nil\n  def remove_nth_from_end(head, n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for singly-linked list.\n%%\n%% -record(list_node, {val = 0 :: integer(),\n%%                     next = null :: 'null' | #list_node{}}).\n\n-spec remove_nth_from_end(Head :: #list_node{} | null, N :: integer()) -> #list_node{} | null.\nremove_nth_from_end(Head, N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n(define/contract (remove-nth-from-end head n)\n  (-> (or/c list-node? #f) exact-integer? (or/c list-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "48",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/664082490\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n## Summary\n\nThis article is for beginners. It introduces the following idea:\nLinked List traversal and removal of nth element from the end.\n\n---\n### Approach 1: Two pass algorithm\n\n**Intuition**\n\n We notice that the problem could be simply reduced to another one : Remove the $$(L - n + 1)$$ th node from the beginning in the list , where $$L$$ is the list length. This problem is easy to solve once we found list length $$L$$.\n\n**Algorithm**\n\nFirst we will add an auxiliary \"dummy\" node, which points to the list head. The \"dummy\" node is used to simplify some corner cases such as a list with only one node, or removing the head of the list. On the first pass, we find the list length $$L$$. Then we set a pointer to the dummy node and start to move it through the list till it comes to the $$(L - n)$$ th node. We relink `next` pointer of the $$(L - n)$$ th node to the $$(L - n + 2)$$ th node and we are done.\n\n![Remove the nth element from a list](https://leetcode.com/media/original_images/19_Remove_nth_node_from_end_of_listA.png)\n\n\n*Figure 1. Remove the L - n + 1 th element from a list.*\n\n\n<iframe src=\"https://leetcode.com/playground/cJebwHDZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"cJebwHDZ\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(L)$$.\n\n    The algorithm makes two traversal of the list, first to calculate list length $$L$$ and second to find the $$(L - n)$$ th node. There are $$2L-n$$ operations and time complexity is $$O(L)$$.\n\n* Space complexity : $$O(1)$$.\n\n    We only used constant extra space.\n<br />\n<br />\n\n---\n### Approach 2: One pass algorithm\n\n**Algorithm**\n\nThe above algorithm could be optimized to one pass. Instead of one pointer, we could use two pointers. The first pointer advances the list by $$n+1$$ steps from the beginning, while the second pointer starts from the beginning of the list. Now, both pointers are exactly separated by $$n$$ nodes apart. We maintain this constant gap by advancing both pointers together until the first pointer arrives past the last node. The second pointer will be pointing at the $$n$$th node counting from the last.\nWe relink the next pointer of the node referenced by the second pointer to point to the node's next next node.\n\n![Remove the nth element from a list](https://leetcode.com/media/original_images/19_Remove_nth_node_from_end_of_listB.png)\n\n\n*Figure 2. Remove the nth element from end of a list.*\n\n\n<iframe src=\"https://leetcode.com/playground/c49YQiYS/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"c49YQiYS\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(L)$$.\n\n    The algorithm makes one traversal of the list of $$L$$ nodes. Therefore time complexity is $$O(L)$$.\n\n* Space complexity : $$O(1)$$.\n\n    We only used constant extra space.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

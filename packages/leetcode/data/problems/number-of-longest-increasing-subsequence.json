@@ -1,0 +1,141 @@
+{
+  "questionId": "673",
+  "questionFrontendId": "673",
+  "title": "Number of Longest Increasing Subsequence",
+  "titleSlug": "number-of-longest-increasing-subsequence",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array&nbsp;<code>nums</code>, return <em>the number of longest increasing subsequences.</em></p>\n\n<p><strong>Notice</strong> that the sequence has to be <strong>strictly</strong> increasing.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,3,5,4,7]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The two longest increasing subsequences are [1, 3, 4, 7] and [1, 3, 5, 7].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,2,2,2,2]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The length of the longest increasing subsequence is 1, and there are 5 increasing subsequences of length 1, so output 5.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 2000</code></li>\n\t<li><code>-10<sup>6</sup> &lt;= nums[i] &lt;= 10<sup>6</sup></code></li>\n\t<li>The answer is guaranteed to fit inside a 32-bit integer.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findNumberOfLIS\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"332.2K\", \"totalSubmission\": \"643.9K\", \"totalAcceptedRaw\": 332221, \"totalSubmissionRaw\": 643923, \"acRate\": \"51.6%\"}",
+  "likes": 7301,
+  "dislikes": 288,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Increasing Subsequence\", \"titleSlug\": \"longest-increasing-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Continuous Increasing Subsequence\", \"titleSlug\": \"longest-continuous-increasing-subsequence\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Longest Increasing Subsequence II\", \"titleSlug\": \"longest-increasing-subsequence-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,5,4,7]",
+    "[2,2,2,2,2]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"intuit\", \"name\": \"Intuit\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Binary Indexed Tree",
+      "slug": "binary-indexed-tree"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findNumberOfLIS(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findNumberOfLIS(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findNumberOfLIS(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findNumberOfLIS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar findNumberOfLIS = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findNumberOfLIS(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindNumberOfLIS(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findNumberOfLIS(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findNumberOfLIS(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findNumberOfLIS(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findNumberOfLIS(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_number_of_lis(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef find_number_of_lis(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function findNumberOfLIS($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findNumberOfLIS(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findNumberOfLIS(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_number_of_lis(nums :: [integer]) :: integer\n  def find_number_of_lis(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_number_of_lis(Nums :: [integer()]) -> integer().\nfind_number_of_lis(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-number-of-lis nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1933",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n>**Note.** For this problem, we assume that you already know the fundamentals of dynamic programming and are figuring out how to apply it to a wide range of problems, such as this one. If you are not yet at this stage, we recommend checking out our relevant [Explore Card content on dynamic programming](https://leetcode.com/explore/featured/card/dynamic-programming/) before returning to this article.\n\n### Approach 1: Bottom-up Dynamic Programming\n\n#### Intuition\n\nBefore attempting this problem, please first solve [Longest Increasing Subsequence](https://leetcode.com/problems/longest-increasing-subsequence/), which this problem is a follow up to.\n\nConsider an array $\\text{nums}$ of length $n$ representing a sequence of numbers. To find the number of longest increasing subsequences (LISs) in this array, we introduce two dynamic programming (DP) arrays: $\\text{length}$ and $\\text{count}$.\n\n$\\text{length}[i]$ represents the length of the LIS ending at index $i$ in the $\\text{nums}$ array, while $\\text{count}[i]$ denotes the count of LISs ending at index $i$.\n\nNotice that $\\text{length}$ here represents the answer to **Longest Increasing Subsequence** and $\\text{count}$ represents the answer to this problem.\n\n!?!../Documents/673/slideshow.json:1000,500!?!\n\nFor instance, given $\\text{nums} = [1, 3, 2, 4]$, we can illustrate the purpose of these arrays. Here, $\\text{length}[0] = 1$ because the longest increasing subsequence ending at index $0$ is the number $1$ itself. Similarly, $\\text{length}[1] = 2$ as the LIS ending at index $1$ is $[1, 3]$. Continuing, $\\text{length}[2] = 2$ since the LIS ending at index $2$ is $[1, 2]$. Finally, $\\text{length}[3] = 3$ as the LIS ending at index $3$ is either $[1, 3, 4]$ or $[1, 2, 4]$.\n\nIn addition, we use $\\text{count}$ to keep track of the count of the longest increasing subsequences. In the example above, $\\text{count}[0] = 1$ because only one LIS ends at index $0$. Similarly, $\\text{count}[1] = 1$ and $\\text{count}[2] = 1$ since one LIS is ending at each of those indices. $\\text{count}[3] = 2$ because there are two LISs ending at index $3$.\n\nBy utilizing these two DP arrays, we can efficiently compute the count of the LISs in the given $\\text{nums}$ array.\n\nInitially, every subsequence consisting of a single element is increasing. Therefore, we initialize $\\text{length}[i] = 1$ and $\\text{count}[i] = 1$ for all indices $i$ in the array. As we iterate through the array, if we encounter a longer subsequence ending at index $i$, we update the values of $\\text{length}[i]$ and $\\text{count}[i]$ accordingly.\n\nTo compute the DP values for index $i$, we first calculate the values for all positions $j < i$.\n\nFor each index $j$ such that $j < i$ and $\\text{nums}[j] < \\text{nums}[i]$, we can extend any increasing subsequence that ends at index $j$ by adding the element at index $i$. The length of the LIS ending at position $j$ is $\\text{length}[j]$. By extending the subsequence, we obtain a new subsequence of length $\\text{length}[j] + 1$ that ends at index $i$. We update the $\\text{length}[i]$ value to be the maximum length of an increasing subsequence ending at index $i$ seen so far.\n\nIf $\\text{length}[j] + 1 > \\text{length}[i]$, it means we have found a longer subsequence ending at index $i$. In this case, we update $\\text{length}[i]$ to $\\text{length}[j] + 1$. Additionally, we discard any subsequences we saw earlier since they are no longer LIS: reset $\\text{count}[i]$ to zero.\n\nNext, we check the equality $\\text{length}[j] + 1 = \\text{length}[i]$. If $\\text{length}[j] + 1 = \\text{length}[i]$, it implies that we can extend every LIS ending at index $j$ with the element $\\text{nums}[i]$ to create new longest increasing subsequences ending at index $i$. Therefore, we add $\\text{count}[j]$ to $\\text{count}[i]$ to count all subsequences that include both indices $j$ and $i$. Note that $\\text{length}[i]$ might have just become $\\text{length}[j] + 1$ during the previous step.\n\nLet's consider the length of the LIS of the entire array $\\text{nums}$, denoted as $\\text{maxLength}$, which equals the maximum $\\text{length}[i]$. By finding $\\text{maxLength}$, we determine the target length we aim to achieve for our subsequences.\n\nTo calculate $\\text{result}$, the total number of LISs in the array, we need to sum up the $\\text{count}[i]$ values for all indices $i$ where the length of the subsequence, $\\text{length}[i]$, is equal to $\\text{maxLength}$. These indices represent the endpoints of the longest increasing subsequences in the array. By adding up their corresponding $\\text{count}[i]$ values, we account for all possible LISs.\n\n#### Algorithm\n\n1. Declare two DP arrays $\\text{length}$ and $\\text{count}$, and initialize $\\text{length}[i] = 1$, $\\text{count}[i] = 1$.\n2. Iterate $i$ from $0$ to $n - 1$.\n\t* Iterate $j$ from $0$ to $i - 1$.\n\t\t* If $\\text{nums}[j] < \\text{nums}[i]$.\n\t\t\t* If $\\text{length}[j] + 1 > \\text{length}[i]$, update $\\text{length}[i]$ with $\\text{length}[j] + 1$ and set $\\text{count}[i]$ to zero.\n\t\t\t* If $\\text{length}[j] + 1 = \\text{length}[i]$, add $\\text{count}[j]$ to $\\text{count}[i]$.\n3. Let $\\text{maxLength}$ be the maximum value in the array $\\text{length}$.\n4. Initialize $\\text{result} = 0$.\n5. Iterate $i$ from $0$ to $n - 1$.\n\t* If $\\text{length}[i] = \\text{maxLength}$, add $\\text{count}[i]$ to $\\text{result}$.\n6. Return $\\text{result}$.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/Q6GAPagG/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Q6GAPagG\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time Complexity: $O(n^2)$.\n\nThe nested loops iterate over the input array $\\text{nums}$, resulting in an overall time complexity of $O(n^2)$, where $n$ is the array length. The outer loop iterates $n$ times, and the inner loop iterates up to $i$ times, where $i$ ranges from $0$ to $n-1$.\n\n* Space Complexity: $O(n)$.\n\nWe store two DP arrays: $\\text{length}$ and $\\text{count}$, each with a length of $n$. Therefore, the space required to store these arrays is $O(n)$.\n\n---\n\n### Approach 2: Top-down Dynamic Programming (Memoization)\n\n#### Intuition\n\nIn this approach, we will calculate the DP arrays $\\text{length}$ and $\\text{count}$ using the same recurrence relation as in the previous one, but the organization of computations will be different.\n\nWe will utilize a recursive function called $\\text{calculateDP}(i)$ that computes the DP values $\\text{length}[i]$ and $\\text{count}[i]$ when called for the first time with a particular $i$ value. Once the values $\\text{length}[i]$ and $\\text{count}[i]$ are computed, subsequent calls to $\\text{calculateDP}(i)$ will terminate immediately.\n\nFor example, when we first call $\\text{calculateDP}(4)$, it computes $\\text{length}[4]$ and $\\text{count}[4]$. When we make subsequent calls to $\\text{calculateDP}(4)$, it returns immediately.\n\nThis approach ensures that we calculate the DP value for each state (each $i$) only once.\n\nTo compute $\\text{length}[i]$ and $\\text{count}[i]$, we will follow the same steps as in the previous approach: iterate over $j$ such that $j < i$ and $\\text{nums}[j] < \\text{nums}[i]$, and update the DP values for $i$ using the DP values for $j$.\n\nTo determine whether we need to compute the DP values for $i$ or return immediately, we can initialize the DP arrays $\\text{length}$ and $\\text{count}$ with zeros. Thus, $\\text{length}[i] = 0$ will indicate that we have not yet computed the DP values for $i$. Once we find the result for $i$, we will update $\\text{length}[i]$ and $\\text{count}[i]$, and $\\text{length}[i]$ will no longer be zero, indicating that we have computed the values.\n\n#### Algorithm\n\nThe function $\\text{calculateDP}$ takes a parameter $i$.\n1. If $\\text{length}[i] \\ne 0$ (which means that we found this value earlier), return from the function.\n2. Assign $\\text{length}[i] = 1$, $\\text{count}[i] = 1$ (the DP initialization).\n3. Iterate $j$ from $0$ to $i - 1$.\n\t* If $\\text{nums}[j] < \\text{nums}[i]$.\n\t\t* Call $\\text{calculateDP}(j)$ recursively to ensure that $\\text{length}[j]$ and $\\text{count}[j]$ are calculated.\n\t\t* If $\\text{length}[j] + 1 > \\text{length}[i]$, update $\\text{length}[i]$ with $\\text{length}[j] + 1$ and set $\\text{count}[i]$ to zero.\n\t\t* If $\\text{length}[j] + 1 = \\text{length}[i]$, add $\\text{count}[j]$ to $\\text{count}[i]$.\n\nIn the main function, one needs to do the following.\n1. Initialize $\\text{maxLength} = 0$ and $\\text{result} = 0$.\n2. Iterate $i$ from $0$ to $n - 1$.\n\t* Call $\\text{calculateDP}(i)$.\n\t* Assign $\\text{maxLength} = \\max(\\text{maxLength}, \\text{length}[i])$.\n3. Iterate $i$ from $0$ to $n - 1$.\n\t* If $\\text{length}[i] = \\text{maxLength}$, add $\\text{count}[i]$ to $\\text{result}$.\n4. Return $\\text{result}$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/eWJZudA2/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"eWJZudA2\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time Complexity: $O(n^2)$.\n\nEven though we changed the order in which we calculate DP, the time complexity is the same as in the previous approach: for each $i$, we compute $\\text{length}[i]$ and $\\text{count}[i]$ in $O(n)$. \n\n* Space Complexity: $O(n)$.\n\nWe store the DP arrays $\\text{length}$ and $\\text{count}$ of size $n$, as in the previous approach.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

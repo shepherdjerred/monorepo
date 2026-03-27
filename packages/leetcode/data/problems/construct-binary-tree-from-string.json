@@ -1,0 +1,146 @@
+{
+  "questionId": "536",
+  "questionFrontendId": "536",
+  "title": "Construct Binary Tree from String",
+  "titleSlug": "construct-binary-tree-from-string",
+  "difficulty": "Medium",
+  "content": "<p>You need to construct a binary tree from a string consisting of parenthesis and integers.</p>\n\n<p>The whole input represents a binary tree. It contains an integer followed by zero, one or two pairs of parenthesis. The integer represents the root&#39;s value and a pair of parenthesis contains a child binary tree with the same structure.</p>\n\n<p>You always start to construct the <b>left</b> child node of the parent first if it exists.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/02/butree.jpg\" style=\"width: 382px; height: 322px;\" />\n<pre>\n<strong>Input:</strong> s = &quot;4(2(3)(1))(6(5))&quot;\n<strong>Output:</strong> [4,2,6,3,1,5]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;4(2(3)(1))(6(5)(7))&quot;\n<strong>Output:</strong> [4,2,6,3,1,5,7]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;-4(2(3)(1))(6(5)(7))&quot;\n<strong>Output:</strong> [-4,2,6,3,1,5,7]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= s.length &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>s</code> consists of digits, <code>&#39;(&#39;</code>, <code>&#39;)&#39;</code>, and <code>&#39;-&#39;</code> only.</li>\n\t<li>All numbers in the tree have value <strong>at most</strong> than <code>2<sup>30</sup></code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"str2tree\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"TreeNode\",\r\n    \"dealloc\": true\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"127K\", \"totalSubmission\": \"216.4K\", \"totalAcceptedRaw\": 127031, \"totalSubmissionRaw\": 216441, \"acRate\": \"58.7%\"}",
+  "likes": 1134,
+  "dislikes": 184,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Construct String from Binary Tree\", \"titleSlug\": \"construct-string-from-binary-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"4(2(3)(1))(6(5))\"",
+    "\"4(2(3)(1))(6(5)(7))\"",
+    "\"-4(2(3)(1))(6(5)(7))\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 39, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    TreeNode* str2tree(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public TreeNode str2tree(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def str2tree(self, s: str) -> Optional[TreeNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def str2tree(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: Optional[TreeNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {string} s\n * @return {TreeNode}\n */\nvar str2tree = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction str2tree(s: string): TreeNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public TreeNode Str2tree(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nstruct TreeNode* str2tree(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc str2tree(s string) *TreeNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun str2tree(s: String): TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func str2tree(_ s: String) -> TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn str2tree(s: String) -> Option<Rc<RefCell<TreeNode>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {String} s\n# @return {TreeNode}\ndef str2tree(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param String $s\n     * @return TreeNode\n     */\n    function str2tree($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  TreeNode? str2tree(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def str2tree(s: String): TreeNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec str2tree(s :: String.t) :: TreeNode.t | nil\n  def str2tree(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec str2tree(S :: unicode:unicode_binary()) -> #tree_node{} | null.\nstr2tree(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (str2tree s)\n  (-> string? (or/c tree-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1111",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThis is a really useful problem to work on since this is a part of the general umbrella of problems which are like *Serialize and Deserialize some data structure*. This is important if we want to save a tree (a custom object with some special properties and fields) to a file, a database, or as a string someplace essentially. In this problem we are given a string representation of a tree i.e. we are given the serialized version of the tree and we have to deserialize it and return the `TreeNode` object representing the root of the tree (since the rest of the tree is trackable via the root). \n\nA tree (or a graph) has a recursive structure to it i.e. *a subtree is a tree in itself*. Similarly, we expect the string representation of a tree to also have some kind of a recursive structure and that is what will be used to reconstruct our tree. Let's first take a look at this recursive structure in the string.\n\n\n![](../Figures/536/img1.png)\n\n\n*Figure 1. The tree and the corresponding string.*\n\n\nLet's look at the subtrees along with their counterparts in the string. Note that we assume the entire string is also enclosed between a pair of brackets thus representing the entire tree. \n\n![](../Figures/536/img2.png)\n\n\n*Figure 2. String split according to the subtrees.*\n\n\nSo we can see the recursive build-up of the string and we are going to leverage that property to come up with a solution. Since this problem involves a recursive property, we will look at a solution based on recursion, and then, we will convert that solution to one using a stack as opposed to the memory stack used in the recursive approach.\n\n</br>\n\n---\n\n### Approach 1: Recursion\n\n**Intuition**\n\nThe idea here is very simple. An opening bracket represents the start of a new tree (subtree really). Thus, whenever we encounter a new opening bracket, we make a new recursion call. A recursion call to our function will essentially return the root of a properly built tree with all the required `TreeNode` objects and proper connections set up between them. Thus, making a new recursive call upon encountering an opening bracket is essentially calling our function to build the subtree and return the root node.\n\nWe know when to make a new recursive call, but, when do we stop really? We stop when we encounter a closing bracket. That's because a closing bracket will be the end of *the most recent* subtree that we're building in our recursion. We assume that a particular closing bracket matches with the *nearest* opening bracket we would have encountered previously when we made the recursive call. Let's put all this information into an algorithm with steps.\n\n**Algorithm**\n\n1. Let's define a couple of internal functions that we will be using along the way. The first one is called `getNumber` and it returns the integer number/value that the current `TreeNode` is supposed to have. It takes the string and the current index as inputs. We iterate until we no longer encounter a digit or we reach the end of the string. We stick all the digits together and get a number. Also, we take care of the sign `-` in case one exists in the beginning which would indicate a negative value for the node.\n2. The next function we define is our recursive function called `str2treeInternal` which does all the heavy lifting for us. It also takes the string and the index of the current character as inputs and returns a pair of the `TreeNode` representation of the current subtree and also the index of the next character to be processed in the string. This index manipulation is important because we don't want to parse the string twice to figure out the boundaries for the children subtrees.\n3. Whenever the function `str2treeInternal` is called, we expect that the current subtree will all its children and descendants will be constructed and returned. There are 4 steps we take inside this function of ours. \n   1. Firstly we check for the termination condition i.e. if there are no more characters left in the string to process. \n   \n       ![](../Figures/536/img3.png)\n\n       *Figure 3. Sample subtrees which we will consider for the algorithm.*\n\n   2. Next, we get the value for the root node of this tree. This is an invariant here. We will never find any brackets before we get the value for the root node.\n   \n       ![](../Figures/536/img4.png)\n   \n   3. Once we have the value, we form the root node.\n   4. Then, we check for an opening bracket (make sure to check for the end of string conditions always). If there is one, we make a recursive call and use the node returned as the left child of the current node.\n   \n       ![](../Figures/536/img5.png)\n   \n   5. Finally, we check if there's another opening bracket. If there is one, then it represents our right child and we again make a recursive call to construct that and make the right connection.\n   \n       ![](../Figures/536/img6.png)\n   \n4. We return the construct root node and also the correct index. For the index, we check if it points to a closing bracket, we move one step forward. Else, we stay at the current spot and let the caller function decide how to proceed/process.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/nf6kojSw/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nf6kojSw\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$ where $$N$$ represents the number of characters in the string representation. This is because each character is processed exactly once and we need to process the entire string to form our tree.\n\n* Space Complexity: $$O(H)$$ where $$H$$ represents the height of the tree. We don't have any information about if the tree is balanced or not and so, in the worst case when the tree would be skewed left (can't be right according to the problem), we will have a recursion stack consisting of $$N$$ calls and hence, the overall space complexity can be $$O(N)$$;\n\n<br/>\n\n---\n\n### Approach 2: Stack\n\n**Intuition**\n\nThe main problem with a recursive solution is the stack limitation. We might run into stack-overflow problems if the tree is too tall and the system's stack is low on resources. Hence, we prefer to use our own stack and that is the variation which we will explore in this solution. The overall idea remains the same as the previous approach and for that matter, even the complexities remain the same. The only thing that changes is a recursive vs iterative approach.\n\nThe algorithm presented here is completely based on the recursive solution before. The only thing we need to take care of are the different states a particular *function call/node* can be in during recursion. Notably, there are 3 different states that we need to account for. We won't be using these three states in the code directly but it is important to understand these three possibilities to understand the overall algorithm.\n\n1. *NOT_STARTED* ~ This is the initial state that a node is in. Before we even process the left or the right children. In this state, we simply form the value of the root node and then check for the presence of the left child. If the left child exists, we make a recursive call and the returned value is used as the left child.\n2. *LEFT_DONE* ~ In this state, we are processing our root node given the fact that we're done processing its left subtree. So, the `index` would be used to check for the presence of a right child and if one exists, we make another recursive call to process the same.\n3. *RIGHT_DONE* ~ This is the final state of any node where we are done processing the left and the right children and don't need to do anything more.\n\n**Algorithm**\n\n1. Let's define a function called `getNumber` which returns the integer number/value that the current `TreeNode` is supposed to have. It takes the string and the current index as inputs. We iterate until we no longer encounter a digit or we reach the end of the string. We stick all the digits together and get a number. Also, we take care of the sign `-` in case one exists in the beginning which would indicate a negative value for the node.\n2. We use a `stack` for our implementation and it would contain a pair of the node itself and the state it is in. The state can be one of the three described before.\n3. Initially, we push the `root node` (a new `TreeNode` essentially) into the stack. *Note:* that the state of this node is `NOT_STARTED`.\n4. We iterate over the characters in our string one by one and we do the following at each step:\n   1. Pop the node. This will be the root node that we currently process i.e. not the global root node of the tree but rather the root of the current subtree.\n   2. If the current character pointed to by the `index` is a digit or the `-` character, \n      1. that means we have a node that we haven't started processing yet i.e. the `NOT_STARTED` state. So the first thing we do is to call the `getNumber` function to get the value for the node and set `node.val` to this value. *Note:* the `getNumber` function progresses the `index`.\n      2. Then, we check for the presence of a left child. We simply check if there are more characters left in the string and the one we have to process now is an opening bracket. If it is, then we do two things:\n         * We add the current node back to the queue. At this point, the state of this node would be `LEFT_DONE`. Again, we don't need the state information anywhere in the code except for reasoning about the algorithm itself.\n         * Then, we assign `node.left` to a new `TreeNode` and also add it to the queue.\n\n             ![](../Figures/536/img7.png)\n             \n             *Figure 4. Process the root node from the string.*\n\n             ![](../Figures/536/img8.png)\n             \n             *Figure 5. Here we process the left child.*\n\n             ![](../Figures/536/img9.png)\n             \n             *Figure 6. Complete the processing or the left child.*\n\n   3. If the current character is the left bracket i.e. `(`,\n      1. we check for the presence of a right child because we know that the value of the node is already set in the previous step and also, the left child is properly processed at this point.\n      2. We check if the current character, if there is one left, is an opening bracket. If it is one then we do the following:\n         * We add the current node back to the queue assuming its state to be `LEFT_DONE`.\n         * Then, we assign `node.right` to a new `TreeNode` and also add it to the queue.\n\n             ![](../Figures/536/img10.png)\n             \n             *Figure 7. Start processing the right child.*\n\n   4. We don't do anything if the current character is a closing bracket except for popping the nodes which we already did in step `4.1` here.\n\n       ![](../Figures/536/img11.png)\n       \n       *Figure 8. Pop the right child and return the root.*\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/7bd3ohyf/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7bd3ohyf\"></iframe>\n\n**Complexity Analysis**\n\nThe complexity is the same as the previous solution with the only exception that we are now using our own stack instead of relying on the system's stack.\n\n* Time Complexity: $$O(N)$$ where $$N$$ represents the number of characters in the string representation. This is because each character is processed exactly once and we need to process the entire string so as to form our tree.\n\n* Space Complexity: $$O(H)$$ where $$H$$ represents the height of the tree. We don't have any information about if the tree is balanced or not and so, in the worst case when the tree would be skewed left (can't be right according to the problem), we will have a recursion stack consisting of $$N$$ calls and hence, the overall space complexity can be $$O(N)$$;\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

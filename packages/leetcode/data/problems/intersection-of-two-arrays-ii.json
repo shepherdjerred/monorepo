@@ -1,0 +1,145 @@
+{
+  "questionId": "350",
+  "questionFrontendId": "350",
+  "title": "Intersection of Two Arrays II",
+  "titleSlug": "intersection-of-two-arrays-ii",
+  "difficulty": "Easy",
+  "content": "<p>Given two integer arrays <code>nums1</code> and <code>nums2</code>, return <em>an array of their intersection</em>. Each element in the result must appear as many times as it shows in both arrays and you may return the result in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [1,2,2,1], nums2 = [2,2]\n<strong>Output:</strong> [2,2]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [4,9,5], nums2 = [9,4,9,8,4]\n<strong>Output:</strong> [4,9]\n<strong>Explanation:</strong> [9,4] is also accepted.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums1.length, nums2.length &lt;= 1000</code></li>\n\t<li><code>0 &lt;= nums1[i], nums2[i] &lt;= 1000</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong></p>\n\n<ul>\n\t<li>What if the given array is already sorted? How would you optimize your algorithm?</li>\n\t<li>What if <code>nums1</code>&#39;s size is small compared to <code>nums2</code>&#39;s size? Which algorithm is better?</li>\n\t<li>What if elements of <code>nums2</code> are stored on disk, and the memory is limited such that you cannot load all elements into the memory at once?</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"intersect\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums1\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"nums2\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer[]\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.7M\", \"totalSubmission\": \"2.9M\", \"totalAcceptedRaw\": 1723719, \"totalSubmissionRaw\": 2883797, \"acRate\": \"59.8%\"}",
+  "likes": 8191,
+  "dislikes": 1010,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Intersection of Two Arrays\", \"titleSlug\": \"intersection-of-two-arrays\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find Common Characters\", \"titleSlug\": \"find-common-characters\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Difference of Two Arrays\", \"titleSlug\": \"find-the-difference-of-two-arrays\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Choose Numbers From Two Arrays in Range\", \"titleSlug\": \"choose-numbers-from-two-arrays-in-range\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Intersection of Multiple Arrays\", \"titleSlug\": \"intersection-of-multiple-arrays\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Common Value\", \"titleSlug\": \"minimum-common-value\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,2,1]\n[2,2]",
+    "[4,9,5]\n[9,4,9,8,4]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"criteo\", \"name\": \"Criteo\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> intersect(vector<int>& nums1, vector<int>& nums2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] intersect(int[] nums1, int[] nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def intersect(self, nums1: List[int], nums2: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def intersect(self, nums1, nums2):\n        \"\"\"\n        :type nums1: List[int]\n        :type nums2: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums1\n * @param {number[]} nums2\n * @return {number[]}\n */\nvar intersect = function(nums1, nums2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function intersect(nums1: number[], nums2: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] Intersect(int[] nums1, int[] nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* intersect(int* nums1, int nums1Size, int* nums2, int nums2Size, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func intersect(nums1 []int, nums2 []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun intersect(nums1: IntArray, nums2: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func intersect(_ nums1: [Int], _ nums2: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn intersect(nums1: Vec<i32>, nums2: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums1\n# @param {Integer[]} nums2\n# @return {Integer[]}\ndef intersect(nums1, nums2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums1\n     * @param Integer[] $nums2\n     * @return Integer[]\n     */\n    function intersect($nums1, $nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> intersect(List<int> nums1, List<int> nums2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def intersect(nums1: Array[Int], nums2: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec intersect(nums1 :: [integer], nums2 :: [integer]) :: [integer]\n  def intersect(nums1, nums2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec intersect(Nums1 :: [integer()], Nums2 :: [integer()]) -> [integer()].\nintersect(Nums1, Nums2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (intersect nums1 nums2)\n  (-> (listof exact-integer?) (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "802",
+    "content": "[TOC]\n\n## Solution\n\nIf an interviewer gives you this problem, your first question should be - *how should I handle duplicates?* Your second question, perhaps, can be about the order of inputs and outputs. Such questions manifest your problem-solving skills, and help you steer to the right solution.\n\n The [solution](https://leetcode.com/problems/intersection-of-two-arrays/solution/) for the previous problem, [349. Intersection of Two Arrays](https://leetcode.com/problems/intersection-of-two-arrays/), talks about approaches when each number in the output must be unique. For this problem, we need to adapt those approaches so that numbers in the result appear as many times as they do in both arrays.\n\n---\n\n### Approach 1: Hash Map\n\nFor the previous problem, we used a hash set to achieve a linear time complexity. Here, we need to use a hash map to track the count for each number.\n\nWe collect numbers and their counts from one of the arrays into a hash map. Then, we iterate along the second array, and check if the number exists in the hash map and its count is positive. If so - add the number to the result and decrease its count in the hash map.\n\n![Hash Map Illustration](../Figures/350/350_approach1-v2.png)\n\n> It's a good idea to check array sizes and use a hash map for the smaller array. It will reduce memory usage when one of the arrays is very large.\n\n**Algorithm**\n\n1. If `nums1` is larger than `nums2`, swap the arrays.\n\n2. For each element in `nums1`:\n\n      - Add it to the hash map `m`.\n\n          - Increment the count if the element is already there.\n\n3. Initialize the insertion pointer (`k`) with zero.\n\n4. Iterate along `nums2`:\n\n      - If the current number is in the hash map and count is positive:\n\n          - Copy the number into `nums1[k]`, and increment `k`.\n\n          - Decrement the count in the hash map.\n\n5. Return first `k` elements of `nums1`.\n\n> For our solutions here, we use one of the arrays to store the result. As we find common numbers, we copy them to the first array starting from the beginning. This idea is from [this solution](https://leetcode.com/problems/intersection-of-two-arrays-ii/discuss/82405/Simple-Java-Solution) by [sankitgupta](https://leetcode.com/sankitgupta/).\n\n<iframe src=\"https://leetcode.com/playground/f6DsoMKs/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"f6DsoMKs\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(n + m)$$, where $$n$$ and $$m$$ are the lengths of the arrays. We iterate through the first, and then through the second array; insert and lookup operations in the hash map take a constant time.\n\n- Space Complexity: $$\\mathcal{O}(\\min(n, m))$$. We use hash map to store numbers (and their counts) from the smaller array.\n\n---\n\n### Approach 2: Sort\n\nYou can recommend this method when the input is sorted, or when the output needs to be sorted. Here, we sort both arrays (assuming they are not sorted) and use two pointers to find common numbers in a single scan.\n\n![Sort Illustration](../Figures/350/350_approach2-v2.png)\n\n**Algorithm**\n\n1. Sort `nums1` and `nums2`.\n\n2. Initialize `i`, `j` and `k` with zero.\n\n3. Move indices `i` along `nums1`, and `j` through `nums2`:\n\n      - Increment `i` if `nums1[i]` is smaller.\n\n      - Increment `j` if `nums2[j]` is smaller.\n\n      - If numbers are the same, copy the number into `nums1[k]`, and increment `i`, `j` and `k`.\n\n4. Return first `k` elements of `nums1`.\n\n<iframe src=\"https://leetcode.com/playground/VDBkg3yk/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"VDBkg3yk\"></iframe>\n\n**Complexity Analysis** <a name=\"approach2complexity\"></a>\n\n- Time Complexity: $$\\mathcal{O}(n\\log{n} + m\\log{m})$$, where $$n$$ and $$m$$ are the lengths of the arrays. We sort two arrays independently, and then do a linear scan.\n\n- Space Complexity: from $$\\mathcal{O}(\\log{n} + \\log{m})$$ to $$\\mathcal{O}(n + m)$$, depending on the implementation of the sorting algorithm. For the complexity analysis purposes, we ignore the memory required by inputs and outputs.\n\n---\n\n### Approach 3: Built-in Intersection\n\nThis is similar to [Approach 2](#approach-2-sort). Instead of iterating with two pointers, we use a built-in function to find common elements. In C++, we can use `set_intersection` for sorted arrays (or multisets).\n\nThe [retainAll](https://docs.oracle.com/javase/8/docs/api/java/util/AbstractCollection.html#retainAll-java.util.Collection-) method in Java, unfortunately, does not care how many times an element occurs in the other collection. You can use the [retainOccurrences](https://guava.dev/releases/23.0/api/docs/com/google/common/collect/Multisets.html#retainOccurrences-com.google.common.collect.Multiset-com.google.common.collect.Multiset-) method of the multiset implementation in [Guava](https://guava.dev/releases/16.0/api/docs/com/google/common/collect/Multiset.html).\n\n**Algorithm**\n\n> Note that `set_intersection` returns the position past the end of the produced range, so it can be used as an input for the `erase` function. The idea is from [this solution](https://leetcode.com/problems/intersection-of-two-arrays-ii/discuss/82269/Short-Python-C%2B%2B) by [StefanPochmann](https://leetcode.com/stefanpochmann/).\n\n<iframe src=\"https://leetcode.com/playground/9sxPNx62/shared\" frameBorder=\"0\" width=\"100%\" height=\"174\" name=\"9sxPNx62\"></iframe>\n\n**Complexity Analysis**\n\n- Same as for [approach 2](#approach2complexity) above.\n\n---\n\n### Follow-up Questions\n\n1. What if the given array is already sorted? How would you optimize your algorithm?\n\n      - We can use either [Approach 2](#approach-2-sort) or [Approach 3](#approach-3-built-in-intersection), dropping the sort of course. It will give us linear time and constant memory complexity.\n\n2. What if *nums1's* size is small compared to *nums2's* size? Which algorithm is better?\n\n      - [Approach 1](#approach-1-hash-map) is a good choice here as we use a hash map for the smaller array.\n\n3. What if elements of *nums2* are stored on disk, and the memory is limited such that you cannot load all elements into the memory at once?\n\n      - If `nums1` fits into the memory, we can use [Approach 1](#approach-1-hash-map) to collect counts for `nums1` into a hash map. Then, we can sequentially load and process `nums2`.\n\n      - If neither of the arrays fit into the memory, we can apply some partial processing strategies:\n\n          - Split the numeric range into subranges that fits into the memory. Modify [Approach 1](#approach-1-hash-map) to collect counts only within a given subrange, and call the method multiple times (for each subrange).\n\n          - Use an external sort for both arrays. Modify [Approach 2](#approach-2-sort) to load and process arrays sequentially.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

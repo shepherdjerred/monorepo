@@ -1,0 +1,138 @@
+{
+  "questionId": "715",
+  "questionFrontendId": "715",
+  "title": "Range Module",
+  "titleSlug": "range-module",
+  "difficulty": "Hard",
+  "content": "<p>A Range Module is a module that tracks ranges of numbers. Design a data structure to track the ranges represented as <strong>half-open intervals</strong> and query about them.</p>\n\n<p>A <strong>half-open interval</strong> <code>[left, right)</code> denotes all the real numbers <code>x</code> where <code>left &lt;= x &lt; right</code>.</p>\n\n<p>Implement the <code>RangeModule</code> class:</p>\n\n<ul>\n\t<li><code>RangeModule()</code> Initializes the object of the data structure.</li>\n\t<li><code>void addRange(int left, int right)</code> Adds the <strong>half-open interval</strong> <code>[left, right)</code>, tracking every real number in that interval. Adding an interval that partially overlaps with currently tracked numbers should add any numbers in the interval <code>[left, right)</code> that are not already tracked.</li>\n\t<li><code>boolean queryRange(int left, int right)</code> Returns <code>true</code> if every real number in the interval <code>[left, right)</code> is currently being tracked, and <code>false</code> otherwise.</li>\n\t<li><code>void removeRange(int left, int right)</code> Stops tracking every real number currently being tracked in the <strong>half-open interval</strong> <code>[left, right)</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;RangeModule&quot;, &quot;addRange&quot;, &quot;removeRange&quot;, &quot;queryRange&quot;, &quot;queryRange&quot;, &quot;queryRange&quot;]\n[[], [10, 20], [14, 16], [10, 14], [13, 15], [16, 17]]\n<strong>Output</strong>\n[null, null, null, true, false, true]\n\n<strong>Explanation</strong>\nRangeModule rangeModule = new RangeModule();\nrangeModule.addRange(10, 20);\nrangeModule.removeRange(14, 16);\nrangeModule.queryRange(10, 14); // return True,(Every number in [10, 14) is being tracked)\nrangeModule.queryRange(13, 15); // return False,(Numbers like 14, 14.03, 14.17 in [13, 15) are not being tracked)\nrangeModule.queryRange(16, 17); // return True, (The number 16 in [16, 17) is still being tracked, despite the remove operation)\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= left &lt; right &lt;= 10<sup>9</sup></code></li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>addRange</code>, <code>queryRange</code>, and <code>removeRange</code>.</li>\n</ul>\n",
+  "hints": [
+    "Maintain a sorted set of disjoint intervals.  addRange and removeRange can be performed with time complexity linear to the size of this set; queryRange can be performed with time complexity logarithmic to the size of this set."
+  ],
+  "metaData": "{\r\n    \"classname\": \"RangeModule\",\r\n    \"constructor\": {\r\n        \"params\": []\r\n    },\r\n    \"methods\": [\r\n        {\r\n            \"name\" : \"addRange\",\r\n            \"params\": [\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"left\"\r\n                },\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"right\"\r\n                }\r\n            ],\r\n            \"return\": {\r\n                \"type\": \"void\"\r\n            }\r\n        },\r\n        {\r\n            \"name\" : \"queryRange\",\r\n            \"params\": [\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"left\"\r\n                },\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"right\"\r\n                }\r\n            ],\r\n            \"return\": {\r\n                \"type\": \"boolean\"\r\n            }\r\n        },\r\n        {\r\n            \"name\" : \"removeRange\",\r\n            \"params\": [\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"left\"\r\n                },\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"right\"\r\n                }\r\n            ],\r\n            \"return\": {\r\n                \"type\": \"void\"\r\n            }\r\n        }\r\n    ],\r\n    \"systemdesign\": true,\r\n    \"params\": [\r\n        {\r\n            \"name\": \"lefts\",\r\n            \"type\": \"integer[]\"\r\n        },\r\n        {\r\n            \"name\": \"rights\",\r\n            \"type\": \"integer[]\"\r\n        }\r\n    ],\r\n    \"return\": {\r\n        \"type\": \"list<String>\",\r\n        \"dealloc\": true\r\n    }\r\n}",
+  "stats": "{\"totalAccepted\": \"93.4K\", \"totalSubmission\": \"208.3K\", \"totalAcceptedRaw\": 93434, \"totalSubmissionRaw\": 208315, \"acRate\": \"44.9%\"}",
+  "likes": 1593,
+  "dislikes": 141,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Merge Intervals\", \"titleSlug\": \"merge-intervals\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Insert Interval\", \"titleSlug\": \"insert-interval\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Data Stream as Disjoint Intervals\", \"titleSlug\": \"data-stream-as-disjoint-intervals\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"RangeModule\",\"addRange\",\"removeRange\",\"queryRange\",\"queryRange\",\"queryRange\"]\n[[],[10,20],[14,16],[10,14],[13,15],[16,17]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"coupang\", \"name\": \"Coupang\"}, {\"timesEncountered\": 2, \"slug\": \"machine-zone\", \"name\": \"Machine Zone\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class RangeModule {\npublic:\n    RangeModule() {\n        \n    }\n    \n    void addRange(int left, int right) {\n        \n    }\n    \n    bool queryRange(int left, int right) {\n        \n    }\n    \n    void removeRange(int left, int right) {\n        \n    }\n};\n\n/**\n * Your RangeModule object will be instantiated and called as such:\n * RangeModule* obj = new RangeModule();\n * obj->addRange(left,right);\n * bool param_2 = obj->queryRange(left,right);\n * obj->removeRange(left,right);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class RangeModule {\n\n    public RangeModule() {\n        \n    }\n    \n    public void addRange(int left, int right) {\n        \n    }\n    \n    public boolean queryRange(int left, int right) {\n        \n    }\n    \n    public void removeRange(int left, int right) {\n        \n    }\n}\n\n/**\n * Your RangeModule object will be instantiated and called as such:\n * RangeModule obj = new RangeModule();\n * obj.addRange(left,right);\n * boolean param_2 = obj.queryRange(left,right);\n * obj.removeRange(left,right);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class RangeModule:\n\n    def __init__(self):\n        \n\n    def addRange(self, left: int, right: int) -> None:\n        \n\n    def queryRange(self, left: int, right: int) -> bool:\n        \n\n    def removeRange(self, left: int, right: int) -> None:\n        \n\n\n# Your RangeModule object will be instantiated and called as such:\n# obj = RangeModule()\n# obj.addRange(left,right)\n# param_2 = obj.queryRange(left,right)\n# obj.removeRange(left,right)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class RangeModule(object):\n\n    def __init__(self):\n        \n\n    def addRange(self, left, right):\n        \"\"\"\n        :type left: int\n        :type right: int\n        :rtype: None\n        \"\"\"\n        \n\n    def queryRange(self, left, right):\n        \"\"\"\n        :type left: int\n        :type right: int\n        :rtype: bool\n        \"\"\"\n        \n\n    def removeRange(self, left, right):\n        \"\"\"\n        :type left: int\n        :type right: int\n        :rtype: None\n        \"\"\"\n        \n\n\n# Your RangeModule object will be instantiated and called as such:\n# obj = RangeModule()\n# obj.addRange(left,right)\n# param_2 = obj.queryRange(left,right)\n# obj.removeRange(left,right)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar RangeModule = function() {\n    \n};\n\n/** \n * @param {number} left \n * @param {number} right\n * @return {void}\n */\nRangeModule.prototype.addRange = function(left, right) {\n    \n};\n\n/** \n * @param {number} left \n * @param {number} right\n * @return {boolean}\n */\nRangeModule.prototype.queryRange = function(left, right) {\n    \n};\n\n/** \n * @param {number} left \n * @param {number} right\n * @return {void}\n */\nRangeModule.prototype.removeRange = function(left, right) {\n    \n};\n\n/** \n * Your RangeModule object will be instantiated and called as such:\n * var obj = new RangeModule()\n * obj.addRange(left,right)\n * var param_2 = obj.queryRange(left,right)\n * obj.removeRange(left,right)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class RangeModule {\n    constructor() {\n        \n    }\n\n    addRange(left: number, right: number): void {\n        \n    }\n\n    queryRange(left: number, right: number): boolean {\n        \n    }\n\n    removeRange(left: number, right: number): void {\n        \n    }\n}\n\n/**\n * Your RangeModule object will be instantiated and called as such:\n * var obj = new RangeModule()\n * obj.addRange(left,right)\n * var param_2 = obj.queryRange(left,right)\n * obj.removeRange(left,right)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class RangeModule {\n\n    public RangeModule() {\n        \n    }\n    \n    public void AddRange(int left, int right) {\n        \n    }\n    \n    public bool QueryRange(int left, int right) {\n        \n    }\n    \n    public void RemoveRange(int left, int right) {\n        \n    }\n}\n\n/**\n * Your RangeModule object will be instantiated and called as such:\n * RangeModule obj = new RangeModule();\n * obj.AddRange(left,right);\n * bool param_2 = obj.QueryRange(left,right);\n * obj.RemoveRange(left,right);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} RangeModule;\n\n\nRangeModule* rangeModuleCreate() {\n    \n}\n\nvoid rangeModuleAddRange(RangeModule* obj, int left, int right) {\n    \n}\n\nbool rangeModuleQueryRange(RangeModule* obj, int left, int right) {\n    \n}\n\nvoid rangeModuleRemoveRange(RangeModule* obj, int left, int right) {\n    \n}\n\nvoid rangeModuleFree(RangeModule* obj) {\n    \n}\n\n/**\n * Your RangeModule struct will be instantiated and called as such:\n * RangeModule* obj = rangeModuleCreate();\n * rangeModuleAddRange(obj, left, right);\n \n * bool param_2 = rangeModuleQueryRange(obj, left, right);\n \n * rangeModuleRemoveRange(obj, left, right);\n \n * rangeModuleFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type RangeModule struct {\n    \n}\n\n\nfunc Constructor() RangeModule {\n    \n}\n\n\nfunc (this *RangeModule) AddRange(left int, right int)  {\n    \n}\n\n\nfunc (this *RangeModule) QueryRange(left int, right int) bool {\n    \n}\n\n\nfunc (this *RangeModule) RemoveRange(left int, right int)  {\n    \n}\n\n\n/**\n * Your RangeModule object will be instantiated and called as such:\n * obj := Constructor();\n * obj.AddRange(left,right);\n * param_2 := obj.QueryRange(left,right);\n * obj.RemoveRange(left,right);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class RangeModule() {\n\n    fun addRange(left: Int, right: Int) {\n        \n    }\n\n    fun queryRange(left: Int, right: Int): Boolean {\n        \n    }\n\n    fun removeRange(left: Int, right: Int) {\n        \n    }\n\n}\n\n/**\n * Your RangeModule object will be instantiated and called as such:\n * var obj = RangeModule()\n * obj.addRange(left,right)\n * var param_2 = obj.queryRange(left,right)\n * obj.removeRange(left,right)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass RangeModule {\n\n    init() {\n        \n    }\n    \n    func addRange(_ left: Int, _ right: Int) {\n        \n    }\n    \n    func queryRange(_ left: Int, _ right: Int) -> Bool {\n        \n    }\n    \n    func removeRange(_ left: Int, _ right: Int) {\n        \n    }\n}\n\n/**\n * Your RangeModule object will be instantiated and called as such:\n * let obj = RangeModule()\n * obj.addRange(left, right)\n * let ret_2: Bool = obj.queryRange(left, right)\n * obj.removeRange(left, right)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct RangeModule {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl RangeModule {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn add_range(&self, left: i32, right: i32) {\n        \n    }\n    \n    fn query_range(&self, left: i32, right: i32) -> bool {\n        \n    }\n    \n    fn remove_range(&self, left: i32, right: i32) {\n        \n    }\n}\n\n/**\n * Your RangeModule object will be instantiated and called as such:\n * let obj = RangeModule::new();\n * obj.add_range(left, right);\n * let ret_2: bool = obj.query_range(left, right);\n * obj.remove_range(left, right);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class RangeModule\n    def initialize()\n        \n    end\n\n\n=begin\n    :type left: Integer\n    :type right: Integer\n    :rtype: Void\n=end\n    def add_range(left, right)\n        \n    end\n\n\n=begin\n    :type left: Integer\n    :type right: Integer\n    :rtype: Boolean\n=end\n    def query_range(left, right)\n        \n    end\n\n\n=begin\n    :type left: Integer\n    :type right: Integer\n    :rtype: Void\n=end\n    def remove_range(left, right)\n        \n    end\n\n\nend\n\n# Your RangeModule object will be instantiated and called as such:\n# obj = RangeModule.new()\n# obj.add_range(left, right)\n# param_2 = obj.query_range(left, right)\n# obj.remove_range(left, right)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class RangeModule {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $left\n     * @param Integer $right\n     * @return NULL\n     */\n    function addRange($left, $right) {\n        \n    }\n  \n    /**\n     * @param Integer $left\n     * @param Integer $right\n     * @return Boolean\n     */\n    function queryRange($left, $right) {\n        \n    }\n  \n    /**\n     * @param Integer $left\n     * @param Integer $right\n     * @return NULL\n     */\n    function removeRange($left, $right) {\n        \n    }\n}\n\n/**\n * Your RangeModule object will be instantiated and called as such:\n * $obj = RangeModule();\n * $obj->addRange($left, $right);\n * $ret_2 = $obj->queryRange($left, $right);\n * $obj->removeRange($left, $right);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class RangeModule {\n\n  RangeModule() {\n    \n  }\n  \n  void addRange(int left, int right) {\n    \n  }\n  \n  bool queryRange(int left, int right) {\n    \n  }\n  \n  void removeRange(int left, int right) {\n    \n  }\n}\n\n/**\n * Your RangeModule object will be instantiated and called as such:\n * RangeModule obj = RangeModule();\n * obj.addRange(left,right);\n * bool param2 = obj.queryRange(left,right);\n * obj.removeRange(left,right);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class RangeModule() {\n\n    def addRange(left: Int, right: Int): Unit = {\n        \n    }\n\n    def queryRange(left: Int, right: Int): Boolean = {\n        \n    }\n\n    def removeRange(left: Int, right: Int): Unit = {\n        \n    }\n\n}\n\n/**\n * Your RangeModule object will be instantiated and called as such:\n * val obj = new RangeModule()\n * obj.addRange(left,right)\n * val param_2 = obj.queryRange(left,right)\n * obj.removeRange(left,right)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule RangeModule do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec add_range(left :: integer, right :: integer) :: any\n  def add_range(left, right) do\n    \n  end\n\n  @spec query_range(left :: integer, right :: integer) :: boolean\n  def query_range(left, right) do\n    \n  end\n\n  @spec remove_range(left :: integer, right :: integer) :: any\n  def remove_range(left, right) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# RangeModule.init_()\n# RangeModule.add_range(left, right)\n# param_2 = RangeModule.query_range(left, right)\n# RangeModule.remove_range(left, right)\n\n# RangeModule.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec range_module_init_() -> any().\nrange_module_init_() ->\n  .\n\n-spec range_module_add_range(Left :: integer(), Right :: integer()) -> any().\nrange_module_add_range(Left, Right) ->\n  .\n\n-spec range_module_query_range(Left :: integer(), Right :: integer()) -> boolean().\nrange_module_query_range(Left, Right) ->\n  .\n\n-spec range_module_remove_range(Left :: integer(), Right :: integer()) -> any().\nrange_module_remove_range(Left, Right) ->\n  .\n\n\n%% Your functions will be called as such:\n%% range_module_init_(),\n%% range_module_add_range(Left, Right),\n%% Param_2 = range_module_query_range(Left, Right),\n%% range_module_remove_range(Left, Right),\n\n%% range_module_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define range-module%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; add-range : exact-integer? exact-integer? -> void?\n    (define/public (add-range left right)\n      )\n    ; query-range : exact-integer? exact-integer? -> boolean?\n    (define/public (query-range left right)\n      )\n    ; remove-range : exact-integer? exact-integer? -> void?\n    (define/public (remove-range left right)\n      )))\n\n;; Your range-module% object will be instantiated and called as such:\n;; (define obj (new range-module%))\n;; (send obj add-range left right)\n;; (define param_2 (send obj query-range left right))\n;; (send obj remove-range left right)"
+    }
+  ],
+  "solution": {
+    "id": "268",
+    "content": "[TOC]\n\n\n### Approach #1: Maintain Sorted Disjoint Intervals [Accepted]\n\n**Intuition**\n\nBecause `left, right < 10^9`, we need to deal with the coordinates abstractly. Let's maintain some sorted structure of disjoint intervals. These intervals will be closed (eg. we don't store `[[1, 2], [2, 3]]`; we would store `[[1, 3]]` instead.)\n\nIn this article, we will go over Python and Java versions separately, as the data structures available to us that are relevant to the problem are substantially different.\n\n**Algorithm**\n\nWe will maintain the structure as a *list* `self.ranges = []`.  \n\n*Adding a Range*\n\nWhen we want to add a range, we first find the indices `i, j = self._bounds(left, right)` for which `self.ranges[i: j+1]` touches (in a closed sense - not half open) the given interval `[left, right]`. We can find this in log time by making steps of size 100, 10, then 1 in our linear search from both sides.\n\nEvery interval touched by `[left, right]` will be replaced by the single interval `[min(left, self.ranges[i][0]), max(right, self.ranges[j][1])]`.\n\n*Removing a Range*\n\nAgain, we use `i, j = self._bounds(...)` to only work in the relevant subset of `self.ranges` that is in the neighborhood of our given range `[left, right)`. For each interval `[x, y)` from `self.ranges[i:j+1]`, we may have some subset of that interval to the left and/or right of `[left, right)`. We replace our current interval `[x, y)` with those (up to 2) new intervals.\n\n*Querying a Range*\n\nAs the intervals are sorted, we use binary search to find the single interval that could intersect `[left, right)`, then verify that it does.\n\n<iframe src=\"https://leetcode.com/playground/2cwAuDxK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2cwAuDxK\"></iframe>\n\n---\n\n**Algorithm (Java)**\n\nWe will maintain the structure as a *TreeSet* `ranges = new TreeSet<Interval>();`. We introduce a new *Comparable* class `Interval` to represent our half-open intervals. They compare by *right-most* coordinate as later we will see that it simplifies our work. Also note that this ordering is consistent with equals, which is important when dealing with *Sets*.\n\n*Adding and Removing a Range*\n\nThe basic structure of adding and removing a range is the same.  First, we must iterate over the relevant subset of `ranges`. This is done using iterators so that we can `itr.remove` on the fly, and break when the intervals go too far to the right.\n\nThe critical logic of `addRange` is simply to make `left, right` the smallest and largest seen coordinates. After, we add one giant interval representing the union of all intervals seen that touched `[left, right]`.\n\nThe logic of `removeRange` is to remember in `todo` the intervals we wanted to replace the removed interval with. After, we can add them all back in.\n\n*Querying a Range*\n\nAs the intervals are sorted, we search to find the single interval that could intersect `[left, right)`, then verify that it does. As the TreeSet uses a balanced (red-black) tree, this has logarithmic complexity.\n\n<iframe src=\"https://leetcode.com/playground/inESDPPR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"inESDPPR\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: Let $$K$$ be the number of elements in `ranges`. `addRange` and `removeRange` operations have $$O(K)$$ complexity. `queryRange` has $$O(\\log K)$$ complexity. Because `addRange, removeRange` adds at most 1 interval at a time, you can bound these further. For example, if there are $$A$$ `addRange`, $$R$$ `removeRange`, and $$Q$$ `queryRange` number of operations respectively, we can express our complexity as $$O((A+R)^2 Q \\log(A+R))$$. \n\n* Space Complexity: $$O(A+R)$$, the space used by `ranges`.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

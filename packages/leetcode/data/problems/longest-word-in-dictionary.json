@@ -1,0 +1,147 @@
+{
+  "questionId": "720",
+  "questionFrontendId": "720",
+  "title": "Longest Word in Dictionary",
+  "titleSlug": "longest-word-in-dictionary",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of strings <code>words</code> representing an English Dictionary, return <em>the longest word in</em> <code>words</code> <em>that can be built one character at a time by other words in</em> <code>words</code>.</p>\n\n<p>If there is more than one possible answer, return the longest word with the smallest lexicographical order. If there is no answer, return the empty string.</p>\n\n<p>Note that the word should be built from left to right with each additional character being added to the end of a previous word.&nbsp;</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;w&quot;,&quot;wo&quot;,&quot;wor&quot;,&quot;worl&quot;,&quot;world&quot;]\n<strong>Output:</strong> &quot;world&quot;\n<strong>Explanation:</strong> The word &quot;world&quot; can be built one character at a time by &quot;w&quot;, &quot;wo&quot;, &quot;wor&quot;, and &quot;worl&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;a&quot;,&quot;banana&quot;,&quot;app&quot;,&quot;appl&quot;,&quot;ap&quot;,&quot;apply&quot;,&quot;apple&quot;]\n<strong>Output:</strong> &quot;apple&quot;\n<strong>Explanation:</strong> Both &quot;apply&quot; and &quot;apple&quot; can be built from other words in the dictionary. However, &quot;apple&quot; is lexicographically smaller than &quot;apply&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= words[i].length &lt;= 30</code></li>\n\t<li><code>words[i]</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "For every word in the input list, we can check whether all prefixes of that word are in the input list by using a Set."
+  ],
+  "metaData": "{\r\n  \"name\": \"longestWord\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"words\",\r\n      \"type\": \"string[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"190.4K\", \"totalSubmission\": \"348.8K\", \"totalAcceptedRaw\": 190411, \"totalSubmissionRaw\": 348754, \"acRate\": \"54.6%\"}",
+  "likes": 2086,
+  "dislikes": 1509,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Word in Dictionary through Deleting\", \"titleSlug\": \"longest-word-in-dictionary-through-deleting\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Implement Magic Dictionary\", \"titleSlug\": \"implement-magic-dictionary\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Word With All Prefixes\", \"titleSlug\": \"longest-word-with-all-prefixes\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"w\",\"wo\",\"wor\",\"worl\",\"world\"]",
+    "[\"a\",\"banana\",\"app\",\"appl\",\"ap\",\"apply\",\"apple\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string longestWord(vector<string>& words) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String longestWord(String[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestWord(self, words: List[str]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestWord(self, words):\n        \"\"\"\n        :type words: List[str]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @return {string}\n */\nvar longestWord = function(words) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestWord(words: string[]): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string LongestWord(string[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* longestWord(char** words, int wordsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestWord(words []string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestWord(words: Array<String>): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestWord(_ words: [String]) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_word(words: Vec<String>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @return {String}\ndef longest_word(words)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @return String\n     */\n    function longestWord($words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String longestWord(List<String> words) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestWord(words: Array[String]): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_word(words :: [String.t]) :: String.t\n  def longest_word(words) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_word(Words :: [unicode:unicode_binary()]) -> unicode:unicode_binary().\nlongest_word(Words) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-word words)\n  (-> (listof string?) string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "284",
+    "content": "[TOC]\n\n### Approach #1: Brute Force [Accepted]\n\n**Intuition**\n\nFor each word, check if all prefixes `word[:k]` are present. We can use a `Set` structure to check this quickly.\n\n**Algorithm**\n\nWhenever our found word would be superior, we check if all its prefixes are present, then replace our answer.\n\nAlternatively, we could have sorted the words beforehand, so that we knew the word we were considering would be the answer if all its prefixes were present.\n\n**Python**\n```python\nclass Solution(object):\n    def longestWord(self, words):\n    ans = \"\"\n    wordset = set(words)\n    for word in words:\n        if len(word) > len(ans) or len(word) == len(ans) and word < ans:\n            if all(word[:k] in wordset for k in xrange(1, len(word))):\n                ans = word\n\n    return ans\n```\n\n*Alternate Implementation*\n```python\nclass Solution(object):\n    def longestWord(self, words):\n        wordset = set(words)\n        words.sort(key = lambda c: (-len(c), c))\n        for word in words:\n            if all(word[:k] in wordset for k in xrange(1, len(word))):\n                return word\n\n        return \"\"\n```\n\n**Java**\n\n```java\nclass Solution {\n    public String longestWord(String[] words) {\n        String ans = \"\";\n        Set<String> wordset = new HashSet();\n        for (String word: words) {\n            wordset.add(word);\n        }\n        for (String word: words) {\n            if (word.length() > ans.length() ||\n                    word.length() == ans.length() && word.compareTo(ans) < 0) {\n                boolean good = true;\n                for (int k = 1; k < word.length(); ++k) {\n                    if (!wordset.contains(word.substring(0, k))) {\n                        good = false;\n                        break;\n                    }\n                }\n                if (good) {\n                    ans = word;\n                }\n            }    \n        }\n        return ans;\n    }\n}\n```\n\n*Alternate Implementation*\n```java\nclass Solution {\n    public String longestWord(String[] words) {\n        Set<String> wordset = new HashSet();\n        for (String word: words) {\n            wordset.add(word);\n        }\n        Arrays.sort(words, (a, b) -> a.length() == b.length()\n                    ? a.compareTo(b) : b.length() - a.length());\n        for (String word: words) {\n            boolean good = true;\n            for (int k = 1; k < word.length(); ++k) {\n                if (!wordset.contains(word.substring(0, k))) {\n                    good = false;\n                    break;\n                }\n            }\n            if (good) {\n                return word;\n            }\n        }\n\n        return \"\";\n    }\n}\n```\n\n**Complexity Analysis**\n\n* Time complexity : $$O(\\sum w_i^2)$$, where $$w_i$$ is the length of `words[i]`. Checking whether all prefixes of `words[i]` are in the set is $$O(\\sum w_i^2)$$.\n\n* Space complexity : $$O(\\sum w_i^2)$$ to create the substrings.\n\n---\n### Approach #2: Trie + Depth-First Search [Accepted]\n\n**Intuition**\n\nAs prefixes of strings are involved, this is usually a natural fit for a *trie* (a prefix tree.)\n\n**Algorithm**\n\nPut every word in a trie, then depth-first-search from the start of the trie, only searching nodes that ended a word. Every node found (except the root, which is a special case) then represents a word with all its prefixes present.  We take the best such word.\n\nIn Python, we showcase a method using defaultdict, while in Java, we stick to a more general object-oriented approach.\n\n**Python**\n```python\nclass Solution(object):\n    def longestWord(self, words):\n        Trie = lambda: collections.defaultdict(Trie)\n        trie = Trie()\n        END = True\n\n        for i, word in enumerate(words):\n            reduce(dict.__getitem__, word, trie)[END] = i\n\n        stack = trie.values()\n        ans = \"\"\n        while stack:\n            cur = stack.pop()\n            if END in cur:\n                word = words[cur[END]]\n                if len(word) > len(ans) or len(word) == len(ans) and word < ans:\n                    ans = word\n                stack.extend([cur[letter] for letter in cur if letter != END])\n\n        return ans\n```\n\n**Java**\n```java\nclass Solution {\n    public String longestWord(String[] words) {\n        Trie trie = new Trie();\n        int index = 0;\n        for (String word: words) {\n            trie.insert(word, ++index); //indexed by 1\n        }\n        trie.words = words;\n        return trie.dfs();\n    }\n}\nclass Node {\n    char c;\n    HashMap<Character, Node> children = new HashMap();\n    int end;\n    public Node(char c){\n        this.c = c;\n    }\n}\n\nclass Trie {\n    Node root;\n    String[] words;\n    public Trie() {\n        root = new Node('0');\n    }\n\n    public void insert(String word, int index) {\n        Node cur = root;\n        for (char c: word.toCharArray()) {\n            cur.children.putIfAbsent(c, new Node(c));\n            cur = cur.children.get(c);\n        }\n        cur.end = index;\n    }\n\n    public String dfs() {\n        String ans = \"\";\n        Stack<Node> stack = new Stack();\n        stack.push(root);\n        while (!stack.empty()) {\n            Node node = stack.pop();\n            if (node.end > 0 || node == root) {\n                if (node != root) {\n                    String word = words[node.end - 1];\n                    if (word.length() > ans.length() ||\n                            word.length() == ans.length() && word.compareTo(ans) < 0) {\n                        ans = word;\n                    }\n                }\n                for (Node nei: node.children.values()) {\n                    stack.push(nei);\n                }\n            }\n        }\n        return ans;\n    }\n}\n```\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(\\sum w_i)$$, where $$w_i$$ is the length of `words[i]`. This is the complexity to build the trie and to search it.\n\n  If we used a BFS instead of a DFS and ordered the children in an array, we could drop the need to check whether the candidate word at each node is better than the answer, by forcing that the last node visited will be the best answer.\n\n* Space Complexity: $$O(\\sum w_i)$$, the space used by our trie.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

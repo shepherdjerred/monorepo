@@ -1,0 +1,154 @@
+{
+  "questionId": "140",
+  "questionFrontendId": "140",
+  "title": "Word Break II",
+  "titleSlug": "word-break-ii",
+  "difficulty": "Hard",
+  "content": "<p>Given a string <code>s</code> and a dictionary of strings <code>wordDict</code>, add spaces in <code>s</code> to construct a sentence where each word is a valid dictionary word. Return all such possible sentences in <strong>any order</strong>.</p>\n\n<p><strong>Note</strong> that the same word in the dictionary may be reused multiple times in the segmentation.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;catsanddog&quot;, wordDict = [&quot;cat&quot;,&quot;cats&quot;,&quot;and&quot;,&quot;sand&quot;,&quot;dog&quot;]\n<strong>Output:</strong> [&quot;cats and dog&quot;,&quot;cat sand dog&quot;]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;pineapplepenapple&quot;, wordDict = [&quot;apple&quot;,&quot;pen&quot;,&quot;applepen&quot;,&quot;pine&quot;,&quot;pineapple&quot;]\n<strong>Output:</strong> [&quot;pine apple pen apple&quot;,&quot;pineapple pen apple&quot;,&quot;pine applepen apple&quot;]\n<strong>Explanation:</strong> Note that you are allowed to reuse a dictionary word.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;catsandog&quot;, wordDict = [&quot;cats&quot;,&quot;dog&quot;,&quot;sand&quot;,&quot;and&quot;,&quot;cat&quot;]\n<strong>Output:</strong> []\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 20</code></li>\n\t<li><code>1 &lt;= wordDict.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= wordDict[i].length &lt;= 10</code></li>\n\t<li><code>s</code> and <code>wordDict[i]</code> consist of only lowercase English letters.</li>\n\t<li>All the strings of <code>wordDict</code> are <strong>unique</strong>.</li>\n\t<li>Input is generated in a way that the length of the answer doesn&#39;t exceed&nbsp;10<sup>5</sup>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"wordBreak\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"wordDict\",\n      \"type\": \"list<string>\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<string>\",\n    \"dealloc\": true\n  }\n}",
+  "stats": "{\"totalAccepted\": \"811.2K\", \"totalSubmission\": \"1.5M\", \"totalAcceptedRaw\": 811197, \"totalSubmissionRaw\": 1467599, \"acRate\": \"55.3%\"}",
+  "likes": 7550,
+  "dislikes": 550,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Word Break\", \"titleSlug\": \"word-break\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Concatenated Words\", \"titleSlug\": \"concatenated-words\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"catsanddog\"\n[\"cat\",\"cats\",\"and\",\"sand\",\"dog\"]",
+    "\"pineapplepenapple\"\n[\"apple\",\"pen\",\"applepen\",\"pine\",\"pineapple\"]",
+    "\"catsandog\"\n[\"cats\",\"dog\",\"sand\",\"and\",\"cat\"]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 11, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"anduril\", \"name\": \"Anduril\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"moveworks\", \"name\": \"Moveworks\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 26, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 13, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 4, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 4, \"slug\": \"grammarly\", \"name\": \"Grammarly\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}, {\"timesEncountered\": 2, \"slug\": \"dropbox\", \"name\": \"Dropbox\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    },
+    {
+      "name": "Memoization",
+      "slug": "memoization"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> wordBreak(string s, vector<string>& wordDict) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> wordBreak(String s, List<String> wordDict) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def wordBreak(self, s: str, wordDict: List[str]) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def wordBreak(self, s, wordDict):\n        \"\"\"\n        :type s: str\n        :type wordDict: List[str]\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string[]} wordDict\n * @return {string[]}\n */\nvar wordBreak = function(s, wordDict) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function wordBreak(s: string, wordDict: string[]): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> WordBreak(string s, IList<string> wordDict) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** wordBreak(char* s, char** wordDict, int wordDictSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func wordBreak(s string, wordDict []string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun wordBreak(s: String, wordDict: List<String>): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func wordBreak(_ s: String, _ wordDict: [String]) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn word_break(s: String, word_dict: Vec<String>) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String[]} word_dict\n# @return {String[]}\ndef word_break(s, word_dict)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String[] $wordDict\n     * @return String[]\n     */\n    function wordBreak($s, $wordDict) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> wordBreak(String s, List<String> wordDict) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def wordBreak(s: String, wordDict: List[String]): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec word_break(s :: String.t, word_dict :: [String.t]) :: [String.t]\n  def word_break(s, word_dict) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec word_break(S :: unicode:unicode_binary(), WordDict :: [unicode:unicode_binary()]) -> [unicode:unicode_binary()].\nword_break(S, WordDict) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (word-break s wordDict)\n  (-> string? (listof string?) (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2324",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe have a string `s` and a dictionary of strings `wordDict`. The task is to add spaces in `s` to construct valid sentences where each word is present in `wordDict` and return all possible valid sentences. The same word from the dictionary can be reused multiple times.\n\nThis problem is an extension of [Problem 139. Word Break I](https://leetcode.com/problems/word-break/description/), where the goal was to determine if a word could be segmented into other words from a given dictionary. In this problem, however, we need to find all possible ways to split the word into valid statements. To understand this problem, it is beneficial to be familiar with [Problem 139. Word Break I](https://leetcode.com/problems/word-break/description/) as well as [Problem 208. Implement Trie Prefix Tree](https://leetcode.com/problems/implement-trie-prefix-tree/), as those questions provide the foundational concepts and intuition necessary for solving this problem.\n\nHere, we will focus on the applications of recursion, dynamic programming, and tries, rather than on understanding their underlying mechanisms.\n\nTo gain an understanding of their underlying mechanisms, we suggest you check out these explore cards: \n1. [Backtracking Explore Card](https://leetcode.com/explore/learn/card/recursion-ii/472/backtracking/).\n2. [Dynamic Programming Explore Card](https://leetcode.com/explore/learn/card/dynamic-programming/).\n3. [Trie Explore Card](https://leetcode.com/explore/learn/card/trie/).\n\n---\n\n### Approach 1: Backtracking\n\n#### Intuition\n\nInitially, we might think of a brute-force approach where we systematically explore all possible ways to break the string into words from the dictionary. This leads us to the backtracking strategy, where we recursively try to form words from the string and add them to a current sentence if they are in the dictionary. If the current prefix doesn't lead to a valid solution, we backtrack by removing the last added word and trying the next possible word. This ensures we explore all possible segmentations of the string.\n\nAt each step, we consider all possible end indices for substrings starting from the current index. For each substring, we check if it exists in the dictionary. If the substring is a valid word, we append it to the current sentence and recursively call the function with the updated index, which is the end index of the substring plus one.\n\nIf we reach the end of the string, it means we have found a valid segmentation, and we can add the current sentence to the results. However, if we encounter a substring that is not a valid word, we backtrack by returning from that recursive call and trying the next possible end index.\n\nThe backtracking approach will be inefficient due to the large number of recursive calls, especially for longer strings. To increase efficiency, we will convert the word dictionary into a set for constant-time lookups. However, the overall time complexity remains high because we explore all possible partitions.\n\nThe process is visualized below:\n\n![backtrack](../Figures/140/backtrack.png)\n\n#### Algorithm\n\n**`wordBreak` Function:**\n- Convert the `wordDict` array into an unordered set `wordSet` for efficient lookups.\n- Initialize an empty array `results` to store valid sentences.\n- Initialize an empty string `currentSentence` to keep track of the sentence being constructed.\n- Call the `backtrack` function with the input string `s`, `wordSet`, `currentSentence`, `results`, and a starting index set to 0, the beginning of the input string.\n- Return `results`.\n\n**`backtrack` Function:**\n- Base Case: If the `startIndex` is equal to the length of the string, add the `currentSentence` to `results` and return as it means that `currentSentence` represents a valid sentence.\n- Iterate over possible `endIndex` values from `startIndex + 1` to the end of the string.\n    - Extract the substring `word` from `startIndex` to `endIndex - 1`.\n    - If `word` is found in `wordSet`:\n        - Store the current `currentSentence` in `originalSentence`.\n        - Append `word` to `currentSentence` (with a space if needed).\n        - Recursively call `backtrack` with the updated `currentSentence` and `endIndex`.\n        - Reset `currentSentence` to its original value (`originalSentence`) to backtrack and try the next `endIndex`.\n- Return from the `backtrack` function.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/izdRa3p9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"izdRa3p9\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input string.  \n\n- Time complexity: $O(n \\cdot 2^n)$\n\n    The algorithm explores all possible ways to break the string into words. In the worst case, where each character can be treated as a word, the recursion tree has $2^n$ leaf nodes, resulting in an exponential time complexity. For each leaf node, $O(n)$ work is performed, so the overall complexity is $O(n \\cdot 2^n)$.\n\n- Space complexity: $O(2^n)$\n\n    The recursion stack can grow up to a depth of $n$, where each recursive call consumes additional space for storing the current state. \n    \n    Since each position in the string can be a split point or not, and for $n$ positions, there are $2^n$ possible combinations of splits. Thus, in the worst case, each combination generates a different sentence that needs to be stored, leading to exponential space complexity.\n\n---\n\n### Approach 2: Dynamic Programming - Memoization\n\n#### Intuition\n\nWe can improve the efficiency of the backtracking method by using Memoization, which stores the results of subproblems to avoid recalculating them.\n\nWe use a depth-first search (DFS) function that recursively breaks the string into words. However, before performing a recursive call, we check if the results for the current substring have already been computed and stored in a memoization map (typically a dictionary or hash table).\n\nIf the results of the current substring are found in the memoization map, we can directly return them without further computation. If not, we proceed with the recursive call, computing the results and storing them in the memoization map before returning them.\n\nBy memoizing the results, we can reduce the number of computations by ensuring that each substring is processed only once in average cases. \n\n#### Algorithm\n \n**`wordBreak` Function:**\n- Convert the `wordDict` array into an unordered set `wordSet` for efficient lookups.\n- Initialize an empty unordered map `memoization` to store the results of subproblems.\n- Call the `dfs` function with the input string `s`, `wordSet`, and `memoization`.\n\n**`dfs` Function:**\n- Check if the answer for the current `remainingStr`(the remaining part of the string to be processed) are already in `memoization`. If so, return them.\n- Base Case: If `remainingStr` is empty, it means that all characters have been processed. An empty string represents a valid sentence so return an array containing the empty string.\n- Initialize an empty array `results`.\n- Iterate from 1 to the length of `remainingStr`:\n    - Extract the substring `currentWord` from 0 to `i` to check if it is a valid word.\n    - If `currentWord` is found in `wordSet`:\n        - Recursively call `dfs` with `remainingStr.substr(i)`, `wordSet`, and `memoization`.\n        - Append `currentWord` and the recursive results to `results`(with a space if needed) to form valid sentences.\n- Store the `results` for `remainingStr` in `memoization`.\n- Return `results`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Ri3aMwXd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Ri3aMwXd\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input string.  \n\n* Time complexity: $O(n \\cdot 2^n)$\n\n    While memoization avoids redundant computations, it does not change the overall number of subproblems that need to be solved. In the worst case, there are still unique $2^n$ possible substrings that need to be explored, leading to an exponential time complexity. For each subproblem, $O(n)$ work is performed, so the overall complexity is $O(n \\cdot 2^n)$.\n\n* Space complexity: $O(n \\cdot 2^n)$\n\n    The recursion stack can grow up to a depth of $n$, where each recursive call consumes additional space for storing the current state. \n\n    The memoization map needs to store the results for all possible substrings, which can be up to $2^n$ substrings of size $n$ in the worst case, resulting in an exponential space complexity.\n\n---\n\n### Approach 3: Dynamic Programming - Tabulation\n\n#### Intuition\n\nWhile memoization improves the backtracking approach, we might consider an alternative approach using dynamic programming principles. This leads us to the tabulation method, which builds a table (or map) of valid sentences for each starting index in the string. \n\nThe tabulation approach is often more efficient than backtracking and memoization in terms of time and space complexity because it avoids the overhead of recursive calls and stack usage. It also eliminates the need for a separate memoization map, as the table itself serves as the storage for the subproblem solutions.\n\nThe tabulation approach works in a bottom-up manner, iterating from the end of the string towards the beginning. At each step, we construct all possible sentences that can be formed starting from the current index by checking if substrings form valid words in the dictionary.\n\nIf a valid word is found, we combine it with the valid sentences formed from the remaining substring. This process continues until we reach the beginning of the string, building up the table of valid sentences for each starting index.\n\nThe key idea behind tabulation is that we ensure all subproblems are solved before they are needed, enabling the construction of complete solutions in an organized manner. By iterating from the end to the beginning of the string, we guarantee that the necessary subproblems have already been solved when we need them.\n\n#### Algorithm\n \n- Initialize an empty unordered map `dp` to store the results of subproblems.\n- Iterate from the end of the string to the beginning (`startIdx` from `s.size()` to 0):\n    - Initialize an empty array `validSentences` to store all valid sentences starting from that index. \n    - Iterate from `startIdx` to the end of the string (`endIdx`):\n        - Extract the substring `currentWord` from `startIdx` to `endIdx`.\n        - If `currentWord` is a valid word in `wordDict`:\n            - If `endIdx` is the last index, add `currentWord` to `validSentences`.\n            - Else, append `currentWord` to each sentence formed by the remaining substring (`sentencesFromNextIndex`) from `dp[endIdx + 1]`.\n    - Store `validSentences` in `dp[startIdx]`.\n- Return `dp[0]` (valid sentences formed from the entire string).\n\nThe algorithm is visualized below:\n\n!?!../Documents/140/tabulation.json:976,631!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/gWJckozB/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"gWJckozB\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input string.  \n\n* Time complexity: $O(n \\cdot 2^n)$\n\n    Similar to memoization, the tabulation approach still needs to explore all possible substrings, which can be up to $2^n$ in the worst case, leading to an exponential time complexity. $O(n)$ work is performed to explore each substring, so the overall complexity is $O(n \\cdot 2^n)$.\n\n* Space complexity: $O(n \\cdot 2^n)$\n\n    The dynamic programming table or map needs to store the valid sentences for all possible starting indices, which can be up to $2^n$ strings of size $n$ in the worst case, resulting in an exponential space complexity.\n\n---\n\n### Approach 4: Trie Optimization\n\n#### Intuition\n\nWhile the previous approaches focus on optimizing the search and computation process, we can also consider leveraging efficient data structures to enhance the word lookup process. This leads us to the trie-based approach, which uses a trie data structure to store the word dictionary, allowing efficient word lookup and prefix matching.\n\n> The trie, also known as a prefix tree, is a tree-based data structure where each node represents a character in a word, and the path from the root to a leaf node represents a complete word. This structure is particularly useful for problems involving word segmentation because it allows for efficient prefix matching.\n\nHere, we first build a trie from the dictionary words. Each word is represented as a path in the trie, where each node corresponds to a character in the word.\n\nBy using the trie, we can quickly determine whether a substring can form a valid word without having to perform linear searches or set lookups. This reduces the search space and improves the efficiency of the algorithm.\n\nIn this approach, instead of recursively exploring the remaining substring and using memoization, we iterate from the end of the input string to the beginning (in reverse order). For each starting index (`startIdx`), we attempt to find valid sentences that can be formed from that index by iterating through the string and checking if the current substring forms a valid word using the trie data structure.\nWhen a valid word is encountered in the trie, we append it to the list of valid sentences for the current starting index. If the current valid word is not the last word in the sentence, we combine it with the valid sentences formed from the next index (`endIdx + 1`), which are retrieved from the `dp` dictionary.\n\nThe valid sentences for each starting index are stored in the `dp` dictionary, ensuring that previously computed results are reused. By using tabulation and storing the valid sentences for each starting index, we avoid redundant computations and achieve significant time and space efficiency improvements compared to the standard backtracking method with memoization.\n\nThe trie-based approach offers advantages in terms of efficient word lookup and prefix matching, making it particularly suitable for problems involving word segmentation or string manipulation. However, it comes with the additional overhead of constructing and maintaining the trie data structure, which can be more memory-intensive for large dictionaries.\n\n#### Algorithm\n \n**Initialize TrieNode Structure**\n- Each TrieNode has two properties:\n - `isEnd`: A boolean value indicating if the node marks the end of a word.\n - `children`: An array of size 26 (for lowercase English letters) to store pointers to child nodes.\n- The constructor initializes `isEnd` to `false` and all elements in `children` to `null`.\n\n**Trie Class**\n- The Trie class has a `root` pointer of type `TrieNode`.\n- The constructor initializes the `root` with a new `TrieNode` object.\n- The `insert` function:\n - Takes a string `word` as input.\n - Starts from the `root` node.\n - For each character `c` in the `word`:\n   - Calculate the index corresponding to the character.\n   - If the child node at the calculated index doesn't exist, create a new `TrieNode` and assign it to that index.\n   - Move to the child node.\n - After processing all characters, mark the current node's `isEnd` as `true`.\n\n**wordBreak Function**\n- Create a `Trie` object.\n- Insert all words from `wordDict` into the trie using the `insert` function.\n- Initialize a map `dp` to store the results of subproblems.\n- Iterate from the end of the string `s` to the beginning (in reverse order).\n - For each starting index `startIdx`:\n   - Initialize a vector `validSentences` to store valid sentences starting from `startIdx`.\n   - Initialize a `current_node` pointer to the `root` of the trie.\n   - Iterate from `startIdx` to the end of the string.\n     - For each character `c` in the string:\n       - Calculate the index corresponding to `c`.\n       - Check if the child node at the calculated index exists in the trie.\n        - If the child node doesn't exist, break out of the inner loop. This means that the current substring cannot form a valid word, so there is no need to continue checking the remaining characters.\n       - Move to the child node.\n     - Check if the current node's `isEnd` is `true`, indicating a valid word.\n     - If a valid word is found:\n       - Extract the current word from the string using `substr`.\n       - If it's the last word in the sentence (`endIdx` is the last index):\n         - Add the current word to `validSentences`.\n       - If it's not the last word:\n         - Retrieve the valid sentences formed by the remaining substring from `dp[endIdx + 1]`.\n         - Combine the current word with each sentence and add it to `validSentences`.\n   - Store the `validSentences` for the current `startIdx` in `dp`.\n- Return the valid sentences stored in `dp[0]`, which represents the valid sentences formed from the entire string.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/YBoyT88T/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"YBoyT88T\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input string. \n\n* Time complexity: $O(n \\cdot 2^n)$\n\n    Even though the trie-based approach uses an efficient data structure for word lookup, it still needs to explore all possible ways to break the string into words. In the worst case, there are $2^n$ unique possible partitions, leading to an exponential time complexity. $O(n)$ work is performed for each partition, so the overall complexity is $O(n \\cdot 2^n)$.\n\n* Space complexity: $O(n \\cdot 2^n)$\n\n    The trie data structure itself can have a maximum of $2^n$ nodes in the worst case, where each character in the string represents a separate word. Additionally, the tabulation map used in this approach can also store up to $2^n$ strings of size $n$, resulting in an overall exponential space complexity.\n\n---\n\n**Further Thoughts On Complexity Analysis:**\n\nThe complexity of this problem cannot be reduced from $n \\cdot 2^n$; the worst-case scenario will still be $(n \\cdot 2^n)$. However, using dynamic programming (DP) will make it a bit more efficient than backtracking overall because of the below test case.\n\nConsider the input `\"aaaaaa\"`, with `wordDict = [\"a\", \"aa\", \"aaa\", \"aaaa\", \"aaaaa\", \"aaaaa\"]`. \nEvery possible partition is a valid sentence, and there are $2^{n-1}$ such partitions. The algorithms cannot perform better than this since they must generate all valid sentences. The cost of iterating over cached results will be exponential, as every possible partition will be cached, resulting in the same runtime as regular backtracking. Likewise, the space complexity will also be $O(n \\cdot 2^n)$ for the same reason—every partition is stored in memory.\n\nAnother way to explain why the worst-case complexity is $O(n \\cdot 2^n)$ for all the algorithms is that, given an array of length $n$, there are $n+1$ ways/intervals to partition it into two parts. Each interval has two choices: to split or not to split. In the worst case, we will have to check all possibilities, which results in a time complexity of $O(n \\cdot 2^{n+1})$, which simplifies to $O(n \\cdot 2^n)$. This analysis is extremely similar to palindrome partitioning.\n\nOverall, this question is interesting because of the nature of this complexity. In an interview setting, if an interviewer asks this question, the most expected solutions would be Backtracking and Trie, as they become natural choices for the conditions and outputs we need.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

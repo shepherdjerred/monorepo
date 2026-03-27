@@ -1,0 +1,144 @@
+{
+  "questionId": "379",
+  "questionFrontendId": "379",
+  "title": "Design Phone Directory",
+  "titleSlug": "design-phone-directory",
+  "difficulty": "Medium",
+  "content": "<p>Design a phone directory that initially has <code>maxNumbers</code> empty slots that can store numbers. The directory should store numbers, check if a certain slot is empty or not, and empty a given slot.</p>\n\n<p>Implement the <code>PhoneDirectory</code> class:</p>\n\n<ul>\n\t<li><code>PhoneDirectory(int maxNumbers)</code> Initializes the phone directory with the number of available slots <code>maxNumbers</code>.</li>\n\t<li><code>int get()</code> Provides a number that is not assigned to anyone. Returns <code>-1</code> if no number is available.</li>\n\t<li><code>bool check(int number)</code> Returns <code>true</code> if the slot <code>number</code> is available and <code>false</code> otherwise.</li>\n\t<li><code>void release(int number)</code> Recycles or releases the slot <code>number</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;PhoneDirectory&quot;, &quot;get&quot;, &quot;get&quot;, &quot;check&quot;, &quot;get&quot;, &quot;check&quot;, &quot;release&quot;, &quot;check&quot;]\n[[3], [], [], [2], [], [2], [2], [2]]\n<strong>Output</strong>\n[null, 0, 1, true, 2, false, null, true]\n\n<strong>Explanation</strong>\nPhoneDirectory phoneDirectory = new PhoneDirectory(3);\nphoneDirectory.get();      // It can return any available phone number. Here we assume it returns 0.\nphoneDirectory.get();      // Assume it returns 1.\nphoneDirectory.check(2);   // The number 2 is available, so return true.\nphoneDirectory.get();      // It returns 2, the only number that is left.\nphoneDirectory.check(2);   // The number 2 is no longer available, so return false.\nphoneDirectory.release(2); // Release number 2 back to the pool.\nphoneDirectory.check(2);   // Number 2 is available again, return true.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= maxNumbers &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= number &lt; maxNumbers</code></li>\n\t<li>At most <code>2 * 10<sup>4</sup></code> calls will be made to <code>get</code>, <code>check</code>, and <code>release</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"PhoneDirectory\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"name\": \"maxNumbers\",\n        \"type\": \"integer\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [],\n      \"name\": \"get\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"number\"\n        }\n      ],\n      \"name\": \"check\",\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"number\"\n        }\n      ],\n      \"name\": \"release\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"74.5K\", \"totalSubmission\": \"141.4K\", \"totalAcceptedRaw\": 74531, \"totalSubmissionRaw\": 141368, \"acRate\": \"52.7%\"}",
+  "likes": 366,
+  "dislikes": 482,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Seat Reservation Manager\", \"titleSlug\": \"seat-reservation-manager\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"PhoneDirectory\",\"get\",\"get\",\"check\",\"get\",\"check\",\"release\",\"check\"]\n[[3],[],[],[2],[],[2],[2],[2]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class PhoneDirectory {\npublic:\n    PhoneDirectory(int maxNumbers) {\n        \n    }\n    \n    int get() {\n        \n    }\n    \n    bool check(int number) {\n        \n    }\n    \n    void release(int number) {\n        \n    }\n};\n\n/**\n * Your PhoneDirectory object will be instantiated and called as such:\n * PhoneDirectory* obj = new PhoneDirectory(maxNumbers);\n * int param_1 = obj->get();\n * bool param_2 = obj->check(number);\n * obj->release(number);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class PhoneDirectory {\n\n    public PhoneDirectory(int maxNumbers) {\n        \n    }\n    \n    public int get() {\n        \n    }\n    \n    public boolean check(int number) {\n        \n    }\n    \n    public void release(int number) {\n        \n    }\n}\n\n/**\n * Your PhoneDirectory object will be instantiated and called as such:\n * PhoneDirectory obj = new PhoneDirectory(maxNumbers);\n * int param_1 = obj.get();\n * boolean param_2 = obj.check(number);\n * obj.release(number);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class PhoneDirectory:\n\n    def __init__(self, maxNumbers: int):\n        \n\n    def get(self) -> int:\n        \n\n    def check(self, number: int) -> bool:\n        \n\n    def release(self, number: int) -> None:\n        \n\n\n# Your PhoneDirectory object will be instantiated and called as such:\n# obj = PhoneDirectory(maxNumbers)\n# param_1 = obj.get()\n# param_2 = obj.check(number)\n# obj.release(number)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class PhoneDirectory(object):\n\n    def __init__(self, maxNumbers):\n        \"\"\"\n        :type maxNumbers: int\n        \"\"\"\n        \n\n    def get(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def check(self, number):\n        \"\"\"\n        :type number: int\n        :rtype: bool\n        \"\"\"\n        \n\n    def release(self, number):\n        \"\"\"\n        :type number: int\n        :rtype: None\n        \"\"\"\n        \n\n\n# Your PhoneDirectory object will be instantiated and called as such:\n# obj = PhoneDirectory(maxNumbers)\n# param_1 = obj.get()\n# param_2 = obj.check(number)\n# obj.release(number)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} maxNumbers\n */\nvar PhoneDirectory = function(maxNumbers) {\n    \n};\n\n/**\n * @return {number}\n */\nPhoneDirectory.prototype.get = function() {\n    \n};\n\n/** \n * @param {number} number\n * @return {boolean}\n */\nPhoneDirectory.prototype.check = function(number) {\n    \n};\n\n/** \n * @param {number} number\n * @return {void}\n */\nPhoneDirectory.prototype.release = function(number) {\n    \n};\n\n/** \n * Your PhoneDirectory object will be instantiated and called as such:\n * var obj = new PhoneDirectory(maxNumbers)\n * var param_1 = obj.get()\n * var param_2 = obj.check(number)\n * obj.release(number)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class PhoneDirectory {\n    constructor(maxNumbers: number) {\n        \n    }\n\n    get(): number {\n        \n    }\n\n    check(number: number): boolean {\n        \n    }\n\n    release(number: number): void {\n        \n    }\n}\n\n/**\n * Your PhoneDirectory object will be instantiated and called as such:\n * var obj = new PhoneDirectory(maxNumbers)\n * var param_1 = obj.get()\n * var param_2 = obj.check(number)\n * obj.release(number)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class PhoneDirectory {\n\n    public PhoneDirectory(int maxNumbers) {\n        \n    }\n    \n    public int Get() {\n        \n    }\n    \n    public bool Check(int number) {\n        \n    }\n    \n    public void Release(int number) {\n        \n    }\n}\n\n/**\n * Your PhoneDirectory object will be instantiated and called as such:\n * PhoneDirectory obj = new PhoneDirectory(maxNumbers);\n * int param_1 = obj.Get();\n * bool param_2 = obj.Check(number);\n * obj.Release(number);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} PhoneDirectory;\n\n\nPhoneDirectory* phoneDirectoryCreate(int maxNumbers) {\n    \n}\n\nint phoneDirectoryGet(PhoneDirectory* obj) {\n    \n}\n\nbool phoneDirectoryCheck(PhoneDirectory* obj, int number) {\n    \n}\n\nvoid phoneDirectoryRelease(PhoneDirectory* obj, int number) {\n    \n}\n\nvoid phoneDirectoryFree(PhoneDirectory* obj) {\n    \n}\n\n/**\n * Your PhoneDirectory struct will be instantiated and called as such:\n * PhoneDirectory* obj = phoneDirectoryCreate(maxNumbers);\n * int param_1 = phoneDirectoryGet(obj);\n \n * bool param_2 = phoneDirectoryCheck(obj, number);\n \n * phoneDirectoryRelease(obj, number);\n \n * phoneDirectoryFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type PhoneDirectory struct {\n    \n}\n\n\nfunc Constructor(maxNumbers int) PhoneDirectory {\n    \n}\n\n\nfunc (this *PhoneDirectory) Get() int {\n    \n}\n\n\nfunc (this *PhoneDirectory) Check(number int) bool {\n    \n}\n\n\nfunc (this *PhoneDirectory) Release(number int)  {\n    \n}\n\n\n/**\n * Your PhoneDirectory object will be instantiated and called as such:\n * obj := Constructor(maxNumbers);\n * param_1 := obj.Get();\n * param_2 := obj.Check(number);\n * obj.Release(number);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class PhoneDirectory(maxNumbers: Int) {\n\n    fun get(): Int {\n        \n    }\n\n    fun check(number: Int): Boolean {\n        \n    }\n\n    fun release(number: Int) {\n        \n    }\n\n}\n\n/**\n * Your PhoneDirectory object will be instantiated and called as such:\n * var obj = PhoneDirectory(maxNumbers)\n * var param_1 = obj.get()\n * var param_2 = obj.check(number)\n * obj.release(number)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass PhoneDirectory {\n\n    init(_ maxNumbers: Int) {\n        \n    }\n    \n    func get() -> Int {\n        \n    }\n    \n    func check(_ number: Int) -> Bool {\n        \n    }\n    \n    func release(_ number: Int) {\n        \n    }\n}\n\n/**\n * Your PhoneDirectory object will be instantiated and called as such:\n * let obj = PhoneDirectory(maxNumbers)\n * let ret_1: Int = obj.get()\n * let ret_2: Bool = obj.check(number)\n * obj.release(number)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct PhoneDirectory {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl PhoneDirectory {\n\n    fn new(maxNumbers: i32) -> Self {\n        \n    }\n    \n    fn get(&self) -> i32 {\n        \n    }\n    \n    fn check(&self, number: i32) -> bool {\n        \n    }\n    \n    fn release(&self, number: i32) {\n        \n    }\n}\n\n/**\n * Your PhoneDirectory object will be instantiated and called as such:\n * let obj = PhoneDirectory::new(maxNumbers);\n * let ret_1: i32 = obj.get();\n * let ret_2: bool = obj.check(number);\n * obj.release(number);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class PhoneDirectory\n\n=begin\n    :type max_numbers: Integer\n=end\n    def initialize(max_numbers)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def get()\n        \n    end\n\n\n=begin\n    :type number: Integer\n    :rtype: Boolean\n=end\n    def check(number)\n        \n    end\n\n\n=begin\n    :type number: Integer\n    :rtype: Void\n=end\n    def release(number)\n        \n    end\n\n\nend\n\n# Your PhoneDirectory object will be instantiated and called as such:\n# obj = PhoneDirectory.new(max_numbers)\n# param_1 = obj.get()\n# param_2 = obj.check(number)\n# obj.release(number)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class PhoneDirectory {\n    /**\n     * @param Integer $maxNumbers\n     */\n    function __construct($maxNumbers) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function get() {\n        \n    }\n  \n    /**\n     * @param Integer $number\n     * @return Boolean\n     */\n    function check($number) {\n        \n    }\n  \n    /**\n     * @param Integer $number\n     * @return NULL\n     */\n    function release($number) {\n        \n    }\n}\n\n/**\n * Your PhoneDirectory object will be instantiated and called as such:\n * $obj = PhoneDirectory($maxNumbers);\n * $ret_1 = $obj->get();\n * $ret_2 = $obj->check($number);\n * $obj->release($number);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class PhoneDirectory {\n\n  PhoneDirectory(int maxNumbers) {\n    \n  }\n  \n  int get() {\n    \n  }\n  \n  bool check(int number) {\n    \n  }\n  \n  void release(int number) {\n    \n  }\n}\n\n/**\n * Your PhoneDirectory object will be instantiated and called as such:\n * PhoneDirectory obj = PhoneDirectory(maxNumbers);\n * int param1 = obj.get();\n * bool param2 = obj.check(number);\n * obj.release(number);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class PhoneDirectory(_maxNumbers: Int) {\n\n    def get(): Int = {\n        \n    }\n\n    def check(number: Int): Boolean = {\n        \n    }\n\n    def release(number: Int): Unit = {\n        \n    }\n\n}\n\n/**\n * Your PhoneDirectory object will be instantiated and called as such:\n * val obj = new PhoneDirectory(maxNumbers)\n * val param_1 = obj.get()\n * val param_2 = obj.check(number)\n * obj.release(number)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule PhoneDirectory do\n  @spec init_(max_numbers :: integer) :: any\n  def init_(max_numbers) do\n    \n  end\n\n  @spec get() :: integer\n  def get() do\n    \n  end\n\n  @spec check(number :: integer) :: boolean\n  def check(number) do\n    \n  end\n\n  @spec release(number :: integer) :: any\n  def release(number) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# PhoneDirectory.init_(max_numbers)\n# param_1 = PhoneDirectory.get()\n# param_2 = PhoneDirectory.check(number)\n# PhoneDirectory.release(number)\n\n# PhoneDirectory.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec phone_directory_init_(MaxNumbers :: integer()) -> any().\nphone_directory_init_(MaxNumbers) ->\n  .\n\n-spec phone_directory_get() -> integer().\nphone_directory_get() ->\n  .\n\n-spec phone_directory_check(Number :: integer()) -> boolean().\nphone_directory_check(Number) ->\n  .\n\n-spec phone_directory_release(Number :: integer()) -> any().\nphone_directory_release(Number) ->\n  .\n\n\n%% Your functions will be called as such:\n%% phone_directory_init_(MaxNumbers),\n%% Param_1 = phone_directory_get(),\n%% Param_2 = phone_directory_check(Number),\n%% phone_directory_release(Number),\n\n%% phone_directory_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define phone-directory%\n  (class object%\n    (super-new)\n    \n    ; max-numbers : exact-integer?\n    (init-field\n      max-numbers)\n    \n    ; get : -> exact-integer?\n    (define/public (get)\n      )\n    ; check : exact-integer? -> boolean?\n    (define/public (check number)\n      )\n    ; release : exact-integer? -> void?\n    (define/public (release number)\n      )))\n\n;; Your phone-directory% object will be instantiated and called as such:\n;; (define obj (new phone-directory% [max-numbers max-numbers]))\n;; (define param_1 (send obj get))\n;; (define param_2 (send obj check number))\n;; (send obj release number)"
+    }
+  ],
+  "solution": {
+    "id": "2038",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Design using Arrays\n\n#### Intuition  \n\nThe most intuitive method is using an array to record the availability of each slot. We build a boolean array `isSlotAvailable` of size `maxNumbers` to indicate whether the slot at index `i` is available. Initially, all values of the array are `true`.\n\nEach slot `i` assigned by `get()` will be marked as `isSlotAvailable[i] = false` to indicate the slot is already occupied. Each slot `i` released by `release()` will be marked as `true` to indicate it's available. \n\nWhile performing the `get()` operation, we can iterate on all slots from `0` till `isSlotAvailable.size()` one by one, and search for an unoccupied slot (i.e. `isSlotAvailable[i] == true`), if found, then we mark that slot as occupied (i.e. `isSlotAvailable[i] = false`) and return the slot `i`.    \nIf no slot is available then in that case we return `-1`.\n\nTo check if a slot `number` is occupied or not, we can check if `isSlotAvailable[number]` is `true` (available) or `false` (not available).\n\nTo release a slot `number`, we need to set `isSlotAvailable[number] = true`, indicating that the slot is available.\n\n![array_example](../Figures/379/Slide1.PNG)\n\n\n#### Algorithm\n\n1. Initialize an array `isSlotAvailable` of size `maxNumbers`, storing `true` at all indices.\n\n2. Implementing the `get()` method:    \n    Iterate through our `isSlotAvailable` array and if `isSlotAvailable[i] == true` at any index, mark `isSlotAvailable[i] = false` and return `i`.    \n    Otherwise, return `-1`.\n\n3. Implementing the `check(number)` method:    \n    Return `isSlotAvailable[number]`.\n\n4. Implementing the `release(number)` method:    \n    Mark `isSlotAvailable[number] = true`.\n   \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/G8JYNsEk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"G8JYNsEk\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the maximum number of slots in the phone directory, i.e. `n = maxNumbers`.\n\n* Time complexity: \n    - In each `get` method call, we iterate over the `isSlotAvailable` array until we reach the end or find the first available slot, one call will take $O(n)$ time on average.\n    - In each `check` method call, we only check if the value stored at the respective index in the `isSlotAvailable` array is `true` or not, thus each call will take $O(1)$ time.\n    - In each `release` method call, we mark the value at the respective index in the `isSlotAvailable` array as `true`, thus each call will take $O(1)$ time.\n\n* Space complexity: $$O(n)$$\n    - We use an auxiliary array `isSlotAvailable` of size $n$, to mark the availability status of $n$ slots.\n\n\n<br />\n\n---\n\n### Approach 2: Design using Queue / LinkedList\n\n#### Intuition  \n\nIn the previous approach, the `get` method is not optimal as to find any available slot we need to iterate over the whole `isSlotAvailable` array. \n\nInstead, we can use a queue (or, a linked list) `slotsAvalaiableQueue` to keep track of currently available slots, we will push a slot number if it is available, and whenever we require a slot number we will pop from it, both these operations will take constant time.   \n\nSearching if a `number` is present in the queue or not will take linear time, so to avoid searching in the queue to check whether the slot is available or not, we will use the previously used boolean array `isSlotAvailable` where we will mark `isSlotAvailable[number] = true` if `number` is present in the queue. Thus, we can quickly check if the slot `number` is present in the queue (i.e., is available) or not in constant time.\n\n<br />\n\nInitially, all slots are available, thus, `isSlotAvailable` will store `true` at all indices, and `slotsAvailableQueue` will have all numbers in it from `0` till `(maxNumbers - 1)`.\n\nWhile performing the `get()` operation, we need to return any available slot, so if `slotsAvailableQueue` is not empty, we pop its first element `slot`, mark it as not available (i.e. `isSlotAvailable[number] = false`), and return `slot`.     \nOtherwise, if `slotsAvailableQueue` is empty, all slots are already occupied, then we return `-1`.\n\nTo check if a slot `number` is occupied or not, we can check if `isSlotAvailable[number]` is `true` (indicating it's available), or `false` (indicating it's not available).\n\nWhile releasing a slot `number`, if `isSlotAvailable[number]` is already `true` it means it is already available and is present in the queue so there is no need to push it again.   \nOtherwise, the `number` was earlier occupied and is now released, so, we will push the `number` in the `slotsAvailableQueue` queue and mark it as available `isSlotAvailable[number] = true`.  \n\n\n![queue_example](../Figures/379/Slide2.PNG)\n\n\n\n\n#### Algorithm\n\n1. Initialize an array `isSlotAvailable` of size `maxNumbers` storing `true` at all indices, and a queue `slotsAvalaiableQueue` having all numbers from `0` till `(maxNumbers - 1)` in it.\n\n2. Implementing the `get()` method:    \n    If `slotsAvalaiableQueue` is not empty, we pop its first element `slot`, mark `isSlotAvailable[slot] = false`, and return `slot`.     \n    Otherwise, return `-1`.\n\n3. Implementing the `check(number)` method:    \n    Return `isSlotAvailable[number]`.\n\n4. Implementing the `release(number)` method:    \n    If `isSlotAvailable[number] == true`, then return.    \n    Otherwise, mark `isSlotAvailable[number] = true` and push `number` in `slotsAvalaiableQueue`.\n    \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/dsTa3ymD/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dsTa3ymD\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the maximum number of slots in the phone directory, i.e. `n = maxNumbers`.\n\n* Time complexity: \n    - In each `get` method call, we pop the first element from `slotsAvailableQueue ` and mark it as not available in `isSlotAvailable`, both of which are constant time operations, thus each call will only take $O(1)$ time.\n    - In each `check` method call, we only check if the value stored at the respective index in the `isSlotAvailable` array is `true` or not, thus each call will take $O(1)$ time.\n    - In each `release` method call, we mark the value at the respective index in the `isSlotAvailable` array as `true` and push it in `slotsAvailableQueue` both of which are constant time operations, thus each call will take $O(1)$ time.\n\n* Space complexity: $$O(n)$$\n    - We use an additional queue `slotsAvailableQueue ` and an array `isSlotAvailable`, both of which have a maximum size of $n$.\n\n\n<br />\n\n---\n\n### Approach 3: Design using Hash Table\n\n#### Intuition  \n\nWe can also use a hash set `slotsAvailable` to store all available slots. In addition, in a hash set, inserting an element, checking if an element is present, and getting the first element are all constant time operations.  \n\nAs initially, all slots are available `slotsAvailable` will have all numbers from `0` till `(maxNumbers - 1)` in it.\n\nWhile performing the `get()` operation, we need to return any available slot, if `slotsAvailable` is not empty then we pop its first element and return it.     \nOtherwise, all slots are already occupied, so, we return `-1`.\n\nTo check if a slot `number` is occupied or not, we can check if `number` is present in the hash set `slotsAvailable` (indicating it's available), or not (indicating it's not available).\n\nTo release a slot `number`, we will push `number` in our `slotsAvailable` hash set.\n\n#### Algorithm\n\n1. Initialize a hash set `slotsAvailable` having numbers from `0` till `(maxNumbers - 1)` in it.\n\n2. Implementing the `get()` method:    \n    If `slotsAvailable` is not empty then we pop its first element `slot` and return it.     \n    Otherwise, return `-1`.\n\n3. Implementing the `check(number)` method:    \n    Return `true` if `number` is present in `slotsAvailable`, otherwise, return `false`.\n\n4. Implementing the `release(number)` method:    \n    Push `number` in `slotsAvailable`.\n   \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Q3ecR8EN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Q3ecR8EN\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the maximum number of slots in the phone directory, i.e. `n = maxNumbers`.\n\n* Time complexity: \n    - In each `get` method call, we return the first element from the `slotsAvailable` hash set, thus each call will only take $O(1)$ time.\n    - In each `check` method call, we check if the value is present in the `slotsAvailable` hash set or not, thus each call will take $O(1)$ time.\n    - In each `release` method call, we insert the value in the `slotsAvailable` hash set, thus each call will take $O(1)$ time.\n\n* Space complexity: $$O(n)$$\n    - We use an additional hash set `slotsAvailable` of maximum size $n$. \n\n\n<br />\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "questionId": "503",
+  "questionFrontendId": "503",
+  "title": "Next Greater Element II",
+  "titleSlug": "next-greater-element-ii",
+  "difficulty": "Medium",
+  "content": "<p>Given a circular integer array <code>nums</code> (i.e., the next element of <code>nums[nums.length - 1]</code> is <code>nums[0]</code>), return <em>the <strong>next greater number</strong> for every element in</em> <code>nums</code>.</p>\n\n<p>The <strong>next greater number</strong> of a number <code>x</code> is the first greater number to its traversing-order next in the array, which means you could search circularly to find its next greater number. If it doesn&#39;t exist, return <code>-1</code> for this number.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,1]\n<strong>Output:</strong> [2,-1,2]\nExplanation: The first 1&#39;s next greater number is 2; \nThe number 2 can&#39;t find next greater number. \nThe second 1&#39;s next greater number needs to search circularly, which is also 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4,3]\n<strong>Output:</strong> [2,3,4,-1,4]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"nextGreaterElements\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer[]\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"778K\", \"totalSubmission\": \"1.1M\", \"totalAcceptedRaw\": 778025, \"totalSubmissionRaw\": 1142486, \"acRate\": \"68.1%\"}",
+  "likes": 9157,
+  "dislikes": 239,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Next Greater Element I\", \"titleSlug\": \"next-greater-element-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Next Greater Element III\", \"titleSlug\": \"next-greater-element-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum and Minimum Sums of at Most Size K Subarrays\", \"titleSlug\": \"maximum-and-minimum-sums-of-at-most-size-k-subarrays\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,1]",
+    "[1,2,3,4,3]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"zeta\", \"name\": \"Zeta\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Monotonic Stack",
+      "slug": "monotonic-stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> nextGreaterElements(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] nextGreaterElements(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def nextGreaterElements(self, nums: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def nextGreaterElements(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number[]}\n */\nvar nextGreaterElements = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function nextGreaterElements(nums: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] NextGreaterElements(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* nextGreaterElements(int* nums, int numsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func nextGreaterElements(nums []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun nextGreaterElements(nums: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func nextGreaterElements(_ nums: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn next_greater_elements(nums: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer[]}\ndef next_greater_elements(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer[]\n     */\n    function nextGreaterElements($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> nextGreaterElements(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def nextGreaterElements(nums: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec next_greater_elements(nums :: [integer]) :: [integer]\n  def next_greater_elements(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec next_greater_elements(Nums :: [integer()]) -> [integer()].\nnext_greater_elements(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (next-greater-elements nums)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "88",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force (using Double Length Array) [Time Limit Exceeded]\n\n#### Algorithm\n\nIn this method, we make use of an array $doublenums$ which is formed by concatenating two copies of the given $nums$ array one after the other. Now, when we need to find out the next greater element for $nums[i]$, we can simply scan all the elements $doublenums[j]$, such that $i < j < length(doublenums)$. The first element found satisfying the given condition is the required result for $nums[i]$. If no such element is found, we put a $\\text{-1}$ at the appropriate position in the $res$ array.\n\n \n<iframe src=\"https://leetcode.com/playground/tRcR8Lx3/shared\" frameBorder=\"0\" name=\"tRcR8Lx3\" width=\"100%\" height=\"377\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n^2)$. The complete $doublenums$ array(of size $\\text{2n}$) is scanned for all the elements of $nums$ in the worst case.\n\n* Space complexity : $O(n)$. $doublenums$ array of size $\\text{2n}$ is used. $res$ array of size $\\text{n}$ is used.\n\n\n---\n\n### Approach 2: Better Brute Force [Accepted]\n\n#### Algorithm\n\nInstead of making a double length copy of $nums$ array , we can traverse circularly in the $nums$ array by making use of the $ \\text{modulus}$ operator. For every element $nums[i]$, we start searching in the $nums$ array(of length $n$) from the index $(i+1)%n$ and look at the next (circularly) $n-1$ elements. For $nums[i]$ we do so by scanning over $nums[j]$, such that\n$(i+1)%n &leq; j &leq; (i+(n-1))%n$, and we look for the first greater element found. If no such element is found, we put a $\\text{-1}$ at the appropriate position in the $res$ array.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LCG759JD/shared\" frameBorder=\"0\" name=\"LCG759JD\" width=\"100%\" height=\"309\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n^2)$. The complete $nums$ array of size $n$ is scanned for all the elements of $nums$ in the worst case.\n\n* Space complexity : $O(n)$. $res$ array of size $n$ is used.\n\n---\n\n### Approach 3: Using Stack [Accepted]\n\n\n#### Algorithm\n\nThis approach makes use of a stack. This stack stores the indices of the appropriate elements from $nums$ array.  The top of the stack refers to the index of the Next Greater Element found so far. We store the indices instead of the elements since there could be duplicates in the $nums$ array. The description of the method will make the above statement clearer.\n\nWe start traversing the $nums$ array from right towards the left. For an element $nums[i]$ encountered, we pop all the elements\n$stack[top]$ from the stack such that $nums\\big[stack[top]\\big] \\le nums[i]$. We continue the popping till we encounter a $stack[top]$ satisfying $nums\\big[stack[top]\\big] > nums[i]$. Now, it is obvious that the current $stack[top]$ only can act as the\nNext Greater Element for $nums[i]$(right now, considering only the elements lying to the right of $nums[i]$).\n\nIf no element remains on the top of the stack, it means no larger element than $nums[i]$ exists to its right. Along with this, we also push the index of the element just encountered($nums[i]$), i.e. $i$ over the top of the stack, so that $nums[i]$(or $stack[top]$) now acts as the Next Greater Element for the elements lying to its left.\n\nWe go through two such passes over the complete $nums$ array. This is done so as to complete a circular traversal over the $nums$ array. The first pass could make some wrong entries in the $res$ array since it considers only the elements lying to the right of $nums[i]$, without a circular traversal. But, these entries are corrected in the second pass.  \n\nFurther, to ensure the correctness of the method, let's look at the following cases.\n\nAssume that $nums[j]$ is the correct Next Greater Element for $nums[i]$, such that $i < j &le; stack[top]$. Now, whenever we encounter $nums[j]$, if $nums[j] > nums\\big[stack[top]\\big]$, it would have already popped the previous $stack[top]$ and $j$ would have become the topmost element. On the other hand, if  $nums[j] < nums\\big[stack[top]\\big]$, it would have become the topmost element by being pushed above the previous $stack[top]$. In both the cases, if $nums[j] > nums[i]$, it will be correctly determined to be the Next Greater Element.\n\nThe following example makes the procedure clear:\n\n<!--![Next_Greater_Element_II](../Figures/503_Next_Greater_Element_II.gif)-->\n!?!../Documents/503_Next_Greater2.json:1000,563!?!\n\nAs the animation above depicts, after the first pass, there are a number of wrong entries(marked as $\\text{-1}$) in the $res$ array, because only the elements lying to the corresponding right(non-circular) have been considered till now. But, after the second pass, the correct values are substituted.\n\n\n#### Implementation\n \n<iframe src=\"https://leetcode.com/playground/in37fqRd/shared\" frameBorder=\"0\" name=\"in37fqRd\" width=\"100%\" height=\"309\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n)$. Only two traversals of the $nums$ array are done. Further, at most $\\text{2n}$ elements are pushed and popped from the stack.\n\n* Space complexity : $O(n)$. A stack of size $n$ is used. $res$ array of size $n$ is used.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

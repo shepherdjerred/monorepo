@@ -1,0 +1,144 @@
+{
+  "questionId": "816",
+  "questionFrontendId": "705",
+  "title": "Design HashSet",
+  "titleSlug": "design-hashset",
+  "difficulty": "Easy",
+  "content": "<p>Design a HashSet without using any built-in hash table libraries.</p>\n\n<p>Implement <code>MyHashSet</code> class:</p>\n\n<ul>\n\t<li><code>void add(key)</code> Inserts the value <code>key</code> into the HashSet.</li>\n\t<li><code>bool contains(key)</code> Returns whether the value <code>key</code> exists in the HashSet or not.</li>\n\t<li><code>void remove(key)</code> Removes the value <code>key</code> in the HashSet. If <code>key</code> does not exist in the HashSet, do nothing.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;MyHashSet&quot;, &quot;add&quot;, &quot;add&quot;, &quot;contains&quot;, &quot;contains&quot;, &quot;add&quot;, &quot;contains&quot;, &quot;remove&quot;, &quot;contains&quot;]\n[[], [1], [2], [1], [3], [2], [2], [2], [2]]\n<strong>Output</strong>\n[null, null, null, true, false, null, true, null, false]\n\n<strong>Explanation</strong>\nMyHashSet myHashSet = new MyHashSet();\nmyHashSet.add(1);      // set = [1]\nmyHashSet.add(2);      // set = [1, 2]\nmyHashSet.contains(1); // return True\nmyHashSet.contains(3); // return False, (not found)\nmyHashSet.add(2);      // set = [1, 2]\nmyHashSet.contains(2); // return True\nmyHashSet.remove(2);   // set = [1]\nmyHashSet.contains(2); // return False, (already removed)</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= key &lt;= 10<sup>6</sup></code></li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>add</code>, <code>remove</code>, and <code>contains</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"MyHashSet\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"key\"\n        }\n      ],\n      \"name\": \"add\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"key\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"void\"\n      },\n      \"name\": \"remove\"\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"key\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"boolean\"\n      },\n      \"name\": \"contains\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"567.4K\", \"totalSubmission\": \"835.9K\", \"totalAcceptedRaw\": 567362, \"totalSubmissionRaw\": 835871, \"acRate\": \"67.9%\"}",
+  "likes": 4037,
+  "dislikes": 329,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Design HashMap\", \"titleSlug\": \"design-hashmap\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Design Skiplist\", \"titleSlug\": \"design-skiplist\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"MyHashSet\",\"add\",\"add\",\"contains\",\"contains\",\"add\",\"contains\",\"remove\",\"contains\"]\n[[],[1],[2],[1],[3],[2],[2],[2],[2]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"wix\", \"name\": \"Wix\"}, {\"timesEncountered\": 2, \"slug\": \"marqeta\", \"name\": \"Marqeta\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Hash Function",
+      "slug": "hash-function"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class MyHashSet {\npublic:\n    MyHashSet() {\n        \n    }\n    \n    void add(int key) {\n        \n    }\n    \n    void remove(int key) {\n        \n    }\n    \n    bool contains(int key) {\n        \n    }\n};\n\n/**\n * Your MyHashSet object will be instantiated and called as such:\n * MyHashSet* obj = new MyHashSet();\n * obj->add(key);\n * obj->remove(key);\n * bool param_3 = obj->contains(key);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class MyHashSet {\n\n    public MyHashSet() {\n        \n    }\n    \n    public void add(int key) {\n        \n    }\n    \n    public void remove(int key) {\n        \n    }\n    \n    public boolean contains(int key) {\n        \n    }\n}\n\n/**\n * Your MyHashSet object will be instantiated and called as such:\n * MyHashSet obj = new MyHashSet();\n * obj.add(key);\n * obj.remove(key);\n * boolean param_3 = obj.contains(key);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class MyHashSet:\n\n    def __init__(self):\n        \n\n    def add(self, key: int) -> None:\n        \n\n    def remove(self, key: int) -> None:\n        \n\n    def contains(self, key: int) -> bool:\n        \n\n\n# Your MyHashSet object will be instantiated and called as such:\n# obj = MyHashSet()\n# obj.add(key)\n# obj.remove(key)\n# param_3 = obj.contains(key)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class MyHashSet(object):\n\n    def __init__(self):\n        \n\n    def add(self, key):\n        \"\"\"\n        :type key: int\n        :rtype: None\n        \"\"\"\n        \n\n    def remove(self, key):\n        \"\"\"\n        :type key: int\n        :rtype: None\n        \"\"\"\n        \n\n    def contains(self, key):\n        \"\"\"\n        :type key: int\n        :rtype: bool\n        \"\"\"\n        \n\n\n# Your MyHashSet object will be instantiated and called as such:\n# obj = MyHashSet()\n# obj.add(key)\n# obj.remove(key)\n# param_3 = obj.contains(key)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar MyHashSet = function() {\n    \n};\n\n/** \n * @param {number} key\n * @return {void}\n */\nMyHashSet.prototype.add = function(key) {\n    \n};\n\n/** \n * @param {number} key\n * @return {void}\n */\nMyHashSet.prototype.remove = function(key) {\n    \n};\n\n/** \n * @param {number} key\n * @return {boolean}\n */\nMyHashSet.prototype.contains = function(key) {\n    \n};\n\n/** \n * Your MyHashSet object will be instantiated and called as such:\n * var obj = new MyHashSet()\n * obj.add(key)\n * obj.remove(key)\n * var param_3 = obj.contains(key)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class MyHashSet {\n    constructor() {\n        \n    }\n\n    add(key: number): void {\n        \n    }\n\n    remove(key: number): void {\n        \n    }\n\n    contains(key: number): boolean {\n        \n    }\n}\n\n/**\n * Your MyHashSet object will be instantiated and called as such:\n * var obj = new MyHashSet()\n * obj.add(key)\n * obj.remove(key)\n * var param_3 = obj.contains(key)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class MyHashSet {\n\n    public MyHashSet() {\n        \n    }\n    \n    public void Add(int key) {\n        \n    }\n    \n    public void Remove(int key) {\n        \n    }\n    \n    public bool Contains(int key) {\n        \n    }\n}\n\n/**\n * Your MyHashSet object will be instantiated and called as such:\n * MyHashSet obj = new MyHashSet();\n * obj.Add(key);\n * obj.Remove(key);\n * bool param_3 = obj.Contains(key);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} MyHashSet;\n\n\nMyHashSet* myHashSetCreate() {\n    \n}\n\nvoid myHashSetAdd(MyHashSet* obj, int key) {\n    \n}\n\nvoid myHashSetRemove(MyHashSet* obj, int key) {\n    \n}\n\nbool myHashSetContains(MyHashSet* obj, int key) {\n    \n}\n\nvoid myHashSetFree(MyHashSet* obj) {\n    \n}\n\n/**\n * Your MyHashSet struct will be instantiated and called as such:\n * MyHashSet* obj = myHashSetCreate();\n * myHashSetAdd(obj, key);\n \n * myHashSetRemove(obj, key);\n \n * bool param_3 = myHashSetContains(obj, key);\n \n * myHashSetFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type MyHashSet struct {\n    \n}\n\n\nfunc Constructor() MyHashSet {\n    \n}\n\n\nfunc (this *MyHashSet) Add(key int)  {\n    \n}\n\n\nfunc (this *MyHashSet) Remove(key int)  {\n    \n}\n\n\nfunc (this *MyHashSet) Contains(key int) bool {\n    \n}\n\n\n/**\n * Your MyHashSet object will be instantiated and called as such:\n * obj := Constructor();\n * obj.Add(key);\n * obj.Remove(key);\n * param_3 := obj.Contains(key);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class MyHashSet() {\n\n    fun add(key: Int) {\n        \n    }\n\n    fun remove(key: Int) {\n        \n    }\n\n    fun contains(key: Int): Boolean {\n        \n    }\n\n}\n\n/**\n * Your MyHashSet object will be instantiated and called as such:\n * var obj = MyHashSet()\n * obj.add(key)\n * obj.remove(key)\n * var param_3 = obj.contains(key)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass MyHashSet {\n\n    init() {\n        \n    }\n    \n    func add(_ key: Int) {\n        \n    }\n    \n    func remove(_ key: Int) {\n        \n    }\n    \n    func contains(_ key: Int) -> Bool {\n        \n    }\n}\n\n/**\n * Your MyHashSet object will be instantiated and called as such:\n * let obj = MyHashSet()\n * obj.add(key)\n * obj.remove(key)\n * let ret_3: Bool = obj.contains(key)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct MyHashSet {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl MyHashSet {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn add(&self, key: i32) {\n        \n    }\n    \n    fn remove(&self, key: i32) {\n        \n    }\n    \n    fn contains(&self, key: i32) -> bool {\n        \n    }\n}\n\n/**\n * Your MyHashSet object will be instantiated and called as such:\n * let obj = MyHashSet::new();\n * obj.add(key);\n * obj.remove(key);\n * let ret_3: bool = obj.contains(key);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class MyHashSet\n    def initialize()\n        \n    end\n\n\n=begin\n    :type key: Integer\n    :rtype: Void\n=end\n    def add(key)\n        \n    end\n\n\n=begin\n    :type key: Integer\n    :rtype: Void\n=end\n    def remove(key)\n        \n    end\n\n\n=begin\n    :type key: Integer\n    :rtype: Boolean\n=end\n    def contains(key)\n        \n    end\n\n\nend\n\n# Your MyHashSet object will be instantiated and called as such:\n# obj = MyHashSet.new()\n# obj.add(key)\n# obj.remove(key)\n# param_3 = obj.contains(key)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class MyHashSet {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $key\n     * @return NULL\n     */\n    function add($key) {\n        \n    }\n  \n    /**\n     * @param Integer $key\n     * @return NULL\n     */\n    function remove($key) {\n        \n    }\n  \n    /**\n     * @param Integer $key\n     * @return Boolean\n     */\n    function contains($key) {\n        \n    }\n}\n\n/**\n * Your MyHashSet object will be instantiated and called as such:\n * $obj = MyHashSet();\n * $obj->add($key);\n * $obj->remove($key);\n * $ret_3 = $obj->contains($key);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class MyHashSet {\n\n  MyHashSet() {\n    \n  }\n  \n  void add(int key) {\n    \n  }\n  \n  void remove(int key) {\n    \n  }\n  \n  bool contains(int key) {\n    \n  }\n}\n\n/**\n * Your MyHashSet object will be instantiated and called as such:\n * MyHashSet obj = MyHashSet();\n * obj.add(key);\n * obj.remove(key);\n * bool param3 = obj.contains(key);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class MyHashSet() {\n\n    def add(key: Int): Unit = {\n        \n    }\n\n    def remove(key: Int): Unit = {\n        \n    }\n\n    def contains(key: Int): Boolean = {\n        \n    }\n\n}\n\n/**\n * Your MyHashSet object will be instantiated and called as such:\n * val obj = new MyHashSet()\n * obj.add(key)\n * obj.remove(key)\n * val param_3 = obj.contains(key)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule MyHashSet do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec add(key :: integer) :: any\n  def add(key) do\n    \n  end\n\n  @spec remove(key :: integer) :: any\n  def remove(key) do\n    \n  end\n\n  @spec contains(key :: integer) :: boolean\n  def contains(key) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# MyHashSet.init_()\n# MyHashSet.add(key)\n# MyHashSet.remove(key)\n# param_3 = MyHashSet.contains(key)\n\n# MyHashSet.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec my_hash_set_init_() -> any().\nmy_hash_set_init_() ->\n  .\n\n-spec my_hash_set_add(Key :: integer()) -> any().\nmy_hash_set_add(Key) ->\n  .\n\n-spec my_hash_set_remove(Key :: integer()) -> any().\nmy_hash_set_remove(Key) ->\n  .\n\n-spec my_hash_set_contains(Key :: integer()) -> boolean().\nmy_hash_set_contains(Key) ->\n  .\n\n\n%% Your functions will be called as such:\n%% my_hash_set_init_(),\n%% my_hash_set_add(Key),\n%% my_hash_set_remove(Key),\n%% Param_3 = my_hash_set_contains(Key),\n\n%% my_hash_set_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define my-hash-set%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; add : exact-integer? -> void?\n    (define/public (add key)\n      )\n    ; remove : exact-integer? -> void?\n    (define/public (remove key)\n      )\n    ; contains : exact-integer? -> boolean?\n    (define/public (contains key)\n      )))\n\n;; Your my-hash-set% object will be instantiated and called as such:\n;; (define obj (new my-hash-set%))\n;; (send obj add key)\n;; (send obj remove key)\n;; (define param_3 (send obj contains key))"
+    }
+  ],
+  "solution": {
+    "id": "852",
+    "content": "[TOC]\n\n## Solution\n\n---\n#### Intuition\n\nThis is a classical question from textbook, which is intended to test one's knowledge on data structure. Therefore, needless to say, it is not desirable to solve the problem with any build-in HashSet data structure.\n\n>There are two key questions that one should address, in order to implement the HashSet data structure, namely _**hash function**_ and _**collision handling**_.\n\n- _**hash function**_: the goal of the hash function is to assign an address to store a given value. Ideally, each unique value should have a unique hash value. \n\n- _**collision handling**_: since the nature of a hash function is to map a value from a space `A` into a corresponding value in a __*smaller*__ space `B`, it could happen that multiple values from space `A` might be mapped to the _same_ value in space `B`. This is what we call __*collision*__. Therefore, it is indispensable for us to have a strategy to handle the collision. \n\nOverall, there are several strategies to resolve the collisions:\n\n- [Separate Chaining](https://en.wikipedia.org/wiki/Hash_table#Separate_chaining): for values with the same hash key, we keep them in a _bucket_, and each bucket is independent of each other.\n\n- [Open Addressing](https://en.wikipedia.org/wiki/Hash_table#Open_addressing): whenever there is a collision, we keep on _probing_ on the main space with certain strategy until a free slot is found.\n\n- [2-Choice Hashing](https://en.wikipedia.org/wiki/2-choice_hashing): we use two hash functions rather than one, and we pick the generated address with fewer collision.\n\nIn this article, we focus on the strategy of _**separate chaining**_. Here is how it works overall.\n\n- Essentially, the primary storage underneath a HashSet is a continuous memory as `Array`. Each element in this array corresponds to a `bucket` that stores the actual values.\n\n- Given a `value`, first we generate a key for the value via the _hash function_. The generated key serves as the index to locate the bucket.\n\n- Once the `bucket` is located, we then perform the desired operations on the bucket, such as `add`, `remove` and `contains`.\n\n---\n### Approach 1: LinkedList as Bucket\n\n**Intuition**\n\n\nThe common choice of hash function is the `modulo` operator, _i.e._ $$\\text{hash} = \\text{value} \\mod \\text{base}$$. Here, the $$\\text{base}$$ of modulo operation would determine the number of buckets that we would have at the end in the HashSet.\n\nTheoretically, the more buckets we have (hence the larger the space would be), the less likely that we would have _collisions_. The choice of $$\\text{base}$$ is a tradeoff between the space and the collision. \n\nIn addition, it is generally advisable to use a prime number as the base of modulo, _e.g._ $$769$$, in order to reduce the potential collisions. \n\n![pic](../Figures/705/705_linked_list.png)\n\nAs to the design of `bucket`, again there are several options. One could simply use another `Array` as bucket to store all the values.\nHowever, one drawback with the Array data structure is that it would take $$\\mathcal{O}(N)$$ time complexity to remove or insert an element, rather than the desired $$\\mathcal{O}(1)$$.\n\nSince for any update operation, we would need to scan the entire _bucket_ first to avoid any duplicate, a better choice for the implementation of _bucket_ would be the _**LinkedList**_, which has a constant time complexity for the _insertion_ as well as _deletion_, once we locate the position to update.\n\n**Algorithm**\n\nAs we discussed in the above section, here we adopt the `LinkedList` to implement our _bucket_ within the HashSet.\n\n>Essentially, we are implementing a _LinkedList_ that does not contain any duplicate.\n\nFor each of the functions of `add`, `remove` and `contains`, we first generate the bucket index with the hash function. Then, we simply pass down the operation to the underlying bucket.\n\n\n<iframe src=\"https://leetcode.com/playground/jbZ6FmcW/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jbZ6FmcW\"></iframe>\n\n\n***Implementation Notes***\n\nIn the Python implementation, we employed a sort of **_pseudo head_** to keep a reference to the _actual_ head of the LinkedList, which could _simplify_ a bit the logic by reducing the number of branchings.\n\nFor a value that was never seen before, we insert it to the **head** of the bucket, though we could also append it to the tail. It is a choice that we made, which could **fit better** the scenario where redundant values are operated in nearby time windows, since it is more likely that we spot the value at the head of the bucket rather than walking through the entire bucket.\n\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(\\frac{N}{K})$$ where $$N$$ is the number of all possible values and $$K$$ is the number of predefined buckets, which is `769`.\n\n    - Assuming that the values are _evenly_ distributed, thus we could consider that the average size of bucket is $$\\frac{N}{K}$$. \n\n    - Since for each operation, in the worst case, we would need to scan the entire bucket, hence the time complexity is $$\\mathcal{O}(\\frac{N}{K})$$.\n<br/>\n\n- Space Complexity: $$\\mathcal{O}(K+M)$$ where $$K$$ is the number of predefined buckets, and $$M$$ is the number of unique values that have been inserted into the HashSet.\n<br/>\n<br/>\n\n---\n### Approach 2: Binary Search Tree (BST) as Bucket\n\n**Intuition**\n\nIn the above approach, one of the drawbacks is that we have to scan the entire linkedlist in order to verify if a value already exists in the bucket (_i.e._ the lookup operation).\n\nTo optimize the above process, one of the strategies could be that we maintain a _**sorted list**_ as the bucket. With the sorted list, we could obtain the $$\\mathcal{O}(\\log{N})$$ time complexity for the lookup operation, with the binary search algorithm, rather than a linear $$\\mathcal{O}({N})$$ complexity as in the above approach.\n\nOn the other hand, if we implement the sorted list in a continuous space such as Array, it would incur a _linear_ time complexity for the update operations (_e.g._ _insert_ and _delete_), since we would need to shift the elements.\n\n>So the question is can we have a data structure that have $$\\mathcal{O}(\\log{N})$$ time complexity, for the operations of _search_, _insert_ and _delete_ ?\n\nWell. The answer is yes, with _**Binary Search Tree**_ (BST). Thanks to the properties of BST, we could optimize the time complexity of our first approach with LinkedList.\n\n![pic](../Figures/705/705_BST.png)\n\nAs a result, now the problem is boiled down to the implementation of a standard Binary Search Tree that serves as the _bucket_ in the HashSet.\n\n**Algorithm**\n\nOne could build upon the implementation of first approach for our second approach, by applying the [Façade design pattern](https://en.wikipedia.org/wiki/Facade_pattern).\n\n>We have already defined a façade class (_i.e._ `bucket`) with three interfaces (`exists`, `insert` and `delete`), which hides all the underlying details from its users (_i.e._ HashSet).\n\nSo we can keep the bulk of the code, and simply modify the implementation of `bucket` class with BST. For each of the interfaces in `bucket`, it corresponds exactly to an operation in BST.\n\n!?!../Documents/705_LIS.json:1000,456!?!\n\nActually, we have each of the BST operations listed as an independent problem in LeetCode, as follows:\n\n- [Article 700. Search in a BST](https://leetcode.com/articles/search-in-a-bst/)\n- [Article 701. Insert in a BST](https://leetcode.com/articles/insert-into-a-bst/)\n- [Article 450. Delete in a BST](https://leetcode.com/articles/delete-node-in-a-bst)\n\nOne could try these exercises first, and then combine them together to get a full implementation of BST. \n\n<iframe src=\"https://leetcode.com/playground/FsNfV9XF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FsNfV9XF\"></iframe>\n\n\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(\\log{\\frac{N}{K}})$$ where $$N$$ is the number of all possible values and $$K$$ is the number of predefined buckets, which is `769`.\n\n    - Assuming that the values are evenly distributed, we could consider that the average size of bucket is $$\\frac{N}{K}$$. \n\n    - When we traverse the BST, we are conducting binary search, as a result, the final time complexity of each operation is $$\\mathcal{O}(\\log{\\frac{N}{K}})$$.\n\n- Space Complexity: $$\\mathcal{O}(K+M)$$ where $$K$$ is the number of predefined buckets, and $$M$$ is the number of unique values that have been inserted into the HashSet.\n<br/>\n<br/>\n\n---\n### Notes on Hash Function\n\nIn all the above approaches, the range of address is fixed, since the base of modulo operator is fixed.\n\nSometimes, it might be more desirable to have a __*dynamic space*__ that goes with the increase of elements in the HashSet. One could set up a threshold on the _load factor_ (_i.e._ ratio between the number of elements and the size of space) of the HashSet, and double the range of address, once the load factor exceeds the threshold.\n\nThe increase of address space could potentially **_reduce_** the collisions, therefore improve the overall performance of HashSet.\nHowever, one should also take into account the cost of **_rehashing_** and redistributing the existing values. \n\nIn another scenario, one could adopt the **_2-choice hashing_** as we mentioned at the beginning, which could help the values to be more _**evenly**_ distributed in the address space.\n<br/>\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "questionId": "30",
+  "questionFrontendId": "30",
+  "title": "Substring with Concatenation of All Words",
+  "titleSlug": "substring-with-concatenation-of-all-words",
+  "difficulty": "Hard",
+  "content": "<p>You are given a string <code>s</code> and an array of strings <code>words</code>. All the strings of <code>words</code> are of <strong>the same length</strong>.</p>\n\n<p>A <strong>concatenated string</strong> is a string that exactly contains all the strings of any permutation of <code>words</code> concatenated.</p>\n\n<ul>\n\t<li>For example, if <code>words = [&quot;ab&quot;,&quot;cd&quot;,&quot;ef&quot;]</code>, then <code>&quot;abcdef&quot;</code>, <code>&quot;abefcd&quot;</code>, <code>&quot;cdabef&quot;</code>, <code>&quot;cdefab&quot;</code>, <code>&quot;efabcd&quot;</code>, and <code>&quot;efcdab&quot;</code> are all concatenated strings. <code>&quot;acdbef&quot;</code> is not a concatenated string because it is not the concatenation of any permutation of <code>words</code>.</li>\n</ul>\n\n<p>Return an array of <em>the starting indices</em> of all the concatenated substrings in <code>s</code>. You can return the answer in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;barfoothefoobarman&quot;, words = [&quot;foo&quot;,&quot;bar&quot;]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[0,9]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The substring starting at 0 is <code>&quot;barfoo&quot;</code>. It is the concatenation of <code>[&quot;bar&quot;,&quot;foo&quot;]</code> which is a permutation of <code>words</code>.<br />\nThe substring starting at 9 is <code>&quot;foobar&quot;</code>. It is the concatenation of <code>[&quot;foo&quot;,&quot;bar&quot;]</code> which is a permutation of <code>words</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;wordgoodgoodgoodbestword&quot;, words = [&quot;word&quot;,&quot;good&quot;,&quot;best&quot;,&quot;word&quot;]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There is no concatenated substring.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;barfoofoobarthefoobarman&quot;, words = [&quot;bar&quot;,&quot;foo&quot;,&quot;the&quot;]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[6,9,12]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The substring starting at 6 is <code>&quot;foobarthe&quot;</code>. It is the concatenation of <code>[&quot;foo&quot;,&quot;bar&quot;,&quot;the&quot;]</code>.<br />\nThe substring starting at 9 is <code>&quot;barthefoo&quot;</code>. It is the concatenation of <code>[&quot;bar&quot;,&quot;the&quot;,&quot;foo&quot;]</code>.<br />\nThe substring starting at 12 is <code>&quot;thefoobar&quot;</code>. It is the concatenation of <code>[&quot;the&quot;,&quot;foo&quot;,&quot;bar&quot;]</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= words.length &lt;= 5000</code></li>\n\t<li><code>1 &lt;= words[i].length &lt;= 30</code></li>\n\t<li><code>s</code> and <code>words[i]</code> consist of lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findSubstring\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    },\r\n    {\r\n      \"name\": \"words\",\r\n      \"type\": \"string[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<integer>\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"695.6K\", \"totalSubmission\": \"2M\", \"totalAcceptedRaw\": 695574, \"totalSubmissionRaw\": 2037470, \"acRate\": \"34.1%\"}",
+  "likes": 2630,
+  "dislikes": 436,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Window Substring\", \"titleSlug\": \"minimum-window-substring\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"barfoothefoobarman\"\n[\"foo\",\"bar\"]",
+    "\"wordgoodgoodgoodbestword\"\n[\"word\",\"good\",\"best\",\"word\"]",
+    "\"barfoofoobarthefoobarman\"\n[\"bar\",\"foo\",\"the\"]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"more_than_six_months\": [{\"timesEncountered\": 17, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 10, \"slug\": \"samsung\", \"name\": \"Samsung\"}, {\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"roku\", \"name\": \"Roku\"}, {\"timesEncountered\": 2, \"slug\": \"texas-instruments\", \"name\": \"Texas Instruments\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> findSubstring(string s, vector<string>& words) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> findSubstring(String s, String[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findSubstring(self, s: str, words: List[str]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findSubstring(self, s, words):\n        \"\"\"\n        :type s: str\n        :type words: List[str]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string[]} words\n * @return {number[]}\n */\nvar findSubstring = function(s, words) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findSubstring(s: string, words: string[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> FindSubstring(string s, string[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* findSubstring(char* s, char** words, int wordsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findSubstring(s string, words []string) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findSubstring(s: String, words: Array<String>): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findSubstring(_ s: String, _ words: [String]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_substring(s: String, words: Vec<String>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String[]} words\n# @return {Integer[]}\ndef find_substring(s, words)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String[] $words\n     * @return Integer[]\n     */\n    function findSubstring($s, $words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> findSubstring(String s, List<String> words) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findSubstring(s: String, words: Array[String]): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_substring(s :: String.t, words :: [String.t]) :: [integer]\n  def find_substring(s, words) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_substring(S :: unicode:unicode_binary(), Words :: [unicode:unicode_binary()]) -> [integer()].\nfind_substring(S, Words) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-substring s words)\n  (-> string? (listof string?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1295",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/784866294\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Approach 1: Check All Indices Using a Hash Table\n\n**Intuition**\n\n> Definition: a **valid substring** is a string that is a concatenation of all of the words in our word bank. So if we are given the words \"foo\" and \"bar\", then \"foobar\" and \"barfoo\" would be valid substrings.\n\nAn important detail in the problem description to notice is that **all elements in `words` have the same length**. This gives us valuable information about all valid substrings - we know what length they will be. Each valid substring is the concatenation of `words.length` words which all have the same length, so each valid substring has a length of `words.length * words[0].length`.\n\n<img src=\"../Figures/30/30_1.png\" width=\"960\"><br>\n\nThis makes it easy for us to take a given index and check if a valid substring starting at this index exists. Let's say that the elements of `words` have a length of `3`. Then, for a given starting index, we can just look at the string in groups of `3` characters and check if those characters form a word in `words`. Because `words` can have duplicate words, we should use a hash table to maintain a count for each word. As a bonus, a hash table also lets us search for word matches very quickly.   \n\nWe can write a helper function that takes an index and returns if a valid substring starting at this index exists. Then, we can build our answer by running this function for all candidate indices. The logic for this function can be something along the lines of:\n\n- Iterate from the starting index to the starting index plus the size of a valid substring.\n- Iterate `words[0].length` characters at a time. At each iteration, we will look at a substring with the same length as the elements in `words`.\n- If the substring doesn't exist in `words`, or it does exist but we already found the necessary amount of it, then return false.\n- We can use a hash table to keep an updated count of the words between the starting index and the current index.\n\n!?!../Documents/30_Substring.json:960,540!?!\n\n**Algorithm**\n\n1. Initialize some variables:\n    - `n` as the length of `s`.\n    - `k` as the length of `words`\n    - `wordLength` as the length of each word in `words`.\n    - `substringSize` as `wordLength * k`, which represents the size of each valid substring.\n    - `wordCount` as a hash table that tracks how many times a word occurs in `words`.\n\n2. Create a function `check` that takes a starting index `i` and returns if a valid substring starts at index `i`:\n    - Create a copy of `wordCount` to make use of for this particular index. Let's call it `remaining`. Also, initialize an integer `wordsUsed` which tracks how many matches we have found so far.\n    - Iterate starting from `i`. Iterate until `i + substringSize` - we know that each valid substring will have this size, so we don't need to go further. At each iteration, we will be checking for a word - and we know each word has a length of `wordLength`, so increment by `wordLength` each time.\n    - If the variable we are iterating with is `j`, then at each iteration, check for a word `sub = s.substring(j, j + wordLength)`.\n    - If `sub` is in `remaining` and has a value greater than `0`, then decrease its count by `1` and increase `wordsUsed` by `1`. Otherwise, `break` out of the loop.\n    - At the end of it all, if `wordsUsed == k`, that means we used up all the words in `words` and have found a valid substring. Return `true` if so, `false` otherwise.\n\n3. Now that we have this function `check`, we can just check all possible starting indices. Because a valid substring has a length of `substringSize`, we only need to iterate up to `n - substringSize`. Build an array with all indices that pass `check` and return it.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/PUJ2FYXd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PUJ2FYXd\"></iframe>\n\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `s`, $$a$$ as the length of `words`, and $$b$$ as the length of each word:\n\n* Time complexity: $$O(n \\cdot a \\cdot b - (a \\cdot b) ^ 2)$$\n\n    First, let's analyze the time complexity of `check`. We start by creating a copy of our hash table, which in the worst case will take $$O(a)$$ time, when `words` only has unique elements. Then, we iterate $$a$$ times (from `i` to `i + substringSize`, `wordLength` at a time): $$ \\text{substringSize / wordLength = words.length = } a $$. At each iteration, we create a substring, which takes `wordLength` = $$b$$ time. Then we do a hash table check.\n\n    That means each call to `check` uses $$O(a + a \\cdot (b + 1))$$ time, simplified to $$O(a \\cdot b)$$. How many times do we call `check`? Only `n - substringSize` times. Recall that `substringSize` is equal to the length of `words` times the length of `words[0]`, which we have defined as $$a$$ and $$b$$ respectively here. That means we call `check` $$n - a \\cdot b$$ times.\n\n    This gives us a time complexity of $$O((n - a \\cdot b) \\cdot a \\cdot b)$$, which can be expanded to $$O(n \\cdot a \\cdot b - (a \\cdot b) ^ 2)$$.\n    \n* Space complexity: $$O(a + b)$$\n\n    Most of the time, the majority of extra memory we use is the hash table to store word counts. In the worst-case scenario where `words` only has unique elements, we will store up to $$a$$ keys.\n\n    We also store substrings in `sub` which requires $$O(b)$$ space. So the total space complexity of this approach is $$O(a + b)$$. However, because for this particular problem the upper bound for $$b$$ is very small (30), we can consider the space complexity to be $$O(a)$$.\n    \n<br/>\n\n---\n\n### Approach 2: Sliding Window\n\n**Intuition**\n\nIn the previous approach, we made use of the fact that all elements of `words` share the same length, which allows us to efficiently check for valid substrings. Unfortunately, we repeated a lot of computation - each character of `s` is iterated over many times. Imagine if we had an input like this:\n\n`s = \"barfoobarfoo\"` and `words = [\"bar\", \"foo\"]`\n\n<img src=\"../Figures/30/30_5.png\" width=\"960\"><br>\n\nValid substrings start at index `0`, `3`, and `6`. Notice that the substrings starting at indices `0` and `3` share the same `\"foo\"`. That means we are iterating over and handling this `\"foo\"` twice, which shouldn't be necessary. We do it again with the substrings starting at indices `3` and `6` - they use the same `\"bar\"`. In this specific example it may not seem too bad, but imagine if we had an input like:\n\n`s = \"aaaa...aaa\", s.length = 10,000` and `words = [\"a\", \"a\", ..., \"a\", \"a\"], words.length = 5000`\n\nWe would be iterating over the same characters **millions** of times. How can we avoid repeated computation? Let's make use of a sliding window. We can re-use most of the logic from the previous approach, but this time instead of only checking for one valid substring at a time with each call to `check`, we will try to find **all** valid substrings in one pass by sliding our window across `s`.\n\nSo how will the left and right bounds of the window move, and how can we tell if we our window is a valid substring? Let's say we start at index `0` and do the same process as the previous approach - iterate `wordLength` at a time, so that at each iteration we are focusing on one potential word. Our iteration variable, say `right`, can be our right bound. We can initialize our left bound at `0`, say `left = 0`.\n\nNow, `right` will move at each iteration, by `wordLength` each time. At each iteration, we have a word `sub = s.substring(right, right + wordLength)`. If `sub` is not in `words`, we know that we cannot possibly form a valid substring, so we should reset the entire window and try again, starting with the next iteration. If `sub` is in `words`, then we need to keep track of it. Like in the previous approach, we can use a hash table to keep count of all the words in our current window.\n\n<img src=\"../Figures/30/30_14.png\" width=\"960\"><br>\n\n<img src=\"../Figures/30/30_15.png\" width=\"960\"><br>\n\nWhen our window has reached the maximum size (`substringSize`), we can check if it is a valid substring. Like in the previous approach, we can use an integer `wordsUsed` to check if `wordsUsed == words.length` to see if we made use of all the elements in `words`, and thus have a valid substring. If we do, then we can add `left` to our answer.\n\nWhether we have a valid substring or not, if our window has reached maximum size, we need to move the left bound. This means we need to find the word we are removing from the window, and perform the necessary logic to keep our hash table up to date.\n\nAnother thing to note: we may encounter excess words. For example, with `s = \"foofoobar\"`, and `words = [\"foo\", \"bar\"]`, the two `\"foo\"` should not be matched together to have `wordsUsed = 2`. Whenever we find that `sub` is in `words`, we should check how many times we have seen `sub` so far in the current window (using our hash table), and if it is greater than the number of times it appears in `words` (which we can find with a second hash table, `wordCount` in the first approach), then we know we have an excess word and should not increment `wordsUsed`.\n\nIn fact, so long as we have an excess word, we can never have a valid substring. Therefore, another criterion for moving our left bound should be to remove words from the left until we find the excess word and remove it (which we can accomplish by comparing the hash table values).\n\n<img src=\"../Figures/30/30_16.png\" width=\"960\"><br>\n\n<img src=\"../Figures/30/30_17.png\" width=\"960\"><br>\n\nNow that we've described the logic needed for the sliding window, how will we apply the window? In the first approach, we tried every candidate index (all indices up until `n - substringSize`). In this problem, you may notice that starting the process from two indices that are `wordLength` apart is pointless. For example, if we have `words = [\"foo\", \"bar\"]`, then starting from index `3` is pointless since by starting at index `0`, we will move over index `3`. However, we will still need to try starting from indices `1` and `2`, in case the input looks something like `s = \"xfoobar\"` or `s = \"xyfoobar\"`. As such, we will only need to perform the sliding window `wordLength` amount of times.\n\n!?!../Documents/30_Substring_2.json:960,540!?!\n\n**Algorithm**\n\n1. Initialize some variables:\n    - `n` as the length of `s`.\n    - `k` as the length of `words`\n    - `wordLength` as the length of each word in `words`.\n    - `substringSize` as `wordLength * k`, which represents the size of each valid substring.\n    - `wordCount` as a hash table that tracks how many times a word occurs in `words`.\n    - `answer` as an array that will hold the starting index of every valid substring\n\n2. Create a function `slidingWindow` that takes an index `left` and starts a sliding window from `left`:\n    - Initialize a hash table `wordsFound` that will keep track of how many times a word appears in our window. Also, an integer `wordsUsed = 0` to keep track of how many words are in our window, and a boolean `excessWord = false` that indicates if our window is currently holding an excess word, such as a third `\"foo\"` if `words = [\"foo\", \"foo\"]`.\n    - Iterate using the right bound of our window, `right`. Start iteration at `left`, until `n`, `wordLength` at a time. At each iteration:\n        - We are dealing with a word `sub = s.substring(right, right + wordLength)`. If `sub` is not in `wordCount`, then we must reset the window. Clear our hash table `wordsFound`, and reset our variables `wordsUsed = 0` and `excessWord = false`. Move `left` to the next index we will handle, which will be `right + wordLength`.\n        - Otherwise, if `sub` is in `wordCount`, we can continue with our window. First, check if our window is beyond max size or has an excess word. So long as either of these conditions are true, move `left` over while appropriately updating our hash table, integer and boolean variables.\n        - Now, we can handle `sub`. Increment its value in `wordsFound`, and then compare its value in `wordsFound` to its value in `wordCount`. If the value is less than or equal, then we can make use of this word in a valid substring - increment `wordsUsed`. Otherwise, it is an excess word, and we should set `excessWord = true`.\n        - At the end of it all, if we have `wordsUsed == k` without any excess words, then we have a valid substring. Add `left` to `answer`.\n\n3. Call `slidingWindow` with each index from `0` to `wordLength`. Return `answer` once finished.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/axJcKGzq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"axJcKGzq\"></iframe>\n\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `s`, $$a$$ as the length of `words`, and $$b$$ as the length of each word:\n\n* Time complexity: $$O(a + n \\cdot b)$$ \n\n    First, let's analyze the time complexity of `slidingWindow()`. The for loop in this function iterates from the starting index `left` up to `n`, at increments of `wordLength`. This results in `n / b` total iterations. At each iteration, we create a substring of length `wordLength`, which costs $$O(b)$$. \n    \n    Although there is a nested while loop, the left pointer can only move over each word once, so this inner loop will only ever perform a total of `n / wordLength` iterations summed across all iterations of the outer for loop. Inside that while loop, we also take a substring which costs $$O(b)$$, which means each iteration will cost at most $$O(2 \\cdot b)$$ on average.\n\n    This means that each call to `slidingWindow` costs $$O(\\dfrac{n}{b} \\cdot 2 \\cdot b)$$, or $$O(n)$$. How many times do we call `slidingWindow`? `wordLength`, or $$b$$ times. This means that all calls to `slidingWindow` costs $$O(n \\cdot b)$$.\n    \n    On top of the calls to `slidingWindow`, at the start of the algorithm we create a dictionary `wordCount` by iterating through `words`, which costs $$O(a)$$. This gives us our final time complexity of $$O(a + n \\cdot b)$$. \n\n    Notice that the length of `words` $$a$$ is not multiplied by anything, which makes this approach **much** more efficient than the first approach due to the bounds of the problem, as $$n > a \\gg b$$.\n    \n* Space complexity: $$O(a + b)$$\n\n    Most of the times, the majority of extra memory we use is due to the hash tables used to store word counts. In the worst-case scenario where `words` only has unique elements, we will store up to $$a$$ keys in the tables.\n\n    We also store substrings in `sub` which requires $$O(b)$$ space. So the total space complexity of this approach is $$O(a + b)$$. However, because for this particular problem the upper bound for $$b$$ is very small (30), we can consider the space complexity to be $$O(a)$$.\n\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

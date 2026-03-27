@@ -1,0 +1,134 @@
+{
+  "questionId": "205",
+  "questionFrontendId": "205",
+  "title": "Isomorphic Strings",
+  "titleSlug": "isomorphic-strings",
+  "difficulty": "Easy",
+  "content": "<p>Given two strings <code>s</code> and <code>t</code>, <em>determine if they are isomorphic</em>.</p>\n\n<p>Two strings <code>s</code> and <code>t</code> are isomorphic if the characters in <code>s</code> can be replaced to get <code>t</code>.</p>\n\n<p>All occurrences of a character must be replaced with another character while preserving the order of characters. No two characters may map to the same character, but a character may map to itself.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;egg&quot;, t = &quot;add&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">true</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The strings <code>s</code> and <code>t</code> can be made identical by:</p>\n\n<ul>\n\t<li>Mapping <code>&#39;e&#39;</code> to <code>&#39;a&#39;</code>.</li>\n\t<li>Mapping <code>&#39;g&#39;</code> to <code>&#39;d&#39;</code>.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;f11&quot;, t = &quot;b23&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">false</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The strings <code>s</code> and <code>t</code> can not be made identical as <code>&#39;1&#39;</code> needs to be mapped to both <code>&#39;2&#39;</code> and <code>&#39;3&#39;</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;paper&quot;, t = &quot;title&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">true</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>t.length == s.length</code></li>\n\t<li><code>s</code> and <code>t</code> consist of any valid ascii character.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"isIsomorphic\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    },\r\n    {\r\n      \"name\": \"t\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"2.1M\", \"totalSubmission\": \"4.4M\", \"totalAcceptedRaw\": 2129383, \"totalSubmissionRaw\": 4418751, \"acRate\": \"48.2%\"}",
+  "likes": 10546,
+  "dislikes": 2280,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Word Pattern\", \"titleSlug\": \"word-pattern\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find and Replace Pattern\", \"titleSlug\": \"find-and-replace-pattern\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"egg\"\n\"add\"",
+    "\"foo\"\n\"bar\"",
+    "\"paper\"\n\"title\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 7, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 25, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 12, \"slug\": \"remitly\", \"name\": \"Remitly\"}, {\"timesEncountered\": 4, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 4, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 4, \"slug\": \"sprinklr\", \"name\": \"Sprinklr\"}, {\"timesEncountered\": 2, \"slug\": \"tinkoff\", \"name\": \"Tinkoff\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"american-express\", \"name\": \"American Express\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"hashedin\", \"name\": \"HashedIn\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isIsomorphic(string s, string t) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isIsomorphic(String s, String t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isIsomorphic(self, s: str, t: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isIsomorphic(self, s, t):\n        \"\"\"\n        :type s: str\n        :type t: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string} t\n * @return {boolean}\n */\nvar isIsomorphic = function(s, t) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isIsomorphic(s: string, t: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsIsomorphic(string s, string t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isIsomorphic(char* s, char* t) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isIsomorphic(s string, t string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isIsomorphic(s: String, t: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isIsomorphic(_ s: String, _ t: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_isomorphic(s: String, t: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String} t\n# @return {Boolean}\ndef is_isomorphic(s, t)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String $t\n     * @return Boolean\n     */\n    function isIsomorphic($s, $t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isIsomorphic(String s, String t) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isIsomorphic(s: String, t: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_isomorphic(s :: String.t, t :: String.t) :: boolean\n  def is_isomorphic(s, t) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_isomorphic(S :: unicode:unicode_binary(), T :: unicode:unicode_binary()) -> boolean().\nis_isomorphic(S, T) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-isomorphic s t)\n  (-> string? string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1147",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nThis is one of those problems where we can come up with a whole suite of different solutions, with similar time and space complexities. The discussion section is filled with various tricks to solve this problem, however, we will stick to a couple of approaches that have the optimal time and space complexity and are reasonably easy to come up with during an interview. Regardless of which approach we use, three conditions must be met for the two strings to be isomorphic:\n\n1. We can map a character only to itself or to one other character.\n2. No two character should map to same character.\n3. Replacing each character in string `s` with the character it is mapped to results in string `t`.\n\nMatching the order will be easy.  Since we will iterate over the two strings and do some sort of comparison from left to right, the task of ensuring that the character order is the same in both strings will take care of itself. Next, we need to somehow maintain a mapping of characters (hint: dictionary) or come up with a way to \"convert\" both of the strings to a common format (think integer assignment to characters) and then check if the converted strings are the same.\n\nThese are the two solutions that we will explore. Again, many other tricks can be used to solve this problem, and thus there are a variety of different solutions.  A compilation of other solutions can be found [here](https://leetcode.com/problems/isomorphic-strings/discuss/57941/Python-different-solutions-(dictionary-etc)), however, some of these solutions would be difficult to come up with during an interview.  So, in this article, we will focus on solutions that are both intuitive and have optimal complexity.\n\n</br>\n\n---\n\n### Approach 1: Character Mapping with Dictionary\n\n### Intuition\n\nThe first solution is based on the approach indicated in the problem statement itself. We will process both of the strings from left to right. At each step, we take one character at a time from the two strings and compare them. There are three cases we need to handle here:\n\n1. If the characters don't have a mapping, we add one in the dictionary and move on.\n\n    ![Example for when we don't have a mapping](../Figures/205/img1.png)\n\n    *Figure 1. The first encounter for a new character in both strings which are not yet mapped.*\n\n2. The characters already have a mapping in the dictionary. If that is the case, then we're good to go.\n\n    ![Example for when we have a mapping](../Figures/205/img2.png)\n\n    *Figure 2. Example for when we already had a mapping between the corresponding characters.*\n\n3. The final case is when a mapping already exists for one of the characters but it *doesn't map to the other character at hand*. In this case, we can safely conclude that the given strings are not isomorphic and we can return.\n\nIf at this point you're ready to move on to the algorithm, take a step back and think about the correctness of this solution. The above three cases only care about **one-way-mapping** i.e. mapping characters from the first string to the second one only. Don't we need the mapping from the other side as well? \n\n![Breaking example using our existing 3 cases](../Figures/205/img3.png)\n\n*Figure 3. Example for when a single dictionary implementation breaks.*\n\nWe will need two dictionaries instead of one since we need `one-to-one` mapping from the string `s` to string `t` and vice versa. Let's look at the algorithm to see the modified cases.\n\n#### Algorithm\n\n1. We define a dictionary `mapping_s_t` which will be used to map characters in string `s` to characters in string `t` and another dictionary `mapping_t_s` which will be used to map characters in string `t` to characters in string `s`. \n2. Next, we iterate over the two strings one character at a time.\n3. Let's assume the character in the first string is `c1` and the corresponding character in the second string is `c2`. \n   1. If `c1` does not have a mapping in `mapping_s_t` and `c2` does not have a mapping in `mapping_t_s`, we add the corresponding mappings in both the dictionaries and move on to the next character.\n   2. At this point, we expect both the character mappings to exist in the dictionaries and their values should be `mapping_s_t[c1] = c2` and `mapping_t_s[c2] = c1`. If either of these conditions fails (`c1` is not in the dictionary, `c2` is not in the dictionary, unexpected mapping), we return `false`.\n4. Return `true` once both the strings have been exhausted.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Pq6X6SV2/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Pq6X6SV2\"></iframe>\n\n#### Complexity Analysis\n\nHere $$N$$ is the length of each string (if the strings are not the same length, then they cannot be isomorphic).\n* Time Complexity: $$O(N)$$. We process each character in both the strings exactly once to determine if the strings are isomorphic.\n* Space Complexity: $$O(1)$$ since the size of the ASCII character set is fixed and the keys in our dictionary are all valid ASCII characters according to the problem statement.\n\n</br>\n\n---\n\n### Approach 2: First occurence transformation\n\n#### Intuition\n\nThis approach is based on the idea that the two given strings, if isomorphic, will in some way be exactly the same. If we have two isomorphic strings, we can replace the characters in the first string with the corresponding mapped characters to get the second string. The idea we explore here is the following:\n\n>Is there any string transformation we can apply to both the strings such that to check for isomorphism, we simply check if their modified versions are ___exactly___ the same?\n\nOne can come up with various such transformations giving us different variations of this solution. We will stick with one such transformations for the official solution. \n\n>For each character in the given string, we replace it with the index of that character's first occurence in the string. \n\nFor a string like `paper`, the transformed string will be `01034`. The character `p` occurs first at the index `0`; so we replace future occurrences of `p` with the index `0`. Similar modifications are made for the other characters. Now let's look at `title`. The transformed string would be `01034` which is the same as that for `paper`. This confirms the isomorphic nature of both the strings.\n\n>However, we should be mindful of transformations that use both one and two-digit numbers.  Under these circumstances, the transformed strings can be misinterpreted.\n\nFor example, `stenographics` and `logarithmsxox` both transform to `123456789110`, yet they are not isomorphic. So what went wrong? Well, the first 10 digits of `stenographics` are unique and the same is true for `logarithmsxox`, so they should be isomorphic up to `0123456789`.  However the $$11^{th}$$ and $$12^{th}$$ characters of `stenographics` map to `11` and `0` while the $$11^{th}$$ and $$12^{th}$$ characters of `logarithmsxox` map to `1` and `10`.  To avoid confusing `11 0` with `1 10` we can add a delimiter to help differentiate the transformed digits.  Thus, by adding spaces we obtain `stenographics = 0 1 2 3 4 5 6 7 8 9 10 11 0` and `logarithmsxox = 0 1 2 3 4 5 6 7 8 9 10 1 10`.  As a side note, this issue can also be resolved by comparing arrays of the transformed digits instead of using strings.\n\n#### Algorithm\n\n1. Define a function called `transform` that takes a string as an input and returns a new string with modifications as explained in the intuition section.\n   1. We maintain a dictionary to store the character to index mapping for the given string.\n   2. For each character, we look up the mapping in the dictionary. If there is a mapping, that means this character already has its first occurrence recorded and we simply use the first occurrence's index in the new string. Otherwise, we use the current index for the first occurrence.\n2. We find the transformed strings for both of our input strings. Let's say the transformed strings are `s1` and `s2` respectively.\n3. If `s1 == s2`, that implies the two input strings are isomorphic. Otherwise, they're not.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/dF9cYWhk/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"dF9cYWhk\"></iframe>\n\n#### Complexity Analysis\n\nHere $$N$$ is the length of each string (if the strings are not the same length, they cannot be isomorphic).\n\n* Time Complexity: $$O(N)$$. We process each character in both the strings exactly once to determine if they are isomorphic.\n* Space Complexity: $$O(N)$$. We form two new strings returned by our transformation function. The size of ASCII character set is fixed and the keys in our dictionary are valid ASCII characters only. So the size of the map in the transform function doesn't contribute to the space complexity.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

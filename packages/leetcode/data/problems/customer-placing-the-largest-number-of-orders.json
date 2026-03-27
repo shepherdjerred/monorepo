@@ -1,0 +1,60 @@
+{
+  "questionId": "586",
+  "questionFrontendId": "586",
+  "title": "Customer Placing the Largest Number of Orders",
+  "titleSlug": "customer-placing-the-largest-number-of-orders",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Orders</code></p>\n\n<pre>\n+-----------------+----------+\n| Column Name     | Type     |\n+-----------------+----------+\n| order_number    | int      |\n| customer_number | int      |\n+-----------------+----------+\norder_number is the primary key (column with unique values) for this table.\nThis table contains information about the order ID and the customer ID.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the <code>customer_number</code> for the customer who has placed <strong>the largest number of orders</strong>.</p>\n\n<p>The test cases are generated so that <strong>exactly one customer</strong> will have placed more orders than any other customer.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nOrders table:\n+--------------+-----------------+\n| order_number | customer_number |\n+--------------+-----------------+\n| 1            | 1               |\n| 2            | 2               |\n| 3            | 3               |\n| 4            | 3               |\n+--------------+-----------------+\n<strong>Output:</strong> \n+-----------------+\n| customer_number |\n+-----------------+\n| 3               |\n+-----------------+\n<strong>Explanation:</strong> \nThe customer with number 3 has two orders, which is greater than either customer 1 or 2 because each of them only has one order. \nSo the result is customer_number 3.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> What if more than one customer has the largest number of orders, can you find all the <code>customer_number</code> in this case?</p>\n",
+  "hints": [
+    "MySQL uses a different expression to get the first records other than MSSQL's TOP expression."
+  ],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists orders (order_number int, customer_number int)\"], \"mssql\": [\"Create table orders (order_number int, customer_number int)\"], \"oraclesql\": [\"Create table orders (order_number int, customer_number int)\"], \"database\": true, \"name\": \"largest_orders\", \"pythondata\": [\"orders = pd.DataFrame([], columns=['order_number', 'customer_number']).astype({'order_number':'Int64', 'customer_number':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists orders (order_number int, customer_number int)\"], \"database_schema\": {\"orders\": {\"order_number\": \"INT\", \"customer_number\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"492.3K\", \"totalSubmission\": \"765.3K\", \"totalAcceptedRaw\": 492279, \"totalSubmissionRaw\": 765299, \"acRate\": \"64.3%\"}",
+  "likes": 1214,
+  "dislikes": 100,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"orders\":[\"order_number\",\"customer_number\"]},\"rows\":{\"orders\":[[1,1],[2,2],[3,3],[4,3]]}}"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef largest_orders(orders: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "160",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Approach: Group By\n\n#### Algorithm\n\nWe are asked to find the customer who placed the largest number of orders, which involves counting the number of orders per customer. This can be done by grouping the orders by each unique customer. Hence, we group the DataFrame `orders` by the column `customer_number` and apply the `size()` method to calculate the number of occurrences of each unique value in `customer_number`, which represents the number of orders placed by each customer.\n\n`reset_index(name='count')` is used to assign a new name `count` to the resulting column that represents the count of orders. This step ensures that the resulting DataFrame `df` has two columns: `customer_number` and `count`.\n\n\n```\ndf = orders.groupby('customer_number').size().reset_index(name='count')\n```\n\nWe will have the following DataFrame `df`:\n\n<table>\n  <tr>\n    <th>customer_number</th>\n    <th>count</th>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>1</td>\n  </tr>\n  <tr>\n    <td>2</td>\n    <td>1</td>\n  </tr>\n  <tr>\n    <td>3</td>\n    <td>2</td>\n  </tr>\n</table>\n\n<br>\n\nOnce we have the count of orders per customer, we can sort the DataFrame by `count` in descending order.\n \n```python\ndf.sort_values(by='count', ascending = False, inplace=True)\n``` \n\n<table>\n  <tr>\n    <th>customer_number</th>\n    <th>count</th>\n  </tr>\n  <tr>\n    <td>3</td>\n    <td>2</td>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>1</td>\n  </tr>\n  <tr>\n    <td>2</td>\n    <td>1</td>\n  </tr>\n</table>\n\n<br>\n\nNext, we return the `customer_number` in the first row, which denotes the customer placing the maximum orders. The complete code is as follows:\n\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/EuSiBChq/shared\" frameBorder=\"0\" width=\"100%\" height=\"225\" name=\"EuSiBChq\"></iframe>\n\nWe can obtain the following DataFrame:\n<table>\n  <tr>\n    <th>customer_number</th>\n  </tr>\n  <tr>\n    <td>3</td>\n  </tr>\n</table>\n\n<br>\n\n---\n\n## Database\n\n### Approach: Group By\n\n#### Algorithm\n\nFirst, we can select the <b>customer_number</b> and the according count of orders using `GROUP BY`.\n```sql\nSELECT\n    customer_number, COUNT(*)\nFROM\n    orders\nGROUP BY customer_number\n```\n\n<table>\n  <tr>\n    <th>customer_number</th>\n    <th>COUNT(*)</th>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>1</td>\n  </tr>\n  <tr>\n    <td>2</td>\n    <td>1</td>\n  </tr>\n  <tr>\n    <td>3</td>\n    <td>2</td>\n  </tr>\n</table>\n\n\nThen, the <b>customer_number</b> of first record is the result after sorting them by order count descending.\n\n<table>\n  <tr>\n    <th>customer_number</th>\n    <th>COUNT(*)</th>\n  </tr>\n  <tr>\n    <td>3</td>\n    <td>2</td>\n  </tr>\n</table>\n\n\nIn MySQL, the [LIMIT](https://dev.mysql.com/doc/refman/5.7/en/select.html) clause can be used to constrain the number of rows returned by the SELECT statement. It takes one or two nonnegative numeric arguments, the first of which specifies the offset of the first row to return, and the second specifies the maximum number of rows to return. The offset of the initial row is 0 (not 1).\n\nIt can be used with only one argument, which specifies the number of rows to return from the beginning of the result set. So `LIMIT 1` will return the first record.\n\n#### Implementation\n\n```sql\nSELECT\n    customer_number\nFROM\n    orders\nGROUP BY customer_number\nORDER BY COUNT(*) DESC\nLIMIT 1\n;\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

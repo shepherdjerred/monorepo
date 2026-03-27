@@ -1,0 +1,120 @@
+{
+  "questionId": "116",
+  "questionFrontendId": "116",
+  "title": "Populating Next Right Pointers in Each Node",
+  "titleSlug": "populating-next-right-pointers-in-each-node",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>perfect binary tree</strong> where all leaves are on the same level, and every parent has two children. The binary tree has the following definition:</p>\n\n<pre>\nstruct Node {\n  int val;\n  Node *left;\n  Node *right;\n  Node *next;\n}\n</pre>\n\n<p>Populate each next pointer to point to its next right node. If there is no next right node, the next pointer should be set to <code>NULL</code>.</p>\n\n<p>Initially, all next pointers are set to <code>NULL</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/02/14/116_sample.png\" style=\"width: 500px; height: 171px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3,4,5,6,7]\n<strong>Output:</strong> [1,#,2,3,#,4,5,6,7,#]\n<strong>Explanation: </strong>Given the above perfect binary tree (Figure A), your function should populate each next pointer to point to its next right node, just like in Figure B. The serialized output is in level order as connected by the next pointers, with &#39;#&#39; signifying the end of each level.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = []\n<strong>Output:</strong> []\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[0, 2<sup>12</sup> - 1]</code>.</li>\n\t<li><code>-1000 &lt;= Node.val &lt;= 1000</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow-up:</strong></p>\n\n<ul>\n\t<li>You may only use constant extra space.</li>\n\t<li>The recursive approach is fine. You may assume implicit stack space does not count as extra space for this problem.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"connect\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"TreeNode\"\n  },\n  \"structures\": [\n    {\n      \"name\": \"TreeNode\",\n      \"comment\": \"Definition for a Node.\",\n      \"members\": [\n        {\n          \"name\": \"val\",\n          \"type\": \"integer\"\n        },\n        {\n          \"name\": \"left\",\n          \"type\": \"TreeNode\"\n        },\n        {\n          \"name\": \"right\",\n          \"type\": \"TreeNode\"\n        },\n        {\n          \"name\": \"next\",\n          \"type\": \"TreeNode\"\n        }\n      ]\n    }\n  ],\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"csharp\",\n    \"javascript\",\n    \"python3\",\n    \"swift\",\n    \"golang\",\n    \"kotlin\",\n    \"ruby\",\n    \"c\",\n    \"scala\",\n    \"php\",\n    \"typescript\"\n  ],\n  \"manual\": true,\n\"typescriptCustomType\" : \"class _Node {\\n    val: number\\n    left: _Node | null\\n    right: _Node | null\\n    next: _Node | null\\n\\n    constructor(val?: number, left?: _Node, right?: _Node, next?: _Node) {\\n        this.val = (val===undefined ? 0 : val)\\n        this.left = (left===undefined ? null : left)\\n        this.right = (right===undefined ? null : right)\\n        this.next = (next===undefined ? null : next)\\n    }\\n}\"\n}",
+  "stats": "{\"totalAccepted\": \"1.3M\", \"totalSubmission\": \"2M\", \"totalAcceptedRaw\": 1325551, \"totalSubmissionRaw\": 1979051, \"acRate\": \"67.0%\"}",
+  "likes": 10407,
+  "dislikes": 329,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Populating Next Right Pointers in Each Node II\", \"titleSlug\": \"populating-next-right-pointers-in-each-node-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Binary Tree Right Side View\", \"titleSlug\": \"binary-tree-right-side-view\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Cycle Length Queries in a Tree\", \"titleSlug\": \"cycle-length-queries-in-a-tree\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5,6,7]",
+    "[]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}]}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/*\n// Definition for a Node.\nclass Node {\npublic:\n    int val;\n    Node* left;\n    Node* right;\n    Node* next;\n\n    Node() : val(0), left(NULL), right(NULL), next(NULL) {}\n\n    Node(int _val) : val(_val), left(NULL), right(NULL), next(NULL) {}\n\n    Node(int _val, Node* _left, Node* _right, Node* _next)\n        : val(_val), left(_left), right(_right), next(_next) {}\n};\n*/\n\nclass Solution {\npublic:\n    Node* connect(Node* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/*\n// Definition for a Node.\nclass Node {\n    public int val;\n    public Node left;\n    public Node right;\n    public Node next;\n\n    public Node() {}\n    \n    public Node(int _val) {\n        val = _val;\n    }\n\n    public Node(int _val, Node _left, Node _right, Node _next) {\n        val = _val;\n        left = _left;\n        right = _right;\n        next = _next;\n    }\n};\n*/\n\nclass Solution {\n    public Node connect(Node root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "\"\"\"\n# Definition for a Node.\nclass Node:\n    def __init__(self, val: int = 0, left: 'Node' = None, right: 'Node' = None, next: 'Node' = None):\n        self.val = val\n        self.left = left\n        self.right = right\n        self.next = next\n\"\"\"\n\nclass Solution:\n    def connect(self, root: 'Optional[Node]') -> 'Optional[Node]':\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "\"\"\"\n# Definition for a Node.\nclass Node(object):\n    def __init__(self, val=0, left=None, right=None, next=None):\n        self.val = val\n        self.left = left\n        self.right = right\n        self.next = next\n\"\"\"\n\nclass Solution(object):\n    def connect(self, root):\n        \"\"\"\n        :type root: Node\n        :rtype: Node\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * // Definition for a _Node.\n * function _Node(val, left, right, next) {\n *    this.val = val === undefined ? null : val;\n *    this.left = left === undefined ? null : left;\n *    this.right = right === undefined ? null : right;\n *    this.next = next === undefined ? null : next;\n * };\n */\n\n/**\n * @param {_Node} root\n * @return {_Node}\n */\nvar connect = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for _Node.\n * class _Node {\n *     val: number\n *     left: _Node | null\n *     right: _Node | null\n *     next: _Node | null\n *     constructor(val?: number, left?: _Node, right?: _Node, next?: _Node) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction connect(root: _Node | null): _Node | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/*\n// Definition for a Node.\npublic class Node {\n    public int val;\n    public Node left;\n    public Node right;\n    public Node next;\n\n    public Node() {}\n\n    public Node(int _val) {\n        val = _val;\n    }\n\n    public Node(int _val, Node _left, Node _right, Node _next) {\n        val = _val;\n        left = _left;\n        right = _right;\n        next = _next;\n    }\n}\n*/\n\npublic class Solution {\n    public Node Connect(Node root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a Node.\n * struct Node {\n *     int val;\n *     struct Node *left;\n *     struct Node *right;\n *     struct Node *next;\n * };\n */\n\nstruct Node* connect(struct Node* root) {\n\t\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a Node.\n * type Node struct {\n *     Val int\n *     Left *Node\n *     Right *Node\n *     Next *Node\n * }\n */\n\nfunc connect(root *Node) *Node {\n\t\n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Definition for a Node.\n * class Node(var `val`: Int) {\n *     var left: Node? = null\n *     var right: Node? = null\n *     var next: Node? = null\n * }\n */\n\nclass Solution {\n    fun connect(root: Node?): Node? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a Node.\n * public class Node {\n *     public var val: Int\n *     public var left: Node?\n *     public var right: Node?\n *\t   public var next: Node?\n *     public init(_ val: Int) {\n *         self.val = val\n *         self.left = nil\n *         self.right = nil\n *         self.next = nil\n *     }\n * }\n */\n\nclass Solution {\n    func connect(_ root: Node?) -> Node? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for Node.\n# class Node\n#     attr_accessor :val, :left, :right, :next\n#     def initialize(val)\n#         @val = val\n#         @left, @right, @next = nil, nil, nil\n#     end\n# end\n\n# @param {Node} root\n# @return {Node}\ndef connect(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a Node.\n * class Node {\n *     function __construct($val = 0) {\n *         $this->val = $val;\n *         $this->left = null;\n *         $this->right = null;\n *         $this->next = null;\n *     }\n * }\n */\n\nclass Solution {\n    /**\n     * @param Node $root\n     * @return Node\n     */\n    public function connect($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a Node.\n * class Node(var _value: Int) {\n *   var value: Int = _value\n *   var left: Node = null\n *   var right: Node = null\n *   var next: Node = null\n * }\n */\n\nobject Solution {\n    def connect(root: Node): Node = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "830",
+    "content": "[TOC]\n\n## Solution\n\n### Approach 1: Level Order Traversal\n\n**Intuition**\n\nThere are two basic kinds of traversals on a tree or a graph. One is where we explore the tree in a depth first manner i.e. one branch at a time. The other one is where we traverse the tree breadth-wise i.e. we explore one level of the tree before moving on to the next one. For trees, we have further classifications of the depth first traversal approach called `preorder`, `inorder`, and the `postorder` traversals. Breadth first approach to exploring a tree is based on the concept of the `level` of a node. The `level` of a node is its depth or distance from the root node. We process all the nodes on one level before moving on to the next one. \n\n<center>\n<img src=\"../Figures/116/img1.png\" width=\"600\"/>\n</center>\n\nNow that we have the basics out of the way, it's pretty evident that the problem statement strongly hints at a breadth first kind of a solution. We need to link all the nodes together which lie on the `same level` and the level order or the breadth first traversal gives us access to all such nodes.\n\n**Algorithm**\n\n1. Initialize a queue, `Q` which we will be making use of during our traversal. There are multiple ways to implement the level order traversal especially when it comes to identifying the level of a particular node. \n    1. We can add a pair of $$(node, level)$$ to the queue and whenever we add the children of a node, we add $$\\text (node.left, \\;\\; parent\\_level + 1)$$ and $$(node.right,\\;\\; parent\\_level + 1)$$. This approach wouldn't be very efficient for our algorithm since we need *all* the nodes on the same level and we would need another data structure just for that.\n    \n        <center>\n        <img src=\"../Figures/116/img2.png\" width=\"600\"/>\n        </center>\n    \n    2. A more memory efficient way of segregating the same level nodes is to use some demarcation between the levels. Usually, we insert a `NULL` entry in the queue which marks the end of the previous level and the start of the next level. This is a great approach but again, it would still consume some memory proportional to the number of levels in the tree. \n\n        <center>\n        <img src=\"../Figures/116/img3.png\" width=\"600\"/>\n        </center>\n\n    3. The approach we will be using here would have a nested loop structure to get around the requirement of a `NULL` pointer. Essentially, at each step, we record the size of the queue and that always corresponds to ***all*** the nodes on a particular level. Once we have this size, we only process these many elements and no more. By the time we are done processing `size` number of elements, the queue would contain ***all*** the nodes on the next level. Here's a pseudocode for the same:\n        <pre>\n        while (!Q.empty())\n        {\n            size = Q.size()\n            for i in range 0..size\n            {\n                node = Q.pop()\n                Q.push(node.left)\n                Q.push(node.right)\n            }\n        }\n        </pre>\n        \n2. We start off by adding the root of the tree in the queue. Since there is just one node on the level 0, we don't need to establish any connections and can move onto the `while` loop.\n\n    <center>\n    <img src=\"../Figures/116/img4.png\" width=\"600\"/>\n    </center>\n\n3. The first `while` loop from the pseudocode above essentially iterates over each level one by one and the inner for loop iterates over all the nodes on the particular level. Since we have access to all the nodes on the same level, we can establish the next pointers easily. \n4. When we `pop` a node inside the `for` loop from the pseudocode above, we add its children at the back of the queue. Also, the element at the head of the queue is the `next` element in order, on the current level. So, we can easily establish the new pointers.\n\n    <center>\n    <img src=\"../Figures/116/img5.png\" width=\"600\"/>\n    </center>\n\n<iframe src=\"https://leetcode.com/playground/ZCJNpNyM/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZCJNpNyM\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$ since we process each node exactly once. Note that processing a node in this context means popping the node from the queue and then establishing the next pointers. \n* Space Complexity: $$O(N)$$. This is a perfect binary tree which means the last level contains $$N/2$$ nodes. The space complexity for breadth first traversal is the space occupied by the queue which is dependent upon the maximum number of nodes in particular level. So, in this case, the space complexity would be $$O(N)$$.\n<br>\n<br>\n\n---\n### Approach 2: Using previously established next pointers\n\n**Intuition**\n\nLet's look at the two types of `next` pointer connections we need to establish for a given tree.\n\n1. This first case is the one where we establish the next pointers between the two children of a given node. This is the easier of the two cases since both the children are accessible via the same node. We can simply do the following to establish this connection.\n    <pre>\n    node.left.next = node.right</pre>\n    \n    <center>\n    <img src=\"../Figures/116/img6.png\" width=\"600\"/>\n    </center>\n    \n2.  This next case is not too straightforward to handle. In addition to establishing the next pointers between the nodes having a common parent, we also need to set-up the correct pointers between nodes which have a different parent. \n\n    <center>\n    <img src=\"../Figures/116/img7.png\" width=\"600\"/>\n    </center>\n   \nIf we simply had the parent pointers available with each node, this problem would have been trivial to solve. However, we don't have any such pointers available. The basic idea for this approach is based on the fact that:\n\n> We only move on to the level N+1 when we are done establishing the next pointers for the level N. Since we have access to all the nodes on a particular level via the next pointers, we can use these next pointers to establish the connections for the next level or the level containing their children.\n\n**Algorithm**\n\n1. We start at the root node. Since there are no more nodes to process on the first level or level `0`, we can establish the next pointers on the next level i.e. level 1. An important thing to remember in this algorithm is that we establish the next pointers for a level $$N$$ while we are still on level $$N-1$$ and once we are done establishing these new connections, we move on to $$N$$ and do the same thing for $$N+1$$.\n2. As we just said, when we go over the nodes of a particular level, their next pointers are already established. This is what helps get rid of the queue data structure from the previous approach and helps save space. To start on a particular level, we just need the `leftmost` node. From there on out, its just a linked list traversal.   \n3. Based on these ideas, our algorithm will have the following pseudocode:\n\n    <pre>\n    leftmost = root\n    while (leftmost.left != null)\n    {\n        head = leftmost\n        while (head != null)\n        {\n            1) Establish Connection 1\n            2) Establish Connection 2 using next pointers\n            head = head.next\n        }\n        leftmost = leftmost.left\n    }</pre>\n    \n    <center>\n    <img src=\"../Figures/116/img8.png\" width=\"600\"/>\n    </center>\n\n4. The `Connection 1` and `Connection 2` mentioned above correspond to the two kinds of connections we looked at earlier on in the intuition section of this approach. \n    1. The first one is fairly simple to establish given that it's between the two nodes having a common parent. So, we could simply do something like this to link the two children:\n    \n        <pre>\n        node.left.next = node.right\n        </pre>\n        \n        <center>\n        <img src=\"../Figures/116/img9.png\" width=\"600\"/>\n        </center>\n        \n    2.  For the second type of connection, we have to make use of the next pointers on the current level. Remember that this second type of connection is between nodes that have different parents. More specifically, it's the link between the right child of a node and the left child of the `next` node. Since we already have the next pointers set up on the current level, we use this to set up the correct pointers on the next level.\n    \n        <pre>\n        node.right.next = node.next.left\n        </pre>   \n        \n        <center>\n        <img src=\"../Figures/116/img10.png\" width=\"600\"/>\n        </center>\n        \n5. Once we are done with the current level, we move on to the next one. One last thing that's left here is to update the `leftmost` node. We need that node to start traversal on a particular level. Think of it as the head of the linked list. Since this is a `perfect binary tree`, the leftmost node will always be the left child of the current leftmost node. The only nodes which don't have any children are the ones on the final level and these would be the leaves of the tree. \n\n    <center>\n    <img src=\"../Figures/116/img11.png\" width=\"600\"/>\n    </center>\n\n<iframe src=\"https://leetcode.com/playground/cGmsJv36/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"cGmsJv36\"></iframe>   \n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$ since we process each node exactly once.\n* Space Complexity: $$O(1)$$ since we don't make use of any additional data structure for traversing nodes on a particular level like the previous approach does. \n<br>\n<br>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

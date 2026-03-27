@@ -1,0 +1,140 @@
+{
+  "questionId": "288",
+  "questionFrontendId": "288",
+  "title": "Unique Word Abbreviation",
+  "titleSlug": "unique-word-abbreviation",
+  "difficulty": "Medium",
+  "content": "<p>The <strong>abbreviation</strong> of a word is a concatenation of its first letter, the number of characters between the first and last letter, and its last letter. If a word has only two characters, then it is an <strong>abbreviation</strong> of itself.</p>\n\n<p>For example:</p>\n\n<ul>\n\t<li><code>dog --&gt; d1g</code> because there is one letter between the first letter <code>&#39;d&#39;</code> and the last letter <code>&#39;g&#39;</code>.</li>\n\t<li><code>internationalization --&gt; i18n</code> because there are 18 letters between the first letter <code>&#39;i&#39;</code> and the last letter <code>&#39;n&#39;</code>.</li>\n\t<li><code>it --&gt; it</code> because any word with only two characters is an <strong>abbreviation</strong> of itself.</li>\n</ul>\n\n<p>Implement the <code>ValidWordAbbr</code> class:</p>\n\n<ul>\n\t<li><code>ValidWordAbbr(String[] dictionary)</code> Initializes the object with a <code>dictionary</code> of words.</li>\n\t<li><code>boolean isUnique(string word)</code> Returns <code>true</code> if <strong>either</strong> of the following conditions are met (otherwise returns <code>false</code>):\n\t<ul>\n\t\t<li>There is no word in <code>dictionary</code> whose <strong>abbreviation</strong> is equal to <code>word</code>&#39;s <strong>abbreviation</strong>.</li>\n\t\t<li>For any word in <code>dictionary</code> whose <strong>abbreviation</strong> is equal to <code>word</code>&#39;s <strong>abbreviation</strong>, that word and <code>word</code> are <strong>the same</strong>.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;ValidWordAbbr&quot;, &quot;isUnique&quot;, &quot;isUnique&quot;, &quot;isUnique&quot;, &quot;isUnique&quot;, &quot;isUnique&quot;]\n[[[&quot;deer&quot;, &quot;door&quot;, &quot;cake&quot;, &quot;card&quot;]], [&quot;dear&quot;], [&quot;cart&quot;], [&quot;cane&quot;], [&quot;make&quot;], [&quot;cake&quot;]]\n<strong>Output</strong>\n[null, false, true, false, true, true]\n\n<strong>Explanation</strong>\nValidWordAbbr validWordAbbr = new ValidWordAbbr([&quot;deer&quot;, &quot;door&quot;, &quot;cake&quot;, &quot;card&quot;]);\nvalidWordAbbr.isUnique(&quot;dear&quot;); // return false, dictionary word &quot;deer&quot; and word &quot;dear&quot; have the same abbreviation &quot;d2r&quot; but are not the same.\nvalidWordAbbr.isUnique(&quot;cart&quot;); // return true, no words in the dictionary have the abbreviation &quot;c2t&quot;.\nvalidWordAbbr.isUnique(&quot;cane&quot;); // return false, dictionary word &quot;cake&quot; and word &quot;cane&quot; have the same abbreviation  &quot;c2e&quot; but are not the same.\nvalidWordAbbr.isUnique(&quot;make&quot;); // return true, no words in the dictionary have the abbreviation &quot;m2e&quot;.\nvalidWordAbbr.isUnique(&quot;cake&quot;); // return true, because &quot;cake&quot; is already in the dictionary and no other word in the dictionary has &quot;c2e&quot; abbreviation.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= dictionary.length &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= dictionary[i].length &lt;= 20</code></li>\n\t<li><code>dictionary[i]</code> consists of lowercase English letters.</li>\n\t<li><code>1 &lt;= word.length &lt;= 20</code></li>\n\t<li><code>word</code> consists of lowercase English letters.</li>\n\t<li>At most <code>5000</code> calls will be made to <code>isUnique</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"classname\": \"ValidWordAbbr\",\r\n  \"maxbytesperline\": 470000,\r\n  \"constructor\": {\r\n      \"params\": [\r\n        {\r\n            \"type\": \"string[]\",\r\n            \"name\": \"dictionary\"\r\n        },\r\n        {\r\n            \"type\": \"integer\",\r\n            \"name\": \"dictionarySize\",\r\n            \"lang\": \"c\",\r\n            \"value\": \"size_1\"\r\n        }\r\n      ]\r\n  },\r\n  \"methods\": [\r\n      { \"name\" : \"isUnique\",\r\n        \"params\": [\r\n            {\r\n                \"type\": \"string\",\r\n                \"name\": \"word\"\r\n            }\r\n        ],\r\n        \"return\": {\r\n            \"type\": \"boolean\"\r\n        }\r\n      }\r\n  ],\r\n  \"systemdesign\": true,\r\n  \"params\": [\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        },\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        }\r\n    ],\r\n    \"return\": {\r\n        \"type\": \"list<String>\",\r\n        \"dealloc\": true\r\n    }\r\n}",
+  "stats": "{\"totalAccepted\": \"80.2K\", \"totalSubmission\": \"292K\", \"totalAcceptedRaw\": 80175, \"totalSubmissionRaw\": 291986, \"acRate\": \"27.5%\"}",
+  "likes": 219,
+  "dislikes": 1856,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Two Sum III - Data structure design\", \"titleSlug\": \"two-sum-iii-data-structure-design\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Generalized Abbreviation\", \"titleSlug\": \"generalized-abbreviation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"ValidWordAbbr\",\"isUnique\",\"isUnique\",\"isUnique\",\"isUnique\",\"isUnique\"]\n[[[\"deer\",\"door\",\"cake\",\"card\"]],[\"dear\"],[\"cart\"],[\"cane\"],[\"make\"],[\"cake\"]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class ValidWordAbbr {\npublic:\n    ValidWordAbbr(vector<string>& dictionary) {\n        \n    }\n    \n    bool isUnique(string word) {\n        \n    }\n};\n\n/**\n * Your ValidWordAbbr object will be instantiated and called as such:\n * ValidWordAbbr* obj = new ValidWordAbbr(dictionary);\n * bool param_1 = obj->isUnique(word);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class ValidWordAbbr {\n\n    public ValidWordAbbr(String[] dictionary) {\n        \n    }\n    \n    public boolean isUnique(String word) {\n        \n    }\n}\n\n/**\n * Your ValidWordAbbr object will be instantiated and called as such:\n * ValidWordAbbr obj = new ValidWordAbbr(dictionary);\n * boolean param_1 = obj.isUnique(word);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class ValidWordAbbr:\n\n    def __init__(self, dictionary: List[str]):\n        \n\n    def isUnique(self, word: str) -> bool:\n        \n\n\n# Your ValidWordAbbr object will be instantiated and called as such:\n# obj = ValidWordAbbr(dictionary)\n# param_1 = obj.isUnique(word)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class ValidWordAbbr(object):\n\n    def __init__(self, dictionary):\n        \"\"\"\n        :type dictionary: List[str]\n        \"\"\"\n        \n\n    def isUnique(self, word):\n        \"\"\"\n        :type word: str\n        :rtype: bool\n        \"\"\"\n        \n\n\n# Your ValidWordAbbr object will be instantiated and called as such:\n# obj = ValidWordAbbr(dictionary)\n# param_1 = obj.isUnique(word)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} dictionary\n */\nvar ValidWordAbbr = function(dictionary) {\n    \n};\n\n/** \n * @param {string} word\n * @return {boolean}\n */\nValidWordAbbr.prototype.isUnique = function(word) {\n    \n};\n\n/** \n * Your ValidWordAbbr object will be instantiated and called as such:\n * var obj = new ValidWordAbbr(dictionary)\n * var param_1 = obj.isUnique(word)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class ValidWordAbbr {\n    constructor(dictionary: string[]) {\n        \n    }\n\n    isUnique(word: string): boolean {\n        \n    }\n}\n\n/**\n * Your ValidWordAbbr object will be instantiated and called as such:\n * var obj = new ValidWordAbbr(dictionary)\n * var param_1 = obj.isUnique(word)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class ValidWordAbbr {\n\n    public ValidWordAbbr(string[] dictionary) {\n        \n    }\n    \n    public bool IsUnique(string word) {\n        \n    }\n}\n\n/**\n * Your ValidWordAbbr object will be instantiated and called as such:\n * ValidWordAbbr obj = new ValidWordAbbr(dictionary);\n * bool param_1 = obj.IsUnique(word);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} ValidWordAbbr;\n\n\nValidWordAbbr* validWordAbbrCreate(char** dictionary, int dictionarySize) {\n    \n}\n\nbool validWordAbbrIsUnique(ValidWordAbbr* obj, char* word) {\n    \n}\n\nvoid validWordAbbrFree(ValidWordAbbr* obj) {\n    \n}\n\n/**\n * Your ValidWordAbbr struct will be instantiated and called as such:\n * ValidWordAbbr* obj = validWordAbbrCreate(dictionary, dictionarySize);\n * bool param_1 = validWordAbbrIsUnique(obj, word);\n \n * validWordAbbrFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type ValidWordAbbr struct {\n    \n}\n\n\nfunc Constructor(dictionary []string) ValidWordAbbr {\n    \n}\n\n\nfunc (this *ValidWordAbbr) IsUnique(word string) bool {\n    \n}\n\n\n/**\n * Your ValidWordAbbr object will be instantiated and called as such:\n * obj := Constructor(dictionary);\n * param_1 := obj.IsUnique(word);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class ValidWordAbbr(dictionary: Array<String>) {\n\n    fun isUnique(word: String): Boolean {\n        \n    }\n\n}\n\n/**\n * Your ValidWordAbbr object will be instantiated and called as such:\n * var obj = ValidWordAbbr(dictionary)\n * var param_1 = obj.isUnique(word)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass ValidWordAbbr {\n\n    init(_ dictionary: [String]) {\n        \n    }\n    \n    func isUnique(_ word: String) -> Bool {\n        \n    }\n}\n\n/**\n * Your ValidWordAbbr object will be instantiated and called as such:\n * let obj = ValidWordAbbr(dictionary)\n * let ret_1: Bool = obj.isUnique(word)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct ValidWordAbbr {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl ValidWordAbbr {\n\n    fn new(dictionary: Vec<String>) -> Self {\n        \n    }\n    \n    fn is_unique(&self, word: String) -> bool {\n        \n    }\n}\n\n/**\n * Your ValidWordAbbr object will be instantiated and called as such:\n * let obj = ValidWordAbbr::new(dictionary);\n * let ret_1: bool = obj.is_unique(word);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class ValidWordAbbr\n\n=begin\n    :type dictionary: String[]\n=end\n    def initialize(dictionary)\n        \n    end\n\n\n=begin\n    :type word: String\n    :rtype: Boolean\n=end\n    def is_unique(word)\n        \n    end\n\n\nend\n\n# Your ValidWordAbbr object will be instantiated and called as such:\n# obj = ValidWordAbbr.new(dictionary)\n# param_1 = obj.is_unique(word)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class ValidWordAbbr {\n    /**\n     * @param String[] $dictionary\n     */\n    function __construct($dictionary) {\n        \n    }\n  \n    /**\n     * @param String $word\n     * @return Boolean\n     */\n    function isUnique($word) {\n        \n    }\n}\n\n/**\n * Your ValidWordAbbr object will be instantiated and called as such:\n * $obj = ValidWordAbbr($dictionary);\n * $ret_1 = $obj->isUnique($word);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class ValidWordAbbr {\n\n  ValidWordAbbr(List<String> dictionary) {\n    \n  }\n  \n  bool isUnique(String word) {\n    \n  }\n}\n\n/**\n * Your ValidWordAbbr object will be instantiated and called as such:\n * ValidWordAbbr obj = ValidWordAbbr(dictionary);\n * bool param1 = obj.isUnique(word);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class ValidWordAbbr(_dictionary: Array[String]) {\n\n    def isUnique(word: String): Boolean = {\n        \n    }\n\n}\n\n/**\n * Your ValidWordAbbr object will be instantiated and called as such:\n * val obj = new ValidWordAbbr(dictionary)\n * val param_1 = obj.isUnique(word)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule ValidWordAbbr do\n  @spec init_(dictionary :: [String.t]) :: any\n  def init_(dictionary) do\n    \n  end\n\n  @spec is_unique(word :: String.t) :: boolean\n  def is_unique(word) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# ValidWordAbbr.init_(dictionary)\n# param_1 = ValidWordAbbr.is_unique(word)\n\n# ValidWordAbbr.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec valid_word_abbr_init_(Dictionary :: [unicode:unicode_binary()]) -> any().\nvalid_word_abbr_init_(Dictionary) ->\n  .\n\n-spec valid_word_abbr_is_unique(Word :: unicode:unicode_binary()) -> boolean().\nvalid_word_abbr_is_unique(Word) ->\n  .\n\n\n%% Your functions will be called as such:\n%% valid_word_abbr_init_(Dictionary),\n%% Param_1 = valid_word_abbr_is_unique(Word),\n\n%% valid_word_abbr_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define valid-word-abbr%\n  (class object%\n    (super-new)\n    \n    ; dictionary : (listof string?)\n    (init-field\n      dictionary)\n    \n    ; is-unique : string? -> boolean?\n    (define/public (is-unique word)\n      )))\n\n;; Your valid-word-abbr% object will be instantiated and called as such:\n;; (define obj (new valid-word-abbr% [dictionary dictionary]))\n;; (define param_1 (send obj is-unique word))"
+    }
+  ],
+  "solution": {
+    "id": "17",
+    "content": "[TOC]\n\n## Summary\n\nThis problem has a low acceptance rate for a reason. The logic in `isUnique` can be a little tricky to get right due to the number of cases you need to consider. We highly recommend that you practice this similar but easier problem first - [Two Sum III - Data structure design](https://leetcode.com/problems/two-sum-iii-data-structure-design/).\n\n## Solution\n---\n### Approach #1 (Brute Force)\n\nLet us begin by storing the dictionary first in the constructor. To determine if a word's abbreviation is unique with respect to a word in the dictionary, we check if all the following conditions are met:\n\n1. <a name=\"condition-1\"></a>They are not the same word.\n2. They both have equal lengths.\n3. They both share the same first and last letter.\n\nNote that [Condition #1](#condition-1) is implicit because from the problem statement:\n\n>A word's abbreviation is unique if no ***other*** word from the dictionary has the same abbreviation.\n\n<iframe src=\"https://leetcode.com/playground/ESGwBfpv/shared\" frameBorder=\"0\" name=\"ESGwBfpv\" width=\"100%\" height=\"445\"></iframe>\n\n**Complexity analysis**\n\n* Time complexity : $$O(n)$$ for each `isUnique` call.\nAssume that $$n$$ is the number of words in the dictionary, each `isUnique` call takes $$O(n)$$ time.\n\n---\n### Approach #2 (Hash Table) [Accepted]\n\nNote that `isUnique` is called repeatedly for the same set of words in the dictionary each time. We should pre-process the dictionary to speed it up.\n\nIdeally, a hash table supports constant time look up. What should the key-value pair be?\n\nWell, the idea is to *group* the words that fall under the same abbreviation together. For the value, we use a Set instead of a List to guarantee uniqueness.\n\nThe logic in `isUnique(word)` is tricky. You need to consider the following cases:\n\n1. Does the word's abbreviation exists in the dictionary? If not, then it must be unique.\n2. If above is yes, then it can only be unique if the grouping of the abbreviation contains no other words except *word*.\n\n<iframe src=\"https://leetcode.com/playground/nn3s5QaL/shared\" frameBorder=\"0\" name=\"nn3s5QaL\" width=\"100%\" height=\"513\"></iframe>\n\n---\n### Approach #3 (Hash Table) [Accepted]\n\nLet us consider another approach using a counter as the table's value. For example, assume the dictionary = `[\"door\", \"deer\"]`, we have the mapping of `{\"d2r\" -> 2}`. However, this mapping alone is not enough, because we need to consider whether the word exists in the dictionary. This can be easily overcome by inserting the entire dictionary into a set.\n\nWhen an abbreviation's counter exceeds one, we know this abbreviation must not be unique because at least two different words share the same abbreviation. Therefore, we can further simplify the counter to just a boolean.\n\n<iframe src=\"https://leetcode.com/playground/MVRLCdzb/shared\" frameBorder=\"0\" name=\"MVRLCdzb\" width=\"100%\" height=\"496\"></iframe>\n\n**Complexity analysis**\n\n* Time complexity : $$O(n)$$ pre-processing, $$O(1)$$ for each `isUnique` call.\nBoth [Approach #2](#approach-2) and [Approach #3](#approach-3) above take $$O(n)$$ pre-processing time in the constructor. This is totally worth it if `isUnique` is called repeatedly.\n\n* Space complexity : $$O(n)$$.\nWe traded the extra $$O(n)$$ space storing the table to reduce the time complexity in `isUnique`.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

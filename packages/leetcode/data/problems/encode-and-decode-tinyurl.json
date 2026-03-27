@@ -1,0 +1,120 @@
+{
+  "questionId": "535",
+  "questionFrontendId": "535",
+  "title": "Encode and Decode TinyURL",
+  "titleSlug": "encode-and-decode-tinyurl",
+  "difficulty": "Medium",
+  "content": "<blockquote>Note: This is a companion problem to the <a href=\"https://leetcode.com/discuss/interview-question/system-design/\" target=\"_blank\">System Design</a> problem: <a href=\"https://leetcode.com/discuss/interview-question/124658/Design-a-URL-Shortener-(-TinyURL-)-System/\" target=\"_blank\">Design TinyURL</a>.</blockquote>\n\n<p>TinyURL is a URL shortening service where you enter a URL such as <code>https://leetcode.com/problems/design-tinyurl</code> and it returns a short URL such as <code>http://tinyurl.com/4e9iAk</code>. Design a class to encode a URL and decode a tiny URL.</p>\n\n<p>There is no restriction on how your encode/decode algorithm should work. You just need to ensure that a URL can be encoded to a tiny URL and the tiny URL can be decoded to the original URL.</p>\n\n<p>Implement the <code>Solution</code> class:</p>\n\n<ul>\n\t<li><code>Solution()</code> Initializes the object of the system.</li>\n\t<li><code>String encode(String longUrl)</code> Returns a tiny URL for the given <code>longUrl</code>.</li>\n\t<li><code>String decode(String shortUrl)</code> Returns the original long URL for the given <code>shortUrl</code>. It is guaranteed that the given <code>shortUrl</code> was encoded by the same object.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> url = &quot;https://leetcode.com/problems/design-tinyurl&quot;\n<strong>Output:</strong> &quot;https://leetcode.com/problems/design-tinyurl&quot;\n\n<strong>Explanation:</strong>\nSolution obj = new Solution();\nstring tiny = obj.encode(url); // returns the encoded tiny url.\nstring ans = obj.decode(tiny); // returns the original url after decoding it.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= url.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>url</code> is guranteed to be a valid URL.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"CodecDriver\",\n  \"params\": [\n    {\n      \"name\": \"url\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  },\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"308.7K\", \"totalSubmission\": \"356.4K\", \"totalAcceptedRaw\": 308661, \"totalSubmissionRaw\": 356367, \"acRate\": \"86.6%\"}",
+  "likes": 2134,
+  "dislikes": 3818,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"https://leetcode.com/problems/design-tinyurl\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"shopify\", \"name\": \"Shopify\"}, {\"timesEncountered\": 2, \"slug\": \"revolut\", \"name\": \"Revolut\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Hash Function",
+      "slug": "hash-function"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n\n    // Encodes a URL to a shortened URL.\n    string encode(string longUrl) {\n        \n    }\n\n    // Decodes a shortened URL to its original URL.\n    string decode(string shortUrl) {\n        \n    }\n};\n\n// Your Solution object will be instantiated and called as such:\n// Solution solution;\n// solution.decode(solution.encode(url));"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "public class Codec {\n\n    // Encodes a URL to a shortened URL.\n    public String encode(String longUrl) {\n        \n    }\n\n    // Decodes a shortened URL to its original URL.\n    public String decode(String shortUrl) {\n        \n    }\n}\n\n// Your Codec object will be instantiated and called as such:\n// Codec codec = new Codec();\n// codec.decode(codec.encode(url));"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Codec:\n\n    def encode(self, longUrl: str) -> str:\n        \"\"\"Encodes a URL to a shortened URL.\n        \"\"\"\n        \n\n    def decode(self, shortUrl: str) -> str:\n        \"\"\"Decodes a shortened URL to its original URL.\n        \"\"\"\n        \n\n# Your Codec object will be instantiated and called as such:\n# codec = Codec()\n# codec.decode(codec.encode(url))"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Codec:\n\n    def encode(self, longUrl):\n        \"\"\"Encodes a URL to a shortened URL.\n        \n        :type longUrl: str\n        :rtype: str\n        \"\"\"\n        \n\n    def decode(self, shortUrl):\n        \"\"\"Decodes a shortened URL to its original URL.\n        \n        :type shortUrl: str\n        :rtype: str\n        \"\"\"\n        \n\n# Your Codec object will be instantiated and called as such:\n# codec = Codec()\n# codec.decode(codec.encode(url))"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Encodes a URL to a shortened URL.\n *\n * @param {string} longUrl\n * @return {string}\n */\nvar encode = function(longUrl) {\n    \n};\n\n/**\n * Decodes a shortened URL to its original URL.\n *\n * @param {string} shortUrl\n * @return {string}\n */\nvar decode = function(shortUrl) {\n    \n};\n\n/**\n * Your functions will be called as such:\n * decode(encode(url));\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Encodes a URL to a shortened URL.\n */\nfunction encode(longUrl: string): string {\n\t\n};\n\n/**\n * Decodes a shortened URL to its original URL.\n */\nfunction decode(shortUrl: string): string {\n\t\n};\n\n/**\n * Your functions will be called as such:\n * decode(encode(strs));\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Codec {\n\n    // Encodes a URL to a shortened URL\n    public string encode(string longUrl) {\n        \n    }\n\n    // Decodes a shortened URL to its original URL.\n    public string decode(string shortUrl) {\n        \n    }\n}\n\n// Your Codec object will be instantiated and called as such:\n// Codec codec = new Codec();\n// codec.decode(codec.encode(url));"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/** Encodes a URL to a shortened URL. */\nchar* encode(char* longUrl) {\n    \n}\n\n/** Decodes a shortened URL to its original URL. */\nchar* decode(char* shortUrl) {\n    \n}\n\n// Your functions will be called as such:\n// char* s = encode(s);\n// decode(s);"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Codec struct {\n    \n}\n\n\nfunc Constructor() Codec {\n    \n}\n\n// Encodes a URL to a shortened URL.\nfunc (this *Codec) encode(longUrl string) string {\n\t\n}\n\n// Decodes a shortened URL to its original URL.\nfunc (this *Codec) decode(shortUrl string) string {\n    \n}\n\n\n/**\n * Your Codec object will be instantiated and called as such:\n * obj := Constructor();\n * url := obj.encode(longUrl);\n * ans := obj.decode(url);\n */\n"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Codec() {\n    // Encodes a URL to a shortened URL.\n    fun encode(longUrl: String): String {\n        \n    }\n\n    // Decodes a shortened URL to its original URL.\n    fun decode(shortUrl: String): String {\n        \n    }\n}\n\n/**\n * Your Codec object will be instantiated and called as such:\n * var obj = Codec()\n * var url = obj.encode(longUrl)\n * var ans = obj.decode(url)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Codec {\n    // Encodes a URL to a shortened URL.\n    func encode(_ longUrl: String) -> String {\n        \n    }\n    \n    // Decodes a shortened URL to its original URL.\n    func decode(_ shortUrl: String) -> String {\n        \n    }\n}\n\n/**\n * Your Codec object will be instantiated and called as such:\n * let obj = Codec()\n * val s = obj.encode(longUrl)\n * let ans = obj.decode(s)\n*/"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Codec {\n\t\n}\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Codec {\n    fn new() -> Self {\n        \n    }\n\t\n    // Encodes a URL to a shortened URL.\n    fn encode(&self, longURL: String) -> String {\n        \n    }\n\t\n    // Decodes a shortened URL to its original URL.\n    fn decode(&self, shortURL: String) -> String {\n        \n    }\n}\n\n/**\n * Your Codec object will be instantiated and called as such:\n * let obj = Codec::new();\n * let s: String = obj.encode(strs);\n * let ans: VecVec<String> = obj.decode(s);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Encodes a URL to a shortened URL.\n#\n# @param {string} longUrl\n# @return {string}\ndef encode(longUrl)\n    \nend\n\n# Decodes a shortened URL to its original URL.\n#\n# @param {string} shortUrl\n# @return {string}\ndef decode(shortUrl)\n    \nend\n\n\n# Your functions will be called as such:\n# decode(encode(url))"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Codec {\n    /**\n     * Encodes a URL to a shortened URL.\n     * @param String $longUrl\n     * @return String\n     */\n    function encode($longUrl) {\n        \n    }\n    \n    /**\n     * Decodes a shortened URL to its original URL.\n     * @param String $shortUrl\n     * @return String\n     */\n    function decode($shortUrl) {\n        \n    }\n}\n\n/**\n * Your Codec object will be instantiated and called as such:\n * $obj = Codec();\n * $s = $obj->encode($longUrl);\n * $ans = $obj->decode($s);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Codec {\n    // Encodes a URL to a shortened URL.\n    def encode(longURL: String): String = {\n        \n    }\n    \n    // Decodes a shortened URL to its original URL.\n    def decode(shortURL: String): String = {\n        \n    }\n}\n\n/**\n * Your Codec object will be instantiated and called as such:\n * var obj = new Codec()\n * val s = obj.encode(longURL)\n * val ans = obj.decode(s)\n */"
+    }
+  ],
+  "solution": {
+    "id": "93",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach #1 Using Simple Counter\n\nIn order to encode the URL, we make use of a counter($$i$$), which is incremented for every new URL encountered. We put the URL along with its encoded count($$i$$) in a HashMap. This way we can retrieve it later at the time of decoding easily.\n\n<iframe src=\"https://leetcode.com/playground/o3fArBfN/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"o3fArBfN\"></iframe>\n\n**Performance Analysis**\n\n* The range of URLs that can be decoded is limited by the range of $$\\text{int}$$.\n\n* If excessively large number of URLs have to be encoded, after the range of $$\\text{int}$$ is exceeded, integer overflow could lead to overwriting the previous URLs' encodings, leading to the performance degradation.\n\n* The length of the URL isn't necessarily shorter than the incoming $$\\text{longURL}$$. It is only dependent on the relative order in which the URLs are encoded.\n\n* One problem with this method is that it is very easy to predict the next code generated, since the pattern can be detected by generating a few encoded URLs.\n\n\n---\n### Approach #2 Variable-length Encoding\n\n**Algorithm**\n\nIn this case, we make use of variable length encoding to encode the given URLs. For every $$\\text{longURL}$$, we choose a variable codelength for the input URL, which can be any length between 0 and 61. Further, instead of using only numbers as the Base System for encoding the URLSs, we make use of a set of integers and alphabets to be used for encoding.\n\n<iframe src=\"https://leetcode.com/playground/FhZXvGH3/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FhZXvGH3\"></iframe>\n\n**Performance Analysis**\n\n* The number of URLs that can be encoded is, again, dependent on the range of $$\\text{int}$$, since, the same $$count$$ will be generated after overflow of integers.\n\n* The length of the encoded URLs isn't necessarily short, but is to some extent dependent on the order in which the incoming $$\\text{longURL}$$'s are encountered. For example, the codes generated will have the lengths in the following order: 1(62 times), 2(62 times) and so on.\n\n* The performance is quite good, since the same code will be repeated only after the integer overflow limit, which is quite large.\n\n* In this case also, the next code generated could be predicted by the use of some calculations.\n\n---\n### Approach #3 Using hashcode\n\n**Algorithm**\n\nIn this method, we make use of an inbuilt function $$\\text{hashCode()}$$ to determine a code for mapping every URL. Again, the mapping is stored in a HashMap for decoding.\n\nThe hash code for a String object is computed(using int arithmetic) as −\n\n$$s[0]*31^{(n - 1)} + s[1]*31^{(n - 2)} + ... + s[n - 1]$$ , where s[i] is the ith character of the string, n is the length of the string.\n\n<iframe src=\"https://leetcode.com/playground/Lj5i4Sxz/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"Lj5i4Sxz\"></iframe>\n\n**Performance Analysis**\n\n* The number of URLs that can be encoded is limited by the range of $$\\text{int}$$, since $$\\text{hashCode}$$ uses integer calculations.\n\n* The average length of the encoded URL isn't directly related to the incoming $$\\text{longURL}$$ length.\n\n* The $$\\text{hashCode()}$$ doesn't generate unique codes for different string. This property of getting the same code for two different inputs is called collision. Thus, as the number of encoded URLs increases, the probability of collisions increases, which leads to failure.\n\n* The following figure demonstrates the mapping of different objects to the same hashcode and the increasing probability of collisions with increasing number of objects.\n\n![Encode_and_Decode_URLs](../Figures/535_Encode_and_Decode.png)\n\n* Thus, it isn't necessary that the collisions start occuring only after a certain number of strings have been encoded, but they could occur way before the limit is even near to the $$\\text{int}$$. This is similar to birthday paradox i.e. the probability of two people having the same birthday is nearly 50% if we consider only 23 people and 99.9% with just 70 people.\n\n* Predicting the encoded URL isn't easy in this scheme.\n\n---\n### Approach #4 Using random number\n\n**Algorithm**\n\nIn this case, we generate a random integer to be used as the code. In case the generated code happens to be already mapped to some previous $$\\text{longURL}$$, we generate a new random integer to be used as the code. The data is again stored in a HashMap to help in the decoding process.\n\n<iframe src=\"https://leetcode.com/playground/TX9ZWThj/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"TX9ZWThj\"></iframe>\n\n**Performance Analysis**\n\n* The number of URLs that can be encoded is limited by the range of $$\\text{int}$$.\n\n* The average length of the codes generated is independent of the $$\\text{longURL}$$'s length, since a random integer is used.\n\n* The length of the URL isn't necessarily shorter than the incoming $$\\text{longURL}$$. It is only dependent on the relative order in which the URLs are encoded.\n\n* Since a random number is used for coding, again, as in the previous case, the number of collisions could increase with the increasing number of input strings, leading to performance degradation.\n\n* Determining the encoded URL isn't possible in this scheme, since we make use of random numbers.\n\n---\n### Approach #5 Random fixed-length encoding\n\n**Algorithm**\n\nIn this case, again, we make use of the set of numbers and alphabets to generate the coding for the given URLs, similar to Approach 2. But in this case, the length of the code is fixed to 6 only. Further, random characters from the string to form the characters of the code. In case, the code generated collides with some previously generated code, we form a new random code.\n\n<iframe src=\"https://leetcode.com/playground/bfaUpR2L/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"bfaUpR2L\"></iframe>\n\n**Performance Analysis**\n\n* The number of URLs that can be encoded is quite large in this case, nearly of the order $$(10+26*2)^6$$.\n\n* The length of the encoded URLs is fixed to 6 units, which is a significant reduction for very large URLs.\n\n* The performance of this scheme is quite good, due to a very less probability of repeated same codes generated.\n\n* We can increase the number of encodings possible as well, by increasing the length of the encoded strings. Thus, there exists a  tradeoff between the length of the code and the number of encodings possible.\n\n* Predicting the encoding isn't possible in this scheme since random numbers are used.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

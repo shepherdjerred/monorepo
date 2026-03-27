@@ -1,0 +1,140 @@
+{
+  "questionId": "13",
+  "questionFrontendId": "13",
+  "title": "Roman to Integer",
+  "titleSlug": "roman-to-integer",
+  "difficulty": "Easy",
+  "content": "<p>Roman numerals are represented by seven different symbols:&nbsp;<code>I</code>, <code>V</code>, <code>X</code>, <code>L</code>, <code>C</code>, <code>D</code> and <code>M</code>.</p>\n\n<pre>\n<strong>Symbol</strong>       <strong>Value</strong>\nI             1\nV             5\nX             10\nL             50\nC             100\nD             500\nM             1000</pre>\n\n<p>For example,&nbsp;<code>2</code> is written as <code>II</code>&nbsp;in Roman numeral, just two ones added together. <code>12</code> is written as&nbsp;<code>XII</code>, which is simply <code>X + II</code>. The number <code>27</code> is written as <code>XXVII</code>, which is <code>XX + V + II</code>.</p>\n\n<p>Roman numerals are usually written largest to smallest from left to right. However, the numeral for four is not <code>IIII</code>. Instead, the number four is written as <code>IV</code>. Because the one is before the five we subtract it making four. The same principle applies to the number nine, which is written as <code>IX</code>. There are six instances where subtraction is used:</p>\n\n<ul>\n\t<li><code>I</code> can be placed before <code>V</code> (5) and <code>X</code> (10) to make 4 and 9.&nbsp;</li>\n\t<li><code>X</code> can be placed before <code>L</code> (50) and <code>C</code> (100) to make 40 and 90.&nbsp;</li>\n\t<li><code>C</code> can be placed before <code>D</code> (500) and <code>M</code> (1000) to make 400 and 900.</li>\n</ul>\n\n<p>Given a roman numeral, convert it to an integer.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;III&quot;\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> III = 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;LVIII&quot;\n<strong>Output:</strong> 58\n<strong>Explanation:</strong> L = 50, V= 5, III = 3.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;MCMXCIV&quot;\n<strong>Output:</strong> 1994\n<strong>Explanation:</strong> M = 1000, CM = 900, XC = 90 and IV = 4.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 15</code></li>\n\t<li><code>s</code> contains only&nbsp;the characters <code>(&#39;I&#39;, &#39;V&#39;, &#39;X&#39;, &#39;L&#39;, &#39;C&#39;, &#39;D&#39;, &#39;M&#39;)</code>.</li>\n\t<li>It is <strong>guaranteed</strong>&nbsp;that <code>s</code> is a valid roman numeral in the range <code>[1, 3999]</code>.</li>\n</ul>\n",
+  "hints": [
+    "Problem is simpler to solve by working the string from back to front and using a map."
+  ],
+  "metaData": "{ \r\n  \"name\": \"romanToInt\",\r\n  \"params\": [\r\n    { \r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"5.8M\", \"totalSubmission\": \"8.7M\", \"totalAcceptedRaw\": 5762056, \"totalSubmissionRaw\": 8675570, \"acRate\": \"66.4%\"}",
+  "likes": 17663,
+  "dislikes": 1228,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Integer to Roman\", \"titleSlug\": \"integer-to-roman\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"III\"",
+    "\"LVIII\"",
+    "\"MCMXCIV\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 22, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 9, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 6, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"virtusa\", \"name\": \"Virtusa\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 7, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 7, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 6, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 6, \"slug\": \"wix\", \"name\": \"Wix\"}, {\"timesEncountered\": 5, \"slug\": \"amd\", \"name\": \"AMD\"}, {\"timesEncountered\": 4, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 4, \"slug\": \"deltax\", \"name\": \"DeltaX\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int romanToInt(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int romanToInt(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def romanToInt(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def romanToInt(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar romanToInt = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function romanToInt(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int RomanToInt(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int romanToInt(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func romanToInt(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun romanToInt(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func romanToInt(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn roman_to_int(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef roman_to_int(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function romanToInt($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int romanToInt(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def romanToInt(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec roman_to_int(s :: String.t) :: integer\n  def roman_to_int(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec roman_to_int(S :: unicode:unicode_binary()) -> integer().\nroman_to_int(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (roman-to-int s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "889",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/838799566\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Overview\n\nIn a lot of countries, Roman Numerals are taught in elementary school-level math. This has made them a somewhat popular \"easy\" interview question. Unfortunately though, this ignores the fact that *not everybody learned them in school*, and therefore a big advantage has been given to those who did. I suspect it's also difficult for a lot of us who *have* learned them previously to fully appreciate how much easier prior experience makes this question. While this is very unfair, and possibly very frustrating, keep in mind that the best thing you can do is work through this question and the related question [Integer to Roman](https://leetcode.com/problems/integer-to-roman/) so that you don't get caught out by it in a real interview.\n\n**Can we assume the input is valid?**\n\nYes. Here on Leetcode, you can make that assumption because you *haven't* been told what to do if it *isn't*.\n\nIn a real interview, this is a question you should ask the interviewer. Don't ever assume without asking in a real interview that the input has to be valid.\n\n**Is there only one valid representation for each number?**\n\nThis is more relevant to the other question, [Integer to Roman](https://leetcode.com/problems/integer-to-roman/), however we'll still briefly look at it now.\n\nGiven that the representation for `3` is `III`, it could seem natural that the representation for `15` is `VVV`, because that would be `5 + 5 + 5`. However, it's actually `XV`, which is `10 + 5`. How are you even supposed to know which is correct?\n\nThe trick is to use the \"biggest\" symbols you can. Because `X` is bigger than `V`, we should use an `X` first and then make up the remainder with a single `V`, giving `XV`.\n\nWe'll talk more about this in the [Integer to Roman](https://leetcode.com/problems/integer-to-roman/) article. This question is a lot simpler because there's only one logical way of converting from a *Roman Numeral to an Integer*. This is also why this question is labelled as \"easy\", whereas the other is labelled as \"medium\".\n\n**A few more examples**\n\nIf you're not very familiar with Roman Numerals, work through these examples and then have another go at writing your own algorithm before reading the rest of this solution article.\n\n*What is `CXVII` as an integer?*\n\nRecall that `C = 100`, `X = 10`, `V = 5`, and `I = 1`. Because the symbols are ordered from most significant to least, we can simply add the symbols, i.e. `C + X + V + I + I = 100 + 10 + 5 + 1 + 1 = 117`.\n\n*What is `DXCI` as an integer?*\n\nRecall that `D = 500`. \n\nNow, notice that this time the symbols are *not* ordered from most significant to least—the `X` and `C` are out of numeric order. Because of this, we subtract the value of `X` (`10`) from the value of `C` (`100`) to get `90`.\n\nSo, going from left to right, we have `D + (C - X) + I = 500 + 90 + 1 = 591`. \n\n*What is `CMXCIV` as an integer?*\n\nRecall that `M = 1000`.\n\nThe symbols barely look sorted at all here—from left-to-right we have `100, 1000, 10, 100, 1, 5`. Do not panic though, we just need to look for each occurrence of a smaller symbols *preceding* a bigger symbol. The first, third, and fifth symbols are all smaller than their next symbol. Therefore they are all going to be subtracted from their next.\n\n- The first two symbols are `CM`. This is `M - C = 1000 - 100 = 900`\n- The second two symbols are `XC`. This is `C - X = 100 - 10 = 90`.\n- The final two symbols are `IV`. This is `V - I = 5 - 1 = 4`.\n\nLike we did above, we add these together. `(M - C) + (C - X) + (V - I) = 900 + 90 + 4 = 994`.\n\n---\n\n### Approach 1: Left-to-Right Pass\n\n**Intuition**\n\nLet's hard-code a mapping with the value of each symbol so that we can easily look them up.\n\n![Symbol mapping](../Figures/13/hardcoding_1.png)\n\nNow, recall that each symbol adds its own value, *except for* when a *smaller valued symbol* is *before* a *larger valued symbol*. In those cases, instead of adding both symbols to the total, we need to *subtract the large from the small*, adding that instead.\n\nTherefore, the simplest algorithm is to use a pointer to scan through the string, at each step deciding whether to add the current symbol and go forward 1 place, or add the difference of the next 2 symbols and go forward 2 places. Here is this algorithm in pseudocode.\n\n```text \ntotal = 0\ni = 0\nwhile i < s.length:\n    if at least 2 symbols remaining AND value of s[i] < value of s[i + 1]:\n        total = total + (value of s[i + 1]) - (value of s[i])  \n        i = i + 2\n    else:\n        total = total + (value of s[i])\n        i = i + 1\nreturn total\n```\n\nHere is an animation of the above algorithm.\n\n!?!../Documents/13_animation_1.json:816,307!?!\n\nRecall that the *input is always valid*. This means that we don't need to worry about being given inputs such as `ICD`.\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/fcfhVF5J/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fcfhVF5J\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of the input string (the total number of symbols in it).\n\n- Time complexity : $$O(1)$$.\n\n    As there is a finite set of roman numerals, the maximum number possible number can be `3999`, which in roman numerals is  `MMMCMXCIX`. As such the time complexity is $$O(1)$$.\n\n    If roman numerals had an arbitrary number of symbols, then the time complexity would be proportional to the length of the input, i.e. $$O(n)$$. This is assuming that looking up the value of each symbol is $$O(1)$$.\n\n- Space complexity : $$O(1)$$.\n\n    Because only a constant number of single-value variables are used, the space complexity is $$O(1)$$.\n\n</br>\n\n---\n\n### Approach 2: Left-to-Right Pass Improved\n\n**Intuition**\n\nInstead of viewing a Roman Numeral as having `7` unique symbols, we could instead view it as having `13` unique symbols—some of length-1 and some of length-2.\n\n![Symbol mapping](../Figures/13/hardcoding_2_fixed.png)\n\nFor example, here is the Roman Numeral `MMCMLXXXIX` broken into its symbols using this definition:\n\n![Splitting the numeral into parts](../Figures/13/length_2_symbols_example.png)\n\nWe can then look up the value of each symbol and add them together.\n\n![Adding up the sum of the numeral](../Figures/13/length_2_symbols_calculation.png)\n\nAfter making a `Map` of `String -> Integer` with the `13` \"symbols\", we need to work our way down the string in the same way as before (we'll do left-to-right, however right-to-left will work okay too), firstly checking if we're at a length-2 symbol, and if not, then treating it as a length-1 symbol.\n\n```text \ntotal = 0\ni = 0\nwhile i < s.length:\n    if at least 2 characters remaining and s.substing(i, i + 1) is in values:\n        total = total + (value of s.substring(i, i + 1))  \n        i = i + 2\n    else:\n        total = total + (value of s[i])\n        i = i + 1\nreturn total\n```\n\nHere is an animation showing the algorithm.\n\n!?!../Documents/13_animation_2.json:816,307!?!\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/UfNxM5e6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UfNxM5e6\"></iframe>\n\n**Complexity Analysis**\n\n- Time complexity : $$O(1)$$.\n\n    Same as Approach 1.\n\n- Space complexity : $$O(1)$$.\n\n    Same as Approach 1.\n\n</br>\n\n---\n\n### Approach 3: Right-to-Left Pass\n\n**Intuition**\n\nThis approach is a more elegant variant of Approach 1. Just to be clear though, *Approach 1 and Approach 2 are probably sufficient for an interview. This approach is still well worth understanding though.*\n\nIn the \"subtraction\" cases, such as `XC`, we've been updating our running `sum` as follows:\n\n```text\nsum += value(C) - value(X)\n```\n\nHowever, notice that this is mathematically equivalent to the following:\n\n```text\nsum += value(C)\nsum -= value(X)\n```\n\nUtilizing this means that we can process *one* symbol each time we go around the main loop. We still need to determine whether or not our current symbol should be added or subtracted by looking at the neighbour though.\n\nIn Approach 1, we had to be careful when inspecting the next symbol to not go over the end of the string. This check wasn't difficult to do, but it increased the code complexity a bit, and it turns out we can avoid it with this approach!\n\nObserve the following:\n\n1. Without looking at the next symbol, we *don't* know whether or not the left-most symbol should be added or subtracted.\n2. The right-most symbol is *always* added. It is either by itself, or the additive part of a pair.\n\nSo, what we can do is initialise sum to be the value of the right-most (last) symbol. Then, we work *backwards* through the string, starting from the second-to-last-symbol. We check the symbol *after* (`i + 1`) to determine whether the current symbol should be \"added\" or \"subtracted\".\n\n```text\nlast = s.length - 1\ntotal = value(last)\n`\nfor i from last - 1 down to 0:\n    if value(s[i]) < value(s[i+1]):\n        total -= value(s[i])\n    else:\n        total += value(s[i])\nreturn sum\n```\n\nBecause we're starting at the second-to-last-index, we know that index `i + 1` always exists. We no longer need to handle its potential non-existence as a special case, and additionally we're able to (cleanly) use a `for` loop, as we're always moving along by 1 index at at time, unlike before where it could have been 1 or 2.\n\nHere is an animation of the above approach.\n\n!?!../Documents/13_animation_3.json:816,307!?!\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/fXAjK3Fk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fXAjK3Fk\"></iframe>\n\n**Complexity Analysis**\n\n- Time complexity : $$O(1)$$.\n\n    Same as Approach 1.\n\n- Space complexity : $$O(1)$$.\n\n    Same as Approach 1.\n</br>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

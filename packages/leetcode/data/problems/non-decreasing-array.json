@@ -1,0 +1,129 @@
+{
+  "questionId": "665",
+  "questionFrontendId": "665",
+  "title": "Non-decreasing Array",
+  "titleSlug": "non-decreasing-array",
+  "difficulty": "Medium",
+  "content": "<p>Given an array <code>nums</code> with <code>n</code> integers, your task is to check if it could become non-decreasing by modifying <strong>at most one element</strong>.</p>\n\n<p>We define an array is non-decreasing if <code>nums[i] &lt;= nums[i + 1]</code> holds for every <code>i</code> (<strong>0-based</strong>) such that (<code>0 &lt;= i &lt;= n - 2</code>).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [4,2,3]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> You could modify the first 4 to 1 to get a non-decreasing array.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [4,2,1]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> You cannot get a non-decreasing array by modifying at most one element.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>-10<sup>5</sup> &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"checkPossibility\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"293K\", \"totalSubmission\": \"1.2M\", \"totalAcceptedRaw\": 292965, \"totalSubmissionRaw\": 1153680, \"acRate\": \"25.4%\"}",
+  "likes": 5855,
+  "dislikes": 789,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Make Array Non-decreasing or Non-increasing\", \"titleSlug\": \"make-array-non-decreasing-or-non-increasing\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find Good Days to Rob the Bank\", \"titleSlug\": \"find-good-days-to-rob-the-bank\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Non-Decreasing Subarrays After K Operations\", \"titleSlug\": \"count-non-decreasing-subarrays-after-k-operations\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,2,3]",
+    "[4,2,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"turing\", \"name\": \"Turing\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"cashfree\", \"name\": \"Cashfree\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool checkPossibility(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean checkPossibility(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def checkPossibility(self, nums: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def checkPossibility(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {boolean}\n */\nvar checkPossibility = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function checkPossibility(nums: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CheckPossibility(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool checkPossibility(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func checkPossibility(nums []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun checkPossibility(nums: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func checkPossibility(_ nums: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn check_possibility(nums: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Boolean}\ndef check_possibility(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Boolean\n     */\n    function checkPossibility($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool checkPossibility(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def checkPossibility(nums: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec check_possibility(nums :: [integer]) :: boolean\n  def check_possibility(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec check_possibility(Nums :: [integer()]) -> boolean().\ncheck_possibility(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (check-possibility nums)\n  (-> (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1126",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach: Greedy\n\n**Intuition**\n\nThe one thing that we should focus on here is the fact that the problem description says non-decreasing, which is just another way of saying increasing. In this case, it means the next element must always be greater than or equal to the current element. Thus, in an array, the item on the left must be less than or equal to the item on the right. Since we can only rectify a single violation of this rule, if more than one violation exists, it is impossible to make the array non-decreasing. \n\nThe first time we encounter such a violation i.e. `nums[i - 1] > nums[i]`, we make a change.  You don't actually have to make a change because the question doesn't ask us to give the final array in order, it just asks if it could become non-decreasing. Then, we move on with the rest of the array and continue to check for other violations. If it ever so happens that the rule gets violated again, we return `false` since this would be the second violation of the rule. If we don't find a second violation, we can return `true` since rectifying the first violation made our array non-decreasing.\n\nWhenever we encounter a violation at a particular index `i`, we need to check what modification we can make to make the array sorted. Let's see this scenario using an example.\n\n![Single violation](../Figures/665/img1.png)\n\n\n*Figure 1. A violation in the sorted array.*\n\n\nIn the example above, we consider the numbers `4, 5, 3` for deciding on how to fix the violation or. In this case, the correct modification is to change the number `3` to `5`. If we change `5` to `3`, then we won't be fixing the violation because the resulting array would be `3, 4, 3, 3, 6, 8`.\n\n![Single violation modification](../Figures/665/img2.png)\n\n\n*Figure 2. Rectifying a single violation leading to a sorted array.*\n\n\nThe basic decision-making process for fixing a violation is listed below. Without considering the number at the index `i - 2`, we won't be able to choose between updating `nums[i]` or `nums[i - 1]`. The modification has to fit in with the sorted nature of the array.\n\n<pre>\nif nums[i - 2] > nums[i] then\n    nums[i] = nums[i - 1]\nelse\n    nums[i - 1] = nums[i]\n</pre>\n\nOnce we make the modification, we expect that the rest of the array will be sorted. If that is not the case, then we return `false` from our function. Some arrays will have violations in different places e.g. a `10` element array where `nums[4] > nums[5]` and also `nums[8] > nums[9]`. This array cannot be sorted by only fixing the violation at `nums[5]`.\n\nAdditionally, it is possible that a modification in the array leads to another violation that did not exist before. Let's consider an example where this can happen.\n\n![Additional violation introduced](../Figures/665/img3.png)\n\n\n*Figure 3. Rectifying a single violation introduces a new violation.*\n\n\n**Algorithm**\n\n1. We iterate over the array until we reach the end of the array or find a violation.\n2. If we reach the end of the array, we know it is sorted and we return `true`.\n3. Otherwise, we found a violation. We consider the `nums[i - 2]` to fix the violation. \n    * If the violation is at the index `1`, we won't have a `nums[i - 2]` available. In that case, we simply set `nums[i - 1]` equal to `nums[i]`.  \n    * Otherwise, we check if `nums[i - 2] <= nums[i]` in which case we set `nums[i - 1]` equal to `nums[i]`. \n    * Finaly, if `nums[i - 2] > nums[i]`, then we set `nums[i]` equal to `nums[i - 1]`.\n4. Once we modify, we simply iterate over the remaining array. If we find another violation, we return `false`. Otherwise, we return `true` once the iteration is complete.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/XSE7S8Ao/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"XSE7S8Ao\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(n)$$ considering there are $$n$$ elements in the array and we process each element at most once.\n\n* Space Complexity: $$O(1)$$ since we don't use any additional space apart from a couple of variables for executing this algorithm.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

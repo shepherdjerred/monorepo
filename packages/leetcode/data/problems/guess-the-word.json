@@ -1,0 +1,120 @@
+{
+  "questionId": "873",
+  "questionFrontendId": "843",
+  "title": "Guess the Word",
+  "titleSlug": "guess-the-word",
+  "difficulty": "Hard",
+  "content": "<p>You are given an array of unique strings <code>words</code> where <code>words[i]</code> is six letters long. One word of <code>words</code> was chosen as a secret word.</p>\n\n<p>You are also given the helper object <code>Master</code>. You may call <code>Master.guess(word)</code> where <code>word</code> is a six-letter-long string, and it must be from <code>words</code>. <code>Master.guess(word)</code> returns:</p>\n\n<ul>\n\t<li><code>-1</code> if <code>word</code> is not from <code>words</code>, or</li>\n\t<li>an integer representing the number of exact matches (value and position) of your guess to the secret word.</li>\n</ul>\n\n<p>There is a parameter <code>allowedGuesses</code> for each test case where <code>allowedGuesses</code> is the maximum number of times you can call <code>Master.guess(word)</code>.</p>\n\n<p>For each test case, you should call <code>Master.guess</code> with the secret word without exceeding the maximum number of allowed guesses. You will get:</p>\n\n<ul>\n\t<li><strong><code>&quot;Either you took too many guesses, or you did not find the secret word.&quot;</code></strong> if you called <code>Master.guess</code> more than <code>allowedGuesses</code> times or if you did not call <code>Master.guess</code> with the secret word, or</li>\n\t<li><strong><code>&quot;You guessed the secret word correctly.&quot;</code></strong> if you called <code>Master.guess</code> with the secret word with the number of calls to <code>Master.guess</code> less than or equal to <code>allowedGuesses</code>.</li>\n</ul>\n\n<p>The test cases are generated such that you can guess the secret word with a reasonable strategy (other than using the bruteforce method).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> secret = &quot;acckzz&quot;, words = [&quot;acckzz&quot;,&quot;ccbazz&quot;,&quot;eiowzz&quot;,&quot;abcczz&quot;], allowedGuesses = 10\n<strong>Output:</strong> You guessed the secret word correctly.\n<strong>Explanation:</strong>\nmaster.guess(&quot;aaaaaa&quot;) returns -1, because &quot;aaaaaa&quot; is not in words.\nmaster.guess(&quot;acckzz&quot;) returns 6, because &quot;acckzz&quot; is secret and has all 6 matches.\nmaster.guess(&quot;ccbazz&quot;) returns 3, because &quot;ccbazz&quot; has 3 matches.\nmaster.guess(&quot;eiowzz&quot;) returns 2, because &quot;eiowzz&quot; has 2 matches.\nmaster.guess(&quot;abcczz&quot;) returns 4, because &quot;abcczz&quot; has 4 matches.\nWe made 5 calls to master.guess, and one of them was the secret, so we pass the test case.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> secret = &quot;hamada&quot;, words = [&quot;hamada&quot;,&quot;khaled&quot;], allowedGuesses = 10\n<strong>Output:</strong> You guessed the secret word correctly.\n<strong>Explanation:</strong> Since there are two words, you can guess both.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 100</code></li>\n\t<li><code>words[i].length == 6</code></li>\n\t<li><code>words[i]</code> consist of lowercase English letters.</li>\n\t<li>All the strings of <code>words</code> are <strong>unique</strong>.</li>\n\t<li><code>secret</code> exists in <code>words</code>.</li>\n\t<li><code>10 &lt;= allowedGuesses &lt;= 30</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"findSecretWord\",\n  \"params\": [\n    {\n      \"name\": \"secret\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"words\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"name\": \"allowedGuesses\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"void\"\n  },\n  \"manual\": true,\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"c\",\n    \"csharp\",\n    \"javascript\",\n    \"ruby\",\n    \"swift\",\n    \"golang\",\n    \"python3\",\n    \"scala\",\n    \"kotlin\",\n    \"rust\",\n    \"php\",\n    \"typescript\"\n  ],\n\"typescriptCustomType\" : \"class Master {\\n    __secret: string;\\n    __wordset: Set<string>;\\n    __guesses: number;\\n    __found: boolean;\\n    constructor(secret: string, wordlist: string[], numguesses: number) {\\n        this.__secret = secret;\\n        this.__wordset = new Set(wordlist);\\n        this.__guesses = numguesses;\\n        this.__found = false;\\n    }\\n\\n    guess(word: string): number {\\n        this.__guesses -= 1;\\n        if (word == this.__secret) {\\n            this.__found = true;\\n            return word.length;\\n        }\\n        if (!this.__wordset.has(word))\\n            return -1;\\n\\n        var matches = 0;\\n        for (var i = 0; i < word.length; ++i)\\n            if (word[i] == this.__secret[i])\\n                matches += 1;\\n        return matches;\\n    }\\n\\n    getGuesses(): number {\\n        return this.__guesses;\\n    }\\n        \\n    getFound(): boolean {\\n        return this.__found;\\n    }\\n};\"\n}",
+  "stats": "{\"totalAccepted\": \"168.7K\", \"totalSubmission\": \"457.9K\", \"totalAcceptedRaw\": 168722, \"totalSubmissionRaw\": 457850, \"acRate\": \"36.9%\"}",
+  "likes": 1632,
+  "dislikes": 1872,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"acckzz\"\n[\"acckzz\",\"ccbazz\",\"eiowzz\",\"abcczz\"]\n10",
+    "\"hamada\"\n[\"hamada\",\"khaled\"]\n10"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"dropbox\", \"name\": \"Dropbox\"}, {\"timesEncountered\": 3, \"slug\": \"verily\", \"name\": \"Verily\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Interactive",
+      "slug": "interactive"
+    },
+    {
+      "name": "Game Theory",
+      "slug": "game-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * // This is the Master's API interface.\n * // You should not implement it, or speculate about its implementation\n * class Master {\n *   public:\n *     int guess(string word);\n * };\n */\nclass Solution {\npublic:\n    void findSecretWord(vector<string>& words, Master& master) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * // This is the Master's API interface.\n * // You should not implement it, or speculate about its implementation\n * interface Master {\n *     public int guess(String word) {}\n * }\n */\nclass Solution {\n    public void findSecretWord(String[] words, Master master) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# \"\"\"\n# This is Master's API interface.\n# You should not implement it, or speculate about its implementation\n# \"\"\"\n# class Master:\n#     def guess(self, word: str) -> int:\n\nclass Solution:\n    def findSecretWord(self, words: List[str], master: 'Master') -> None:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# \"\"\"\n# This is Master's API interface.\n# You should not implement it, or speculate about its implementation\n# \"\"\"\n#class Master(object):\n#    def guess(self, word):\n#        \"\"\"\n#        :type word: str\n#        :rtype int\n#        \"\"\"\n\nclass Solution(object):\n    def findSecretWord(self, words, master):\n        \"\"\"\n        :type words: List[Str]\n        :type master: Master\n        :rtype: None\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * // This is the master's API interface.\n * // You should not implement it, or speculate about its implementation\n * function Master() {\n *\n *     @param {string} word\n *     @return {integer}\n *     this.guess = function(word) {\n *         ...\n *     };\n * };\n */\n/**\n * @param {string[]} words\n * @param {Master} master\n * @return {void}\n */\nvar findSecretWord = function(words, master) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * // This is the Master's API interface.\n * // You should not implement it, or speculate about its implementation\n * class Master {\n *      guess(word: string): number {}\n * }\n */\n\nfunction findSecretWord(words: string[], master: Master) {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * // This is the Master's API interface.\n * // You should not implement it, or speculate about its implementation\n * class Master {\n *     public int Guess(string word);\n * }\n */\nclass Solution {\n    public void FindSecretWord(string[] words, Master master) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * *********************************************************************\n * // This is the Master's API interface.\n * // You should not implement it, or speculate about its implementation\n * *********************************************************************\n *\n * int guess(Master *, char *word);\n */\nvoid findSecretWord(char** words, int wordsSize, Master* master) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * // This is the Master's API interface.\n * // You should not implement it, or speculate about its implementation\n * type Master struct {\n * }\n *\n * func (this *Master) Guess(word string) int {}\n */\nfunc findSecretWord(words []string, master *Master) {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * // This is the Master's API interface.\n * // You should not implement it, or speculate about its implementation\n * interface Master {\n *     fun guess(word: String): Int {}\n * }\n */\nclass Solution {\n    fun findSecretWord(words: Array<String>, master: Master) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * // This is the Master's API interface.\n * // You should not implement it, or speculate about its implementation\n * class Master {\n *     public func guess(word: String) -> Int {}\n * }\n */\nclass Solution {\n    func findSecretWord(_ words: [String], _ master: Master) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "/**\n * // This is the Master's API interface.\n * // You should not implement it, or speculate about its implementation\n * struct Master;\n * impl Master {\n *     fn guess(word:String)->int;\n * };\n */\n\nimpl Solution {\n    pub fn find_secret_word(words: Vec<String>, master: &Master) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "#    This is Master's API interface.\n#    You should not implement it, or speculate about its implementation\n#\n# class Master\n# =begin\n#     :type word: String\n#     :rtype: Integer\n# =end\n#     def guess(word)\n#         ...\n#     end\n# end\n#\n\n# @param {String[]} words\n# @param {Master} master\n# @return {Void}\ndef find_secret_word(words, master)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * // This is the Master's API interface.\n * // You should not implement it, or speculate about its implementation\n * interface Master {\n *     function guess($word) {}\n * }\n */\n\nclass Solution {\n    /**\n     * @param String[] $words\n     * @param Master $master\n     * @return \n     */\n    function findSecretWord($words, $master) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * // This is the Master's API interface.\n * // You should not implement it, or speculate about its implementation\n * class Master {\n *\n *   def guess(word: String): Int = {}\n *\n * }\n */\nobject Solution {\n    def findSecretWord(words: Array[String], master: Master): Unit = {\n        \n    }\n}"
+    }
+  ],
+  "solution": null
+}

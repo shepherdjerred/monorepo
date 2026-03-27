@@ -1,0 +1,144 @@
+{
+  "questionId": "716",
+  "questionFrontendId": "716",
+  "title": "Max Stack",
+  "titleSlug": "max-stack",
+  "difficulty": "Hard",
+  "content": "<p>Design a max stack data structure that supports the stack operations and supports finding the stack&#39;s maximum element.</p>\n\n<p>Implement the <code>MaxStack</code> class:</p>\n\n<ul>\n\t<li><code>MaxStack()</code> Initializes the stack object.</li>\n\t<li><code>void push(int x)</code> Pushes element <code>x</code> onto the stack.</li>\n\t<li><code>int pop()</code> Removes the element on top of the stack and returns it.</li>\n\t<li><code>int top()</code> Gets the element on the top of the stack without removing it.</li>\n\t<li><code>int peekMax()</code> Retrieves the maximum element in the stack without removing it.</li>\n\t<li><code>int popMax()</code> Retrieves the maximum element in the stack and removes it. If there is more than one maximum element, only remove the <strong>top-most</strong> one.</li>\n</ul>\n\n<p>You must come up with a solution that supports <code>O(1)</code> for each <code>top</code> call and <code>O(logn)</code> for each other call.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;MaxStack&quot;, &quot;push&quot;, &quot;push&quot;, &quot;push&quot;, &quot;top&quot;, &quot;popMax&quot;, &quot;top&quot;, &quot;peekMax&quot;, &quot;pop&quot;, &quot;top&quot;]\n[[], [5], [1], [5], [], [], [], [], [], []]\n<strong>Output</strong>\n[null, null, null, null, 5, 5, 1, 5, 1, 5]\n\n<strong>Explanation</strong>\nMaxStack stk = new MaxStack();\nstk.push(5);   // [<strong><u>5</u></strong>] the top of the stack and the maximum number is 5.\nstk.push(1);   // [<u>5</u>, <strong>1</strong>] the top of the stack is 1, but the maximum is 5.\nstk.push(5);   // [5, 1, <strong><u>5</u></strong>] the top of the stack is 5, which is also the maximum, because it is the top most one.\nstk.top();     // return 5, [5, 1, <strong><u>5</u></strong>] the stack did not change.\nstk.popMax();  // return 5, [<u>5</u>, <strong>1</strong>] the stack is changed now, and the top is different from the max.\nstk.top();     // return 1, [<u>5</u>, <strong>1</strong>] the stack did not change.\nstk.peekMax(); // return 5, [<u>5</u>, <strong>1</strong>] the stack did not change.\nstk.pop();     // return 1, [<strong><u>5</u></strong>] the top of the stack and the max element is now 5.\nstk.top();     // return 5, [<strong><u>5</u></strong>] the stack did not change.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>-10<sup>7</sup> &lt;= x &lt;= 10<sup>7</sup></code></li>\n\t<li>At most <code>10<sup>5</sup></code>&nbsp;calls will be made to <code>push</code>, <code>pop</code>, <code>top</code>, <code>peekMax</code>, and <code>popMax</code>.</li>\n\t<li>There will be <strong>at least one element</strong> in the stack when <code>pop</code>, <code>top</code>, <code>peekMax</code>, or <code>popMax</code> is called.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"MaxStack\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"x\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"void\"\n      },\n      \"name\": \"push\"\n    },\n    {\n      \"params\": [],\n      \"return\": {\n        \"type\": \"integer\"\n      },\n      \"name\": \"pop\"\n    },\n    {\n      \"params\": [],\n      \"return\": {\n        \"type\": \"integer\"\n      },\n      \"name\": \"top\"\n    },\n    {\n      \"params\": [],\n      \"return\": {\n        \"type\": \"integer\"\n      },\n      \"name\": \"peekMax\"\n    },\n    {\n      \"params\": [],\n      \"return\": {\n        \"type\": \"integer\"\n      },\n      \"name\": \"popMax\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"183.9K\", \"totalSubmission\": \"400.5K\", \"totalAcceptedRaw\": 183914, \"totalSubmissionRaw\": 400498, \"acRate\": \"45.9%\"}",
+  "likes": 2014,
+  "dislikes": 513,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Min Stack\", \"titleSlug\": \"min-stack\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"MaxStack\",\"push\",\"push\",\"push\",\"top\",\"popMax\",\"top\",\"peekMax\",\"pop\",\"top\"]\n[[],[5],[1],[5],[],[],[],[],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 22, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 11, \"slug\": \"lyft\", \"name\": \"Lyft\"}, {\"timesEncountered\": 7, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}, {\"timesEncountered\": 2, \"slug\": \"woven-by-toyota\", \"name\": \"Woven by Toyota\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Doubly-Linked List",
+      "slug": "doubly-linked-list"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class MaxStack {\npublic:\n    MaxStack() {\n        \n    }\n    \n    void push(int x) {\n        \n    }\n    \n    int pop() {\n        \n    }\n    \n    int top() {\n        \n    }\n    \n    int peekMax() {\n        \n    }\n    \n    int popMax() {\n        \n    }\n};\n\n/**\n * Your MaxStack object will be instantiated and called as such:\n * MaxStack* obj = new MaxStack();\n * obj->push(x);\n * int param_2 = obj->pop();\n * int param_3 = obj->top();\n * int param_4 = obj->peekMax();\n * int param_5 = obj->popMax();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class MaxStack {\n\n    public MaxStack() {\n        \n    }\n    \n    public void push(int x) {\n        \n    }\n    \n    public int pop() {\n        \n    }\n    \n    public int top() {\n        \n    }\n    \n    public int peekMax() {\n        \n    }\n    \n    public int popMax() {\n        \n    }\n}\n\n/**\n * Your MaxStack object will be instantiated and called as such:\n * MaxStack obj = new MaxStack();\n * obj.push(x);\n * int param_2 = obj.pop();\n * int param_3 = obj.top();\n * int param_4 = obj.peekMax();\n * int param_5 = obj.popMax();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class MaxStack:\n\n    def __init__(self):\n        \n\n    def push(self, x: int) -> None:\n        \n\n    def pop(self) -> int:\n        \n\n    def top(self) -> int:\n        \n\n    def peekMax(self) -> int:\n        \n\n    def popMax(self) -> int:\n        \n\n\n# Your MaxStack object will be instantiated and called as such:\n# obj = MaxStack()\n# obj.push(x)\n# param_2 = obj.pop()\n# param_3 = obj.top()\n# param_4 = obj.peekMax()\n# param_5 = obj.popMax()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class MaxStack(object):\n\n    def __init__(self):\n        \n\n    def push(self, x):\n        \"\"\"\n        :type x: int\n        :rtype: None\n        \"\"\"\n        \n\n    def pop(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def top(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def peekMax(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def popMax(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your MaxStack object will be instantiated and called as such:\n# obj = MaxStack()\n# obj.push(x)\n# param_2 = obj.pop()\n# param_3 = obj.top()\n# param_4 = obj.peekMax()\n# param_5 = obj.popMax()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar MaxStack = function() {\n    \n};\n\n/** \n * @param {number} x\n * @return {void}\n */\nMaxStack.prototype.push = function(x) {\n    \n};\n\n/**\n * @return {number}\n */\nMaxStack.prototype.pop = function() {\n    \n};\n\n/**\n * @return {number}\n */\nMaxStack.prototype.top = function() {\n    \n};\n\n/**\n * @return {number}\n */\nMaxStack.prototype.peekMax = function() {\n    \n};\n\n/**\n * @return {number}\n */\nMaxStack.prototype.popMax = function() {\n    \n};\n\n/** \n * Your MaxStack object will be instantiated and called as such:\n * var obj = new MaxStack()\n * obj.push(x)\n * var param_2 = obj.pop()\n * var param_3 = obj.top()\n * var param_4 = obj.peekMax()\n * var param_5 = obj.popMax()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class MaxStack {\n    constructor() {\n        \n    }\n\n    push(x: number): void {\n        \n    }\n\n    pop(): number {\n        \n    }\n\n    top(): number {\n        \n    }\n\n    peekMax(): number {\n        \n    }\n\n    popMax(): number {\n        \n    }\n}\n\n/**\n * Your MaxStack object will be instantiated and called as such:\n * var obj = new MaxStack()\n * obj.push(x)\n * var param_2 = obj.pop()\n * var param_3 = obj.top()\n * var param_4 = obj.peekMax()\n * var param_5 = obj.popMax()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class MaxStack {\n\n    public MaxStack() {\n        \n    }\n    \n    public void Push(int x) {\n        \n    }\n    \n    public int Pop() {\n        \n    }\n    \n    public int Top() {\n        \n    }\n    \n    public int PeekMax() {\n        \n    }\n    \n    public int PopMax() {\n        \n    }\n}\n\n/**\n * Your MaxStack object will be instantiated and called as such:\n * MaxStack obj = new MaxStack();\n * obj.Push(x);\n * int param_2 = obj.Pop();\n * int param_3 = obj.Top();\n * int param_4 = obj.PeekMax();\n * int param_5 = obj.PopMax();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} MaxStack;\n\n\nMaxStack* maxStackCreate() {\n    \n}\n\nvoid maxStackPush(MaxStack* obj, int x) {\n    \n}\n\nint maxStackPop(MaxStack* obj) {\n    \n}\n\nint maxStackTop(MaxStack* obj) {\n    \n}\n\nint maxStackPeekMax(MaxStack* obj) {\n    \n}\n\nint maxStackPopMax(MaxStack* obj) {\n    \n}\n\nvoid maxStackFree(MaxStack* obj) {\n    \n}\n\n/**\n * Your MaxStack struct will be instantiated and called as such:\n * MaxStack* obj = maxStackCreate();\n * maxStackPush(obj, x);\n \n * int param_2 = maxStackPop(obj);\n \n * int param_3 = maxStackTop(obj);\n \n * int param_4 = maxStackPeekMax(obj);\n \n * int param_5 = maxStackPopMax(obj);\n \n * maxStackFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type MaxStack struct {\n    \n}\n\n\nfunc Constructor() MaxStack {\n    \n}\n\n\nfunc (this *MaxStack) Push(x int)  {\n    \n}\n\n\nfunc (this *MaxStack) Pop() int {\n    \n}\n\n\nfunc (this *MaxStack) Top() int {\n    \n}\n\n\nfunc (this *MaxStack) PeekMax() int {\n    \n}\n\n\nfunc (this *MaxStack) PopMax() int {\n    \n}\n\n\n/**\n * Your MaxStack object will be instantiated and called as such:\n * obj := Constructor();\n * obj.Push(x);\n * param_2 := obj.Pop();\n * param_3 := obj.Top();\n * param_4 := obj.PeekMax();\n * param_5 := obj.PopMax();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class MaxStack() {\n\n    fun push(x: Int) {\n        \n    }\n\n    fun pop(): Int {\n        \n    }\n\n    fun top(): Int {\n        \n    }\n\n    fun peekMax(): Int {\n        \n    }\n\n    fun popMax(): Int {\n        \n    }\n\n}\n\n/**\n * Your MaxStack object will be instantiated and called as such:\n * var obj = MaxStack()\n * obj.push(x)\n * var param_2 = obj.pop()\n * var param_3 = obj.top()\n * var param_4 = obj.peekMax()\n * var param_5 = obj.popMax()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass MaxStack {\n\n    init() {\n        \n    }\n    \n    func push(_ x: Int) {\n        \n    }\n    \n    func pop() -> Int {\n        \n    }\n    \n    func top() -> Int {\n        \n    }\n    \n    func peekMax() -> Int {\n        \n    }\n    \n    func popMax() -> Int {\n        \n    }\n}\n\n/**\n * Your MaxStack object will be instantiated and called as such:\n * let obj = MaxStack()\n * obj.push(x)\n * let ret_2: Int = obj.pop()\n * let ret_3: Int = obj.top()\n * let ret_4: Int = obj.peekMax()\n * let ret_5: Int = obj.popMax()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct MaxStack {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl MaxStack {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn push(&self, x: i32) {\n        \n    }\n    \n    fn pop(&self) -> i32 {\n        \n    }\n    \n    fn top(&self) -> i32 {\n        \n    }\n    \n    fn peek_max(&self) -> i32 {\n        \n    }\n    \n    fn pop_max(&self) -> i32 {\n        \n    }\n}\n\n/**\n * Your MaxStack object will be instantiated and called as such:\n * let obj = MaxStack::new();\n * obj.push(x);\n * let ret_2: i32 = obj.pop();\n * let ret_3: i32 = obj.top();\n * let ret_4: i32 = obj.peek_max();\n * let ret_5: i32 = obj.pop_max();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class MaxStack\n    def initialize()\n        \n    end\n\n\n=begin\n    :type x: Integer\n    :rtype: Void\n=end\n    def push(x)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def pop()\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def top()\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def peek_max()\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def pop_max()\n        \n    end\n\n\nend\n\n# Your MaxStack object will be instantiated and called as such:\n# obj = MaxStack.new()\n# obj.push(x)\n# param_2 = obj.pop()\n# param_3 = obj.top()\n# param_4 = obj.peek_max()\n# param_5 = obj.pop_max()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class MaxStack {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $x\n     * @return NULL\n     */\n    function push($x) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function pop() {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function top() {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function peekMax() {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function popMax() {\n        \n    }\n}\n\n/**\n * Your MaxStack object will be instantiated and called as such:\n * $obj = MaxStack();\n * $obj->push($x);\n * $ret_2 = $obj->pop();\n * $ret_3 = $obj->top();\n * $ret_4 = $obj->peekMax();\n * $ret_5 = $obj->popMax();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class MaxStack {\n\n  MaxStack() {\n    \n  }\n  \n  void push(int x) {\n    \n  }\n  \n  int pop() {\n    \n  }\n  \n  int top() {\n    \n  }\n  \n  int peekMax() {\n    \n  }\n  \n  int popMax() {\n    \n  }\n}\n\n/**\n * Your MaxStack object will be instantiated and called as such:\n * MaxStack obj = MaxStack();\n * obj.push(x);\n * int param2 = obj.pop();\n * int param3 = obj.top();\n * int param4 = obj.peekMax();\n * int param5 = obj.popMax();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class MaxStack() {\n\n    def push(x: Int): Unit = {\n        \n    }\n\n    def pop(): Int = {\n        \n    }\n\n    def top(): Int = {\n        \n    }\n\n    def peekMax(): Int = {\n        \n    }\n\n    def popMax(): Int = {\n        \n    }\n\n}\n\n/**\n * Your MaxStack object will be instantiated and called as such:\n * val obj = new MaxStack()\n * obj.push(x)\n * val param_2 = obj.pop()\n * val param_3 = obj.top()\n * val param_4 = obj.peekMax()\n * val param_5 = obj.popMax()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule MaxStack do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec push(x :: integer) :: any\n  def push(x) do\n    \n  end\n\n  @spec pop() :: integer\n  def pop() do\n    \n  end\n\n  @spec top() :: integer\n  def top() do\n    \n  end\n\n  @spec peek_max() :: integer\n  def peek_max() do\n    \n  end\n\n  @spec pop_max() :: integer\n  def pop_max() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# MaxStack.init_()\n# MaxStack.push(x)\n# param_2 = MaxStack.pop()\n# param_3 = MaxStack.top()\n# param_4 = MaxStack.peek_max()\n# param_5 = MaxStack.pop_max()\n\n# MaxStack.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_stack_init_() -> any().\nmax_stack_init_() ->\n  .\n\n-spec max_stack_push(X :: integer()) -> any().\nmax_stack_push(X) ->\n  .\n\n-spec max_stack_pop() -> integer().\nmax_stack_pop() ->\n  .\n\n-spec max_stack_top() -> integer().\nmax_stack_top() ->\n  .\n\n-spec max_stack_peek_max() -> integer().\nmax_stack_peek_max() ->\n  .\n\n-spec max_stack_pop_max() -> integer().\nmax_stack_pop_max() ->\n  .\n\n\n%% Your functions will be called as such:\n%% max_stack_init_(),\n%% max_stack_push(X),\n%% Param_2 = max_stack_pop(),\n%% Param_3 = max_stack_top(),\n%% Param_4 = max_stack_peek_max(),\n%% Param_5 = max_stack_pop_max(),\n\n%% max_stack_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define max-stack%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; push : exact-integer? -> void?\n    (define/public (push x)\n      )\n    ; pop : -> exact-integer?\n    (define/public (pop)\n      )\n    ; top : -> exact-integer?\n    (define/public (top)\n      )\n    ; peek-max : -> exact-integer?\n    (define/public (peek-max)\n      )\n    ; pop-max : -> exact-integer?\n    (define/public (pop-max)\n      )))\n\n;; Your max-stack% object will be instantiated and called as such:\n;; (define obj (new max-stack%))\n;; (send obj push x)\n;; (define param_2 (send obj pop))\n;; (define param_3 (send obj top))\n;; (define param_4 (send obj peek-max))\n;; (define param_5 (send obj pop-max))"
+    }
+  ],
+  "solution": {
+    "id": "1560",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nIn this problem, we are required to implement a data structure based on a classic stack, supporting `pop` and `top` methods in a stack. It is not hard to implement such a LIFO (Last-In-First-Out) stack to return and remove the last added element. However, we need to implement `popMax` and  `peekMax` to return and remove the max element in the entire stack additionally, which makes the requirement become much more tricky.\n\nWe may easily come up with the idea to track the last pushed and the max element so far separately, so we can find the last or the max element quickly for a single operation of `top` or `peekMax`. But the primary challenge is to figure out an efficient way to remove a specified element in both records of the push order track and the value track. Otherwise, we will fail to find out the exact last or max value in the next query method call.\n\nThus, in this solution, we will introduce two approaches to solve the problem. The first approach takes advantage of two balanced trees to sort all elements in two different orders meanwhile. Once we get the element to remove, we can remove it in both two balanced trees with acceptable time complexity. The second one just memorizes the IDs of elements to remove instead of deleting the last or max element in each `pop` or `popMax` request immediately. We only remove them physically when we come across them in later method calls. The two approaches based on different ideas could have different performances when functions are called in variously. You should adopt one of them according to the explicit requirements or assumptions.\n\n---\n\n### Approach 1: Two Balanced Trees\n\n#### Intuition\n\nThe main challenge in the design is how to track the max and the last element respectively. Naturally, we consider keeping two copies of all elements stack, one is in the pushing order, and the other is sorted by the elements' values. A balanced tree is perfect for keeping all elements sorted in some specified order dynamically. We can use two balanced trees to track the order of pushing and values respectively. Once we need to remove the largest element in either balanced tree, we can also easily locate and remove it in the other balanced tree. \n\n#### Algorithm\n\nAs we discussed in Intuition, we need to maintain two balanced trees respectively: the former is in pushing order (`stack`), and the latter is sorted by values (`values`). Besides, we also need to tag each element with a unique `id`. To ensure all elements are of different `id`s, we keep a counter `cnt`, which increases by one once an element is pushed into our stack.\n\nFor `push` operation, we need to push the element with the current `cnt` into both two balanced trees, `stack` and `values`, which insert the element by `id` and `val` respectively. And then, don't forget to increase `cnt`.\n\nFor `top` and `peekMax`, since `stack` and `values` are sorted by the pushing order and element values, we only need to return the last element value of `stack` for `top` query, and the last element value of `values` for `peekMax`.\n\nFor `pop` and `popMax`, besides what we do before, we still find and remove the returned element in both two balanced trees. For `pop`, we first remove the last element in `stack`, and then remove the element in `values`; for `popMax`,  we first remove the last element in `values`, and then remove the element in `stack`.\n\nFor example, let's take a look at the input in example 1:\n\n```\n[\"MaxStack\", \"push\", \"push\", \"push\", \"top\", \"popMax\", \"top\", \"peekMax\", \"pop\", \"top\"]\n[[], [5], [1], [5], [], [], [], [], [], []]\n```\n\nAfter the first three `push` calls, our `stack` and `values` are sorted as:\n\n```\nstack = [(id:0, val:5), (id:1, val:1), (id:2, val:5)]\nvalues = [(id:1, val:1), (id:0, val:5), (id:2, val:5)]\n```\n\nThen, `top` returns the last element in `stack`, whose value is 5;\n\n`popMax` is about to remove the last element in `values`, `(id:2, val:5)`, in both `stack` and `values`. So after `popMax` returns `5`, the two balanced trees are:\n\n```\nstack = [(id:0, val:5), (id:1, val:1)]\nvalues = [(id:1, val:1), (id:0, val:5)]\n```\n\nThen, `top` returns the last element in `stack`, whose value is `1`; Similar, the following `peekMax` returns the last element in `values`, whose value is `5`.\n\nAfter `pop` is called, we remove `(id:1, val:1)` and return the value `5`, so:\n\n```\nstack = [(id:0, val:5)]\nvalues = [(id:0, val:5)]\n```\n\nFinally, the last call of `top` gives the only element `(id:0, val:5)`, whose value is `5`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/mkfc9XPH/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"mkfc9XPH\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $N$ be the number of elements to add to the stack.\n\n* Time Complexity: $O(\\log{N})$ for each operation except for initialization. All operations other than initialization are involved with finding/inserting/removing elements in a balanced tree once or twice. In general, the upper bound of time complexity for each of them is $O(\\log{N})$. However, note that `top` and `peekMax` operations, requiring only the last element in a balanced tree, can be even done in $O(1)$ with `set::rbegin()` in C++ and some special handles on the last element of `SortedList` in Python. But `last` for `TreeSet` in Java haven't implemented similar optimization yet, we have to get the last element in $O(\\log{N})$.\n\n* Space Complexity: $O(N)$, the maximum size of the two balanced trees.\n\n---\n\n### Approach 2: Heap + Lazy Update\n\n#### Intuition\n\nTo peek or pop the max element quickly, we may think of a heap (or priority queue). Meanwhile, a classic stack is sufficient to peek or pop the last added element quickly. What if we keep the two data structures at the same time?\n\nYes, we can pop the max or the last element quickly. However, when we pop the top element of our heap or the stack, we don't know how to locate the removed element in the other one unless we enumerate all items in it from top to bottom.\n\nThus, we are not urgent to delete the popped element. Instead, we just memorize the ID of this element. Next time, when we are going to peek or pop the top of our heap or stack, we first check whether the top is already removed from the other data structure by checking its ID.\n\n#### Algorithm\n\nTo memorize all IDs of deleted elements, we use a hash set `removed` to store them. Apart from the stack(`stack`) and max heap(`heap`) we mentioned above, we still need a counter `cnt` like Approach 1 to tag each element with a unique ID.\n\nWhenever `push(x)` is called, we add it along with the current counter value into both `heap` and `stack`, then increase our `cnt` by 1.\n\nWhenever we are requested to operate on `stack` or `heap` (i.e., `top`, `pop`, `peekMax` and `popMax`), we first check the ID of its top element, if is turns out to be an ID in `removed`, that is, it was removed previously, we need to remove the current top element until its ID is not in `removed` to make sure the top still exists. After that,\n\n- For `top`, return the value of the top element in `stack`.\n- For `peekMax`, return the value of the top element in `heap`.\n- For `pop`, remove the top element of `stack`, put its ID into `removed`, and return its value.\n- For `popMax`, remove the top element of `heap`, put its ID into `removed`, and return its value.\n\nWe can observe that we only check the existence of the top element and remove the element only when it is at the top because the deletion operation for the top of a stack or heap is much faster.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/GPL5yVEe/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GPL5yVEe\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of elements to add to the stack.\n\n* Time Complexity:  \n    - `push`: $O(\\log{N})$, it costs $O(\\log{N})$ to add an element to the `heap` and $O(1)$ to add it to the `stack`.  \n    - The amortized time complexity of operations caused by a single `pop`/`popMax` call is $O(\\log{N})$. For a `pop` call, we first remove the last element in the `stack` and add its ID to `removed` in $O(1)$, resulting in the deletion of the top element in the `heap` in the future (when `peekMax` or `popMax` is called), which has a time complexity of $O(\\log{N})$. Similarly, `popMax` needs $O(\\log{N})$ immediately and $O(1)$ in the operations later. Note that because we lazy-update the two data structures, future operations might never happen in some cases. But even in the worst cases, the upper bound of the amortized time complexity is still only $O(\\log{N})$.  \n    - `top`: $O(1)$, excluding the time cost related to `popMax` calls we discussed above.  \n    - `peekMax`: $O(1)$, excluding the time cost related to `pop` calls we discussed above.  \n\n* Space Complexity:\n    - $O(N)$, the maximum size of the `heap`, `stack`, and `removed`.  \n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

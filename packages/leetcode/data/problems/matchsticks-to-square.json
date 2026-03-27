@@ -1,0 +1,151 @@
+{
+  "questionId": "473",
+  "questionFrontendId": "473",
+  "title": "Matchsticks to Square",
+  "titleSlug": "matchsticks-to-square",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>matchsticks</code> where <code>matchsticks[i]</code> is the length of the <code>i<sup>th</sup></code> matchstick. You want to use <strong>all the matchsticks</strong> to make one square. You <strong>should not break</strong> any stick, but you can link them up, and each matchstick must be used <strong>exactly one time</strong>.</p>\n\n<p>Return <code>true</code> if you can make this square and <code>false</code> otherwise.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/09/matchsticks1-grid.jpg\" style=\"width: 253px; height: 253px;\" />\n<pre>\n<strong>Input:</strong> matchsticks = [1,1,2,2,2]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> You can form a square with length 2, one side of the square came two sticks with length 1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> matchsticks = [3,3,3,3,4]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> You cannot find a way to form a square with all the matchsticks.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= matchsticks.length &lt;= 15</code></li>\n\t<li><code>1 &lt;= matchsticks[i] &lt;= 10<sup>8</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Treat the matchsticks as an array. Can we split the array into 4 equal parts?",
+    "Every matchstick can belong to either of the 4 sides. We don't know which one. Maybe try out all options!",
+    "For every matchstick, we have to try out each of the 4 options i.e. which side it can belong to. We can make use of recursion for this.",
+    "We don't really need to keep track of which matchsticks belong to a particular side during recursion. We just need to keep track of the <b>length</b> of each of the 4 sides.",
+    "When all matchsticks have been used we simply need to see the length of all 4 sides. If they're equal, we have a square on our hands!"
+  ],
+  "metaData": "{\n  \"name\": \"makesquare\",\n  \"params\": [\n    {\n      \"name\": \"matchsticks\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"212.6K\", \"totalSubmission\": \"509.9K\", \"totalAcceptedRaw\": 212641, \"totalSubmissionRaw\": 509935, \"acRate\": \"41.7%\"}",
+  "likes": 4033,
+  "dislikes": 309,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Rows Covered by Columns\", \"titleSlug\": \"maximum-rows-covered-by-columns\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,1,2,2,2]",
+    "[3,3,3,3,4]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"ebay\", \"name\": \"eBay\"}, {\"timesEncountered\": 4, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"rackspace\", \"name\": \"Rackspace\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Bitmask",
+      "slug": "bitmask"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool makesquare(vector<int>& matchsticks) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean makesquare(int[] matchsticks) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def makesquare(self, matchsticks: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def makesquare(self, matchsticks):\n        \"\"\"\n        :type matchsticks: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} matchsticks\n * @return {boolean}\n */\nvar makesquare = function(matchsticks) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function makesquare(matchsticks: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool Makesquare(int[] matchsticks) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool makesquare(int* matchsticks, int matchsticksSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func makesquare(matchsticks []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun makesquare(matchsticks: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func makesquare(_ matchsticks: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn makesquare(matchsticks: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} matchsticks\n# @return {Boolean}\ndef makesquare(matchsticks)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $matchsticks\n     * @return Boolean\n     */\n    function makesquare($matchsticks) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool makesquare(List<int> matchsticks) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def makesquare(matchsticks: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec makesquare(matchsticks :: [integer]) :: boolean\n  def makesquare(matchsticks) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec makesquare(Matchsticks :: [integer()]) -> boolean().\nmakesquare(Matchsticks) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (makesquare matchsticks)\n  (-> (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "540",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nSuppose we have `1,1,1,1,2,2,2,2,3,3,3,3` as our set of matchsticks. In this case a square of side $$6$$ can be formed and we have 4 matchsticks each of 1, 2 and 3 and so we can have each square side formed by `3 + 2 + 1 = 6`.\n\n<center>\n<img src=\"../Figures/473/473_Matchsticks-In-Square-Diag-1.png\" height=\"400\"></center>\n\nWe can clearly see in the diagram above that the 3 matchsticks of sizes `1`, `2` and `3` combine to give one side of our resulting square.\n\nThis problem boils down to splitting an array of integers into $$4$$ subsets where all of these subsets are:\n* mutually exclusive i.e. no specific element of the array is shared by any two of these subsets, and\n* have the same sum which is equal to the side of our square.\n\nWe know that we will have $$4$$ different subsets. The sum of elements of these subsets would be $$\\frac{1}{4}\\sum_{}^{} arr$$. If the sum if not divisible by $$4$$, that implies that $$4$$ subsets of equal value are not possible and we don't need to do any further processing on this.\n\nThe only question that remains now for us to solve is:\n> what subset a particular element belongs to?\n\nIf we are able to figure that out, then there's nothing else left to do. But, since we can't say which of the $$4$$ subsets would contain a particular element, we try out all the options.\n\n---\n\n### Approach 1: Depth First Search\n\n#### Intuition\n\nIt is possible that a matchstick ***can*** be a part of any of the 4 sides of the resulting square, but which one of these choices leads to an actual square is something we don't know.\n\nThis means that for every matchstick in our given array, we have $$4$$ different options each representing the side of the square or subset that this matchstick can be a part of.\n\nWe try out all of them and keep on doing this recursively until we exhaust all of the possibilities or until we find an arrangement of our matchsticks such that they form the square.\n\n#### Algorithm\n\n1. As discussed previously, we will follow a recursive, depth first approach to solve this problem. So, we have a function that takes the current matchstick index we are to process and also the number of sides of the square that are completely formed till now.\n\n2. If all of the matchsticks have been used up and 4 sides have been completely formed, that implies our square is completely formed. This is the base case for the recursion.\n\n3. For the current matchstick we have 4 different options. This matchstick at $$index$$ can be a part of any of the sides of the square. We try out the 4 options by recursing on them.\n    - If any of these recursive calls returns $$True$$, then we return from there, else we return $$False$$\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LGi7CtY9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LGi7CtY9\"></iframe>\n\nThis solution is very slow as is. However, we can speed it up considerably by a small trick and that is to `sort our matchsticks sizes in reverse order before processing them recursively`.\n\nThe reason for this is that if there is no solution, trying a longer matchstick first will get to negative conclusion earlier.\n\ne.g. $$[8,4,4,4]$$. In this case we can have a square of size 5 but the largest side 8 doesn't fit in anywhere i.e. cannot be a part of any of the sides (because we can't break matchsticks according to the question) and hence we can simply return $$False$$ without even considering the remaining matchsticks.\n\n#### Complexity Analysis\n\n* Time Complexity: $$O(4^N)$$ because we have a total of $$N$$ sticks and for each one of those matchsticks, we have $$4$$ different possibilities for the subsets they might belong to or the side of the square they might be a part of.\n\n* Space Complexity: $$O(N)$$. For recursive solutions, the space complexity is the stack space occupied by all the recursive calls. The deepest recursive call here would be of size $$N$$ and hence the space complexity is $$O(N)$$. There is no additional space other than the recursion stack in this solution.\n\n---\n\n### Approach 2: Dynamic Programming\n\n#### Intuition\n\nIn any dynamic programming problem, what's important is that our problem must be breakable into smaller subproblems and also, these subproblems show some sort of overlap which we can save upon by caching or memoization.\n\nSuppose we have `3,3,4,4,5,5` as our matchsticks that have been used already to construct some of the sides of our square (**Note:** not all the sides may be completely constructed at all times.)\n\nIf the square side is $$8$$, then there are many possibilities for how the sides can be constructed using the matchsticks above. We can have\n\n<pre>\n  (4, 4), (3, 5), (3, 5) -----------> 3 sides fully constructed.\n  (3, 4), (3, 5), (4), (5) ---------> 0 sides completely constructed.\n  (3, 3), (4, 4), (5), (5) ---------> 1 side completely constructed.\n</pre>\n\nAs we can see above, there are multiple ways to use the same set of matchsticks and land up in completely different recursion states.\n\nThis means that if we just keep track of what all matchsticks have been used and which all are remaining, it won't properly define the state of recursion we are in or what subproblem we are solving.\n\nA single set of used matchsticks can represent multiple different unrelated subproblems and that is just not right.\n\nWe also need to keep track of number of sides of the square that have been **completely** formed till now.\n\nAlso, an important thing to note in the example we just considered was that if the matchsticks being used are $$[3,3,4,4,5,5]$$ and the side of the square is `8`, then we will always consider that arrangement that forms the most number of complete sides over that arrangement that leads to incomplete sides. Hence, the optimal arrangement here is $$(4, 4), (3, 5), (3, 5)$$ with 3 complete sides of the square.\n\nLet us take a look at the following recursion tree to see if in-fact we can get overlapping subproblems.\n\n<center>\n<img src=\"../Figures/473/473_Matchsticks-In-Square-Diag-2.png\" width=\"500\"></center>\n\n**Note:** Not all subproblems have been shown in this figure. The thing we wanted to point out was overlapping subproblems.\n\nWe know that the overall sum of these matchsticks can be split equally into 4 halves. The only thing we don't know is if 4 **equal** halves can be carved out of the given set of matchsticks. For that also we need to keep track of the number of sides completely formed at any point in time. ***If we end up forming 4 equal sides successfully then naturally we would have used up all of the matchsticks each being used exactly once and we would have formed a square***.\n\n#### Algorithm\n\nLet us first look at the pseudo-code for this problem before looking at the exact implementation details for the same.\n\n<pre>\nlet square_side = sum(matchsticks) / 4\nfunc recurse(matchsticks_used, sides_formed) {\n    if sides_formed == 4, then {\n        Square Formed!!\n    }\n    for match in matchsticks available, do {\n          add match to matchsticks_used\n          let result = recurse(matchsticks_used, sides_formed)\n          if result == True, then {\n              return True\n          }\n          remove match from matchsticks_used\n    }\n    return False\n}\n</pre>\n\nThis is the overall structure of our dynamic programming solution. Of course, a lot of implementation details are missing here that we will address now.\n\n<br />\n\nIt is very clear from the pseudo-code above that the state of a recursion is defined by two variables `matchsticks_used` and `sides_formed`. Hence, these are the two variables that will be used to **memoize** or cache the results for that specific subproblem.\n\nThe question however is how do we actually store all the matchsticks that have been used? We want a memory efficient solution for this.\n\nIf we look at the question's constraints, we find that the max number of matchsticks we can have are $$15$$. That's a pretty small number and we can make use of this constraint.\n\nAll we need to store is which of the matchsticks from the original list have been used. `We can use a Bit-Map for this`\n\nWe will use $$N$$ number of bits, one for each of the matchsticks ($$N$$ is at max 15 according to the question's constraints). Initially we will start with a bit mask of `all 1s` and then as we keep on using the matchsticks, we will keep on setting their corresponding bits to `0`.\n\nThis way, we just have to hash an integer value which represents our bit-map and the max value for this mask would be $$2^{15}$$.\n\n<br />\n\n**Do we really need to see if all 4 sides have been completely formed ?**\n\nAnother implementation trick that helps optimize this solution is that we don't really need to see if 4 sides have been completely formed.\n\nThis is because, we already know that the sum of all the matchsticks is divisible by 4. So, *if 3 equal sides have been formed by using some of the matchsticks, then the remaining matchsticks would definitely form the remaining side of our square.*\n\nHence, we only need to check if 3 sides of our square can be formed or not.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/kKkAjm9e/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"kKkAjm9e\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity: $$O(N \\times 2^N)$$. At max $$2^N$$ unique bit masks are possible and during every recursive call, we iterate our original matchsticks array to sum up the values of matchsticks used to update the `sides_formed` variable.\n\n* Space Complexity: $$O(N + 2^N)$$ because $$N$$ is the stack space taken up by recursion and $$4 \\times 2^N$$ = $$O(2^N)$$ is the max possible size of our cache for memoization.\n    - The size of the cache is defined by the two variables `sides_formed` and `mask`. The number of different values that `sides_formed` can take = 4 and number of unique values of `mask` = $$2^N$$.\n\n  <br />\n  <br />",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

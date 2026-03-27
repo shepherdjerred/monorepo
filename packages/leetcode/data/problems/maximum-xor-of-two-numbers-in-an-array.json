@@ -1,0 +1,141 @@
+{
+  "questionId": "421",
+  "questionFrontendId": "421",
+  "title": "Maximum XOR of Two Numbers in an Array",
+  "titleSlug": "maximum-xor-of-two-numbers-in-an-array",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code>, return <em>the maximum result of </em><code>nums[i] XOR nums[j]</code>, where <code>0 &lt;= i &lt;= j &lt; n</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,10,5,25,2,8]\n<strong>Output:</strong> 28\n<strong>Explanation:</strong> The maximum result is 5 XOR 25 = 28.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [14,70,53,83,49,91,36,80,92,51,66,70]\n<strong>Output:</strong> 127\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 2 * 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"findMaximumXOR\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"219.3K\", \"totalSubmission\": \"410.7K\", \"totalAcceptedRaw\": 219312, \"totalSubmissionRaw\": 410710, \"acRate\": \"53.4%\"}",
+  "likes": 5932,
+  "dislikes": 423,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum XOR With an Element From Array\", \"titleSlug\": \"maximum-xor-with-an-element-from-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum XOR After Operations \", \"titleSlug\": \"maximum-xor-after-operations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sum of Prefix Scores of Strings\", \"titleSlug\": \"sum-of-prefix-scores-of-strings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimize XOR\", \"titleSlug\": \"minimize-xor\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Strong Pair XOR I\", \"titleSlug\": \"maximum-strong-pair-xor-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Maximum Strong Pair XOR II\", \"titleSlug\": \"maximum-strong-pair-xor-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,10,5,25,2,8]",
+    "[14,70,53,83,49,91,36,80,92,51,66,70]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findMaximumXOR(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findMaximumXOR(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findMaximumXOR(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findMaximumXOR(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar findMaximumXOR = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findMaximumXOR(nums: number[]): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindMaximumXOR(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findMaximumXOR(int* nums, int numsSize){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findMaximumXOR(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findMaximumXOR(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findMaximumXOR(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_maximum_xor(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef find_maximum_xor(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function findMaximumXOR($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findMaximumXOR(List<int> nums) {\n\n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findMaximumXOR(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_maximum_xor(nums :: [integer]) :: integer\n  def find_maximum_xor(nums) do\n\n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_maximum_xor(Nums :: [integer()]) -> integer().\nfind_maximum_xor(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-maximum-xor nums)\n  (-> (listof exact-integer?) exact-integer?)\n\n  )"
+    }
+  ],
+  "solution": {
+    "id": "778",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nRequirements are to have $$\\mathcal{O}(N)$$ time complexity, and we'll discuss here two standard approaches to achieve that complexity.\n\n1. Bitwise Prefixes in HashSet.\n\n2. Bitwise Prefixes in Trie. \n\nThe idea behind both solutions is the same: to convert all numbers into the binary form, and to construct the maximum XOR bit by bit, starting from the leftmost one. The difference is in the data structure used to store unique bitwise prefixes, i.e. the first i*th* bits. \n\n\nThe first approach works faster on the given test case set, but the second one is standard, more simple, and easily generalized for more complex problems like _Find maximum subarray XOR in a given array_.\n\n**Prerequisites**\n\nXOR of zero and a bit results in that bit\n\n$$\n0 \\oplus x = x  \n$$\n\nXOR of two equal bits (even if they are zeros) results in a zero\n\n$$\nx \\oplus x = 0  \n$$\n<br />\n<br />\n\n\n---\n### Approach 1: Bitwise Prefixes in HashSet \n\nLet's start from rewriting all numbers `[3, 10, 5, 25, 2, 8]` in binary from\n\n$$3 = (00011)_2$$\n\n$$10 = (01010)_2$$\n\n$$5 = (00101)_2$$\n\n$$25 = (11001)_2$$\n\n$$2 = (00010)_2$$\n\n$$8 = (01000)_2$$\n\nTo simplify the work with prefixes, better to use the same number of bits $$L$$ for all the numbers. It's enough to take $$L$$ equal to the length of the max number in the binary representation. \n\nNow let's construct the max XOR starting from the leftmost bit. The absolute maximum one could have with $$L = 5$$ bits here is $$(11111)_2$$. So let's check bit by bit:\n\n- Could we have the leftmost bit for XOR to be equal to 1-bit, i.e. max XOR to be equal to $$(1****)_2$$? \n\nYes, for that it's enough to pair $$25 = (11001)_2$$ with another number starting with the zero leftmost bit. So the max XOR is $$(1****)_2$$. \n\n- Next step. Could we have max XOR to be equal to $$(11***)_2$$? \n\nFor that, let's consider all prefixes of length 2 and check if there is a pair of them, $$p_1$$ and $$p_2$$, such that its XOR is equal to 11: $$p_1 \\oplus p_2 == 11$$\n\n$$3 = (00***)_2$$\n\n$$10 = (01***)_2$$\n\n$$5 = (00***)_2$$\n\n$$25 = (11***)_2$$\n\n$$2 = (00***)_2$$\n\n$$8 = (01***)_2$$\n\nYes, it's the case, for example, pair $$5 = (00***)_2$$ and $$25 = (11***)_2$$, or $$2 = (00***)_2$$ and $$25 = (11***)_2$$, or $$3 = (00***)_2$$ and $$25 = (11***)_2$$. \n\nAnd so on, and so forth. The complexity remains linear. One has to perform $$N$$ operations to compute prefixes, though the number of prefixes containing $$L - i$$ bits could not be greater than $$2^{L - i}$$. Hence the check if XOR could have the i*th* bit to be equal to 1-bit takes $$2^{L - i} \\times 2^{L - i}$$ operations.\n\n**Algorithm**\n\n\n- Compute the number of bits $$L$$ to be used. It's the length of the max number in binary representation.\n\n- Initiate `max_xor = 0`.\n\n- Loop from $$i = L - 1$$ down to $$i = 0$$ (from the leftmost bit $$L - 1$$ to the rightmost bit 0):\n\n    - Left shift the `max_xor` to free the next bit. \n    \n    - Initiate variable `curr_xor = max_xor | 1` by setting 1 in the rightmost bit of `max_xor`. Now let's check if `curr_xor` could be done using available prefixes.\n    \n    - Compute all possible prefixes of length $$L - i$$ by iterating over `nums`.\n        \n        - Put in the HashSet `prefixes` the prefix of the current number of the length $$L - i$$: `num >> i`.\n        \n\n    - Iterate over all prefixes and check if `curr_xor` could be done using two of them: `p1^p2 == curr_xor`. Using the self-inverse property of XOR `p1^p2^p2 = p1`, one could rewrite it as `p1 == curr_xor^p2` and simply check for each `p` if `curr_xor^p` is in prefixes. If so, set `max_xor` to be equal to `curr_xor`, i.e. set 1-bit in the rightmost bit. Otherwise, let `max_xor` keep 0-bit in the rightmost bit. \n\n    \n- Return `max_xor`. \n\n<iframe src=\"https://leetcode.com/playground/RsG4JzA4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RsG4JzA4\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$. One has to perform $$N$$ operations to compute prefixes, though the number of prefixes containing $$L - i$$ bits is $$2^{L - i}$$. Check if XOR could have the i*th* bit to be equal to 1-bit takes $$2^{L - i} \\times 2^{L - i}$$ operations. Altogether that results in $$\\sum_{i = 0}^{L - 1}{(N + 4^{L - i})} = NL + \\frac{4}{3}(4^L - 1)$$ operations, that means $$\\mathcal{O}(N)$$ time complexity.\n\n\n* Space complexity: $$\\mathcal{O}(N)$$. One has to keep at most $$N$$ prefixes in the worst-case scenario.\n\n<br />\n<br />\n\n\n---\n### Approach 2: Bitwise Trie\n\n**Why HashSet is not a Good Structure to Store Prefixes**\n\nThe hashset structure, used to store the prefixes in Approach 1, doesn't provide the functionality to cut off some paths which don't lead to the solution. \n\nFor example, after two steps of max XOR computation $$(11***)_2$$ it's quite obvious that 25 should be paired with $$00$$ prefix, i.e. with 2, 3, or 5. \n\n$$3 = (00011)_2$$\n\n$$10 = (01010)_2$$\n\n$$5 = (00101)_2$$\n\n$$25 = (11001)_2$$\n\n$$2 = (00010)_2$$\n\n$$8 = (01000)_2$$\n\nHowever, for the third step, we'll again compute all possible prefixes, including the ones for 10 and 8, even if it's quite obvious that they will not lead to the solution.\n\n$$3 = (000**)_2$$\n\n$$10 = (010**)_2$$\n\n$$5 = (001**)_2$$\n\n$$25 = (110**)_2$$\n\n$$2 = (000**)_2$$\n\n$$8 = (010**)_2$$\n\nTo cut these branches off, would be great to use some sort of tree structure.  \n\n**Bitwise Trie: What is it and How to Construct**\n\nThe standard way is to use [Bitwise Trie](https://en.wikipedia.org/wiki/Trie#Bitwise_tries). It's a special type of [Trie](https://leetcode.com/articles/word-search-ii/), which is used to store binary prefixes in an efficient way. There are plenty of real-life examples of bitwise trie usage, for example, [in GCC](https://gcc.gnu.org/onlinedocs/libstdc++/ext/pb_ds/trie_based_containers.html).\n\nLet's start with Bitwise Trie for the array `[3, 10, 5, 25, 2]`\n\n$$3 = (00011)_2$$\n\n$$10 = (01010)_2$$\n\n$$5 = (00101)_2$$\n\n$$25 = (11001)_2$$\n\n$$2 = (00010)_2$$\n\n![fig](../Figures/421/trie.png)\n\nEach root -> leaf path in Bitwise Trie represents a binary form of a number in nums, for example, 0 -> 0 -> 0 -> 1 -> 1 is 3. As before, the same number of bits $$L$$ is used for all numbers, and $$L = 1 + [\\log_2 M]$$, where M is a maximum number in nums. The depth of Bitwise Trie is equal to $$L$$ as well, and all leaves are on the same level.  \n\nBitwise Trie is a perfect way to see how different the binary forms of numbers are, for example, 3 and 2 share 4 bits of 5. The construction of Bitwise Trie is pretty straightforward, it's basically nested hashmaps. At each step one has to verify, if the child node to add (0 or 1) is already present. If yes, just go one step down. If not, add it into the Trie and then go one step down.  \n\n<iframe src=\"https://leetcode.com/playground/hwkN8Vcw/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"hwkN8Vcw\"></iframe>\n\n**Maximum XOR of a Given Number with All Numbers in Trie** \n\nNow the Trie is constructed, so let's find the maximum XOR of a given number with all numbers that have been already inserted into Bitwise Trie. \n\nTo maximize XOR, the strategy is to choose the opposite bit at each step whenever it's possible. Step by step for 25 as a given number:\n\n![fig](../Figures/421/max_xor.png)\n\nThe implementation is also pretty simple: \n\n- Try to go down to the opposite bit at each step if it's possible. Add 1-bit at the end of the current XOR.\n\n- If not, just go down to the same bit. Add 0-bit at the end of the current XOR.\n\n<iframe src=\"https://leetcode.com/playground/ZV2ZGLfL/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"ZV2ZGLfL\"></iframe>\n\n**Algorithm** \n\nTo summarise, now one could\n\n- Insert a number into Bitwise Trie.\n\n- Find the maximum XOR of a given number with all numbers that have been inserted so far.\n\nThat's all one needs to solve the initial problem:\n\n- Convert all numbers to the binary form.\n\n- Add the numbers into Trie one by one and compute the maximum XOR of a number to add with all previously inserted. Update maximum XOR at each step.  \n\n- Return `max_xor`.\n\n**Implementation** \n\n<iframe src=\"https://leetcode.com/playground/B6FqN66f/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"B6FqN66f\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$. It takes $$\\mathcal{O}(L)$$ to insert a number in Trie, and $$\\mathcal{O}(L)$$ to find the max XOR of the given number with all already inserted ones. $$L = 1 + [\\log_2 M]$$ is defined by the maximum number in the array and could be considered as a constant here. Hence the overall time complexity is $$\\mathcal{O}(N)$$.\n\n* Space complexity: $$\\mathcal{O}(1)$$, since one needs at maximum $$\\mathcal{O}(2^L) = \\mathcal{O}(M)$$ space to keep Trie, and $$L$$ and $$M$$ could be considered as constants here because of input limitations.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

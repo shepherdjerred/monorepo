@@ -1,0 +1,141 @@
+{
+  "questionId": "491",
+  "questionFrontendId": "491",
+  "title": "Non-decreasing Subsequences",
+  "titleSlug": "non-decreasing-subsequences",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code>, return <em>all the different possible non-decreasing subsequences of the given array with at least two elements</em>. You may return the answer in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [4,6,7,7]\n<strong>Output:</strong> [[4,6],[4,6,7],[4,6,7,7],[4,7],[4,7,7],[6,7],[6,7,7],[7,7]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [4,4,3,2,1]\n<strong>Output:</strong> [[4,4]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 15</code></li>\n\t<li><code>-100 &lt;= nums[i] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findSubsequences\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<list<integer>>\",\r\n    \"dealloc\": true\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"208.6K\", \"totalSubmission\": \"333.5K\", \"totalAcceptedRaw\": 208592, \"totalSubmissionRaw\": 333486, \"acRate\": \"62.5%\"}",
+  "likes": 3820,
+  "dislikes": 237,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Length of Pair Chain\", \"titleSlug\": \"maximum-length-of-pair-chain\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,6,7,7]",
+    "[4,4,3,2,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"yahoo\", \"name\": \"Yahoo\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> findSubsequences(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> findSubsequences(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findSubsequences(self, nums: List[int]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findSubsequences(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number[][]}\n */\nvar findSubsequences = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findSubsequences(nums: number[]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> FindSubsequences(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** findSubsequences(int* nums, int numsSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findSubsequences(nums []int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findSubsequences(nums: IntArray): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findSubsequences(_ nums: [Int]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_subsequences(nums: Vec<i32>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer[][]}\ndef find_subsequences(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer[][]\n     */\n    function findSubsequences($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> findSubsequences(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findSubsequences(nums: Array[Int]): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_subsequences(nums :: [integer]) :: [[integer]]\n  def find_subsequences(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_subsequences(Nums :: [integer()]) -> [[integer()]].\nfind_subsequences(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-subsequences nums)\n  (-> (listof exact-integer?) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1639",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nOne of the first things you should always do is look at the\nconstraints. Often you can figure out what\napproach needs to be taken simply by looking at the input size.\nIn an interview, asking your interviewer about the constraints\nwill also show your attention to detail – on top of giving you information.\n\nIn this particular problem, the length of the input is small,\n`1 <= nums.length <= 15`. With such small input sizes, we can\nsafely assume that a brute-force solution that generates\nall subsequences of increasing numbers will be accepted.\n\n---\n\n### Approach 1: Backtracking\n\n#### Intuition\n\nWhenever you have a problem where you need to check the\nsubsequences/combinations/permutations of some group of letters/numbers, the\nfirst thought you should have is backtracking. If you are new to\nbacktracking, check out our\n[backtracking explore card](https://leetcode.com/explore/featured/card/recursion-ii/472/backtracking/).\nBacktracking algorithms can often keep the space complexity\nlinear with the input size.\n\nThere are not any tricks needed for this problem – the hard\npart is just figuring out how to generate all possible\nincreasing subsequences, and to do this using a standard\nbacktracking algorithm template.\n\n**Example**. $nums = [1, 5, 2, 4, 8, 5, 4, 7, 9]$. Consider\nthe first $7$ elements of the array $nums$ and the\nsubsequence $[1, 2, 4, 4]$. Then we look at the next element\n$nums[7] = 7$. We have two options: either append this element to\nthe sequence and obtain a new sequence $[1, 2, 4, 4, 7]$ or\nskip it and proceed with the original sequence. By skipping it, at the next element, we can create a new subsequence $[1, 2, 4, 4, 9]$. By taking it, we can create $[1, 2, 4, 4, 7, 9]$ as well, so we should try both options.\n\nAnd what if $nums[7]$ is $3$ instead of $7$? Then we do not have an\noption to append because the sequence $[1, 2, 4, 4, 3]$ is not\nincreasing. In this case, we must skip the element.\n\nEach time we have two options: add the current element to the sequence\n(if it is possible) or not.\n\nNote that there might be duplicates among the found subsequences,\nand we do not want to include the same subsequence more than once. We can achieve this by\nmaintaining them in a set.\n\n#### Algorithm\n\nThe easiest way to implement this algorithm is to use recursion.\nOur algorithm will be as follows:\n\nUse a backtracking function $backtrack$ to generate all possible\nsubsequences.\n\n* The function takes the (0-based) $index$ we are\ncurrently checking and the current increasing $sequence$.\n\n* The base case is $index = nums.length$, i.e. we have run out of\nelements. If the length of the current subsequence is at least $2$,\nadd it to the answer.\n\n* Otherwise, try to append $nums[index]$ to the $sequence$ if it\nremains increasing after this. If we appended the element, call\n$backtrack(index + 1)$ recursively and delete $nums[index]$ from the end of the\n$sequence$ after that (backtrack). We should always recursively call $backtrack(index + 1)$ without\nappending the element (the second option).\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/7UBvcdvo/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7UBvcdvo\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n = nums.length$.\n\n* Time complexity: $O(2^n \\cdot n^2)$ or $O(2^n \\cdot n)$ depending on which\nimplementation of a set we use.\n\n\tThe total number of subsequences (including the empty\n\tone) of an array $nums$ is $2^n$. In the worst case, we may\n\tcheck all of them.\n\t\n\tIf we use Java `HashSet` or Python `set` (which are\n\timplemented as hash sets under the hood), the total time\n\tcomplexity is $O(2^n \\cdot n)$ because we add to the hash set\n\t$O(2^n)$ sequences each having a length of $O(n)$.\n\t\n\tHowever, if we use C++ `set` (which is a \n\tred-black tree under the hood), the complexity is\n\t$O(2^n \\cdot n^2)$. Do not worry if you do not know what a\n\tred-black tree is. It suffices to know that the complexity\n\tof insertion into it is logarithmic in the number of\n\telements in the set. Here we have a factor of\n\t$O(\\log 2^n) = O(n)$ for insertion into the set.\n\n* Space complexity: $O(2^n \\cdot n)$.\n\t\n\tThe answer contains $O(2^n)$ sequences, each having a\n\tlength of $O(n)$. If we do not count the answer as part of the space complexity, then the space complexity is $O(n)$ for the recursion call stack and space needed to build each sequence.\n\n---\n\n### Approach 2: Bitmasks\n\n#### Intuition\n\nAnother approach to iterate over all subsequences of an array is\nby using bitmasks. This approach is common when we have to\ngenerate all subsets of a set because bitmasks give you an easy way\nto represent a set with an integer.\n\nHow exactly do we associate a set and an integer?\nLook at the binary representation of the integer. If the $i$-th\nbit in it is $1$, then element $i$ belongs to the set\notherwise, it does not.\n\nFor example, consider a bitmask\n$101111_2=2^0+2^1+2^2+2^3+2^5=47$. It represents the\nset $\\{0, 1, 2, 3, 5\\}$. The bitmask $1001010_2=2^1+2^3+2^6=74$\nrepresents the set $\\{1, 3, 6\\}$.\n\nIn this problem, we use bitmasks to represent sets of (0-based)\nindices of the array $nums$.\n\nFor example, let $nums=[4, 6, 7, 7]$. The set of indices $\\{0, 1, 3\\}$\ncorresponds to the subsequence $[4, 6, 7]$. The bitmask\n$11=1+2+8=2^0+2^1+2^3=1011_2$ represents this set.\n\nLet `n = nums.length`. The bitmask $2^0+2^1+\\dots+2^{n-1}=2^n-1$\nrepresents the set of all indices $\\{0, 1, \\dots, n-1\\}$.\nThe bitmasks between $1$ and $2^n-1$ represent all its non-empty subsets.\nTherefore, one can iterate over all integers between $1$ and\n$2^n-1$ to iterate over all possible non-empty subsets of indices.\n\nWhen we consider a particular bitmask, we know the subset of\nindices it represents and the corresponding subsequence of the\narray. If the subsequence is increasing, add it to the answer.\n\nAs in the previous approach, we maintain unique subsequences in a set.\n\n#### Algorithm\n\n* Iterate over bitmasks from $1$ to $2^n-1$.\n\n* For each bitmask, build the subsequence that corresponds to this bitmask. Here we\niterate over bits from $0$ to $n-1$ and check whether the\ncurrent bit is $1$ in the bitmask. We can get the value of a\nparticular bit in a number with bitwise operations.\n\n>*Right shift*. In C++, Java and Python, syntax is `bitmask >> i`.\nThe right-shift operator shifts the bit pattern in the $bitmask$\nto the right by the number of positions specified by $i$.\nThe bit positions vacated by the shift operation are zero-filled.\nFor example, let $a=128=10000000_2$. Then $a >> 1=64=01000000_2$,\n$a >> 7=1=00000001_2$.\n<br /><br />\n*Bitwise AND*. The bitwise AND operator (`&`) compares each bit of the first\noperand to the corresponding bit of the second operand. If both\nbits are $1$, the corresponding result bit is $1$. Otherwise,\nthe corresponding result bit is $0$.\nFor example, let $a=1100_2, b=1010_2$. Then $a \\& b = 1000_2$.\n<br /><br />\nThe value of the $i$-th bit in $bitmask$ is $(bitmask >> i) \\space \\& \\space 1$.\nFor example, let $bitmask=11= 1011_2$, and we want to test its\n1st bit (0-indexed). First, calculate $bitmask >> 1 = 0101_2$ to put the 1st\nbit in the rightmost position. Then perform bitwise AND of this\nnumber with $1$. $(bitmask >> 1) \\space \\& \\space 1 = 101_2 \\space \\& \\space 001_2=001_2=1$.\nTo test the $2$-nd bit, we compute\n$(bitmask >> 2) \\space \\& \\space 1 = 010_2 \\space \\& \\space 001_2=000_2=0$.\n<br /><br />\nAs you can see, the $i^{th}$ bit is $1$ if $(bitmask >> i) \\space \\& \\space 1$ is non-zero. The CPU performs bitwise operations extremely fast, making this an efficient approach.\n\n* If the length of the sequence is at least 2, and it is increasing,\nadd it to the answer.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/82dWQg9Y/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"82dWQg9Y\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $O(2^n \\cdot n^2)$ or $O(2^n \\cdot n)$.\n\n\tWe check $O(2^n)$ bitmasks. For each bitmask, finding the subsequence and verifying it costs $O(n)$. The complexity of\n\tinserting into the set is the same as in the previous\n\tapproach.\n\n* Space complexity: $O(2^n \\cdot n)$.\n\n\tThe answer contains $O(2^n)$ sequences, each having a\n\tlength of $O(n)$. If we do not count the output as part of the space complexity, then the space complexity is $O(n)$ to build the subsequences.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

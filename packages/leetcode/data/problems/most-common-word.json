@@ -1,0 +1,141 @@
+{
+  "questionId": "837",
+  "questionFrontendId": "819",
+  "title": "Most Common Word",
+  "titleSlug": "most-common-word",
+  "difficulty": "Easy",
+  "content": "<p>Given a string <code>paragraph</code> and a string array of the banned words <code>banned</code>, return <em>the most frequent word that is not banned</em>. It is <strong>guaranteed</strong> there is <strong>at least one word</strong> that is not banned, and that the answer is <strong>unique</strong>.</p>\n\n<p>The words in <code>paragraph</code> are <strong>case-insensitive</strong> and the answer should be returned in <strong>lowercase</strong>.</p>\n\n<p><strong>Note</strong> that words can not contain punctuation symbols.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> paragraph = &quot;Bob hit a ball, the hit BALL flew far after it was hit.&quot;, banned = [&quot;hit&quot;]\n<strong>Output:</strong> &quot;ball&quot;\n<strong>Explanation:</strong> \n&quot;hit&quot; occurs 3 times, but it is a banned word.\n&quot;ball&quot; occurs twice (and no other word does), so it is the most frequent non-banned word in the paragraph. \nNote that words in the paragraph are not case sensitive,\nthat punctuation is ignored (even if adjacent to words, such as &quot;ball,&quot;), \nand that &quot;hit&quot; isn&#39;t the answer even though it occurs more because it is banned.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> paragraph = &quot;a.&quot;, banned = []\n<strong>Output:</strong> &quot;a&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= paragraph.length &lt;= 1000</code></li>\n\t<li>paragraph consists of English letters, space <code>&#39; &#39;</code>, or one of the symbols: <code>&quot;!?&#39;,;.&quot;</code>.</li>\n\t<li><code>0 &lt;= banned.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= banned[i].length &lt;= 10</code></li>\n\t<li><code>banned[i]</code> consists of only lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"mostCommonWord\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"paragraph\",\r\n      \"type\": \"string\"\r\n    },\r\n    {\r\n      \"name\": \"banned\",\r\n      \"type\": \"string[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"449.3K\", \"totalSubmission\": \"997.6K\", \"totalAcceptedRaw\": 449310, \"totalSubmissionRaw\": 997561, \"acRate\": \"45.0%\"}",
+  "likes": 1849,
+  "dislikes": 3119,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"Bob hit a ball, the hit BALL flew far after it was hit.\"\n[\"hit\"]",
+    "\"a.\"\n[]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 5, \"slug\": \"datadog\", \"name\": \"Datadog\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string mostCommonWord(string paragraph, vector<string>& banned) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String mostCommonWord(String paragraph, String[] banned) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def mostCommonWord(self, paragraph: str, banned: List[str]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def mostCommonWord(self, paragraph, banned):\n        \"\"\"\n        :type paragraph: str\n        :type banned: List[str]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} paragraph\n * @param {string[]} banned\n * @return {string}\n */\nvar mostCommonWord = function(paragraph, banned) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function mostCommonWord(paragraph: string, banned: string[]): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string MostCommonWord(string paragraph, string[] banned) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* mostCommonWord(char* paragraph, char** banned, int bannedSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func mostCommonWord(paragraph string, banned []string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun mostCommonWord(paragraph: String, banned: Array<String>): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func mostCommonWord(_ paragraph: String, _ banned: [String]) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn most_common_word(paragraph: String, banned: Vec<String>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} paragraph\n# @param {String[]} banned\n# @return {String}\ndef most_common_word(paragraph, banned)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $paragraph\n     * @param String[] $banned\n     * @return String\n     */\n    function mostCommonWord($paragraph, $banned) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String mostCommonWord(String paragraph, List<String> banned) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def mostCommonWord(paragraph: String, banned: Array[String]): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec most_common_word(paragraph :: String.t, banned :: [String.t]) :: String.t\n  def most_common_word(paragraph, banned) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec most_common_word(Paragraph :: unicode:unicode_binary(), Banned :: [unicode:unicode_binary()]) -> unicode:unicode_binary().\nmost_common_word(Paragraph, Banned) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (most-common-word paragraph banned)\n  (-> string? (listof string?) string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "976",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nThis problem is a good exercise to brush up one's skills on string manipulation.\n\nThe String data type is almost omnipresent in all programming languages.\nHowever, each language has its own implementation of String type, as well as various APIs for string manipulation.\nFor instance, String is _mutable_ in C++, while immutable in Python and Java.\n\nThe problem is not difficult. But due to the diversity of String type and string manipulation APIs, one could come up many different solutions.\n\nHere we give two general approaches in the following sections.\n\n- In one approach, we will construct a pipeline to process strings in several stages, where naturally each string would be traversed for several times.\n\n- In another approach, we will traverse the input string _once and only once_, on the character base and do the processing _**on-the-fly**_.\n<br/>\n<br/>\n\n---\n### Approach 1: String Processing in Pipeline\n\n**Intuition**\n\nWe can solve the problem by breaking it into a series of _sequential tasks_.\nEach task functions like a stage in a pipeline, which takes the input from the previous stage and then channels its output to the next stage.\n\nMore specifically, for this problem, we could break it down into the following stages:\n\n![string processing pipeline](../Figures/819/819_pipeline_.png)\n\n1. We replace all the punctuations with spaces and at the same time convert each letter to its lowercase. One could also accomplish this in two stages. Here we merge them together in one stage.\n\n2. We split the output in the above step into words, with the separator of spaces.\n\n3. We then iterate through the words to count the appearance of each unique word, excluding the words from the banned list.\n\n4. With the hashmap of `{word->count}`, we then walk through all the items to find the word with the highest frequency.\n\n**Algorithm**\n\nFollowing the stages we explained before, here are some sample implementations.\n\n<iframe src=\"https://leetcode.com/playground/jSM7y4ka/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"jSM7y4ka\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of characters in the input string and $$M$$ be the number of characters in the banned list.\n\n- Time Complexity: $$\\mathcal{O}(N + M)$$.\n\n    - It would take $$\\mathcal{O}(N)$$ time to process each stage of the pipeline as we built.\n\n    - In addition, we built a set out of the list of banned words, which would take $$\\mathcal{O}(M)$$ time.\n\n    - Hence, the overall time complexity of the algorithm is $$\\mathcal{O}(N + M)$$.\n\n- Space Complexity: $$\\mathcal{O}(N + M)$$.\n\n    - We built a hashmap to count the frequency of each unique word, whose space would be of $$\\mathcal{O}(N)$$.\n\n    - Similarly, we built a set out of the banned word list, which would consume additional $$\\mathcal{O}(M)$$ space.\n\n    - Therefore, the overall space complexity of the algorithm is $$\\mathcal{O}(N + M)$$.\n<br/>\n<br/>\n\n---\n### Approach 2: Character Processing in One-Pass\n\n**Intuition**\n\nWith the approach of String manipulation pipeline, it is clear and easy to debug, since we could locate and inspect each stage if anything goes wrong.\n\nHowever, one might argue that it is probably not the most efficient way to solve the problem, since we scan the input string multiple times.\n\nIndeed, it is possible to process the input string once and only once to accomplish the tasks.\n\n>We could iterate through the string character by character, and do the processing _**on-the-fly**_, rather than delaying the processing to the latter stages of the pipeline.\n\nThe idea is that we consume the input string on the character base.\nAt the moment we reach the end of one word, we can then start to perform the word-based logics such as checking if the word is in the banned list, updating the frequency of the word and also updating the most frequent word we've seen so far _etc._\n\n**Algorithm**\n\nWe could implement the algorithm in one single loop, over the characters of the input string.\n\n- At each iteration, the character is either of letter (maybe digit), or punctuation or space in other cases.\n\n![character pointers](../Figures/819/819_character_pointers_.png)\n\n- Further more, we could divide it into the following two cases:\n\n    - **Case (1):** we are in the middle of a word.\n\n    - **Case (2):** we in in-between the words, _e.g._ punctuations between the words or at the end of the paragraph.\n\n- We then can organize the logics into the above two cases.\n\n    - In case (1), we simply append the character into the word buffer.\n\n    - In case (2), we do the rest of the logics, as follows:\n\n        - check if the word is enlisted in the banned list.\n\n        - if not, update the frequency of the word.\n\n        - update the most common word that we've seen so far.\n\n<iframe src=\"https://leetcode.com/playground/Yoz4mHVK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Yoz4mHVK\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of characters in the input string and $$M$$ be the number of characters in the banned list.\n\n- Time Complexity: $$\\mathcal{O}(N + M)$$.\n\n    - We traverse each character in the input string once and only once. At each iteration, it takes constant time to perform the operations, except the operation that we build a new string out of the buffer. Excluding the cost of string-building out of the iteration, we can consider the cost of iterations as $$\\mathcal{O}(N)$$.\n\n    - If we combine all the string-building operations all together, in total it would take another $$\\mathcal{O}(N)$$ time.\n\n    - In addition, we built a set out of the list of banned words, which would take $$\\mathcal{O}(M)$$ time.\n\n    - Hence, the overall time complexity of the algorithm is $$\\mathcal{O}(N) + \\mathcal{O}(N) + \\mathcal{O}(M) = \\mathcal{O}(N + M)$$.\n\n- Space Complexity: $$\\mathcal{O}(N + M)$$.\n\n    - We built a hashmap to count the frequency of each unique word, whose space would be of $$\\mathcal{O}(N)$$.\n\n    - Similarly, we built a set out of the banned word list, which would consume additional $$\\mathcal{O}(M)$$ space.\n\n    - Therefore, the overall space complexity of the algorithm is $$\\mathcal{O}(N + M)$$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

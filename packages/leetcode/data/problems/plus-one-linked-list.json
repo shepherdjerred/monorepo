@@ -1,0 +1,113 @@
+{
+  "questionId": "369",
+  "questionFrontendId": "369",
+  "title": "Plus One Linked List",
+  "titleSlug": "plus-one-linked-list",
+  "difficulty": "Medium",
+  "content": "<p>Given a non-negative integer represented as a linked list of digits, <em>plus one to the integer</em>.</p>\n\n<p>The digits are stored such that the most significant digit is at the <code>head</code> of the list.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> head = [1,2,3]\n<strong>Output:</strong> [1,2,4]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> head = [0]\n<strong>Output:</strong> [1]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the linked list is in the range <code>[1, 100]</code>.</li>\n\t<li><code>0 &lt;= Node.val &lt;= 9</code></li>\n\t<li>The number represented by the linked list does not contain leading zeros except for the zero itself.&nbsp;</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"plusOne\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"head\",\r\n      \"type\": \"ListNode\",\r\n      \"dealloc\": false\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"ListNode\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"87.8K\", \"totalSubmission\": \"143.3K\", \"totalAcceptedRaw\": 87764, \"totalSubmissionRaw\": 143325, \"acRate\": \"61.2%\"}",
+  "likes": 966,
+  "dislikes": 48,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Plus One\", \"titleSlug\": \"plus-one\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Double a Number Represented as a Linked List\", \"titleSlug\": \"double-a-number-represented-as-a-linked-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3]",
+    "[0]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    ListNode* plusOne(ListNode* head) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public ListNode plusOne(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def plusOne(self, head: ListNode) -> ListNode:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def plusOne(self, head):\n        \"\"\"\n        :type head: ListNode\n        :rtype: ListNode\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} head\n * @return {ListNode}\n */\nvar plusOne = function(head) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction plusOne(head: ListNode | null): ListNode | null {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public ListNode PlusOne(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\n\n\nstruct ListNode* plusOne(struct ListNode* head){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc plusOne(head *ListNode) *ListNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun plusOne(head: ListNode?): ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func plusOne(_ head: ListNode?) -> ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn plus_one(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {ListNode} head\n# @return {ListNode}\ndef plus_one(head)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $head\n     * @return ListNode\n     */\n    function plusOne($head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def plusOne(head: ListNode): ListNode = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "843",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/491376541\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Overview.\n\n\"Plus One\" is a subset of a problem set \"Add Number\", and the solution patterns are the same.\n\nAll these problems could be solved in linear time, and the question here is how to solve them without using addition operation or how to fit into constant space complexity.\n\nThe choice of algorithm should be based on the input format:\n\n1. Integers.\nUsually, addition operation is not allowed for such a case. Use the Bit Manipulation Approach. Here is an example: [Add Binary](https://leetcode.com/articles/add-binary/).\n\n2. Strings.\nUse schoolbook bit-by-bit computation. Note, that to fit into constant space is not possible for languages with immutable strings, for ex. for Java and Python. Here is an example: [Add Binary](https://leetcode.com/articles/add-binary/).\n\n3. Arrays.\nThe same textbook addition. Here is an example: [Add to Array Form of Integer](https://leetcode.com/articles/add-to-array-form-of-integer/).\n\n4. Linked Lists, current problem.\nSentinel Head + Textbook Addition.\n\nNote, that the straightforward idea of converting everything into integers and then using addition could be risky for Java interviews because of possible overflow issues, [here is in more details](https://leetcode.com/articles/add-binary/).\n<br />\n<br />\n\n\n---\n### Approach 1: Sentinel Head + Textbook Addition.\n\n**Textbook Addition**\n\nLet's identify the rightmost digit which is not equal to nine and increase that digit by one. All the following nines should be set to zero.\n\nHere is the simplest use case which works fine.\n\n![simple](../Figures/369/simple.png)\n\nHere is the more difficult case that still passes.\n\n![diff](../Figures/369/diff.png)\n\nAnd here is the case which breaks everything.\n\n![diff](../Figures/369/handle.png)\n\n**Sentinel Head**\n\nTo handle the last use case, one needs the so-called [Sentinel Node](https://en.wikipedia.org/wiki/Sentinel_node). Sentinel nodes are widely used for trees and linked lists such as pseudo-heads, pseudo-tails, etc. They are purely functional and usually don't hold any data. Their main purpose is to standardize the situation to avoid edge case handling.\n\nFor example, here one could add a pseudo-head with zero value, and hence there will always be not-nine nodes.\n\n![diff](../Figures/369/sentinel.png)\n\n**Algorithm**\n\n- Initialize the sentinel node as `ListNode(0)` and set it to be the new head: `sentinel.next = head`.\n\n- Find the rightmost digit not equal to nine.\n\n- Increase that digit by one.\n\n- Set all the following nines to zero.\n\n- Return the sentinel node if it was set to 1, and head `sentinel.next` otherwise.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/8TYgRpcV/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8TYgRpcV\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(N)$$ since it's not more that two passes along the input list.\n\n* Space complexity : $$\\mathcal{O}(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

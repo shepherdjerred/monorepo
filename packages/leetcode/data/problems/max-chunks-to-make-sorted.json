@@ -1,0 +1,147 @@
+{
+  "questionId": "780",
+  "questionFrontendId": "769",
+  "title": "Max Chunks To Make Sorted",
+  "titleSlug": "max-chunks-to-make-sorted",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>arr</code> of length <code>n</code> that represents a permutation of the integers in the range <code>[0, n - 1]</code>.</p>\n\n<p>We split <code>arr</code> into some number of <strong>chunks</strong> (i.e., partitions), and individually sort each chunk. After concatenating them, the result should equal the sorted array.</p>\n\n<p>Return <em>the largest number of chunks we can make to sort the array</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [4,3,2,1,0]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>\nSplitting into two or more chunks will not return the required result.\nFor example, splitting into [4, 3], [2, 1, 0] will result in [3, 4, 0, 1, 2], which isn&#39;t sorted.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,0,2,3,4]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong>\nWe can split into two chunks, such as [1, 0], [2, 3, 4].\nHowever, splitting into [1, 0], [2], [3], [4] is the highest number of chunks possible.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == arr.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10</code></li>\n\t<li><code>0 &lt;= arr[i] &lt; n</code></li>\n\t<li>All the elements of <code>arr</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [
+    "The first chunk can be found as the smallest k for which A[:k+1] == [0, 1, 2, ...k]; then we repeat this process."
+  ],
+  "metaData": "{\r\n  \"name\": \"maxChunksToSorted\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"arr\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"236.8K\", \"totalSubmission\": \"369.2K\", \"totalAcceptedRaw\": 236772, \"totalSubmissionRaw\": 369214, \"acRate\": \"64.1%\"}",
+  "likes": 3652,
+  "dislikes": 367,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Max Chunks To Make Sorted II\", \"titleSlug\": \"max-chunks-to-make-sorted-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,3,2,1,0]",
+    "[1,0,2,3,4]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"poshmark\", \"name\": \"Poshmark\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Monotonic Stack",
+      "slug": "monotonic-stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxChunksToSorted(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxChunksToSorted(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxChunksToSorted(self, arr: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxChunksToSorted(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {number}\n */\nvar maxChunksToSorted = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxChunksToSorted(arr: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxChunksToSorted(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxChunksToSorted(int* arr, int arrSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxChunksToSorted(arr []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxChunksToSorted(arr: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxChunksToSorted(_ arr: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_chunks_to_sorted(arr: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Integer}\ndef max_chunks_to_sorted(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Integer\n     */\n    function maxChunksToSorted($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxChunksToSorted(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxChunksToSorted(arr: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_chunks_to_sorted(arr :: [integer]) :: integer\n  def max_chunks_to_sorted(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_chunks_to_sorted(Arr :: [integer()]) -> integer().\nmax_chunks_to_sorted(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-chunks-to-sorted arr)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2617",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an array `arr` of length `n` that contains the numbers `0`, `1`, ... , `n - 1` in random order. According to the problem description, three operations are to be performed:\n\n1. Split the array into a number of *chunks* (i.e., segments).\n2. Sort each segment separately in increasing order.\n3. Concatenate all segments **in the same order** as they appear in the original array.\n\nOur task is to find the highest possible number of chunks we can split the array into such that each chunk can be sorted independently and still be concatenated to match the sorted version of the entire array. \n\nA key observation here is that a split is valid if and only if each segment contains numbers strictly greater than those in the previous segment. In other words, the minimum value of each segment must be greater than the maximum value of the previous segment.\n\n---\n\n### Approach 1: PrefixMax and SuffixMin Arrays\n\n#### Intuition\n\nBuilding on the above observation, we further notice that for each number in the array, we have two options: we can either include it in the same chunk as the previous number or create a new chunk for it. However, we must consider the limitation that a new chunk at index $i$ can only be created if all the numbers in the current and previous chunks (the \"prefix\" of the array) are smaller than all the numbers in the following chunks (the \"suffix\" of the array). This is equivalent to checking whether:\n\n$$\n\\begin{aligned}\nmax(prefix[0:i]) < min(suffix[i:n]).\n\\end{aligned}\n$$\n\nSince we aim to find the largest possible number of chunks, we will choose the second option (i.e., create a new chunk) whenever the above condition is satisfied. Therefore, the problem reduces to counting how many indices in the array satisfy this condition.\n\n#### Algorithm\n\n-   Initialize `n` to the size of the `arr` array.\n-   Initialize `prefixMax` and `suffixMin` arrays to `arr`.\n-   Iterate over `arr` with `i` from `1` to `n - 1`:\n    -   Set `prefixMax[i] = max(prefixMax[i], prefixMax[i-1])`.\n-   Iterate over `arr` with `i` from `n - 2` to `0`:\n    -   Set `suffixMin[i] = min(suffixMin[i], suffixMin[i+1])`.\n-   Initialize `chunks` to `0`.\n-   Iterate over `arr` with `i` from `0` to `n - 1`:\n    -   Check if `i == 0` (create a chunk for the first element) or `suffixMin[i] > prefixMax[i - 1]`.\n        -   If true, increment `chunks` by `1`.\n-   Return `chunks`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DUP4x9QQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DUP4x9QQ\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the array `arr`.\n\n-   Time complexity: $O(n)$\n\n    The initialization of the `prefixMax` and `suffixMin` arrays, as well as the computation of `chunks`, each requires a single pass through the array `arr`, taking $O(n)$ time. Therefore, the total time complexity is $O(n) + O(n) + O(n) = O(n)$.\n\n-   Space complexity: $O(n)$\n\n    The `prefixMax` and `suffixMin` arrays require $O(n)$ space.\n\n---\n\n### Approach 2: Prefix Sums\n\n#### Intuition\n\nAn important observation is that a segment of the array can form a valid chunk if, when sorted, it matches the corresponding segment in the fully sorted version of the array.\n\nSince the numbers in `arr` belong to the range `[0, n - 1]`, we can simplify the problem by using the property of sums. Specifically, for any index, it suffices to check whether the sum of the elements in `arr` up to that index is equal to the sum of the elements in the corresponding prefix of the sorted array.\n\nIf these sums are equal, it guarantees that the elements in the current segment of `arr` match the elements in the corresponding segment of the sorted array (possibly in a different order). When this condition is satisfied, we can form a new chunk — either starting from the beginning of the array or the end of the previous chunk.\n\nFor example, consider `arr = [1, 2, 0, 3, 4]` and the sorted version `sortedArr = [0, 1, 2, 3, 4]`. We find the valid segments as follows:\n-   Segment `[0, 0]` is not valid, since `sum = 1` and `sortedSum = 0`.\n-   Segment `[0, 1]` is not valid, since `sum = 1 + 2 = 3` and `sortedSum = 0 + 1 = 1`.\n-   Segment `[0, 2]` is valid, since `sum = 1 + 2 + 0 = 3` and `sortedSum = 0 + 1 + 2 = 3`.\n-   Segment `[3, 3]` is valid, because `sum = 1 + 2 + 0 + 3 = 6` and `sortedSum = 0 + 1 + 2 + 3 = 6`.\n-   Segment `[4, 4]` is valid, because `sum = 1 + 2 + 0 + 3 + 4 = 10` and `sortedSum = 0 + 1 + 2 + 3 + 4 = 10`.\n\nTherefore, the answer here is 3.\n\n#### Algorithm\n\n-   Initialize `n` to the size of the `arr` array.\n-   Initialize `chunks`, `prefixSum`, and `sortedPrefixSum` to `0`.\n-   Iterate over `arr` with `i` from `0` to `n - 1`:\n    -   Increment `prefixSum` by `arr[i]`.\n    -   Increment `sortedPrefixSum` by `i`.\n    -   Check if `prefixSum == sortedPrefixSum`:\n        -   If so, increment `chunks` by `1`.\n-   Return `chunks`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DBPgzN5d/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"DBPgzN5d\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the array `arr`.\n\n-   Time complexity: $O(n)$\n\n    We iterate over the array `arr` once and perform constant-time operations on each iteration.\n\n-   Space complexity: $O(1)$\n\n    We are only using a fixed number of variables which does not depend on the input size.\n\n---\n\n### Approach 3: Monotonic Increasing Stack\n\n#### Intuition\n\nThe main idea of this approach is that if a number in the array is less than any number in the previous chunks, this number cannot create a new chunk, as we cannot swap elements from different chunks to fix their relative order. We will iterate over the array and maintain a stack to represent the maximum values of the chunks created so far. As we loop over the array, we decide whether the current element (`arr[i]`) can start a new chunk or should merge with an existing chunk. We handle two cases:\n1. `arr[i] > stack.top`: If the current element is greater than the top of the stack, it means it can start a new chunk because it’s larger than all previous chunks. We push `arr[i]` into the stack to represent a new chunk.\n2. `arr[i] < stack.top`: If the current element is smaller the top of the stack, it cannot form a new chunk. Instead, it must merge with one or more existing chunks. To merge, remove all chunks from the stack whose maximum values are greater than the current element. Then, push back the maximum value of the merged chunks to maintain the stack sorted.\n\nLet's take a look at an example, where `arr = [1, 2, 0, 3, 4]`. Initially the stack is empty: `stack = []`.\n-   We then push `1` into the stack: `stack = [1]`.\n-   `2 > 1`, we push `2` into the stack: `stack = [1, 2]`.\n-   `0 < 2`, `0 < 1`, we pop `2` and `1` from the stack. We push `2` back into the stack, as it the maximum element of the current chunk: `stack = [2]`.\n-   `3 > 2`, we push `3` into the stack: `stack = [2, 3]`.\n-   `4 > 3`, we push `4` into the stack: `stack = [2, 3, 4]`. \n\nNow recall that at each point the elements in the stack represent the maximum elements of the chunks created so far. Therefore, at the end of the iteration, the size of the stack equals the maximum number of chunks that can be formed.\n\n> For a more comprehensive understanding of stacks, check out the [Stack Explore Card](https://leetcode.com/explore/learn/card/queue-stack/). This resource provides an in-depth look at stacks, explaining their key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n-   Initialize `n` to the size of the `arr` array.\n-   Initialize `monotonicStack` to an empty stack.\n-   Iterate over `arr` with `i` from `0` to `n - 1`:\n    -  If the `monotonicStack` is empty or `arr[i]` is greater than the top of the stack:\n        -   Push `arr[i]` into the `monotonicStack`.\n    -  Otherwise:\n        -   Initialize `maxElement` to the top element of the `monotonicStack`.\n        -   While the `monotonicStack` is not empty and the top element is greater than `arr[i]`:\n            -   Pop the top element from the `monotonicStack`.\n        -   Push `maxElement` into the `monotonicStack`.      \n-   Return the size of the `monotonicStack`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/XVZvpjGz/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"XVZvpjGz\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the array `arr`.\n\n-   Time complexity: $O(n)$\n\n    We iterate over the array, and during each iteration, we either push an element into the `monotonicStack` (constant-time operation) or pop elements from the stack using the inner while loop. Notice that the number of times the while loop runs in a single iteration corresponds to the size of the current chunk being merged. The total number of pop operations across all iterations is therefore equal to the sum of the sizes of the chunks which is the total number of elements in the array. Hence the total time complexity is $O(n)$.\n\n-   Space complexity: $O(n)$\n\n    In the worst case (i.e., `arr` is in increasing order), the stack contains $n$ elements, so the space complexity of the algorithm is $O(n)$.\n\n---\n\n### Approach 4: Maximum Element\n\n#### Intuition\n\nSimilarly to the second approach, we will use a condition to determine when a segment can be considered a valid chunk. Here, we iterate through the array while keeping track of the maximum element we've encountered up to the current index. \n\nNow, consider the case where the current index $i$, is equal to the maximum element encountered so far, $\\text{maxElement}$. This condition means that all elements preceding index $i$ are less than $\\text{maxElement}$. Since the array is a permutation of integers in the range $[0, n - 1]$, it also guarantees that all integers from $0$ to $\\text{maxElement}$ must appear in the array before index $i$. Therefore, whenever the current index matches the maximum value so far (i.e., $i == \\text{maxElement}$), we increment the count of chunks. \n\n#### Algorithm\n\n-   Initialize `n` to the size of the `arr` array.\n-   Initialize `chunks` and `maxElement` to `0`.\n-   Iterate over `arr` with `i` from `0` to `n - 1`:\n    -  Update `maxElement` to `max(maxElement, arr[i])`.\n    -  If `maxElement == i`:\n        -   Increment `chunks` by `1`.\n-   Return `chunks`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ZvF2KSk7/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"ZvF2KSk7\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the array `arr`.\n\n-   Time complexity: $O(n)$\n\n    We iterate over the array `arr` once and perform constant-time operations on each iteration.\n\n-   Space complexity: $O(1)$\n\n    We are only using a fixed number of variables which does not depend on the input size.\n\n\n---\n\n**Follow Up:** Want to challenge yourself further? Try out the harder version of the problem: [Max Chunks To Make Sorted II](https://leetcode.com/problems/max-chunks-to-make-sorted-ii/description/)",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

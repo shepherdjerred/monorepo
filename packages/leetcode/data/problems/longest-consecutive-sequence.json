@@ -1,0 +1,138 @@
+{
+  "questionId": "128",
+  "questionFrontendId": "128",
+  "title": "Longest Consecutive Sequence",
+  "titleSlug": "longest-consecutive-sequence",
+  "difficulty": "Medium",
+  "content": "<p>Given an unsorted array of integers <code>nums</code>, return <em>the length of the longest consecutive elements sequence.</em></p>\n\n<p>You must write an algorithm that runs in&nbsp;<code>O(n)</code>&nbsp;time.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [100,4,200,1,3,2]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The longest consecutive elements sequence is <code>[1, 2, 3, 4]</code>. Therefore its length is 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0,3,7,2,5,8,4,6,0,1]\n<strong>Output:</strong> 9\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,0,1,2]\n<strong>Output:</strong> 3\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"longestConsecutive\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"3.2M\", \"totalSubmission\": \"6.9M\", \"totalAcceptedRaw\": 3227720, \"totalSubmissionRaw\": 6861096, \"acRate\": \"47.0%\"}",
+  "likes": 22837,
+  "dislikes": 1235,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Binary Tree Longest Consecutive Sequence\", \"titleSlug\": \"binary-tree-longest-consecutive-sequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Three Consecutive Integers That Sum to a Given Number\", \"titleSlug\": \"find-three-consecutive-integers-that-sum-to-a-given-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Consecutive Floors Without Special Floors\", \"titleSlug\": \"maximum-consecutive-floors-without-special-floors\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Length of the Longest Alphabetical Continuous Substring\", \"titleSlug\": \"length-of-the-longest-alphabetical-continuous-substring\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Maximum Number of Elements in Subset\", \"titleSlug\": \"find-the-maximum-number-of-elements-in-subset\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[100,4,200,1,3,2]",
+    "[0,3,7,2,5,8,4,6,0,1]",
+    "[1,0,1,2]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 27, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 15, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 5, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 4, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 4, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 4, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 4, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 4, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 4, \"slug\": \"zepto\", \"name\": \"Zepto\"}, {\"timesEncountered\": 4, \"slug\": \"lyft\", \"name\": \"Lyft\"}, {\"timesEncountered\": 3, \"slug\": \"infosys\", \"name\": \"Infosys\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int longestConsecutive(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int longestConsecutive(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestConsecutive(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestConsecutive(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar longestConsecutive = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestConsecutive(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LongestConsecutive(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int longestConsecutive(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestConsecutive(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestConsecutive(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestConsecutive(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_consecutive(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef longest_consecutive(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function longestConsecutive($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int longestConsecutive(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestConsecutive(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_consecutive(nums :: [integer]) :: integer\n  def longest_consecutive(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_consecutive(Nums :: [integer()]) -> integer().\nlongest_consecutive(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-consecutive nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "280",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nBecause a sequence could start at any number in `nums`, we can exhaust the\nentire search space by building as long a sequence as possible from every\nnumber.\n\n#### Algorithm\n\nThe brute force algorithm does not do anything clever - it just considers\neach number in `nums`, attempting to count as high as possible from that\nnumber using only numbers in `nums`. After it counts too high (i.e.\n`currentNum` refers to a number that `nums` does not contain), it records the\nlength of the sequence if it is larger than the current best. The algorithm\nis necessarily optimal because it explores every possibility.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TjgvcC7X/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TjgvcC7X\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $$O(n^3)$$.\n\n    The outer loop runs exactly $$n$$ times, and because `currentNum`\n    increments by 1 during each iteration of the `while` loop, it runs in\n    $$O(n)$$ time. Then, on each iteration of the `while` loop, an $$O(n)$$\n    lookup in the array is performed. Therefore, this brute force algorithm\n    is really three nested $$O(n)$$ loops, which compound multiplicatively to a\n    cubic runtime.\n\n* Space complexity : $$O(1)$$.\n\n    The brute force algorithm only allocates a handful of integers, so it uses constant\n    additional space.\n\n<br />\n\n---\n\n### Approach 2: Sorting\n\n#### Intuition\n\nIf we can iterate over the numbers in ascending order, then it will be\neasy to find sequences of consecutive numbers. To do so, we can sort the\narray.\n\n#### Algorithm\n\nBefore we do anything, we check for the base case input of the empty array.\nThe longest sequence in an empty array is, of course, 0, so we can simply\nreturn that. For all other cases, we sort `nums` and consider each number\nafter the first (because we need to compare each number to its previous\nnumber). If the current number and the previous are equal, then our current\nsequence is neither extended nor broken, so we simply move on to the next\nnumber. If they are unequal, then we must check whether the current number\nextends the sequence (i.e. `nums[i] == nums[i-1] + 1`). If it does, then we\nadd to our current count and continue. Otherwise, the sequence is broken, so\nwe record our current sequence and reset it to 1 (to include the number that\nbroke the sequence). It is possible that the last element of `nums` is part\nof the longest sequence, so we return the maximum of the current sequence and\nthe longest one.\n\n![Sorting Example](../Figures/128/sorting.png)\n\n\nHere, an example array is sorted before the linear scan identifies all consecutive sequences.\nThe longest sequence is colored in red.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/hnhWnRtn/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"hnhWnRtn\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n \\log n)$\n\n    The main `for` loop does constant work $n$ times, so the algorithm's time\n    complexity is dominated by the invocation of `sort`, which will run in\n    $O(n \\log n)$ time for any sensible implementation.\n\n* Space complexity : $O( \\log n)$ or $O(n)$\n\n    Note that some extra space is used when we sort an array in place. The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the `sort` method sorts a list using the Tim Sort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(n)$ additional space. Additionally, Tim Sort is designed to be a stable algorithm.\n    - In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$ for sorting an array.\n\n\n\n---\n\n### Approach 3: HashSet and Intelligent Sequence Building\n\n**Intuition**\n\nIt turns out that our initial brute force solution was on the right track, but missing\na few optimizations necessary to reach $$O(n)$$ time complexity.\n\n**Algorithm**\n\nThis optimized algorithm contains only two changes from the brute force\napproach: the numbers are stored in a `HashSet` (or `Set`, in Python) to\nallow $$O(1)$$ lookups, and we only attempt to build sequences from numbers\nthat are not already part of a longer sequence. This is accomplished by first\nensuring that the number that would immediately precede the current number in\na sequence is not present, as that number would necessarily be part of a\nlonger sequence.\n\n<iframe src=\"https://leetcode.com/playground/jAQb2UPp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jAQb2UPp\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$.\n\n    Although the time complexity appears to be quadratic due to the `while`\n    loop nested within the `for` loop, closer inspection reveals it to be\n    linear. Because the `while` loop is reached only when `currentNum` marks\n    the beginning of a sequence (i.e. `currentNum-1` is not present in\n    `nums`), the `while` loop can only run for $$n$$ iterations throughout the\n    entire runtime of the algorithm. This means that despite looking like\n    $$O(n \\cdot n)$$ complexity, the nested loops actually run in $$O(n + n) = O(n)$$\n    time. All other computations occur in constant time, so the overall\n    runtime is linear.\n\n* Space complexity : $$O(n)$$.\n\n    In order to set up $$O(1)$$ containment lookups, we allocate linear space\n    for a hash table to store the $$O(n)$$ numbers in `nums`. Other than that,\n    the space complexity is identical to that of the brute force solution.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "questionId": "10",
+  "questionFrontendId": "10",
+  "title": "Regular Expression Matching",
+  "titleSlug": "regular-expression-matching",
+  "difficulty": "Hard",
+  "content": "<p>Given an input string <code>s</code>&nbsp;and a pattern <code>p</code>, implement regular expression matching with support for <code>&#39;.&#39;</code> and <code>&#39;*&#39;</code> where:</p>\n\n<ul>\n\t<li><code>&#39;.&#39;</code> Matches any single character.​​​​</li>\n\t<li><code>&#39;*&#39;</code> Matches zero or more of the preceding element.</li>\n</ul>\n\n<p>Return a boolean indicating whether the matching covers the entire input string (not partial).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aa&quot;, p = &quot;a&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> &quot;a&quot; does not match the entire string &quot;aa&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aa&quot;, p = &quot;a*&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> &#39;*&#39; means zero or more of the preceding element, &#39;a&#39;. Therefore, by repeating &#39;a&#39; once, it becomes &quot;aa&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;ab&quot;, p = &quot;.*&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> &quot;.*&quot; means &quot;zero or more (*) of any character (.)&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length&nbsp;&lt;= 20</code></li>\n\t<li><code>1 &lt;= p.length&nbsp;&lt;= 20</code></li>\n\t<li><code>s</code> contains only lowercase English letters.</li>\n\t<li><code>p</code> contains only lowercase English letters, <code>&#39;.&#39;</code>, and&nbsp;<code>&#39;*&#39;</code>.</li>\n\t<li>It is guaranteed for each appearance of the character <code>&#39;*&#39;</code>, there will be a previous valid character to match.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{ \r\n  \"name\": \"isMatch\",\r\n  \"params\": [\r\n    { \r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    },\r\n    {\r\n      \"name\": \"p\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.4M\", \"totalSubmission\": \"4.4M\", \"totalAcceptedRaw\": 1361660, \"totalSubmissionRaw\": 4444110, \"acRate\": \"30.6%\"}",
+  "likes": 13296,
+  "dislikes": 2394,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Wildcard Matching\", \"titleSlug\": \"wildcard-matching\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"aa\"\n\"a\"",
+    "\"aa\"\n\"a*\"",
+    "\"ab\"\n\".*\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"coupang\", \"name\": \"Coupang\"}], \"six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"rokt\", \"name\": \"Rokt\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 5, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}, {\"timesEncountered\": 4, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 2, \"slug\": \"confluent\", \"name\": \"Confluent\"}, {\"timesEncountered\": 2, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}]}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isMatch(string s, string p) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isMatch(String s, String p) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isMatch(self, s: str, p: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isMatch(self, s, p):\n        \"\"\"\n        :type s: str\n        :type p: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string} p\n * @return {boolean}\n */\nvar isMatch = function(s, p) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isMatch(s: string, p: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsMatch(string s, string p) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isMatch(char* s, char* p) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isMatch(s string, p string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isMatch(s: String, p: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isMatch(_ s: String, _ p: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_match(s: String, p: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String} p\n# @return {Boolean}\ndef is_match(s, p)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String $p\n     * @return Boolean\n     */\n    function isMatch($s, $p) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isMatch(String s, String p) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isMatch(s: String, p: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_match(s :: String.t, p :: String.t) :: boolean\n  def is_match(s, p) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_match(S :: unicode:unicode_binary(), P :: unicode:unicode_binary()) -> boolean().\nis_match(S, P) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-match s p)\n  (-> string? string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "238",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach 1: Recursion\n\n**Intuition**\n\nIf there were no Kleene stars (the `*` wildcard character for regular expressions), the problem would be easier - we simply check from left to right if each character of the text matches the pattern.\n\nWhen a star is present, we may need to check many different suffixes of the text and see if they match the rest of the pattern.  A recursive solution is a straightforward way to represent this relationship.\n\n**Algorithm**\n\nWithout a Kleene star, our solution would look like this:\n\n\n<iframe src=\"https://leetcode.com/playground/WHCkKfaZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"WHCkKfaZ\"></iframe>\n\nIf a star is present in the pattern, it will be in the second position $$\\text{pattern[1]}$$.  Then, we may ignore this part of the pattern, or delete a matching character in the text.  If we have a match on the remaining strings after any of these operations, then the initial inputs matched.\n\n<iframe src=\"https://leetcode.com/playground/QZA8SsdJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"QZA8SsdJ\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: Let $$T, P$$ be the lengths of the text and the pattern respectively.  In the worst case, a call to `match(text[i:], pattern[2j:])` will be made $$\\binom{i+j}{i}$$ times, and strings of the order $$O(T - i)$$ and $$O(P - 2*j)$$ will be made.  Thus, the complexity has the order $$\\sum_{i = 0}^T \\sum_{j = 0}^{P/2} \\binom{i+j}{i} O(T+P-i-2j)$$.  With some effort outside the scope of this article, we can show this is bounded by $$O\\big((T+P)2^{T + \\frac{P}{2}}\\big)$$.\n\n* Space Complexity:  For every call to `match`, we will create those strings as described above, possibly creating duplicates.  If memory is not freed, this will also take a total of $$O\\big((T+P)2^{T + \\frac{P}{2}}\\big)$$ space, even though there are only order $$O(T^2 + P^2)$$ unique suffixes of $$P$$ and  $$T$$ that are actually required.\n<br />\n<br />\n\n---\n\n### Approach 2: Dynamic Programming\n\n**Intuition**\n\nAs the problem has an **optimal substructure**, it is natural to cache intermediate results.  We ask the question $$\\text{dp(i, j)}$$: does $$\\text{text[i:]}$$ and $$\\text{pattern[j:]}$$ match?  We can describe our answer in terms of answers to questions involving smaller strings.\n\n**Algorithm**\n\nWe proceed with the same recursion as in [Approach 1](#approach-1-recursion), except because calls will only ever be made to `match(text[i:], pattern[j:])`, we use $$\\text{dp(i, j)}$$ to handle those calls instead, saving us expensive string-building operations and allowing us to cache the intermediate results.\n\n\n*Top-Down Variation*\n<iframe src=\"https://leetcode.com/playground/cXs5KPLc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"cXs5KPLc\"></iframe>\n\n*Bottom-Up Variation*\n\n<iframe src=\"https://leetcode.com/playground/GnSNNEQb/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"GnSNNEQb\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: Let $$T, P$$ be the lengths of the text and the pattern respectively.  The work for every call to `dp(i, j)` for $$i=0, ... ,T$$; $$j=0, ... ,P$$ is done once, and it is $$O(1)$$ work.  Hence, the time complexity is $$O(TP)$$.\n\n* Space Complexity:  The only memory we use is the $$O(TP)$$ boolean entries in our cache.  Hence, the space complexity is $$O(TP)$$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

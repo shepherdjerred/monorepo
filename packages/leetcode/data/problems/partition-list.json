@@ -1,0 +1,133 @@
+{
+  "questionId": "86",
+  "questionFrontendId": "86",
+  "title": "Partition List",
+  "titleSlug": "partition-list",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>head</code> of a linked list and a value <code>x</code>, partition it such that all nodes <strong>less than</strong> <code>x</code> come before nodes <strong>greater than or equal</strong> to <code>x</code>.</p>\n\n<p>You should <strong>preserve</strong> the original relative order of the nodes in each of the two partitions.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/01/04/partition.jpg\" style=\"width: 662px; height: 222px;\" />\n<pre>\n<strong>Input:</strong> head = [1,4,3,2,5,2], x = 3\n<strong>Output:</strong> [1,2,2,4,3,5]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> head = [2,1], x = 2\n<strong>Output:</strong> [1,2]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the list is in the range <code>[0, 200]</code>.</li>\n\t<li><code>-100 &lt;= Node.val &lt;= 100</code></li>\n\t<li><code>-200 &lt;= x &lt;= 200</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"partition\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"head\",\r\n      \"type\": \"ListNode\",\r\n      \"dealloc\": false\r\n    },\r\n    {\r\n      \"name\": \"x\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"ListNode\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"893.6K\", \"totalSubmission\": \"1.5M\", \"totalAcceptedRaw\": 893579, \"totalSubmissionRaw\": 1468626, \"acRate\": \"60.8%\"}",
+  "likes": 8038,
+  "dislikes": 984,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Partition Array According to Given Pivot\", \"titleSlug\": \"partition-array-according-to-given-pivot\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,4,3,2,5,2]\n3",
+    "[2,1]\n2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 8, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    ListNode* partition(ListNode* head, int x) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public ListNode partition(ListNode head, int x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def partition(self, head: Optional[ListNode], x: int) -> Optional[ListNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def partition(self, head, x):\n        \"\"\"\n        :type head: Optional[ListNode]\n        :type x: int\n        :rtype: Optional[ListNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} head\n * @param {number} x\n * @return {ListNode}\n */\nvar partition = function(head, x) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction partition(head: ListNode | null, x: number): ListNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public ListNode Partition(ListNode head, int x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\nstruct ListNode* partition(struct ListNode* head, int x) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc partition(head *ListNode, x int) *ListNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun partition(head: ListNode?, x: Int): ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func partition(_ head: ListNode?, _ x: Int) -> ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn partition(head: Option<Box<ListNode>>, x: i32) -> Option<Box<ListNode>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {ListNode} head\n# @param {Integer} x\n# @return {ListNode}\ndef partition(head, x)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $head\n     * @param Integer $x\n     * @return ListNode\n     */\n    function partition($head, $x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *   int val;\n *   ListNode? next;\n *   ListNode([this.val = 0, this.next]);\n * }\n */\nclass Solution {\n  ListNode? partition(ListNode? head, int x) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def partition(head: ListNode, x: Int): ListNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for singly-linked list.\n#\n# defmodule ListNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           next: ListNode.t() | nil\n#         }\n#   defstruct val: 0, next: nil\n# end\n\ndefmodule Solution do\n  @spec partition(head :: ListNode.t | nil, x :: integer) :: ListNode.t | nil\n  def partition(head, x) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for singly-linked list.\n%%\n%% -record(list_node, {val = 0 :: integer(),\n%%                     next = null :: 'null' | #list_node{}}).\n\n-spec partition(Head :: #list_node{} | null, X :: integer()) -> #list_node{} | null.\npartition(Head, X) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n(define/contract (partition head x)\n  (-> (or/c list-node? #f) exact-integer? (or/c list-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "654",
+    "content": "[TOC]\n\n## Solution\n\nThe problem wants us to reform the linked list structure, such that the\nelements lesser that a certain value `x`, come before the elements greater or\nequal to `x`. This essentially means in this reformed list, there would be a\npoint in the linked list `before` which all the elements would be smaller than\n`x` and `after` which all the elements would be greater or equal to `x`.\nLet's call this point as the `JOINT`.\n\n<center>\n<img src=\"../Figures/86/86_Partition_List_1.png\" width=\"700\"/>\n</center>\n\nReverse engineering the question tells us that if we break the reformed list\nat the `JOINT`, we will get two smaller linked lists, one with lesser elements\nand the other with elements greater or equal to `x`. In the solution, our main aim\nis to create these two linked lists and join them.\n\n### Approach 1: Two Pointer Approach\n\n**Intuition**\n\nWe can take two pointers `before` and `after` to keep track of the two linked\nlists as described above. These two pointers could be\nused two create two separate lists and then these lists could be combined to\nform the desired reformed list.\n\n**Algorithm**\n\n1. Initialize two pointers `before` and `after`. In the implementation we have\ninitialized these two with a dummy `ListNode`. This helps to reduce the number\nof conditional checks we would need otherwise. You can try an implementation\nwhere you don't initialize with a dummy node and see it yourself!\n\n    <center>\n    <img src=\"../Figures/86/86_Partition_List_2.png\" width=\"400\"/>\n    </center>\n    <center>Dummy Node Initialization</center><br/>\n\n2. Iterate the original linked list, using the `head` pointer.\n3. If the node's value pointed by `head` is *lesser* than `x`, the node should\nbe part of the `before` list. So we move it to `before` list.\n\n    <center>\n    <img src=\"../Figures/86/86_Partition_List_3.png\" width=\"700\"/>\n    </center>\n\n4. Else, the node should be part of `after` list. So we move it to `after` list.\n\n    <center>\n    <img src=\"../Figures/86/86_Partition_List_4.png\" width=\"700\"/>\n    </center>\n\n5. Once we are done with all the nodes in the original linked list, we would\nhave two list `before` and `after`. The original list nodes are either part of\n`before` list or `after` list, depending on its value.\n\n    <center>\n    <img src=\"../Figures/86/86_Partition_List_5.png\" width=\"700\"/>\n    </center>\n\n    *`Note:` Since we traverse the original linked list from left to right,\n    at no point would the order of nodes change relatively in the two lists. Another important thing to note here is that we show the original linked list intact in the above diagrams. However, in the implementation, we remove the nodes from the original linked list and attach them in the before or after list. We don't utilize any additional space. We simply move the nodes from the original list around.*\n\n6. Now, these two lists `before` and `after` can be combined to form the reformed list.\n\n    <center>\n    <img src=\"../Figures/86/86_Partition_List_6.png\" width=\"700\"/>\n    </center>\n\nWe did a dummy node initialization at the start to make implementation\neasier, you don't want that to be part of the returned list, hence just\nmove ahead one node in both the lists while combining the two list. Since both\nbefore and after have an extra node at the front.\n\n<iframe src=\"https://leetcode.com/playground/UBqWALRQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UBqWALRQ\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$, where $$N$$ is the number of nodes in the original\nlinked list and we iterate the original list.\n* Space Complexity: $$O(1)$$, we have not utilized any extra space, the point to\nnote is that we are reforming the original list, by moving the original nodes, we\nhave not used any extra space as such.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

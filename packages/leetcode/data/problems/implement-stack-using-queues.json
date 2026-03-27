@@ -1,0 +1,136 @@
+{
+  "questionId": "225",
+  "questionFrontendId": "225",
+  "title": "Implement Stack using Queues",
+  "titleSlug": "implement-stack-using-queues",
+  "difficulty": "Easy",
+  "content": "<p>Implement a last-in-first-out (LIFO) stack using only two queues. The implemented stack should support all the functions of a normal stack (<code>push</code>, <code>top</code>, <code>pop</code>, and <code>empty</code>).</p>\n\n<p>Implement the <code>MyStack</code> class:</p>\n\n<ul>\n\t<li><code>void push(int x)</code> Pushes element x to the top of the stack.</li>\n\t<li><code>int pop()</code> Removes the element on the top of the stack and returns it.</li>\n\t<li><code>int top()</code> Returns the element on the top of the stack.</li>\n\t<li><code>boolean empty()</code> Returns <code>true</code> if the stack is empty, <code>false</code> otherwise.</li>\n</ul>\n\n<p><b>Notes:</b></p>\n\n<ul>\n\t<li>You must use <strong>only</strong> standard operations of a queue, which means that only <code>push to back</code>, <code>peek/pop from front</code>, <code>size</code> and <code>is empty</code> operations are valid.</li>\n\t<li>Depending on your language, the queue may not be supported natively. You may simulate a queue using a list or deque (double-ended queue) as long as you use only a queue&#39;s standard operations.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;MyStack&quot;, &quot;push&quot;, &quot;push&quot;, &quot;top&quot;, &quot;pop&quot;, &quot;empty&quot;]\n[[], [1], [2], [], [], []]\n<strong>Output</strong>\n[null, null, null, 2, 2, false]\n\n<strong>Explanation</strong>\nMyStack myStack = new MyStack();\nmyStack.push(1);\nmyStack.push(2);\nmyStack.top(); // return 2\nmyStack.pop(); // return 2\nmyStack.empty(); // return False\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= x &lt;= 9</code></li>\n\t<li>At most <code>100</code> calls will be made to <code>push</code>, <code>pop</code>, <code>top</code>, and <code>empty</code>.</li>\n\t<li>All the calls to <code>pop</code> and <code>top</code> are valid.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow-up:</strong> Can you implement the stack using only one queue?</p>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"MyStack\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"x\"\n        }\n      ],\n      \"name\": \"push\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [],\n      \"return\": {\n        \"type\": \"integer\"\n      },\n      \"name\": \"pop\"\n    },\n    {\n      \"params\": [],\n      \"name\": \"top\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    },\n    {\n      \"params\": [],\n      \"name\": \"empty\",\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"1.1M\", \"totalSubmission\": \"1.6M\", \"totalAcceptedRaw\": 1127126, \"totalSubmissionRaw\": 1619969, \"acRate\": \"69.6%\"}",
+  "likes": 6926,
+  "dislikes": 1285,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Implement Queue using Stacks\", \"titleSlug\": \"implement-queue-using-stacks\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"MyStack\",\"push\",\"push\",\"top\",\"pop\",\"empty\"]\n[[],[1],[2],[],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"nagarro\", \"name\": \"Nagarro\"}]}",
+  "topicTags": [
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class MyStack {\npublic:\n    MyStack() {\n        \n    }\n    \n    void push(int x) {\n        \n    }\n    \n    int pop() {\n        \n    }\n    \n    int top() {\n        \n    }\n    \n    bool empty() {\n        \n    }\n};\n\n/**\n * Your MyStack object will be instantiated and called as such:\n * MyStack* obj = new MyStack();\n * obj->push(x);\n * int param_2 = obj->pop();\n * int param_3 = obj->top();\n * bool param_4 = obj->empty();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class MyStack {\n\n    public MyStack() {\n        \n    }\n    \n    public void push(int x) {\n        \n    }\n    \n    public int pop() {\n        \n    }\n    \n    public int top() {\n        \n    }\n    \n    public boolean empty() {\n        \n    }\n}\n\n/**\n * Your MyStack object will be instantiated and called as such:\n * MyStack obj = new MyStack();\n * obj.push(x);\n * int param_2 = obj.pop();\n * int param_3 = obj.top();\n * boolean param_4 = obj.empty();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class MyStack:\n\n    def __init__(self):\n        \n\n    def push(self, x: int) -> None:\n        \n\n    def pop(self) -> int:\n        \n\n    def top(self) -> int:\n        \n\n    def empty(self) -> bool:\n        \n\n\n# Your MyStack object will be instantiated and called as such:\n# obj = MyStack()\n# obj.push(x)\n# param_2 = obj.pop()\n# param_3 = obj.top()\n# param_4 = obj.empty()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class MyStack(object):\n\n    def __init__(self):\n        \n\n    def push(self, x):\n        \"\"\"\n        :type x: int\n        :rtype: None\n        \"\"\"\n        \n\n    def pop(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def top(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def empty(self):\n        \"\"\"\n        :rtype: bool\n        \"\"\"\n        \n\n\n# Your MyStack object will be instantiated and called as such:\n# obj = MyStack()\n# obj.push(x)\n# param_2 = obj.pop()\n# param_3 = obj.top()\n# param_4 = obj.empty()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar MyStack = function() {\n    \n};\n\n/** \n * @param {number} x\n * @return {void}\n */\nMyStack.prototype.push = function(x) {\n    \n};\n\n/**\n * @return {number}\n */\nMyStack.prototype.pop = function() {\n    \n};\n\n/**\n * @return {number}\n */\nMyStack.prototype.top = function() {\n    \n};\n\n/**\n * @return {boolean}\n */\nMyStack.prototype.empty = function() {\n    \n};\n\n/** \n * Your MyStack object will be instantiated and called as such:\n * var obj = new MyStack()\n * obj.push(x)\n * var param_2 = obj.pop()\n * var param_3 = obj.top()\n * var param_4 = obj.empty()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class MyStack {\n    constructor() {\n        \n    }\n\n    push(x: number): void {\n        \n    }\n\n    pop(): number {\n        \n    }\n\n    top(): number {\n        \n    }\n\n    empty(): boolean {\n        \n    }\n}\n\n/**\n * Your MyStack object will be instantiated and called as such:\n * var obj = new MyStack()\n * obj.push(x)\n * var param_2 = obj.pop()\n * var param_3 = obj.top()\n * var param_4 = obj.empty()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class MyStack {\n\n    public MyStack() {\n        \n    }\n    \n    public void Push(int x) {\n        \n    }\n    \n    public int Pop() {\n        \n    }\n    \n    public int Top() {\n        \n    }\n    \n    public bool Empty() {\n        \n    }\n}\n\n/**\n * Your MyStack object will be instantiated and called as such:\n * MyStack obj = new MyStack();\n * obj.Push(x);\n * int param_2 = obj.Pop();\n * int param_3 = obj.Top();\n * bool param_4 = obj.Empty();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} MyStack;\n\n\nMyStack* myStackCreate() {\n    \n}\n\nvoid myStackPush(MyStack* obj, int x) {\n    \n}\n\nint myStackPop(MyStack* obj) {\n    \n}\n\nint myStackTop(MyStack* obj) {\n    \n}\n\nbool myStackEmpty(MyStack* obj) {\n    \n}\n\nvoid myStackFree(MyStack* obj) {\n    \n}\n\n/**\n * Your MyStack struct will be instantiated and called as such:\n * MyStack* obj = myStackCreate();\n * myStackPush(obj, x);\n \n * int param_2 = myStackPop(obj);\n \n * int param_3 = myStackTop(obj);\n \n * bool param_4 = myStackEmpty(obj);\n \n * myStackFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type MyStack struct {\n    \n}\n\n\nfunc Constructor() MyStack {\n    \n}\n\n\nfunc (this *MyStack) Push(x int)  {\n    \n}\n\n\nfunc (this *MyStack) Pop() int {\n    \n}\n\n\nfunc (this *MyStack) Top() int {\n    \n}\n\n\nfunc (this *MyStack) Empty() bool {\n    \n}\n\n\n/**\n * Your MyStack object will be instantiated and called as such:\n * obj := Constructor();\n * obj.Push(x);\n * param_2 := obj.Pop();\n * param_3 := obj.Top();\n * param_4 := obj.Empty();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class MyStack() {\n\n    fun push(x: Int) {\n        \n    }\n\n    fun pop(): Int {\n        \n    }\n\n    fun top(): Int {\n        \n    }\n\n    fun empty(): Boolean {\n        \n    }\n\n}\n\n/**\n * Your MyStack object will be instantiated and called as such:\n * var obj = MyStack()\n * obj.push(x)\n * var param_2 = obj.pop()\n * var param_3 = obj.top()\n * var param_4 = obj.empty()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass MyStack {\n\n    init() {\n        \n    }\n    \n    func push(_ x: Int) {\n        \n    }\n    \n    func pop() -> Int {\n        \n    }\n    \n    func top() -> Int {\n        \n    }\n    \n    func empty() -> Bool {\n        \n    }\n}\n\n/**\n * Your MyStack object will be instantiated and called as such:\n * let obj = MyStack()\n * obj.push(x)\n * let ret_2: Int = obj.pop()\n * let ret_3: Int = obj.top()\n * let ret_4: Bool = obj.empty()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct MyStack {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl MyStack {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn push(&self, x: i32) {\n        \n    }\n    \n    fn pop(&self) -> i32 {\n        \n    }\n    \n    fn top(&self) -> i32 {\n        \n    }\n    \n    fn empty(&self) -> bool {\n        \n    }\n}\n\n/**\n * Your MyStack object will be instantiated and called as such:\n * let obj = MyStack::new();\n * obj.push(x);\n * let ret_2: i32 = obj.pop();\n * let ret_3: i32 = obj.top();\n * let ret_4: bool = obj.empty();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class MyStack\n    def initialize()\n        \n    end\n\n\n=begin\n    :type x: Integer\n    :rtype: Void\n=end\n    def push(x)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def pop()\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def top()\n        \n    end\n\n\n=begin\n    :rtype: Boolean\n=end\n    def empty()\n        \n    end\n\n\nend\n\n# Your MyStack object will be instantiated and called as such:\n# obj = MyStack.new()\n# obj.push(x)\n# param_2 = obj.pop()\n# param_3 = obj.top()\n# param_4 = obj.empty()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class MyStack {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $x\n     * @return NULL\n     */\n    function push($x) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function pop() {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function top() {\n        \n    }\n  \n    /**\n     * @return Boolean\n     */\n    function empty() {\n        \n    }\n}\n\n/**\n * Your MyStack object will be instantiated and called as such:\n * $obj = MyStack();\n * $obj->push($x);\n * $ret_2 = $obj->pop();\n * $ret_3 = $obj->top();\n * $ret_4 = $obj->empty();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class MyStack {\n\n  MyStack() {\n    \n  }\n  \n  void push(int x) {\n    \n  }\n  \n  int pop() {\n    \n  }\n  \n  int top() {\n    \n  }\n  \n  bool empty() {\n    \n  }\n}\n\n/**\n * Your MyStack object will be instantiated and called as such:\n * MyStack obj = MyStack();\n * obj.push(x);\n * int param2 = obj.pop();\n * int param3 = obj.top();\n * bool param4 = obj.empty();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class MyStack() {\n\n    def push(x: Int): Unit = {\n        \n    }\n\n    def pop(): Int = {\n        \n    }\n\n    def top(): Int = {\n        \n    }\n\n    def empty(): Boolean = {\n        \n    }\n\n}\n\n/**\n * Your MyStack object will be instantiated and called as such:\n * val obj = new MyStack()\n * obj.push(x)\n * val param_2 = obj.pop()\n * val param_3 = obj.top()\n * val param_4 = obj.empty()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule MyStack do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec push(x :: integer) :: any\n  def push(x) do\n    \n  end\n\n  @spec pop() :: integer\n  def pop() do\n    \n  end\n\n  @spec top() :: integer\n  def top() do\n    \n  end\n\n  @spec empty() :: boolean\n  def empty() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# MyStack.init_()\n# MyStack.push(x)\n# param_2 = MyStack.pop()\n# param_3 = MyStack.top()\n# param_4 = MyStack.empty()\n\n# MyStack.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec my_stack_init_() -> any().\nmy_stack_init_() ->\n  .\n\n-spec my_stack_push(X :: integer()) -> any().\nmy_stack_push(X) ->\n  .\n\n-spec my_stack_pop() -> integer().\nmy_stack_pop() ->\n  .\n\n-spec my_stack_top() -> integer().\nmy_stack_top() ->\n  .\n\n-spec my_stack_empty() -> boolean().\nmy_stack_empty() ->\n  .\n\n\n%% Your functions will be called as such:\n%% my_stack_init_(),\n%% my_stack_push(X),\n%% Param_2 = my_stack_pop(),\n%% Param_3 = my_stack_top(),\n%% Param_4 = my_stack_empty(),\n\n%% my_stack_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define my-stack%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; push : exact-integer? -> void?\n    (define/public (push x)\n      )\n    ; pop : -> exact-integer?\n    (define/public (pop)\n      )\n    ; top : -> exact-integer?\n    (define/public (top)\n      )\n    ; empty : -> boolean?\n    (define/public (empty)\n      )))\n\n;; Your my-stack% object will be instantiated and called as such:\n;; (define obj (new my-stack%))\n;; (send obj push x)\n;; (define param_2 (send obj pop))\n;; (define param_3 (send obj top))\n;; (define param_4 (send obj empty))"
+    }
+  ],
+  "solution": {
+    "id": "41",
+    "content": "[TOC]\n\n## Summary\nThis article is for beginners. It introduces the following ideas:\nStack, Queue.\n\n## Solution\n---\n### Approach #1 (Two Queues, push - $$O(1)$$, pop $$O(n)$$ )\n\n**Intuition**\n\nStack is **LIFO** (last in - first out) data structure, in which elements are added and removed from the same end, called `top`.\nIn general stack is implemented using array or linked list, but in the current article we will review a different approach for implementing stack using queues. In contrast queue is **FIFO** (first in - first out) data structure, in which elements are added only from the one side - `rear` and removed from the other - `front`. In order to implement stack using queues, we need to maintain two queues `q1` and `q2`. Also we will keep top stack element in a constant memory.\n\n**Algorithm**\n\n**Push**\n\nThe new element is always added to the rear of queue `q1` and it is kept as `top` stack element\n\n![Push an element in stack](https://leetcode.com/media/original_images/225_stack_using_queues_pushA.png){:width=\"539px\"}\n\n\n*Figure 1. Push an element in stack*\n\n\n\n<iframe src=\"https://leetcode.com/playground/hA8Av9g7/shared\" frameBorder=\"0\" name=\"hA8Av9g7\" width=\"100%\" height=\"207\"></iframe>\n**Complexity Analysis**\n\n* Time complexity : $$O(1)$$. Queue is implemented as linked list and `add` operation has $$O(1)$$ time complexity.\n\n* Space complexity : $$O(1)$$\n\n**Pop**\n\nWe need to remove the element from the top of the stack. This is the last inserted element in `q1`.\nBecause queue is FIFO (first in - first out) data structure, the last inserted element could be removed only after all elements, except it, have been removed. For this reason we need to maintain additional queue `q2`, which will serve as a temporary storage to enqueue the removed elements from q1. The last inserted element in `q2` is kept as top. Then the algorithm removes the last element in `q1`. We swap `q1` with `q2` to avoid copying all elements from `q2` to `q1`.\n\n![Pop an element from stack](https://leetcode.com/media/original_images/225_stack_using_queues_popA.png){:width=\"539px\"}\n\n\n*Figure 2. Pop an element from stack*\n\n\n\n<iframe src=\"https://leetcode.com/playground/GVEP7KC5/shared\" frameBorder=\"0\" name=\"GVEP7KC5\" width=\"100%\" height=\"241\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. The algorithm  dequeues n elements from `q1` and enqueues $$n - 1$$ elements to `q2`, where $$n$$ is the stack size. This gives $$2n - 1$$ operations.\n* Space complexity : $$O(1)$$.\n\n---\n### Approach #2 (Two Queues, push - $$O(n)$$, pop $$O(1)$$ )\n\n**Algorithm**\n\n**Push**\n\nThe algorithm inserts each new element to queue `q2` and keep it as the `top` element. In case queue `q1` is not empty (there are elements in the stack), we remove all elements from `q1` and add them to `q2`. In this way the new inserted element (`top` element in the stack) will be always positioned at the front of `q2`. We swap `q1` with `q2` to avoid copying all elements from `q2` to `q1`.\n\n![Push an element in stack](https://leetcode.com/media/original_images/225_stack_using_queues_pushB.png){:width=\"539px\"}\n\n\n*Figure 3. Push an element in stack*\n\n\n\n<iframe src=\"https://leetcode.com/playground/PmACxrs7/shared\" frameBorder=\"0\" name=\"PmACxrs7\" width=\"100%\" height=\"224\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. The algorithm  removes n elements from `q1` and inserts $$n + 1$$ elements to `q2`, where n is the stack size. This gives $$2n + 1$$ operations. The operations `add` and `remove` in linked lists has $$O(1)$$ complexity.\n\n* Space complexity : $$O(1)$$.\n\n**Pop**\n\nThe algorithm dequeues an element from  queue `q1` and keeps front element of `q1` as `top`.\n\n![Pop an element from stack](https://leetcode.com/media/original_images/225_stack_using_queues_popB.png){:width=\"539px\"}\n\n\n*Figure 4. Pop an element from stack*\n\n\n\n<iframe src=\"https://leetcode.com/playground/cJSgWsjg/shared\" frameBorder=\"0\" name=\"cJSgWsjg\" width=\"100%\" height=\"173\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(1)$$.\n* Space complexity : $$O(1)$$.\n\nIn both approaches `empty` and `top` operations have the same implementation.\n\n**Empty**\n\nQueue `q1` always contains all stack elements, so the algorithm checks `q1` size to return if the stack is empty.\n\n<iframe src=\"https://leetcode.com/playground/daUayMBx/shared\" frameBorder=\"0\" name=\"daUayMBx\" width=\"100%\" height=\"122\"></iframe>\n\nTime complexity : $$O(1)$$.\n\nSpace complexity : $$O(1)$$.\n\n**Top**\n\nThe `top` element is kept in constant memory and is modified each time when we push or pop an element.\n\n<iframe src=\"https://leetcode.com/playground/2egrNy7x/shared\" frameBorder=\"0\" name=\"2egrNy7x\" width=\"100%\" height=\"122\"></iframe>\n\nTime complexity : $$O(1)$$.\n The `top` element has been calculated in advance and only returned in `top` operation.\n\nSpace complexity : $$O(1)$$.\n\n---\n### Approach #3 (One Queue, push - $$O(n)$$, pop $$O(1)$$ )\n\nThe mentioned above two approaches have one weakness, they use two queues. This could be optimized as we use only one queue, instead of two.\n\n**Algorithm**\n\n**Push**\n\nWhen we push an element into a queue, it will be stored at back of the queue due to queue's properties.\nBut we need to implement a stack, where last inserted element should be in the front of the queue, not at the back. To achieve this we can invert the order of queue elements when pushing a new element.\n\n![Push an element in stack](https://leetcode.com/media/original_images/225_stack_using_queues_pushC.png){:width=\"539px\"}\n\n\n*Figure 5. Push an element in stack*\n\n\n\n<iframe src=\"https://leetcode.com/playground/KWjfiLLE/shared\" frameBorder=\"0\" name=\"KWjfiLLE\" width=\"100%\" height=\"241\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. The algorithm  removes n elements and inserts $$n + 1$$ elements to `q1` , where n is the stack size. This gives $$2n + 1$$ operations. The operations `add` and `remove` in linked lists has $$O(1)$$ complexity.\n\n* Space complexity : $$O(1)$$.\n\n**Pop**\n\n The last inserted element is always stored at the front of `q1` and we can pop it for constant time.\n\n<iframe src=\"https://leetcode.com/playground/9VzMVJRW/shared\" frameBorder=\"0\" name=\"9VzMVJRW\" width=\"100%\" height=\"122\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(1)$$.\n* Space complexity : $$O(1)$$.\n\n**Empty**\n\nQueue `q1` contains all stack elements, so the algorithm checks if `q1` is empty.\n\n<iframe src=\"https://leetcode.com/playground/Bo3j7qez/shared\" frameBorder=\"0\" name=\"Bo3j7qez\" width=\"100%\" height=\"122\"></iframe>\n\nTime complexity : $$O(1)$$.\nSpace complexity : $$O(1)$$.\n\n**Top**\n\nThe `top` element is always positioned at the front of `q1`. Algorithm return it.\n\n<iframe src=\"https://leetcode.com/playground/CyVTnqYt/shared\" frameBorder=\"0\" name=\"CyVTnqYt\" width=\"100%\" height=\"122\"></iframe>\n\nTime complexity : $$O(1)$$.\nSpace complexity : $$O(1)$$.\n\nAnalysis written by: @elmirap.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

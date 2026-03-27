@@ -1,0 +1,144 @@
+{
+  "questionId": "406",
+  "questionFrontendId": "406",
+  "title": "Queue Reconstruction by Height",
+  "titleSlug": "queue-reconstruction-by-height",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array of people, <code>people</code>, which are the attributes of some people in a queue (not necessarily in order). Each <code>people[i] = [h<sub>i</sub>, k<sub>i</sub>]</code> represents the <code>i<sup>th</sup></code> person of height <code>h<sub>i</sub></code> with <strong>exactly</strong> <code>k<sub>i</sub></code> other people in front who have a height greater than or equal to <code>h<sub>i</sub></code>.</p>\n\n<p>Reconstruct and return <em>the queue that is represented by the input array </em><code>people</code>. The returned queue should be formatted as an array <code>queue</code>, where <code>queue[j] = [h<sub>j</sub>, k<sub>j</sub>]</code> is the attributes of the <code>j<sup>th</sup></code> person in the queue (<code>queue[0]</code> is the person at the front of the queue).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> people = [[7,0],[4,4],[7,1],[5,0],[6,1],[5,2]]\n<strong>Output:</strong> [[5,0],[7,0],[5,2],[6,1],[4,4],[7,1]]\n<strong>Explanation:</strong>\nPerson 0 has height 5 with no other people taller or the same height in front.\nPerson 1 has height 7 with no other people taller or the same height in front.\nPerson 2 has height 5 with two persons taller or the same height in front, which is person 0 and 1.\nPerson 3 has height 6 with one person taller or the same height in front, which is person 1.\nPerson 4 has height 4 with four people taller or the same height in front, which are people 0, 1, 2, and 3.\nPerson 5 has height 7 with one person taller or the same height in front, which is person 1.\nHence [[5,0],[7,0],[5,2],[6,1],[4,4],[7,1]] is the reconstructed queue.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> people = [[6,0],[5,0],[4,0],[3,2],[2,2],[1,4]]\n<strong>Output:</strong> [[4,0],[5,0],[2,2],[3,2],[1,4],[6,0]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= people.length &lt;= 2000</code></li>\n\t<li><code>0 &lt;= h<sub>i</sub> &lt;= 10<sup>6</sup></code></li>\n\t<li><code>0 &lt;= k<sub>i</sub> &lt; people.length</code></li>\n\t<li>It is guaranteed that the queue can be reconstructed.</li>\n</ul>\n",
+  "hints": [
+    "What can you say about the position of the shortest person? </br>\r\nIf the position of the shortest person is <i>i</i>, how many people would be in front of the shortest person?",
+    "Once you fix the position of the shortest person, what can you say about the position of the second shortest person?"
+  ],
+  "metaData": "{\r\n  \"name\": \"reconstructQueue\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"people\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer[][]\",\r\n    \"colsize\": \"2\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"343.2K\", \"totalSubmission\": \"459.7K\", \"totalAcceptedRaw\": 343170, \"totalSubmissionRaw\": 459743, \"acRate\": \"74.6%\"}",
+  "likes": 7247,
+  "dislikes": 754,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count of Smaller Numbers After Self\", \"titleSlug\": \"count-of-smaller-numbers-after-self\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Reward Top K Students\", \"titleSlug\": \"reward-top-k-students\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[7,0],[4,4],[7,1],[5,0],[6,1],[5,2]]",
+    "[[6,0],[5,0],[4,0],[3,2],[2,2],[1,4]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"medianet\", \"name\": \"Media.net\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Indexed Tree",
+      "slug": "binary-indexed-tree"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> reconstructQueue(vector<vector<int>>& people) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] reconstructQueue(int[][] people) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def reconstructQueue(self, people: List[List[int]]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def reconstructQueue(self, people):\n        \"\"\"\n        :type people: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} people\n * @return {number[][]}\n */\nvar reconstructQueue = function(people) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function reconstructQueue(people: number[][]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] ReconstructQueue(int[][] people) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** reconstructQueue(int** people, int peopleSize, int* peopleColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func reconstructQueue(people [][]int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun reconstructQueue(people: Array<IntArray>): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func reconstructQueue(_ people: [[Int]]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn reconstruct_queue(people: Vec<Vec<i32>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} people\n# @return {Integer[][]}\ndef reconstruct_queue(people)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $people\n     * @return Integer[][]\n     */\n    function reconstructQueue($people) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> reconstructQueue(List<List<int>> people) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def reconstructQueue(people: Array[Array[Int]]): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec reconstruct_queue(people :: [[integer]]) :: [[integer]]\n  def reconstruct_queue(people) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec reconstruct_queue(People :: [[integer()]]) -> [[integer()]].\nreconstruct_queue(People) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (reconstruct-queue people)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "754",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Greedy\n\n**Intuition**\n\nThe problem is to reconstruct the queue.\n\n![pic](../Figures/406/input.png)\n\nLet's start with the simplest case, when all guys (h, k) in the queue are of the same height h, and differ by their k values only (the number of people in front who have a greater or the same height). Then the solution is simple: each guy's index is equal to his k value. The guy with zero people in front takes the place number 0, the guy with 1 person in front takes the place number 1, and so on and so forth.  \n\n![fig](../Figures/406/same.png)\n\nThis strategy could be used even in the case when not all people are of the same height. The smaller persons are \"invisible\" to the taller ones, and hence one could first arrange the tallest guys as if there was no one else.\n\nLet's now consider a queue with people of two different heights: 7 and 6. For simplicity, let's have just one 6-height guy. First, follow the strategy above and arrange guys of height 7. Now it's time to find a place for the guy of height 6. Since he is \"invisible\" to the 7-height guys, he could take whatever place without disturbing the 7-height guys' order. However, for him the others are visible, and hence he should take the position equal to his k-value, in order to have his proper place. \n \n![fig](../Figures/406/two.png)\n\n> This idea is easy to extend for the case of numerous guys of height 6. Just sort them by k-values, as it was done before for 7-height guys, and insert them one by one in the positions equal to their k-values. \n\nThe following strategy could be continued recursively:\n\n- Sort the tallest guys in ascending order by k-values and then insert them one by one into the output queue at the indexes equal to their k-values.\n\n- Take the next height in descending order. Sort the guys of that height in ascending order by k-values and then insert them one by one into the output queue at the indexes equal to their k-values.\n\n- And so on and so forth.\n\n!?!../Documents/406_LIS.json:1000,612!?!\n\n**Algorithm**\n\n- Sort people: \n    - In descending order by height. \n    - Among the guys of the same height, in the ascending order by k-values.\n\n- Take guys one by one, and place them in the output array at the indexes equal to their k-values.\n\n- Return output array.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/KW74tsbz/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"KW74tsbz\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(N^2)$$. To sort people takes $$\\mathcal{O}(N \\log N)$$ time. Then one proceeds to n insert operations, and each takes up to $$\\mathcal{O}(k)$$ time, where k is a current number of elements in the list. In total, one needs up to $$\\mathcal{O}\\left({\\sum\\limits_{k = 0}^{N - 1}{k}}\\right)$$ time, i.e. up to $$\\mathcal{O}(N^2)$$ time.\n \n* Space complexity : $$\\mathcal{O}(N)$$ to keep the output.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

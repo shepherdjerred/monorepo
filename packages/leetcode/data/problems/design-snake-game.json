@@ -1,0 +1,139 @@
+{
+  "questionId": "353",
+  "questionFrontendId": "353",
+  "title": "Design Snake Game",
+  "titleSlug": "design-snake-game",
+  "difficulty": "Medium",
+  "content": "<p>Design a <a href=\"https://en.wikipedia.org/wiki/Snake_(video_game)\" target=\"_blank\">Snake game</a> that is played on a device with screen size <code>height x width</code>. <a href=\"http://patorjk.com/games/snake/\" target=\"_blank\">Play the game online</a> if you are not familiar with the game.</p>\n\n<p>The snake is initially positioned at the top left corner <code>(0, 0)</code> with a length of <code>1</code> unit.</p>\n\n<p>You are given an array <code>food</code> where <code>food[i] = (r<sub>i</sub>, c<sub>i</sub>)</code> is the row and column position of a piece of food that the snake can eat. When a snake eats a piece of food, its length and the game&#39;s score both increase by <code>1</code>.</p>\n\n<p>Each piece of food appears one by one on the screen, meaning the second piece of food will not appear until the snake eats the first piece of food.</p>\n\n<p>When a piece of food appears on the screen, it is <strong>guaranteed</strong> that it will not appear on a block occupied by the snake.</p>\n\n<p>The game is over if the snake goes out of bounds (hits a wall) or if its head occupies a space that its body occupies <strong>after</strong> moving (i.e. a snake of length 4 cannot run into itself).</p>\n\n<p>Implement the <code>SnakeGame</code> class:</p>\n\n<ul>\n\t<li><code>SnakeGame(int width, int height, int[][] food)</code> Initializes the object with a screen of size <code>height x width</code> and the positions of the <code>food</code>.</li>\n\t<li><code>int move(String direction)</code> Returns the score of the game after applying one <code>direction</code> move by the snake. If the game is over, return <code>-1</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/01/13/snake.jpg\" style=\"width: 800px; height: 302px;\" />\n<pre>\n<strong>Input</strong>\n[&quot;SnakeGame&quot;, &quot;move&quot;, &quot;move&quot;, &quot;move&quot;, &quot;move&quot;, &quot;move&quot;, &quot;move&quot;]\n[[3, 2, [[1, 2], [0, 1]]], [&quot;R&quot;], [&quot;D&quot;], [&quot;R&quot;], [&quot;U&quot;], [&quot;L&quot;], [&quot;U&quot;]]\n<strong>Output</strong>\n[null, 0, 0, 1, 1, 2, -1]\n\n<strong>Explanation</strong>\nSnakeGame snakeGame = new SnakeGame(3, 2, [[1, 2], [0, 1]]);\nsnakeGame.move(&quot;R&quot;); // return 0\nsnakeGame.move(&quot;D&quot;); // return 0\nsnakeGame.move(&quot;R&quot;); // return 1, snake eats the first piece of food. The second piece of food appears at (0, 1).\nsnakeGame.move(&quot;U&quot;); // return 1\nsnakeGame.move(&quot;L&quot;); // return 2, snake eats the second food. No more food appears.\nsnakeGame.move(&quot;U&quot;); // return -1, game over because snake collides with border\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= width, height &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= food.length &lt;= 50</code></li>\n\t<li><code>food[i].length == 2</code></li>\n\t<li><code>0 &lt;= r<sub>i</sub> &lt; height</code></li>\n\t<li><code>0 &lt;= c<sub>i</sub> &lt; width</code></li>\n\t<li><code>direction.length == 1</code></li>\n\t<li><code>direction</code> is <code>&#39;U&#39;</code>, <code>&#39;D&#39;</code>, <code>&#39;L&#39;</code>, or <code>&#39;R&#39;</code>.</li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>move</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"SnakeGame\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"width\"\n      },\n      {\n        \"type\": \"integer\",\n        \"name\": \"height\"\n      },\n      {\n        \"type\": \"integer[][]\",\n        \"name\": \"food\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"direction\"\n        }\n      ],\n      \"name\": \"move\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true,\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"105.7K\", \"totalSubmission\": \"264.1K\", \"totalAcceptedRaw\": 105651, \"totalSubmissionRaw\": 264071, \"acRate\": \"40.0%\"}",
+  "likes": 1015,
+  "dislikes": 353,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"SnakeGame\",\"move\",\"move\",\"move\",\"move\",\"move\",\"move\"]\n[[3,2,[[1,2],[0,1]]],[\"R\"],[\"D\"],[\"R\"],[\"U\"],[\"L\"],[\"U\"]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}, {\"timesEncountered\": 2, \"slug\": \"weride\", \"name\": \"WeRide\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"ixl\", \"name\": \"IXL\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class SnakeGame {\npublic:\n    SnakeGame(int width, int height, vector<vector<int>>& food) {\n        \n    }\n    \n    int move(string direction) {\n        \n    }\n};\n\n/**\n * Your SnakeGame object will be instantiated and called as such:\n * SnakeGame* obj = new SnakeGame(width, height, food);\n * int param_1 = obj->move(direction);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class SnakeGame {\n\n    public SnakeGame(int width, int height, int[][] food) {\n        \n    }\n    \n    public int move(String direction) {\n        \n    }\n}\n\n/**\n * Your SnakeGame object will be instantiated and called as such:\n * SnakeGame obj = new SnakeGame(width, height, food);\n * int param_1 = obj.move(direction);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class SnakeGame:\n\n    def __init__(self, width: int, height: int, food: List[List[int]]):\n        \n\n    def move(self, direction: str) -> int:\n        \n\n\n# Your SnakeGame object will be instantiated and called as such:\n# obj = SnakeGame(width, height, food)\n# param_1 = obj.move(direction)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class SnakeGame(object):\n\n    def __init__(self, width, height, food):\n        \"\"\"\n        :type width: int\n        :type height: int\n        :type food: List[List[int]]\n        \"\"\"\n        \n\n    def move(self, direction):\n        \"\"\"\n        :type direction: str\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your SnakeGame object will be instantiated and called as such:\n# obj = SnakeGame(width, height, food)\n# param_1 = obj.move(direction)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} width\n * @param {number} height\n * @param {number[][]} food\n */\nvar SnakeGame = function(width, height, food) {\n    \n};\n\n/** \n * @param {string} direction\n * @return {number}\n */\nSnakeGame.prototype.move = function(direction) {\n    \n};\n\n/** \n * Your SnakeGame object will be instantiated and called as such:\n * var obj = new SnakeGame(width, height, food)\n * var param_1 = obj.move(direction)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class SnakeGame {\n    constructor(width: number, height: number, food: number[][]) {\n\n    }\n\n    move(direction: string): number {\n\n    }\n}\n\n/**\n * Your SnakeGame object will be instantiated and called as such:\n * var obj = new SnakeGame(width, height, food)\n * var param_1 = obj.move(direction)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class SnakeGame {\n\n    public SnakeGame(int width, int height, int[][] food) {\n        \n    }\n    \n    public int Move(string direction) {\n        \n    }\n}\n\n/**\n * Your SnakeGame object will be instantiated and called as such:\n * SnakeGame obj = new SnakeGame(width, height, food);\n * int param_1 = obj.Move(direction);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} SnakeGame;\n\n\nSnakeGame* snakeGameCreate(int width, int height, int** food, int foodSize, int* foodColSize) {\n    \n}\n\nint snakeGameMove(SnakeGame* obj, char * direction) {\n  \n}\n\nvoid snakeGameFree(SnakeGame* obj) {\n    \n}\n\n/**\n * Your SnakeGame struct will be instantiated and called as such:\n * SnakeGame* obj = snakeGameCreate(width, height, food, foodSize, foodColSize);\n * int param_1 = snakeGameMove(obj, direction);\n \n * snakeGameFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type SnakeGame struct {\n    \n}\n\n\nfunc Constructor(width int, height int, food [][]int) SnakeGame {\n    \n}\n\n\nfunc (this *SnakeGame) Move(direction string) int {\n    \n}\n\n\n/**\n * Your SnakeGame object will be instantiated and called as such:\n * obj := Constructor(width, height, food);\n * param_1 := obj.Move(direction);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class SnakeGame(width: Int, height: Int, food: Array<IntArray>) {\n\n    fun move(direction: String): Int {\n        \n    }\n\n}\n\n/**\n * Your SnakeGame object will be instantiated and called as such:\n * var obj = SnakeGame(width, height, food)\n * var param_1 = obj.move(direction)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass SnakeGame {\n\n    init(_ width: Int, _ height: Int, _ food: [[Int]]) {\n        \n    }\n    \n    func move(_ direction: String) -> Int {\n        \n    }\n}\n\n/**\n * Your SnakeGame object will be instantiated and called as such:\n * let obj = SnakeGame(width, height, food)\n * let ret_1: Int = obj.move(direction)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct SnakeGame {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl SnakeGame {\n\n    fn new(width: i32, height: i32, food: Vec<Vec<i32>>) -> Self {\n        \n    }\n    \n    fn make_a_move(&self, direction: String) -> i32 {\n        \n    }\n}\n\n/**\n * Your SnakeGame object will be instantiated and called as such:\n * let obj = SnakeGame::new(width, height, food);\n * let ret_1: i32 = obj.move(direction);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class SnakeGame\n\n=begin\n    :type width: Integer\n    :type height: Integer\n    :type food: Integer[][]\n=end\n    def initialize(width, height, food)\n        \n    end\n\n\n=begin\n    :type direction: String\n    :rtype: Integer\n=end\n    def move(direction)\n        \n    end\n\n\nend\n\n# Your SnakeGame object will be instantiated and called as such:\n# obj = SnakeGame.new(width, height, food)\n# param_1 = obj.move(direction)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class SnakeGame {\n    /**\n     * @param Integer $width\n     * @param Integer $height\n     * @param Integer[][] $food\n     */\n    function __construct($width, $height, $food) {\n        \n    }\n  \n    /**\n     * @param String $direction\n     * @return Integer\n     */\n    function move($direction) {\n        \n    }\n}\n\n/**\n * Your SnakeGame object will be instantiated and called as such:\n * $obj = SnakeGame($width, $height, $food);\n * $ret_1 = $obj->move($direction);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class SnakeGame(_width: Int, _height: Int, _food: Array[Array[Int]]) {\n\n    def move(direction: String): Int = {\n        \n    }\n\n}\n\n/**\n * Your SnakeGame object will be instantiated and called as such:\n * var obj = new SnakeGame(width, height, food)\n * var param_1 = obj.move(direction)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule SnakeGame do\n  @spec init_(width :: integer, height :: integer, food :: [[integer]]) :: any\n  def init_(width, height, food) do\n\n  end\n\n  @spec move(direction :: String.t) :: integer\n  def move(direction) do\n\n  end\nend\n\n# Your functions will be called as such:\n# SnakeGame.init_(width, height, food)\n# param_1 = SnakeGame.move(direction)\n\n# SnakeGame.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec snake_game_init_(Width :: integer(), Height :: integer(), Food :: [[integer()]]) -> any().\nsnake_game_init_(Width, Height, Food) ->\n  .\n\n-spec snake_game_move(Direction :: unicode:unicode_binary()) -> integer().\nsnake_game_move(Direction) ->\n  .\n\n\n%% Your functions will be called as such:\n%% snake_game_init_(Width, Height, Food),\n%% Param_1 = snake_game_move(Direction),\n\n%% snake_game_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define snake-game%\n  (class object%\n    (super-new)\n\n    ; width : exact-integer?\n\n    ; height : exact-integer?\n\n    ; food : (listof (listof exact-integer?))\n    (init-field\n      width\n      height\n      food)\n    \n    ; move : string? -> exact-integer?\n    (define/public (move direction)\n\n      )))\n\n;; Your snake-game% object will be instantiated and called as such:\n;; (define obj (new snake-game% [width width] [height height] [food food]))\n;; (define param_1 (send obj move direction))"
+    }
+  ],
+  "solution": {
+    "id": "1042",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nWho doesn't feel nostalgic while thinking about the famous `Snake` video game? It used to be (and still is) the goto video game on phones and other platforms for so many of us and there are countless variations of the game out there. The version that this problem talks about is the most basic one. And this being a design problem makes things more interesting!\n\nLet's go over the details in the problem statement once. \n\n* We're given the `width` and `height` of the grid over which the snake moves. \n* Additionally, we are also given the list of grid positions where the food would appear one after the other. Just like the traditional snake, the next food item only appears once the current one is consumed.\n* Consuming a piece of food increasses the length of the snake by one. In terms of our problem statement, the length of the snake is increased by one more `cell` from the grid with each cell being of unit length and width.\n* The snake can move in four directions `U`, `D`, `L`, and `R`. Everytime the snake has to be moved, the `move()` function would be called and this is the only function we need to focus on in this question.\n* The game ends when either of these conditions happens:\n    * The snake becomes too long to potentially fit inside the grid or\n    * The snake hits one of the boundaries which would happen in the previous case as well.\n    * The snake bites itself i.e. when the head of the snake collides with its body in the next move.\n\nThe problem statement doesn't have any follow up statements, but we're going to discuss a follow-up to this question where the wall becomes `infinite` i.e. the snake can move across walls and the only condition then for the game to end is when the `snake` crashes into itself on the grid.\n\n<center>\n<img src=\"../Figures/353/img1.png\"/>\n</center>\n\n---\n### Approach: Queue and Hash Set\n\n**Intuition**\n\nLet's start by thinking about how we want to store the snake? \n\n>In terms of the grid, a snake is just an **_ordered_** collection of cells.\n\nWe can technically use an array to store the cells representing a snake. However, we would need to instantiate an array the size of `width * height` of the grid since a snake can be composed of all the the cells of the grid in the worst case. A spiral kind of a snake. Let's look at such a snake occupying the grid.\n\n<center>\n<img src=\"../Figures/353/img2.png\"/>\n</center>\n\nThis structure is highly unlikely given the random nature of food items appearing on the grid. However, we would need an array the size of the grid to be able to hold this big a snake. The breaking point for an array is when we have to move the snake from one position to another. Let's see what happens to the snake when it moves by one in a direction. The result overall would be the same with some minor changes based on the direction.\n\n<center>\n<img src=\"../Figures/353/img3.png\"/>\n</center>\n\nIn the above figure, we have a snake that occupies 4 cells across the grid or in other words, is of length 4. The snake can be represented by the following collection of cells: `[(1,1), (1,2), (1,3), (2,3)]`. Now say we have the snake move in the right direction i.e. `R`. The snake now would look like this across the grid.\n\n<center>\n<img src=\"../Figures/353/img4.png\"/>\n</center>\n\nNow here, after moving one step to the right, the snake is represented by the cells `[(1,2), (1,3), (2,3), (2,4)]`. \n\n>In order to achieve this with an array, we would have to move all the cells around per move which is not exactly ideal. We can build some complicated logic around the movement of the snake in an array but that won't be worth the fixed space complexity that an array would occupy.\n\nLet's see what data structure would naturally fit our requirements for the snake. There are two basic requirements we need to satisfy:\n\n1. Dynamically add new cells to the snake's body and\n2. Move the snake in constant amount of time across the grid.\n\nLet's look at the snake representation between moves from the example above to understand what really is happening here and that will help us get to the data structure we need to use for solving this problem.\n\n**Move with No Food**\n\nWe already have an example for such a move so we will simply be looking at the snake representation on the grid to understand what's really happening here. \n\nBefore the move, the snake was occupying the following cells of the grid in the specified order:\n\n<pre>\n(1,1), (1,2), (1,3), (2,3)\n</pre>\n\nand after the move, the snake was occupying the following positions on the grid:\n\n<pre>\n(1,2), (1,3), (2,3), (2,4)\n</pre>\n\nIf you think about this from a **_sliding window_** perspective, we simply moves the window one step forward i.e. we removed the **_tail_** of the window and added a new **_head_** to the window. The tail in this case was `(1,2)` and the new head being `(2,4)`.\n\n**Move with Food Consumption**\n\nNow let's look at a move by the snake wherein they consume a food item and grow in length. Suppose the move was the same as before and the spot `(2,4)` contained a food item. The snake head from the previous example, was at `(2,3)` on the grid. So, a move to the right would cause them to consume this food item thus extending their overall length by one. So now, instead of occupying 4 cells on the grid, the snake would occupy 5 cells. Let's concretely look at the snake representations before and after the move.\n\nBefore the move, the snake was occupying the following cells of the grid in the specified order:\n\n<pre>\n(1,1), (1,2), (1,3), (2,3)\n</pre>\n\nand after the move, the snake was occupying the following positions on the grid:\n\n<pre>\n(1,1), (1,2), (1,3), (2,3), (2,4)\n</pre>\n\nHere, we simply added a new **_head_** to the snake with the head being the cell `(2,4)`. The tail remained the same in this case. These are the only two possibilities for moves that can happen other than the termination conditions for the game. Based on them, let's see what operations out data structure needs to support concretely for us to be able to perform these moves efficiently.\n\nOur abstract data structure needs to support the following operations efficiently.\n\n1. Grow in size dynamically. Note that we never **_shrink_** in size. The snake can stay the same size as before or grow in size due to the consumption of a food item on the grid. But they can't shrink in size.\n2. Maintain a specified ordering of cells in order to represent the snake.\n3. Extract the `tail` cell and potentially add a new `head` cell to the ordering of cells to represent the updated snake post a move. This is the most important operation of all and this points to a very specific data structure.\n\n>Based on the third operation, we can see that the **_Queue_** would be a good data structure to use since we need to have quick access to the first and last elements of an ordered list and a queue gives us exactly that.\n\nA queue is an abstract data structure with some specified properties which meets our requirements. It can be represented by an array or a linked list. For our purposes, since we need a data structure with dynamic sizing, we would go with a linked-list based implementation for a queue rather than an array since we don't want to pre-allocate any memory for the array and only allocate on the fly. A linked list would be a great fit here since we don't require random access to cells of the snake.\n\n**Algorithm**\n\n1. Initialize a queue containing a single cell `(0,0)` which is the initial position of the snake at the beginning of the game. Note that we will be doing this in the constructor of the class and not in the `move` function. \n2. The fist thing we need to do inside the `move` function is to compute the **_new head_** based on the direction of the move. As we saw in the intuition section, irrespective of the kind of move, we will always get a new head. We need the new head position to determine if the snake has hit a boundary and hence, terminate the game.\n3. Let's first discuss the termination conditions before moving on to the modifications we would make to our queue data structure.\n      1. The first condition is if the snake cross either of the boundaries of the grid after the mode, then we terminate. So for this, we simply check if the new head (`new_head`) satisfies `new_head[0] < 0` or `new_head[0] > height` or `new_head[1] < 0` or `new_head[1] > width`.\n      2. The second condition is if the snake bites itself after the move. An important thing to remember here is that the current `tail` of the snake is **_not_** a part of the snake's body. If the move doesn't involve a food, then the tail gets updated (removed) as we have seen. If this is a food move, then the snake cannot bite itself because the food cannot appear on any of the cells occupied by the snake (according to the problem statement).\n\n      In order to check if the snake bites itself we need to check if the new head already exists in our queue or not. This can turn out to be an $$\\mathcal{O}(N)$$ operation and that would be costly. So, at the expense of memory, we can also use an additional dictionary data structure to keep the positions of the snake. This dictionary will only be used for this particular check. We can't do with _just_ a dictionary because a dictionary doesn't have an ordered list of elements and we need the ordering for our implementation.\n4. If none of the termination conditions have been met, then we will continue to update our queue with the new head and potentially remove the old tail. If the new head lands on a position which contains food, then we simply add the new head to our queue representing the snake. We won't pop the tail in this case since the length of the snake has increased by 1.\n5. After each move, we return the length of the snake if this was a valid move. Else, we return `-1` to indicate that the game is over.\n\n<iframe src=\"https://leetcode.com/playground/LLWRZVYE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LLWRZVYE\"></iframe>\n\n**Complexity Analysis**\n\nLet $$W$$ represent the width of the grid and $$H$$ represent the height of the grid. Also, let $$N$$ represent the number of food items in the list.\n\n- Time Complexity: \n    - The time complexity of the `move` function is $$\\mathcal{O}(1)$$.\n    - The time taken to calculate `bites_itself` is constant since we are using a dictionary to search for the element.\n    - The time taken to add and remove an element from the queue is also constant.\n- Space Complexity:\n    - The space complexity is $$\\mathcal{O}(W \\times H + N)$$\n    - $$\\mathcal{O}(N)$$ is used by the `food` data structure.\n    - $$\\mathcal{O}(W \\times H)$$ is used by the `snake` and the `snake_set` data structures. At most, we can have snake that occupies all the cells of the grid as explained in the beginning of the article.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

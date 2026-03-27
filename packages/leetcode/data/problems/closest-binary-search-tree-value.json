@@ -1,0 +1,145 @@
+{
+  "questionId": "270",
+  "questionFrontendId": "270",
+  "title": "Closest Binary Search Tree Value",
+  "titleSlug": "closest-binary-search-tree-value",
+  "difficulty": "Easy",
+  "content": "<p>Given the <code>root</code> of a binary search tree and a <code>target</code> value, return <em>the value in the BST that is closest to the</em> <code>target</code>. If there are multiple answers, print the smallest.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/12/closest1-1-tree.jpg\" style=\"width: 292px; height: 302px;\" />\n<pre>\n<strong>Input:</strong> root = [4,2,5,1,3], target = 3.714286\n<strong>Output:</strong> 4\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [1], target = 4.428571\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 10<sup>4</sup>]</code>.</li>\n\t<li><code>0 &lt;= Node.val &lt;= 10<sup>9</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= target &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"closestValue\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    },\r\n    {\r\n      \"name\": \"target\",\r\n      \"type\": \"double\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"451.5K\", \"totalSubmission\": \"917.1K\", \"totalAcceptedRaw\": 451492, \"totalSubmissionRaw\": 917053, \"acRate\": \"49.2%\"}",
+  "likes": 1902,
+  "dislikes": 166,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Count Complete Tree Nodes\", \"titleSlug\": \"count-complete-tree-nodes\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Closest Binary Search Tree Value II\", \"titleSlug\": \"closest-binary-search-tree-value-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Search in a Binary Search Tree\", \"titleSlug\": \"search-in-a-binary-search-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Closest Nodes Queries in a Binary Search Tree\", \"titleSlug\": \"closest-nodes-queries-in-a-binary-search-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,2,5,1,3]\n3.714286",
+    "[1]\n4.428571"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 2, \"slug\": \"fractal-analytics\", \"name\": \"Fractal Analytics\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Search Tree",
+      "slug": "binary-search-tree"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int closestValue(TreeNode* root, double target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int closestValue(TreeNode root, double target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def closestValue(self, root: Optional[TreeNode], target: float) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def closestValue(self, root, target):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type target: float\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {number} target\n * @return {number}\n */\nvar closestValue = function(root, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction closestValue(root: TreeNode | null, target: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int ClosestValue(TreeNode root, double target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint closestValue(struct TreeNode* root, double target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc closestValue(root *TreeNode, target float64) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun closestValue(root: TreeNode?, target: Double): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func closestValue(_ root: TreeNode?, _ target: Double) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn closest_value(root: Option<Rc<RefCell<TreeNode>>>, target: f64) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @param {Float} target\n# @return {Integer}\ndef closest_value(root, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @param Float $target\n     * @return Integer\n     */\n    function closestValue($root, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int closestValue(TreeNode? root, double target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def closestValue(root: TreeNode, target: Double): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec closest_value(root :: TreeNode.t | nil, target :: float) :: integer\n  def closest_value(root, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec closest_value(Root :: #tree_node{} | null, Target :: float()) -> integer().\nclosest_value(Root, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (closest-value root target)\n  (-> (or/c tree-node? #f) flonum? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "749",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Recursive Inorder + Linear search, O(N) time\n\n**Intuition**\n\nThe simplest approach (3 lines in Python) is to build inorder traversal and then find the closest element in a sorted array with built-in function `min`.  \n\n![pic](../Figures/270/dummy.png)\n\nThis approach serves to identify the subproblems.\n\n**Algorithm**\n\n- Build an inorder traversal array.\n\n- Find the closest to the target element in that array.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/dczSzCsj/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"dczSzCsj\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ because to build inorder traversal and then to perform linear search takes linear time.\n* Space complexity: $$\\mathcal{O}(N)$$ to keep inorder traversal.\n<br /> \n<br />\n\n\n---\n### Approach 2: Iterative Inorder, O(k) time\n\n**Intuition**\n\nLet's optimize Approach 1 in the case when the index k of the closest element is much smaller than the tree height H.\n\nFirst, one could merge both steps by traversing the tree and searching for the closest value at the same time.  \n\nSecond, one could stop just after identifying the closest value, there is no need to traverse the whole tree. The closest value is found if the target value is in-between between two in-order array elements `nums[i] <= target < nums[i + 1]`. Then the closest value is one of these elements.\n\n![pic](../Figures/270/iteration.png)\n\n**Algorithm**\n\n- Initiate stack as an empty array and predecessor value as a very small number.\n\n- While root is not null:\n\n    - To build an inorder traversal iteratively, go left as far as you can and add all nodes on the way into the stack.\n    \n    - Pop the last element from stack `root = stack.pop()`. \n\n    - If the target is in-between of `pred` and `root.val`, return the closest between these two elements.\n    \n    - Set predecessor value to be equal to `root.val` and go one step right: `root = root.right`.\n    \n- We're here because during the loop one couldn't identify the closest value. That means that the closest value is the last value in the inorder traversal, i.e. current predecessor value. Return it. \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/jZKVgBLb/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"jZKVgBLb\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(k)$$ in the average case and $$\\mathcal{O}(H + k)$$ in the worst case, where k is an index of the closest element. It's known that [the average case is a balanced tree](https://pages.cpsc.ucalgary.ca/~jacobs/Courses/cpsc331/F08/notes/lecture17.pdf), in that case stack always contains a few elements, and hence one does $$2k$$ operations to go to kth element in inorder traversal (k times to push into stack and then k times to pop out of stack). That results in $$\\mathcal{O}(k)$$ time complexity. The worst case is a completely unbalanced tree, where you first push H elements into the stack and then pop out k elements, which results in $$\\mathcal{O}(H + k)$$ time complexity.\n\n![pic](../Figures/270/unbalanced.png)\n\n* Space complexity: up to $$\\mathcal{O}(H)$$ to keep the stack in the case of a non-balanced tree.\n<br /> \n<br />\n\n\n---\n### Approach 3: Binary Search, O(H) time \n\n**Intuition**\n\nApproach 2 works fine when indexing k of the closest element is much smaller than the tree height H.  \n\nLet's now consider another limit and optimize Approach 1 in the case of relatively large k, comparable with N. \n\nThen it makes sense to use a binary search: go left if the target is smaller than the current root value, and go right otherwise. Choose the closest to the target value at each step.\n\n![pic](../Figures/270/binary.png)\n\nKudos for this solution goes to @[stefanpochmann](https://leetcode.com/stefanpochmann/).  \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/akN4WqeW/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"akN4WqeW\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(H)$$ since here one goes from root down to a leaf.\n\n* Space complexity : $$\\mathcal{O}(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

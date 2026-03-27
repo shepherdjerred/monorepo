@@ -1,0 +1,147 @@
+{
+  "questionId": "678",
+  "questionFrontendId": "678",
+  "title": "Valid Parenthesis String",
+  "titleSlug": "valid-parenthesis-string",
+  "difficulty": "Medium",
+  "content": "<p>Given a string <code>s</code> containing only three types of characters: <code>&#39;(&#39;</code>, <code>&#39;)&#39;</code> and <code>&#39;*&#39;</code>, return <code>true</code> <em>if</em> <code>s</code> <em>is <strong>valid</strong></em>.</p>\n\n<p>The following rules define a <strong>valid</strong> string:</p>\n\n<ul>\n\t<li>Any left parenthesis <code>&#39;(&#39;</code> must have a corresponding right parenthesis <code>&#39;)&#39;</code>.</li>\n\t<li>Any right parenthesis <code>&#39;)&#39;</code> must have a corresponding left parenthesis <code>&#39;(&#39;</code>.</li>\n\t<li>Left parenthesis <code>&#39;(&#39;</code> must go before the corresponding right parenthesis <code>&#39;)&#39;</code>.</li>\n\t<li><code>&#39;*&#39;</code> could be treated as a single right parenthesis <code>&#39;)&#39;</code> or a single left parenthesis <code>&#39;(&#39;</code> or an empty string <code>&quot;&quot;</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> s = \"()\"\n<strong>Output:</strong> true\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> s = \"(*)\"\n<strong>Output:</strong> true\n</pre><p><strong class=\"example\">Example 3:</strong></p>\n<pre><strong>Input:</strong> s = \"(*))\"\n<strong>Output:</strong> true\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 100</code></li>\n\t<li><code>s[i]</code> is <code>&#39;(&#39;</code>, <code>&#39;)&#39;</code> or <code>&#39;*&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "Use backtracking to explore all possible combinations of treating '*' as either '(', ')', or an empty string. If any combination leads to a valid string, return true.",
+    "DP[i][j] represents whether the substring s[i:j] is valid.",
+    "Keep track of the count of open parentheses encountered so far. If you encounter a close parenthesis, it should balance with an open parenthesis. Utilize a stack to handle this effectively.",
+    "How about using 2 stacks instead of 1? Think about it."
+  ],
+  "metaData": "{\r\n  \"name\": \"checkValidString\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"580.6K\", \"totalSubmission\": \"1.5M\", \"totalAcceptedRaw\": 580581, \"totalSubmissionRaw\": 1455097, \"acRate\": \"39.9%\"}",
+  "likes": 6973,
+  "dislikes": 222,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Special Binary String\", \"titleSlug\": \"special-binary-string\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Check if a Parentheses String Can Be Valid\", \"titleSlug\": \"check-if-a-parentheses-string-can-be-valid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"()\"",
+    "\"(*)\"",
+    "\"(*))\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"pornhub\", \"name\": \"PornHub\"}, {\"timesEncountered\": 2, \"slug\": \"keeptruckin\", \"name\": \"Motive\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"tekion\", \"name\": \"Tekion\"}, {\"timesEncountered\": 2, \"slug\": \"palo-alto-networks\", \"name\": \"Palo Alto Networks\"}, {\"timesEncountered\": 2, \"slug\": \"roku\", \"name\": \"Roku\"}, {\"timesEncountered\": 2, \"slug\": \"alibaba\", \"name\": \"Alibaba\"}]}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool checkValidString(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean checkValidString(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def checkValidString(self, s: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def checkValidString(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {boolean}\n */\nvar checkValidString = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function checkValidString(s: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CheckValidString(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool checkValidString(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func checkValidString(s string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun checkValidString(s: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func checkValidString(_ s: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn check_valid_string(s: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Boolean}\ndef check_valid_string(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Boolean\n     */\n    function checkValidString($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool checkValidString(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def checkValidString(s: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec check_valid_string(s :: String.t) :: boolean\n  def check_valid_string(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec check_valid_string(S :: unicode:unicode_binary()) -> boolean().\ncheck_valid_string(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (check-valid-string s)\n  (-> string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2279",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a string `s`, and the task is to check whether the string consisting of only `'('`, `')'` and `'*'` characters forms a valid sequence of parentheses. We consider `'*'` as a wildcard that can represent either `'('`, `')'` or an empty string.\n\n**Key Observations:**\n1. While traversing the string, the order of parentheses matters. `'('` must come before `')'` for a valid sequence.\n2. The number of left parentheses `'('` and right parentheses `')'` must be the same, including considering `'*'`.\n3. Using `'*'` optimally can help maintain the balance between open and closed parentheses.\n\n> Note: The term \"opening bracket\" refers to the left parenthesis `'('` and \"closing bracket\" refers to the right parenthesis `')'`.\n\n---\n\n### Approach 1: Top-Down Dynamic Programming - Memoization\n\n#### Intuition\n\nOne way to check if a given string of parentheses is valid is to use a stack. Whenever we encounter an opening bracket, we push it onto the stack. Whenever we encounter a closing bracket, we pop an opening bracket from the stack. If the stack is empty at the end of the string, then the string is valid. This is similar to problem [20. Valid Parentheses](https://leetcode.com/problems/valid-parentheses/description/).\n\nHowever, the introduction of the wildcard character (`'*'`) complicates this approach. When dealing with the wildcard character (`'*'`), each `'*'` can represent an opening bracket, a closing bracket, or an empty string, leading to multiple branching possibilities.\n\nWe can explore all possible combinations in branching scenarios by applying recursive solutions.\n\nWe can track whether a string is valid by counting opening brackets:\n- When we encounter an opening bracket, we increment the count of opening brackets by 1.\n- Conversely, for a closing bracket, we decrement the count by 1.\n- After processing a valid string, the count of opening brackets is 0, indicating proper closure by corresponding closing brackets.\n\nNow, let's adapt our recursive solution based on these insights:\n- The base case occurs when the index reaches the end of the string. At this point, we return true if the count of opening brackets is 0, indicating a valid string, otherwise, we return false.\n- If the character at `s[index]` is not `'*'`, we adjust the count of opening brackets accordingly:\n  - If `s[index]` is `'('`, we increment the count of opening brackets by 1 and move to `index + 1`.\n  - If `s[index]` is `')'`, we decrement the count of opening brackets by 1 if it is positive, then move to `index + 1`.\n- If `s[index]` is `'*'`, we explore all possible scenarios:\n  - We can add an opening bracket (increment the count of opening brackets by 1) and move to `index + 1`.\n  - We can add a closing bracket (decrement the count of opening brackets by 1), if the count is positive, then move to `index + 1`.\n  - We can add an empty string and keep the count of opening brackets the same, then move to `index + 1`.\n\nThe recursive approach will result in Time Limit Exceeded (TLE) issues due to the exponential nature of possibilities ($3^{100}$ is a huge number).\n\nTo tackle this issue, we'll use dynamic programming (DP) with a two-dimensional table.\n\nThe DP table caches the results of subproblems, with rows representing different indices of the string `s` and columns representing different counts of opening brackets. Each cell stores a boolean value indicating whether the string from the current index with the given count of opening brackets is valid or not.\n\nBy caching the calculated states in the dp table, we can avoid recalculating the result for the same combination of index and opening bracket count. When encountering a state that has already been computed and stored in the dp table, instead of recursively exploring further, we can directly retrieve the cached result, significantly reducing the time complexity of the algorithm.\n\n#### Algorithm\n\n**`checkValidString` main function:**\n- Initialize a 2D vector `memo` of size `s.size() x s.size() - 1`, representing an uninitialized state.\n- Call the helper function `isValidString` with initial parameters `index = 0`, `openCount = 0`, and the given string `s`.\n- Return the result of `isValidString`.\n\n**`isValidString` helper function:**\n- Base case: If `index` reaches the end of the string (`index == s.size()`), return true if `openCount` is 0 (all brackets are balanced), and false otherwise.\n- Check if the result for the current `index` and `openCount` has already been computed (memoized) in `memo`. If so, return the memoized result.\n- Initialize `isValid` to false.\n- If the current character `s[index]` is `'*'`:\n  - Try treating `'*'` as `'('`:\n    - Call `isValidString` recursively with `index + 1` and `openCount + 1`.\n    - If the recursive call returns true, update `isValid` to true.\n  - If `openCount` is non-zero, try treating `'*'` as `')'`:\n    - Call `isValidString` recursively with `index + 1` and `openCount - 1`.\n    - If the recursive call returns true, update `isValid` to true.\n  - Try treating `'*'` as an empty character:\n    - Call `isValidString` recursively with `index + 1` and the same `openCount`.\n    - If the recursive call returns true, update `isValid` to true.\n- If the current character `s[index]` is `'('`:\n  - Call `isValidString` recursively with `index + 1` and `openCount + 1`.\n  - Update `isValid` with the result of the recursive call.\n- If the current character `s[index]` is `')'`:\n  - If `openCount` is non-zero (there are open parentheses):\n    - Call `isValidString` recursively with `index + 1` and `openCount - 1`.\n    - Update `isValid` with the result of the recursive call.\n- Memoize the result of `isValid` in `memo[index][openCount]`.\n- Return `isValid`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/76A7zEs3/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"76A7zEs3\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input string.\n\n- Time complexity: $O(n \\cdot n)$\n\n    The time complexity of the `isValidString` function can be analyzed by considering the number of unique subproblems that need to be solved. Since there are at most $n \\cdot n$ unique subproblems (indexed by `index` and `openCount`), where `n` is the length of the input string, and each subproblem is computed only once (due to memoization), the time complexity is bounded by the number of unique subproblems. Therefore, the time complexity can be stated as $O(n \\cdot n)$.\n\n- Space complexity: $O(n \\cdot n)$\n\n    The space complexity of the algorithm is primarily determined by two factors: the auxiliary space used for memoization and the recursion stack space. The memoization table, denoted as `memo`, consumes $O(n \\cdot n)$ space due to its size being proportional to the square of the length of the input string. Additionally, the recursion stack space can grow up to $O(n)$ in the worst case, constrained by the length of the input string, as each recursive call may add a frame to the stack. Therefore, the overall space complexity is the sum of these two components, resulting in $O(n \\cdot n) + O(n)$, which simplifies to $O(n \\cdot n)$.\n\n---\n\n### Approach 2: Bottom-Up Dynamic Programming - Tabulation\n\n#### Intuition\n\nTabulation is a dynamic programming technique that involves systematically iterating through all possible combinations of changing parameters. Since tabulation operates iteratively, rather than recursively, it does not require overhead for the recursive stack space, making it more efficient than memoization. We have two variables that change as we progress through the string: the current index we're considering and the count of open brackets encountered so far. To thoroughly explore the combinations, we use two nested loops to iterate through these variables.\n\nFirst, let's establish the base case:\n\n```java\nif (index == s.size()) return (openingBracket == 0);\n```\n\nWe represent this base case in our tabulation matrix as `dp[s.size()][0] = true`, indicating that a string with no brackets is valid.\n\nOur ultimate goal is to determine whether a valid parenthesis sequence can be achieved, and this information will be stored in `dp[0][0]`. To accomplish this, we traverse through every combination of index and open bracket count using the two nested loops. The outer loop iterates over the index, while the inner loop iterates over the count of open brackets (`openBracket`).\n\nThroughout this traversal, we evaluate each state and update our tabulation matrix accordingly. Upon completing the traversal of the entire string, if `dp[0][0]` evaluates to true, it signifies that there exists a valid parenthesis sequence.\n\n#### Algorithm\n\n- Initialize a 2D boolean vector `dp` of size `(n + 1) x (n + 1)`, where `n` is the length of the input string `s`. The `dp[index][openBracket]` represents whether the substring starting from index `i` is valid with `j` opening brackets.\n- Set the base case `dp[n][0]` as true, as an empty string with no opening brackets is always valid.\n- Iterate through the string from the end to the beginning (reverse order) using a nested loop:\n  - Outer loop: Iterate over the indices of the string from `n - 1` to `0`.\n  - Inner loop: Iterate over the number of opening brackets from `0` to `n`.\n  - For each character at index `index` and the current number of opening brackets `openBracket`, determine if the substring starting from `index` is valid with `openBracket` opening brackets:\n    - If the character is `'*'`:\n      - Try treating `'*'` as `'('`: Check if the substring starting from `index + 1` is valid with `openBracket + 1` opening brackets (`dp[index + 1][openBracket + 1]`).\n      - Try treating `'*'` as `')'`: If `openBracket > 0`, check if the substring starting from `index + 1` is valid with `openBracket - 1` opening brackets (`dp[index + 1][openBracket - 1]`).\n      - Try ignoring `'*'`: Check if the substring starting from `index + 1` is valid with the same number of opening brackets (`dp[index + 1][openBracket]`).\n    - If the character is `'('`:\n      - Try treating `'('` as an opening bracket: Check if the substring starting from `index + 1` is valid with `openBracket + 1` opening brackets (`dp[index + 1][openBracket + 1]`).\n    - If the character is `')'`:\n      - Try treating `')'` as a closing bracket: If `openBracket > 0`, check if the substring starting from `index + 1` is valid with `openBracket - 1` opening brackets (`dp[index + 1][openBracket - 1]`).\n    - Update the `dp[index][openBracket]` value based on the result of the above checks.\n- After completing the nested loops, the `dp[0][0]` value represents whether the entire input string is valid with no excess opening brackets.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/652HyVYi/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"652HyVYi\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input string.\n\n* Time complexity: $O(n \\cdot n)$\n\n    This is due to the nested loop structure, where the outer loop iterates over each character of the string, and the inner loop iterates over all possible counts of opening brackets.\n\n* Space complexity: $O(n \\cdot n)$\n\n    This is primarily due to the 2D array dp, which has dimensions $(n + 1) \\cdot (n + 1)$.\n\n---\n\n### Approach 3: Using Two Stacks\n\n#### Intuition\n\nIn Approach 1, we discussed how stacks can be used to solve brackets matching problems, but the wildcard `'*'` complicates this problem. We can tweak the stack method by creating two stacks: one for open brackets and another for the wildcard `'*'`.\n\nThis way, we maintain two stacks to process the string. The first stack keeps track of the indices of encountered open brackets, while the second stack is dedicated to storing the indices of asterisks.\n\nAs we traverse through the input string, every time we encounter an open bracket or an asterisk, we record its index by pushing it onto the respective stack.\n\nWhen we encounter a right bracket, we first attempt to balance this right bracket with an open bracket. To do so, we peek into our open bracket stack. If it's not empty, indicating that there's a matching open bracket available, we pop the index from this stack and proceed.\n\nHowever, if the open bracket stack is empty, we resort to using an asterisk. In this scenario, we peek into our asterisk stack and check if it contains any available asterisks. If so, we pop the index from this stack and proceed. This dynamic selection process ensures that we exhaust all possible options for balancing the right bracket.\n\nIf both the open bracket and asterisk stacks are empty, we return false, as this indicates an unmatched right bracket.\n\nOnce we've processed the whole string, our attention shifts to the remaining elements in the open bracket and asterisk stacks. Here, we check their positions relative to each other. We recognize that if an open bracket appears after the last encountered asterisk, there's no viable way to balance it because we have no available right brackets. Therefore, we return false. However, if no such mismatch is detected, we proceed to empty both stacks.\n\nHere we used a greedy strategy, prioritizing the use of open brackets over asterisks whenever possible to balance the right brackets. This ensures that we exhaust all available options for balancing before resorting to using asterisks. \n\nThe following is an illustration demonstrating the stack solution:\n\n!?!../Documents/678/stack_solution.json:961,446!?!\n\n#### Algorithm\n \n- Initialize two stacks: `openBrackets` to store indices of open brackets `'('`, and `asterisks` to store indices of asterisks `'*'`.\n- Iterate through the string `s` character by character:\n  - If the current character is `'('`, push its index onto the `openBrackets` stack.\n  - If the current character is `'*'`, push its index onto the `asterisks` stack.\n  - If the current character is `')'`:\n    - If `openBrackets` is not empty, pop an element from it (removing the matching open bracket).\n    - If `asterisks` is not empty, pop an element from `asterisks` (using an asterisk to balance the closing bracket).\n    - If neither an open bracket nor an asterisk is available, return false.\n- After iterating through the entire string, check if any remaining open brackets and asterisks can balance each other:\n  - While both `openBrackets` and `asterisks` are not empty:\n    - If the top element of `openBrackets` (representing an open bracket index) is greater than the top element of `asterisks` (representing an asterisk index), it means the open bracket appears after the asterisk, which cannot be balanced, so return false.\n    - Otherwise, pop elements from both `openBrackets` and `asterisks` stacks (matching an open bracket with an asterisk).\n- If after the above step, `openBrackets` is empty, it means all open brackets have been matched or balanced, so return true. Otherwise, return false (unmatched open brackets are remaining).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/FMuDohBp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FMuDohBp\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input string.\n\n* Time complexity: $O(n)$\n\n    The algorithm iterates through the entire string once, taking $O(n)$ time. Additionally, in the worst case, it may need to traverse both the `openBrackets` and `asterisks` stacks simultaneously to check for balanced parentheses, which also takes $O(n)$ time. Thus, the overall time complexity is $O(n)$.\n\n* Space complexity: $O(n)$\n\n    The algorithm uses two stacks, `openBrackets`, and `asterisks`, which could potentially hold up to $O(n)$ elements combined in the worst case. Additionally, there are a few extra variables and loop counters, which require constant space. Therefore, the overall space complexity is $O(n)$.\n\n---\n\n### Approach 4: Two Pointer\n\n#### Intuition\n\nThe above approaches all use significant extra space to solve the problem. Let's develop an approach that uses constant space.\n\nWe can use a two-pointer greedy approach, which checks the balance between open and closed brackets from both ends of the array simultaneously, ensuring that no surplus or deficit of brackets occurs at any point during the iteration.\n\nWe initiate two pointers, one starting from the left and the other from the right of the array.\n\nStarting from the left, we iterate through the array, counting the occurrences of open brackets `'('` and asterisks `'*'`. Whenever we encounter a closed bracket `')'`, we decrement the count of open brackets. This decrement operation mimics the process of matching an open bracket with a closed one.\n\nSimultaneously, we traverse from the right of the array, counting the occurrences of closed brackets `')'` and asterisks `'*'`. Whenever we encounter an open bracket `'('`, we decrement the count of closed brackets. This simulates the process of matching a closed bracket with an open one.\n\nThroughout this process, if either the count of open brackets or the count of closed brackets falls below zero (i.e., becomes negative), we immediately conclude that the sequence is invalid, as it indicates a surplus of closed brackets without corresponding open ones, or vice versa.\n\nIf neither of the counters becomes negative throughout the iteration, the sequence is valid, and we return true.\n\nThe following is an illustration demonstrating the two pointer solution:\n\n!?!../Documents/678/twopointer.json:960,352!?!\n\n#### Algorithm\n \n- Initialize two variables, `openCount` and `closeCount`, to keep track of the number of open and close parentheses (or asterisks) encountered so far.\n- Calculate the length of the input string `s` and store it in the variable `length`.\n- Traverse the string from both ends simultaneously using a single loop:\n  - Iterate over the indices `i` from 0 to `length` (inclusive).\n  - For each index `i`:\n    - If the character at index `i` is `'('` or `'*'`, increment `openCount`.\n    - Otherwise, decrement `openCount`.\n    - If the character at index `length - i` is `')'` or `'*'`, increment `closeCount`.\n    - Otherwise, decrement `closeCount`.\n  - If at any point during the loop, either `openCount` or `closeCount` becomes negative, it means there are more closing parentheses than open parentheses (or asterisks), which makes the string invalid. In this case, return false.\n- After the loop finishes traversing the entire string without returning, `openCount` and `closeCount` are non-negative, which means that the string is valid, so return true.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/UGc495d9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UGc495d9\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input string.\n\n* Time complexity: $O(n)$\n\n    The time complexity is $O(n)$, as we iterate through the string once.\n\n* Space complexity: $O(1)$\n\n    The space complexity is $O(1)$, as we use a constant amount of extra space to store the `openCount` and `closeCount` variables.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

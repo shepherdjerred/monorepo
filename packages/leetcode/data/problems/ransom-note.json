@@ -1,0 +1,138 @@
+{
+  "questionId": "383",
+  "questionFrontendId": "383",
+  "title": "Ransom Note",
+  "titleSlug": "ransom-note",
+  "difficulty": "Easy",
+  "content": "<p>Given two strings <code>ransomNote</code> and <code>magazine</code>, return <code>true</code><em> if </em><code>ransomNote</code><em> can be constructed by using the letters from </em><code>magazine</code><em> and </em><code>false</code><em> otherwise</em>.</p>\n\n<p>Each letter in <code>magazine</code> can only be used once in <code>ransomNote</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> ransomNote = \"a\", magazine = \"b\"\n<strong>Output:</strong> false\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> ransomNote = \"aa\", magazine = \"ab\"\n<strong>Output:</strong> false\n</pre><p><strong class=\"example\">Example 3:</strong></p>\n<pre><strong>Input:</strong> ransomNote = \"aa\", magazine = \"aab\"\n<strong>Output:</strong> true\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= ransomNote.length, magazine.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>ransomNote</code> and <code>magazine</code> consist of lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"canConstruct\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"ransomNote\",\r\n      \"type\": \"string\"\r\n    },\r\n    {\r\n      \"name\": \"magazine\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.9M\", \"totalSubmission\": \"2.9M\", \"totalAcceptedRaw\": 1922872, \"totalSubmissionRaw\": 2924104, \"acRate\": \"65.8%\"}",
+  "likes": 5678,
+  "dislikes": 546,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Stickers to Spell Word\", \"titleSlug\": \"stickers-to-spell-word\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find Words That Can Be Formed by Characters\", \"titleSlug\": \"find-words-that-can-be-formed-by-characters\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"a\"\n\"b\"",
+    "\"aa\"\n\"ab\"",
+    "\"aa\"\n\"aab\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"karat\", \"name\": \"Karat\"}], \"more_than_six_months\": [{\"timesEncountered\": 22, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 11, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"spotify\", \"name\": \"Spotify\"}, {\"timesEncountered\": 3, \"slug\": \"disney\", \"name\": \"Disney\"}, {\"timesEncountered\": 2, \"slug\": \"criteo\", \"name\": \"Criteo\"}, {\"timesEncountered\": 2, \"slug\": \"tripadvisor\", \"name\": \"Tripadvisor\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool canConstruct(string ransomNote, string magazine) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean canConstruct(String ransomNote, String magazine) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def canConstruct(self, ransomNote: str, magazine: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def canConstruct(self, ransomNote, magazine):\n        \"\"\"\n        :type ransomNote: str\n        :type magazine: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} ransomNote\n * @param {string} magazine\n * @return {boolean}\n */\nvar canConstruct = function(ransomNote, magazine) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function canConstruct(ransomNote: string, magazine: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CanConstruct(string ransomNote, string magazine) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool canConstruct(char* ransomNote, char* magazine) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func canConstruct(ransomNote string, magazine string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun canConstruct(ransomNote: String, magazine: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func canConstruct(_ ransomNote: String, _ magazine: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn can_construct(ransom_note: String, magazine: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} ransom_note\n# @param {String} magazine\n# @return {Boolean}\ndef can_construct(ransom_note, magazine)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $ransomNote\n     * @param String $magazine\n     * @return Boolean\n     */\n    function canConstruct($ransomNote, $magazine) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool canConstruct(String ransomNote, String magazine) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def canConstruct(ransomNote: String, magazine: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec can_construct(ransom_note :: String.t, magazine :: String.t) :: boolean\n  def can_construct(ransom_note, magazine) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec can_construct(RansomNote :: unicode:unicode_binary(), Magazine :: unicode:unicode_binary()) -> boolean().\ncan_construct(RansomNote, Magazine) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (can-construct ransomNote magazine)\n  (-> string? string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "895",
+    "content": "[TOC]\n\n## Video Solution\n\n ---\n\n <div>\n   <div class=\"video-container\">\n     <iframe src=\"https://player.vimeo.com/video/791704838?texttrack=en-x-autogenerated\" frameborder=\"0\"\n       allow=\"autoplay; fullscreen\"></iframe>\n   </div>\n </div>\n\n## Solution\n\n---\n\nSomething you might notice when you run code for this problem here on Leetcode is that *Approach 1 passes, and is the fastest*. This is because all the testcases are very small. For huge test cases though, the other approaches would beat it, and Approach 1 would be far too slow. \n\nIn an interview, it's *unlikely that Approach 1 would be sufficient to get you the job*. Interviewers will expect to see an optimized approach such as Approach 2 or 3. \n\n</br>\n\n---\n\n### Approach 1: Simulation\n\n**Intuition**\n\nTo create our ransom note, for every character we have in the note, we need to take a copy of that character out of the magazine so that it can go into the note.\n\nIf a character we need isn't in the magazine, then we should stop and return `False`. Otherwise, if we manage to get all the characters we need to complete the note, then we should return `True`.\n\n```text\nFor each char in ransomNote:\n    Find that letter in magazine.\n    If it is in magazine:\n        Remove it from magazine.\n    Else:\n        Return False\nReturn True\n```\n\nNote that there's no need to *explicitly* build up the ransom note; we only need to return whether or not it's possible. This can be determined simply by removing the characters we need from the magazine.\n\nThis is the most straightforward approach, but as we'll see soon, although it does pass here on Leetcode, it's not very efficient and is not likely to get you a job at a top company.\n\n**Algorithm**\n\nStrings are an **immutable** type. This means that they can't be modified, and so don't have \"insert\" and \"delete\" operations. For this reason, we instead need to repeatedly replace the magazine with a new String, that doesn't have the character we wanted to remove. \n\n<iframe src=\"https://leetcode.com/playground/fr3JNpC7/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"fr3JNpC7\"></iframe>\n\n**Complexity Analysis**\n\nWe'll say $$m$$ is the length of the **m**agazine, and $$n$$ is the length of the ransom **n**ote.\n\n- Time Complexity : $$O(m \\cdot n)$$.\n    \n    Finding the letter we need in the magazine has a cost of $$O(m)$$. This is because we need to perform a linear search of the magazine. Removing the letter we need from the magazine is *also* $$O(m)$$. This is because we need to make a new string to represent it. $$O(m) + O(m) = O(2 \\cdot m) = O(m)$$ because we drop constants in big-o analysis. \n\n    So, how many times are we performing this $$O(m)$$ operation? Well, we are looping through each of the $$n$$ characters in the ransom note and performing it once for each letter. This is a total of $$n$$ times, and so we get $$n \\cdot O(m) = O(m \\cdot n)$$.\n\n- Space Complexity : $$O(m)$$.\n\n    Creating a new magazine with one letter less requires auxillary space the length of the magazine; $$O(m)$$.\n\n</br>\n\n---\n\n### Approach 2: Two HashMaps\n\n**Intuition**\n\nRemember that we decided the length of the ransom **n**ote is $$n$$, and the length of the **m**agazine is $$m$$.\n\nIn an interview, you might start by describing the previous approach and determining its time complexity, but not actually implementing it. Your next goal would be to reason carefully about the implementation and its time complexity, to identify parts that could be made more efficient.\n\nRemoving the $$n$$ factor from the time complexity is going to be impossible, because we need to at least look at each character in the ransom note. Otherwise, how could we possibly know whether or not we have the characters we need to make it? We might be able to avoid the need for an $$O(m)$$ operation for every one of the $$n$$ characters in the ransom note though. \n\nAs an example, notice that if there's three `'a'`'s in the ransom note, then there needs to be *at least* three `'a'`s in the magazine. This should be fairly intuitive, as you'd encounter it if trying to make a note out of a magazine for real. The same idea applies for all the other unique characters too.\n\nTherefore, a better way of solving the problem would be to count up how many of each letter are in both the magazine and the ransom note. We can represent the counts with a `HashMap` that has characters as keys, and counts as values. For example, the string `\"leetcode is cool\"` is represented as follows.\n\n![The counts](../Figures/383/counts_example.png)\n\nWe can make two `HashMap`s; one for the magazine, and the other for the ransom note. Here is the pseudocode for making one of these \"counts\" `HashMap`s.\n\n```text\ndefine function makeCountsMap(string):\n    counts = a new HashMap\n    for each char in string:\n        if char not in counts:\n            counts.put(char, 1)\n        else:\n            old_count = counts.get(char)\n            counts.put(char, old_count + 1)\n    return counts\n```\n\nThen, to actually check whether or not the ransom note can be made using the magazine, we should loop over each character of the ransom note, checking how many of it we need, and checking that at least that many exist in the magazine, by looking it up in the magazine `HashMap`. We need to be careful of the case where the character we need isn't in the magazine *at all*; in this case we should return `False` as the number of them in the magazine is definitely smaller than the number we need. If we manage to check all the characters without `False` being returned, then we know that we must have had enough characters to complete the note, and can therefore return `True`. Here is some pseudocode for that algorithm.\n\n```text\nnoteCounts = makeCountsMap(ransomNote)\nmagazineCounts = makeCountsMap(magazine)\nfor each (char, count) in noteCounts:\n    if char is not in magazineCounts:\n        return False\n    countInMagazine = magazineCounts.get(char)\n    if countInMagazine < count:\n        return False\nreturn True\n```\n\nHere is an animation showing the above algorithm in action with the ransom note `\"leetcode is cool\"` and the magazine `\"close call as fools take sides\"`.\n\n!?!../Documents/383_Two_HashMaps_Valid.json:960,350!?!\n\nAnd here is another example, with the same ransom note, but the magazine `\"cats close in on the fish\"`.\n\n!?!../Documents/383_Two_HashMaps_Invalid.json:960,350!?!\n\nThere's one more optimization we can make. Notice that if the length of the ransom note is *longer* than the length of the magazine, then its impossible for there to be enough characters in the magazine.\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/hvRvrAMp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"hvRvrAMp\"></iframe>\n\n**Complexity Analysis**\n\nWe'll say $$m$$ is the length of the **m**agazine, and $$n$$ is the length of the ransom **n**ote.\n\nAlso, let $$k$$ be the number of unique characters across both the ransom note and magazine. While this is never more than $$26$$, we'll treat it as a variable for a more accurate complexity analysis.\n\nThe basic `HashMap` operations, `get(...)` and `put(...)`, are $$O(1)$$ time complexity.\n\n- Time Complexity : $$O(m)$$.\n\n    When $$m < n$$, we immediately return `false`. Therefore, the worst case occurs when $$m ≥ n$$.\n\n    Creating a `HashMap` of counts for the magazine is $$O(m)$$, as each insertion/ count update is is $$O(1)$$, and is done for each of the $$m$$ characters.\n\n    Likewise, creating the `HashMap` of counts for the ransom note is $$O(n)$$.\n\n    We then iterate over the ransom note `HashMap`, which contains at most $$n$$ unique values, looking up their counterparts in the magazine `HashMap. This is, therefore, at *worst* $$O(n)$$.\n\n    This gives us $$O(n) + O(n) + O(m)$$. Now, remember how we said $$m ≥ n$$? This means that we can simplify it to $$O(m) + O(m) + O(m) = 3 \\cdot O(m) = O(m)$$, dropping the constant of $$3$$.\n\n- Space Complexity : $$O(k)$$ / $$O(1)$$.\n\n    We build two `HashMap`s of counts; each with up to $$k$$ characters in them. This means that they take up $$O(k)$$ space.\n\n    For this problem, because $$k$$ is never more than $$26$$, which is a constant, it'd be reasonable to say that this algorithm requires $$O(1)$$ space.\n\n</br>\n\n---\n\n\n### Approach 3: One HashMap\n\n**Intuition**\n\nIn the previous approach, we used two `HashMap`s. You might have noticed a slightly better way though; we can simply put the magazine into a `HashMap`, and then *subtract* characters from the ransom note from it. Here is the pseudocode, using our `makeCountsMap(...)` function from above.\n\n```text\nmagazineCounts = makeCountsMap(magazine)\nfor each char in ransomNote:\n    countInMagazine = magazineCounts.get(char)\n    if countInMagazine == 0:\n        return False\n    magazineCounts.put(char, countInMagazine - 1)\nreturn True\n```\n\nHere is an animation of the algorithm on our \"true\" case from before.\n\n!?!../Documents/383_One_HashMap_Valid.json:960,350!?!\n\nAnd here's one on the \"false\" case.\n\n!?!../Documents/383_One_HashMap_Invalid.json:960,350!?!\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/N9peLgrp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"N9peLgrp\"></iframe>\n\n**Complexity Analysis**\n\nWe'll say $$m$$ is the length of the **m**agazine, and $$n$$ is the length of the ransom **n**ote.\n\nAlso, let $$k$$ be the number of unique characters across both the ransom note and magazine. While this is never more than $$26$$, we'll treat it as a variable for a more accurate complexity analysis.\n\nThe basic `HashMap` operations, `get(...)` and `put(...)`, are $$O(1)$$ time complexity.\n\n- Time Complexity : $$O(m)$$.\n\n    When $$m < n$$, we immediately return `false`. Therefore, the worst case occurs when $$m ≥ n$$.\n\n    Creating a `HashMap` of counts for the magazine is $$O(m)$$, as each insertion/ count update is is $$O(1)$$, and is done for each of the $$m$$ characters.\n\n    We then iterate over the ransom note, performing an $$O(1)$$ operation for each character in it. This has a cost of $$O(n)$$.\n\n    Becuase we know that $$m ≥ n$$, again this simplifies to $$O(m)$$.\n\n- Space Complexity : $$O(k)$$ / $$O(1)$$.\n\n    Same as above.\n\n    For this problem, because $$k$$ is never more than $$26$$, which is a constant, it'd be reasonable to say that this algorithm requires $$O(1)$$ space.\n\n</br>\n\n---\n\n### Approach 4: Sorting and Stacks\n\n**Intuition**\n\n*This approach isn't needed for an interview, and is better than Approach 1, but worse than Approach 2 and 3. I've included it because it's still very cool and might give you additional creative ideas for when tackling related problems! :)*\n\nAnother, completely different, way of solving the problem is to start by converting each string into an Array of characters, and then *reverse* sorting them by alphabetical order. It's not actually necessary to reverse sort, but it will make things easier for the rest of the algorithm. For example, here's the sorted characters for the ransom note `leetcode is cool` and the magazine `close call as fools take sides`.\n\n![Strings reverse sorted as lists](../Figures/383/reverse_sorted_lists.png)\n\nNow, convert each array into a stack.\n\nCompare the tops of the stacks. There are three possibilities.\n\n1. The characters are the same.\n2. The ransom note character is *earlier* in the alphabet than the magazine character.\n3. The ransom note character is *later* in the alphabet than the magazine character.\n\nFor the first possibility, we've found a copy of the letter we need in the magazine, for a letter in our ransom note. So pop the top off each stack.\n\nFor the second possibility, we know that the letter we need *can't be on the magazine stack*. This is because all the other characters on the magazine must be even later than the top, and we needed an earlier letter. Therefore, we can return `false` now.\n\nFor the third possibility, we know that the letter on the top of the magazine stack will never be needed, as all the characters on the ransom note stack must be later than it, so we pop the top off *just* the magazine stack.\n\nHere is an animation of the algorithm on our \"true\" case from before.\n\n!?!../Documents/383_Stack_Valid.json:960,270!?!\n\nAnd here's one on the \"false\" case.\n\n!?!../Documents/383_Stack_Invalid.json:960,270!?!\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/3pe7Sav7/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3pe7Sav7\"></iframe>\n\n**Complexity Analysis**\n\nWe'll say $$m$$ is the length of the **m**agazine, and $$n$$ is the length of the ransom **n**ote.\n\n- Time Complexity : $$O(m \\, \\log \\, m)$$.\n\n    When $$m < n$$, we immediately return `false`. Therefore, the worst case occurs when $$m ≥ n$$.\n\n    Sorting the magazine is $$O(m \\, \\log \\, m)$$. Inserting the contents into the stack is $$O(m)$$, which is insignificant. This, therefore, gives us $$O(m \\, \\log \\, m)$$ for creating the magazine stack.\n\n    Likewise, creating the ransom note stack is $$O(n \\, \\log \\, n)$$.\n\n    In total, the stacks contain $$n + m$$ characters. For each iteration of the loop, we are either immediately returning `false`, or removing at least one character from the stacks. This means that the stack processing loop has to use at most $$O(n + m)$$ time.\n\n    This gives us $$O(m \\, \\log \\, m) + O(n \\, \\log \\, n) + O(n + m)$$. Now, remembering that $$m ≥ n$$ it simplifies down to $$O(m \\, \\log \\, m) + O(m \\, \\log \\, m) + O(m + m) = 2 \\cdot O(m \\, \\log \\, m) + O(2 \\cdot m) = O(m \\, \\log \\, m)$$. \n\n- Space Complexity : $$O(m)$$.\n    \n    The magazine stack requires $$O(m)$$ space, and the ransom note stack requires $$O(n)$$ space. Because $$m ≥ n$$, this simplifies down to $$O(m)$$.\n\n</br>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "questionId": "151",
+  "questionFrontendId": "151",
+  "title": "Reverse Words in a String",
+  "titleSlug": "reverse-words-in-a-string",
+  "difficulty": "Medium",
+  "content": "<p>Given an input string <code>s</code>, reverse the order of the <strong>words</strong>.</p>\n\n<p>A <strong>word</strong> is defined as a sequence of non-space characters. The <strong>words</strong> in <code>s</code> will be separated by at least one space.</p>\n\n<p>Return <em>a string of the words in reverse order concatenated by a single space.</em></p>\n\n<p><b>Note</b> that <code>s</code> may contain leading or trailing spaces or multiple spaces between two words. The returned string should only have a single space separating the words. Do not include any extra spaces.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;the sky is blue&quot;\n<strong>Output:</strong> &quot;blue is sky the&quot;\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;  hello world  &quot;\n<strong>Output:</strong> &quot;world hello&quot;\n<strong>Explanation:</strong> Your reversed string should not contain leading or trailing spaces.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;a good   example&quot;\n<strong>Output:</strong> &quot;example good a&quot;\n<strong>Explanation:</strong> You need to reduce multiple spaces between two words to a single space in the reversed string.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>s</code> contains English letters (upper-case and lower-case), digits, and spaces <code>&#39; &#39;</code>.</li>\n\t<li>There is <strong>at least one</strong> word in <code>s</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><b data-stringify-type=\"bold\">Follow-up:&nbsp;</b>If the string data type is mutable in your language, can&nbsp;you solve it&nbsp;<b data-stringify-type=\"bold\">in-place</b>&nbsp;with&nbsp;<code data-stringify-type=\"code\">O(1)</code>&nbsp;extra space?</p>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"reverseWords\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"2.9M\", \"totalSubmission\": \"5.3M\", \"totalAcceptedRaw\": 2934552, \"totalSubmissionRaw\": 5250823, \"acRate\": \"55.9%\"}",
+  "likes": 10495,
+  "dislikes": 5575,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Reverse Words in a String II\", \"titleSlug\": \"reverse-words-in-a-string-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"the sky is blue\"",
+    "\"  hello world  \"",
+    "\"a good   example\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 5, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 5, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 4, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 4, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 4, \"slug\": \"zopsmart\", \"name\": \"Zopsmart\"}, {\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 3, \"slug\": \"cisco\", \"name\": \"Cisco\"}]}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string reverseWords(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String reverseWords(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def reverseWords(self, s: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def reverseWords(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {string}\n */\nvar reverseWords = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function reverseWords(s: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string ReverseWords(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* reverseWords(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func reverseWords(s string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun reverseWords(s: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func reverseWords(_ s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn reverse_words(s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {String}\ndef reverse_words(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return String\n     */\n    function reverseWords($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String reverseWords(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def reverseWords(s: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec reverse_words(s :: String.t) :: String.t\n  def reverse_words(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec reverse_words(S :: unicode:unicode_binary()) -> unicode:unicode_binary().\nreverse_words(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (reverse-words s)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "828",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nDifferent interviewers would probably expect different approaches to this problem. The holy war question is whether to use or not use built-in methods. As you may notice, most of the design problems on Leetcode are voted down because of two main reasons:\n\n1. There was no approach with built-in methods/data structures in the article.\n\n2. One of the approaches in the article did contain built-in methods/data structures.\n\nSeems like the community has no common opinion yet, and in practice that means an unpredictable interview experience for some sort of problem. \n \nHere we consider three different solutions for linear time and space complexity:\n\n1. Use built-in split and reverse. Benefits: in-place in Python (in-place, but linear space complexity!) and the simplest one to write.  \n\n2. The most straightforward one. Trim the whitespaces, reverse the whole string, and then reverse each word. Benefits: This could be done in place for the languages with mutable strings.\n\n3. Two passes approach with a deque. Move along the string, word by word, and push each new word in front of the deque. Convert the deque back into a string. Benefits: two passes.\n\n### Approach 1: Built-in Split + Reverse\n\n![fig](../Figures/151/fun2.png)\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/77APCB6k/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"77APCB6k\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$, where N is the number of characters in the input string.\n\n* Space complexity: $$\\mathcal{O}(N)$$, to store the result of split by spaces.\n\n<br /> \n<br />\n\n\n---\n### Approach 2: Reverse the Whole String and Then Reverse Each Word\n\nThe implementation of this approach will be different for Java/Python (= immutable strings) and C++ (= mutable strings). \n\nIn the case of immutable strings, one has first to convert the string into a mutable data structure, and hence it makes sense to trim all spaces during that conversion. \n\n![fig](../Figures/151/reverse_whole2.png)\n\nIn the case of _mutable_ strings, there is no need to allocate an additional data structure, one could get all jobs done in-place. In such a case it makes sense to reverse words and trim spaces at the same time.\n\n![fig](../Figures/151/mutable2.png)\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/XDT8DCHk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XDT8DCHk\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$.\n\n* Space complexity: $$\\mathcal{O}(N)$$.\n<br /> \n<br />\n\n\n---\n### Approach 3: Deque of Words\n\n![fig](../Figures/151/deque2.png)\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/Wd6LnDw4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Wd6LnDw4\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$.\n\n* Space complexity: $$\\mathcal{O}(N)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

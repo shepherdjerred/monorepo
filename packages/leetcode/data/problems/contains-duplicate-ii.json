@@ -1,0 +1,138 @@
+{
+  "questionId": "219",
+  "questionFrontendId": "219",
+  "title": "Contains Duplicate II",
+  "titleSlug": "contains-duplicate-ii",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer array <code>nums</code> and an integer <code>k</code>, return <code>true</code> <em>if there are two <strong>distinct indices</strong> </em><code>i</code><em> and </em><code>j</code><em> in the array such that </em><code>nums[i] == nums[j]</code><em> and </em><code>abs(i - j) &lt;= k</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,1], k = 3\n<strong>Output:</strong> true\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,0,1,1], k = 1\n<strong>Output:</strong> true\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,1,2,3], k = 2\n<strong>Output:</strong> false\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>0 &lt;= k &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"containsNearbyDuplicate\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"k\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.7M\", \"totalSubmission\": \"3.4M\", \"totalAcceptedRaw\": 1732485, \"totalSubmissionRaw\": 3397331, \"acRate\": \"51.0%\"}",
+  "likes": 7480,
+  "dislikes": 3319,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Contains Duplicate\", \"titleSlug\": \"contains-duplicate\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Contains Duplicate III\", \"titleSlug\": \"contains-duplicate-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,1]\n3",
+    "[1,0,1,1]\n1",
+    "[1,2,3,1,2,3]\n2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 5, \"slug\": \"netflix\", \"name\": \"Netflix\"}, {\"timesEncountered\": 4, \"slug\": \"arista-networks\", \"name\": \"Arista Networks\"}, {\"timesEncountered\": 4, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 3, \"slug\": \"palantir-technologies\", \"name\": \"Palantir Technologies\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool containsNearbyDuplicate(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean containsNearbyDuplicate(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def containsNearbyDuplicate(self, nums: List[int], k: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def containsNearbyDuplicate(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {boolean}\n */\nvar containsNearbyDuplicate = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function containsNearbyDuplicate(nums: number[], k: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool ContainsNearbyDuplicate(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool containsNearbyDuplicate(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func containsNearbyDuplicate(nums []int, k int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun containsNearbyDuplicate(nums: IntArray, k: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func containsNearbyDuplicate(_ nums: [Int], _ k: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn contains_nearby_duplicate(nums: Vec<i32>, k: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Boolean}\ndef contains_nearby_duplicate(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Boolean\n     */\n    function containsNearbyDuplicate($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool containsNearbyDuplicate(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def containsNearbyDuplicate(nums: Array[Int], k: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec contains_nearby_duplicate(nums :: [integer], k :: integer) :: boolean\n  def contains_nearby_duplicate(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec contains_nearby_duplicate(Nums :: [integer()], K :: integer()) -> boolean().\ncontains_nearby_duplicate(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (contains-nearby-duplicate nums k)\n  (-> (listof exact-integer?) exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "24",
+    "content": "[TOC]\n\n## Summary\n\nThis article is for beginners. It introduces the following ideas:\nLinear Search, Binary Search Tree and Hash Table.\n\n## Solution\n---\n### Approach #1: Naive Linear Search\n\n**Intuition**\n\nLook for duplicate element in the previous $$k$$ elements.\n\n**Algorithm**\n\nThis algorithm is the same as [Approach #1 in Contains Duplicate solution](https://leetcode.com/articles/contains-duplicate/#approach-1-naive-linear-search-time-limit-exceeded), except that it looks at previous $$k$$ elements instead of all its previous elements.\n\nAnother perspective of this algorithm is to keep a virtual sliding window of the previous $$k$$ elements. We scan for the duplicate in this window.\n\n<iframe src=\"https://leetcode.com/playground/Frbg3g3i/shared\" frameBorder=\"0\" name=\"Frbg3g3i\" width=\"100%\" height=\"207\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n \\min(k,n))$$.\nIt costs $$O(\\min(k, n))$$ time for each linear search. Apparently we do at most $$n$$ comparisons in one search even if $$k$$ can be larger than $$n$$.\n\n* Space complexity : $$O(1)$$.\n\n---\n### Approach #2: Binary Search Tree\n\n**Intuition**\n\nKeep a sliding window of $$k$$ elements using self-balancing Binary Search Tree (BST).\n\n**Algorithm**\n\nThe key to improve upon [Approach #1](#approach-1-naive-linear-search-time-limit-exceeded) above is to reduce the search time of the previous $$k$$ elements. Can we use an auxiliary data structure to maintain a sliding window of $$k$$ elements with more efficient `search`, `delete`, and `insert` operations? Since elements in the sliding window are strictly First-In-First-Out (FIFO), queue is a natural data structure. A queue using a linked list implementation supports constant time `delete` and `insert` operations, however the `search` costs linear time, which is *no better* than [Approach #1](#approach-1-naive-linear-search-time-limit-exceeded).\n\nA better option is to use a self-balancing BST. A BST supports `search`, `delete` and `insert` operations all in $$O(\\log k)$$ time, where $$k$$ is the number of elements in the BST. In most interviews you are not required to implement a self-balancing BST, so you may think of it as a black box. Most programming languages provide implementations of this useful data structure in its standard library. In Java, you may use a `TreeSet` or a `TreeMap`. In C++ STL, you may use a `std::set` or a `std::map`.\n\nIf you already have such a data structure available, the pseudocode is:\n\n* Loop through the array, for each element do\n    * Search current element in the BST, return `true` if found\n    * Put current element in the BST\n    * If the size of the BST is larger than $$k$$, remove the oldest item.\n* Return `false`\n\n<iframe src=\"https://leetcode.com/playground/Z35msNHU/shared\" frameBorder=\"0\" name=\"Z35msNHU\" width=\"100%\" height=\"258\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n \\log (\\min(k,n)))$$. We do $$n$$ operations of `search`, `delete` and `insert`. Each operation costs logarithmic time complexity in the sliding window which size is $$\\min(k, n)$$. Note that even if $$k$$ can be greater than $$n$$, the window size can never exceed $$n$$.\n\n* Space complexity : $$O(\\min(n,k))$$.\nSpace is the size of the sliding window which should not exceed $$n$$ or $$k$$.\n\n**Note**\n\nThe algorithm still gets Time Limit Exceeded for large $$n$$ and $$k$$.\n\n---\n### Approach #3: Hash Table\n\n**Intuition**\n\nKeep a sliding window of $$k$$ elements using Hash Table.\n\n**Algorithm**\n\nFrom the previous approaches, we know that even logarithmic performance in `search` is not enough.\nIn this case, we need a data structure supporting constant time `search`, `delete` and `insert` operations.\nHash Table is the answer. The algorithm and implementation are almost identical to [Approach #2](#approach-2-binary-search-tree-time-limit-exceeded).\n\n* Loop through the array, for each element do\n    * Search current element in the HashTable, return `true` if found\n    * Put current element in the HashTable\n    * If the size of the HashTable is larger than $$k$$, remove the oldest item.\n* Return `false`\n\n\n\n<iframe src=\"https://leetcode.com/playground/vZLsswaU/shared\" frameBorder=\"0\" name=\"vZLsswaU\" width=\"100%\" height=\"241\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$.\nWe do $$n$$ operations of `search`, `delete` and `insert`, each with constant time complexity.\n\n* Space complexity : $$O(\\min(n,k))$$.\nThe extra space required depends on the number of items stored in the hash table, which is the size of the sliding window, $$\\min(n,k)$$.\n\n## See Also\n\n* [Problem 217 Contains Duplicate](https://leetcode.com/articles/contains-duplicate/)\n* [Problem 220 Contains Duplicate III](https://leetcode.com/articles/contains-duplicate-iii/)",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

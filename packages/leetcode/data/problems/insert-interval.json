@@ -1,0 +1,133 @@
+{
+  "questionId": "57",
+  "questionFrontendId": "57",
+  "title": "Insert Interval",
+  "titleSlug": "insert-interval",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array of non-overlapping intervals <code>intervals</code> where <code>intervals[i] = [start<sub>i</sub>, end<sub>i</sub>]</code> represent the start and the end of the <code>i<sup>th</sup></code> interval and <code>intervals</code> is sorted in ascending order by <code>start<sub>i</sub></code>. You are also given an interval <code>newInterval = [start, end]</code> that represents the start and end of another interval.</p>\n\n<p>Insert <code>newInterval</code> into <code>intervals</code> such that <code>intervals</code> is still sorted in ascending order by <code>start<sub>i</sub></code> and <code>intervals</code> still does not have any overlapping intervals (merge overlapping intervals if necessary).</p>\n\n<p>Return <code>intervals</code><em> after the insertion</em>.</p>\n\n<p><strong>Note</strong> that you don&#39;t need to modify <code>intervals</code> in-place. You can make a new array and return it.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> intervals = [[1,3],[6,9]], newInterval = [2,5]\n<strong>Output:</strong> [[1,5],[6,9]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> intervals = [[1,2],[3,5],[6,7],[8,10],[12,16]], newInterval = [4,8]\n<strong>Output:</strong> [[1,2],[3,10],[12,16]]\n<strong>Explanation:</strong> Because the new interval [4,8] overlaps with [3,5],[6,7],[8,10].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= intervals.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>intervals[i].length == 2</code></li>\n\t<li><code>0 &lt;= start<sub>i</sub> &lt;= end<sub>i</sub> &lt;= 10<sup>5</sup></code></li>\n\t<li><code>intervals</code> is sorted by <code>start<sub>i</sub></code> in <strong>ascending</strong> order.</li>\n\t<li><code>newInterval.length == 2</code></li>\n\t<li><code>0 &lt;= start &lt;= end &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Intervals Array is sorted. Can you use Binary Search to find the correct position to insert the new Interval.?",
+    "Can you try merging the overlapping intervals while inserting the new interval?",
+    "This can be done by comparing the end of the last interval with the start of the new interval and vice versa."
+  ],
+  "metaData": "{\r\n  \"name\": \"insert\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"intervals\",\r\n      \"type\": \"integer[][]\"\r\n    },\r\n    {\r\n      \"name\": \"newInterval\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer[][]\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.7M\", \"totalSubmission\": \"3.9M\", \"totalAcceptedRaw\": 1739238, \"totalSubmissionRaw\": 3870602, \"acRate\": \"44.9%\"}",
+  "likes": 11825,
+  "dislikes": 919,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Merge Intervals\", \"titleSlug\": \"merge-intervals\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Range Module\", \"titleSlug\": \"range-module\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Integers in Intervals\", \"titleSlug\": \"count-integers-in-intervals\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,3],[6,9]]\n[2,5]",
+    "[[1,2],[3,5],[6,7],[8,10],[12,16]]\n[4,8]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 6, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 3, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 3, \"slug\": \"mongodb\", \"name\": \"MongoDB\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"tesco\", \"name\": \"Tesco\"}, {\"timesEncountered\": 2, \"slug\": \"blend\", \"name\": \"Blend\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> insert(vector<vector<int>>& intervals, vector<int>& newInterval) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] insert(int[][] intervals, int[] newInterval) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def insert(self, intervals: List[List[int]], newInterval: List[int]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def insert(self, intervals, newInterval):\n        \"\"\"\n        :type intervals: List[List[int]]\n        :type newInterval: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} intervals\n * @param {number[]} newInterval\n * @return {number[][]}\n */\nvar insert = function(intervals, newInterval) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function insert(intervals: number[][], newInterval: number[]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] Insert(int[][] intervals, int[] newInterval) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** insert(int** intervals, int intervalsSize, int* intervalsColSize, int* newInterval, int newIntervalSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func insert(intervals [][]int, newInterval []int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun insert(intervals: Array<IntArray>, newInterval: IntArray): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func insert(_ intervals: [[Int]], _ newInterval: [Int]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn insert(intervals: Vec<Vec<i32>>, new_interval: Vec<i32>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} intervals\n# @param {Integer[]} new_interval\n# @return {Integer[][]}\ndef insert(intervals, new_interval)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $intervals\n     * @param Integer[] $newInterval\n     * @return Integer[][]\n     */\n    function insert($intervals, $newInterval) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> insert(List<List<int>> intervals, List<int> newInterval) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def insert(intervals: Array[Array[Int]], newInterval: Array[Int]): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec insert(intervals :: [[integer]], new_interval :: [integer]) :: [[integer]]\n  def insert(intervals, new_interval) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec insert(Intervals :: [[integer()]], NewInterval :: [integer()]) -> [[integer()]].\ninsert(Intervals, NewInterval) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (insert intervals newInterval)\n  (-> (listof (listof exact-integer?)) (listof exact-integer?) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2269",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a sorted list of non-overlapping `intervals` and a `newInterval`. The task is to insert the `newInterval` into the `intervals` while maintaining sorted order and ensuring no overlapping intervals. If there is any overlap, the overlapping intervals should be merged. In the end, return the intervals list with the addition of the new intervals.\n\nTwo key observations are crucial for this problem:\n1. The given intervals are already sorted in ascending order based on the start values.\n2. Initially, the intervals are non-overlapping, but inserting a new interval might lead to overlaps that need resolution by merging while maintaining sorted order.\n\nTo solve this problem, we break it into three cases when comparing the current interval with the new interval:\nCase 1. The current interval ends before the new interval starts.\nCase 2. There is an overlap, and the intervals need merging.\nCase 3. The current interval starts after the new interval ends.\n\nA visual representation below illustrates all three scenarios:\n\n![img](../Figures/57_re/1.png)\n\n\nNow let us consider the given problem description example with `intervals` and a `newInterval`:\n```\nintervals = [[1, 3], [6, 9]]\nnewInterval = [2, 5]\n```\n\nThe first interval starts at 1 and ends at 3, while the second interval starts at 6 and ends at 9. The goal is to insert the `newInterval` into the existing list of `intervals`, maintaining sorted order.\n\nUpon analysis, we observe that the `newInterval` [2, 5] overlaps with the first interval [1, 3] because 2 is less than 3. Now, since we know the intervals need to be merged, we must ensure the merged interval covers the entire overlapping region.\n\nTo achieve this, we take the maximum of the end of the first interval and the end of the new interval, as well as the minimum of the start of the first interval and the start of the new interval. Therefore, the merged interval becomes `[min(1, 2), max(3, 5)] = [1, 5]`.\n\nMoving on to the second interval [6, 9], its starting point (6) comes after the new interval's ending point (5). There is no overlap between them. Therefore, the second interval remains unchanged.\n\n\n| Original Intervals | New Interval | Action                     | Resulting Intervals |\n|-------------------- |--------------|---------------------------- |----------------------|\n|      [1,3]          |   [2,5]      | New interval overlaps with the first interval [1,3]. Merge intervals by taking [min(1, 2), max(3, 5)] = [1, 5]. |      [1,5]           |\n|      [6,9]          |              | No overlap with the new interval [2,5]. Interval remains unchanged. |      [6,9]           |\n\nIn conclusion, the final result is [[1, 5], [6, 9]], representing the intervals after inserting and merging the new interval [2, 5].\n\nIn a concrete business context, this problem may be presented as follows: Suppose we have an array representing video watch times, where each segment consists of the start and stop times of a user watching a video. The task is to calculate the total number of unique minutes watched across all the video segments. This is fundamentally the same question.\n\n> We recommend solving [Merge Intervals](https://leetcode.com/problems/merge-intervals/) problem before attempting this question, as it provides valuable insights into pattern recognition. This question is an extension of the Merge Intervals concept, building upon the same principles.\n\n---\n\n### Approach 1: Linear Search\n\n#### Intuition\n\nWe can do a linear search by iterating through all the intervals and checking which one of the three conditions the intervals fall under:\n\n1. **No Overlaps before Merging:**\n   - This occurs when the current interval ends before the new interval starts.\n\n2. **Overlapping and Merging:**\n   - This occurs when the starting point of the current interval is less than or equal to the ending point of the new interval (`newInterval[1]`), indicating an overlap. We can merge the current interval with the new interval by updating the start and end values of the new interval.\n\n3. **No Overlapping after Merging:**\n   - This occurs when the current interval starts after the new interval ends.\n\n##### 1. Identifying Non-Overlapping Intervals Before Merging:\nWe iterate through all intervals, checking whether the endpoint of the current interval (`intervals[i][1]`) is less than the starting point of the new interval (`newInterval[0]`). If this condition holds true, it indicates there is no overlap before merging, and we add the current interval to the result.\n\n##### 2. Identifying and Merging Overlapping Intervals:\nDuring the iteration, we identify overlap by comparing the endpoint of the new interval (`newInterval[1]`) with the starting point of the current interval (`intervals[i][0]`). When an overlap is detected, we merge the intervals by updating the start and end values of the new interval. The index (`i`) is then incremented to move to the next interval. After merging, the new interval is added to the result.\n\n##### 3. Identifying Non-Overlapping Intervals After Merging:\nAs we have already added the non-overlapping intervals before `newInterval` and merged overlapping ones, the remaining intervals after are guaranteed not to overlap with the newly merged interval. We simply add these remaining intervals to the result.\n\nThe following slideshow illustrates how the linear search algorithm is employed:\n\n!?!../Documents/57/57_LS.json:945,480!?!\n\n#### Algorithm\n\n- Initialize variables `n` and `i` to store the size of intervals and the current index, respectively, and an empty array `res` to store the result.\n- Case 1: No Overlap Before Insertion:\n    - Loop through intervals while `i` is less than `n` and the current interval's endpoint (`intervals[i][1]`) is less than the new interval's start point (`newInterval[0]`).\n    - Add the current interval from intervals to the `res` array.\n    - Increment `i` to move to the next interval.\n- Case 2: Overlap and Merge:\n    - Loop through intervals while `i` is less than `n` and the new interval's endpoint (`newInterval[1]`) is greater than or equal to the current interval's start point (`intervals[i][0]`).\n    - Update the newInterval's start point to the minimum of its current start and the current interval's start.\n    - Update the newInterval's endpoint to the maximum of its current end and the current interval's end.\n    - This essentially merges overlapping intervals into a single larger interval.\n    - Increment `i` to move to the next interval.\n- Add the updated `newInterval` to the `res` array, representing the merged interval.\n- Case 3: No overlap after insertion:\n    - Loop through the remaining intervals (from index `i`) and add them to the `res` array.\n        - This includes intervals that occur after the new interval and those that don't overlap, as they have already been correctly inserted in the previous iterations (previous two cases).\n- Return the `res` array containing all intervals with the new interval inserted correctly.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/XFeK8AcX/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XFeK8AcX\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of intervals.\n\n* Time complexity: $O(N)$\n\n    We iterate through the intervals once, and each interval is considered and processed only once.\n\n* Space complexity: $O(1)$\n\n    We only use the result (`res`) array to store output, so this could be considered $O(1)$.\n\n---\n\n### Approach 2: Binary Search\n\n#### Intuition\n\nTo apply binary search to a problem, a crucial requirement is that the input should have a monotonically increasing or decreasing nature. In our given scenario, it is explicitly stated that the input is already sorted with respect to the start value, indicating a monotonically increasing order. Therefore, we can confidently consider applying binary search.\n\n##### 1. Finding the Insertion Position\nAs the intervals are sorted by start value, we perform a binary search comparing the starting point of the current interval (`intervals[mid][0]`) with the starting point of the new interval (`target`). If `intervals[mid][0]` is less than the target, it indicates that the insertion point should be to the right of the current position. Consequently, we update `left` to `mid + 1`. If it's greater, the insertion point should be to the left, so we update `right` to `mid - 1`. This process continues until `left` becomes greater than `right`, revealing the correct insertion position.\n\n##### 2. Handling Merging\n1. If `res` is empty or the end of the last interval in `res` is less than the starting point of the current interval, it indicates there is no overlap before merging. The current interval is directly added to `res` in such cases.\n2. If an overlap is detected, signifying the need for merging, the current interval is merged with the last interval in `res`. The end of the last interval in `res` is updated to the maximum of its current end and the end of the current interval.\n\nThe following slideshow illustrates how the binary search algorithm is employed:\n\n!?!../Documents/57/57_BS.json:930,315!?!\n\n#### Algorithm\n\n- If `intervals` is empty, it means there are no existing intervals, so we can simply return a array containing the `newInterval`.\n- Perform a binary search to find the correct position to insert the new interval in the `intervals` array. It updates the values of `left` and `right` based on the comparison of the target value with the first element of the interval at the middle index.\n    - Initialize the variables `target` with the starting point of `newInterval` (i.e., `newInterval[0]`), `left` with 0, and `right` with `n - 1` to define the search space in the `intervals` array.\n    - Perform a binary search by repeatedly dividing the search space in half until `left` is greater than `right`.\n    - Calculate the middle index `mid` as the average of `left` and `right`.\n    - If the start of the interval at index `mid` is less than the target value, update `left` to `mid + 1` to search the right half of the search space. Otherwise, update `right` to `mid - 1` to search the left half of the search space.\n    - The search updates `left` and `right` until they converge to the correct position. Repeat until `left` is greater than `right`.\n- Use `intervals.insert(intervals.begin() + left, newInterval)` to insert the `newInterval` at the correct position.\n- Initialize an empty array `res` to store the result.\n- Iterate through the sorted intervals.\n    - Check if `res` is empty or if the end of the last interval in `res` is less than the start of the current interval. If either condition is true, add the current interval to `res`.\n    - If there is an overlap, update the endpoint of the last interval in `res` to cover the current interval. This step ensures that non-overlapping intervals are added directly, and overlapping intervals are merged.\n- The final merged and inserted intervals are stored in the `res` array, which is then returned.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Rg6hYgzg/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Rg6hYgzg\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of intervals.\n\n* Time complexity: $O(N)$\n\n    The binary search for finding the position to insert the `newInterval` has a time complexity of $O(\\log N)$. However, the insertion of the `newInterval` into the list may take $O(N)$ time in the worst case, as it could involve shifting elements within the list. Consequently, the overall time complexity is $O(N + \\log N)$, which simplifies to $O(N)$.\n\n* Space complexity: $O(N)$\n\n    We use the additional space to store the result (`res`) and perform calculations using `res,` so it does count towards the space complexity. In the worst case, the size of `res` will be proportional to the number of intervals in the input list.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

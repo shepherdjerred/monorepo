@@ -1,0 +1,141 @@
+{
+  "questionId": "645",
+  "questionFrontendId": "645",
+  "title": "Set Mismatch",
+  "titleSlug": "set-mismatch",
+  "difficulty": "Easy",
+  "content": "<p>You have a set of integers <code>s</code>, which originally contains all the numbers from <code>1</code> to <code>n</code>. Unfortunately, due to some error, one of the numbers in <code>s</code> got duplicated to another number in the set, which results in <strong>repetition of one</strong> number and <strong>loss of another</strong> number.</p>\n\n<p>You are given an integer array <code>nums</code> representing the data status of this set after the error.</p>\n\n<p>Find the number that occurs twice and the number that is missing and return <em>them in the form of an array</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> nums = [1,2,2,4]\n<strong>Output:</strong> [2,3]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> nums = [1,1]\n<strong>Output:</strong> [1,2]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= nums.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findErrorNums\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer[]\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"716.7K\", \"totalSubmission\": \"1.6M\", \"totalAcceptedRaw\": 716702, \"totalSubmissionRaw\": 1628534, \"acRate\": \"44.0%\"}",
+  "likes": 5438,
+  "dislikes": 1377,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find the Duplicate Number\", \"titleSlug\": \"find-the-duplicate-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,2,4]",
+    "[1,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"github\", \"name\": \"Github\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> findErrorNums(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] findErrorNums(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findErrorNums(self, nums: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findErrorNums(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number[]}\n */\nvar findErrorNums = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findErrorNums(nums: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] FindErrorNums(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* findErrorNums(int* nums, int numsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findErrorNums(nums []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findErrorNums(nums: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findErrorNums(_ nums: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_error_nums(nums: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer[]}\ndef find_error_nums(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer[]\n     */\n    function findErrorNums($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> findErrorNums(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findErrorNums(nums: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_error_nums(nums :: [integer]) :: [integer]\n  def find_error_nums(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_error_nums(Nums :: [integer()]) -> [integer()].\nfind_error_nums(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-error-nums nums)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "224",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\nThe most naive solution is to consider each number from $1$ to $n$, and traverse over the whole $nums$ array to check if the current number occurs twice in $nums$\nor doesn't occur at all. We need to set the duplicate number, $dup$ and the missing number, $missing$, appropriately in such cases respectively.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/bwUHEF4k/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"bwUHEF4k\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n^2)$. We traverse over the $nums$ array of size $n$ for each of the numbers from $1$ to $n$.\n\n* Space complexity : $O(1)$. Constant extra space is used.\n<br>\n<br>\n\n---\n\n### Approach 2: Better Brute Force\n\nIn the last approach, we continued the search process, even when we've already found the duplicate and the missing number. But, as per the problem statement, \nwe know that only one number will be repeated and only one number will be missing. Thus, we can optimize the last approach to some extent, by stopping \nthe search process as soon as we find these two required numbers.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Jcwrs8t2/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"Jcwrs8t2\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n^2)$. We traverse over the $nums$ array of size $n$ for each of the numbers from $1$ to $n$, in the worst case.\n\n* Space complexity : $O(1)$. Constant extra space is used.\n<br>\n<br>\n\n---\n\n### Approach 3: Using Sorting\n\n#### Algorithm\n\nOne way to further optimize the last approach is to sort the given $nums$ array. This way, the numbers which are equal will always lie together. \nFurther, we can easily identify the missing number by checking if every two consecutive elements in the sorted $nums$ array are just one count apart or not.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/emUXqgH6/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"emUXqgH6\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n\\log n)$. Sorting takes $O(n\\log n)$ time.\n\n* Space complexity : $O(\\log n)$. Sorting takes $O(\\log n)$ space. \n<br>\n<br>\n\n---\n\n### Approach 4: Using Map\n\n#### Algorithm\n\nThe given problem can also be solved easily if we can somehow keep a track of the number of times each element of the $nums$ array occurs. One way to \ndo so is to make an entry for each element of $nums$ in a HashMap $map$. This $map$ stores the entries in the form $(num_i, count_i)$. Here, $num$ refers to\nthe $i^{th}$ element in $nums$ and $count_i$ refers to the number of times this element occurs in $nums$.\n  Whenever, the same element occurs again, we can increment the count corresponding to the \nsame. \n\nAfter this, we can consider every number from $1$ to $n$, and check for its presence in $map$. If it isn't present, we can update the $missing$ variable \nappropriately. But, if the $count$ corresponding to the current number is $2$, we can update the $dup$ variable with the current number.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/kpoeDXpW/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"kpoeDXpW\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n)$. Traversing over $nums$ of size $n$ takes $O(n)$ time. Considering each number from $1$ to $n$ also takes $O(n)$ time.\n\n* Space complexity : $O(n)$. $map$ can contain at most $n$ entries for each of the numbers from $1$ to $n$.\n<br>\n<br>\n\n---\n\n### Approach 5: Using Extra Array\n\n#### Algorithm\n\nIn the last approach, we make use of a $map$ to store the elements of $nums$ along with their corresponding counts. But, we can note, that each entry in $map$ \nrequires two entries. Thus, putting up $n$ entries requires $2n$ space actually. We can reduce this space required to $n$ by making use of an array, $arr$ instead.\nNow, the indices of $arr$ can be used instead of storing the elements again. Thus, we make use of $arr$ in such a way that, $arr[i]$ is used to store \nthe number of occurences of the element $i+1$. The rest of the process remains the same as in the last approach.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/j2iHdWN2/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"j2iHdWN2\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n)$. Traversing over $nums$ of size $n$ takes $O(n)$ time. Considering each number from $1$ to $n$ also takes $O(n)$ time.\n\n* Space complexity : $O(n)$. $arr$ can contain at most $n$ elements for each of the numbers from $1$ to $n$.\n<br>\n<br>\n\n---\n\n### Approach 6: Using Constant Space\n\n#### Algorithm\n\nWe can save the space used in the last approach, if we can somehow, include the information regarding the duplicacy of an element or absence of an element\n in the $nums$ array. Let's see how this can be done.\n \n We know that all the elements in the given $nums$ array are positive, and lie in the range $1$ to $n$ only. Thus, we can pick up each element $i$ \n from $nums$. For every number $i$ picked up, we can invert the element at the index $\\left|i\\right|$. By doing so,  if one of the elements $j$ occurs twice, \nwhen this number is encountered the second time,  the element $nums[\\left|i\\right|]$ will be found to be negative. \nThus, while doing the inversions, we can check if a number found is already negative, to find the duplicate number.\n \n After the inversions have been done, if all the elements in $nums$ are present correctly, the resultant $nums$ array will have all the elements as \n negative now. But, if one of the numbers, $j$ is missing, the element at the $j^{th}$ index will be positive. This  can be used to determine the missing number.\n \n #### Implementation\n\n<iframe src=\"https://leetcode.com/playground/bwXmHhTt/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"bwXmHhTt\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n)$. Two traversals over the $nums$ array of size $n$ are done.\n\n* Space complexity : $O(1)$. Constant extra space is used.\n<br>\n<br>\n\n---\n\n### Approach 7: Using XOR\n\n#### Algorithm\n\nBefore we dive into the solution to this problem, let's consider a simple problem. Consider an array with $n-1$ elements containing numbers from $1$ to $n$ with one number missing out of them. Now, how to we find out this missing element. One of the solutions is to take the XOR of all the elements of this array with all the numbers from $1$ to $n$. By doing so, we get the required missing number. This works because XORing a number with itself results in a 0 result. Thus, only the number which is missing can't get cancelled with this XORing.\n\nNow, using this idea as the base, let's take it a step forward and use it for the current problem. By taking the XOR of all the elements of the given $nums$ array with all the numbers from $1$ to $n$, we will get a result, $xor$, as $x \\oplus y$. Here, $x$ and $y$ refer to the repeated and the missing term in the given $nums$ array. This happens on the same grounds as in the first problem discussed above.\n\nNow, in the resultant $xor$, we'll get a 1 in the binary representation only at those bit positions which have a 1 in one out of the numbers $x$ and $y$, and a 0 at the same bit position in the other one. In the current solution, we consider the rightmost bit which is 1 in the $xor$, although any bit would work. Let's say, this position is called the $rightmostbit$. \n\nIf we divide the elements of the given $nums$ array into two parts such that the first set contains the elements which have a 1 at the $rightmostbit$ position and the second set contains the elements having a 0 at the same position, we'll get one out of $x$ or $y$ in one set and the other one in the second set. Now, our problem has reduced somewhat to the simple problem discussed above.\n\nTo solve this reduced problem, we can find out the elements from $1$ to $n$ and consider them as a part of the previous sets only, with the allocation of the set depending on a 1 or 0 at the $righmostbit$ position. \n\nNow, if we do the XOR of all the elements of the first set, all the elements will result in an XOR of 0, due to cancellation of the similar terms in both $nums$ and the numbers $(1:n)$, except one term, which is either $x$ or $y$. \n\nFor the other term, we can do the XOR of all the elements in the second set as well.\n\nConsider the example `[1 2 4 4 5 6]`\n\n![XOR](../Figures/645_Set_Mismatch.PNG)\n\n\nOne more traversal over the $nums$ can be used to identify the missing and the repeated number out of the two numbers found.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3i8UGTa3/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3i8UGTa3\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n)$. We iterate over $n$ elements five times.\n\n* Space complexity : $O(1)$. Constant extra space is used.\n<br>\n<br>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

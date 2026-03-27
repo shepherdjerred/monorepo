@@ -1,0 +1,146 @@
+{
+  "questionId": "594",
+  "questionFrontendId": "594",
+  "title": "Longest Harmonious Subsequence",
+  "titleSlug": "longest-harmonious-subsequence",
+  "difficulty": "Easy",
+  "content": "<p>We define a harmonious array as an array where the difference between its maximum value and its minimum value is <b>exactly</b> <code>1</code>.</p>\n\n<p>Given an integer array <code>nums</code>, return the length of its longest harmonious <span data-keyword=\"subsequence-array\">subsequence</span> among all its possible subsequences.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,3,2,2,5,2,3,7]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">5</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The longest harmonious subsequence is <code>[3,2,2,2,3]</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,2,3,4]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The longest harmonious subsequences are <code>[1,2]</code>, <code>[2,3]</code>, and <code>[3,4]</code>, all of which have a length of 2.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,1,1,1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>No harmonic subsequence exists.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findLHS\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"381.2K\", \"totalSubmission\": \"590.9K\", \"totalAcceptedRaw\": 381152, \"totalSubmissionRaw\": 590902, \"acRate\": \"64.5%\"}",
+  "likes": 2838,
+  "dislikes": 351,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,3,2,2,5,2,3,7]",
+    "[1,2,3,4]",
+    "[1,1,1,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"zs-associates\", \"name\": \"ZS Associates\"}, {\"timesEncountered\": 2, \"slug\": \"liveramp\", \"name\": \"LiveRamp\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findLHS(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findLHS(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findLHS(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findLHS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar findLHS = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findLHS(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindLHS(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findLHS(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findLHS(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findLHS(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findLHS(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_lhs(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef find_lhs(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function findLHS($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findLHS(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findLHS(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_lhs(nums :: [integer]) :: integer\n  def find_lhs(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_lhs(Nums :: [integer()]) -> integer().\nfind_lhs(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-lhs nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "141",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach 1: Brute Force\n\nIn the brute force solution, we consider every possible subsequence that can be formed using the elements of the given array. For every subsequence, we find the maximum and minimum values in the subsequence. If the difference between the maximum and the minimum values obtained is 1, it means the current subsequence forms a harmonious subsequence. Thus, we can consider the number of elements in this subsequence to be compared with the length of the last longest harmonious subsequence. \n\nIn order to obtain all the subseqeuences possible, we make use of binary number representation of decimal numbers. For a binary number of size $$n$$, a total of $$2^n$$ different binary numbers can be generated. We generate all these binary numbers from $$0$$ to $$2^n$$. For every binary number generated, we consider the subsequence to be comprised of only those elements of $$nums$$ which have a 1 at the corresponding position in the current binary number. The following figure shows an example of the way the elements of $$nums$$ are considered in the current subsequence.\n\n![Harmonic_Subsequence](../Figures/594_Harmonic_Subsequence_Binary.PNG)\n\n<iframe src=\"https://leetcode.com/playground/AtCTNsAV/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"AtCTNsAV\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(2^n)$$. Number of subsequences generated will be $$2^n$$.\n\n* Space complexity : $$O(1)$$. Constant space required.\n<br>\n<br>\n\n---\n### Approach 2: Better Brute Force\n\n**Algorithm**\n\nIn the last approach, we created every possible subsequence, and for every such subsequence, we found out if it satisfies the harmonicity condition. Instead of doing this, we can do as follows. We can consider every element of the given $$nums$$ array one by one. For $$nums[i]$$ chosen to be the current element, we determine the $$count$$ of all the elements in the $$nums$$ array, which satisfy the harmonicity condition with $$nums[i]$$, i.e. the $$count$$ of all such $$nums[j]$$ satisfying $$nums[i] == nums[j]$$ or $$nums[i] == nums[j] + 1$$. When we reach the end of the array for $$nums[i]$$ being the current element, we compare this $$count$$ obtained with the result obtained from the previous traversals and update the result appropriately. When all the elements of the array have been chosen as the element to be chosen as the base for harmonicity check, we get the required length of the longest harmonic subsequence.\n\nThe following animation illustrates the process:\n\n!?!../Documents/594_Harmonic_Subsequence_1.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/JfEQyRWt/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"JfEQyRWt\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^2)$$. Two nested loops are there.\n\n* Space complexity : $$O(1)$$. Constant space required.\n<br>\n<br>\n\n---\n### Approach 3: Using Sorting\n\n**Algorithm**\n\nSince we are concerned only with the count of elements which are at a difference of 1, we can use sorting to our advantage. If we sort the given $$nums$$ array, the related elements will get arranged close to each other. Thus, we can traverse over the sorted array, and find the count of similar elements and elements one larger than the current ones, which occur consecutively(all the similar elements will be lying consecutively now). Initially, this value is stored in $$prev\\_count$$ variable. Then, if we encounter an element which is just 1 larger than the last elements, we count the occurences of such elements as well. This value is stored in $$count$$ variable. \n\nThus, now for the harmonic subsequence comprised of only these two elements is a subsequence of length $$count + prev\\_count$$. This result is stored in $$res$$ for each subsequence found. When we move forward to considering the next set of similar consecutive elements, we need to update the $$prev\\_count$$ with the $$count$$'s value, since now $$count$$ will act as the count of the elements 1 lesser than the next elements encountered. The value of $$res$$ is always updated to be the larger of previous $$res$$ and the current $$count + prev\\_count$$ value.\n\nWhen we are done traversing over the whole array, the value of $$res$$ gives us the required result.\n\n<iframe src=\"https://leetcode.com/playground/3MbXC4Hy/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"3MbXC4Hy\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n\\log n)$$. Sorting takes $$O(n\\log n)$$ time.\n\n* Space complexity : $$O(\\log n)$$. $$\\log n$$ space is required by sorting in average case.\n<br>\n<br>\n\n---\n### Approach 4: Using HashMap\n\n**Algorithm**\n\nIn this approach, we make use of a hashmap $$map$$ which stores the number of times an element occurs in the array along with the element's value in the form $$(num: count\\_num)$$, where $$num$$ refers to an element in the array and $$count\\_num$$ refers to the number of times this $$num$$ occurs in the $$nums$$ array. We traverse over the $$nums$$ array and fill this $$map$$ once.\n\nAfter this, we traverse over the keys of the $$map$$ created. For every key of the $$map$$ considered, say $$key$$, we find out if the map contains the $$key + 1$$. Such an element is found, since only such elements can be counted for the harmonic subsequence if $$key$$ is considered as one of the element of the harmonic subsequence. We need not care about $$key - 1$$, because if $$key$$ is present in the harmonic subsequence, at one time either $$key + 1$$ or $$key - 1$$ only could be included in the harmonic subsequence. The case of $$key - 1$$ being in the harmonic subsequence will automatically be considered, when $$key - 1$$ is encountered as the current key. \n\nNow, whenver we find that $$key + 1$$ exists in the keys of $$map$$, we determine the count of the current harmonic subsequence as $$count_{key} + count_{key+1}$$, where $$count_i$$ refers to the value corresponding to the key $$i$$ in $$map$$, which reprents the number of times $$i$$ occurs in the array $$nums$$.\n\nLook at the animation below for a pictorial view of the process:\n\n!?!../Documents/594_Harmonic_Subsequence_2.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/H3sgwsL2/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"H3sgwsL2\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. One loop is required to fill $$map$$ and one for traversing the $$map$$.\n\n* Space complexity : $$O(n)$$. In worst case map size grows upto size $$n$$.\n<br>\n<br>\n\n---\n### Approach 5: In Single Loop\n\n**Algorithm**\n\nInstead of filling the $$map$$ first and then traversing over the $$map$$ to determine the lengths of the harmonic subsequences encountered, we can traverse over the $$nums$$ array, and while doing the traversals, we can determine the lengths of the harmonic subsequences possible till the current index of the $$nums$$ array. \n\nThe method of finding the length of harmonic subsequence remains the same as the last approach. But, this time, we need to consider the existence of both $$key + 1$$ and $$key - 1$$ exclusively and determine the counts corresponding to both the cases. This is needed now because it could be possible that $$key$$ has already been added to the $$map$$ and later on $$key - 1$$ is encountered. In this case, if we consider the presence of $$key + 1$$ only, we'll go in the wrong direction.\n\nThus, we consider the $$count$$s corresponding to both the cases separately for every $$key$$ and determine the maximum out of them. \nThus, now the same task can be done only in a single traveral of the $$nums$$ array.\n\nSee the animation below for understanding the process:\n\n!?!../Documents/594_Harmonic_Subsequence_3.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/PUva27V6/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"PUva27V6\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. Only one loop is there.\n\n* Space complexity : $$O(n)$$. $$map$$ size grows upto size $$n$$.\n<br>\n<br>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "questionId": "131",
+  "questionFrontendId": "131",
+  "title": "Palindrome Partitioning",
+  "titleSlug": "palindrome-partitioning",
+  "difficulty": "Medium",
+  "content": "<p>Given a string <code>s</code>, partition <code>s</code> such that every <span data-keyword=\"substring-nonempty\">substring</span> of the partition is a <span data-keyword=\"palindrome-string\"><strong>palindrome</strong></span>. Return <em>all possible palindrome partitioning of </em><code>s</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> s = \"aab\"\n<strong>Output:</strong> [[\"a\",\"a\",\"b\"],[\"aa\",\"b\"]]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> s = \"a\"\n<strong>Output:</strong> [[\"a\"]]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 16</code></li>\n\t<li><code>s</code> contains only lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"partition\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<list<string>>\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.3M\", \"totalSubmission\": \"1.8M\", \"totalAcceptedRaw\": 1321185, \"totalSubmissionRaw\": 1789462, \"acRate\": \"73.8%\"}",
+  "likes": 14244,
+  "dislikes": 572,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Palindrome Partitioning II\", \"titleSlug\": \"palindrome-partitioning-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Palindrome Partitioning IV\", \"titleSlug\": \"palindrome-partitioning-iv\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Non-overlapping Palindrome Substrings\", \"titleSlug\": \"maximum-number-of-non-overlapping-palindrome-substrings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"aab\"",
+    "\"a\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"coupang\", \"name\": \"Coupang\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}]}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<string>> partition(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<String>> partition(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def partition(self, s: str) -> List[List[str]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def partition(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: List[List[str]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {string[][]}\n */\nvar partition = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function partition(s: string): string[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<string>> Partition(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nchar*** partition(char* s, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func partition(s string) [][]string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun partition(s: String): List<List<String>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func partition(_ s: String) -> [[String]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn partition(s: String) -> Vec<Vec<String>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {String[][]}\ndef partition(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return String[][]\n     */\n    function partition($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<String>> partition(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def partition(s: String): List[List[String]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec partition(s :: String.t) :: [[String.t]]\n  def partition(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec partition(S :: unicode:unicode_binary()) -> [[unicode:unicode_binary()]].\npartition(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (partition s)\n  (-> string? (listof (listof string?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1012",
+    "content": "[TOC]\n\n## Solution\n---\n\n### Overview\n\nThe aim is to partition the string into all possible palindrome combinations. To achieve this, we must generate all possible substrings of a string by partitioning at every index until we reach the end of the string. Example, `abba` can be partitioned as `[\"a\",\"ab\",\"abb\",\"abba\"]`. Each generated substring is considered as a potential candidate if it a [palindrome](https://en.wikipedia.org/wiki/Palindrome).\n\nLet's look at a few approaches to implement this idea.\n\n---\n\n### Approach 1: Backtracking\n\n**Intuition**\n\nThe first idea is to generate all possible substrings of a given string and expand each possibility if it is a potential candidate. The first thing that comes to mind is [Depth First Search](https://en.wikipedia.org/wiki/Depth-first_search). In Depth First Search, we recursively expand potential candidates until the defined goal is achieved. After that, we backtrack to explore the next potential candidate.\n\n[Backtracking](https://en.wikipedia.org/wiki/Backtracking) incrementally build the candidates for the solution and discards the candidates (backtrack) if they doesn't satisfy the condition.\n\nThe backtracking algorithms consists of the following steps:\n\n- _Choose_: Choose the potential candidate. Here, our potential candidates are all substrings that could be generated from the given string.\n\n- _Constraint_: Define a constraint that must be satisfied by the chosen candidate. In this case, the constraint is that the string must be a _palindrome_.\n\n- _Goal_: We must define the goal that determines if have found the required solution and we must backtrack. Here, our goal is achieved if we have reached the end of the string.\n\n**Algorithm**\n\nIn the backtracking algorithm, we recursively traverse over the string in depth-first search fashion. For each recursive call, the beginning index of the string is given as $$\\text{start}$$.\n\n1) Iteratively generate all possible substrings beginning at index $$\\text{start}$$. The index $$\\text{end}$$ increments from $$\\text{start}$$ until the end of the string.\n\n2) For each of the substrings generated, check if it is a palindrome.\n\n3) If the substring is a palindrome, the substring is a potential candidate. Add the substring to the $$\\text{currentList}$$ and perform a depth-first search on the remaining substring. If the current substring ends at index $$\\text{end}$$, $$\\text{end}+1$$ becomes the $$\\text{start}$$ index for the next recursive call.\n\n4) Backtrack if $$\\text{start}$$ index is greater than or equal to the string length and add the $$\\text{currentList}$$ to the result.\n\n\n!?!../Documents/131_LIS.json:1772,888!?!\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/FWW8Eqgj/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FWW8Eqgj\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$\\mathcal{O}(N \\cdot 2^{N})$$, where $$N$$ is the length of string $$s$$. This is the worst-case time complexity when all the possible substrings are palindrome.\n\nExample, if s is `aaa`, the recursive tree can be illustrated as follows:\n\n![img](../Figures/131/time_complexity.png)\n\n\nHence, there could be $$2^{N}$$ possible substrings in the worst case. For each substring, it takes $$\\mathcal{O}(N)$$ time to generate the substring and determine if it is a palindrome or not. This gives us a time complexity of $$\\mathcal{O}(N \\cdot 2^{N})$$\n\n- Space Complexity: $$\\mathcal{O}(N)$$, where $$N$$ is the length of the string $$s$$. This space will be used to store the recursion stack. For s = `aaa`, the maximum depth of the recursive call stack is 3 which is equivalent to $$N$$.\n\n---\n\n### Approach 2: Backtracking with Dynamic Programming\n\n**Intuition**\n\nThis approach uses a similar backtracking algorithm as discussed in _Approach 1_. But, the previous approach performs one extra iteration to determine if a given substring is a palindrome or not. Here, we are repeatedly iterating over the same substring multiple times and the result is always the same. There are [overlapping subproblems](https://en.wikipedia.org/wiki/Overlapping_subproblems) and we could further optimize the approach by using dynamic programming to determine if a string is a palindrome in constant time. Let's understand the algorithm in detail.\n\n**Algorithm**\n\nA given string $$s$$ starting at index $$\\text{start}$$ and ending at index $$\\text{end}$$ is a palindrome if the following conditions are satisfied:\n1) The characters at $$\\text{start}$$ and $$\\text{end}$$ indexes are equal.\n2) The substring starting at index $$\\text{start}+1$$ and ending at index $$\\text{end}-1$$ is a palindrome.\n\n![img](../Figures/131/palindrome_dp.png)\n\nLet $$N$$ be the length of the string.\nTo determine if a substring starting at index $$\\text{start}$$ and ending at index $$\\text{end}$$ is a palindrome or not, we use a 2 Dimensional array $$\\text{dp}$$ of size $$N \\cdot N$$ where,\n\n$$\\text{dp[start][end]} = \\text{true}$$, if the substring beginning at index $$\\text{start}$$ and ending at index $$\\text{end}$$ is a palindrome.\n\nOtherwise, $$\\text{dp[start][end] }== \\text{false}$$.\n\nAlso, we must update the $$\\text{dp}$$ array, if we find that the current string is a palindrome.  \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/J9BcvQWt/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"J9BcvQWt\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$\\mathcal{O}(N \\cdot 2^{N})$$, where $$N$$ is the length of the string $$s$$. In the worst case, there could be $$2^{N}$$ possible substrings and it will take $$\\mathcal{O}(N)$$ to generate each substring using `substr` as in _Approach 1_. However, we are eliminating one additional iteration to check if the substring is a palindrome or not.\n\n- Space Complexity: $$\\mathcal{O}(N \\cdot N)$$, where $$N$$ is the length of the string $$s$$. The recursive call stack would require $$N$$ space as in _Approach 1_. Additionally we also use 2 dimensional array $$\\text{dp}$$ of size $$N \\cdot N$$ .\n\nThis gives us a total space complexity of $$\\mathcal{O}(N \\cdot N)$$ + $$\\mathcal{O}(N)$$ = $$\\mathcal{O}(N \\cdot N)$$",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

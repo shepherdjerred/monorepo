@@ -1,0 +1,141 @@
+{
+  "questionId": "542",
+  "questionFrontendId": "542",
+  "title": "01 Matrix",
+  "titleSlug": "01-matrix",
+  "difficulty": "Medium",
+  "content": "<p>Given an <code>m x n</code> binary matrix <code>mat</code>, return <em>the distance of the nearest </em><code>0</code><em> for each cell</em>.</p>\n\n<p>The distance between two cells sharing a common edge is <code>1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/24/01-1-grid.jpg\" style=\"width: 253px; height: 253px;\" />\n<pre>\n<strong>Input:</strong> mat = [[0,0,0],[0,1,0],[0,0,0]]\n<strong>Output:</strong> [[0,0,0],[0,1,0],[0,0,0]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/24/01-2-grid.jpg\" style=\"width: 253px; height: 253px;\" />\n<pre>\n<strong>Input:</strong> mat = [[0,0,0],[0,1,0],[1,1,1]]\n<strong>Output:</strong> [[0,0,0],[0,1,0],[1,2,1]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == mat.length</code></li>\n\t<li><code>n == mat[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= m * n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>mat[i][j]</code> is either <code>0</code> or <code>1</code>.</li>\n\t<li>There is at least one <code>0</code> in <code>mat</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Note:</strong> This question is the same as 1765: <a href=\"https://leetcode.com/problems/map-of-highest-peak/description/\" target=\"_blank\">https://leetcode.com/problems/map-of-highest-peak/</a></p>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"updateMatrix\",\n  \"params\": [\n    {\n      \"name\": \"mat\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"885.8K\", \"totalSubmission\": \"1.7M\", \"totalAcceptedRaw\": 885796, \"totalSubmissionRaw\": 1654496, \"acRate\": \"53.5%\"}",
+  "likes": 10727,
+  "dislikes": 451,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Shortest Path to Get Food\", \"titleSlug\": \"shortest-path-to-get-food\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Remove Adjacent Ones in Matrix\", \"titleSlug\": \"minimum-operations-to-remove-adjacent-ones-in-matrix\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Difference Between Ones and Zeros in Row and Column\", \"titleSlug\": \"difference-between-ones-and-zeros-in-row-and-column\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,0,0],[0,1,0],[0,0,0]]",
+    "[[0,0,0],[0,1,0],[1,1,1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 8, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"graviton\", \"name\": \"Graviton\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& mat) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] updateMatrix(int[][] mat) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def updateMatrix(self, mat: List[List[int]]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def updateMatrix(self, mat):\n        \"\"\"\n        :type mat: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} mat\n * @return {number[][]}\n */\nvar updateMatrix = function(mat) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function updateMatrix(mat: number[][]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] UpdateMatrix(int[][] mat) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** updateMatrix(int** mat, int matSize, int* matColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func updateMatrix(mat [][]int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun updateMatrix(mat: Array<IntArray>): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func updateMatrix(_ mat: [[Int]]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn update_matrix(mat: Vec<Vec<i32>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} mat\n# @return {Integer[][]}\ndef update_matrix(mat)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $mat\n     * @return Integer[][]\n     */\n    function updateMatrix($mat) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> updateMatrix(List<List<int>> mat) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def updateMatrix(mat: Array[Array[Int]]): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec update_matrix(mat :: [[integer]]) :: [[integer]]\n  def update_matrix(mat) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec update_matrix(Mat :: [[integer()]]) -> [[integer()]].\nupdate_matrix(Mat) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (update-matrix mat)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1965",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWhenever you have a matrix where you can move between adjacent cells, you should immediately think about graphs. A matrix is a very common format for a graph to take.\n\nYou can treat each square as a node. There are edges between adjacent nodes. Here are some other graph problems that use matrices:\n\n- [Number of Islands](https://leetcode.com/problems/number-of-islands/)\n- [Pacific Atlantic Water Flow](https://leetcode.com/problems/pacific-atlantic-water-flow/)\n- [Max Area of Island](https://leetcode.com/problems/max-area-of-island/)\n- [Number of Enclaves](https://leetcode.com/problems/number-of-enclaves/)\n- [Number of Closed Islands](https://leetcode.com/problems/number-of-closed-islands/)\n\n---\n\n### Approach 1: Breadth-First Search (BFS)\n\n**Intuition**\n\nThe first thing you should think about when it comes to shortest path problems on graphs is BFS. If you're not familiar with BFS, we suggest you read the relevant [LeetCode Explore Card](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/).\n\nFirst of all, any cell with value `0` does not need to be changed. For a given cell with value `1`, we need to find the nearest `0`. We could perform a BFS starting from the cell and terminate once we find any `0`, as this `0` would be the closest one. By repeating this for every cell with value `1`, we would solve the problem.\n\nThe issue with this is that the constraints state that the matrix could have up to `10,000` cells. Think about a matrix where the entire matrix is `1` except for one of the corners. We would need to perform $$O(\\text{size})$$ BFS, with each BFS costing up to $$O(\\text{size})$$. In the worst-case scenario, the number of operations we would need is on the order of `100,000,000`, which would fail the time limit. We need to think of a more efficient way to perform the BFS.\n\nWhat if we started the BFS from `0` instead of `1`? Let's say that we started a BFS from a `1` and found that the nearest `0` was `x` steps away. Now, let's start a BFS from that `0` until we reach the original `1`. We will again find that the BFS takes `x` steps. Basically, it doesn't matter if we start from the `0` or `1`, both will result in the same distance.\n\nIf we start BFS from `1`, we can only find the shortest distance for that `1`. If we start BFS from `0`, we could find the shortest distance for many `1` at a time. So which `0` should we start from? The answer is all of them!\n\nLet's think about how BFS works. From a source node, we first visit all nodes at a distance of `1`. Next, we visit all nodes at a distance of `2`, then `3`, and so on. We can say a node at a distance of x from the source belongs to \"level x\". So the source is at level 0, the neighbors of the source are at level 1, the neighbors of those nodes are at level 2, and so on.\n\nWe are used to starting BFS from only one source node, i.e. level 0 only has one node. But there is nothing stopping us from having multiple nodes in level 0. If we start with multiple nodes in level 0, then the nodes in level 1 will be all the neighbors of the nodes in level 0. The nodes in level 2 will be all the neighbors of the nodes in level 1, and so on - the logic is identical. The following animation illustrates this idea (cells are labeled by their level):\n\n!?!../Documents/542.json:960,540!?!\n<br>\n\nAs you can see, we don't need to visit any node more than once, which drastically improves our time complexity.\n\n**Algorithm**\n\n1. Create a copy of `mat`, we'll call it `matrix`.\n2. Use a data structure `seen` to mark nodes we have already visited and a `queue` for the BFS.\n3. Put all nodes with `0` into the `queue`. We will also track the level/number of steps with each `queue` entry. Mark these nodes in `seen` as well.\n4. Perform the BFS:\n    - While `queue` is not empty, get the current `row, col, steps` from the `queue`.\n    - Iterate over the 4 directions. For each `nextRow, nextCol`, check if it is in bounds and not already visited in `seen`.\n    - If so, set `matrix[nextRow][nextCol] = steps + 1` and push `nextRow, nextCol, steps + 1` onto the `queue`. Also mark `nextRow, nextCol` in `seen`.\n5. Return `matrix`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/dw4gumNm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dw4gumNm\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$m$$ as the number of rows and $$n$$ as the number of columns,\n\n* Time complexity: $$O(m \\cdot n)$$\n\n    The BFS never visits a node more than once due to `seen`. Each node has at most 4 neighbors, so the work done at each node is $$O(1)$$. This gives us a time complexity of $$O(m \\cdot n)$$, the number of nodes.\n\n* Space complexity: $$O(m \\cdot n)$$\n\n    Note: some people may choose to modify the input `mat` instead of creating a copy `matrix` and using `seen`.\n\n    It is generally not considered good practice to modify the input, especially if it's an array as they are passed by reference. Even then, you would only be saving on **auxiliary space** - if you modify the input as part of your algorithm, you still need to count it towards the space complexity.\n\n    We could also elect to not count `matrix` as part of the space complexity as it serves only as the output and the output does not count towards the space complexity if it is not used in any logic during the algorithm.\n\n    There is a lot of nuance when it comes to these decisions and you should always clarify your decisions with the interviewer.\n\n    In our implementation, `seen` and `queue` uses $$O(m \\cdot n)$$ space regardless of interpretation, so that is our space complexity.\n    \n<br/>\n\n---\n\n### Approach 2: Dynamic Programming\n\n**Intuition**\n\nLet's say we're currently at `row, col`. What is the minimum distance for this cell? We must have arrived from one of the following:\n\n- `row - 1, col`\n- `row + 1, col`\n- `row, col - 1`\n- `row, col + 1`\n\nTherefore the minimum distance for `row, col` is 1 + the minimum distance from these four neighbors. This gives us a natural recurrence that we can solve using DP:\n\n`dp[row][col] = 1 + min(dp[row - 1][col], dp[row + 1][col], dp[row][col - 1], dp[row][col + 1])`\n\nWhere `dp[x][y]` is the minimum distance for the cell `mat[x][y]` and `mat[x][y] != 0`.\n\nThe issue with this recurrence is that we don't have an obvious order in which we should iterate over `mat`. We can't just iterate over each cell and check the four directions immediately because the other directions haven't been calculated yet. DP only works with values that have been previously calculated. So how do we calculate `dp`?\n\nLet's pretend that we can only move down and right (not allowed to move up and left). That would change the recurrence. To reach `row, col`, we must have arrived from one of:\n\n- `row - 1, col`\n- `row, col - 1`\n\nSo the new recurrence would be:\n\n`dp[row][col] = 1 + min(dp[row - 1][col], dp[row][col - 1])`\n\nIf we start at the top left and iterate row by row, column by column, we will correctly calculate `dp` for any paths that move down and right. Now, let's pretend that we can only move up and left (not allowed to move down and right). Again, this would change our recurrence:\n\n`dp[row][col] = 1 + min(dp[row + 1][col], dp[row][col + 1])`\n\nIf we start at the bottom right and iterate backward, we will correctly calculate `dp` for any paths that move up and left. Finally, `dp` is the answer!\n\n<details><summary><b>Click here to see proof of this algorithm's correctness if interested</b></summary>\n\nAssume we have a 2x2 matrix: `[a, b], [c, d]`. There are two possibilities:\n\n1. `a = 0`. On the first pass (moving down and right only), we can correctly calculate `dp`.\n2. `a = 1`. One of `b, c, d` must be `0`, since the constraints say there must be at least one `0`. No matter where the `0` is, we can calculate the correct distance for `d`, since it is in the bottom right. Now that we know the answer for `d`, in the second pass, we can calculate the answer for `b, c`, and with that we can calculate the answer of `a`.\n\nTherefore, `a, b, c, d` can always be calculated regardless of their initial values. This logic extends to any size matrix.\n\n</details>\n\n<br>\n\n**Algorithm**\n\n1. Create a copy of `mat`, we'll call it `dp`.\n2. Iterate row by row, column by column. At each `row, col`:\n    - Initialize `minNeighbor` to a large value. This represents the minimum value of `dp` from the cells we could have arrived from.\n    - Making sure to stay in bounds, check the two cells we could have arrived from: `row - 1, col` and `row, col - 1`.\n    - Update `minNeighbor` with their `dp` values.\n    - Set `dp[row][col] = minNeighbor + 1`.\n3. Iterate over `dp` again but in reverse order. At each `row, col`:\n    - Initialize `minNeighbor` to a large value.\n    - Making sure to stay in bounds, check the two cells we could have arrived from: `row + 1, col` and `row, col + 1`.\n    - Update `minNeighbor` with their `dp` values.\n    - If `minNeighbor + 1` is less than `dp[row][col]` (the minimum distance if we only considered down-right paths), then update it.\n4. Return `dp`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/bHKXqUcX/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bHKXqUcX\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$m$$ as the number of rows and $$n$$ as the number of columns,\n\n* Time complexity: $$O(m \\cdot n)$$\n\n    We iterate over $$m \\cdot n$$ cells twice, performing constant work at each iteration.\n\n* Space complexity: $$O(m \\cdot n)$$\n\n    As discussed above, some people may choose to reuse `mat` as `dp`.\n\n    A common misconception is that it would be $$O(1)$$ space. It would only be $$O(1)$$ **auxiliary space**, but as we are modifying the input and using it in the algorithm, it must be included in the space complexity. Again, it is not considered good practice to modify the input anyways, which is why we are creating `dp`, which uses $$O(m \\cdot n)$$ space.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

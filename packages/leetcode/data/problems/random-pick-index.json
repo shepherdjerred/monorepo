@@ -1,0 +1,135 @@
+{
+  "questionId": "398",
+  "questionFrontendId": "398",
+  "title": "Random Pick Index",
+  "titleSlug": "random-pick-index",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code> with possible <strong>duplicates</strong>, randomly output the index of a given <code>target</code> number. You can assume that the given target number must exist in the array.</p>\n\n<p>Implement the <code>Solution</code> class:</p>\n\n<ul>\n\t<li><code>Solution(int[] nums)</code> Initializes the object with the array <code>nums</code>.</li>\n\t<li><code>int pick(int target)</code> Picks a random index <code>i</code> from <code>nums</code> where <code>nums[i] == target</code>. If there are multiple valid i&#39;s, then each index should have an equal probability of returning.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;Solution&quot;, &quot;pick&quot;, &quot;pick&quot;, &quot;pick&quot;]\n[[[1, 2, 3, 3, 3]], [3], [1], [3]]\n<strong>Output</strong>\n[null, 4, 0, 2]\n\n<strong>Explanation</strong>\nSolution solution = new Solution([1, 2, 3, 3, 3]);\nsolution.pick(3); // It should return either index 2, 3, or 4 randomly. Each index should have equal probability of returning.\nsolution.pick(1); // It should return 0. Since in the array only nums[0] is equal to 1.\nsolution.pick(3); // It should return either index 2, 3, or 4 randomly. Each index should have equal probability of returning.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>-2<sup>31</sup> &lt;= nums[i] &lt;= 2<sup>31</sup> - 1</code></li>\n\t<li><code>target</code> is an integer from <code>nums</code>.</li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>pick</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n    \"classname\": \"Solution\",\r\n    \"constructor\": {\r\n        \"params\": [\r\n            {\r\n                \"name\": \"nums\",\r\n                \"type\": \"integer[]\"\r\n            },\r\n            {\r\n                \"type\": \"integer\",\r\n                \"name\": \"numsSize\",\r\n                \"lang\": \"c\",\r\n                \"value\": \"size_1\"\r\n            }\r\n        ]\r\n    },\r\n    \"methods\": [\r\n        {\r\n            \"name\" : \"pick\",\r\n            \"params\": [\r\n                {\r\n                  \"name\": \"target\",\r\n                  \"type\": \"integer\"\r\n                }\r\n            ],\r\n            \"return\": {\r\n                \"type\": \"integer\"\r\n            }\r\n        }\r\n    ],\r\n    \"systemdesign\": true,\r\n    \"params\": [\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        },\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        }\r\n    ],\r\n    \"return\": {\r\n        \"type\": \"list<String>\",\r\n        \"dealloc\": true\r\n    }\r\n}",
+  "stats": "{\"totalAccepted\": \"304.8K\", \"totalSubmission\": \"468.8K\", \"totalAcceptedRaw\": 304813, \"totalSubmissionRaw\": 468777, \"acRate\": \"65.0%\"}",
+  "likes": 1397,
+  "dislikes": 1309,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Linked List Random Node\", \"titleSlug\": \"linked-list-random-node\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Random Pick with Blacklist\", \"titleSlug\": \"random-pick-with-blacklist\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Random Pick with Weight\", \"titleSlug\": \"random-pick-with-weight\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"Solution\",\"pick\",\"pick\",\"pick\"]\n[[[1,2,3,3,3]],[3],[1],[3]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 8, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Reservoir Sampling",
+      "slug": "reservoir-sampling"
+    },
+    {
+      "name": "Randomized",
+      "slug": "randomized"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    Solution(vector<int>& nums) {\n        \n    }\n    \n    int pick(int target) {\n        \n    }\n};\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution* obj = new Solution(nums);\n * int param_1 = obj->pick(target);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n\n    public Solution(int[] nums) {\n        \n    }\n    \n    public int pick(int target) {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = new Solution(nums);\n * int param_1 = obj.pick(target);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n\n    def __init__(self, nums: List[int]):\n        \n\n    def pick(self, target: int) -> int:\n        \n\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution(nums)\n# param_1 = obj.pick(target)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n\n    def __init__(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        \"\"\"\n        \n\n    def pick(self, target):\n        \"\"\"\n        :type target: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution(nums)\n# param_1 = obj.pick(target)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n */\nvar Solution = function(nums) {\n    \n};\n\n/** \n * @param {number} target\n * @return {number}\n */\nSolution.prototype.pick = function(target) {\n    \n};\n\n/** \n * Your Solution object will be instantiated and called as such:\n * var obj = new Solution(nums)\n * var param_1 = obj.pick(target)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Solution {\n    constructor(nums: number[]) {\n        \n    }\n\n    pick(target: number): number {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * var obj = new Solution(nums)\n * var param_1 = obj.pick(target)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n\n    public Solution(int[] nums) {\n        \n    }\n    \n    public int Pick(int target) {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = new Solution(nums);\n * int param_1 = obj.Pick(target);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Solution;\n\n\nSolution* solutionCreate(int* nums, int numsSize) {\n    \n}\n\nint solutionPick(Solution* obj, int target) {\n    \n}\n\nvoid solutionFree(Solution* obj) {\n    \n}\n\n/**\n * Your Solution struct will be instantiated and called as such:\n * Solution* obj = solutionCreate(nums, numsSize);\n * int param_1 = solutionPick(obj, target);\n \n * solutionFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Solution struct {\n    \n}\n\n\nfunc Constructor(nums []int) Solution {\n    \n}\n\n\nfunc (this *Solution) Pick(target int) int {\n    \n}\n\n\n/**\n * Your Solution object will be instantiated and called as such:\n * obj := Constructor(nums);\n * param_1 := obj.Pick(target);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution(nums: IntArray) {\n\n    fun pick(target: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * var obj = Solution(nums)\n * var param_1 = obj.pick(target)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Solution {\n\n    init(_ nums: [Int]) {\n        \n    }\n    \n    func pick(_ target: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * let obj = Solution(nums)\n * let ret_1: Int = obj.pick(target)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Solution {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Solution {\n\n    fn new(nums: Vec<i32>) -> Self {\n        \n    }\n    \n    fn pick(&self, target: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * let obj = Solution::new(nums);\n * let ret_1: i32 = obj.pick(target);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Solution\n\n=begin\n    :type nums: Integer[]\n=end\n    def initialize(nums)\n        \n    end\n\n\n=begin\n    :type target: Integer\n    :rtype: Integer\n=end\n    def pick(target)\n        \n    end\n\n\nend\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution.new(nums)\n# param_1 = obj.pick(target)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n    /**\n     * @param Integer[] $nums\n     */\n    function __construct($nums) {\n        \n    }\n  \n    /**\n     * @param Integer $target\n     * @return Integer\n     */\n    function pick($target) {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * $obj = Solution($nums);\n * $ret_1 = $obj->pick($target);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n\n  Solution(List<int> nums) {\n    \n  }\n  \n  int pick(int target) {\n    \n  }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = Solution(nums);\n * int param1 = obj.pick(target);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Solution(_nums: Array[Int]) {\n\n    def pick(target: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * val obj = new Solution(nums)\n * val param_1 = obj.pick(target)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec init_(nums :: [integer]) :: any\n  def init_(nums) do\n    \n  end\n\n  @spec pick(target :: integer) :: integer\n  def pick(target) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Solution.init_(nums)\n# param_1 = Solution.pick(target)\n\n# Solution.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec solution_init_(Nums :: [integer()]) -> any().\nsolution_init_(Nums) ->\n  .\n\n-spec solution_pick(Target :: integer()) -> integer().\nsolution_pick(Target) ->\n  .\n\n\n%% Your functions will be called as such:\n%% solution_init_(Nums),\n%% Param_1 = solution_pick(Target),\n\n%% solution_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define solution%\n  (class object%\n    (super-new)\n    \n    ; nums : (listof exact-integer?)\n    (init-field\n      nums)\n    \n    ; pick : exact-integer? -> exact-integer?\n    (define/public (pick target)\n      )))\n\n;; Your solution% object will be instantiated and called as such:\n;; (define obj (new solution% [nums nums]))\n;; (define param_1 (send obj pick target))"
+    }
+  ],
+  "solution": null
+}

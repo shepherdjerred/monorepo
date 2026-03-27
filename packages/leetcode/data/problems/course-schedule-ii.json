@@ -1,0 +1,146 @@
+{
+  "questionId": "210",
+  "questionFrontendId": "210",
+  "title": "Course Schedule II",
+  "titleSlug": "course-schedule-ii",
+  "difficulty": "Medium",
+  "content": "<p>There are a total of <code>numCourses</code> courses you have to take, labeled from <code>0</code> to <code>numCourses - 1</code>. You are given an array <code>prerequisites</code> where <code>prerequisites[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> indicates that you <strong>must</strong> take course <code>b<sub>i</sub></code> first if you want to take course <code>a<sub>i</sub></code>.</p>\n\n<ul>\n\t<li>For example, the pair <code>[0, 1]</code>, indicates that to take course <code>0</code> you have to first take course <code>1</code>.</li>\n</ul>\n\n<p>Return <em>the ordering of courses you should take to finish all courses</em>. If there are many valid answers, return <strong>any</strong> of them. If it is impossible to finish all courses, return <strong>an empty array</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> numCourses = 2, prerequisites = [[1,0]]\n<strong>Output:</strong> [0,1]\n<strong>Explanation:</strong> There are a total of 2 courses to take. To take course 1 you should have finished course 0. So the correct course order is [0,1].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> numCourses = 4, prerequisites = [[1,0],[2,0],[3,1],[3,2]]\n<strong>Output:</strong> [0,2,1,3]\n<strong>Explanation:</strong> There are a total of 4 courses to take. To take course 3 you should have finished both courses 1 and 2. Both courses 1 and 2 should be taken after you finished course 0.\nSo one correct course order is [0,1,2,3]. Another correct ordering is [0,2,1,3].\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> numCourses = 1, prerequisites = []\n<strong>Output:</strong> [0]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= numCourses &lt;= 2000</code></li>\n\t<li><code>0 &lt;= prerequisites.length &lt;= numCourses * (numCourses - 1)</code></li>\n\t<li><code>prerequisites[i].length == 2</code></li>\n\t<li><code>0 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt; numCourses</code></li>\n\t<li><code>a<sub>i</sub> != b<sub>i</sub></code></li>\n\t<li>All the pairs <code>[a<sub>i</sub>, b<sub>i</sub>]</code> are <strong>distinct</strong>.</li>\n</ul>\n",
+  "hints": [
+    "This problem is equivalent to finding the topological order in a directed graph. If a cycle exists, no topological ordering exists and therefore it will be impossible to take all courses.",
+    "<a href=\"https://www.youtube.com/watch?v=ozso3xxkVGU\" target=\"_blank\">Topological Sort via DFS</a> - A great video tutorial (21 minutes) on Coursera explaining the basic concepts of Topological Sort.",
+    "Topological sort could also be done via <a href=\"http://en.wikipedia.org/wiki/Topological_sorting#Algorithms\" target=\"_blank\">BFS</a>."
+  ],
+  "metaData": "{\r\n  \"name\": \"findOrder\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"numCourses\",\r\n      \"type\": \"integer\"\r\n    },\r\n    {\r\n      \"name\": \"prerequisites\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer[]\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.7M\", \"totalSubmission\": \"3M\", \"totalAcceptedRaw\": 1668508, \"totalSubmissionRaw\": 3023757, \"acRate\": \"55.2%\"}",
+  "likes": 11931,
+  "dislikes": 378,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Course Schedule\", \"titleSlug\": \"course-schedule\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Alien Dictionary\", \"titleSlug\": \"alien-dictionary\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Height Trees\", \"titleSlug\": \"minimum-height-trees\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sequence Reconstruction\", \"titleSlug\": \"sequence-reconstruction\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Course Schedule III\", \"titleSlug\": \"course-schedule-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Parallel Courses\", \"titleSlug\": \"parallel-courses\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find All Possible Recipes from Given Supplies\", \"titleSlug\": \"find-all-possible-recipes-from-given-supplies\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Build a Matrix With Conditions\", \"titleSlug\": \"build-a-matrix-with-conditions\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Sort Array by Moving Items to Empty Space\", \"titleSlug\": \"sort-array-by-moving-items-to-empty-space\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2\n[[1,0]]",
+    "4\n[[1,0],[2,0],[3,1],[3,2]]",
+    "1\n[]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"anduril\", \"name\": \"Anduril\"}, {\"timesEncountered\": 2, \"slug\": \"netflix\", \"name\": \"Netflix\"}], \"six_months\": [{\"timesEncountered\": 8, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"arista-networks\", \"name\": \"Arista Networks\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 2, \"slug\": \"moloco\", \"name\": \"Moloco\"}], \"more_than_six_months\": [{\"timesEncountered\": 40, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 9, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 9, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 8, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 3, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 3, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}]}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> findOrder(int numCourses, vector<vector<int>>& prerequisites) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] findOrder(int numCourses, int[][] prerequisites) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findOrder(self, numCourses: int, prerequisites: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findOrder(self, numCourses, prerequisites):\n        \"\"\"\n        :type numCourses: int\n        :type prerequisites: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} numCourses\n * @param {number[][]} prerequisites\n * @return {number[]}\n */\nvar findOrder = function(numCourses, prerequisites) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findOrder(numCourses: number, prerequisites: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] FindOrder(int numCourses, int[][] prerequisites) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* findOrder(int numCourses, int** prerequisites, int prerequisitesSize, int* prerequisitesColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findOrder(numCourses int, prerequisites [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findOrder(numCourses: Int, prerequisites: Array<IntArray>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findOrder(_ numCourses: Int, _ prerequisites: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_order(num_courses: i32, prerequisites: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num_courses\n# @param {Integer[][]} prerequisites\n# @return {Integer[]}\ndef find_order(num_courses, prerequisites)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $numCourses\n     * @param Integer[][] $prerequisites\n     * @return Integer[]\n     */\n    function findOrder($numCourses, $prerequisites) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> findOrder(int numCourses, List<List<int>> prerequisites) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findOrder(numCourses: Int, prerequisites: Array[Array[Int]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_order(num_courses :: integer, prerequisites :: [[integer]]) :: [integer]\n  def find_order(num_courses, prerequisites) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_order(NumCourses :: integer(), Prerequisites :: [[integer()]]) -> [integer()].\nfind_order(NumCourses, Prerequisites) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-order numCourses prerequisites)\n  (-> exact-integer? (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "645",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/792774073\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n## Solution\n\nThis is a very common problem that some of us might face during college. We might want to take up a certain set of courses that interest us. However, as we all know, most of the courses do tend to have a lot of prerequisites associated with them. Some of these would be hard requirements whereas others would be simply `suggested` prerequisites which you may or may not take. However, for us to be able to have an all round learning experience, we should follow the suggested set of prerequisites. How does one decide what order of courses they should follow so as not to miss out on any subjects?\n\nAs mentioned in the problem statement, such a problem is a natural fit for graph based algorithms and we can easily model the elements in the problem statement as a graph. First of all, let's look at the graphical representation of the problem and it's components and then we will move onto the solutions.\n\nWe can represent the information provided in the question in the form of a graph.\n\n* Let $$G(V, E)$$ represent a `directed`, `unweighted` graph.\n* Each course would represent a vertex in the graph.\n* The edges are modeled after the prerequisite relationship between courses. So, we are given, that a pair such as $$[a, b]$$ in the question means the course `b` is a prerequisite for the course `a`. This can be represented as a `directed edge b ➔ a` in the graph.\n* The graph is a cyclic graph because there is a possibility of a cycle in the graph. If the graph would be acyclic, then an ordering of subjects as required in the question would `always` be possible. Since it's mentioned that such an ordering may not always be possible, that means we have a cyclic graph.\n\nLet's look at a sample graph representing a set of courses where such an ordering is possible and one where such an ordering is not possible. It will be easier to explain the approaches once we look at two sample graphs.\n\n<center>\n<img src=\"../Figures/210_Course_Schedule_2/Fig-1.png\">\n</center>\n\nFor the sample graph shown above, one of the possible ordering of courses is: `C6 ➔ C4 ➔ C1 ➔ C5 ➔ C2 ➔ C3` and another possible ordering of subjects is `C6 ➔ C4 ➔ C5 ➔ C1 ➔ C2 ➔ C3`. Now let's look at a graph where no such ordering of courses is possible.\n\n<center>\n<img src=\"../Figures/210_Course_Schedule_2/Fig-2.png\">\n</center>\n\nNote that the edges that have changed from the previous graph have been highlighted in red.\n\n> Clearly, the presence of a cycle in the graph shows us that a proper ordering of prerequisites is not possible at all. Intuitively, it is not possible to have e.g. two subjects S1 and S2 prerequisites of each other. Similar ideology applies to a larger cycle in the graph like we have above.\n\nSuch an ordering of subjects is referred to as a `Topological Sorted Order` and this is a common algorithmic problem in the graph domain. There are two approaches that we will be looking at in this article to solve this problem.\n<br>\n<br>\n\n---\n\n### Approach 1: Using Depth First Search\n\n#### Intuition\n\nSuppose we are at a node in our graph during the depth first traversal. Let's call this node `A`.\n\n> The way DFS would work is that we would consider all possible paths stemming from A before finishing up the recursion for A and moving onto other nodes. All the nodes in the paths stemming from the node A would have A as an ancestor. The way this fits in our problem is, all the courses in the paths stemming from the course A would have A as a prerequisite.\n\nNow we know how to get all the courses that have a particular course as a prerequisite. If a valid ordering of courses is possible, the course `A` would come before all the other set of courses that have it as a prerequisite. This idea for solving the problem can be explored using depth first search. Let's look at the pseudo-code before looking at the formal algorithm.\n\n<pre>\n➔ let S be a stack of courses\n➔ function dfs(node)\n➔     for each neighbor in adjacency list of node\n➔          dfs(neighbor)\n➔     add node to S\n</pre>\n\nLet's now look at the formal algorithm based on this idea.\n\n#### Algorithm\n\n1. Initialize a stack `S` that will contain the topologically sorted order of the courses in our graph.\n2. Construct the adjacency list using the edge pairs given in the input. An important thing to note about the input for the problem is that a pair such as `[a, b]` represents that the course `b` needs to be taken in order to do the course `a`. This implies an edge of the form `b ➔ a`. Please take note of this when implementing the algorithm.\n3. For each of the nodes in our graph, we will run a depth first search in case that node was not already visited in some other node's DFS traversal.\n4. Suppose we are executing the depth first search for a node `N`. We will recursively traverse all of the neighbors of node `N` which have not been processed before.\n5. Once the processing of all the neighbors is done, we will add the node `N` to the stack. We are making use of a stack to simulate the ordering we need. When we add the node `N` to the stack, all the nodes that require the node `N` as a prerequisites (among others) will already be in the stack.\n6. Once all the nodes have been processed, we will simply return the nodes as they are present in the stack from top to bottom.\n\nLet's look at an animated dry run of the algorithm on a sample graph before moving onto the formal implementations.\n\n<center>\n\n!?!../Documents/210_Anim1.json:640,370!?!\n\n</center>\n\n> An important thing to note about topologically sorted order is that there won't be just one ordering of nodes (courses). There can be multiple. For e.g. in the above graph, we could have processed the node \"D\" before we did \"B\" and hence have a different ordering.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4ATudvxw/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4ATudvxw\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity: $$O(V + E)$$ where $$V$$ represents the number of vertices and $$E$$ represents the number of edges.\nEssentially we iterate through each node and each vertex in the graph once and only once.\n\n* Space Complexity: $$O(V + E)$$.\n\n  - We use the adjacency list to represent our graph initially. The space occupied is defined by the number of edges because for each node as the key, we have all its adjacent nodes in the form of a list as the value. Hence, $$O(E)$$\n\n  - Additionally, we apply recursion in our algorithm, which in worst case will incur $$O(E)$$ extra space in the function call stack.\n\n  - To sum up, the overall space complexity is $$O(V + E)$$.\n\n\n---\n\n### Approach 2: Using Node Indegree\n\n#### Intuition\n\nThis approach is much easier to think about intuitively as will be clear from the following point/fact about topological ordering.\n\n> The first node in the topological ordering will be the node that doesn't have any incoming edges. Essentially, any node that has an in-degree of 0 can start the topologically sorted order. If there are multiple such nodes, their relative order doesn't matter and they can appear in any order.\n\nOur current algorithm is based on this idea. We first process all the nodes/course with 0 in-degree implying no prerequisite courses\nrequired. If we remove all these courses from the graph, along with their outgoing edges, we can find out the courses/nodes that should be processed next. These would again be the nodes with 0 in-degree. We can continuously do this until all the courses have been accounted for.\n\n#### Algorithm\n\n1. Initialize a queue, `Q` to keep a track of all the nodes in the graph with 0 in-degree.\n2. Iterate over all the edges in the input and create an adjacency list and also a map of node v/s in-degree.\n3. Add all the nodes with 0 in-degree to `Q`.\n4. The following steps are to be done until the `Q` becomes empty.\n    1. Pop a node from the `Q`. Let's call this node, `N`.\n    2. For all the neighbors of this node, `N`, reduce their in-degree by 1. If any of the nodes' in-degree reaches 0, add it to the `Q`.\n    3. Add the node `N` to the list maintaining topologically sorted order.\n    4. Continue from step 4.1.\n\nLet us now look at an animation depicting this algorithm and then we will get to the implementations.\n\n<center>\n\n!?!../Documents/210_Anim2.json:640,400!?!\n\n</center>\n\nAn important thing to note here is, using a queue is not a hard requirement for this algorithm. We can make use of a stack. That however, will give us a different ordering than what we might get from the queue because of the difference in access patterns between the two data-structures.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/oMxGnyBR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"oMxGnyBR\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity: $$O(V + E)$$ where $$V$$ represents the number of vertices and $$E$$ represents the number of edges. We pop each node exactly once from the zero in-degree queue and that gives us $$V$$. Also, for each vertex, we iterate over its adjacency list and in totality, we iterate over all the edges in the graph which gives us $$E$$. Hence, $$O(V + E)$$\n\n* Space Complexity: $$O(V + E)$$. The in-degree array requires $$O(V)$$ space. We use an intermediate queue data structure to keep all the nodes with 0 in-degree. In the worst case, there won't be any prerequisite relationship and the queue will contain all the vertices initially since all of them will have 0 in-degree. That gives us $$O(V)$$. Additionally, we also use the adjacency list to represent our graph initially. The space occupied is defined by the number of edges because for each node as the key, we have all its adjacent nodes in the form of a list as the value. Hence, $$O(E)$$. So, the overall space complexity is $$O(V + E)$$.\n\nKudos to people in the comments section and @himanshujain71](https://leetcode.com/himanshujain71) for bringing up a grave oversight on my part in the complexity analysis for the second approach!\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

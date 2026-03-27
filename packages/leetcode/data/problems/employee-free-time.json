@@ -1,0 +1,113 @@
+{
+  "questionId": "761",
+  "questionFrontendId": "759",
+  "title": "Employee Free Time",
+  "titleSlug": "employee-free-time",
+  "difficulty": "Hard",
+  "content": "<p>We are given a list <code>schedule</code> of employees, which represents the working time for each employee.</p>\r\n\r\n<p>Each employee has a list of non-overlapping <code>Intervals</code>, and these intervals are in sorted order.</p>\r\n\r\n<p>Return the list of finite intervals representing <b>common, positive-length free time</b> for <i>all</i> employees, also in sorted order.</p>\r\n\r\n<p>(Even though we are representing <code>Intervals</code> in the form <code>[x, y]</code>, the objects inside are <code>Intervals</code>, not lists or arrays. For example, <code>schedule[0][0].start = 1</code>, <code>schedule[0][0].end = 2</code>, and <code>schedule[0][0][0]</code> is not defined).&nbsp; Also, we wouldn&#39;t include intervals like [5, 5] in our answer, as they have zero length.</p>\r\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> schedule = [[[1,2],[5,6]],[[1,3]],[[4,10]]]\n<strong>Output:</strong> [[3,4]]\n<strong>Explanation:</strong> There are a total of three employees, and all common\nfree time intervals would be [-inf, 1], [3, 4], [10, inf].\nWe discard any intervals that contain inf as they aren&#39;t finite.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> schedule = [[[1,3],[6,7]],[[2,4]],[[2,5],[9,12]]]\n<strong>Output:</strong> [[5,6],[7,9]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= schedule.length , schedule[i].length &lt;= 50</code></li>\n\t<li><code>0 &lt;= schedule[i].start &lt; schedule[i].end &lt;= 10^8</code></li>\n</ul>\n",
+  "hints": [
+    "Take all the intervals and do an \"events\" (or \"line sweep\") approach - an event of (x, OPEN) increases the number of active intervals, while (x, CLOSE) decreases it.\r\n\r\nProcessing in sorted order from left to right, if the number of active intervals is zero, then you crossed a region of common free time."
+  ],
+  "metaData": "{\n  \"name\": \"employeeFreeTime\",\n  \"params\": [\n    {\n      \"name\": \"schedule\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"csharp\",\n    \"javascript\",\n    \"python3\",\n    \"golang\",\n    \"ruby\",\n    \"kotlin\",\n    \"scala\",\n    \"swift\",\n    \"php\",\n    \"typescript\",\n    \"rust\"\n  ],\n  \"manual\": true,\n  \"typescriptCustomType\" : \"class Interval {\\n    start: number;\\n    end: number;\\n    constructor(start: number, end: number) {\\n        this.start = start;\\n        this.end = end;\\n    }\\n}\"\n}",
+  "stats": "{\"totalAccepted\": \"177.2K\", \"totalSubmission\": \"243.6K\", \"totalAcceptedRaw\": 177247, \"totalSubmissionRaw\": 243558, \"acRate\": \"72.8%\"}",
+  "likes": 1953,
+  "dislikes": 149,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Merge Intervals\", \"titleSlug\": \"merge-intervals\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Interval List Intersections\", \"titleSlug\": \"interval-list-intersections\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[[1,2],[5,6]],[[1,3]],[[4,10]]]",
+    "[[[1,3],[6,7]],[[2,4]],[[2,5],[9,12]]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}, {\"timesEncountered\": 2, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 2, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 2, \"slug\": \"roblox\", \"name\": \"Roblox\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sweep Line",
+      "slug": "line-sweep"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/*\n// Definition for an Interval.\nclass Interval {\npublic:\n    int start;\n    int end;\n\n    Interval() {}\n\n    Interval(int _start, int _end) {\n        start = _start;\n        end = _end;\n    }\n};\n*/\n\nclass Solution {\npublic:\n    vector<Interval> employeeFreeTime(vector<vector<Interval>> schedule) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/*\n// Definition for an Interval.\nclass Interval {\n    public int start;\n    public int end;\n\n    public Interval() {}\n\n    public Interval(int _start, int _end) {\n        start = _start;\n        end = _end;\n    }\n};\n*/\n\nclass Solution {\n    public List<Interval> employeeFreeTime(List<List<Interval>> schedule) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "\"\"\"\n# Definition for an Interval.\nclass Interval:\n    def __init__(self, start: int = None, end: int = None):\n        self.start = start\n        self.end = end\n\"\"\"\n\nclass Solution:\n    def employeeFreeTime(self, schedule: '[[Interval]]') -> '[Interval]':\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "\"\"\"\n# Definition for an Interval.\nclass Interval(object):\n    def __init__(self, start=None, end=None):\n        self.start = start\n        self.end = end\n\"\"\"\n\nclass Solution(object):\n    def employeeFreeTime(self, schedule):\n        \"\"\"\n        :type schedule: [[Interval]]\n        :rtype: [Interval]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * // Definition for an Interval.\n * function Interval(start, end) {\n *    this.start = start;\n *    this.end = end;\n * };\n */\n\n/**\n * @param {Interval[][]} schedule\n * @return {Interval[]}\n */\nvar employeeFreeTime = function(schedule) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * // Definition for an Interval.\n * class Interval {\n *    start: number;\n *    end: number;\n *    constructor(start: number, end: number) {\n *        this.start = start;\n *        this.end = end;\n *    }\n * }\n */\n\nfunction employeeFreeTime(schedule: Interval[][]): Interval[] {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/*\n// Definition for an Interval.\npublic class Interval {\n    public int start;\n    public int end;\n\n    public Interval(){}\n    public Interval(int _start, int _end) {\n        start = _start;\n        end = _end;\n    }\n}\n*/\n\npublic class Solution {\n    public IList<Interval> EmployeeFreeTime(IList<IList<Interval>> schedule) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for an Interval.\n * type Interval struct {\n *     Start int\n *     End   int\n * }\n */\n\nfunc employeeFreeTime(schedule [][]*Interval) []*Interval {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/*\n *\t// Definition for an Interval.\n *\tclass Interval {\n *\t\tvar start:Int = 0\n *\t\tvar end:Int = 0\n *\t\n *\t\tconstructor(_start:Int, _end:Int) {\n *\t\t\tstart = _start\n *\t\t\tend = _end\n *\t\t}\n *\t}\n */\n\nclass Solution {\n    fun employeeFreeTime(schedule: ArrayList<ArrayList<Interval>>): ArrayList<Interval> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for an Interval.\n * public class Interval {\n *     public var start: Int\n *     public var end: Int\n *     public init(_ start: Int, _ end: Int) {\n *         self.start = start\n *         self.end = end\n *     }\n * }\n */\n\nclass Solution {\n    func employeeFreeTime(_ schedule: [[Interval]]) -> [Interval] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "/*\n// Definition for an Interval.\n#[derive(PartialEq, Eq, Clone, Debug)]\nstruct Interval {\n    pub start:i32,\n    pub end:i32\n}\n\nimpl Interval {\n    #[inline]\n    fn new(start:i32, end:i32) -> Self{\n        Interval {\n            start,\n            end\n        }\n    }\n}\n*/\n\nimpl Solution {\n    pub fn employee_free_time(schedule: Vec<Vec<Interval>>) -> Vec<Interval> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for an Interval.\n# class Interval\n#     def initialize(start_, end_)\n#         @start = start_\n#         @end = end_\n#     end\n# end\n\n# @param {List[List[Interval]]} schedule\n# @return {List[List[Interval]]}\ndef employeeFreeTime(schedule)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for an Interval.\n * class Interval {\n *     public $start = null;\n *     public $end = null;\n *     function __construct($start, $end) {\n *         $this->start = $start;\n *         $this->end = $end;\n *     }\n * }\n */\n\nclass Solution {\n    /**\n     * @param Interval[][] $schedule\n     * @return Interval[]\n     */\n    function employeeFreeTime($schedule) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for an Interval.\n * class Interval(var _start: Int, var _end: Int) {\n *   var start: Int = _start\n *  var end: Int = _end\n * }\n */\n\nobject Solution {\n    def employeeFreeTime(schedule: List[List[Interval]]): List[Interval] = {\n        \n    }\n}"
+    }
+  ],
+  "solution": null
+}

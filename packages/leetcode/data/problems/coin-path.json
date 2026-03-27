@@ -1,0 +1,133 @@
+{
+  "questionId": "656",
+  "questionFrontendId": "656",
+  "title": "Coin Path",
+  "titleSlug": "coin-path",
+  "difficulty": "Hard",
+  "content": "<p>You are given an integer array <code>coins</code> (<strong>1-indexed</strong>) of length <code>n</code> and an integer <code>maxJump</code>. You can jump to any index <code>i</code> of the array <code>coins</code> if <code>coins[i] != -1</code> and you have to pay <code>coins[i]</code> when you visit index <code>i</code>. In addition to that, if you are currently at index <code>i</code>, you can only jump to any index <code>i + k</code> where <code>i + k &lt;= n</code> and <code>k</code> is a value in the range <code>[1, maxJump]</code>.</p>\n\n<p>You are initially positioned at index <code>1</code> (<code>coins[1]</code> is not <code>-1</code>). You want to find the path that reaches index n with the minimum cost.</p>\n\n<p>Return an integer array of the indices that you will visit in order so that you can reach index n with the minimum cost. If there are multiple paths with the same cost, return the <strong>lexicographically smallest</strong> such path. If it is not possible to reach index n, return an empty array.</p>\n\n<p>A path <code>p1 = [Pa<sub>1</sub>, Pa<sub>2</sub>, ..., Pa<sub>x</sub>]</code> of length <code>x</code> is <strong>lexicographically smaller</strong> than <code>p2 = [Pb<sub>1</sub>, Pb<sub>2</sub>, ..., Pb<sub>x</sub>]</code> of length <code>y</code>, if and only if at the first <code>j</code> where <code>Pa<sub>j</sub></code> and <code>Pb<sub>j</sub></code> differ, <code>Pa<sub>j</sub> &lt; Pb<sub>j</sub></code>; when no such <code>j</code> exists, then <code>x &lt; y</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> coins = [1,2,4,-1,2], maxJump = 2\n<strong>Output:</strong> [1,3,5]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> coins = [1,2,4,-1,2], maxJump = 1\n<strong>Output:</strong> []\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= coins.length &lt;= 1000</code></li>\n\t<li><code>-1 &lt;= coins[i] &lt;= 100</code></li>\n\t<li><code>coins[1] != -1</code></li>\n\t<li><code>1 &lt;= maxJump &lt;= 100</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"cheapestJump\",\n  \"params\": [\n    {\n      \"name\": \"coins\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"maxJump\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"17.2K\", \"totalSubmission\": \"50.4K\", \"totalAcceptedRaw\": 17247, \"totalSubmissionRaw\": 50357, \"acRate\": \"34.2%\"}",
+  "likes": 260,
+  "dislikes": 115,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"House Robber\", \"titleSlug\": \"house-robber\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"House Robber II\", \"titleSlug\": \"house-robber-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,4,-1,2]\n2",
+    "[1,2,4,-1,2]\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> cheapestJump(vector<int>& coins, int maxJump) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> cheapestJump(int[] coins, int maxJump) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def cheapestJump(self, coins: List[int], maxJump: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def cheapestJump(self, coins, maxJump):\n        \"\"\"\n        :type coins: List[int]\n        :type maxJump: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} coins\n * @param {number} maxJump\n * @return {number[]}\n */\nvar cheapestJump = function(coins, maxJump) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function cheapestJump(coins: number[], maxJump: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> CheapestJump(int[] coins, int maxJump) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* cheapestJump(int* coins, int coinsSize, int maxJump, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func cheapestJump(coins []int, maxJump int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun cheapestJump(coins: IntArray, maxJump: Int): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func cheapestJump(_ coins: [Int], _ maxJump: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn cheapest_jump(coins: Vec<i32>, max_jump: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} coins\n# @param {Integer} max_jump\n# @return {Integer[]}\ndef cheapest_jump(coins, max_jump)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $coins\n     * @param Integer $maxJump\n     * @return Integer[]\n     */\n    function cheapestJump($coins, $maxJump) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> cheapestJump(List<int> coins, int maxJump) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def cheapestJump(coins: Array[Int], maxJump: Int): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec cheapest_jump(coins :: [integer], max_jump :: integer) :: [integer]\n  def cheapest_jump(coins, max_jump) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec cheapest_jump(Coins :: [integer()], MaxJump :: integer()) -> [integer()].\ncheapest_jump(Coins, MaxJump) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (cheapest-jump coins maxJump)\n  (-> (listof exact-integer?) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "228",
+    "content": "[TOC]\n\n\n## Solution\n\n---\n### Approach #1 Brute Force[Time Limit Exceeded]\n\nIn this approach, we make use of a $$next$$ array of size $$n$$. Here, $$n$$ refers to the size of the given $$A$$ array. The array $$nums$$ is used such that $$nums[i]$$ is used to store the minimum number of coins needed to jump till the end of the array $$A$$, starting from the index $$i$$. \n\nWe start by filling the $$next$$ array with all -1's. Then, in order to fill this $$next$$ array, we make use of a recursive function `jump(A, B, i, next)` which fills the $$next$$ array starting from the index $$i$$ onwards, given $$A$$ as the coins array and $$B$$ as the largest jump value.\n\nWith $$i$$ as the current index, we can consider every possible index from $$i+1$$ to $$i+B$$ as the next place to be jumped to. For every such next index, $$j$$, if this place can be jumped to, we determine the cost of reaching the end of the array starting from the index $$i$$, and with $$j$$ as the next index jumped from $$i$$, as  $$A[i] + jump(A, B, j, next)$$. If this cost is lesser than the minimum cost required till now, for the same starting index, we can update the minimum cost and the value of $$next[i]$$ as well. \n\nFor every such function call, we also need to return this minimum cost.\n\nAt the end, we traverse over the $$next$$ array starting from the index 1. At every step, we add the current index to the $$res$$ list to be returned and also jump/move to the index pointed by $$next[i]$$, since this refers to the next index for the minimum cost. We continue in the same manner till we reach the end of the array $$A$$.\n\n<iframe src=\"https://leetcode.com/playground/9tcSoGzo/shared\" frameBorder=\"0\" name=\"9tcSoGzo\" width=\"100%\" height=\"515\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(B^n)$$. The size of the recursive tree can grow upto $$O(b^n)$$ in the worst case. This is because, we have $$B$$ possible branches at every step. Here, $$B$$ refers to the limit of the largest jump and $$n$$ refers to the size of the given $$A$$ array. \n\n* Space complexity : $$O(n)$$. The depth of the recursive tree can grow upto $$n$$. $$next$$ array of size $$n$$ is used.\n\n---\n### Approach #2 Using Memoization [Accepted]\n\n**Algorithm**\n\nIn the recursive solution just discussed, a lot of duplicate function calls are made, since we are considering the same index through multiple paths. To remove this redundancy, we can make use of memoization.\n\nWe keep a $$memo$$ array, such that $$memo[i]$$ is used to store the minimum cost of jumps to reach the end of the array $$A$$. Whenever the value for any index is calculated once, it is stored in its appropriate location. Thus, next time whenever the same function call is made, we can return the result directly from this $$memo$$ array, pruning the search space to a great extent.\n\n<iframe src=\"https://leetcode.com/playground/mAVq4r5H/shared\" frameBorder=\"0\" name=\"mAVq4r5H\" width=\"100%\" height=\"515\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(nB)$$. $$memo$$ array of size $$n$$ is filled only once. We also do a traversal over the $$next$$ array, which will go upto $$B$$ steps.  Here, $$n$$ refers to the number of nodes in the given tree.\n\n* Space complexity : $$O(n)$$. The depth of the recursive tree can grow upto $$n$$. $$next$$ array of size $$n$$ is used.\n\n---\n### Approach #3 Using Dynamic Programming [Accepted]\n\n**Algorithm**\n\nFrom the solutions discussed above, we can observe that the cost of jumping till the end of the array $$A$$ starting from the index $$i$$ is only dependent on the elements following the index $$i$$ and not the ones before it. This inspires us to make use of Dynamic Programming to solve the current problem.\n\nWe again make use of a $$next$$ array to store the next jump locations. We also make use of a $$dp$$ with the same size as that of the given $$A$$ array. $$dp[i]$$ is used to store the minimum cost of jumping till the end of the array $$A$$, starting from the index $$i$$. We start with the last index as the current index and proceed backwards for filling the $$next$$ and $$dp$$ array.\n\nWith $$i$$ as the current index, we consider all the next possible positions from $$i+1$$, $$i+2$$,..., $$i+B$$, and determine the position, $$j$$,  which leads to a minimum cost of reaching the end of $$A$$, which is given by $$A[i]+dp[j]$$. We update $$next[i]$$ with this corresponding index. We also update $$dp[i]$$ with the minimum cost, to be used by the previous indices' cost calculations.\n\nAt the end, we again jump over the indices as per the $$next$$ array and put these indices in the $$res$$ array to be returned.\n\n<iframe src=\"https://leetcode.com/playground/BMCVq3jo/shared\" frameBorder=\"0\" name=\"BMCVq3jo\" width=\"100%\" height=\"515\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(nB)$$. We need to consider all the possible $$B$$ positions for every current index considered in the $$A$$ array. Here, $$A$$ refers to the number of elements in $$A$$.\n\n* Space complexity : $$O(n)$$. $$dp$$ and $$next$$ array of size $$n$$ are used.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "questionId": "635",
+  "questionFrontendId": "635",
+  "title": "Design Log Storage System",
+  "titleSlug": "design-log-storage-system",
+  "difficulty": "Medium",
+  "content": "<p>You are given several logs, where each log contains a unique ID and timestamp. Timestamp is a string that has the following format: <code>Year:Month:Day:Hour:Minute:Second</code>, for example, <code>2017:01:01:23:59:59</code>. All domains are zero-padded decimal numbers.</p>\n\n<p>Implement the <code>LogSystem</code> class:</p>\n\n<ul>\n\t<li><code>LogSystem()</code> Initializes the <code>LogSystem</code><b> </b>object.</li>\n\t<li><code>void put(int id, string timestamp)</code> Stores the given log <code>(id, timestamp)</code> in your storage system.</li>\n\t<li><code>int[] retrieve(string start, string end, string granularity)</code> Returns the IDs of the logs whose timestamps are within the range from <code>start</code> to <code>end</code> inclusive. <code>start</code> and <code>end</code> all have the same format as <code>timestamp</code>, and <code>granularity</code> means how precise the range should be (i.e. to the exact <code>Day</code>, <code>Minute</code>, etc.). For example, <code>start = &quot;2017:01:01:23:59:59&quot;</code>, <code>end = &quot;2017:01:02:23:59:59&quot;</code>, and <code>granularity = &quot;Day&quot;</code> means that we need to find the logs within the inclusive range from <strong>Jan. 1st 2017</strong> to <strong>Jan. 2nd 2017</strong>, and the <code>Hour</code>, <code>Minute</code>, and <code>Second</code> for each log entry can be ignored.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;LogSystem&quot;, &quot;put&quot;, &quot;put&quot;, &quot;put&quot;, &quot;retrieve&quot;, &quot;retrieve&quot;]\n[[], [1, &quot;2017:01:01:23:59:59&quot;], [2, &quot;2017:01:01:22:59:59&quot;], [3, &quot;2016:01:01:00:00:00&quot;], [&quot;2016:01:01:01:01:01&quot;, &quot;2017:01:01:23:00:00&quot;, &quot;Year&quot;], [&quot;2016:01:01:01:01:01&quot;, &quot;2017:01:01:23:00:00&quot;, &quot;Hour&quot;]]\n<strong>Output</strong>\n[null, null, null, null, [3, 2, 1], [2, 1]]\n\n<strong>Explanation</strong>\nLogSystem logSystem = new LogSystem();\nlogSystem.put(1, &quot;2017:01:01:23:59:59&quot;);\nlogSystem.put(2, &quot;2017:01:01:22:59:59&quot;);\nlogSystem.put(3, &quot;2016:01:01:00:00:00&quot;);\n\n// return [3,2,1], because you need to return all logs between 2016 and 2017.\nlogSystem.retrieve(&quot;2016:01:01:01:01:01&quot;, &quot;2017:01:01:23:00:00&quot;, &quot;Year&quot;);\n\n// return [2,1], because you need to return all logs between Jan. 1, 2016 01:XX:XX and Jan. 1, 2017 23:XX:XX.\n// Log 3 is not returned because Jan. 1, 2016 00:00:00 comes before the start of the range.\nlogSystem.retrieve(&quot;2016:01:01:01:01:01&quot;, &quot;2017:01:01:23:00:00&quot;, &quot;Hour&quot;);\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= id &lt;= 500</code></li>\n\t<li><code>2000 &lt;= Year &lt;= 2017</code></li>\n\t<li><code>1 &lt;= Month &lt;= 12</code></li>\n\t<li><code>1 &lt;= Day &lt;= 31</code></li>\n\t<li><code>0 &lt;= Hour &lt;= 23</code></li>\n\t<li><code>0 &lt;= Minute, Second &lt;= 59</code></li>\n\t<li><code>granularity</code> is one of the values <code>[&quot;Year&quot;, &quot;Month&quot;, &quot;Day&quot;, &quot;Hour&quot;, &quot;Minute&quot;, &quot;Second&quot;]</code>.</li>\n\t<li>At most <code>500</code> calls will be made to <code>put</code> and <code>retrieve</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"LogSystem\",\n  \"maxbytesperline\": 200000,\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"name\": \"put\",\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"id\"\n        },\n        {\n          \"type\": \"string\",\n          \"name\": \"timestamp\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"name\": \"retrieve\",\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"start\"\n        },\n        {\n          \"type\": \"string\",\n          \"name\": \"end\"\n        },\n        {\n          \"type\": \"string\",\n          \"name\": \"granularity\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"list<integer>\"\n      }\n    }\n  ],\n  \"systemdesign\": true,\n  \"params\": [\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<String>\",\n    \"dealloc\": true\n  }\n}",
+  "stats": "{\"totalAccepted\": \"43.7K\", \"totalSubmission\": \"73.3K\", \"totalAcceptedRaw\": 43668, \"totalSubmissionRaw\": 73318, \"acRate\": \"59.6%\"}",
+  "likes": 494,
+  "dislikes": 230,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Design In-Memory File System\", \"titleSlug\": \"design-in-memory-file-system\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"LogSystem\",\"put\",\"put\",\"put\",\"retrieve\",\"retrieve\"]\n[[],[1,\"2017:01:01:23:59:59\"],[2,\"2017:01:01:22:59:59\"],[3,\"2016:01:01:00:00:00\"],[\"2016:01:01:01:01:01\",\"2017:01:01:23:00:00\",\"Year\"],[\"2016:01:01:01:01:01\",\"2017:01:01:23:00:00\",\"Hour\"]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class LogSystem {\npublic:\n    LogSystem() {\n        \n    }\n    \n    void put(int id, string timestamp) {\n        \n    }\n    \n    vector<int> retrieve(string start, string end, string granularity) {\n        \n    }\n};\n\n/**\n * Your LogSystem object will be instantiated and called as such:\n * LogSystem* obj = new LogSystem();\n * obj->put(id,timestamp);\n * vector<int> param_2 = obj->retrieve(start,end,granularity);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class LogSystem {\n\n    public LogSystem() {\n        \n    }\n    \n    public void put(int id, String timestamp) {\n        \n    }\n    \n    public List<Integer> retrieve(String start, String end, String granularity) {\n        \n    }\n}\n\n/**\n * Your LogSystem object will be instantiated and called as such:\n * LogSystem obj = new LogSystem();\n * obj.put(id,timestamp);\n * List<Integer> param_2 = obj.retrieve(start,end,granularity);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class LogSystem:\n\n    def __init__(self):\n        \n\n    def put(self, id: int, timestamp: str) -> None:\n        \n\n    def retrieve(self, start: str, end: str, granularity: str) -> List[int]:\n        \n\n\n# Your LogSystem object will be instantiated and called as such:\n# obj = LogSystem()\n# obj.put(id,timestamp)\n# param_2 = obj.retrieve(start,end,granularity)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class LogSystem(object):\n\n    def __init__(self):\n        \n\n    def put(self, id, timestamp):\n        \"\"\"\n        :type id: int\n        :type timestamp: str\n        :rtype: None\n        \"\"\"\n        \n\n    def retrieve(self, start, end, granularity):\n        \"\"\"\n        :type start: str\n        :type end: str\n        :type granularity: str\n        :rtype: List[int]\n        \"\"\"\n        \n\n\n# Your LogSystem object will be instantiated and called as such:\n# obj = LogSystem()\n# obj.put(id,timestamp)\n# param_2 = obj.retrieve(start,end,granularity)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar LogSystem = function() {\n    \n};\n\n/** \n * @param {number} id \n * @param {string} timestamp\n * @return {void}\n */\nLogSystem.prototype.put = function(id, timestamp) {\n    \n};\n\n/** \n * @param {string} start \n * @param {string} end \n * @param {string} granularity\n * @return {number[]}\n */\nLogSystem.prototype.retrieve = function(start, end, granularity) {\n    \n};\n\n/** \n * Your LogSystem object will be instantiated and called as such:\n * var obj = new LogSystem()\n * obj.put(id,timestamp)\n * var param_2 = obj.retrieve(start,end,granularity)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class LogSystem {\n    constructor() {\n        \n    }\n\n    put(id: number, timestamp: string): void {\n        \n    }\n\n    retrieve(start: string, end: string, granularity: string): number[] {\n        \n    }\n}\n\n/**\n * Your LogSystem object will be instantiated and called as such:\n * var obj = new LogSystem()\n * obj.put(id,timestamp)\n * var param_2 = obj.retrieve(start,end,granularity)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class LogSystem {\n\n    public LogSystem() {\n        \n    }\n    \n    public void Put(int id, string timestamp) {\n        \n    }\n    \n    public IList<int> Retrieve(string start, string end, string granularity) {\n        \n    }\n}\n\n/**\n * Your LogSystem object will be instantiated and called as such:\n * LogSystem obj = new LogSystem();\n * obj.Put(id,timestamp);\n * IList<int> param_2 = obj.Retrieve(start,end,granularity);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} LogSystem;\n\n\nLogSystem* logSystemCreate() {\n    \n}\n\nvoid logSystemPut(LogSystem* obj, int id, char* timestamp) {\n    \n}\n\nint* logSystemRetrieve(LogSystem* obj, char* start, char* end, char* granularity, int* retSize) {\n    \n}\n\nvoid logSystemFree(LogSystem* obj) {\n    \n}\n\n/**\n * Your LogSystem struct will be instantiated and called as such:\n * LogSystem* obj = logSystemCreate();\n * logSystemPut(obj, id, timestamp);\n \n * int* param_2 = logSystemRetrieve(obj, start, end, granularity, retSize);\n \n * logSystemFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type LogSystem struct {\n    \n}\n\n\nfunc Constructor() LogSystem {\n    \n}\n\n\nfunc (this *LogSystem) Put(id int, timestamp string)  {\n    \n}\n\n\nfunc (this *LogSystem) Retrieve(start string, end string, granularity string) []int {\n    \n}\n\n\n/**\n * Your LogSystem object will be instantiated and called as such:\n * obj := Constructor();\n * obj.Put(id,timestamp);\n * param_2 := obj.Retrieve(start,end,granularity);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class LogSystem() {\n\n    fun put(id: Int, timestamp: String) {\n        \n    }\n\n    fun retrieve(start: String, end: String, granularity: String): List<Int> {\n        \n    }\n\n}\n\n/**\n * Your LogSystem object will be instantiated and called as such:\n * var obj = LogSystem()\n * obj.put(id,timestamp)\n * var param_2 = obj.retrieve(start,end,granularity)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass LogSystem {\n\n    init() {\n        \n    }\n    \n    func put(_ id: Int, _ timestamp: String) {\n        \n    }\n    \n    func retrieve(_ start: String, _ end: String, _ granularity: String) -> [Int] {\n        \n    }\n}\n\n/**\n * Your LogSystem object will be instantiated and called as such:\n * let obj = LogSystem()\n * obj.put(id, timestamp)\n * let ret_2: [Int] = obj.retrieve(start, end, granularity)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct LogSystem {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl LogSystem {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn put(&self, id: i32, timestamp: String) {\n        \n    }\n    \n    fn retrieve(&self, start: String, end: String, granularity: String) -> Vec<i32> {\n        \n    }\n}\n\n/**\n * Your LogSystem object will be instantiated and called as such:\n * let obj = LogSystem::new();\n * obj.put(id, timestamp);\n * let ret_2: Vec<i32> = obj.retrieve(start, end, granularity);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class LogSystem\n    def initialize()\n        \n    end\n\n\n=begin\n    :type id: Integer\n    :type timestamp: String\n    :rtype: Void\n=end\n    def put(id, timestamp)\n        \n    end\n\n\n=begin\n    :type start: String\n    :type end: String\n    :type granularity: String\n    :rtype: Integer[]\n=end\n    def retrieve(start, end, granularity)\n        \n    end\n\n\nend\n\n# Your LogSystem object will be instantiated and called as such:\n# obj = LogSystem.new()\n# obj.put(id, timestamp)\n# param_2 = obj.retrieve(start, end, granularity)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class LogSystem {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $id\n     * @param String $timestamp\n     * @return NULL\n     */\n    function put($id, $timestamp) {\n        \n    }\n  \n    /**\n     * @param String $start\n     * @param String $end\n     * @param String $granularity\n     * @return Integer[]\n     */\n    function retrieve($start, $end, $granularity) {\n        \n    }\n}\n\n/**\n * Your LogSystem object will be instantiated and called as such:\n * $obj = LogSystem();\n * $obj->put($id, $timestamp);\n * $ret_2 = $obj->retrieve($start, $end, $granularity);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class LogSystem {\n\n  LogSystem() {\n    \n  }\n  \n  void put(int id, String timestamp) {\n    \n  }\n  \n  List<int> retrieve(String start, String end, String granularity) {\n    \n  }\n}\n\n/**\n * Your LogSystem object will be instantiated and called as such:\n * LogSystem obj = LogSystem();\n * obj.put(id,timestamp);\n * List<int> param2 = obj.retrieve(start,end,granularity);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class LogSystem() {\n\n    def put(id: Int, timestamp: String): Unit = {\n        \n    }\n\n    def retrieve(start: String, end: String, granularity: String): List[Int] = {\n        \n    }\n\n}\n\n/**\n * Your LogSystem object will be instantiated and called as such:\n * val obj = new LogSystem()\n * obj.put(id,timestamp)\n * val param_2 = obj.retrieve(start,end,granularity)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule LogSystem do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec put(id :: integer, timestamp :: String.t) :: any\n  def put(id, timestamp) do\n    \n  end\n\n  @spec retrieve(start :: String.t, end :: String.t, granularity :: String.t) :: [integer]\n  def retrieve(start, end, granularity) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# LogSystem.init_()\n# LogSystem.put(id, timestamp)\n# param_2 = LogSystem.retrieve(start, end, granularity)\n\n# LogSystem.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec log_system_init_() -> any().\nlog_system_init_() ->\n  .\n\n-spec log_system_put(Id :: integer(), Timestamp :: unicode:unicode_binary()) -> any().\nlog_system_put(Id, Timestamp) ->\n  .\n\n-spec log_system_retrieve(Start :: unicode:unicode_binary(), End :: unicode:unicode_binary(), Granularity :: unicode:unicode_binary()) -> [integer()].\nlog_system_retrieve(Start, End, Granularity) ->\n  .\n\n\n%% Your functions will be called as such:\n%% log_system_init_(),\n%% log_system_put(Id, Timestamp),\n%% Param_2 = log_system_retrieve(Start, End, Granularity),\n\n%% log_system_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define log-system%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; put : exact-integer? string? -> void?\n    (define/public (put id timestamp)\n      )\n    ; retrieve : string? string? string? -> (listof exact-integer?)\n    (define/public (retrieve start end granularity)\n      )))\n\n;; Your log-system% object will be instantiated and called as such:\n;; (define obj (new log-system%))\n;; (send obj put id timestamp)\n;; (define param_2 (send obj retrieve start end granularity))"
+    }
+  ],
+  "solution": {
+    "id": "190",
+    "content": "[TOC]\n\n\n\n## Solution\n\n---\n### Approach #1 Converting timestamp into a number [Accepted]\n\nThis solution is based on converting the given timestap into a number. This can help because retrieval of Logs lying\nwithin a current range can be very easily done if the range to be used can be represented in the form of a single number.\nLet's look at the individual implementations directly.\n\n1. `put`: Firstly, we split the given timestamp based on `:` and store the individual components obtained into an $$st$$ array.\nNow, in order to put this log's entry into the storage, firstly, we convert this timestamp, now available as individual components \nin the $$st$$ array into a single number. To obtain a number which is unique for each timestamp, the number chosen is such that \nit represents the timestamp in terms of seconds. But, doing so for the Year values can lead to very large numbers, which could \nlead to a potential overflow. Since, we know that the Year's value can start from 2000 only, we subtract 1999 from the Year's value \nbefore doing the conversion of the given timestamp into seconds. We store this timestamp(in the form of a number now), along with the \nLog's id, in s $$list$$, which stores data in the form $$[converted\\_timestamp, id]$$. \n\n2. `retrieve`: In order to retrieve the logs' ids lying within the timestamp $$s$$ and $$e$$, with a granularity $$gra$$, firstly, we \nneed to convert the given timestamps into seconds. But, since, we need to take care of granularity, before doing the conversion, we \nneed to consider the effect of granularity. Granularity, in a way, depicts the precision of the results. Thus, for a granularity corresponding to \na Day, we need to consider the portion of the timestamp considering the precision upto Day only. The rest of the fields \ncan be assumed to be all 0's. After doing this for both the start and end timestamp, we do the conversion of the timestamp with the \nrequired precision into seconds. Once this has been done, we iterate over all the logs in the $$list$$ to obtain the ids of those \nlogs which lie within the required range. We keep on adding these ids to a $$res$$ list which is returned at the end of this function call.\n\n<iframe src=\"https://leetcode.com/playground/zHbRZ2y6/shared\" frameBorder=\"0\" name=\"zHbRZ2y6\" width=\"100%\" height=\"515\"></iframe>\n**Performance Analysis**\n\n* The `put`method takes $$O(1)$$ time to insert a new entry into the given set of logs.\n\n* The `retrieve` method takes $$O(n)$$ time to retrieve the logs in the required range. Determining the granularity takes $$O(1)$$ time. But, to find the logs lying in the required range, we need to iterate over the set of logs atleast once. Here, $$n$$ refers to the number of entries in the current set of logs.\n\n\n---\n### Approach #2 Better Retrieval [Accepted]\n\nThis method remains almost the same as the last approach, except that, in order to store the timestamp data, we make use \nof a TreeMap instead of a list, with the key values being the timestamps converted in seconds form and the values being the \nids of the corresponding logs.\n\nThus, the `put` method remains the same as the last approach. However, we can save some time in `retrieve` approach by making use \nof `tailMap` function of TreeMap, which stores the entries in the form of a sorted navigable binary tree. By making use of this function, instead of iterating over all the timestamps in \nthe storage to find the timestamps lying within the required range(after considering the granularity as in the last approach),\nwe can reduce the search space to only those elements whose timestamp is larger than(or equal to) the starting timestamp value.\n\n\n<iframe src=\"https://leetcode.com/playground/5bhZzaNE/shared\" frameBorder=\"0\" name=\"5bhZzaNE\" width=\"100%\" height=\"515\"></iframe>\n**Performance Analysis**\n\n* The TreeMap is maintained internally as a Red-Black(balanced) tree. Thus, the `put`method takes $$O\\big(log(n)\\big)$$ time to insert a new entry into the given set of logs. Here, $$n$$ refers to the number of entries currently present in the given set of logs.\n\n* The `retrieve` method takes $$O(m_{start})$$ time to retrieve the logs in the required range. Determining the granularity takes $$O(1)$$ time. To find the logs in the required range, we only need to iterate over those elements which already lie in the required range. Here, $$m_{start}$$ refers to the number of entries in the current set of logs which have a timestamp greater than the current $$start$$ value.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

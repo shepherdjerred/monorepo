@@ -1,0 +1,137 @@
+{
+  "questionId": "871",
+  "questionFrontendId": "841",
+  "title": "Keys and Rooms",
+  "titleSlug": "keys-and-rooms",
+  "difficulty": "Medium",
+  "content": "<p>There are <code>n</code> rooms labeled from <code>0</code> to <code>n - 1</code>&nbsp;and all the rooms are locked except for room <code>0</code>. Your goal is to visit all the rooms. However, you cannot enter a locked room without having its key.</p>\n\n<p>When you visit a room, you may find a set of <strong>distinct keys</strong> in it. Each key has a number on it, denoting which room it unlocks, and you can take all of them with you to unlock the other rooms.</p>\n\n<p>Given an array <code>rooms</code> where <code>rooms[i]</code> is the set of keys that you can obtain if you visited room <code>i</code>, return <code>true</code> <em>if you can visit <strong>all</strong> the rooms, or</em> <code>false</code> <em>otherwise</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> rooms = [[1],[2],[3],[]]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> \nWe visit room 0 and pick up key 1.\nWe then visit room 1 and pick up key 2.\nWe then visit room 2 and pick up key 3.\nWe then visit room 3.\nSince we were able to visit every room, we return true.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> rooms = [[1,3],[3,0,1],[2],[0]]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> We can not enter room number 2 since the only key that unlocks it is in that room.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == rooms.length</code></li>\n\t<li><code>2 &lt;= n &lt;= 1000</code></li>\n\t<li><code>0 &lt;= rooms[i].length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= sum(rooms[i].length) &lt;= 3000</code></li>\n\t<li><code>0 &lt;= rooms[i][j] &lt; n</code></li>\n\t<li>All the values of <code>rooms[i]</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"canVisitAllRooms\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"rooms\",\r\n      \"type\": \"list<list<integer>>\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"677.2K\", \"totalSubmission\": \"895.8K\", \"totalAcceptedRaw\": 677190, \"totalSubmissionRaw\": 895786, \"acRate\": \"75.6%\"}",
+  "likes": 6675,
+  "dislikes": 301,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Graph Valid Tree\", \"titleSlug\": \"graph-valid-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1],[2],[3],[]]",
+    "[[1,3],[3,0,1],[2],[0]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"tinkoff\", \"name\": \"Tinkoff\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 2, \"slug\": \"graviton\", \"name\": \"Graviton\"}]}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool canVisitAllRooms(vector<vector<int>>& rooms) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean canVisitAllRooms(List<List<Integer>> rooms) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def canVisitAllRooms(self, rooms: List[List[int]]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def canVisitAllRooms(self, rooms):\n        \"\"\"\n        :type rooms: List[List[int]]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} rooms\n * @return {boolean}\n */\nvar canVisitAllRooms = function(rooms) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function canVisitAllRooms(rooms: number[][]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CanVisitAllRooms(IList<IList<int>> rooms) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool canVisitAllRooms(int** rooms, int roomsSize, int* roomsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func canVisitAllRooms(rooms [][]int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun canVisitAllRooms(rooms: List<List<Int>>): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func canVisitAllRooms(_ rooms: [[Int]]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn can_visit_all_rooms(rooms: Vec<Vec<i32>>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} rooms\n# @return {Boolean}\ndef can_visit_all_rooms(rooms)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $rooms\n     * @return Boolean\n     */\n    function canVisitAllRooms($rooms) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool canVisitAllRooms(List<List<int>> rooms) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def canVisitAllRooms(rooms: List[List[Int]]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec can_visit_all_rooms(rooms :: [[integer]]) :: boolean\n  def can_visit_all_rooms(rooms) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec can_visit_all_rooms(Rooms :: [[integer()]]) -> boolean().\ncan_visit_all_rooms(Rooms) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (can-visit-all-rooms rooms)\n  (-> (listof (listof exact-integer?)) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "472",
+    "content": "[TOC]\n\n---\n### Approach #1: Depth-First Search [Accepted]\n\n**Intuition and Algorithm**\n\nWhen visiting a room for the first time, look at all the keys in that room.  For any key that hasn't been used yet, add it to the todo list (`stack`) for it to be used.\n\nSee the comments of the code for more details.\n\n<iframe src=\"https://leetcode.com/playground/dRqvjiWp/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"dRqvjiWp\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N + E)$$, where $$N$$ is the number of rooms, and $$E$$ is the total number of keys.\n\n* Space Complexity:  $$O(N)$$ in additional space complexity, to store `stack` and `seen`.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

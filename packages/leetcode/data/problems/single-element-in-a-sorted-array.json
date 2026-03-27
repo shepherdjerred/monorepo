@@ -1,0 +1,133 @@
+{
+  "questionId": "540",
+  "questionFrontendId": "540",
+  "title": "Single Element in a Sorted Array",
+  "titleSlug": "single-element-in-a-sorted-array",
+  "difficulty": "Medium",
+  "content": "<p>You are given a sorted array consisting of only integers where every element appears exactly twice, except for one element which appears exactly once.</p>\n\n<p>Return <em>the single element that appears only once</em>.</p>\n\n<p>Your solution must run in <code>O(log n)</code> time and <code>O(1)</code> space.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> nums = [1,1,2,3,3,4,4,8,8]\n<strong>Output:</strong> 2\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> nums = [3,3,7,7,10,11,11]\n<strong>Output:</strong> 10\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"singleNonDuplicate\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"1.2M\", \"totalSubmission\": \"2M\", \"totalAcceptedRaw\": 1184469, \"totalSubmissionRaw\": 1999695, \"acRate\": \"59.2%\"}",
+  "likes": 12972,
+  "dislikes": 245,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,1,2,3,3,4,4,8,8]",
+    "[3,3,7,7,10,11,11]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 3, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 3, \"slug\": \"coupang\", \"name\": \"Coupang\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"cognizant\", \"name\": \"Cognizant\"}, {\"timesEncountered\": 2, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 2, \"slug\": \"blinkit\", \"name\": \"blinkit\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int singleNonDuplicate(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int singleNonDuplicate(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def singleNonDuplicate(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def singleNonDuplicate(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar singleNonDuplicate = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function singleNonDuplicate(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int SingleNonDuplicate(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int singleNonDuplicate(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func singleNonDuplicate(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun singleNonDuplicate(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func singleNonDuplicate(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn single_non_duplicate(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef single_non_duplicate(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function singleNonDuplicate($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int singleNonDuplicate(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def singleNonDuplicate(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec single_non_duplicate(nums :: [integer]) :: integer\n  def single_non_duplicate(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec single_non_duplicate(Nums :: [integer()]) -> integer().\nsingle_non_duplicate(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (single-non-duplicate nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "808",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n**Intuition**\n\nWe can use a linear search to check every element in the array until we find the single element.\n\n**Algorithm**\n\nStarting with the first element, we iterate over every 2nd element, checking whether or not the next element is the same as the current. If it's not, then we know this must be the single element.\n\nIf we get as far as the last element, we know that it must be the single element. We need to treat it as a special case after the loop, because otherwise we'll be going over the end of the array.\n\n<iframe src=\"https://leetcode.com/playground/DeDjbpRi/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"DeDjbpRi\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. For linear search, we are looking at every element in the array once.\n\n* Space complexity : $$O(1)$$. We are only using constant extra space.\n\nWhile this approach will work, the question tells us we need a $$O(\\log n)$$ solution. Therefore, this solution isn't good enough.\n<br/>\n<br/>\n\n---\n\n### Approach 2: Binary Search\n\n**Intuition**\n\nIt makes sense to try and convert the linear search into a binary search. In order to use binary search, we need to be able to look at the middle item and then determine whether the solution is the middle item, or to the left, or to the right. The key observation to make is that the starting array must always have an odd number of elements (be odd-lengthed), because it has one element appearing once, and all the other elements appearing twice.\n\n![An array with the elements 1, 1, 4, 4, 5, 5, 6, 6, 8, 9, 9](../Figures/540/example1.png)\n\nHere is what happens when we remove a *pair* from the center. We are left with a left subarray and a right subarray.\n\n![An array with the elements 1, 1, 4, 4, 5, 5, 6, 6, 8, 9, 9. The 5's are crossed out.](../Figures/540/example2.png)\n\nLike the original array, the subarray containing the single element must be odd-lengthed. The subarray *not* containing it must be even-lengthed. So by taking a pair out of the middle and then calculating which side is now odd-lengthed, we have the information needed for binary search.\n\n**Algorithm**\n\nWe start by setting ```lo``` and ```hi``` to be the lowest and highest index (inclusive) of the array, and then iteratively halve the array until we find the single element or until there is only one element left. We know that if there is only one element in the search space, it must be the single element, so should terminate the search.\n\nOn each loop iteration, we find ```mid```, and determine the odd/ evenness of the sides and save it in a variable called ```halvesAreEven```. By then looking at which half the middle element's *partner* is in (either last element in the left subarray or first element in the right subarray), we can decide which side is now (or remained) odd-lengthed and set ```lo``` and ```hi``` to cover the part of the array we now know the single element must be in.\n\nThe trickiest part is ensuring we update ```lo``` and ```hi``` correctly based on the values of ```mid``` and ```halvesAreEven```. These diagrams should help you understand the cases. When solving problems like this, it's often good to draw a diagram and think really carefully about it to avoid off-by-one errors. Avoid using a guess and check approach.\n\n*Case 1: Mid’s partner is to the right, and the halves were originally even.*\n\nThe right side *becomes* odd-lengthed because we removed ```mid```'s partner from it. We need to set ```lo``` to ```mid + 2``` so that the remaining array is the part above ```mid```'s partner.\n\n![fig](../Figures/540/case1.png)\n\n*Case 2: Mid’s partner is to the right, and the halves were originally odd.*\n\nThe left side *remains* odd-lengthed. We need to set ```hi``` to ```mid - 1``` so that the remaining array is the part below ```mid```.\n\n![fig](../Figures/540/case2.png)\n\n*Case 3: Mid’s partner is to the left, and the halves were originally even.*\n\nThe left side *becomes* odd-lengthed because we removed ```mid```'s partner from it. We need to set ```hi``` to ```mid - 2``` so that the remaining array is the part below ```mid```'s partner.\n\n![fig](../Figures/540/case3.png)\n\n*Case 4: Mid’s partner is to the left, and the halves were originally odd.*\n\nThe right side *remains* odd-lengthed. We need to set ```lo``` to ```mid + 1``` so that the remaining array is the part above ```mid```.\n\n![fig](../Figures/540/case4.png)\n\n<iframe src=\"https://leetcode.com/playground/7MRAYayD/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7MRAYayD\"></iframe>\n\nAnother interesting observation you might have made is that this algorithm will still work even if the array isn't fully sorted. As long as pairs are always grouped together in the array (for example, ```[10, 10, 4, 4, 7, 11, 11, 12, 12, 2, 2]```), it doesn't matter what order they're in. Binary search worked for this problem because we knew the subarray with the single number is always odd-lengthed, not because the array was fully sorted numerically. We commonly call this an *invariant*, something that is always true (i.e. \"The array containing the single element is always odd-lengthed\"). Be on the lookout for invariants like this when solving array problems, as binary search is very flexibile!\n\n**Complexity Analysis**\n\n* Time complexity : $$O(\\log n)$$. On each iteration of the loop, we're *halving* the number of items we still need to search.\n\n* Space complexity : $$O(1)$$. We are only using constant space to keep track of where we are in the search.\n<br/>\n<br/>\n\n---\n\n### Approach 3: Binary Search on Evens Indexes Only\n\nIt turns out that we only need to binary search on the even indexes. This approach is more elegant than the last, although both are good solutions.\n\n**Intuition**\n\nThe single element is at the *first* even index *not* followed by its pair. We used this property in the linear search algorithm, where we iterated over all of the *even indexes* until we encountered the first one not followed by its pair.\n\nInstead of linear searching for this index though, we can binary search for it.\n\nAfter the single element, the pattern changes to being odd indexes followed by their pair. This means that the single element (an even index) and all elements after it are even indexes *not* followed by their pair. Therefore, given any even index in the array, we can easily determine whether the single element is to the left or to the right.\n\n**Algorithm**\n\nWe need to set up the binary search variables and loop so that we are only considering *even* indexes. The last index of an odd-lengthed array is always even, so we can set ```lo``` and ```hi``` to be the start and end of the array.\n\nWe need to make sure our ```mid``` index is *even*. We can do this by dividing ```lo``` and ```hi``` in the usual way, but then *decrementing* it by ```1``` if it is odd. This also ensures that if we have an even number of even indexes to search, that we are getting the *lower middle* (*incrementing* by 1 here would not work, it'd lead to an infinite loop as the search space would not be reduced in some cases).\n\nThen we check whether or not the ```mid``` index is the same as the one after it.\n- *If it is*, then we know that ```mid``` is not the single element, and that the single element must be at an even index *after* ```mid```. Therefore, we set ```lo``` to be ```mid + 2```. It is ```+2``` rather than the usual ```+1``` because we want it to point at an even index.\n- *If it is not*, then we know that the single element is either at ```mid```, or at some index *before* ```mid```. Therefore, we set ```hi``` to be mid.\n\nOnce ```lo == hi```, the search space is down to 1 element, and this must be the single element, so we return it.\n\n<iframe src=\"https://leetcode.com/playground/7NmwcLQr/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"7NmwcLQr\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(\\log \\frac{n}{2}) = O(\\log n)$$. Same as the binary search above, except we are only binary searching half the elements, rather than all of them.\n\n* Space complexity : $$O(1)$$. Same as the other approaches. We are only using constant space to keep track of where we are in the search.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "questionId": "293",
+  "questionFrontendId": "293",
+  "title": "Flip Game",
+  "titleSlug": "flip-game",
+  "difficulty": "Easy",
+  "content": "<p>You are playing a Flip Game with your friend.</p>\n\n<p>You are given a string <code>currentState</code> that contains only <code>&#39;+&#39;</code> and <code>&#39;-&#39;</code>. You and your friend take turns to flip <strong>two consecutive</strong> <code>&quot;++&quot;</code> into <code>&quot;--&quot;</code>. The game ends when a person can no longer make a move, and therefore the other person will be the winner.</p>\n\n<p>Return all possible states of the string <code>currentState</code> after <strong>one valid move</strong>. You may return the answer in <strong>any order</strong>. If there is no valid move, return an empty list <code>[]</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> currentState = &quot;++++&quot;\n<strong>Output:</strong> [&quot;--++&quot;,&quot;+--+&quot;,&quot;++--&quot;]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> currentState = &quot;+&quot;\n<strong>Output:</strong> []\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= currentState.length &lt;= 500</code></li>\n\t<li><code>currentState[i]</code> is either <code>&#39;+&#39;</code> or <code>&#39;-&#39;</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"generatePossibleNextMoves\",\n  \"params\": [\n    {\n      \"name\": \"currentState\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<string>\",\n    \"dealloc\": true\n  }\n}",
+  "stats": "{\"totalAccepted\": \"79.2K\", \"totalSubmission\": \"121.8K\", \"totalAcceptedRaw\": 79214, \"totalSubmissionRaw\": 121811, \"acRate\": \"65.0%\"}",
+  "likes": 232,
+  "dislikes": 477,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Flip Game II\", \"titleSlug\": \"flip-game-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"++++\"",
+    "\"+\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> generatePossibleNextMoves(string currentState) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> generatePossibleNextMoves(String currentState) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def generatePossibleNextMoves(self, currentState: str) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def generatePossibleNextMoves(self, currentState):\n        \"\"\"\n        :type currentState: str\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} currentState\n * @return {string[]}\n */\nvar generatePossibleNextMoves = function(currentState) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function generatePossibleNextMoves(currentState: string): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> GeneratePossibleNextMoves(string currentState) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** generatePossibleNextMoves(char* currentState, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func generatePossibleNextMoves(currentState string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun generatePossibleNextMoves(currentState: String): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func generatePossibleNextMoves(_ currentState: String) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn generate_possible_next_moves(current_state: String) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} current_state\n# @return {String[]}\ndef generate_possible_next_moves(current_state)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $currentState\n     * @return String[]\n     */\n    function generatePossibleNextMoves($currentState) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> generatePossibleNextMoves(String currentState) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def generatePossibleNextMoves(currentState: String): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec generate_possible_next_moves(current_state :: String.t) :: [String.t]\n  def generate_possible_next_moves(current_state) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec generate_possible_next_moves(CurrentState :: unicode:unicode_binary()) -> [unicode:unicode_binary()].\ngenerate_possible_next_moves(CurrentState) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (generate-possible-next-moves currentState)\n  (-> string? (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2242",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n\n### Approach: Linear Iteration\n\n#### Intuition  \n\n> **Note:** This problem evaluates your understanding and handiness in working with string data structures and performing operations like sub-string and concatenation.\n\nGiven the `currentState` string consisting of `'+'` and `'-'`, we must return all possible next states after making one move.    \nIn one move we can only change one `'++'` to `'--'`. All other combinations `'--'`, `'+-'`, or `'-+'` can't be changed.\n\nThe naive approach would be to find all `'++'` in the `currentState` string and change them to `'--'` one at a time.     \nFor this, we can iterate over the whole `currentState` string from the `0`th index to the end and check every two adjacent characters. If both characters are `'+'`, they can be replaced with `'-'` and stored in the `nextPossibleStates` array.\n\n\n![image](../Figures/293/Slide1.jpg)\n\n\n\n#### Algorithm\n\n1. Create an empty array `nextPossibleStates` to store all possible next states after making one move.\n\n2. Start a loop from `index = 0` up to `currentState.size() - 1`. For each `index`:\n    - If the character at `index` and `index + 1` are both `'+'`: \n        - Create a new string `nextState` by replacing the two adjacent `'+'` characters with `'--'`.    \n        - Use string concatenation to construct `nextState` from the substring before the first `'+'`, `\"--\"`, and the substring after the second `'+'` till the end.\n        - Store the generated `nextState` in the `nextPossibleStates` array.\n\n3. After the loop, return the `nextPossibleStates` array containing all the possible next states.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LQpK3Mpz/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"LQpK3Mpz\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `currentState` string.\n\n* Time complexity:  $O(n^2)$\n    - We iterate over all $n - 1$ indices of the `currentState` string, and for each index, we may create the next state string, which takes $O(n)$ time. Thus, for all indices, this approach will take $O(n^2)$ time.\n* Space complexity: $O(1)$\n    - We declare a few variables, which use constant space. We also declare the output array `nextPossibleStates`, but because this is only used for storing the output, it does not count towards the space complexity. Therefore, the space complexity is $O(1)$.\n\n> **Note:** We generally don't consider input and output space usages during space complexity analysis.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

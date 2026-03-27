@@ -1,0 +1,142 @@
+{
+  "questionId": "662",
+  "questionFrontendId": "662",
+  "title": "Maximum Width of Binary Tree",
+  "titleSlug": "maximum-width-of-binary-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary tree, return <em>the <strong>maximum width</strong> of the given tree</em>.</p>\n\n<p>The <strong>maximum width</strong> of a tree is the maximum <strong>width</strong> among all levels.</p>\n\n<p>The <strong>width</strong> of one level is defined as the length between the end-nodes (the leftmost and rightmost non-null nodes), where the null nodes between the end-nodes that would be present in a complete binary tree extending down to that level are also counted into the length calculation.</p>\n\n<p>It is <strong>guaranteed</strong> that the answer will in the range of a <strong>32-bit</strong> signed integer.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/05/03/width1-tree.jpg\" style=\"width: 359px; height: 302px;\" />\n<pre>\n<strong>Input:</strong> root = [1,3,2,5,3,null,9]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The maximum width exists in the third level with length 4 (5,3,null,9).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/03/14/maximum-width-of-binary-tree-v3.jpg\" style=\"width: 442px; height: 422px;\" />\n<pre>\n<strong>Input:</strong> root = [1,3,2,5,null,null,9,6,null,7]\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> The maximum width exists in the fourth level with length 7 (6,null,null,null,null,null,7).\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/05/03/width3-tree.jpg\" style=\"width: 289px; height: 299px;\" />\n<pre>\n<strong>Input:</strong> root = [1,3,2,5]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The maximum width exists in the second level with length 2 (3,2).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 3000]</code>.</li>\n\t<li><code>-100 &lt;= Node.val &lt;= 100</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"widthOfBinaryTree\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"584K\", \"totalSubmission\": \"1.3M\", \"totalAcceptedRaw\": 583967, \"totalSubmissionRaw\": 1286711, \"acRate\": \"45.4%\"}",
+  "likes": 9720,
+  "dislikes": 1322,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,3,2,5,3,null,9]",
+    "[1,3,2,5,null,null,9,6,null,7]",
+    "[1,3,2,5]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}]}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int widthOfBinaryTree(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int widthOfBinaryTree(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def widthOfBinaryTree(self, root: Optional[TreeNode]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def widthOfBinaryTree(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number}\n */\nvar widthOfBinaryTree = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction widthOfBinaryTree(root: TreeNode | null): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int WidthOfBinaryTree(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint widthOfBinaryTree(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc widthOfBinaryTree(root *TreeNode) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun widthOfBinaryTree(root: TreeNode?): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func widthOfBinaryTree(_ root: TreeNode?) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn width_of_binary_tree(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer}\ndef width_of_binary_tree(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer\n     */\n    function widthOfBinaryTree($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int widthOfBinaryTree(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def widthOfBinaryTree(root: TreeNode): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec width_of_binary_tree(root :: TreeNode.t | nil) :: integer\n  def width_of_binary_tree(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec width_of_binary_tree(Root :: #tree_node{} | null) -> integer().\nwidth_of_binary_tree(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (width-of-binary-tree root)\n  (-> (or/c tree-node? #f) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "965",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nThe problem defines the concept of **_width_** for the binary tree.\nIn essence, it is about binary tree traversal, since we need to traverse the tree in order to measure its width.\n\nAs one would probably know, the common strategies to traverse a binary tree are Breadth-First Search (_a.k.a._ BFS) and Depth-First Search (_a.k.a._ DFS).\nFurthermore, the DFS strategy can be distinguished as _preorder_ DFS, _inorder_ DFS and _postorder_ DFS, depending on the relative order of visit among the node itself and its child nodes.\n\nIf one is not familiar with the concepts of BFS and DFS, we have an Explore card called [Queue & Stack](https://leetcode.com/explore/learn/card/queue-stack/) where we cover the [BFS traversal](https://leetcode.com/explore/learn/card/queue-stack/231/practical-application-queue/) as well as the [DFS traversal](https://leetcode.com/explore/learn/card/queue-stack/232/practical-application-stack/). Hence, in this article, we won't repeat ourselves on these concepts.\n\n**Intuition**\n\n>The key to solve the problem though lie on how we **index** the nodes that are on the same level.\n\nSuppose that the indices for the first and the last nodes of one particular level are $$C_1$$ and $$C_n$$ respectively, we could then calculate the _width_ of this level as $$C_n - C_i + 1$$.\n\nNow, let us try to come up with a schema to index the nodes, so that the problem can be solved easily with the above formula.\n\nAs we know, for a _full_ binary tree, the number of nodes double at each level, since each parent node has two child nodes.\nNaturally, the range of our node index would double as well.\n\n>If the index of a parent node is $$C_i$$, accordingly we can define the index of its **_left_** child node as $$2\\cdot C_i$$ and the index of its **_right_** child node as $$2 \\cdot C_i + 1$$.\n\nIn the following graph, we show an example of how the index works for a full binary tree, where on each node we label its index rather than its value.\n\n![full binary tree with index](../Figures/662/662_full_binary_tree.png)\n\nWith the above indexing schema, we manage to assign a unique index for each node on the same level, and in addition there is no _gap_ among all the indices if it is a full binary tree.\n\nFor a non-full binary tree, the relationship between the indices of a parent and its child node still holds.\n\nNow that we have an indexing schema, all we need to do is assign an index for each node in the tree.\nOnce it is done, we can calculate the _width_ for each level, and finally, we could return the maximal value among them as the solution.\n\nVoila. This is the key insight to solve the problem. With this hint, we believe that one could definitely come up with some solutions.\n\nAs a spoiler alert, we will cover how to implement different solutions with BFS and DFS traversal strategies in the remaining sections.\n\n---\n### Approach 1: BFS Traversal\n\n**Intuition**\n\nNaturally, one might resort to the BFS traversal. After all, the width is measured among the nodes on the same level. So let us get down to the BFS traversal first.\n\nThere are several ways to implement the BFS traversal. Almost all of them share a common point, _i.e._ using the `queue` data structure to maintain the order of visits.\n\nIn brief, we push the nodes into the queue level by level. As a result, the priorities of visiting would roll out from top to down and from left to right, due to the FIFO (First-in-first-out) principle of the queue data structure, _i.e._ the element that enters the queue first would exit first as well.\n\n![BFS traversal](../Figures/662/662_bfs_traversal.png)\n\nIn the above graph, we show an example of BFS traversal on a full binary tree where we indicate the _global_ order of visiting along with each node.\n\n**Algorithm**\n\nHere are a few steps to implement a solution with the BFS traversal.\n\n- First of all, we create a `queue` data structure, which would be used to hold elements of a tuple as `(node, col_index)`, where the `node` is the tree node and the `col_index` is the corresponding index that is assigned to the node based on our indexing schema.\nAlso, we define a global variable called `max_width` which holds the maximal width that we've seen so far.\n\n- Then we append the root node along with its index 0, to kick off the BFS traversal.\n\n- The BFS traversal is basically an iteration over the elements of the queue. We visit the nodes _level by level_ until there are no more elements in the queue.\n\n    - At the end of each level, we use the indices of the first and the last elements on the same level, in order to obtain the width of the level.\n\n- At the end of BFS traversal, we then return the maximal width that we've seen overall levels.\n\n<iframe src=\"https://leetcode.com/playground/46BXEJHp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"46BXEJHp\"></iframe>\n\n\n**Note:** In the above implementation, we use the `size` of the queue as a delimiter to determine the boundary between each level.\n\nOne could also use a specific dummy element as a marker to separate nodes of different levels in the queue.\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the total number of nodes in the input tree.\n\n- Time Complexity: $$\\mathcal{O}(N)$$ \n\n    - We visit each node once and only once. And at each visit, it takes a constant time to process.\n\n\n- Space Complexity: $$\\mathcal{O}(N)$$\n\n    - We used a queue to maintain the nodes along with their indices, which is the main memory consumption of the algorithm.\n\n    - Due to the nature of BFS, at any given moment, the queue holds no more than *two levels* of nodes. In the worst case, a level in a full binary tree contains at most half of the total nodes (_i.e._ $$\\frac{N}{2}$$), _i.e._ this is also the level where the leaf nodes reside.\n\n    - Hence, the overall space complexity of the algorithm is $$\\mathcal{O}(N)$$.\n<br/>\n<br/>\n\n---\n### Approach 2: DFS Traversal\n\n**Intuition**\n\nAlthough it is definitely more intuitive to implement a solution with BFS traversal, it is not impossible to do it with DFS.\n\nIt might sound twisted, but we don't need to visit the nodes strictly in the order of BFS. All we need is to compare the indices between the first and the last elements of the same level.\n\n>We could build a table that records the indices of nodes grouped by level.\nThen we could scan the indices level by level to obtain the **_maximal_** difference among them, which is also the width of the level.\n\nWith the above idea, as we can see, any traversal will do, including the BFS and DFS.\n\n>Better yet, we don't need to keep the indices of the entire level, but the first and the last index.\n\nWe could use the table to keep **only** the index of the first element for each level, _i.e._ `depth -> first_col_index`, which we illustrate in the following graph.\n\n![tree with first_col_index](../Figures/662/662_first_col_index.png)\n\nAlong with the traversal, we could compare the index of every node with the corresponding first index of its level (_i.e._ `first_col_index`).\n\nRather than keeping all the indices in the table, we save time and space by keeping only the index of the first element per level.\n\n**Algorithm**\n\nThe tricky part is how we can obtain the index for the first element of each level.\n\nAs we discussed before, we use a table with `depth` of the node as the key and the index of the first element for that depth (level) as the value.\n\n>If we can make sure that we visit the first element of a level before the rest of the elements on that level, we then can easily populate the table along with the traversal.\n\nIn fact, a DFS traversal can assure the above priority that we desire. Even better, it could be either _preorder_, _inorder_, or _postorder_ DFS traversal, as long as we **_prioritize_** the visit of the left child node over the right child node.\n\n>Although in principle DFS prioritizes depth over breadth, it could also ensure the _level-wise_ priority.\nBy visiting the left node before the right child node in DFS traversal, we can ensure that the nodes that lean more to the left are visited earlier.\n\nWe showcase a **preorder DFS** traversal, with an example in the following graph:\n\n![DFS traversal](../Figures/662/662_preorder_dfs_traversal.png)\n\nWe label each node with a number that indicates the _global_ order of visits. As one can see, the nodes at the same level do get visited from left to right. For instance, on the second level, the first node would be visited at the step 2, while the next node at the same level would be visited at the step 5.\n\nWe give some sample implementations of DFS in the following.\n\n<iframe src=\"https://leetcode.com/playground/8HjsAnHb/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8HjsAnHb\"></iframe>\n\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the total number of nodes in the input tree.\n\n- Time Complexity: $$\\mathcal{O}(N)$$.\n\n    - Similar to the BFS traversal, we visit each node once and only once in the DFS traversal. And each visit takes a constant time to process as well.\n\n\n- Space Complexity: $$\\mathcal{O}(N)$$\n\n    - Unlike the BFS traversal, we used an additional table to keep the index for the first element per level. In the worst case where the tree is extremely skewed, there could be as many levels as the number of nodes. As a result, the space complexity of the table would be $$\\mathcal{O}(N)$$.\n\n    - Since we implement DFS traversal with recursion which would incur some additional memory consumption in the function call stack, we need to take this into account for the space complexity.\n\n    - The consumption of the function stack is proportional to the depth of recursion. Again, in the same worst-case above, where the tree is extremely skewed, the depth of the recursion would be equal to the number of nodes in the tree.\n    Therefore, the space complexity of the function stack would be $$\\mathcal{O}(N)$$.\n\n    - To sum up, the overall space complexity of the algorithm is $$\\mathcal{O}(N) + \\mathcal{O}(N) = \\mathcal{O}(N)$$.\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "questionId": "626",
+  "questionFrontendId": "626",
+  "title": "Exchange Seats",
+  "titleSlug": "exchange-seats",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Seat</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| id          | int     |\n| student     | varchar |\n+-------------+---------+\nid is the primary key (unique value) column for this table.\nEach row of this table indicates the name and the ID of a student.\nThe ID sequence always starts from 1 and increments continuously.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to swap the seat id of every two consecutive students. If the number of students is odd, the id of the last student is not swapped.</p>\n\n<p>Return the result table ordered by <code>id</code> <strong>in ascending order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nSeat table:\n+----+---------+\n| id | student |\n+----+---------+\n| 1  | Abbot   |\n| 2  | Doris   |\n| 3  | Emerson |\n| 4  | Green   |\n| 5  | Jeames  |\n+----+---------+\n<strong>Output:</strong> \n+----+---------+\n| id | student |\n+----+---------+\n| 1  | Doris   |\n| 2  | Abbot   |\n| 3  | Green   |\n| 4  | Emerson |\n| 5  | Jeames  |\n+----+---------+\n<strong>Explanation:</strong> \nNote that if the number of students is odd, there is no need to change the last one&#39;s seat.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Seat (id int, student varchar(255))\"], \"mssql\": [\"Create table Seat (id int, student varchar(255))\"], \"oraclesql\": [\"Create table Seat (id int, student varchar(255))\"], \"database\": true, \"name\": \"exchange_seats\", \"pythondata\": [\"Seat = pd.DataFrame([], columns=['id', 'student']).astype({'id':'Int64', 'student':'object'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Seat (id int, student varchar(255))\"], \"database_schema\": {\"Seat\": {\"id\": \"INT\", \"student\": \"VARCHAR(255)\"}}}",
+  "stats": "{\"totalAccepted\": \"445.4K\", \"totalSubmission\": \"602.3K\", \"totalAcceptedRaw\": 445385, \"totalSubmissionRaw\": 602265, \"acRate\": \"74.0%\"}",
+  "likes": 1896,
+  "dislikes": 614,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Seat\": [\"id\",\"student\"]}, \"rows\": {\"Seat\": [[1,\"Abbot\"],[2,\"Doris\"],[3,\"Emerson\"],[4,\"Green\"],[5,\"Jeames\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"meesho\", \"name\": \"Meesho\"}, {\"timesEncountered\": 4, \"slug\": \"coindcx\", \"name\": \"CoinDCX\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"capgemini\", \"name\": \"Capgemini\"}, {\"timesEncountered\": 2, \"slug\": \"zomato\", \"name\": \"Zomato\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef exchange_seats(seat: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "195",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach I: Using flow control statement `CASE` [Accepted]\n\n**Algorithm**\n\nFor students with odd id, the new id is (id+1) after switch unless it is the last seat. And for students with even id, the new id is (id-1). In order to know how many seats in total, we can use a subquery:\n```sql\nSELECT\n    COUNT(*) AS counts\nFROM\n    seat\n```\n\nThen, we can use the `CASE` statement and `MOD()` function to alter the seat id of each student.\n\n**MySQL**\n\n```sql\nSELECT\n    (CASE\n        WHEN MOD(id, 2) != 0 AND counts != id THEN id + 1\n        WHEN MOD(id, 2) != 0 AND counts = id THEN id\n        ELSE id - 1\n    END) AS id,\n    student\nFROM\n    seat,\n    (SELECT\n        COUNT(*) AS counts\n    FROM\n        seat) AS seat_counts\nORDER BY id ASC;\n```\n\n### Approach II: Using bit manipulation and `COALESCE()` [Accepted]\n\n**Algorithm**\n\nBit manipulation expression `(id+1)^1-1` can calculate the new id after switch.\n```sql\nSELECT id, (id+1)^1-1, student FROM seat;\n```\n\n```\n| id | (id+1)^1-1 | student |\n|----|------------|---------|\n| 1  | 2          | Abbot   |\n| 2  | 1          | Doris   |\n| 3  | 4          | Emerson |\n| 4  | 3          | Green   |\n| 5  | 6          | Jeames  |\n```\n\nThen, we can make a temp table and join seat with this table like below.\n```sql\nSELECT\n    *\nFROM\n    seat s1\n        LEFT JOIN\n    seat s2 ON (s1.id+1)^1-1 = s2.id\nORDER BY s1.id;\n```\n```\n| id | student | id | student |\n|----|---------|----|---------|\n| 1  | Abbot   | 2  | Doris   |\n| 2  | Doris   | 1  | Abbot   |\n| 3  | Emerson | 4  | Green   |\n| 4  | Green   | 3  | Emerson |\n| 5  | Jeames  |    |         |\n```\n>Note:The first two columns are from s1 and the last two are from s2.\n\nAt last, we can output s1.id and s2.student. However, the s2.student is NULL for seat id '5' but s1.student is right. Thus, we we can use function [`COALESCE()`](https://dev.mysql.com/doc/refman/5.7/en/comparison-operators.html#function_coalesce) to generate the correct output for the last record.\n\n**MySQL**\n\n```sql\nSELECT\n    s1.id, COALESCE(s2.student, s1.student) AS student\nFROM\n    seat s1\n        LEFT JOIN\n    seat s2 ON ((s1.id + 1) ^ 1) - 1 = s2.id\nORDER BY s1.id;\n```\n>Note: This solution comes from [@FANGXIAOFANG](https://discuss.leetcode.com/user/fangxiaofang).",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

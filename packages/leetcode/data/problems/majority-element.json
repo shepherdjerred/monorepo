@@ -1,0 +1,145 @@
+{
+  "questionId": "169",
+  "questionFrontendId": "169",
+  "title": "Majority Element",
+  "titleSlug": "majority-element",
+  "difficulty": "Easy",
+  "content": "<p>Given an array <code>nums</code> of size <code>n</code>, return <em>the majority element</em>.</p>\n\n<p>The majority element is the element that appears more than <code>&lfloor;n / 2&rfloor;</code> times. You may assume that the majority element always exists in the array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> nums = [3,2,3]\n<strong>Output:</strong> 3\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> nums = [2,2,1,1,1,2,2]\n<strong>Output:</strong> 2\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li>The input is generated such that a majority element will exist in the array.</li>\n</ul>\n\n<p>&nbsp;</p>\n<strong>Follow-up:</strong> Could you solve the problem in linear time and in <code>O(1)</code> space?",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"majorityElement\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"5.4M\", \"totalSubmission\": \"8.1M\", \"totalAcceptedRaw\": 5354341, \"totalSubmissionRaw\": 8090694, \"acRate\": \"66.2%\"}",
+  "likes": 22709,
+  "dislikes": 820,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Majority Element II\", \"titleSlug\": \"majority-element-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Check If a Number Is Majority Element in a Sorted Array\", \"titleSlug\": \"check-if-a-number-is-majority-element-in-a-sorted-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Most Frequent Even Element\", \"titleSlug\": \"most-frequent-even-element\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Index of a Valid Split\", \"titleSlug\": \"minimum-index-of-a-valid-split\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Exceed Threshold Value I\", \"titleSlug\": \"minimum-operations-to-exceed-threshold-value-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Most Common Response\", \"titleSlug\": \"find-the-most-common-response\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Valid Pair of Adjacent Digits in String\", \"titleSlug\": \"find-valid-pair-of-adjacent-digits-in-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,2,3]",
+    "[2,2,1,1,1,2,2]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 24, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 15, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"more_than_six_months\": [{\"timesEncountered\": 23, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 7, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 7, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 5, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 4, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"deloitte\", \"name\": \"Deloitte\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"autodesk\", \"name\": \"Autodesk\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int majorityElement(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int majorityElement(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def majorityElement(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def majorityElement(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar majorityElement = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function majorityElement(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MajorityElement(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int majorityElement(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func majorityElement(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun majorityElement(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func majorityElement(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn majority_element(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef majority_element(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function majorityElement($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int majorityElement(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def majorityElement(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec majority_element(nums :: [integer]) :: integer\n  def majority_element(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec majority_element(Nums :: [integer()]) -> integer().\nmajority_element(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (majority-element nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "293",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nWe can exhaust the search space in quadratic time by checking whether each\nelement is the majority element.\n\n#### Algorithm\n\nThe brute force algorithm iterates over the array, and then iterates again\nfor each number to count its occurrences. As soon as a number is found to\nhave appeared more than any other can possibly have appeared, return it.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7GPheN9W/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"7GPheN9W\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n^2)$\n\n    The brute force algorithm contains two nested `for` loops that each run\n    for $n$ iterations, adding up to quadratic time complexity.\n\n* Space complexity : $O(1)$\n\n    The brute force solution does not allocate additional space proportional\n    to the input size.\n\n<br />\n\n---\n\n### Approach 2: HashMap\n\n#### Intuition\n\nWe know that the majority element occurs more than $\\lfloor \\dfrac{n}{2} \\rfloor$\ntimes, and a `HashMap` allows us to count element occurrences efficiently.\n\n#### Algorithm\n\nWe can use a `HashMap` that maps elements to counts in order to count\noccurrences in linear time by looping over `nums`. Then, we simply return the\nkey with maximum value.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/U7vj6wQf/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"U7vj6wQf\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n)$\n\n    We iterate over `nums` once and make a constant time `HashMap` insertion\n    on each iteration. Therefore, the algorithm runs in $O(n)$ time.\n\n* Space complexity : $O(n)$\n\n    At most, the `HashMap` can contain $n - \\lfloor \\dfrac{n}{2} \\rfloor$\n    associations, so it occupies $O(n)$ space. This is because an arbitrary\n    array of length $n$ can contain $n$ distinct values, but `nums` is\n    guaranteed to contain a majority element, which will occupy (at minimum)\n    $\\lfloor \\dfrac{n}{2} \\rfloor + 1$ array indices. Therefore,\n    $n - (\\lfloor \\dfrac{n}{2} \\rfloor + 1)$ indices can be occupied by\n    distinct, non-majority elements (plus 1 for the majority element itself),\n    leaving us with (at most) $n - \\lfloor \\dfrac{n}{2} \\rfloor$ distinct\n    elements.\n\n<br />\n\n---\n\n### Approach 3: Sorting\n\n#### Intuition\n\nIf the elements are sorted in monotonically increasing (or decreasing) order,\nthe majority element can be found at index\n$\\lfloor \\dfrac{n}{2} \\rfloor$ (and also at $\\lfloor \\dfrac{n}{2} \\rfloor - 1$, if $n$ is even).\n\n#### Algorithm\n\nFor this algorithm, we simply do exactly what is described: sort `nums`, and\nreturn the element in question. To see why this will always return the\nmajority element (given that the array has one), consider the figure below\n(the top example is for an odd-length array and the bottom is for an\neven-length array):\n\n\n![Sorting middle index overlap](../Figures/169/sorting.png)\n\n\nFor each example, the line below the array denotes the range of indices that\nare covered by a majority element that happens to be the array minimum. As\nyou might expect, the line above the array is similar, but for the case where\nthe majority element is also the array maximum. In all other cases, this line\nwill lie somewhere between these two, but notice that even in these two most\nextreme cases, they overlap at index $\\lfloor \\dfrac{n}{2} \\rfloor$ for both\neven- and odd-length arrays. Therefore, no matter what value the majority\nelement has in relation to the rest of the array, returning the value at\n$\\lfloor \\dfrac{n}{2} \\rfloor$ will never be wrong.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/VHUhFTvd/shared\" frameBorder=\"0\" width=\"100%\" height=\"174\" name=\"VHUhFTvd\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(nlgn)$\n\n    Sorting the array costs $O(nlgn)$ time in Python and Java, so it\n    dominates the overall runtime.\n\n* Space complexity : $O(1)$ or ($O(n)$)\n\n    We sorted `nums` in place here - if that is not allowed, then we must\n    spend linear additional space on a copy of `nums` and sort the copy\n    instead.\n\n<br />\n\n---\n\n### Approach 4: Bit Manipulation\n\n#### Intuition\n\nIf an element `majority_element` occurs more than $\\lfloor \\dfrac{n}{2} \\rfloor$ times, then there are at least $\\lfloor \\dfrac{n}{2} \\rfloor$ elements of identical values with `num` at each bit. That is, we can reconstruct the exact value of `num` by combining the most frequent value (0 or 1) at each bit.\n\n#### Algorithm\n\nStarting from the least significant bit, we enumerate each bit to determine which value is the majority at this bit, 0 or 1, and put this value to the corresponding bit of the result. Finally, we end up with the most least significant bit of all elements and return the result.\n\n#### Implementation\n\nBecause all numbers are in the range $[-10^9, 10^9]$, which can be represented in 32-bit, we only need to enumerate 32 bits.\n\nFor Python solution, notice that the sign of an integer is not represented in its bits. To check if the majority element is positive or negative, we need to figure out the majority sign additionally. \n\n<iframe src=\"https://leetcode.com/playground/UinqGQZM/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UinqGQZM\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n\\log{C})$\n  \n  $C$ is the max absolute value in `nums`, i.e., $10^5$ in this problem. We enumerate all $\\log{C}$ bits for each number in `nums`.\n\n* Space complexity: $O(1)$\n\n  We count the majority of each bit in $O(1)$ space as it only has the two potential values, 0 and 1. After that, we only need to put the majority values to their corresponding bit in the returned result, and no extra space is used. \n\n\n---\n\n### Approach 5: Randomization\n\n#### Intuition\n\nBecause more than $\\lfloor \\dfrac{n}{2} \\rfloor$ array indices are occupied\nby the majority element, a random array index is likely to contain the\nmajority element.\n\n#### Algorithm\n\nBecause a given index is likely to have the majority element, we can just\nselect a random index, check whether its value is the majority element,\nreturn if it is, and repeat if it is not. The algorithm is verifiably correct\nbecause we ensure that the randomly chosen value is the majority element\nbefore ever returning.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LzaMErWb/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LzaMErWb\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(\\infty)$\n\n    It is technically possible for this algorithm to run indefinitely (if we\n    never manage to randomly select the majority element), so the worst\n    possible runtime is unbounded. However, the expected runtime is far\n    better - linear, in fact. For ease of analysis, convince yourself that\n    because the majority element is guaranteed to occupy _more_ than half of\n    the array, the expected number of iterations will be less than it would\n    be if the element we sought occupied exactly _half_ of the array.\n    Therefore, we can calculate the expected number of iterations for this\n    modified version of the problem and assert that our version is easier.\n\n    $$\n    \\begin{aligned}\n        EV(iters_{prob}) &\\leq EV(iters_{mod}) \\\\\n                         &= \\lim_{n\\to\\infty} \\sum_{i=1}^{n} i \\cdot \\frac{1}{2^i} \\\\\n                         &= 2\n    \\end{aligned}\n    $$\n\n    Because the series converges, the expected number of iterations for the\n    modified problem is constant. Based on an expected-constant number of\n    iterations in which we perform linear work, the expected runtime is\n    linear for the modifed problem. Therefore, the expected runtime for our\n    problem is also linear, as the runtime of the modifed problem serves as\n    an upper bound for it.\n\n* Space complexity : $O(1)$\n\n    Much like the brute force solution, the randomized approach runs with\n    constant additional space.\n\n<br />\n\n---\n\n### Approach 6: Divide and Conquer\n\n#### Intuition\n\nIf we know the majority element in the left and right halves of an array, we\ncan determine which is the global majority element in linear time.\n\n#### Algorithm\n\nHere, we apply a classical divide & conquer approach that recurses on the\nleft and right halves of an array until an answer can be trivially achieved\nfor a length-1 array. Note that because actually passing copies of subarrays\ncosts time and space, we instead pass `lo` and `hi` indices that describe the\nrelevant slice of the overall array. In this case, the majority element for a\nlength-1 slice is trivially its only element, so the recursion stops there.\nIf the current slice is longer than length-1, we must combine the answers for\nthe slice's left and right halves. If they agree on the majority element,\nthen the majority element for the overall slice is obviously the same[^1]. If\nthey disagree, only one of them can be \"right\", so we need to count the\noccurrences of the left and right majority elements to determine which\nsubslice's answer is globally correct. The overall answer for the array is\nthus the majority element between indices 0 and $n$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/o29Pn6gx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"o29Pn6gx\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(nlgn)$\n\n    Each recursive call to `majority_element_rec` performs two recursive\n    calls on subslices of size $\\frac{n}{2}$ and two linear scans of length\n    $n$. Therefore, the time complexity of the divide & conquer approach\n    can be represented by the following recurrence relation:\n\n    $\n        T(n) = 2T(\\frac{n}{2}) + 2n\n    $\n\n    By the [master theorem](https://en.wikipedia.org/wiki/Master_theorem_(analysis_of_algorithms)),\n    the recurrence satisfies case 2, so the complexity can be analyzed as such:\n\n    $\n    \\begin{aligned}\n        T(n) &= \\Theta(n^{log_{b}a}\\log n) \\\\\n             &= \\Theta(n^{log_{2}2}\\log n) \\\\\n             &= \\Theta(n \\log n) \\\\\n    \\end{aligned}\n    $\n\n* Space complexity : $O(lgn)$\n\n    Although the divide & conquer does not explicitly allocate any additional\n    memory, it uses a non-constant amount of additional memory in stack\n    frames due to recursion. Because the algorithm \"cuts\" the array in half\n    at each level of recursion, it follows that there can only be $O(lgn)$\n    \"cuts\" before the base case of 1 is reached. It follows from this fact\n    that the resulting recursion tree is balanced, and therefore all paths\n    from the root to a leaf are of length $O(lgn)$. Because the recursion\n    tree is traversed in a depth-first manner, the space complexity is\n    therefore equivalent to the length of the longest path, which is, of\n    course, $O(lgn)$.\n\n<br />\n\n---\n\n### Approach 7: Boyer-Moore Voting Algorithm\n\n#### Intuition\n\nIf we had some way of counting instances of the majority element as $+1$\nand instances of any other element as $-1$, summing them would make it\nobvious that the majority element is indeed the majority element.\n\n#### Algorithm\n\nEssentially, what Boyer-Moore does is look for a suffix $suf$ of `nums`\nwhere $suf[0]$ is the majority element in that suffix. To do this, we\nmaintain a count, which is incremented whenever we see an instance of our\ncurrent candidate for majority element and decremented whenever we see\nanything else. Whenever `count` equals 0, we effectively forget about\neverything in `nums` up to the current index and consider the current number\nas the candidate for majority element. It is not immediately obvious why we can\nget away with forgetting prefixes of `nums` - consider the following\nexamples (pipes are inserted to separate runs of nonzero `count`).\n\n[7, 7, 5, 7, 5, 1 | 5, 7 | 5, 5, 7, 7 | 7, 7, 7, 7]\n\nHere, the `7` at index 0 is selected to be the first candidate for majority\nelement. `count` will eventually reach 0 after index 5 is processed, so the\n`5` at index 6 will be the next candidate. In this case, `7` is the true\nmajority element, so by disregarding this prefix, we are ignoring an equal\nnumber of majority and minority elements - therefore, `7` will still be the\nmajority element in the suffix formed by throwing away the first prefix.\n\n[7, 7, 5, 7, 5, 1 | 5, 7 | 5, 5, 7, 7 | **5, 5, 5, 5**]\n\nNow, the majority element is `5` (we changed the last run of the array from\n`7`s to `5`s), but our first candidate is still `7`. In this case, our\ncandidate is not the true majority element, but we still cannot discard more\nmajority elements than minority elements (this would imply that `count` could\nreach -1 before we reassign `candidate`, which is obviously false).\n\nTherefore, given that it is impossible (in both cases) to discard more\nmajority elements than minority elements, we are safe in discarding the\nprefix and attempting to recursively solve the majority element problem for the\nsuffix. Eventually, a suffix will be found for which `count` does not hit\n`0`, and the majority element of that suffix will necessarily be the same as\nthe majority element of the overall array.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/a6Q28euk/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"a6Q28euk\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n)$\n\n    Boyer-Moore performs constant work exactly $n$ times, so the algorithm\n    runs in linear time.\n\n* Space complexity : $O(1)$\n\n    Boyer-Moore allocates only constant additional memory.\n\n<br />\n\n### Footnotes\n\n[^1]: This is a constant optimization that could be excluded without hurting our\n      overall runtime.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

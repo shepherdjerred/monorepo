@@ -1,0 +1,142 @@
+{
+  "questionId": "266",
+  "questionFrontendId": "266",
+  "title": "Palindrome Permutation",
+  "titleSlug": "palindrome-permutation",
+  "difficulty": "Easy",
+  "content": "<p>Given a string <code>s</code>, return <code>true</code> <em>if a permutation of the string could form a </em><span data-keyword=\"palindrome-string\"><em><strong>palindrome</strong></em></span><em> and </em><code>false</code><em> otherwise</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;code&quot;\n<strong>Output:</strong> false\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aab&quot;\n<strong>Output:</strong> true\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;carerac&quot;\n<strong>Output:</strong> true\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 5000</code></li>\n\t<li><code>s</code> consists of only lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Consider the palindromes of odd vs even length. What difference do you notice?",
+    "Count the frequency of each character.",
+    "If each character occurs even number of times, then it must be a palindrome. How about character which occurs odd number of times?"
+  ],
+  "metaData": "{\r\n  \"name\": \"canPermutePalindrome\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"234K\", \"totalSubmission\": \"340.9K\", \"totalAcceptedRaw\": 233988, \"totalSubmissionRaw\": 340884, \"acRate\": \"68.6%\"}",
+  "likes": 1103,
+  "dislikes": 75,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Longest Palindromic Substring\", \"titleSlug\": \"longest-palindromic-substring\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Valid Anagram\", \"titleSlug\": \"valid-anagram\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Palindrome Permutation II\", \"titleSlug\": \"palindrome-permutation-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Palindrome\", \"titleSlug\": \"longest-palindrome\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"code\"",
+    "\"aab\"",
+    "\"carerac\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool canPermutePalindrome(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean canPermutePalindrome(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def canPermutePalindrome(self, s: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def canPermutePalindrome(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {boolean}\n */\nvar canPermutePalindrome = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function canPermutePalindrome(s: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CanPermutePalindrome(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool canPermutePalindrome(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func canPermutePalindrome(s string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun canPermutePalindrome(s: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func canPermutePalindrome(_ s: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn can_permute_palindrome(s: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Boolean}\ndef can_permute_palindrome(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Boolean\n     */\n    function canPermutePalindrome($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool canPermutePalindrome(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def canPermutePalindrome(s: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec can_permute_palindrome(s :: String.t) :: boolean\n  def can_permute_palindrome(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec can_permute_palindrome(S :: unicode:unicode_binary()) -> boolean().\ncan_permute_palindrome(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (can-permute-palindrome s)\n  (-> string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "157",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach #1 Brute Force [Accepted]\n\n#### Intuition\n\nIf a string with an even length is a palindrome, every character in the string must always occur an even number of times. If the string with an odd length is a palindrome, every character except one of the characters must always occur an even number of times. Thus, in case of a palindrome, the number of characters with odd number of occurrences can't exceed 1(1 in case of odd length and 0 in case of even length).\n\nBased on the above observation, we can find the solution for the given problem. The given string could contain almost all the ASCII characters from 0 to 127. Thus, we iterate over all the characters from 0 to 127. For every character chosen, we again iterate over the given string $$s$$ and find the number of occurrences, $$ch$$, of the current character in $$s$$. We also keep a track of the number of characters in the given string $$s$$ with odd number of occurrences in a variable $$\\text{count}$$.\n\nIf, for any character currently considered, its corresponding count, $$ch$$, happens to be odd, we increment the value of $$\\text{count}$$, to reflect the same. In case of even value of $$ch$$ for any character, the $$\\text{count}$$ remains unchanged.\n\nIf, for any character, the $$count$$ becomes greater than 1, it indicates that the given string $$s$$ can't lead to the formation of a palindromic permutation based on the reasoning discussed above. But, if the value of $$\\text{count}$$ remains lesser than 2 even when all the possible characters have been considered, it indicates that a palindromic permutation can be formed from the given string $$s$$.\n\n#### Algorithm\n\n- Initialize `count` as `0` to track the number of chars with odd frequencies.  \n- Iterate over all possible chars (0 to 127):  \n  - Initialize `ct` as `0` to count occurrences of current char in the string.  \n  - Iterate over the string:  \n    - If current char matches the string char, increment `ct`.  \n  - Add `ct % 2` to `count` (track odd frequencies).  \n  - If `count > 1`, break early (no palindrome permutation possible).  \n- Return `true` if `count <= 1` (palindrome permutation possible), else `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5vkLBant/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"5vkLBant\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input string `s`.\n\n- Time Complexity\n\n    1. If we assume the input string contains only ASCII characters (hardcoded 128):\n\n        The outer loop runs 128 times (for each ASCII character from 0 to 127). For each iteration of the outer loop, the inner loop iterates over the entire string `s`, which has a length of $n$. Therefore, the total time complexity is $O(128 \\cdot n)$. Since 128 is a constant, the time complexity simplifies to $O(n)$.\n\n    2. If we generalize the solution to handle any Unicode character (no hardcoding):\n\n        Let $k$ be the number of unique characters in the string `s`. The outer loop will now run $k$ times (once for each unique character). For each unique character, the inner loop iterates over the entire string `s`, which has a length of $n$. Therefore, the total time complexity is $O(k \\cdot n)$. In the worst case, if all characters are unique ($k = n$), the time complexity becomes $O(n^2)$.\n\n- Space complexity\n\n    1. If we assume the input string contains only ASCII characters (hardcoded 128):\n\n        The algorithm uses a constant amount of extra space (variables like `count`, `i`, `ct`, and `j`), regardless of the input size. Therefore, the space complexity is $O(1)$.\n\n    2. If we generalize the solution to handle any Unicode character (no hardcoding):\n\n        The algorithm still uses a constant amount of extra space (variables like `count`, `i`, `ct`, and `j`). No additional space that scales with the input size is used. Therefore, the space complexity remains $O(1)$.\n\n---\n\n### Approach #2 Using HashMap [Accepted]\n\n#### Intuition\n\nFrom the discussion above, we know that to solve the given problem, we need to count the number of characters with odd number of occurrences in the given string $$s$$. To do so, we can also make use of a hashmap, $$\\text{map}$$. This $$\\text{map}$$ takes the form $$(\\text{character}, \\text{number of occurrences of character})$$.\n\nWe traverse over the given string $$s$$. For every new character found in $$s$$, we create a new entry in the $$\\text{map}$$ for this character with the number of occurrences as 1. Whenever we find the same character again, we update the number of occurrences appropriately. \n\nAt the end, we traverse over the $$\\text{map}$$ created and find the number of characters with odd number of occurrences. If this $$\\text{count}$$ happens to exceed 1 at any step,  we conclude that a palindromic permutation isn't possible for the string $$s$$. But, if we can reach the end of the string with $$\\text{count}$$ lesser than 2, we conclude that a palindromic permutation is possible for $$s$$.\n\nThe following animation illustrates the process.\n\n!?!../Documents/266_Palindrome_Permutation.json:1000,563!?!\n\n#### Algorithm\n\n- Initialize a hash map to store frequency of each character in the string.  \n- Iterate over the string:  \n  - For each character, update its count in the hash map using `getOrDefault`.  \n- Initialize `count` as `0` to track characters with odd frequencies.  \n- Iterate over the hash map keys:  \n  - For each key, add `frequency % 2` to `count` (track odd frequencies).  \n- Return `true` if `count <= 1` (palindrome permutation possible), else `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/8witE3CG/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"8witE3CG\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input string `s`.\n\n- Time Complexity\n\n    1. If we assume the input string contains only ASCII characters:\n\n        The first loop iterates over the string `s` once, performing operations (insertions or updates) on the `HashMap`. Since the number of unique ASCII characters is at most 128, the `HashMap` operations (insertions and lookups) take $O(1)$ time per operation. Therefore, the first loop runs in $O(n)$ time.\n\n        The second loop iterates over the keys in the `HashMap`, which has at most 128 entries (for ASCII). Each operation in this loop also takes $O(1)$ time. Therefore, the second loop runs in $O(128)$ time, which simplifies to $O(1)$.\n\n        The total time complexity is $O(n)$.\n\n   2. If we generalize the solution to handle any Unicode character:\n\n        The first loop iterates over the string `s` once, performing operations on the `HashMap`. Let $k$ be the number of unique characters in `s`. In the worst case, $k$ can be up to $n$ (if all characters are unique). Each `HashMap` operation (insertion or lookup) takes $O(1)$ time on average. Therefore, the first loop runs in $O(n)$ time.\n\n        The second loop iterates over the keys in the `HashMap`, which has $k$ entries. Each operation in this loop takes $O(1)$ time. Therefore, the second loop runs in $O(k)$ time.\n\n        The total time complexity is $O(n + k)$. In the worst case ($k = n$), this becomes $O(n)$.\n\n- Space complexity\n\n    1. If we assume the input string contains only ASCII characters:\n\n        The `HashMap` stores at most 128 key-value pairs (one for each ASCII character). Therefore, the space used by the `HashMap` is $O(128)$, which simplifies to $O(1)$.\n\n    2. If we generalize the solution to handle any Unicode character:\n\n        The `HashMap` stores $k$ key-value pairs, where $k$ is the number of unique characters in `s`. In the worst case, $k$ can be up to $n$ (if all characters are unique). Therefore, the space used by the `HashMap` is $O(k)$. In the worst case, this becomes $O(n)$.\n\n---\n\n### Approach #3 Using Array [Accepted]\n\n#### Intuition\n\nInstead of making use of the inbuilt Hashmap, we can make use of an array as a hashmap. For this, we make use of an array $$\\text{map}$$ with length 128. Each index of this $$\\text{map}$$ corresponds to one of the 128 ASCII characters possible.\n\nWe traverse over the string $$s$$ and put in the number of occurrences of each character in this $$\\text{map}$$ appropriately as done in the last case. Later on, we find the number of characters with odd number of occurrences to determine if a palindromic permutation is possible for the string $$s$$ or not as done in previous approaches.\n\n#### Algorithm\n\n- Initialize an array `map` of size 128 to store frequency of each character (ASCII range).  \n- Iterate over the string:  \n  - For each character, increment its count in the `map` array.  \n- Initialize `count` as `0` to track characters with odd frequencies.  \n- Iterate over the `map` array:  \n  - For each index, add `map[key] % 2` to `count` (track odd frequencies).  \n  - If `count > 1`, break early (no palindrome permutation possible).  \n- Return `true` if `count <= 1` (palindrome permutation possible), else `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/FcvKCPwa/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"FcvKCPwa\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input string `s`.\n\n- Time Complexity\n\n    1. If we assume the input string contains only ASCII characters:\n\n        The first loop iterates over the string `s` once, updating the frequency of each character in the `map` array. Since the `map` array has a fixed size of 128 (for ASCII characters), each access and update operation takes $O(1)$ time. Therefore, the first loop runs in $O(n)$ time.\n\n        The second loop iterates over the `map` array, which has a fixed size of 128. Each operation in this loop takes $O(1)$ time. Therefore, the second loop runs in $O(128)$ time, which simplifies to $O(1)$. Thus the total time complexity is $O(n)$.\n\n    2. If we generalize the solution to handle any Unicode character:\n\n        This implementation uses a fixed-size array of size 128, which is specifically designed for ASCII characters. It cannot handle Unicode characters without modification. If we were to modify the solution to handle Unicode, we would need to use a different data structure (e.g., a `HashMap`), which would change the time and space complexity. However, as written, this solution is limited to ASCII characters.\n\n- Space complexity\n\n    1. If we assume the input string contains only ASCII characters:\n\n        The `map` array has a fixed size of 128, regardless of the input size. Therefore, the space complexity is $O(1)$.\n\n    2. If we generalize the solution to handle any Unicode character:\n\n        As mentioned earlier, this implementation cannot handle Unicode characters without modification. If modified to handle Unicode, the space complexity would depend on the number of unique characters ($k$), leading to a space complexity of $O(k)$. In the worst case, this becomes $O(n)$.\n\n---\n\n### Approach #4 Single Pass [Accepted]:\n\n#### Intuition\n\nInstead of first traversing over the string $$s$$ for finding the number of occurrences of each element and then determining the $$\\text{count}$$ of characters with odd number of occurrences in $$s$$, we can determine the value of $$\\text{count}$$ on the fly while traversing over $$s$$.\n\nFor this, we traverse over $$s$$ and update the number of occurrences of the character just encountered in the $$\\text{map}$$. But, whevenever we update any entry in $$\\text{map}$$, we also check if its value becomes even or odd. We start of with a $$\\text{count}$$ value of 0. If the value  of the entry just updated in $$map$$ happens to be odd, we increment the value of $$\\text{count}$$ to indicate that one more character with odd number of occurrences has been found. But, if this entry happens to be even, we decrement the value of $$\\text{count}$$ to indicate that the number of characters with odd number of occurrences has reduced by one. \n\nBut, in this case, we need to traverse till the end of the string to determine the final result, unlike the last approaches, where we could stop the traversal over $$\\text{map}$$ as soon as the $$\\text{count}$$ exceeded 1. This is because, even if the number of elements with odd number of occurrences may seem very large at the current moment, but their occurrences could turn out to be even when we traverse further in the string $$s$$.\n\nAt the end, we again check if the value of $$\\text{count}$$ is lesser than 2 to conclude that a palindromic permutation is possible for the string $$s$$.\n\n#### Algorithm\n\n- Initialize an array `map` of size 128 to store frequency of each character (ASCII range).  \n- Initialize `count` as `0` to track the number of characters with odd frequencies.  \n- Iterate over the string:  \n  - For each character, increment its count in the `map` array.  \n  - If the updated count is even, decrement `count` (pair found).  \n  - If the updated count is odd, increment `count` (odd frequency).  \n- Return `true` if `count <= 1` (palindrome permutation possible), else `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/VFnY2n3T/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"VFnY2n3T\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input string `s`.\n\n- Time Complexity\n\n  1. If we assume the input string contains only ASCII characters:\n\n        The loop iterates over the string `s` once, performing operations on the `map` array. Since the `map` array has a fixed size of 128 (for ASCII characters), each access and update operation takes $O(1)$ time. Additionally, the `count` variable is updated in constant time for each character. Therefore, the loop runs in $O(n)$ time.\n\n   2. If we generalize the solution to handle any Unicode character:\n        \n        This implementation uses a fixed-size array of size 128, which is specifically designed for ASCII characters. It cannot handle Unicode characters without modification. If we were to modify the solution to handle Unicode, we would need to use a different data structure (e.g., a `HashMap`), which would change the time complexity. However, as written, this solution is limited to ASCII characters.\n\n- Space complexity\n\n  1. If we assume the input string contains only ASCII characters:\n\n        The `map` array has a fixed size of 128, regardless of the input size. Additionally, the `count` variable uses constant space. Therefore, the space complexity is $O(1)$.\n\n   2. If we generalize the solution to handle any Unicode character:\n\n        As mentioned earlier, this implementation cannot handle Unicode characters without modification. If modified to handle Unicode, the space complexity would depend on the number of unique characters ($k$), leading to a space complexity of $O(k)$. In the worst case, this becomes $O(n)$.\n\n---\n\n### Approach #5 Using Set [Accepted]:\n\n#### Intuition\n\nAnother modification of the last approach could be by making use of a $$\\text{set}$$ for keeping track of the number of elements with odd number of occurrences in $$s$$. For doing this, we traverse over the characters of the string $$s$$. Whenever the number of occurrences of a character becomes odd, we put its entry in the $$\\text{set}$$. Later on, if we find the same element again, lead to its number of occurrences as even, we remove its entry from the $$\\text{set}$$. Thus, if the element occurs again(indicating an odd number of occurrences), its entry won't exist in the $$\\text{set}$$.\n\nBased on this idea, when we find a character in the string $$s$$ that isn't present in the $$\\text{set}$$(indicating an odd number of occurrences currently for this character), we put its corresponding entry in the $$\\text{set}$$. If we find a character that is already present in the $$\\text{set}$$(indicating an even number of occurrences currently for this character), we remove its corresponding entry from the $$\\text{set}$$.\n\nAt the end, the size of $$\\text{set}$$ indicates the number of elements with odd number of occurrences in $$s$$. If it is lesser than 2, a palindromic permutation of the string $$s$$ is possible, otherwise not.\n\n#### Algorithm\n\n- Initialize a set to track characters with odd frequencies.  \n- Iterate over the string:  \n  - For each character, try to add it to the set.  \n  - If the character is already in the set, remove it (pair found).  \n  - If the character is not in the set, add it (odd frequency).  \n- Return `true` if the size of the set is `<= 1` (palindrome permutation possible), else `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/BLRDuWR2/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"BLRDuWR2\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input string `s`.\n\n- Time Complexity\n\n  1. If we assume the input string contains only ASCII characters: \n        \n        The loop iterates over the string `s` once, performing operations on the `HashSet`. Each operation (`add` and `remove`) on the `HashSet` takes $O(1)$ time on average. Therefore, the loop runs in $O(n)$ time.\n\n  2. If we generalize the solution to handle any Unicode character:\n    \n        The loop iterates over the string `s` once, performing operations on the `HashSet`. Each operation (`add` and `remove`) on the `HashSet` takes $O(1)$ time on average. Therefore, the loop still runs in $O(n)$ time, regardless of the character set (ASCII or Unicode).\n\n- Space complexity\n\n  1. If we assume the input string contains only ASCII characters:\n    \n        The `HashSet` stores at most 128 unique characters (for ASCII). Therefore, the space used by the `HashSet` is $O(128)$, which simplifies to $O(1)$.\n\n  1. If we generalize the solution to handle any Unicode character:\n\n        The `HashSet` stores $k$ unique characters, where $k$ is the number of unique characters in `s`. In the worst case, $k$ can be up to $n$ (if all characters are unique). Therefore, the space used by the `HashSet` is $O(k)$. In the worst case, this becomes $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

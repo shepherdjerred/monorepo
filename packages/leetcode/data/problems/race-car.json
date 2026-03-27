@@ -1,0 +1,124 @@
+{
+  "questionId": "836",
+  "questionFrontendId": "818",
+  "title": "Race Car",
+  "titleSlug": "race-car",
+  "difficulty": "Hard",
+  "content": "<p>Your car starts at position <code>0</code> and speed <code>+1</code> on an infinite number line. Your car can go into negative positions. Your car drives automatically according to a sequence of instructions <code>&#39;A&#39;</code> (accelerate) and <code>&#39;R&#39;</code> (reverse):</p>\n\n<ul>\n\t<li>When you get an instruction <code>&#39;A&#39;</code>, your car does the following:\n\n\t<ul>\n\t\t<li><code>position += speed</code></li>\n\t\t<li><code>speed *= 2</code></li>\n\t</ul>\n\t</li>\n\t<li>When you get an instruction <code>&#39;R&#39;</code>, your car does the following:\n\t<ul>\n\t\t<li>If your speed is positive then <code>speed = -1</code></li>\n\t\t<li>otherwise <code>speed = 1</code></li>\n\t</ul>\n\tYour position stays the same.</li>\n</ul>\n\n<p>For example, after commands <code>&quot;AAR&quot;</code>, your car goes to positions <code>0 --&gt; 1 --&gt; 3 --&gt; 3</code>, and your speed goes to <code>1 --&gt; 2 --&gt; 4 --&gt; -1</code>.</p>\n\n<p>Given a target position <code>target</code>, return <em>the length of the shortest sequence of instructions to get there</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> target = 3\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> \nThe shortest instruction sequence is &quot;AA&quot;.\nYour position goes from 0 --&gt; 1 --&gt; 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> target = 6\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> \nThe shortest instruction sequence is &quot;AAARA&quot;.\nYour position goes from 0 --&gt; 1 --&gt; 3 --&gt; 7 --&gt; 7 --&gt; 6.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= target &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"racecar\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"target\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"105.9K\", \"totalSubmission\": \"237.2K\", \"totalAcceptedRaw\": 105943, \"totalSubmissionRaw\": 237182, \"acRate\": \"44.7%\"}",
+  "likes": 2019,
+  "dislikes": 191,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "3",
+    "6"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"anduril\", \"name\": \"Anduril\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"turing\", \"name\": \"Turing\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int racecar(int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int racecar(int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def racecar(self, target: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def racecar(self, target):\n        \"\"\"\n        :type target: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} target\n * @return {number}\n */\nvar racecar = function(target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function racecar(target: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int Racecar(int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int racecar(int target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func racecar(target int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun racecar(target: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func racecar(_ target: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn racecar(target: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} target\n# @return {Integer}\ndef racecar(target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $target\n     * @return Integer\n     */\n    function racecar($target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int racecar(int target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def racecar(target: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec racecar(target :: integer) :: integer\n  def racecar(target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec racecar(Target :: integer()) -> integer().\nracecar(Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (racecar target)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

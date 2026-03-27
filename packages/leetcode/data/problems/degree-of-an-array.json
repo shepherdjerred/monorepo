@@ -1,0 +1,135 @@
+{
+  "questionId": "697",
+  "questionFrontendId": "697",
+  "title": "Degree of an Array",
+  "titleSlug": "degree-of-an-array",
+  "difficulty": "Easy",
+  "content": "<p>Given a non-empty array of non-negative integers <code>nums</code>, the <b>degree</b> of this array is defined as the maximum frequency of any one of its elements.</p>\n\n<p>Your task is to find the smallest possible length of a (contiguous) subarray of <code>nums</code>, that has the same degree as <code>nums</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,2,3,1]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> \nThe input array has a degree of 2 because both elements 1 and 2 appear twice.\nOf the subarrays that have the same degree:\n[1, 2, 2, 3, 1], [1, 2, 2, 3], [2, 2, 3, 1], [1, 2, 2], [2, 2, 3], [2, 2]\nThe shortest length is 2. So return 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,2,3,1,4,2]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> \nThe degree is 3 because the element 2 is repeated 3 times.\nSo [2,2,3,1,4,2] is the shortest subarray, therefore returning 6.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>nums.length</code> will be between 1 and 50,000.</li>\n\t<li><code>nums[i]</code> will be an integer between 0 and 49,999.</li>\n</ul>\n",
+  "hints": [
+    "Say 5 is the only element that occurs the most number of times - for example, nums = [1, 5, 2, 3, 5, 4, 5, 6].  What is the answer?"
+  ],
+  "metaData": "{\r\n  \"name\": \"findShortestSubArray\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"276.6K\", \"totalSubmission\": \"474.8K\", \"totalAcceptedRaw\": 276560, \"totalSubmissionRaw\": 474783, \"acRate\": \"58.2%\"}",
+  "likes": 3270,
+  "dislikes": 1811,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Subarray\", \"titleSlug\": \"maximum-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,2,3,1]",
+    "[1,2,2,3,1,4,2]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}, {\"timesEncountered\": 2, \"slug\": \"sofi\", \"name\": \"SoFi\"}, {\"timesEncountered\": 2, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 2, \"slug\": \"rivian\", \"name\": \"Rivian\"}, {\"timesEncountered\": 2, \"slug\": \"expedia\", \"name\": \"Expedia\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findShortestSubArray(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findShortestSubArray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findShortestSubArray(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findShortestSubArray(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar findShortestSubArray = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findShortestSubArray(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindShortestSubArray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findShortestSubArray(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findShortestSubArray(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findShortestSubArray(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findShortestSubArray(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_shortest_sub_array(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef find_shortest_sub_array(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function findShortestSubArray($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findShortestSubArray(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findShortestSubArray(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_shortest_sub_array(nums :: [integer]) :: integer\n  def find_shortest_sub_array(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_shortest_sub_array(Nums :: [integer()]) -> integer().\nfind_shortest_sub_array(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-shortest-sub-array nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "263",
+    "content": "[TOC]\n\n### Approach #1: Left and Right Index [Accepted]\n\n**Intuition and Algorithm**\n\nAn array that has degree `d`, must have some element `x` occur `d` times.  If some subarray has the same degree, then some element `x` (that occurred `d` times), still occurs `d` times. The shortest such subarray would be from the first occurrence of `x` until the last occurrence.\n\nFor each element in the given array, let's know `left`, the index of its first occurrence; and `right`, the index of its last occurrence. For example, with `nums = [1,2,3,2,5]` we have `left[2] = 1` and `right[2] = 3`.\n\nThen, for each element `x` that occurs the maximum number of times, `right[x] - left[x] + 1` will be our candidate answer, and we'll take the minimum of those candidates.\n\n**Python**\n```python\nclass Solution(object):\n    def findShortestSubArray(self, nums):\n        left, right, count = {}, {}, {}\n        for i, x in enumerate(nums):\n            if x not in left:\n                left[x] = i\n            right[x] = i\n            count[x] = count.get(x, 0) + 1\n\n        ans = len(nums)\n        degree = max(count.values())\n        for x in count:\n            if count[x] == degree:\n                ans = min(ans, right[x] - left[x] + 1)\n\n        return ans\n```\n\n**Java**\n```java\nclass Solution {\n    public int findShortestSubArray(int[] nums) {\n        Map<Integer, Integer> left = new HashMap(),\n            right = new HashMap(), count = new HashMap();\n\n        for (int i = 0; i < nums.length; i++) {\n            int x = nums[i];\n            if (left.get(x) == null) {\n                left.put(x, I);\n            }\n            right.put(x, i);\n            count.put(x, count.getOrDefault(x, 0) + 1);\n        }\n\n        int ans = nums.length;\n        int degree = Collections.max(count.values());\n        for (int x: count.keySet()) {\n            if (count.get(x) == degree) {\n                ans = Math.min(ans, right.get(x) - left.get(x) + 1);\n            }\n        }\n        return ans;\n    }\n}\n```\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$, where $$N$$ is the length of `nums`. Every loop is through $$O(N)$$ items with $$O(1)$$ work inside the for-block.\n\n* Space Complexity: $$O(N)$$, the space used by `left`, `right`, and `count`.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

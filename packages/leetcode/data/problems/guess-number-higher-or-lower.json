@@ -1,0 +1,114 @@
+{
+  "questionId": "374",
+  "questionFrontendId": "374",
+  "title": "Guess Number Higher or Lower",
+  "titleSlug": "guess-number-higher-or-lower",
+  "difficulty": "Easy",
+  "content": "<p>We are playing the Guess Game. The game is as follows:</p>\n\n<p>I pick a number from <code>1</code> to <code>n</code>. You have to guess which number I picked (the number I picked stays the same throughout the game).</p>\n\n<p>Every time you guess wrong, I will tell you whether the number I picked is higher or lower than your guess.</p>\n\n<p>You call a pre-defined API <code>int guess(int num)</code>, which returns three possible results:</p>\n\n<ul>\n\t<li><code>-1</code>: Your guess is higher than the number I picked (i.e. <code>num &gt; pick</code>).</li>\n\t<li><code>1</code>: Your guess is lower than the number I picked (i.e. <code>num &lt; pick</code>).</li>\n\t<li><code>0</code>: your guess is equal to the number I picked (i.e. <code>num == pick</code>).</li>\n</ul>\n\n<p>Return <em>the number that I picked</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 10, pick = 6\n<strong>Output:</strong> 6\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1, pick = 1\n<strong>Output:</strong> 1\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2, pick = 1\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 2<sup>31</sup> - 1</code></li>\n\t<li><code>1 &lt;= pick &lt;= n</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"guessNumber\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"pick\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true,\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"c\",\n    \"csharp\",\n    \"javascript\",\n    \"ruby\",\n    \"swift\",\n    \"golang\",\n    \"python3\",\n    \"scala\",\n    \"kotlin\",\n    \"rust\",\n    \"php\",\n    \"typescript\"\n  ],\n  \"typescriptCustomType\":\"var guess = (num: number) => {\\n    if (num == __pick__) return 0;\\n    return (num > __pick__) ? -1 : 1;\\n}\"\n  \n}",
+  "stats": "{\"totalAccepted\": \"1M\", \"totalSubmission\": \"1.7M\", \"totalAcceptedRaw\": 1000008, \"totalSubmissionRaw\": 1745091, \"acRate\": \"57.3%\"}",
+  "likes": 4242,
+  "dislikes": 692,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"First Bad Version\", \"titleSlug\": \"first-bad-version\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Guess Number Higher or Lower II\", \"titleSlug\": \"guess-number-higher-or-lower-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find K Closest Elements\", \"titleSlug\": \"find-k-closest-elements\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "10\n6",
+    "1\n1",
+    "2\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"samsung\", \"name\": \"Samsung\"}, {\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Interactive",
+      "slug": "interactive"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/** \n * Forward declaration of guess API.\n * @param  num   your guess\n * @return \t     -1 if num is higher than the picked number\n *\t\t\t      1 if num is lower than the picked number\n *               otherwise return 0\n * int guess(int num);\n */\n\nclass Solution {\npublic:\n    int guessNumber(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/** \n * Forward declaration of guess API.\n * @param  num   your guess\n * @return \t     -1 if num is higher than the picked number\n *\t\t\t      1 if num is lower than the picked number\n *               otherwise return 0\n * int guess(int num);\n */\n\npublic class Solution extends GuessGame {\n    public int guessNumber(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# The guess API is already defined for you.\n# @param num, your guess\n# @return -1 if num is higher than the picked number\n#          1 if num is lower than the picked number\n#          otherwise return 0\n# def guess(num: int) -> int:\n\nclass Solution:\n    def guessNumber(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# The guess API is already defined for you.\n# @param num, your guess\n# @return -1 if num is higher than the picked number\n#          1 if num is lower than the picked number\n#          otherwise return 0\n# def guess(num):\n\nclass Solution(object):\n    def guessNumber(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/** \n * Forward declaration of guess API.\n * @param {number} num   your guess\n * @return \t     -1 if num is higher than the picked number\n *\t\t\t      1 if num is lower than the picked number\n *               otherwise return 0\n * var guess = function(num) {}\n */\n\n/**\n * @param {number} n\n * @return {number}\n */\nvar guessNumber = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/** \n * Forward declaration of guess API.\n * @param {number} num   your guess\n * @return \t     -1 if num is higher than the picked number\n *\t\t\t      1 if num is lower than the picked number\n *               otherwise return 0\n * var guess = function(num) {}\n */\n\n\nfunction guessNumber(n: number): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/** \n * Forward declaration of guess API.\n * @param  num   your guess\n * @return \t     -1 if num is higher than the picked number\n *\t\t\t      1 if num is lower than the picked number\n *               otherwise return 0\n * int guess(int num);\n */\n\npublic class Solution : GuessGame {\n    public int GuessNumber(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/** \n * Forward declaration of guess API.\n * @param  num   your guess\n * @return \t     -1 if num is higher than the picked number\n *\t\t\t      1 if num is lower than the picked number\n *               otherwise return 0\n * int guess(int num);\n */\n\nint guessNumber(int n){\n\t\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/** \n * Forward declaration of guess API.\n * @param  num   your guess\n * @return \t     -1 if num is higher than the picked number\n *\t\t\t      1 if num is lower than the picked number\n *               otherwise return 0\n * func guess(num int) int;\n */\n\nfunc guessNumber(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/** \n * The API guess is defined in the parent class.\n * @param  num   your guess\n * @return \t     -1 if num is higher than the picked number\n *\t\t\t      1 if num is lower than the picked number\n *               otherwise return 0\n * fun guess(num:Int):Int {}\n */\n\nclass Solution:GuessGame() {\n    override fun guessNumber(n:Int):Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/** \n * Forward declaration of guess API.\n * @param  num -> your guess number\n * @return \t     -1 if num is higher than the picked number\n *\t\t\t      1 if num is lower than the picked number\n *               otherwise return 0 \n * func guess(_ num: Int) -> Int \n */\n\nclass Solution : GuessGame {\n    func guessNumber(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "/** \n * Forward declaration of guess API.\n * @param  num   your guess\n * @return \t     -1 if num is higher than the picked number\n *\t\t\t      1 if num is lower than the picked number\n *               otherwise return 0\n * unsafe fn guess(num: i32) -> i32 {}\n */\n\nimpl Solution {\n    unsafe fn guessNumber(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# The guess API is already defined for you.\n# @param num, your guess\n# @return -1 if num is higher than the picked number\n#          1 if num is lower than the picked number\n#          otherwise return 0\n# def guess(num)\n\ndef guessNumber(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/** \n * The API guess is defined in the parent class.\n * @param  num   your guess\n * @return \t     -1 if num is higher than the picked number\n *\t\t\t      1 if num is lower than the picked number\n *               otherwise return 0\n * public function guess($num){}\n */\n\nclass Solution extends GuessGame {\n    /**\n     * @param  Integer  $n\n     * @return Integer\n     */\n    function guessNumber($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/** \n * The API guess is defined in the parent class.\n * @param  num   your guess\n * @return \t     -1 if num is higher than the picked number\n *\t\t\t      1 if num is lower than the picked number\n *               otherwise return 0\n * def guess(num: Int): Int = {}\n */\n\nclass Solution extends GuessGame {\n    def guessNumber(n: Int): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "57",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/780501676\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n### Approach 1: Brute Force\n\nWe check every number from 1 to n-1 and pass it to the $$guess$$ function. The number\nfor which a 0 is returned is the required answer.\n\n<iframe src=\"https://leetcode.com/playground/g7L477Q5/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"g7L477Q5\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. We scan all the numbers from 1 to n.\n* Space complexity : $$O(1)$$. No extra space is used.\n<br>\n<br>\n\n---\n### Approach 2: Using Binary Search\n\n**Algorithm**\n\nWe can apply Binary Search to find the given number. We start with the mid\nnumber. We pass that number to the $$guess$$ function. If it returns a -1, it implies that the guessed number is larger than the required one. Thus, we use Binary Search for numbers lower than itself. Similarly, if it returns a 1, we use Binary Search\n for numbers higher than itself.\n\n<iframe src=\"https://leetcode.com/playground/8bfHrALf/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"8bfHrALf\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O\\big(\\log_2 n\\big)$$. Binary Search is used.\n* Space complexity : $$O(1)$$. No extra space is used.\n<br>\n<br>\n\n---\n### Approach 3: Ternary Search\n\n**Algorithm**\n\nIn Binary Search, we choose the middle element as the pivot in splitting. In Ternary Search, we choose two pivots (say $$m1$$ and $$m2$$) such that the given range is divided into three equal parts. If the required number $$num$$ is less than $$m1$$ then we apply ternary search on the left segment of $$m1$$. If $$num$$ lies between $$m1$$ and $$m2$$, we apply ternary search between $$m1$$ and $$m2$$. Otherwise we will search in the segment right to $$m2$$.\n\n<iframe src=\"https://leetcode.com/playground/3B6eoVYW/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3B6eoVYW\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O\\big(\\log_3 n \\big)$$. Ternary Search is used.\n* Space complexity : $$O(1)$$. No extra space is used.\n<br>\n<br>\n\n---\n## Follow up\n\nIt seems that ternary search is able to terminate earlier compared to binary search. But why is binary search more widely used?\n\n### Comparisons between Binary Search and Ternary Search\n\nTernary Search is worse than Binary Search. The following outlines the recursive formula to count comparisons of Binary Search in the worst case.\n\n$$\n\\begin{aligned}\nT(n) &= T\\bigg(\\frac{n}{2} \\ \\bigg) + 2, \\quad T(1) = 1 \\\\\nT\\bigg(\\frac{n}{2} \\ \\bigg) &= T\\bigg(\\frac{n}{2^2} \\ \\bigg) + 2 \\\\\n\\\\\n\\therefore{} \\quad T(n) &= T\\bigg(\\frac{n}{2^2} \\ \\bigg) + 2 \\times 2 \\\\\n&= T\\bigg(\\frac{n}{2^3} \\ \\bigg) + 3 \\times 2 \\\\\n&= \\ldots \\\\\n&= T\\bigg(\\frac{n}{2^{\\log_2 n}} \\ \\bigg) + 2 \\log_2 n \\\\\n&= T(1) + 2 \\log_2 n \\\\\n&= 1 + 2 \\log_2 n\n\\end{aligned}\n$$\n\nThe following outlines the recursive formula to count comparisons of Ternary Search in the worst case.\n\n$$\n\\begin{aligned}\nT(n) &= T\\bigg(\\frac{n}{3} \\ \\bigg) + 4, \\quad T(1) = 1 \\\\\nT\\bigg(\\frac{n}{3} \\ \\bigg) &= T\\bigg(\\frac{n}{3^2} \\ \\bigg) + 4 \\\\\n\\\\\n\\therefore{} \\quad T(n) &= T\\bigg(\\frac{n}{3^2} \\ \\bigg) + 2 \\times 4 \\\\\n&= T\\bigg(\\frac{n}{3^3} \\ \\bigg) + 3 \\times 4 \\\\\n&= \\ldots \\\\\n&= T\\bigg(\\frac{n}{3^{\\log_3 n}} \\ \\bigg) + 4 \\log_3 n \\\\\n&= T(1) + 4 \\log_3 n \\\\\n&= 1 + 4 \\log_3 n\n\\end{aligned}\n$$\n\nAs shown above, the total comparisons in the worst case for ternary and binary search are $$1 + 4 \\log_3 n$$ and $$1 + 2 \\log_2 n$$ comparisons respectively. To determine which is larger, we can just look at the expression $$2 \\log_3 n$$ and $$\\log_2 n$$ . The expression $$2 \\log_3 n$$ can be written as $$\\frac{2}{\\log_2 3} \\times \\log_2 n$$ . Since the value of $$\\frac{2}{\\log_2 3}$$ is greater than one, Ternary Search does more comparisons than Binary Search in the worst case.\n\nAnalysis written by: [@vinod23](https://leetcode.com/vinod23)",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

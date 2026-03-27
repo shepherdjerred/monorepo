@@ -1,0 +1,143 @@
+{
+  "questionId": "76",
+  "questionFrontendId": "76",
+  "title": "Minimum Window Substring",
+  "titleSlug": "minimum-window-substring",
+  "difficulty": "Hard",
+  "content": "<p>Given two strings <code>s</code> and <code>t</code> of lengths <code>m</code> and <code>n</code> respectively, return <em>the <strong>minimum window</strong></em> <span data-keyword=\"substring-nonempty\"><strong><em>substring</em></strong></span><em> of </em><code>s</code><em> such that every character in </em><code>t</code><em> (<strong>including duplicates</strong>) is included in the window</em>. If there is no such substring, return <em>the empty string </em><code>&quot;&quot;</code>.</p>\n\n<p>The testcases will be generated such that the answer is <strong>unique</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;ADOBECODEBANC&quot;, t = &quot;ABC&quot;\n<strong>Output:</strong> &quot;BANC&quot;\n<strong>Explanation:</strong> The minimum window substring &quot;BANC&quot; includes &#39;A&#39;, &#39;B&#39;, and &#39;C&#39; from string t.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;a&quot;, t = &quot;a&quot;\n<strong>Output:</strong> &quot;a&quot;\n<strong>Explanation:</strong> The entire string s is the minimum window.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;a&quot;, t = &quot;aa&quot;\n<strong>Output:</strong> &quot;&quot;\n<strong>Explanation:</strong> Both &#39;a&#39;s from t must be included in the window.\nSince the largest window of s only has one &#39;a&#39;, return empty string.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == s.length</code></li>\n\t<li><code>n == t.length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> and <code>t</code> consist of uppercase and lowercase English letters.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> Could you find an algorithm that runs in <code>O(m + n)</code> time?</p>\n",
+  "hints": [
+    "Use two pointers to create a window of letters in s, which would have all the characters from t.",
+    "Expand the right pointer until all the characters of t are covered.",
+    "Once all the characters are covered, move the left pointer and ensure that all the characters are still covered to minimize the subarray size.",
+    "Continue expanding the right and left pointers until you reach the end of s."
+  ],
+  "metaData": "{ \r\n  \"name\": \"minWindow\",\r\n  \"params\": [\r\n    { \r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    },\r\n    { \r\n      \"name\": \"t\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"2.1M\", \"totalSubmission\": \"4.5M\", \"totalAcceptedRaw\": 2111928, \"totalSubmissionRaw\": 4476395, \"acRate\": \"47.2%\"}",
+  "likes": 20136,
+  "dislikes": 853,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Substring with Concatenation of All Words\", \"titleSlug\": \"substring-with-concatenation-of-all-words\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Size Subarray Sum\", \"titleSlug\": \"minimum-size-subarray-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sliding Window Maximum\", \"titleSlug\": \"sliding-window-maximum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Permutation in String\", \"titleSlug\": \"permutation-in-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Smallest Range Covering Elements from K Lists\", \"titleSlug\": \"smallest-range-covering-elements-from-k-lists\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Window Subsequence\", \"titleSlug\": \"minimum-window-subsequence\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Substrings That Can Be Rearranged to Contain a String II\", \"titleSlug\": \"count-substrings-that-can-be-rearranged-to-contain-a-string-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Substrings That Can Be Rearranged to Contain a String I\", \"titleSlug\": \"count-substrings-that-can-be-rearranged-to-contain-a-string-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"ADOBECODEBANC\"\n\"ABC\"",
+    "\"a\"\n\"a\"",
+    "\"a\"\n\"aa\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 10, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"lyft\", \"name\": \"Lyft\"}, {\"timesEncountered\": 2, \"slug\": \"moloco\", \"name\": \"Moloco\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 21, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 19, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 11, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 9, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 7, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 6, \"slug\": \"sofi\", \"name\": \"SoFi\"}, {\"timesEncountered\": 6, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 5, \"slug\": \"zopsmart\", \"name\": \"Zopsmart\"}, {\"timesEncountered\": 4, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 4, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string minWindow(string s, string t) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String minWindow(String s, String t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minWindow(self, s: str, t: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minWindow(self, s, t):\n        \"\"\"\n        :type s: str\n        :type t: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string} t\n * @return {string}\n */\nvar minWindow = function(s, t) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minWindow(s: string, t: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string MinWindow(string s, string t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* minWindow(char* s, char* t) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minWindow(s string, t string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minWindow(s: String, t: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minWindow(_ s: String, _ t: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_window(s: String, t: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String} t\n# @return {String}\ndef min_window(s, t)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String $t\n     * @return String\n     */\n    function minWindow($s, $t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String minWindow(String s, String t) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minWindow(s: String, t: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_window(s :: String.t, t :: String.t) :: String.t\n  def min_window(s, t) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_window(S :: unicode:unicode_binary(), T :: unicode:unicode_binary()) -> unicode:unicode_binary().\nmin_window(S, T) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-window s t)\n  (-> string? string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "541",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Sliding Window\n\n#### Intuition\n\nThe question asks us to return the minimum window from the string $S$ which has all the characters of the string $T$. Let us call a window `desirable` if it has all the characters from $T$.\n\nWe can use a simple sliding window approach to solve this problem.\n\nIn any sliding window based problem we have two pointers. One $right$ pointer whose job is to expand the current window and then we have the $left$ pointer whose job is to contract a given window. At any point in time only one of these pointers move and the other one remains fixed.\n\nThe solution is pretty intuitive. We keep expanding the window by moving the right pointer. When the window has all the desired characters, we contract (if possible) and save the smallest window till now.\n\nThe answer is the smallest desirable window.\n\nFor eg. ` S = \"ABAACBAB\" T = \"ABC\"`. Then our answer window is `\"ACB\"` and shown below is one of the possible desirable windows.\n<center>\n<img src=\"../Figures/76/76_Minimum_Window_Substring_1.png\" width=\"500\"/>\n</center>\n<br>\n\n#### Algorithm\n\n1. We start with two pointers, $left$ and $right$ initially pointing to the first element of the string $S$.\n\n2. We use the $right$ pointer to expand the window until we get a desirable window i.e. a window that contains all of the characters of $T$.\n\n3. Once we have a window with all the characters, we can move the left pointer ahead one by one. If the window is still a desirable one we keep on updating the minimum window size.\n\n4. If the window is not desirable any more, we repeat $step \\; 2$ onwards.\n\n<center>\n<img src=\"../Figures/76/76_Minimum_Window_Substring_2.png\" width=\"500\"/>\n</center>\n\nThe above steps are repeated until we have looked at all the windows. The smallest window is returned.\n\n<center>\n<img src=\"../Figures/76/76_Minimum_Window_Substring_3.png\" width=\"500\"/>\n</center>\n<br>\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/gXfparKj/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"gXfparKj\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity: $O(|S| + |T|)$ where |S| and |T| represent the lengths of strings $S$ and $T$.\nIn the worst case we might end up visiting every element of string $S$ twice, once by left pointer and once by right pointer. $|T|$ represents the length of string $T$.\n\n* Space Complexity: $O(|S| + |T|)$. $|S|$ when the window size is equal to the entire string $S$. $|T|$ when $T$ has all unique characters.\n\n---\n\n### Approach 2: Optimized Sliding Window\n\n#### Intuition\n\nA small improvement to the above approach can reduce the time complexity of the algorithm to $O(2*|filtered\\_S| + |S| + |T|)$, where $filtered\\_S$ is the string formed from S by removing all the elements not present in $T$.\n\nThis complexity reduction is evident when $|filtered\\_S| <<< |S|$.\n\nThis kind of scenario might happen when length of string $T$ is way too small than the length of string $S$ and string $S$ consists of numerous characters which are not present in $T$.\n\n#### Algorithm\n\nWe create a list called $filtered\\_S$ which has all the characters from string $S$ along with their indices in $S$, but these characters should be present in $T$.\n\n<pre>\n  S = \"ABCDDDDDDEEAFFBC\" T = \"ABC\"\n  filtered_S = [(0, 'A'), (1, 'B'), (2, 'C'), (11, 'A'), (14, 'B'), (15, 'C')]\n  Here (0, 'A') means in string S character A is at index 0.\n</pre>\n\n\nWe can now follow our sliding window approach on the smaller string $filtered\\_S$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/cF6sqNpZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"cF6sqNpZ\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity : $O(|S| + |T|)$ where |S| and |T| represent the lengths of strings $S$ and $T$. The complexity is same as the previous approach. But in certain cases where $|filtered\\_S|$ <<< $|S|$, the complexity would reduce because the number of iterations would be $2*|filtered\\_S| + |S| + |T|$.\n* Space Complexity : $O(|S| + |T|)$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

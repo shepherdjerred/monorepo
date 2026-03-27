@@ -1,0 +1,141 @@
+{
+  "questionId": "876",
+  "questionFrontendId": "846",
+  "title": "Hand of Straights",
+  "titleSlug": "hand-of-straights",
+  "difficulty": "Medium",
+  "content": "<p>Alice has some number of cards and she wants to rearrange the cards into groups so that each group is of size <code>groupSize</code>, and consists of <code>groupSize</code> consecutive cards.</p>\n\n<p>Given an integer array <code>hand</code> where <code>hand[i]</code> is the value written on the <code>i<sup>th</sup></code> card and an integer <code>groupSize</code>, return <code>true</code> if she can rearrange the cards, or <code>false</code> otherwise.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> hand = [1,2,3,6,2,3,4,7,8], groupSize = 3\n<strong>Output:</strong> true\n<strong>Explanation:</strong> Alice&#39;s hand can be rearranged as [1,2,3],[2,3,4],[6,7,8]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> hand = [1,2,3,4,5], groupSize = 4\n<strong>Output:</strong> false\n<strong>Explanation:</strong> Alice&#39;s hand can not be rearranged into groups of 4.\n\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= hand.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= hand[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= groupSize &lt;= hand.length</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Note:</strong> This question is the same as 1296: <a href=\"https://leetcode.com/problems/divide-array-in-sets-of-k-consecutive-numbers/\" target=\"_blank\">https://leetcode.com/problems/divide-array-in-sets-of-k-consecutive-numbers/</a></p>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"isNStraightHand\",\n  \"params\": [\n    {\n      \"name\": \"hand\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"groupSize\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"443.6K\", \"totalSubmission\": \"766.6K\", \"totalAcceptedRaw\": 443568, \"totalSubmissionRaw\": 766605, \"acRate\": \"57.9%\"}",
+  "likes": 3710,
+  "dislikes": 294,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,3,6,2,3,4,7,8]\n3",
+    "[1,2,3,4,5]\n4"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}], \"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isNStraightHand(vector<int>& hand, int groupSize) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isNStraightHand(int[] hand, int groupSize) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isNStraightHand(self, hand: List[int], groupSize: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isNStraightHand(self, hand, groupSize):\n        \"\"\"\n        :type hand: List[int]\n        :type groupSize: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} hand\n * @param {number} groupSize\n * @return {boolean}\n */\nvar isNStraightHand = function(hand, groupSize) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isNStraightHand(hand: number[], groupSize: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsNStraightHand(int[] hand, int groupSize) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isNStraightHand(int* hand, int handSize, int groupSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isNStraightHand(hand []int, groupSize int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isNStraightHand(hand: IntArray, groupSize: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isNStraightHand(_ hand: [Int], _ groupSize: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_n_straight_hand(hand: Vec<i32>, group_size: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} hand\n# @param {Integer} group_size\n# @return {Boolean}\ndef is_n_straight_hand(hand, group_size)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $hand\n     * @param Integer $groupSize\n     * @return Boolean\n     */\n    function isNStraightHand($hand, $groupSize) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isNStraightHand(List<int> hand, int groupSize) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isNStraightHand(hand: Array[Int], groupSize: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_n_straight_hand(hand :: [integer], group_size :: integer) :: boolean\n  def is_n_straight_hand(hand, group_size) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_n_straight_hand(Hand :: [integer()], GroupSize :: integer()) -> boolean().\nis_n_straight_hand(Hand, GroupSize) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-n-straight-hand hand groupSize)\n  (-> (listof exact-integer?) exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2334",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe need to find if it's possible to rearrange a given set of cards into groups of size `groupSize`, where each group consists of `groupSize` consecutive card values. \n\n**Key Observations:**\n1. If the total number of cards is not divisible by `groupSize`, it's impossible to rearrange the cards into the desired groups.\n2. There may be duplicate cards present in the array, but a valid group does not contain duplicates.\n3. Consider the `hand = [1,2,3,6,2,3,4,7,8]` with a `groupSize` of 3. The output is `[1,2,3]`, `[2,3,4]`, `[6,7,8]`. One might argue that even [4,6,7] are consecutive values, so why can't we include them? However, in the context of this question, when they refer to a `groupSize` of consecutive card values, it means immediate consecutive values (i.e., values that increase by `1`).\n\n---\n\n### Approach 1: Using Map\n\n#### Intuition\n\nTo solve this problem, we can count the occurrences of each card value in the `hand` and then iterate through the sorted list of card values, ensuring that each consecutive sequence forms a valid group.\n\nThe first step is to check if it's even possible to evenly distribute the cards into groups of size `groupSize`. We do this by verifying if the total number of cards is divisible by `groupSize`. If not, it's impossible to rearrange the cards, and we can immediately return `False`.\n\nNext, we count the occurrences of each card value in the `hand` using a map. Knowing the frequency of each card value will allow us to check if we have enough cards to form consecutive groups.\n\nWe create a min-heap containing the unique card values from the `hand` to maintain the sorted order of the card values. Another option is to sort the map or use a map implementation that maintains sorted order.\n\nWe then iterate through the min-heap and extract the smallest card value (`currentCard`) at each step. For each extracted value, we check the `hand` to see if it has a consecutive sequence of `groupSize` cards starting from `currentCard`. We do this by checking if all the card values in the range `[currentCard, currentCard + groupSize - 1]` are present in the frequency map and have enough occurrences to form a group.\n\nIf any of these cards are missing from the count or have exhausted their occurrences, it means the `hand` cannot be rearranged into the desired groups, and we return `False`.\n\nHowever, if all consecutive sequences form valid groups, we can conclude that it's possible to rearrange the cards, and we return `True`.\n\nThe condition \"if `currentCard + i` not in hash map\" enhances the solution's efficiency. It allows the function to terminate early when a required card for forming a group is absent. This prevents unnecessary decrement operations and subsequent checks, thus optimizing the overall performance to some extent.\n\n#### Algorithm\n\n- Check if the length of the `hand` array is divisible by `groupSize`. If not, return `false`.\n- Create a `map` called `cardCount` to store the count of each card value in the given `hand` array.\n- Iterate through the `hand` array and update the `cardCount` map accordingly.\n- Process the cards until the `cardCount` map is empty:\n   - Get the smallest card value `currentCard` from the `cardCount` map.\n   - Check if a consecutive sequence of `groupSize` cards starting from `currentCard` exists.\n     - If any card in the potential sequence is not present in the `cardCount` map or has exhausted its occurrences, return `false`.\n     - If the sequence exists, decrement the count of each card in the sequence from the `cardCount` map.\n     - If the count of a card becomes zero, remove it from the `cardCount` map.\n- If all cards can be grouped into consecutive sequences of `groupSize`, return `true`.\n\nThe algorithm is visualized below:\n\n!?!../Documents/846/approach1.json:1015,404!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/apLQam3i/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"apLQam3i\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `hand` array and $k$ be `groupSize`.\n\n- Time complexity: $O(n \\cdot \\log n + n \\cdot k)$\n\n    Populating the `cardCount` map takes $O(n \\log n)$ time.\n\n    The outer loop processes the `cardCount` map until it is empty. In the worst case, it iterates $n$ times.\n\n    Inside the outer loop, getting the smallest card value from the `cardCount` map takes $O(\\log n)$ time due to the `map` implementation.\n\n    Checking for the presence of a consecutive sequence of $k$ cards takes $O(k)$ time. $k$ is limited to the size of the `hand` array because we can't have groups larger than the `hand`.\n\n    Each card will be processed exactly once because the more cards we process in each group, the fewer groups we process. Processing each card can take up to $O(\\log n)$ due to the `map` or heap insertion and removal.\n\n    Therefore, the overall time complexity is $O(n \\log n + n \\cdot k)$.\n\n* Space complexity: $O(n)$\n\n    The `cardCount` map stores the count of each card value.\n    \n    In the worst case, all cards could have distinct values, resulting in a map size of $n$.\n    \n    Therefore, the space complexity is $O(n)$.\n\n---\n\n### Approach 2: Optimal\n\n#### Intuition\n\nThis approach involves counting the number of different cards and storing these counts in a map named `cardCount`. The variable `currentOpenGroups` represents the number of currently open straight groups. Additionally, a deque named `groupStartQueue` is used to record the number of new straight groups starting at each card value. \n\nWe will processes the cards starting from the smallest card number. For instance, given the hand `[1,2,3,2,3,4]` and a group size `groupSize` of 3, the process is as follows:\n\nWhen encountering the card `1`, since `opened = 0`, it indicates that a new straight group is starting at `1`, and this group is recorded in `groupStartQueue`. When the card `2` is encountered twice, the first occurrence (with `opened = 1`) indicates the need to open another straight group starting at `1`, and this is recorded in the queue. The second occurrence of `2` (with `opened = 2`) matches the current number of open groups. \n\nUpon meeting the card `3` twice, the first occurrence matches the number of open groups, and after processing the first `3`, one group starting at `1` is completed and closed, reducing `opened` by 1 to 1. The second occurrence of `3` similarly matches the number of open groups. Finally, when encountering the card `4`, it matches the number of open groups. After processing the first `4`, one group starting at `2` is closed, reducing `opened` by 1 to 0.\n\nWe return `true` if all groups are successfully closed, indicating that it is possible to rearrange the hand into groups of consecutive cards of size `groupSize`. If any groups remain open, we return `false`.\n\n#### Algorithm\n\n- Initialize a `map` called `cardCount` to store the count of each card value in the input array `hand`.\n- Iterate through the input array `hand` and update the `cardCount` map accordingly.\n- Initialize a `queue` called `groupStartQueue` to keep track of the number of new groups starting with each card value.\n- Initialize variables `lastCard` to keep track of the last card value processed, and `currentOpenGroups` to keep track of the number of open groups.\n- Iterate through the `cardCount` map:\n    - Get the current card value `currentCard` and its count from the map entry.\n    - Check if there are any discrepancies in the sequence or if more groups are required than available cards. If so, return `false`.\n    - Calculate the number of new groups starting with the current card value by subtracting `currentOpenGroups` from the count of `currentCard`.\n    - Push the number of new groups to the `groupStartQueue`.\n    - Update `lastCard` with the current card value `currentCard`.\n    - Update `currentOpenGroups` with the count of `currentCard`.\n    - If the size of `groupStartQueue` is equal to `groupSize`, remove the front element from the queue and subtract it from `currentOpenGroups`.\n- After the loop, check if all groups are completed by verifying if `currentOpenGroups` is 0. Return `true` if it is, otherwise return `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PgShea4k/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PgShea4k\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `hand` array and $k$ be `groupSize`.\n\n* Time complexity: $O(n \\log n + n)$\n\n    The time complexity is $O(n \\log n + n)$. This is due to the process of counting and sorting the cards.\n\n* Space complexity: $O(n)$\n\n    We use a map to count the occurrences of each card and a deque to keep track of the number of open groups. Therefore, the space complexity is $O(n)$. \n\n---\n\n\n### Approach 3: Reverse Decrement (Most Optimal)\n\n#### Intuition\n\nThe above approach 1 focused on handling the smallest remaining card and the streak starting from it. For example, given the sequence `[3, 2, 1, 5, 6, 7, 7, 8, 9]` with `k = 3`, this solution first finds the smallest card `1` and removes the streak `[1, 2, 3]`. This approach requires processing the map in sorted order, which leads to a log-linear time complexity.\n\nOnce we've determined it's possible to form valid groups, starting with the smallest card is an effective strategy because the smallest card in the array must be the beginning of a streak.\n\nHowever, starting with the smallest card is not necessary. We could remove the streak `[5, 6, 7]` first, as there's no `4`, indicating that `5` is the start of a streak, so it's safe to remove it first. This alternative strategy improves efficiency by prioritizing the removal of streaks based on their starting points rather than solely focusing on the smallest number. This avoids the need to process the map in sorted order, using a heap or treemap.\n\nHow can we identify the start of any of the other streaks?\n\nEach streak must be consecutive, so if we cannot find a card with a value exactly 1 less than the current card, then it must be the start of a new streak.\n\nSo now, while we could remove `[7, 8, 9]` first, how can we determine if it's safe to do so? It would be unsafe to remove `[6, 7, 8]`, for instance, as that would be a mistake. We could argue that removing `[7, 8, 9]` is safe because there's no `10`, implying that `9` is the end of a streak. However, this approach of looking for streak starts and ends requires more code than simply looking for streak starts.\n\nThe key idea is to find an efficient way to identify the start of a streak. We can achieve this by selecting any card and decrementing the value until we reach a safe streak start. For example, if we begin with the card `8` from the sequence `[3, 2, 1, 5, 6, 7, 7, 8, 9]`, it's not a safe start because there's a `7`. Similarly, `7` is not a safe start because there's a `6`, and `6` is not safe because there's a `5`. However, `5` is a safe start as there's no `4`.\n\n#### Algorithm\n\n- Check if the length of the `hand` array is divisible by `groupSize`. If not, return `false`.\n- Create a `map` called `cardCount` to store the count of each card value in the given `hand` array.\n- Iterate through the `hand` array and update the `cardCount` map accordingly.\n- Iterate through the `hand` array to create the groups:\n  - For each card `card`, find the starting card `startCard` of the potential straight sequence by decrementing `startCard` until a card value is found that is not present in the `cardCount` map.\n  - Once the `startCard` is found, try to form a consecutive sequence of `groupSize` cards starting from `startCard`.\n    - If any card in the potential sequence is not present in the `cardCount` map, return `false`.\n    - If a consecutive sequence of `groupSize` cards can be formed, decrement the count of each card in the sequence from the `cardCount` map.\n- If all cards can be grouped into consecutive sequences of `groupSize`, return `true`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/NjFFV9J8/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"NjFFV9J8\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `hand` array and $k$ be `groupSize`.\n\n* Time complexity: $O(n)$\n\n    Populating the `cardCount` map takes $O(n)$ time, where $n$ is the length of the `hand` array.\n\n    The outer loop iterates over all cards in the `hand` array, which takes $O(n)$ time.\n\n    For each card `card`, the algorithm might need to check for the presence of $k$ consecutive cards, which takes $O(k)$ time in the worst case.\n\n    Given that the maximum number of cards we need to check consecutively is bounded by the size of the `hand`, the inner loop does not run $k$ times for each card independently. Instead, it runs $k$ times in total for each sequence of groups.\n\n    So, the algorithm forms $n/k$ groups, each of size $k$. Also, $k$ is limited to the size of the `hand` array because we can't have groups larger than the `hand`.\n\n    Thus, the inner loop effectively runs $n$ times in total across all iterations of the outer loop, as each of the $n$ cards is processed exactly once within a group.\n\n    Therefore, the overall time complexity is $O(n)$:\n\n    It's important to note that this $O(n)$ complexity holds because the inner loop, despite appearing nested, does not result in a quadratic increase in iterations but rather spreads the iterations across the total number of cards.\n\n    This approach might seem expensive at first glance. If we happen to select a card at the end of a long streak, we'll decrement all the way through the entire streak just to find a single start. However, this is worthwhile because we can then go back up through the streak, deleting it entirely. Overall, we might \"visit\" each card twice, once on the way down and once on the way up, resulting in $O(2n) = O(n)$ time complexity.\n\n    Although it might seem like we go through all the cards and do a lot of work for each card, leading to an $O(n^2)$ time complexity, this is not the case. The amount of work we do for each card is proportional to how much we \"uncount,\" and overall, we can't \"uncount\" more cards than were originally present, which is $n$. So, the overall time complexity is $O(n)$. For example, perhaps the first number causes us to do $O(n)$ work, \"uncounting\" every card. But for all other cards, we do essentially nothing (only $O(1)$ work for each).\n\n    Thus, the overall complexity is approximately $2n$, which simplifies to $O(n)$.\n\n* Space complexity: $O(n)$\n\n    The `cardCount` map stores the count of each card value.\n\n    In the worst case, all cards could have distinct values, resulting in a map size of $n$.\n\n    Therefore, the space complexity is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

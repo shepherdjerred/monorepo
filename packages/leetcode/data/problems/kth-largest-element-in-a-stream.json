@@ -1,0 +1,149 @@
+{
+  "questionId": "789",
+  "questionFrontendId": "703",
+  "title": "Kth Largest Element in a Stream",
+  "titleSlug": "kth-largest-element-in-a-stream",
+  "difficulty": "Easy",
+  "content": "<p>You are part of a university admissions office and need to keep track of the <code>kth</code> highest test score from applicants in real-time. This helps to determine cut-off marks for interviews and admissions dynamically as new applicants submit their scores.</p>\n\n<p>You are tasked to implement a class which, for a given integer&nbsp;<code>k</code>, maintains a stream of test scores and continuously returns the&nbsp;<code>k</code>th highest test score&nbsp;<strong>after</strong>&nbsp;a new score has been submitted. More specifically, we are looking for the <code>k</code>th highest score in the sorted list of all scores.</p>\n\n<p>Implement the&nbsp;<code>KthLargest</code> class:</p>\n\n<ul>\n\t<li><code>KthLargest(int k, int[] nums)</code> Initializes the object with the integer <code>k</code> and the stream of test scores&nbsp;<code>nums</code>.</li>\n\t<li><code>int add(int val)</code> Adds a new test score&nbsp;<code>val</code> to the stream and returns the element representing the <code>k<sup>th</sup></code> largest element in the pool of test scores so far.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong><br />\n<span class=\"example-io\">[&quot;KthLargest&quot;, &quot;add&quot;, &quot;add&quot;, &quot;add&quot;, &quot;add&quot;, &quot;add&quot;]<br />\n[[3, [4, 5, 8, 2]], [3], [5], [10], [9], [4]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[null, 4, 5, 5, 8, 8]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>KthLargest kthLargest = new KthLargest(3, [4, 5, 8, 2]);<br />\nkthLargest.add(3); // return 4<br />\nkthLargest.add(5); // return 5<br />\nkthLargest.add(10); // return 5<br />\nkthLargest.add(9); // return 8<br />\nkthLargest.add(4); // return 8</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong><br />\n<span class=\"example-io\">[&quot;KthLargest&quot;, &quot;add&quot;, &quot;add&quot;, &quot;add&quot;, &quot;add&quot;]<br />\n[[4, [7, 7, 7, 7, 8, 3]], [2], [10], [9], [9]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[null, 7, 7, 7, 8]</span></p>\n\n<p><strong>Explanation:</strong></p>\nKthLargest kthLargest = new KthLargest(4, [7, 7, 7, 7, 8, 3]);<br />\nkthLargest.add(2); // return 7<br />\nkthLargest.add(10); // return 7<br />\nkthLargest.add(9); // return 7<br />\nkthLargest.add(9); // return 8</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= nums.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= nums.length + 1</code></li>\n\t<li><code>-10<sup>4</sup> &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n\t<li><code>-10<sup>4</sup> &lt;= val &lt;= 10<sup>4</sup></code></li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>add</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"KthLargest\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"k\"\n      },\n      {\n        \"type\": \"integer[]\",\n        \"name\": \"nums\"\n      },\n      {\n        \"type\": \"integer\",\n        \"name\": \"numsSize\",\n        \"lang\": \"c\",\n        \"value\": \"size_2\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"name\": \"add\",\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"val\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"systemdesign\": true,\n  \"params\": [\n    {\n      \"name\": \"starts\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"ends\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<boolean>\",\n    \"dealloc\": true\n  },\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"968.1K\", \"totalSubmission\": \"1.6M\", \"totalAcceptedRaw\": 968105, \"totalSubmissionRaw\": 1591952, \"acRate\": \"60.8%\"}",
+  "likes": 6428,
+  "dislikes": 4072,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Kth Largest Element in an Array\", \"titleSlug\": \"kth-largest-element-in-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Finding MK Average\", \"titleSlug\": \"finding-mk-average\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Sequentially Ordinal Rank Tracker\", \"titleSlug\": \"sequentially-ordinal-rank-tracker\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"KthLargest\",\"add\",\"add\",\"add\",\"add\",\"add\"]\n[[3,[4,5,8,2]],[3],[5],[10],[9],[4]]",
+    "[\"KthLargest\",\"add\",\"add\",\"add\",\"add\"]\n[[4,[7,7,7,7,8,3]],[2],[10],[9],[9]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 24, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"tinder\", \"name\": \"Tinder\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"wells-fargo\", \"name\": \"Wells Fargo\"}]}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Binary Search Tree",
+      "slug": "binary-search-tree"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    },
+    {
+      "name": "Data Stream",
+      "slug": "data-stream"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class KthLargest {\npublic:\n    KthLargest(int k, vector<int>& nums) {\n        \n    }\n    \n    int add(int val) {\n        \n    }\n};\n\n/**\n * Your KthLargest object will be instantiated and called as such:\n * KthLargest* obj = new KthLargest(k, nums);\n * int param_1 = obj->add(val);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class KthLargest {\n\n    public KthLargest(int k, int[] nums) {\n        \n    }\n    \n    public int add(int val) {\n        \n    }\n}\n\n/**\n * Your KthLargest object will be instantiated and called as such:\n * KthLargest obj = new KthLargest(k, nums);\n * int param_1 = obj.add(val);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class KthLargest:\n\n    def __init__(self, k: int, nums: List[int]):\n        \n\n    def add(self, val: int) -> int:\n        \n\n\n# Your KthLargest object will be instantiated and called as such:\n# obj = KthLargest(k, nums)\n# param_1 = obj.add(val)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class KthLargest(object):\n\n    def __init__(self, k, nums):\n        \"\"\"\n        :type k: int\n        :type nums: List[int]\n        \"\"\"\n        \n\n    def add(self, val):\n        \"\"\"\n        :type val: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your KthLargest object will be instantiated and called as such:\n# obj = KthLargest(k, nums)\n# param_1 = obj.add(val)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} k\n * @param {number[]} nums\n */\nvar KthLargest = function(k, nums) {\n    \n};\n\n/** \n * @param {number} val\n * @return {number}\n */\nKthLargest.prototype.add = function(val) {\n    \n};\n\n/** \n * Your KthLargest object will be instantiated and called as such:\n * var obj = new KthLargest(k, nums)\n * var param_1 = obj.add(val)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class KthLargest {\n    constructor(k: number, nums: number[]) {\n        \n    }\n\n    add(val: number): number {\n        \n    }\n}\n\n/**\n * Your KthLargest object will be instantiated and called as such:\n * var obj = new KthLargest(k, nums)\n * var param_1 = obj.add(val)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class KthLargest {\n\n    public KthLargest(int k, int[] nums) {\n        \n    }\n    \n    public int Add(int val) {\n        \n    }\n}\n\n/**\n * Your KthLargest object will be instantiated and called as such:\n * KthLargest obj = new KthLargest(k, nums);\n * int param_1 = obj.Add(val);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} KthLargest;\n\n\nKthLargest* kthLargestCreate(int k, int* nums, int numsSize) {\n    \n}\n\nint kthLargestAdd(KthLargest* obj, int val) {\n    \n}\n\nvoid kthLargestFree(KthLargest* obj) {\n    \n}\n\n/**\n * Your KthLargest struct will be instantiated and called as such:\n * KthLargest* obj = kthLargestCreate(k, nums, numsSize);\n * int param_1 = kthLargestAdd(obj, val);\n \n * kthLargestFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type KthLargest struct {\n    \n}\n\n\nfunc Constructor(k int, nums []int) KthLargest {\n    \n}\n\n\nfunc (this *KthLargest) Add(val int) int {\n    \n}\n\n\n/**\n * Your KthLargest object will be instantiated and called as such:\n * obj := Constructor(k, nums);\n * param_1 := obj.Add(val);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class KthLargest(k: Int, nums: IntArray) {\n\n    fun add(`val`: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your KthLargest object will be instantiated and called as such:\n * var obj = KthLargest(k, nums)\n * var param_1 = obj.add(`val`)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass KthLargest {\n\n    init(_ k: Int, _ nums: [Int]) {\n        \n    }\n    \n    func add(_ val: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your KthLargest object will be instantiated and called as such:\n * let obj = KthLargest(k, nums)\n * let ret_1: Int = obj.add(val)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct KthLargest {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl KthLargest {\n\n    fn new(k: i32, nums: Vec<i32>) -> Self {\n        \n    }\n    \n    fn add(&self, val: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your KthLargest object will be instantiated and called as such:\n * let obj = KthLargest::new(k, nums);\n * let ret_1: i32 = obj.add(val);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class KthLargest\n\n=begin\n    :type k: Integer\n    :type nums: Integer[]\n=end\n    def initialize(k, nums)\n        \n    end\n\n\n=begin\n    :type val: Integer\n    :rtype: Integer\n=end\n    def add(val)\n        \n    end\n\n\nend\n\n# Your KthLargest object will be instantiated and called as such:\n# obj = KthLargest.new(k, nums)\n# param_1 = obj.add(val)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class KthLargest {\n    /**\n     * @param Integer $k\n     * @param Integer[] $nums\n     */\n    function __construct($k, $nums) {\n        \n    }\n  \n    /**\n     * @param Integer $val\n     * @return Integer\n     */\n    function add($val) {\n        \n    }\n}\n\n/**\n * Your KthLargest object will be instantiated and called as such:\n * $obj = KthLargest($k, $nums);\n * $ret_1 = $obj->add($val);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class KthLargest {\n\n  KthLargest(int k, List<int> nums) {\n    \n  }\n  \n  int add(int val) {\n    \n  }\n}\n\n/**\n * Your KthLargest object will be instantiated and called as such:\n * KthLargest obj = KthLargest(k, nums);\n * int param1 = obj.add(val);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class KthLargest(_k: Int, _nums: Array[Int]) {\n\n    def add(`val`: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your KthLargest object will be instantiated and called as such:\n * val obj = new KthLargest(k, nums)\n * val param_1 = obj.add(`val`)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule KthLargest do\n  @spec init_(k :: integer, nums :: [integer]) :: any\n  def init_(k, nums) do\n    \n  end\n\n  @spec add(val :: integer) :: integer\n  def add(val) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# KthLargest.init_(k, nums)\n# param_1 = KthLargest.add(val)\n\n# KthLargest.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec kth_largest_init_(K :: integer(), Nums :: [integer()]) -> any().\nkth_largest_init_(K, Nums) ->\n  .\n\n-spec kth_largest_add(Val :: integer()) -> integer().\nkth_largest_add(Val) ->\n  .\n\n\n%% Your functions will be called as such:\n%% kth_largest_init_(K, Nums),\n%% Param_1 = kth_largest_add(Val),\n\n%% kth_largest_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define kth-largest%\n  (class object%\n    (super-new)\n    \n    ; k : exact-integer?\n    ; nums : (listof exact-integer?)\n    (init-field\n      k\n      nums)\n    \n    ; add : exact-integer? -> exact-integer?\n    (define/public (add val)\n      )))\n\n;; Your kth-largest% object will be instantiated and called as such:\n;; (define obj (new kth-largest% [k k] [nums nums]))\n;; (define param_1 (send obj add val))"
+    }
+  ],
+  "solution": {
+    "id": "2399",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nImagine a university admissions office wants to keep track of the `k-th` highest test scores from applicants in real time. This allows them to dynamically determine the cut-off score as new applications come in. To achieve this, we'll create a class `KthLargest` that can return the `k-th` largest element for an incoming stream of numbers. Specifically, we need to implement:  \n\n1. The constructor `KthLargest(int k, int[] nums)`, which initializes the class with `k` and the initial stream of numbers `num`, \n2. The function `add(int val)`, which adds a new number `val` into the existing stream of numbers, and returns the `k-th` largest element of the updated stream. \n\n### Approach 1: Maintain Sorted List\n\n### Intuition\n\nIn this problem, we need to be able to repeatedly fetch the `k-th` largest element from a growing stream of numbers. Suppose we assume that the stream of numbers is always sorted in ascending order. In that case, returning the `k-th` largest element becomes a straightforward operation of fetching the `k-th` element from the end of the stream. \n\nThus, one approach is to maintain a list that stores the entire stream of numbers seen so far, and ensure the list remains sorted each time we add a new element. This allows us to fetch the `k-th` largest element with no extra work.\n\nFor our constructor, we can initialize our list `stream` with the initial set of numbers `nums` provided, and then sort `stream` in ascending order.  \n\nFor every new `val` added to the `stream` by the `add(int val)` call, we ensure `val` is inserted at the correct position so that `stream` remains sorted. Because `stream` is sorted beforehand, we can efficiently find the correct position for `val` by using [binary search](https://leetcode.com/explore/learn/card/binary-search/).\n\nFor this binary search insertion:\n\n1. We start with the entirety of `stream` as our search space\n2. We check the middle element `stream[mid]`\n    * If `stream[mid] == val` then we know that we can add `val` at index `mid`\n    * If `stream[mid] < val`, then `val` needs to be added to the right of `stream[mid]`, so we limit the search space to the right half of `stream`. \n    * If `stream[mid]` is greater than `val`,`val` needs to be added to the left of `stream[mid]`, so we limit the search space to the left half of `stream`. \n3.  We can repeat this procedure until we narrow down our search space to the correct index to add `val`.\n\nAfter inserting `val` in the correct position, we can return `stream[stream.length - k]`, which is the `k-th` largest element in the stream.\n\n### Algorithm\n\n1. In the constructor: \n    * Initialize class variable `k` \n    * Initialize class variable list `stream` \n    * Add all of `nums` to `stream`, used to keep track of the total stream.\n    * Sort `stream` in ascending order\n2. In the `add(int val)` function: \n    * Call helper function `getIndex(int val)` to find the index `i` to add `val`\n    * Insert `val` in `stream` at index `i`\n    * Return the `k-th` largest element in `stream`, at index `stream.size() - k`\n3. In the `getIndex(int val)`:\n    * **Define starting search space**: Initialize `left` to `0` and `right` to `stream.size() - 1`  \n    * While `left <= right`:\n        * **Calculate index for middle element**: Initialize `mid` to `(left + right) / 2`\n        * **Get middle element**: Initialize `midElement` to `stream.get(mid)`\n        * If `midElement == val` return `mid`\n        * If `midElement > val`:\n            * **Go to left half of search space**: Reassign `right` to `mid - 1`\n        * If `midElement < val`:\n            * **Go to right half of search space**: Reassign `left` to `mid + 1`\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/eBbNQ3hn/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"eBbNQ3hn\"></iframe>\n\n### Complexity Analysis\n\nLet $M$ be the size of the initial stream `nums` given in the constructor. Let $N$ be the number of calls of `add`. \n\n* Time Complexity: $O(N^2 + N \\cdot M)$\n\n    The constructor involves creating a list `stream` from `nums`, which takes $O(M)$ time. Then, sorting this list takes $O(M \\cdot \\log M)$ time. Thus, the time complexity of the constructor is $O(M \\cdot \\log M)$ time.  \n\n    The `add` function involves running a binary search on `stream`. Because the total size of `stream` at the end would be $O(M + N)$, each binary search is bounded by a time complexity of $O(\\log(M + N))$. Moreover, adding a number in `stream` can take worst-case $O(M + N)$ time, as adding an element in the middle of a list can offset all the elements to its right. Then, the time complexity of a single `add` call would be $O(M + N + \\log(M + N))$. Because `add` is called $N$ times, the time complexity of all the `add` calls would be $O(N \\cdot (M + N + \\log(M + N)))$.  \n\n    We see that after expanding the time complexity for the `add` function, the $N \\cdot M$ and $N^2$ terms dominate all the other $\\log$ terms in our calculations, so the total time complexity is $O(N^2 + N \\cdot M)$\n\n* Space Complexity: $O(M + N)$\n\n    The maximum size for `stream` is $M + N$, so the total space complexity is $O(M + N)$.\n\n### Approach 2: Heap\n\n### Intuition\n\nIn Approach 1, sorting the entire stream of numbers seems unnecessary because we only need the `k-th` largest element. Maintaining a sorted list becomes costly as its size increases. To optimize, we can focus on only the necessary elements for retrieving and updating the `k-th` largest element.\n\n\n!?!../Documents/703/slideshow1.json:960,540!?!\n\n\nConsider a stream of numbers `[0, 4, 6, 9]` where `k = 3` and incoming `val = 2`. Before adding `2`, the `k-th` largest element is `4`. Adding `2` does not affect `4`'s position since `2` is smaller. Now, if the incoming value is `7`, which is greater than both `4` and `6`, `7` would become the 2nd largest number, pushing `6` to be the new `k-th` largest element, and `4` is no longer in the top `k`.\n\n\n!?!../Documents/703/slideshow2.json:960,540!?!\n\n\nFrom this example, we see that keeping track of just the `k` largest elements allows us to efficiently maintain the `k-th` largest element:\n1. **If an incoming element `val` is smaller than or equal to the existing `k-th` largest element**: The `k` largest elements remain unchanged, and we can return the current `k-th` largest element.\n2. **If `val` is larger than the current `k-th` largest element**: It replaces the current `k-th` largest element. After adding `val`, the new `k-th` largest element is the next largest element.\n\nTo efficiently maintain the `k` largest elements, we use a min-heap. In a min-heap, elements are organized such that the smallest element is always at the top (root node), providing $O(1)$ access time. Adding elements and removing the top element from the min-heap can be done in $O(\\log n)$ time.\n\nFor our problem, the min-heap will contain the `k` largest elements, with the `k-th` largest element at the top. If a new `val` is greater than the `k-th` largest element, we add `val` to the heap and remove the top element, keeping the heap size at `k` and updating the `k-th` largest element.\n\nIn our optimized approach, we initialize the min-heap with the initial stream `nums` in the constructor and ensure it contains only the `k` largest elements. In the `add(int val)` function, if `val` is smaller than the current `k-th` largest element and the heap already contains `k` elements, we return the top element. Otherwise, we add `val`, remove the top element if the heap size exceeds `k`, and return the updated top element.\n\nThis approach is more efficient in both time and space complexity compared to maintaining a fully sorted list, as the relaxed ordering of a heap allows quick access and updates to the `k` largest elements without the overhead of sorting the entire stream.\n\n### Algorithm\n\n1. In the constructor: \n    * Initialize class variable `k` to the input value `k`\n    * Initialize a class `PriorityQueue` `minHeap` to hold the `k` largest elements\n    * Iterate through each element `num` in the initial stream `nums`:\n        * Call `add(num)`\n2. In the `add(int val)` function:\n    * If `val` is greater than the smallest element in `minHeap` or the size of `minHeap` is less than `k` elements:\n        * Add `val` to `minHeap`\n        * If the size of `minHeap` is greater than `k`, then remove the top element\n    * Return the top element as the `k-th` largest element in the stream\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7W8gK6JG/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"7W8gK6JG\"></iframe>\n\n### Complexity Analysis\n\nLet $M$ be the size of the initial stream `nums` given in the constructor, and let $N$ be the number of calls to `add`.\n\n* Time Complexity: $O((M + N) \\cdot \\log k)$\n\n    The `add` function involves adding and removing an element from a heap of size $k$, which is an $O( \\log k)$ operation. Since the `add` function is called $N$ times, the total time complexity for all `add` calls is $O(N \\cdot \\log k)$.\n    \n    The constructor also calls `add` $M$ times to initialize the heap, leading to a time complexity of $O(M \\cdot \\log k)$.\n    \n    Therefore, the overall time complexity is $O((M + N) \\cdot \\log k)$.\n\n* Space Complexity: $O(k)$\n\n    The `minHeap` maintains at most $k$ elements, so the space complexity is $O(k)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

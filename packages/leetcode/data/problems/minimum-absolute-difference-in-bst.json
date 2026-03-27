@@ -1,0 +1,145 @@
+{
+  "questionId": "530",
+  "questionFrontendId": "530",
+  "title": "Minimum Absolute Difference in BST",
+  "titleSlug": "minimum-absolute-difference-in-bst",
+  "difficulty": "Easy",
+  "content": "<p>Given the <code>root</code> of a Binary Search Tree (BST), return <em>the minimum absolute difference between the values of any two different nodes in the tree</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/02/05/bst1.jpg\" style=\"width: 292px; height: 301px;\" />\n<pre>\n<strong>Input:</strong> root = [4,2,6,1,3]\n<strong>Output:</strong> 1\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/02/05/bst2.jpg\" style=\"width: 282px; height: 301px;\" />\n<pre>\n<strong>Input:</strong> root = [1,0,48,null,null,12,49]\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[2, 10<sup>4</sup>]</code>.</li>\n\t<li><code>0 &lt;= Node.val &lt;= 10<sup>5</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Note:</strong> This question is the same as 783: <a href=\"https://leetcode.com/problems/minimum-distance-between-bst-nodes/\" target=\"_blank\">https://leetcode.com/problems/minimum-distance-between-bst-nodes/</a></p>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"getMinimumDifference\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"605.5K\", \"totalSubmission\": \"1M\", \"totalAcceptedRaw\": 605493, \"totalSubmissionRaw\": 1021485, \"acRate\": \"59.3%\"}",
+  "likes": 4747,
+  "dislikes": 275,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"K-diff Pairs in an Array\", \"titleSlug\": \"k-diff-pairs-in-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,2,6,1,3]",
+    "[1,0,48,null,null,12,49]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Search Tree",
+      "slug": "binary-search-tree"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int getMinimumDifference(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int getMinimumDifference(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def getMinimumDifference(self, root: Optional[TreeNode]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def getMinimumDifference(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number}\n */\nvar getMinimumDifference = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction getMinimumDifference(root: TreeNode | null): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int GetMinimumDifference(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint getMinimumDifference(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc getMinimumDifference(root *TreeNode) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun getMinimumDifference(root: TreeNode?): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func getMinimumDifference(_ root: TreeNode?) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn get_minimum_difference(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer}\ndef get_minimum_difference(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer\n     */\n    function getMinimumDifference($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int getMinimumDifference(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def getMinimumDifference(root: TreeNode): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec get_minimum_difference(root :: TreeNode.t | nil) :: integer\n  def get_minimum_difference(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec get_minimum_difference(Root :: #tree_node{} | null) -> integer().\nget_minimum_difference(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (get-minimum-difference root)\n  (-> (or/c tree-node? #f) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1840",
+    "content": "[TOC]\r\n\r\n## Solution\r\n\r\n---\r\n\r\n### Overview\r\n\r\nGiven the `root` of a Binary Search Tree (BST).\r\n\r\nOur task is to return the minimum absolute difference between the values of any two different nodes in the tree.\r\n\r\n---\r\n\r\n### Approach 1: Depth First Search\r\n\r\n#### Intuition\r\n\r\nLet's try to solve a simpler problem first. Given a sorted array of integers, find the minimum difference between any two integers in the array. To solve this problem, we don't need to check every pair of integers. Instead, checking the difference between every two consecutive integers would work. This is because the array is sorted. We will make use of this to solve our original problem.\r\n\r\nIn the original problem, we have some integer values (i.e. node values), and we need to find the minimum difference between any two values. Thus, the original problem is similar to the problem we discussed above if we keep those values in the sorted order.\r\n\r\nTo get all the node values we can use a graph traversal algorithm like depth-first search (DFS).\r\n\r\nIn DFS, we use a recursive function to explore nodes as far as possible along each branch. Upon reaching the end of a branch, we backtrack to the next branch and continue exploring.\r\n\r\nOnce we encounter an unvisited node, we will take one of its neighbor nodes (if exists) as the next node on this branch. Recursively call the function to take the next node as the 'starting node' and solve the subproblem.\r\n\r\nIf you are new to Depth First Search, please see our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/619/depth-first-search-in-graph/3882/) for more information on it!\r\n\r\nAfter gathering all of the node values into a list of integers, we sort the list and compare the difference between every two consecutive integers to determine the minimum difference between the values.\r\n\r\n#### Algorithm\r\n\r\n1. Create a list of integers `nodeValues` to store the node values.\r\n2. Perform the DFS traversal over the given binary search tree. We call `dfs(root)` where `dfs` is a recursive method that takes `TreeNode node` as a parameter. We perform the following in this method:\r\n    - If `node` is `null`, return.\r\n    - Add the current node's value, `node.val`, in the `nodeValues` list.\r\n    - Recursively perform DFS from `node.left`.\r\n    - Recursively perform DFS from `node.right`.\r\n3. Sort the `nodeValues` list.\r\n4. Create an integer variable `minDifference` and initialize it to infinity.\r\n5. Iterate over `inorderNodes` starting from index `1`, and for each element at index `i`, find the difference with the element at index `i - 1` and update the variable `minDifference` accordingly.\r\n6. Return `minDifference`.\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/G6VBSGhb/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"G6VBSGhb\"></iframe>\r\n\r\n#### Complexity Analysis\r\n\r\nHere, $n$ is the number of nodes in the given binary search tree.\r\n\r\n* Time complexity: $O(n \\cdot \\log n)$\r\n\r\n    - We traverse once over each node of the BST using DFS traversal which takes $O(n)$ time.\r\n    - We take $O(n \\cdot \\log n)$ time to sort a list of $n$ elements.\r\n    - We iterate over the list of size $n$ elements to find the minimum difference which also takes $O(n)$ time.\r\n\r\n* Space complexity: $O(n)$\r\n\r\n    - The DFS traversal is recursive and would take some space to store the stack calls. The maximum number of active stack calls at a time would be the tree's height, which in the worst case would be $O(n)$ when the tree is a straight line.\r\n    - We also need a list of size $O(n)$ to store the values of all the nodes.\r\n\r\n---\r\n\r\n### Approach 2: In-order Traversal Using List\r\n\r\n#### Intuition\r\n\r\nIn the previous approach, we found all the values and then sorted them. This would work for any binary tree. However, we are given a binary search tree, which we didn't take advantage of. A unique property of a binary search tree is that an **inorder traversal handles the nodes in sorted order.** This allows us to skip the sorting at the end.\r\n\r\nThe in-order traversal works by visiting the left subtree of a node first, then handling the node itself and finally visiting the right subtree. Since all the nodes in the left subtree are lesser than the current node's value and all nodes in the right subtree are greater than the current node's value, it generates a sorted list of values.\r\n\r\nHere's a visual representation of how inorder traversal works in a BST:\r\n\r\n![img](../Figures/530/530-1.png)\r\n\r\nAs you can see, we continue to move towards the left node until we no longer can, then handle the current node and repeat the process with the right node as the new starting node.\r\n\r\n#### Algorithm\r\n\r\n1. Create a list of integers `inorderNodes` to store the node values.\r\n2. Perform the inorder traversal of the binary search tree (BST). Call `inorderTraversal(root)` where `inorderTraversal` is a recursive method that takes `TreeNode node` as a parameter. We perform the following in this method:\r\n    - If `node` is `null`, return.\r\n    - Recursively perform the in-order traversal for `node.left`.\r\n    - Add the current node's value, `node.val`, in the `inorderNodes` list.\r\n    - Recursively perform the in-order traversal for `node.right`.\r\n3. Create an integer variable `minDifference` and initialize it to infinity.\r\n4. Iterate over `inorderNodes` starting from index `1`, and for each element at index `i`, find the difference with the element at index `i - 1` and update the variable `minDifference` accordingly.\r\n5. Return `minDifference`.\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/FSm45DhS/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FSm45DhS\"></iframe>\r\n\r\n#### Complexity Analysis\r\n\r\nHere, $n$ is the number of nodes in the given binary search tree.\r\n\r\n* Time complexity: $O(n)$\r\n\r\n    - We traverse once over each node of the BST using in-order traversal which takes $O(n)$ time.\r\n    - We iterate over the list of size $n$ elements to find the minimum difference which also takes $O(n)$ time.\r\n\r\n* Space complexity: $O(n)$\r\n\r\n    - The in-order traversal is recursive and would take some space to store the stack calls. The maximum number of active stack calls at a time would be the tree's height, which in the worst case would be $O(n)$ when the tree is a straight line.\r\n    - We also need a list of size $O(n)$ to store the values of all the nodes.\r\n\r\n---\r\n\r\n### Approach 3: In-order Traversal Without List\r\n\r\n#### Intuition\r\n\r\nAs we can notice in the previous approach, we only need the immediate in-order predecessor of any node to calculate the minimum difference. The rest of the nodes will not be needed and are stored unnecessarily in the list.\r\n\r\nThus, we can avoid storing elements in a list if we can find the difference between consecutive nodes on the fly during in-order traversal. For each node in the tree, we need the previous node we have handled, and then we can find the difference. This can be done using another variable `prevNode` that will store the value of the node we handled previously in the in-order traversal. This way, we don't have to store the elements in an array and at the same time, don't have to re-iterate over the nodes again.\r\n\r\n#### Algorithm\r\n\r\n1. Create an answer variable `minDifference` and initialize it to infinity.\r\n2. Create a `TreeNode` variable `prevNode` to keep track of the previous node we have traversed. Initialize it to `null`.\r\n3. Perform the inorder traversal of the binary search tree (BST). Call `inorderTraversal(root)` where `inorderTraversal` is a recursive method that takes `TreeNode node` as a parameter. We perform the following in this method:\r\n    - If `node` is `null`, return.\r\n    - Recursively perform the in-order traversal for `node.left`.\r\n    - We handle `node` now. We check its difference with the previously visited node `prevNode`. If `prevNode != null`, it means we have visited a node previously and hence, we try to update `minDifference` using `minDifference = min(minDifference, node.val - prevNode.val)`.\r\n    - Recursively perform the in-order traversal for `node.right`.\r\n4. Return `minDifference`.\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/NyykTa4K/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"NyykTa4K\"></iframe>\r\n\r\n#### Complexity Analysis\r\n\r\nHere, $n$ is the number of nodes in the given binary search tree.\r\n\r\n* Time complexity: $O(n)$\r\n\r\n    - We traverse once over each node of the BST using in-order traversal which takes $O(n)$ time.\r\n\r\n* Space complexity: $O(n)$\r\n\r\n    - The in-order traversal is recursive and would take some space to store the stack calls. The maximum number of active stack calls at a time would be the tree's height, which in the worst case would be $O(n)$ when the tree is a straight line.\r\n    - Note that this space complexity is only for the worst-case scenario, and in the average case we have greatly improved our space complexity since we don't need to create a list to store all the nodes.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

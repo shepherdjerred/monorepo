@@ -1,0 +1,134 @@
+{
+  "questionId": "518",
+  "questionFrontendId": "518",
+  "title": "Coin Change II",
+  "titleSlug": "coin-change-ii",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>coins</code> representing coins of different denominations and an integer <code>amount</code> representing a total amount of money.</p>\n\n<p>Return <em>the number of combinations that make up that amount</em>. If that amount of money cannot be made up by any combination of the coins, return <code>0</code>.</p>\n\n<p>You may assume that you have an infinite number of each kind of coin.</p>\n\n<p>The answer is <strong>guaranteed</strong> to fit into a signed <strong>32-bit</strong> integer.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> amount = 5, coins = [1,2,5]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> there are four ways to make up the amount:\n5=5\n5=2+2+1\n5=2+1+1+1\n5=1+1+1+1+1\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> amount = 3, coins = [2]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> the amount of 3 cannot be made up just with coins of 2.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> amount = 10, coins = [10]\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= coins.length &lt;= 300</code></li>\n\t<li><code>1 &lt;= coins[i] &lt;= 5000</code></li>\n\t<li>All the values of <code>coins</code> are <strong>unique</strong>.</li>\n\t<li><code>0 &lt;= amount &lt;= 5000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"change\",\r\n  \"params\": [\r\n    {\r\n        \"name\": \"amount\",\r\n        \"type\": \"integer\"\r\n    },\r\n    {\r\n      \"name\": \"coins\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"983.6K\", \"totalSubmission\": \"1.6M\", \"totalAcceptedRaw\": 983616, \"totalSubmissionRaw\": 1631432, \"acRate\": \"60.3%\"}",
+  "likes": 10216,
+  "dislikes": 243,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Value of K Coins From Piles\", \"titleSlug\": \"maximum-value-of-k-coins-from-piles\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of Ways to Earn Points\", \"titleSlug\": \"number-of-ways-to-earn-points\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count of Sub-Multisets With Bounded Sum\", \"titleSlug\": \"count-of-sub-multisets-with-bounded-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Length of the Longest Subsequence That Sums to Target\", \"titleSlug\": \"length-of-the-longest-subsequence-that-sums-to-target\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"The Number of Ways to Make the Sum\", \"titleSlug\": \"the-number-of-ways-to-make-the-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Inverse Coin Change\", \"titleSlug\": \"inverse-coin-change\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "5\n[1,2,5]",
+    "3\n[2]",
+    "10\n[10]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"pornhub\", \"name\": \"PornHub\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int change(int amount, vector<int>& coins) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int change(int amount, int[] coins) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def change(self, amount: int, coins: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def change(self, amount, coins):\n        \"\"\"\n        :type amount: int\n        :type coins: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} amount\n * @param {number[]} coins\n * @return {number}\n */\nvar change = function(amount, coins) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function change(amount: number, coins: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int Change(int amount, int[] coins) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int change(int amount, int* coins, int coinsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func change(amount int, coins []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun change(amount: Int, coins: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func change(_ amount: Int, _ coins: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn change(amount: i32, coins: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} amount\n# @param {Integer[]} coins\n# @return {Integer}\ndef change(amount, coins)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $amount\n     * @param Integer[] $coins\n     * @return Integer\n     */\n    function change($amount, $coins) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int change(int amount, List<int> coins) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def change(amount: Int, coins: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec change(amount :: integer, coins :: [integer]) :: integer\n  def change(amount, coins) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec change(Amount :: integer(), Coins :: [integer()]) -> integer().\nchange(Amount, Coins) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (change amount coins)\n  (-> exact-integer? (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1986",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an integer array `coins` representing coins of different denominations and an integer `amount` representing the total amount of money.\n\nOur task is to return the number of unique combinations that make up that amount. We can assume that we have an infinite number of each kind of coin.\n\n---\n\n### Approach 1: Top-Down Dynamic Programming\n\n#### Intuition\n\nThis is a classical dynamic programming problem. If you are new to Dynamic Programming, please see our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/dynamic-programming/) for more information on it!\n\nIntuitively, we could think of iterating over the coins. For a specific coin, we have two options: either we take this coin and decrease the remaining amount we still need, or we ignore the coin and move to the next one without changing the remaining amount we still need. We add the number of ways to make up the required amount from both choices.\n\nAs we may notice, we are breaking down a larger problem into smaller but similar problems, and adding the results of them to get the answer to the original problem. If we choose to take a coin with `value`, we are now searching for a combination of coins that sum up to `amount - value`. If we choose to skip the coin, we are still looking for a combination of coins that sum up to `amount`, but with fewer coins.\n\nAs we are breaking down a larger problem into smaller, similar problems, we can use recursion to implement this approach.\n\nLet `numberOfWays` be the recursive method that we use to solve the problem. It would require two parameters: the index of the current coin under consideration `i` and the remaining `amount` needed. It would return the number of ways to make up the `amount` by only considering the coins beginning from index `i`.\n\nIf `amount` equals `0`, we return `1` as we can always make up the `0` amount by not taking any coins.\n\nIf `i` equals `n` (where `n` is the number of coins), we return `0` as we don't have any more coins and hence can't possibly make up the amount. These two form the base cases of our recursive implementation.\n\nThe recursive relation can be written as:\n\n```\nIf (coins[i] > amount) {\n    numberOfWays(i, amount) = numberOfWays(i + 1, amount)\n} else {\n    numberOfWays(i, amount) = numberOfWays(i, amount - coins[i]) + numberOfWays(i + 1, amount)\n}\n```\n\nIf the current coin is worth more than the remaining amount we need, we must skip the current coin. Otherwise, we consider both options: skip the current coin or use the current coin.\n\nLet's take an example where we have three coins, `coins = [2, 2, 1]`, and `amount = 6`. The recursion tree of this example using the above relation would look something like this:\n\n![img](../Figures/518/518-1.png)\n\nThe first integer indicates the index of the current coin under consideration, while the second number indicates how much amount we need to make up. In the above diagram, we don't use the current coin in the left branch and we use it to decrease the required amount by its value in the right branch.\n\nWe can observe that there are several repeating problems in this solution highlighted in red. Several subproblems, such as `(2, 4)`, `(1, 4)`, `(1, 2)`, etc., are solved multiple times in the partial recursion tree shown above. If we draw the entire recursion tree, we can see that many subproblems are solved repeatedly.\n\nTo avoid this issue, we store the solution of each sub-problem and when we encounter the same subproblem again, we simply refer to the stored result. This is called **memoization**.\n\nAs we know the current state of a sub-problem depends on the index of the current under consideration and the remaining amount, we can use a 2D array `memo`. `memo[i][j]` stores the number of ways to make up `j` using the coins beginning from index `i`.\n\nWhenever we solve a subproblem, we store its answer in `memo`. We re-use it whenever it is required, instead of solving it again and again.\n\n#### Algorithm\n\n1. Create a 2D array `memo` with `n` rows and `amount + 1` columns. We initialize values to `-1` to indicate a subproblem not being solved yet.\n2. We implement a recursive method `numberOfWays` which takes two parameters: the index `i` of the current coin under consideration and the remaining `amount` to be made up. It returns the number of ways to make up the `amount` by using the coins starting from the index `i` till the last coin.\n    - If `amount == 0`, return `1`. We can choose one way by not selecting any coin to make up an amount of `0`.\n    - If `i == n`, we have no coins left to make up any amount. We return `0`.\n    - If we have already computed this problem, i.e., `memo[i][amount] != -1`, we return `memo[i][amount]`.\n    - If the value of the current coin under consideration exceeds the `amount`, we cannot use it. We recursively call `numberOfWays(i + 1, amount)`, set it equal to `memo[i][amount]`, and return it.\n    - Otherwise, we add the total number of ways to make up the `amount` by both picking up the current coin and ignoring it. Add up the values `numberOfWays(i, amount - coins[i])` and `numberOfWays(i + 1, amount)`, store the result in `memo[i][amount]`, and return it.\n3. Return `numberOfWays(0, amount)`, the answer to the original problem.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ii4xVArQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ii4xVArQ\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the size of `coins`.\n\n* Time complexity: $O(n \\cdot \\text{amount})$.\n    - We take $O(n \\cdot \\text{amount})$ to initialize the `memo` array.\n    - There are total of $O(n \\cdot \\text{amount})$ states that are computed. There is no loop inside the recursive method. Each state is computed once and it takes an average of $O(1)$ time to compute the answer of a state using the smaller states. So, it takes $O(n \\cdot \\text{amount})$ time to compute values for all the states.\n\n* Space complexity: $O(n \\cdot \\text{amount})$.\n    - The memo array takes $O(n \\cdot \\text{amount})$ space.\n    - The recursion stack can grow up to a maximum size of $O(n + \\text{amount})$ as we are reducing either the number of coins or the required amount while going from one recursive call to another.\n\n---\n\n### Approach 2: Bottom-Up Dynamic Programming\n\n#### Intuition\n\nWe used memoization in the preceding approach to store the answers to subproblems to solve a larger problem. We can also use a bottom-up approach to solve such problems without using recursion. We build answers to subproblems iteratively first, then use them to build answers to larger problems.\n\nWe create a 2D list `dp[n][amount]` where `dp[i][j]` stores the number of ways to make up the `j` amount using the coins beginning from index `i`. Note that here, `dp[i][j]` is equivalent to `numberOfWays(i, j)` from the previous approach.\n\nWe initialize `dp[i][0] = 1` for all values of `i` from `0` to `n` since we can always make up the amount `0` by not selecting any coins. While moving from bottom to top, this serves as the base case for our solution.\n\nWhen converting a top-down solution to a bottom-up one, we need to iterate starting from the base cases. As such, we will iterate `i` from `n - 1` until `0` in the outer loop. It controls the index of the current coin under consideration. For the inner loop, we iterate `j` from `1` until `amount` to control the remaining amount to be made.\n\nEach iteration inside the nested loop represents a state `(i, j)`, which is equivalent to a function call from the previous approach. As such, we can apply the exact same logic to calculate `dp[i][j]`.\n\nIf `coins[i] > j`, we cannot use the current coin, so we set `dp[i][j] = dp[i + 1][j]`.\n\nOtherwise, if we can use the current coin, we add the number of ways to make up the amount `j` by both selecting it and ignoring it. We set `dp[i][j] = dp[i + 1][j] + dp[i][j - coins[i]]`.\n\nAfter computing all the `dp` states in the nested loops, `dp[0][amount]` state stores the answer, just like `numberOfWays(0, amount)` was the answer in the previous approach.\n\n#### Algorithm\n\n1. Create an integer variable `n` and initialize it to the size of the `coins` array.\n2. Create a 2D array called `dp` with `n + 1` rows and `amount + 1` columns where `dp[i][j]` stores the number of ways to make up the `j` amount using the coins starting from index `i`.\n3. Set `dp[i][0] = 1` for all values of `i` as the base case.\n4. Fill `dp` using two loops. The outer loop runs from `i = n - 1` to `0`. It controls the index of the current coin under consideration. The inner loop runs from `j = 1` to `amount` and controls the amount to be made up. In the nested loops, we perform the following:\n    - If the value of the current coin at index `i` exceeds `j`, we cannot use it. We set `dp[i][j] = dp[i + 1][j]`.\n    - Otherwise, we add the total number of ways to make up `j` by using the current coin and ignoring it. We set `dp[i][j] = dp[i + 1][j] + dp[i][j - coins[i]]`.\n5. Return `dp[0][amount]`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/EyRAMDW7/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"EyRAMDW7\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the size of `coins`.\n\n* Time complexity: $O(n \\cdot \\text{amount})$.\n    - We take $O(n \\cdot \\text{amount})$ to initialize the `dp` array.\n    - We run two nested to fill the entire `dp` table. Each state consumes $O(1)$ time to compute. As a result, it takes $O(n \\cdot \\text{amount})$ to fill the `dp` table using two nested loops.\n\n* Space complexity: $O(n \\cdot \\text{amount})$.\n    - The dp array takes $O(n \\cdot \\text{amount})$ space.\n\n---\n\n### Approach 3: Dynamic Programming with Space Optimization\n\n#### Intuition\n\nThe state transition, as we discussed in previous approaches, is:\n\n> dp[i][j] = dp[i + 1][j] + dp[i][j - coins[i]]\n\nLooking closely at this transition, we can see that to fill `dp[i][j]` for a specific `i` and all values of `j` we only need the values from `dp[i]` and `dp[i + 1]`. Values from older rows like `i + 2`, `i + 3`, etc. are no longer relevant.\n\nWe can optimize the previous solution by using just one 1D array `dp` of size `amount + 1`.\n\nWe would have an outer loop that selects the current coin under consideration from `i = n - 1` to `0` similar to the previous approach. After the $i^{th}$ iteration of the outer loop, `dp[j]` would represent `dp[i][j]` from the previous approach.\n\nWe initialize `dp[0] = 1` since we can always make up the amount `0` by not selecting any coins. It acts as a base case. This is similar to setting `dp[i][0] = 1` in the previous approach.\n\nNow, consider that we have all of the values of row `i + 1` in `dp` and that we now need to compute the values of row `i`. We can begin an inner loop that iterates from `j = coins[i]` to `amount`. The reason we don't need to consider values from `j = 1` to `coins[i] - 1` is because we cannot select the $i^{th}$ coin for those values of `j`.\n\nIn such cases, as we saw in the previous approach, `dp[i][j] = dp[i + 1][j]`. As a result, we don't need to modify these values that were computed in the previous iteration.\n\nWe start an inner loop from `j = coins[i]` to `amount`. Now, we have two cases.\n\nWe ignore the current coin. The number of ways to make up the `j` amount ignoring the current coin is already present in `dp[j]`. It is computed in the previous iteration (for row `i + 1`) and is identical to the state `dp[i + 1][j]` of the previous approach.\n\nWhen we choose the current coin, we add `dp[j - coins[i]]`. This is equivalent to adding `dp[i][j - coins[i]]` from the previous approach.\n\nSo, we perform `dp[j] += dp[j - coins[i]]` to add both the cases (analogous to `dp[i + 1][j]` and `dp[i][j - coins[i]]`).\n\nAfter all iterations, `dp[amount]` stores the answer.\n\n> It is important to note that changing the order of the nested loops would produce an incorrect answer. We **must** iterate over the coins in the outer loop, not the amount.\n\nIf we change the ordering of the two loops, the outer loop would run from `i = 1` to `amount` and the inner loop would execute from `j = n - 1` to `0`. We would perform the same operation `dp[i] += dp[i - coins[j]]` inside the loops. After the $i^{th}$ iteration, `dp[i]` would store all the ways to make up the amount `i` using all the coins.\n\nLet's take an example where `coins = [1, 2]` and `amount = 3`. The correct answer for this case is `2` (`1 + 1 + 1` and `1 + 2`).\n\nHowever, if we look at the last iteration of the outer loop when `i = 3`, we will execute `dp[3] = dp[3] + dp[3 - 1]` when the first coin is selected using the inner loop. `dp[2]` would be equal to `2` as there are two ways to make up amount `2` (`1 + 1` and `2`). This way we selected two cases `1 + 1 + 1` and `1 + 2`.\n\nWe also execute `dp[3] = dp[3] + dp[3 - 2]` when the second coin is selected. `dp[1]` would be equal to `1` as there is just one way to make up amount `1`. This way we counted the `1 + 2` case. We counted the `1 + 2` case twice. Here's a visual representation showing all the `dp` states for this approach:\n\n![img](../Figures/518/518-2.png)\n\nOverall, the returned answer would be `3` which is incorrect. Switching the ordering of the loops returns all the permutations (`1 + 1 + 1`, `1 + 2`, `2 + 1`) as the answer instead of the combinations where `1 + 2` and `2 + 1` are not considered as separate cases.\n\n#### Algorithm\n\n1. Create an integer variable `n` and initialize it to the size of the `coins` array.\n2. Create an array `dp` of size `amount + 1`. Initialize `dp[0] = 1` (analogous to `dp[i][0] = 1`).\n3. Fill `dp` using two loops. The outer loop runs from `i = n - 1` to `0`. It controls the index of the current coin under consideration. The inner loop runs from `j = coins[i]` to `amount` and controls the amount to be made up. In the nested loops, we perform the following:\n    - `dp[j] += dp[j - coins[i]]`.\n4. Return `dp[amount]`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7t98zwq3/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"7t98zwq3\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the size of `coins`.\n\n* Time complexity: $O(n \\cdot \\text{amount})$\n\n    - Initializing the `dp` array takes $O(\\text{amount})$ time.\n    - To get the answer, we use two nested loops that take $O(n \\cdot \\text{amount})$ time.\n\n* Space complexity: $O(\\text{amount})$\n\n    - The `dp` array take $O(\\text{amount})$ space.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

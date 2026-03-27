@@ -1,0 +1,137 @@
+{
+  "questionId": "818",
+  "questionFrontendId": "800",
+  "title": "Similar RGB Color",
+  "titleSlug": "similar-rgb-color",
+  "difficulty": "Easy",
+  "content": "<p>The red-green-blue color <code>&quot;#AABBCC&quot;</code> can be written as <code>&quot;#ABC&quot;</code> in shorthand.</p>\n\n<ul>\n\t<li>For example, <code>&quot;#15c&quot;</code> is shorthand for the color <code>&quot;#1155cc&quot;</code>.</li>\n</ul>\n\n<p>The similarity between the two colors <code>&quot;#ABCDEF&quot;</code> and <code>&quot;#UVWXYZ&quot;</code> is <code>-(AB - UV)<sup>2</sup> - (CD - WX)<sup>2</sup> - (EF - YZ)<sup>2</sup></code>.</p>\n\n<p>Given a string <code>color</code> that follows the format <code>&quot;#ABCDEF&quot;</code>, return a string represents the color that is most similar to the given color and has a shorthand (i.e., it can be represented as some <code>&quot;#XYZ&quot;</code>).</p>\n\n<p><strong>Any answer</strong> which has the same highest similarity as the best answer will be accepted.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> color = &quot;#09f166&quot;\n<strong>Output:</strong> &quot;#11ee66&quot;\n<strong>Explanation:</strong> \nThe similarity is -(0x09 - 0x11)<sup>2</sup> -(0xf1 - 0xee)<sup>2</sup> - (0x66 - 0x66)<sup>2</sup> = -64 -9 -0 = -73.\nThis is the highest among any shorthand color.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> color = &quot;#4e3fe1&quot;\n<strong>Output:</strong> &quot;#5544dd&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>color.length == 7</code></li>\n\t<li><code>color[0] == &#39;#&#39;</code></li>\n\t<li><code>color[i]</code> is either digit or character in the range <code>[&#39;a&#39;, &#39;f&#39;]</code> for <code>i &gt; 0</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"similarRGB\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"color\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"18.5K\", \"totalSubmission\": \"27.2K\", \"totalAcceptedRaw\": 18490, \"totalSubmissionRaw\": 27212, \"acRate\": \"67.9%\"}",
+  "likes": 112,
+  "dislikes": 692,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"#09f166\"",
+    "\"#4e3fe1\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string similarRGB(string color) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String similarRGB(String color) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def similarRGB(self, color: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def similarRGB(self, color):\n        \"\"\"\n        :type color: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} color\n * @return {string}\n */\nvar similarRGB = function(color) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function similarRGB(color: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string SimilarRGB(string color) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* similarRGB(char* color) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func similarRGB(color string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun similarRGB(color: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func similarRGB(_ color: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn similar_rgb(color: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} color\n# @return {String}\ndef similar_rgb(color)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $color\n     * @return String\n     */\n    function similarRGB($color) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String similarRGB(String color) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def similarRGB(color: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec similar_rgb(color :: String.t) :: String.t\n  def similar_rgb(color) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec similar_rgb(Color :: unicode:unicode_binary()) -> unicode:unicode_binary().\nsimilar_rgb(Color) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (similar-rgb color)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1564",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nIn this problem, we are given a hex code `#ABCDEF` representing a red-green-blue (RGB) color. The definition of **similarity** between two colors `#ABCDEF` and `#UVWXYZ` is:\n\n$$Similarity = -(AB - UV)^2 - (CD - WX)^2 - (EF - YZ)^2$$\n\nMore specifically:\nWe split each color code into 3 sections of 2 digits in base 16, and calculate the square of the difference between the sections of two colors, as shown in the picture below:\n\n\n![img](../Figures/800/800-1.png)\n\n\nThere are also some **special** color codes in the format of `#AABBCC` where every two digits are the same, and they can be written as `#ABC`, for example: \n\n![img](../Figures/800/800-3.png)\n\nHere our task is: Among all such special color codes `#ABC` (or `#AABBCC`), we need to find the one that has the highest similarity to the given color code!\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition   \n\nLet's start with the most intuitive approach, brute force. Since we only need to look for the special color code `#ABC`, thus we can iterate over all such special colors and find the one with the highest similarity. Considering the digits are in base 16, therefore there will be a total of $$16^3$$ possible special color we shall try.\n\nHowever, we can further reduce some calculations. Recall how we calculate the similarity between two colors:\n\n![img](../Figures/800/800-1.png)\n\nWe are actually combining the three **partial similarities** into the total similarity. These partial similarities are independent of others. Therefore, we can just find the best fit for each section separately and then combine the best fits of three sections into one code color which is the color we look for. Hence, we only need to try $$16 \\cdot 3$$ colors.\n\n\nSince the each section of the color code is in base 16, for the convenience of our calculations, we would like to convert it into base 10 first:\n\n$$(AB)_{16} = 16 \\cdot A + B$$. \n\n$$(XX)_{16} = 16 \\cdot X + X = 17 \\cdot X$$. \n\nThen we can get the three partial similarities from these two values:\n\n$$Paritial\\ Similarity = -(16\\cdot A + B - 17\\cdot X)^2$$\n\nIterate over all `XX` sections and find out the one with the highest similarity to `AB`.\n\n\n\nLet's take a look at how we find the target color for `#930613` in the following picture:\n\n![img](../Figures/800/800-2.png)\n\n\n<br>\n\n#### Algorithm\n\n1) Split input color `#ABCDEF` into three sections `AB`, `CD`, `EF`.\n2) For each section, we iterate over all possible candidates: `00`, `11`, ... , `EE`, `FF`, and find out the one that has the highest partial similarity to this section.\n3) Once we find out the best fits for all three sections (Let's call them `XX`, `YY`, and `ZZ`), combine them into one RGB color code `#XXYYZZ` and this is the target color we want. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/bd5FXDk6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bd5FXDk6\"></iframe>\n\n\n#### Complexity Analysis\n\n\n* Time complexity: $$O(1)$$\n\n    - We split the input string into 3 sections.\n    - For each section, we traverse over 16 possible candidates to find out the one with the highest similarity.\n    - To sum up, the overall time complexity is $$O(1)$$\n    \n\n* Space complexity: $$O(1)$$\n\n    - We only need to find the three components that have the highest similarity and each component will use constant space.\n    - The space complexity is $$O(1)$$.\n\n\n<br/>\n\n\n---\n\n### Approach 2: Rounding\n\n#### Intuition   \n\nRecall we converted `XX` from base 16 to base 10:\n\n$$(XX)_{16} = 16 \\cdot X + X = 17 \\cdot X$$. \n\nWe would like to find the `X` that is closest to the section `AB` from the input color code, which actually equals to find the rounded value of $$(AB)_{16} / 17$$. \n\n\nThat is: $$X = round((AB)_{16} / 17)$$.\n\n\n\n<br>\n\n#### Algorithm\n\n1) Similarly, we split the input color color `#ABCDEF` into three sections `AB`, `CD`, and `EF`.\n2) For each section `AB`, we get the rounded value `X` of `AB` to `17`, then the best fit for this section is `XX`.\n3) Once we find out the best fits for all three sections (Let's call them `XX`, `YY`, and `ZZ`), combine them into one RGB color code `#XXYYZZ` and this is the target color we want. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/kCvZsBSQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"kCvZsBSQ\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $$O(1)$$\n\n    - We split the input color code into 3 sections.\n    - For each section, we get the rounded value of this section over `17` to make the best fit.\n    - To sum up, the overall time complexity is $$O(1)$$\n    \n\n* Space complexity: $$O(1)$$\n\n    - We only need to find the three components that have the highest similarity and each component will use constant space.\n    - The space complexity is $$O(1)$$.\n\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

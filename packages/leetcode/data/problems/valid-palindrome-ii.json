@@ -1,0 +1,138 @@
+{
+  "questionId": "680",
+  "questionFrontendId": "680",
+  "title": "Valid Palindrome II",
+  "titleSlug": "valid-palindrome-ii",
+  "difficulty": "Easy",
+  "content": "<p>Given a string <code>s</code>, return <code>true</code> <em>if the </em><code>s</code><em> can be palindrome after deleting <strong>at most one</strong> character from it</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aba&quot;\n<strong>Output:</strong> true\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abca&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> You could delete the character &#39;c&#39;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abc&quot;\n<strong>Output:</strong> false\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"validPalindrome\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"1.1M\", \"totalSubmission\": \"2.6M\", \"totalAcceptedRaw\": 1126968, \"totalSubmissionRaw\": 2556587, \"acRate\": \"44.1%\"}",
+  "likes": 8991,
+  "dislikes": 515,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Valid Palindrome\", \"titleSlug\": \"valid-palindrome\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Valid Palindrome III\", \"titleSlug\": \"valid-palindrome-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Valid Palindrome IV\", \"titleSlug\": \"valid-palindrome-iv\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"aba\"",
+    "\"abca\"",
+    "\"abc\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 15, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"whatnot\", \"name\": \"Whatnot\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 7, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 5, \"slug\": \"attentive\", \"name\": \"Attentive\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 2, \"slug\": \"ebay\", \"name\": \"eBay\"}, {\"timesEncountered\": 2, \"slug\": \"roku\", \"name\": \"Roku\"}, {\"timesEncountered\": 2, \"slug\": \"fortinet\", \"name\": \"Fortinet\"}]}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool validPalindrome(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean validPalindrome(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def validPalindrome(self, s: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def validPalindrome(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {boolean}\n */\nvar validPalindrome = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function validPalindrome(s: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool ValidPalindrome(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool validPalindrome(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func validPalindrome(s string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun validPalindrome(s: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func validPalindrome(_ s: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn valid_palindrome(s: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Boolean}\ndef valid_palindrome(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Boolean\n     */\n    function validPalindrome($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool validPalindrome(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def validPalindrome(s: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec valid_palindrome(s :: String.t) :: boolean\n  def valid_palindrome(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec valid_palindrome(S :: unicode:unicode_binary()) -> boolean().\nvalid_palindrome(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (valid-palindrome s)\n  (-> string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1317",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Two Pointers\n\n**Intuition**\n\nLet's start by thinking about how we can solve this problem without the optional deletion included. How can we check if a given string `s` is a palindrome?\n\n> A string is a palindrome if it reads the same forward as backwards.\n\nFor a string to be a palindrome, the first and last character must be the same, the second and the second last character must be the same, and so on. An efficient way to check if a string is a palindrome is to use two pointers.\n\n- Initialize one pointer at the start of the string and one at the end. \n- Compare the characters at these pointers - if they're different, the string can't be a palindrome. If they're the same, then move the pointers towards each other. \n- Continue until there is a mismatch (signifying the string is not a palindrome) or until the pointers meet each other (which would mean the string is a palindrome).\n\n!?!../Documents/680_Valid_Palindrome_II.json:960,540!?!\n\nWe can write a handy helper function `checkPalindrome(s, i, j)` that implements this logic, where `s` is the string we are checking, and `i` and `j` are the left and right bounds we want to consider. For example, to check if the entire string `s` is a palindrome, `i` will start at `0` and `j` will start at `s.length() - 1`.\n\n<iframe src=\"https://leetcode.com/playground/mjMWQNvv/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"mjMWQNvv\"></iframe>\n\nAn important thing to notice is that once we verify two characters match at positions `i` and `j`, we only care about the indices **between** `i` and `j`. For example, with `s = 'racecar'`, after verifying that `s[0]` and `s[6]` are the same character, we only care about indices `1` through `5`, which represent the substring `'aceca'`. If `'aceca'` is a palindrome, then `'racecar'` is a palindrome as well. \n\n> For our purposes, we can basically pretend that matched characters no longer exist. For example, after verifying that the first and last characters of 'racecar' match, we can reframe the problem as checking if 'aceca' can be a palindrome with at most one deletion.\n\nLet's assume we have some string `s = 'abbxa'`. On its own, `s` is not a palindrome. However, if we delete the `'x'`, then `s` becomes `'abba'`, which is a palindrome. If we use the same algorithm in `checkPalindrome`, we will see that the first and last characters match as `'a'`. The pointers move inwards, and the \"new\" string we're focused on is `'bbx'`.\n\nThe next check will be a mismatch - `'b' != 'x'`. This means that our original string is not a palindrome. However, we can delete one character. If `s` can be a palindrome after one deletion, the deletion **must** be of one of these mismatched characters. Deleting the character `'b'` gives us `'bx'`, and deleting the character `'x'` gives us `'bb'`. Because `'bb'` is a palindrome (which we can verify using `checkPalindrome`), the original string `'abbxa'` can become a palindrome with at most one character deletion.\n\nHere's an animation that demonstrates the process using a slightly longer example:\n\n!?!../Documents/680_Valid_Palindrome_II_2.json:960,540!?!\n\nThis leaves us two scenarios:\n\n1. `s` is a palindrome - great, we can just return `true`.\n\n2. Somewhere in `s`, there will be a pair of mismatched characters. We **must** use our allowed deletion on one of these characters. Try both options - if neither results in a palindrome, then return `false`. Otherwise, return `true`. We can \"delete\" the character at `j` by moving our bounds to `(i, j - 1)`. Likewise, we can \"delete\" the character at `i` by moving our bounds to `(i + 1, j)`. \n\n**Algorithm**\n\n1. Create a helper function `checkPalindrome` that takes a string `s`, and two pointers `i` and `j`. This function returns a boolean indicating if `s.substring(i, j)` is a palindrome. Implementation details for this function can be found in the first section of this article.\n\n2. Initialize two pointers, `i = 0` and `j = s.length() - 1`.\n\n3. While `i < j`, check if the characters at indices `i` and `j` match. If they don't, that means we must spend our deletion on one of these characters. Try both options using `checkPalindrome`. In other words, return true if either `checkPalindrome(s, i, j -1)` or `checkPalindrome(s, i + 1, j)` is true.\n\n4. If we exit the while loop, that means the original string is a palindrome. Since we didn't **need** to use the deletion, we should return `true`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/RZtCiat3/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RZtCiat3\"></iframe>\n\n\n**Complexity Analysis**\n\nGiven $$N$$ as the length of `s`,\n\n* Time complexity: $$O(N)$$.\n\n    The main while loop we use can iterate up to `N / 2` times, since each iteration represents a pair of characters. On any given iteration, we may find a mismatch and call `checkPalindrome` twice. `checkPalindrome` can also iterate up to `N / 2` times, in the worst case where the first and last character of `s` do not match.\n\n    Because we are only allowed up to one deletion, the algorithm only considers one mismatch. This means that `checkPalindrome` will never be called more than twice.\n\n    As such, we have a time complexity of $$O(N)$$.\n\n* Space complexity: $$O(1)$$.\n\n    The only extra space used is by the two pointers `i` and `j`, which can be considered constant relative to the input size.\n    \n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

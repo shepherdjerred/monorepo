@@ -1,0 +1,159 @@
+{
+  "questionId": "691",
+  "questionFrontendId": "691",
+  "title": "Stickers to Spell Word",
+  "titleSlug": "stickers-to-spell-word",
+  "difficulty": "Hard",
+  "content": "<p>We are given <code>n</code> different types of <code>stickers</code>. Each sticker has a lowercase English word on it.</p>\n\n<p>You would like to spell out the given string <code>target</code> by cutting individual letters from your collection of stickers and rearranging them. You can use each sticker more than once if you want, and you have infinite quantities of each sticker.</p>\n\n<p>Return <em>the minimum number of stickers that you need to spell out </em><code>target</code>. If the task is impossible, return <code>-1</code>.</p>\n\n<p><strong>Note:</strong> In all test cases, all words were chosen randomly from the <code>1000</code> most common US English words, and <code>target</code> was chosen as a concatenation of two random words.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> stickers = [&quot;with&quot;,&quot;example&quot;,&quot;science&quot;], target = &quot;thehat&quot;\n<strong>Output:</strong> 3\n<strong>Explanation:</strong>\nWe can use 2 &quot;with&quot; stickers, and 1 &quot;example&quot; sticker.\nAfter cutting and rearrange the letters of those stickers, we can form the target &quot;thehat&quot;.\nAlso, this is the minimum number of stickers necessary to form the target string.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> stickers = [&quot;notice&quot;,&quot;possible&quot;], target = &quot;basicbasic&quot;\n<strong>Output:</strong> -1\nExplanation:\nWe cannot form the target &quot;basicbasic&quot; from cutting letters from the given stickers.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == stickers.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 50</code></li>\n\t<li><code>1 &lt;= stickers[i].length &lt;= 10</code></li>\n\t<li><code>1 &lt;= target.length &lt;= 15</code></li>\n\t<li><code>stickers[i]</code> and <code>target</code> consist of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "We want to perform an exhaustive search, but we need to speed it up based on the input data being random.  \r\n\r\nFor all stickers, we can ignore any letters that are not in the target word.  \r\n\r\nWhen our candidate answer won't be smaller than an answer we have already found, we can stop searching this path.  \r\n\r\nWhen a sticker dominates another, we shouldn't include the dominated sticker in our sticker collection.  [Here, we say a sticker `A` dominates `B` if `A.count(letter) >= B.count(letter)` for all letters.]"
+  ],
+  "metaData": "{\r\n  \"name\": \"minStickers\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"stickers\",\r\n      \"type\": \"string[]\"\r\n    },\r\n    {\r\n      \"name\": \"target\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"95.8K\", \"totalSubmission\": \"188.8K\", \"totalAcceptedRaw\": 95809, \"totalSubmissionRaw\": 188827, \"acRate\": \"50.7%\"}",
+  "likes": 1335,
+  "dislikes": 130,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Ransom Note\", \"titleSlug\": \"ransom-note\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"with\",\"example\",\"science\"]\n\"thehat\"",
+    "[\"notice\",\"possible\"]\n\"basicbasic\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 25, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"ixl\", \"name\": \"IXL\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Memoization",
+      "slug": "memoization"
+    },
+    {
+      "name": "Bitmask",
+      "slug": "bitmask"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minStickers(vector<string>& stickers, string target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minStickers(String[] stickers, String target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minStickers(self, stickers: List[str], target: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minStickers(self, stickers, target):\n        \"\"\"\n        :type stickers: List[str]\n        :type target: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} stickers\n * @param {string} target\n * @return {number}\n */\nvar minStickers = function(stickers, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minStickers(stickers: string[], target: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinStickers(string[] stickers, string target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minStickers(char** stickers, int stickersSize, char* target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minStickers(stickers []string, target string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minStickers(stickers: Array<String>, target: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minStickers(_ stickers: [String], _ target: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_stickers(stickers: Vec<String>, target: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} stickers\n# @param {String} target\n# @return {Integer}\ndef min_stickers(stickers, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $stickers\n     * @param String $target\n     * @return Integer\n     */\n    function minStickers($stickers, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minStickers(List<String> stickers, String target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minStickers(stickers: Array[String], target: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_stickers(stickers :: [String.t], target :: String.t) :: integer\n  def min_stickers(stickers, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_stickers(Stickers :: [unicode:unicode_binary()], Target :: unicode:unicode_binary()) -> integer().\nmin_stickers(Stickers, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-stickers stickers target)\n  (-> (listof string?) string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "257",
+    "content": "[TOC]\n\n### Approach 1: Optimized Exhaustive Search\n\n<br>\n\n**Intuition**\n\nA natural answer is to exhaustively search for combinations of stickers. Because the data is randomized, there are many heuristics available to us that will make this faster.\n\n* For all stickers, we can ignore any letters that are not in the target word.\n\n* When our candidate's answer won't be smaller than an answer we have already found, we can stop searching this path.\n\n* We should try to have our exhaustive search bound to the answer as soon as possible, so the effect described in the above point happens more often.\n\n* When a sticker dominates another, we shouldn't include the dominant sticker in our sticker collection.  [Here, we say a sticker `A` dominates `B` if `A.count(letter) >= B.count(letter)` for all letters.]\n\n<br>\n\n**Algorithm**\n\nFirstly, for each sticker, let's create a count of that sticker (a mapping `letter -> sticker.count(letter)`) that does not consider letters not in the target word.  Let `A` be an array of these counts.  Also, let's create `t_count`, a count of our `target` word.\n\nSecondly, let's remove dominated stickers. Because dominance is a transitive relation, we only need to check if a sticker is not dominated by any other sticker once - the ones that aren't dominated are included in our collection.\n\nWe are now ready to begin our exhaustive search. A call to `search(ans)` denotes that we want to decide the minimum number of stickers we can use in `A` to satisfy the target count `t_count`. `ans` will store the currently formed answer, and `best` will store the current best answer.\n\nIf our current answer can't beat our current best answer, we should stop searching.  Also, if there are no stickers left and our target is satisfied, we should update our answer.\n\nOtherwise, we want to know the maximum number of these stickers we can use. For example, if this sticker is `'abb'` and our target is `'aaabbbbccccc'`, then we could use a maximum of 3 stickers.  This is the maximum of `math.ceil(target.count(letter) / sticker.count(letter))`, taken over all `letter`s in `sticker`.  Let's call this quantity `used`.\n\nAfter, for the sticker we are currently considering, we try to use `used` of them, then `used - 1`, `used - 2`, and so on. The reason we do it in this order is so that we can arrive at a value for `best` more quickly, which will stop other branches of our exhaustive search from continuing.\n\nThe Python version of this solution showcases using `collections.Counter` as a way to simplify some code sections, whereas the Java solution sticks to arrays.\n\n<iframe src=\"https://leetcode.com/playground/KP3fS7G3/shared\" frameBorder=\"0\" name=\"KP3fS7G3\" width=\"100%\" height=\"515\"></iframe>\n\n<br>\n\n**Complexity Analysis**\n\n* Time Complexity: Let $$N$$ be the number of stickers, and $$T$$ be the number of letters in the target word. A bound for time complexity is $$O(N^{T+1} T^2)$$: for each sticker, we'll have to try using it up to $$T+1$$ times, and updating our target count costs $$O(T)$$, which we do up to $$T$$ times. Alternatively, since the answer is bounded at $$T$$, we can prove that we can only search up to $$\\binom{N+T-1}{T-1}$$ times. This would be $$O(\\binom{N+T-1}{T-1} T^2)$$.\n\n* Space Complexity: $$O(N+T)$$, to store `stickersCount`, `targetCount`, and handle the recursive call stack when calling `search`.\n\n<br>\n\n---\n### Approach 2: Dynamic Programming\n\n<br>\n\n**Intuition**\n\nSuppose we need `dp[state]` stickers to satisfy all `target[i]`'s for which the `i`-th bit of `state` is set. We would like to know `dp[(1 << len(target)) - 1]`.\n\n<br>\n\n**Algorithm**\n\nFor each `state`, let's work with it as `now` and look at what happens to it after applying a sticker. For each letter in the sticker that can satisfy an unset bit of `state`, we set the bit (`now |= 1 << i`). In the end, we know `now` is the result of applying that sticker to `state`, and we update our `dp` appropriately.\n\nWhen using Python, we will need some extra techniques from *Approach #1* to pass in time.\n\n<iframe src=\"https://leetcode.com/playground/JTZ2SYco/shared\" frameBorder=\"0\" name=\"JTZ2SYco\" width=\"100%\" height=\"515\"></iframe>\n\n<br>\n\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(2^T * S * T)$$ where $$S$$ is the total number of letters in all stickers, and $$T$$ is the number of letters in the target word. We can examine each loop carefully to arrive at this conclusion.\n\n* Space Complexity: $$O(2^T)$$, the space used by `dp`.\n\n<br>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

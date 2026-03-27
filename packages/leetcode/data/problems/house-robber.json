@@ -1,0 +1,133 @@
+{
+  "questionId": "198",
+  "questionFrontendId": "198",
+  "title": "House Robber",
+  "titleSlug": "house-robber",
+  "difficulty": "Medium",
+  "content": "<p>You are a professional robber planning to rob houses along a street. Each house has a certain amount of money stashed, the only constraint stopping you from robbing each of them is that adjacent houses have security systems connected and <b>it will automatically contact the police if two adjacent houses were broken into on the same night</b>.</p>\n\n<p>Given an integer array <code>nums</code> representing the amount of money of each house, return <em>the maximum amount of money you can rob tonight <b>without alerting the police</b></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,1]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> Rob house 1 (money = 1) and then rob house 3 (money = 3).\nTotal amount you can rob = 1 + 3 = 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,7,9,3,1]\n<strong>Output:</strong> 12\n<strong>Explanation:</strong> Rob house 1 (money = 2), rob house 3 (money = 9) and rob house 5 (money = 1).\nTotal amount you can rob = 2 + 9 + 1 = 12.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 100</code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 400</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"rob\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"3.5M\", \"totalSubmission\": \"6.6M\", \"totalAcceptedRaw\": 3480081, \"totalSubmissionRaw\": 6558614, \"acRate\": \"53.1%\"}",
+  "likes": 23425,
+  "dislikes": 516,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Product Subarray\", \"titleSlug\": \"maximum-product-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"House Robber II\", \"titleSlug\": \"house-robber-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Paint House\", \"titleSlug\": \"paint-house\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Paint Fence\", \"titleSlug\": \"paint-fence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"House Robber III\", \"titleSlug\": \"house-robber-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Non-negative Integers without Consecutive Ones\", \"titleSlug\": \"non-negative-integers-without-consecutive-ones\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Coin Path\", \"titleSlug\": \"coin-path\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Delete and Earn\", \"titleSlug\": \"delete-and-earn\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Solving Questions With Brainpower\", \"titleSlug\": \"solving-questions-with-brainpower\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Number of Ways to Place Houses\", \"titleSlug\": \"count-number-of-ways-to-place-houses\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"House Robber IV\", \"titleSlug\": \"house-robber-iv\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Mice and Cheese\", \"titleSlug\": \"mice-and-cheese\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Largest Element in an Array after Merge Operations\", \"titleSlug\": \"largest-element-in-an-array-after-merge-operations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"House Robber V\", \"titleSlug\": \"house-robber-v\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,1]",
+    "[2,7,9,3,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 16, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 2, \"slug\": \"expedia\", \"name\": \"Expedia\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"gusto\", \"name\": \"Gusto\"}], \"more_than_six_months\": [{\"timesEncountered\": 44, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 30, \"slug\": \"databricks\", \"name\": \"Databricks\"}, {\"timesEncountered\": 8, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 7, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 6, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 5, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 5, \"slug\": \"datadog\", \"name\": \"Datadog\"}, {\"timesEncountered\": 4, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 4, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 4, \"slug\": \"oracle\", \"name\": \"Oracle\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int rob(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int rob(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def rob(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def rob(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar rob = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function rob(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int Rob(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int rob(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func rob(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun rob(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func rob(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn rob(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef rob(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function rob($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int rob(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def rob(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec rob(nums :: [integer]) :: integer\n  def rob(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec rob(Nums :: [integer()]) -> integer().\nrob(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (rob nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1119",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nOur professional robber is in for a treat! They have a buffet of houses available for them to rob. Technically, they can rob any of the houses on the street. However, the alarm companies are smart enough to catch any robber red-handed under certain conditions. If there were no alarms in the houses, obviously the robber would rob every house and make the most money. \n\nHowever, now they have a lot of choices to make. Let's look at a few houses on the street, the different choices our robber can make, and how those choices will affect the heist.\n\n![robber example optimal](../Figures/198/img1.png)\n\n\n*Figure 1. An example showing the robber making the optimal choices to obtain the most money.*\n\n\nIn this example, the robber ended up making 600 which is the maximum they can make for this series of houses. Let's take another set of choices that the robber can make where they will not make the maximum amount.\n\n![robber example not so optimal](../Figures/198/img2.png)\n\n\n*Figure 2. The same example showing the robber making sub-optimal choices.*\n\n\nIn this case, the series of choices that the robber made turned out to be less than optimal and they ended up making a paltry 250.\n\n>A series of choices essentially gives us a subset of houses from the original list. We need to make these choices in such a way that the overall profit is maximized.\n\nThere is no *greedy* way of deciding if the robber should rob a house or not. The best greedy strategy may be to check the neighboring houses and only rob a house if it gives them more money than the neighbors combined. That might be a sound greedy strategy. However, by doing so, the robber may miss out on making the maximum profit. Let's look at an example for that.\n\n![robber greedy choice doesn't work](../Figures/198/img3.png)\n\n\n*Figure 3. Depicting the failure of a greedy strategy on the same example.*\n\n\nIn this example, you could argue that after the robber decided to rob the 3rd house, they could go back and rob the first one as well. In this case, that will give us the optimal answer. However, that decision is still **local** in that we just consider 3 houses at a time.  \n\n> What we need is to try all the possibilities and see which one gives us (the robber) the optimal loot.\n\n</br>\n\n---\n\n### Approach 1: Recursion with Memoization\n\n**Intuition**\n\nAs we mentioned above, the easiest approach here is to try *all* possible combinations of house choices and then use the combination that gives the maximum amount of money to the robber. We do this because there is no plausible greedy strategy that we can use to decide if the robber should rob a particular house or not.\n\nWe rely on our good friend recursion whenever we have *choices* involved in solving a problem. Technically, a robber can come back and rob a house that they previously rejected. However, since we are trying *all* options, we will not go back and rob an unrobbed house since that scenario will be covered in a different recursive path.\n\n> The basic choice that we make is whether to rob the current house or not. If the robber decides to rob the current house, they have to skip the next house. Otherwise, they can evaluate the same choice on the next house i.e. to rob or not to rob.\n\n**Subproblems**\n\nTo approach a problem recursively, we need to make sure that it can be broken down into sub-problems. Additionally, we need to ensure that the optimal solution to these sub-problems can be used to form the solution to the main problem. Let's see how we can divide this problem into smaller recursive problems.\n\nLet's say that we have a function called `robFrom` which we will use to solve this problem. The only input this function takes is an index, `position`. This `position` essentially represents a *suffix in the array which we, the robber, have yet to scan*. Essentially, the `position` indicates that the robber has yet to scan houses $$[\\text{position}, \\cdots, N]$$ where $$N$$ represents the total number of houses.\n\nNaturally, the answer to our problem would be the function call `robFrom(0)` which means scan all the houses and return the maximum profit. Now let's think about `robFrom(i)` for a moment. This simply represents a sub-array or a suffix from the main array. We can think about this as a smaller max-profit problem in itself, can't we?\n\n> A suffix of the initial set of houses simply means a smaller set of houses that the robber has to consider. We will be working with the assumption that in the function call __robFrom(i)__, the robber has to maximize their profit from i..N houses.\n\nAt each step, the robber has two options. If he chooses to rob the current house, he will have to skip the next house on the list by moving two steps forward. If he chooses not to rob the current house, he can simply move on to the next house in the list. Let's see this mathematically. \n\n$$\n\\text{robFrom}(i) = \\text{max}(\\text{robFrom}(i + 1), \\text{robFrom}(i + 2) + \\text{nums}(i))\n$$\n\n**Recursion tree and memoization**\n\nNow that we have an idea about the recursive structure of our problem, let's look at the recursion tree which will be formed. This is important so that we can determine if we have repeating sub-problems, in which case we can use memoization or caching to reduce the overall solution complexity.\n\n![overlapping subproblems in the recursion tree](../Figures/198/img4.png)\n\n\n*Figure 4. Overlapping sub-problems in the recursion tree.*\n\n\nAs we can see in the recursion tree above, we have the repeating sub-problems (nodes) marked in the same color. A repeating node in the tree represents an entire subtree calculation that has to be repeated which is computationally expensive. Hence, we cache the already computed results so that we don't need to re-calculate the maximum profit for previously seen sub-problems.\n\nLet's formalize this idea concretely in the algorithm section below.\n\n**Algorithm**\n\n1. We define a function called `robFrom()` which takes the index of the house that the robber currently has to examine. Also, this function takes the `nums` array which is required during the calculations.\n2. At each step of our recursive call, the robber has two options. He can either rob the current house or not.\n   1. If the robber chooses to rob the current house, then he have to skip the next house i.e `robFrom(i + 2, nums)`. The answer here would be whatever is returned by `robFrom(i + 2, nums)` in addition to the amount that the robber will get by robbing the current house i.e. `nums[i]`.\n   2. Otherwise, he can simply move on to the house next door and return whatever profit he will make in the sub-problem i.e. `robFrom(i + 1, nums)`.\n3. We need to find, cache, and return the maximum of these two options at each step.\n4. `robFrom(0, nums)` will give us the answer to the entire problem.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/mF2JHUv6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"mF2JHUv6\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$ since we process at most $$N$$ recursive calls, thanks to caching, and during each of these calls, we make an $$O(1)$$ computation which is simply making two other recursive calls, finding their maximum, and populating the cache based on that.\n\n* Space Complexity: $$O(N)$$ which is occupied by the cache and also by the recursion stack.\n\n</br>\n\n---\n\n### Approach 2: Dynamic Programming\n\n**Intuition**\n\nThe idea here is the same as before except that instead of following a recursive approach, we will be sticking with a tabular approach. The recursive approach may run into trouble when the recursion stack grows too large.  It may also run into trouble because, for each recursive call, the compiler must do additional work to maintain the call stack (function variables, etc.) which results in unwanted overhead. The dynamic programming approach is simply a tabular formulation of the ideas presented above.\n\nThe cache we had before will still exist in this approach but instead of calling it a cache, we will refer to it as our dynamic programming table. Every DP solution has a table that we populate starting with the base case or the simplest of cases for which we already know the answer. E.g. for our problem, we know that in the absence of houses, the robber will make `0` profit. Similarly, if there is just one house left to rob, the robber will rob that house, and that will be the maximum profit. \n\nWe start by populating the dynamic programming table with these initial values and then build the table in a *bottom-up fashion* which is the essence of this solution. Let's look at the algorithm to formalize this idea.\n\n**Algorithm**\n\n1. We define a table which we will use to store the results of our sub-problems. Let's call this table `maxRobbedAmount` where `maxRobbedAmount[i]` is the same value that would be returned by `recurse(i)` in the previous solution.\n2. We set `maxRobbedAmount[N]` to `0` since this means the robber doesn't have any houses left to rob, thus zero profit. Additionally, we set `maxRobbedAmount[N - 1]` to `nums[N - 1]` because in this case, there is only one house to rob which is the last house. Robbing it will yield the maximum profit.\n3. We iterate from `N - 2` down to `0` and we set `maxRobbedAmount[i] = max(maxRobbedAmount[i + 1], maxRobbedAmount[i + 2] + nums[i])`. Note that this is the same as the recursive formulation in the previous solution. The only difference is that we have *already calculated the solutions to the sub-problems and we simply reuse the solutions in O(1) time when calculating the solution to the main problem*.\n4. We return the value in `maxRobbedAmount[0]`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/To34uaMW/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"To34uaMW\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$ since we have a loop from $$N - 2 \\cdots 0$$ and we simply use the pre-calculated values of our dynamic programming table for calculating the current value in the table which is a constant time operation.\n\n* Space Complexity: $$O(N)$$ which is used by the table. So what is the real advantage of this solution over the previous solution? In this case, we don't have a recursion stack.  When the number of houses is large, a recursion stack can become a serious limitation, because the recursion stack size will be huge and the compiler will eventually run into `stack-overflow problems` (no pun intended!).\n\n</br>\n\n---\n### Approach 3: Optimized Dynamic Programming\n\n**Intuition**\n\nThis is the exact same solution as the previous one with the exception that we will be optimizing the space complexity here. Let's look at the recursive relation again to see where we can reduce the amount of space used.\n\n$$\n\\text{robFrom}(i) = \\text{max}(\\text{robFrom}(i + 1), \\text{robFrom}(i + 2) + \\text{nums}(i))\n$$\n\n> To calculate the current value, we just need to rely on the next two consecutive values/recursive calls.\n\nPorting this idea over to our dynamic programming solution we see that in order to calculate the value at a current index in the dynamic programming table, we simply need to know the next two values i.e. `maxRobbedAmount[i + 1]` and `maxRobbedAmount[i + 2]`. In the end we will return the value of `maxRobbedAmount[0]`. \n\n> Instead of keeping an entire table for storing these cached values, we can get by with simply keeping track of the \"next\" two values.\n\nLet's see this more concretely in the algorithm section.\n\n**Algorithm**\n\n1. We will make use of two variables here called `robNext` and `robNextPlusOne` which at any point will represent the optimal solution for `maxRobbedAmount[i + 1]` and `maxRobbedAmount[i + 2]`.  These are the two values that we need to calculate the current value.\n2. We set `robNextPlusOne` to `0` since this means the robber doesn't have any houses left to rob, thus zero profit. Additionally, we set `robNext` to `nums[N - 1]` because in this case there is only one house to rob which is the last house. Robbing it will yield the maximum profit. \n\n    **Note** We are assuming that `robNextPlusOne` is the value of `maxRobbedAmount[N]` and `robNext` is `maxRobbedAmount[N-1]` initially.\n\n3. We iterate from `N - 2` down to `0` and set `current = max(robNext, robNextPlusOne + nums[i])`. Note that this is the same as the dynamic programming solution except that we are making use of our variables and not entries from the table.\n4. Set `robNextPlusOne = robNext`.\n5. Set `robNext = current`. Updating the two variables is important as we iterate down to `0`.\n4. We return the value in `robNext`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/csEhnVWN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"csEhnVWN\"></iframe>\n\n**Time Complexity**\n\n* Time Complexity: $$O(N)$$ since we have a loop from $$N - 2 \\cdots 0$$ and we use the precalculated values of our dynamic programming table to calculate the current value in the table which is a constant time operation.\n\n* Space Complexity: $$O(1)$$ since we are not using a table to store our values. Simply using two variables will suffice for our calculations.\n\n</br>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

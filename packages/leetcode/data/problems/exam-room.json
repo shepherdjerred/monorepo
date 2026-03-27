@@ -1,0 +1,131 @@
+{
+  "questionId": "885",
+  "questionFrontendId": "855",
+  "title": "Exam Room",
+  "titleSlug": "exam-room",
+  "difficulty": "Medium",
+  "content": "<p>There is an exam room with <code>n</code> seats in a single row labeled from <code>0</code> to <code>n - 1</code>.</p>\n\n<p>When a student enters the room, they must sit in the seat that maximizes the distance to the closest person. If there are multiple such seats, they sit in the seat with the lowest number. If no one is in the room, then the student sits at seat number <code>0</code>.</p>\n\n<p>Design a class that simulates the mentioned exam room.</p>\n\n<p>Implement the <code>ExamRoom</code> class:</p>\n\n<ul>\n\t<li><code>ExamRoom(int n)</code> Initializes the object of the exam room with the number of the seats <code>n</code>.</li>\n\t<li><code>int seat()</code> Returns the label of the seat at which the next student will set.</li>\n\t<li><code>void leave(int p)</code> Indicates that the student sitting at seat <code>p</code> will leave the room. It is guaranteed that there will be a student sitting at seat <code>p</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;ExamRoom&quot;, &quot;seat&quot;, &quot;seat&quot;, &quot;seat&quot;, &quot;seat&quot;, &quot;leave&quot;, &quot;seat&quot;]\n[[10], [], [], [], [], [4], []]\n<strong>Output</strong>\n[null, 0, 9, 4, 2, null, 5]\n\n<strong>Explanation</strong>\nExamRoom examRoom = new ExamRoom(10);\nexamRoom.seat(); // return 0, no one is in the room, then the student sits at seat number 0.\nexamRoom.seat(); // return 9, the student sits at the last seat number 9.\nexamRoom.seat(); // return 4, the student sits at the last seat number 4.\nexamRoom.seat(); // return 2, the student sits at the last seat number 2.\nexamRoom.leave(4);\nexamRoom.seat(); // return 5, the student sits at the last seat number 5.\n\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>9</sup></code></li>\n\t<li>It is guaranteed that there is a student sitting at seat <code>p</code>.</li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>seat</code> and <code>leave</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"ExamRoom\",\n  \"maxbytesperline\": 200000,\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"n\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"name\": \"seat\",\n      \"params\": [],\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    },\n    {\n      \"name\": \"leave\",\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"p\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"void\"\n      }\n    }\n  ],\n  \"systemdesign\": true,\n  \"params\": [\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<String>\",\n    \"dealloc\": true\n  }\n}",
+  "stats": "{\"totalAccepted\": \"74.4K\", \"totalSubmission\": \"171.9K\", \"totalAcceptedRaw\": 74447, \"totalSubmissionRaw\": 171929, \"acRate\": \"43.3%\"}",
+  "likes": 1419,
+  "dislikes": 527,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximize Distance to Closest Person\", \"titleSlug\": \"maximize-distance-to-closest-person\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"ExamRoom\",\"seat\",\"seat\",\"seat\",\"seat\",\"leave\",\"seat\"]\n[[10],[],[],[],[],[4],[]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"quora\", \"name\": \"Quora\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class ExamRoom {\npublic:\n    ExamRoom(int n) {\n        \n    }\n    \n    int seat() {\n        \n    }\n    \n    void leave(int p) {\n        \n    }\n};\n\n/**\n * Your ExamRoom object will be instantiated and called as such:\n * ExamRoom* obj = new ExamRoom(n);\n * int param_1 = obj->seat();\n * obj->leave(p);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class ExamRoom {\n\n    public ExamRoom(int n) {\n        \n    }\n    \n    public int seat() {\n        \n    }\n    \n    public void leave(int p) {\n        \n    }\n}\n\n/**\n * Your ExamRoom object will be instantiated and called as such:\n * ExamRoom obj = new ExamRoom(n);\n * int param_1 = obj.seat();\n * obj.leave(p);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class ExamRoom:\n\n    def __init__(self, n: int):\n        \n\n    def seat(self) -> int:\n        \n\n    def leave(self, p: int) -> None:\n        \n\n\n# Your ExamRoom object will be instantiated and called as such:\n# obj = ExamRoom(n)\n# param_1 = obj.seat()\n# obj.leave(p)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class ExamRoom(object):\n\n    def __init__(self, n):\n        \"\"\"\n        :type n: int\n        \"\"\"\n        \n\n    def seat(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def leave(self, p):\n        \"\"\"\n        :type p: int\n        :rtype: None\n        \"\"\"\n        \n\n\n# Your ExamRoom object will be instantiated and called as such:\n# obj = ExamRoom(n)\n# param_1 = obj.seat()\n# obj.leave(p)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n */\nvar ExamRoom = function(n) {\n    \n};\n\n/**\n * @return {number}\n */\nExamRoom.prototype.seat = function() {\n    \n};\n\n/** \n * @param {number} p\n * @return {void}\n */\nExamRoom.prototype.leave = function(p) {\n    \n};\n\n/** \n * Your ExamRoom object will be instantiated and called as such:\n * var obj = new ExamRoom(n)\n * var param_1 = obj.seat()\n * obj.leave(p)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class ExamRoom {\n    constructor(n: number) {\n        \n    }\n\n    seat(): number {\n        \n    }\n\n    leave(p: number): void {\n        \n    }\n}\n\n/**\n * Your ExamRoom object will be instantiated and called as such:\n * var obj = new ExamRoom(n)\n * var param_1 = obj.seat()\n * obj.leave(p)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class ExamRoom {\n\n    public ExamRoom(int n) {\n        \n    }\n    \n    public int Seat() {\n        \n    }\n    \n    public void Leave(int p) {\n        \n    }\n}\n\n/**\n * Your ExamRoom object will be instantiated and called as such:\n * ExamRoom obj = new ExamRoom(n);\n * int param_1 = obj.Seat();\n * obj.Leave(p);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} ExamRoom;\n\n\nExamRoom* examRoomCreate(int n) {\n    \n}\n\nint examRoomSeat(ExamRoom* obj) {\n    \n}\n\nvoid examRoomLeave(ExamRoom* obj, int p) {\n    \n}\n\nvoid examRoomFree(ExamRoom* obj) {\n    \n}\n\n/**\n * Your ExamRoom struct will be instantiated and called as such:\n * ExamRoom* obj = examRoomCreate(n);\n * int param_1 = examRoomSeat(obj);\n \n * examRoomLeave(obj, p);\n \n * examRoomFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type ExamRoom struct {\n    \n}\n\n\nfunc Constructor(n int) ExamRoom {\n    \n}\n\n\nfunc (this *ExamRoom) Seat() int {\n    \n}\n\n\nfunc (this *ExamRoom) Leave(p int)  {\n    \n}\n\n\n/**\n * Your ExamRoom object will be instantiated and called as such:\n * obj := Constructor(n);\n * param_1 := obj.Seat();\n * obj.Leave(p);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class ExamRoom(n: Int) {\n\n    fun seat(): Int {\n        \n    }\n\n    fun leave(p: Int) {\n        \n    }\n\n}\n\n/**\n * Your ExamRoom object will be instantiated and called as such:\n * var obj = ExamRoom(n)\n * var param_1 = obj.seat()\n * obj.leave(p)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass ExamRoom {\n\n    init(_ n: Int) {\n        \n    }\n    \n    func seat() -> Int {\n        \n    }\n    \n    func leave(_ p: Int) {\n        \n    }\n}\n\n/**\n * Your ExamRoom object will be instantiated and called as such:\n * let obj = ExamRoom(n)\n * let ret_1: Int = obj.seat()\n * obj.leave(p)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct ExamRoom {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl ExamRoom {\n\n    fn new(n: i32) -> Self {\n        \n    }\n    \n    fn seat(&self) -> i32 {\n        \n    }\n    \n    fn leave(&self, p: i32) {\n        \n    }\n}\n\n/**\n * Your ExamRoom object will be instantiated and called as such:\n * let obj = ExamRoom::new(n);\n * let ret_1: i32 = obj.seat();\n * obj.leave(p);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class ExamRoom\n\n=begin\n    :type n: Integer\n=end\n    def initialize(n)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def seat()\n        \n    end\n\n\n=begin\n    :type p: Integer\n    :rtype: Void\n=end\n    def leave(p)\n        \n    end\n\n\nend\n\n# Your ExamRoom object will be instantiated and called as such:\n# obj = ExamRoom.new(n)\n# param_1 = obj.seat()\n# obj.leave(p)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class ExamRoom {\n    /**\n     * @param Integer $n\n     */\n    function __construct($n) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function seat() {\n        \n    }\n  \n    /**\n     * @param Integer $p\n     * @return NULL\n     */\n    function leave($p) {\n        \n    }\n}\n\n/**\n * Your ExamRoom object will be instantiated and called as such:\n * $obj = ExamRoom($n);\n * $ret_1 = $obj->seat();\n * $obj->leave($p);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class ExamRoom {\n\n  ExamRoom(int n) {\n    \n  }\n  \n  int seat() {\n    \n  }\n  \n  void leave(int p) {\n    \n  }\n}\n\n/**\n * Your ExamRoom object will be instantiated and called as such:\n * ExamRoom obj = ExamRoom(n);\n * int param1 = obj.seat();\n * obj.leave(p);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class ExamRoom(_n: Int) {\n\n    def seat(): Int = {\n        \n    }\n\n    def leave(p: Int): Unit = {\n        \n    }\n\n}\n\n/**\n * Your ExamRoom object will be instantiated and called as such:\n * val obj = new ExamRoom(n)\n * val param_1 = obj.seat()\n * obj.leave(p)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule ExamRoom do\n  @spec init_(n :: integer) :: any\n  def init_(n) do\n    \n  end\n\n  @spec seat() :: integer\n  def seat() do\n    \n  end\n\n  @spec leave(p :: integer) :: any\n  def leave(p) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# ExamRoom.init_(n)\n# param_1 = ExamRoom.seat()\n# ExamRoom.leave(p)\n\n# ExamRoom.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec exam_room_init_(N :: integer()) -> any().\nexam_room_init_(N) ->\n  .\n\n-spec exam_room_seat() -> integer().\nexam_room_seat() ->\n  .\n\n-spec exam_room_leave(P :: integer()) -> any().\nexam_room_leave(P) ->\n  .\n\n\n%% Your functions will be called as such:\n%% exam_room_init_(N),\n%% Param_1 = exam_room_seat(),\n%% exam_room_leave(P),\n\n%% exam_room_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define exam-room%\n  (class object%\n    (super-new)\n    \n    ; n : exact-integer?\n    (init-field\n      n)\n    \n    ; seat : -> exact-integer?\n    (define/public (seat)\n      )\n    ; leave : exact-integer? -> void?\n    (define/public (leave p)\n      )))\n\n;; Your exam-room% object will be instantiated and called as such:\n;; (define obj (new exam-room% [n n]))\n;; (define param_1 (send obj seat))\n;; (send obj leave p)"
+    }
+  ],
+  "solution": null
+}

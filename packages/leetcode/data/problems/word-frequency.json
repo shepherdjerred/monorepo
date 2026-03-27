@@ -1,0 +1,33 @@
+{
+  "questionId": "192",
+  "questionFrontendId": "192",
+  "title": "Word Frequency",
+  "titleSlug": "word-frequency",
+  "difficulty": "Medium",
+  "content": "<p>Write a bash script to calculate the <span data-keyword=\"frequency-textfile\">frequency</span> of each word in a text file <code>words.txt</code>.</p>\n\n<p>For simplicity sake, you may assume:</p>\n\n<ul>\n\t<li><code>words.txt</code> contains only lowercase characters and space <code>&#39; &#39;</code> characters.</li>\n\t<li>Each word must consist of lowercase characters only.</li>\n\t<li>Words are separated by one or more whitespace characters.</li>\n</ul>\n\n<p><strong class=\"example\">Example:</strong></p>\n\n<p>Assume that <code>words.txt</code> has the following content:</p>\n\n<pre>\nthe day is sunny the the\nthe sunny is is\n</pre>\n\n<p>Your script should output the following, sorted by descending frequency:</p>\n\n<pre>\nthe 4\nis 3\nsunny 2\nday 1\n</pre>\n\n<p><b>Note:</b></p>\n\n<ul>\n\t<li>Don&#39;t worry about handling ties, it is guaranteed that each word&#39;s frequency count is unique.</li>\n\t<li>Could you write it in one-line using <a href=\"http://tldp.org/HOWTO/Bash-Prog-Intro-HOWTO-4.html\">Unix pipes</a>?</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"shell\": true,\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"76.1K\", \"totalSubmission\": \"265.6K\", \"totalAcceptedRaw\": 76075, \"totalSubmissionRaw\": 265556, \"acRate\": \"28.6%\"}",
+  "likes": 582,
+  "dislikes": 311,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Top K Frequent Elements\", \"titleSlug\": \"top-k-frequent-elements\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "a"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Shell",
+      "slug": "shell"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "Bash",
+      "langSlug": "bash",
+      "code": "# Read from the file words.txt and output the word frequency list to stdout.\n"
+    }
+  ],
+  "solution": null
+}

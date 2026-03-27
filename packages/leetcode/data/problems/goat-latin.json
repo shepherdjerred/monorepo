@@ -1,0 +1,124 @@
+{
+  "questionId": "851",
+  "questionFrontendId": "824",
+  "title": "Goat Latin",
+  "titleSlug": "goat-latin",
+  "difficulty": "Easy",
+  "content": "<p>You are given a string <code>sentence</code> that consist of words separated by spaces. Each word consists of lowercase and uppercase letters only.</p>\n\n<p>We would like to convert the sentence to &quot;Goat Latin&quot; (a made-up language similar to Pig Latin.) The rules of Goat Latin are as follows:</p>\n\n<ul>\n\t<li>If a word begins with a vowel (<code>&#39;a&#39;</code>, <code>&#39;e&#39;</code>, <code>&#39;i&#39;</code>, <code>&#39;o&#39;</code>, or <code>&#39;u&#39;</code>), append <code>&quot;ma&quot;</code> to the end of the word.\n\n\t<ul>\n\t\t<li>For example, the word <code>&quot;apple&quot;</code> becomes <code>&quot;applema&quot;</code>.</li>\n\t</ul>\n\t</li>\n\t<li>If a word begins with a consonant (i.e., not a vowel), remove the first letter and append it to the end, then add <code>&quot;ma&quot;</code>.\n\t<ul>\n\t\t<li>For example, the word <code>&quot;goat&quot;</code> becomes <code>&quot;oatgma&quot;</code>.</li>\n\t</ul>\n\t</li>\n\t<li>Add one letter <code>&#39;a&#39;</code> to the end of each word per its word index in the sentence, starting with <code>1</code>.\n\t<ul>\n\t\t<li>For example, the first word gets <code>&quot;a&quot;</code> added to the end, the second word gets <code>&quot;aa&quot;</code> added to the end, and so on.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>Return<em> the final sentence representing the conversion from sentence to Goat Latin</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> sentence = \"I speak Goat Latin\"\n<strong>Output:</strong> \"Imaa peaksmaaa oatGmaaaa atinLmaaaaa\"\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> sentence = \"The quick brown fox jumped over the lazy dog\"\n<strong>Output:</strong> \"heTmaa uickqmaaa rownbmaaaa oxfmaaaaa umpedjmaaaaaa overmaaaaaaa hetmaaaaaaaa azylmaaaaaaaaa ogdmaaaaaaaaaa\"\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= sentence.length &lt;= 150</code></li>\n\t<li><code>sentence</code> consists of English letters and spaces.</li>\n\t<li><code>sentence</code> has no leading or trailing spaces.</li>\n\t<li>All the words in <code>sentence</code> are separated by a single space.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"toGoatLatin\",\n  \"params\": [\n    {\n      \"name\": \"sentence\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"244K\", \"totalSubmission\": \"348.8K\", \"totalAcceptedRaw\": 243980, \"totalSubmissionRaw\": 348846, \"acRate\": \"69.9%\"}",
+  "likes": 1029,
+  "dislikes": 1303,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"I speak Goat Latin\"",
+    "\"The quick brown fox jumped over the lazy dog\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 9, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string toGoatLatin(string sentence) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String toGoatLatin(String sentence) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def toGoatLatin(self, sentence: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def toGoatLatin(self, sentence):\n        \"\"\"\n        :type sentence: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} sentence\n * @return {string}\n */\nvar toGoatLatin = function(sentence) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function toGoatLatin(sentence: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string ToGoatLatin(string sentence) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* toGoatLatin(char* sentence) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func toGoatLatin(sentence string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun toGoatLatin(sentence: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func toGoatLatin(_ sentence: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn to_goat_latin(sentence: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} sentence\n# @return {String}\ndef to_goat_latin(sentence)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $sentence\n     * @return String\n     */\n    function toGoatLatin($sentence) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String toGoatLatin(String sentence) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def toGoatLatin(sentence: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec to_goat_latin(sentence :: String.t) :: String.t\n  def to_goat_latin(sentence) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec to_goat_latin(Sentence :: unicode:unicode_binary()) -> unicode:unicode_binary().\nto_goat_latin(Sentence) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (to-goat-latin sentence)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": null
+}

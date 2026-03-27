@@ -1,0 +1,158 @@
+{
+  "questionId": "272",
+  "questionFrontendId": "272",
+  "title": "Closest Binary Search Tree Value II",
+  "titleSlug": "closest-binary-search-tree-value-ii",
+  "difficulty": "Hard",
+  "content": "<p>Given the <code>root</code> of a binary search tree, a <code>target</code> value, and an integer <code>k</code>, return <em>the </em><code>k</code><em> values in the BST that are closest to the</em> <code>target</code>. You may return the answer in <strong>any order</strong>.</p>\n\n<p>You are <strong>guaranteed</strong> to have only one unique set of <code>k</code> values in the BST that are closest to the <code>target</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/12/closest1-1-tree.jpg\" style=\"width: 292px; height: 302px;\" />\n<pre>\n<strong>Input:</strong> root = [4,2,5,1,3], target = 3.714286, k = 2\n<strong>Output:</strong> [4,3]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [1], target = 0.000000, k = 1\n<strong>Output:</strong> [1]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is <code>n</code>.</li>\n\t<li><code>1 &lt;= k &lt;= n &lt;= 10<sup>4</sup></code>.</li>\n\t<li><code>0 &lt;= Node.val &lt;= 10<sup>9</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= target &lt;= 10<sup>9</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> Assume that the BST is balanced. Could you solve it in less than <code>O(n)</code> runtime (where <code>n = total nodes</code>)?</p>\n",
+  "hints": [
+    "Consider implement these two helper functions:\r\n<ol type=\"i\"><li><code>getPredecessor(N)</code>, which returns the next smaller node to N.</li>\r\n<li><code>getSuccessor(N)</code>, which returns the next larger node to N.</li>\r\n</ol>",
+    "Try to assume that each node has a parent pointer, it makes the problem much easier.",
+    "Without parent pointer we just need to keep track of the path from the root to the current node using a stack.",
+    "You would need two stacks to track the path in finding predecessor and successor node separately."
+  ],
+  "metaData": "{\r\n  \"name\": \"closestKValues\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    },\r\n    {\r\n      \"name\": \"target\",\r\n      \"type\": \"double\"\r\n    },\r\n    {\r\n      \"name\": \"k\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<integer>\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"139.7K\", \"totalSubmission\": \"228.4K\", \"totalAcceptedRaw\": 139658, \"totalSubmissionRaw\": 228389, \"acRate\": \"61.1%\"}",
+  "likes": 1343,
+  "dislikes": 51,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Binary Tree Inorder Traversal\", \"titleSlug\": \"binary-tree-inorder-traversal\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Closest Binary Search Tree Value\", \"titleSlug\": \"closest-binary-search-tree-value\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Closest Nodes Queries in a Binary Search Tree\", \"titleSlug\": \"closest-nodes-queries-in-a-binary-search-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,2,5,1,3]\n3.714286\n2",
+    "[1]\n0.000000\n1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Search Tree",
+      "slug": "binary-search-tree"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> closestKValues(TreeNode* root, double target, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public List<Integer> closestKValues(TreeNode root, double target, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def closestKValues(self, root: Optional[TreeNode], target: float, k: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def closestKValues(self, root, target, k):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type target: float\n        :type k: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {number} target\n * @param {number} k\n * @return {number[]}\n */\nvar closestKValues = function(root, target, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction closestKValues(root: TreeNode | null, target: number, k: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public IList<int> ClosestKValues(TreeNode root, double target, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* closestKValues(struct TreeNode* root, double target, int k, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc closestKValues(root *TreeNode, target float64, k int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun closestKValues(root: TreeNode?, target: Double, k: Int): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func closestKValues(_ root: TreeNode?, _ target: Double, _ k: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn closest_k_values(root: Option<Rc<RefCell<TreeNode>>>, target: f64, k: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @param {Float} target\n# @param {Integer} k\n# @return {Integer[]}\ndef closest_k_values(root, target, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @param Float $target\n     * @param Integer $k\n     * @return Integer[]\n     */\n    function closestKValues($root, $target, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  List<int> closestKValues(TreeNode? root, double target, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def closestKValues(root: TreeNode, target: Double, k: Int): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec closest_k_values(root :: TreeNode.t | nil, target :: float, k :: integer) :: [integer]\n  def closest_k_values(root, target, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec closest_k_values(Root :: #tree_node{} | null, Target :: float(), K :: integer()) -> [integer()].\nclosest_k_values(Root, Target, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (closest-k-values root target k)\n  (-> (or/c tree-node? #f) flonum? exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1958",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Sort With Custom Comparator\n\n#### Intuition\n\nDo exactly as the problem asks. First, traverse the tree and put all values in an array. Then sort the array according to distance from `target` and return the first `k` values.\n\n#### Algorithm\n\n1. Perform a DFS on `root` and put all values in an array.\n2. Sort the array using a custom comparator: distance from `target`.\n3. Return the first `k` values of the sorted array.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/mrEGxLJQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"mrEGxLJQ\"></iframe>\n\n#### Complexity Analysis\n\nGiven $$n$$ as the number of nodes in the tree,\n\n* Time complexity: $$O(n \\cdot \\log n)$$\n\n    We traverse the tree and collect all values in $$O(n)$$. Then, we sort the values which costs $$O(n \\cdot \\log n)$$.\n\n* Space complexity: $$O(n)$$\n\n    Both `arr` and the recursion call stack use $$O(n)$$ space. Depending on the language, some space is also used for sorting, but not more than $$O(n)$$.\n    \n<br/>\n\n---\n\n### Approach 2: Traverse With Heap\n\n#### Intuition\n\n\"Find the K best elements\" is a common type of problem. The most common way to solve these problems is by using a heap that eliminates \"worse\" elements (according to whatever criteria the problem description gives). If we limit the size of this heap to `k`, then the heap will hold the answer after we process all elements.\n\nWe can perform a traversal over the tree and push all values onto a max heap. We will use a value's distance from `target` as the key in the heap. Because we are using a max heap, larger distances will be popped.\n\n#### Algorithm\n\n1. Declare a max `heap` that judges elements based on their distance from `target`.\n2. Perform a DFS on the tree:\n    - At each `node`, push `node.val` onto the `heap`.\n    - If the heap's size exceeds `k`, pop from `heap`.\n3. Return the elements in `heap`.\n\n#### Implementation\n\n> Note: Python's `heapq` module only implements min heaps, so we will make the keys negative to emulate a max heap.\n\n<iframe src=\"https://leetcode.com/playground/PHGGz4yQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"PHGGz4yQ\"></iframe>\n\n#### Complexity Analysis\n\nGiven $$n$$ as the number of nodes in the tree,\n\n* Time complexity: $$O(n \\cdot \\log k)$$\n\n    A heap operation's cost is a function of the size of the heap. We are limiting the size of our heap to $$k$$, so heap operations will cost $$O(\\log k)$$.\n\n    We visit each node once. At each node, we perform up to two heap operations. Therefore, we perform a maximum of $$2n$$ heap operations, giving us a time complexity of $$O(n \\cdot \\log k)$$.\n\n* Space complexity: $$O(n + k)$$\n\n    We need $$O(n)$$ space for the recursion call stack, and $$O(k)$$ space for the heap.\n    \n<br/>\n\n---\n\n### Approach 3: Inorder Traversal + Sliding Window\n\n#### Intuition\n\nThe previous two approaches didn't take advantage of the fact that the given tree is a binary search tree. Both approaches would have worked given any arbitrary binary tree.\n\nAn important thing to know is that an inorder traversal on a BST handles the nodes in sorted order. This is because in a BST, at a given `node`, all nodes in the left subtree have a value less than `node`, and all values in the right subtree have a value greater than `node`. Inorder traversal handles all nodes in the left subtree, then `node`, then all nodes in the right subtree, and thus nodes will be handled in sorted order.\n\nIn the previous two approaches, we performed DFS solely to collect the values. In this approach, we will do an in-order traversal so that the values will be collected in sorted order. How does having the values in sorted order help us?\n\nIn a sorted array, all answer values would form a subarray.\n\n<img src=\"../Figures/272/1.png\" width=\"960\"> <br>\n\nWe can find this subarray efficiently by first identifying the element closest to `target`. Naturally, this element must be in the answer. The next element in the answer must be a neighbor of this element - we check both left and right and add the one that is closer to `target`. We continue this sliding window process until the window has a size of $$k$$, at which point we can return the elements in the window.\n\n<img src=\"../Figures/272/2.png\" width=\"960\"> <br>\n\nThe initial (closest) element can be found using binary search, although you could also do a linear scan since we need $$O(n)$$ to traverse the tree anyways, and thus a binary search would not improve the complexity (although it is still a good optimization to consider in an interview).\n\n#### Algorithm\n\n1. Perform an inorder DFS on the tree to obtain the sorted values in `arr`.\n2. Identify the element closest to `target`. Initialize two pointers `left` and `right` at this location.\n3. While the window has less than `k` elements:\n    - If `arr[left]` is closer to `target` than `arr[right]`, add `arr[left]` to the window and decrement `left`.\n    - Otherwise, add `arr[right]` to the window and increment `right`.\n    - Be careful not to go out of bounds.\n4. Return the window.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5aSaDASr/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5aSaDASr\"></iframe>\n\n#### Complexity Analysis\n\nGiven $$n$$ as the number of nodes in the tree,\n\n* Time complexity: $$O(n + k)$$\n\n    First, we perform a DFS on the tree to build `arr` which costs $$O(n)$$.\n\n    Next, we perform either a binary search or linear scan on `arr` which costs $$O(\\log n)$$ or $$O(n)$$. Neither will change the complexity.\n\n    Finally, we perform a sliding window process that costs $$O(k)$$ since we add an element to the window at each iteration and stop when the window has a size of `k`.\n\n* Space complexity: $$O(n)$$\n\n    Both `arr` and the recursion call stack use $$O(n)$$ space.\n    \n<br/>\n\n---\n\n### Approach 4: Binary Search The Left Bound\n\n#### Intuition\n\nIn approach 3, we first created a sorted `arr` and then did a sliding window process that cost $$O(k)$$.\n\nWe can identify the window without the sliding window process, and independent of `k`!\n\nBinary search is typically used to find if an element exists or where an element belongs in a sorted array. However, we can use it in a different manner here with some clever thinking. We will try to find the left bound of the window using binary search. If we know the left bound, we also know the right bound since we know the window's size must be $$k$$.\n\nWhat is the biggest index the left bound could be? It is `arr.length - k`. If it were any greater, then there wouldn't be room for the window to have $$k$$ elements, you would go out of bounds. The smallest index is `0`, so this is where we will begin our binary search bounds.\n\nConsider indices `mid = (left + right) / 2` and `mid + k`. Why do we care about `mid + k`? Because indices `mid` and `mid + k` **cannot both be in the answer**. We already established that the answer must be a subarray, and indices `mid` and `mid + k` are too far apart.\n\n<img src=\"../Figures/272/3.png\" width=\"960\"> <br>\n\nIf the element at `arr[mid]` is closer to `target` than `arr[mid + k]`, there is no chance `arr[mid + k]` could be in the answer while `arr[mid]` isn't. Therefore, we can discard `arr[mid + k]` and every element to the right of it (move the right pointer).\n\nVice-versa, if the element at `arr[mid + k]` is closer to `target`, then we can discard `arr[mid]` and every element to the left of it (move the left pointer).\n\nThis binary search will find the left bound of the answer. We can find the answer as the subarray of `arr` starting at `left` with a length of `k`.\n\n#### Algorithm\n\n1. Perform an inorder DFS on the tree to obtain the sorted values in `arr`.\n2. Perform a binary search. Initialize `left = 0` and `right = arr.length - k`.\n3. While `left < right`:\n    - Calculate `mid = (left + right) / 2`.\n    - If `arr[mid + k]` is closer to `target` than `arr[mid]`, move `left`.\n    - Otherwise, move `right`.\n4. Return the subarray of `arr` starting at `left` of length `k`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/iGP49wGP/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"iGP49wGP\"></iframe>\n\n#### Complexity Analysis\n\nGiven $$n$$ as the number of nodes in the tree,\n\n* Time complexity: $$O(n)$$ in Java, $$O(n + k)$$ in Python\n\n    First, we perform a DFS on the tree to build `arr` which costs $$O(n)$$.\n\n    Next, we perform a binary search on `arr` which costs $$O(\\log {(n - k)})$$.\n\n    Finally, we return the answer. In Java, `arr.subList()` is an $$O(1)$$ operation. In Python, we spend $$O(k)$$ to create the answer.\n\n    Note that an interviewer may find it reasonable to ignore the $$O(k)$$ to build the answer, thus giving this algorithm a time complexity of $$O(n)$$.\n\n* Space complexity: $$O(n)$$\n\n    Both `arr` and the recursion call stack use $$O(n)$$ space.\n    \n<br/>\n\n---\n\n### Approach 5: Build The Window With Deque\n\n#### Intuition\n\nThis approach combines ideas from approaches 2 and 3. We will build the window during the traversal.\n\nWhen we used the heap, we could visit the nodes in any order - we didn't take advantage of the tree being a BST. Here, we will again use an in-order traversal to handle the nodes in sorted order.\n\nDuring the traversal, we can build the window using a deque (double-ended queue). Because we visit the nodes in sorted order, values will be added to the deque in ascending order. When the deque's size exceeds `k`, we need to remove either the first or last element. We will remove the one that is farther from `target`.\n\n> Why do we need to remove the first or last element? It's the exact same idea as the previous approach! Elements at indices `i` and `i + k` cannot both exist in a subarray of size `k`. Because the deque currently has a size greater than `k`, one of the edges must be removed.\n\nIf we find that the last element (the most recently added one) is farther, then all future elements will be even larger. This means that the window is currently positioned correctly, and we can end the DFS early.\n\nThis approach is similar to approach 3 because the deque represents a sliding window. It slides along the sorted values, growing until it reaches a size of `k`. Once it reaches a size of `k`, we remove it from the left so that we can continue sliding if the left element is farther than the right element. If the right element is farther, we find our window.\n\n#### Algorithm\n\n1. Initialize a double-ended queue `queue`.\n2. Perform an inorder traversal on the tree. To handle each `node`:\n    - Add `node.val` to the end of `queue`.\n    - If the size of `queue` exceeds `k`:\n        - Compare the first and last value.\n        - If the last value is farther from `target`, remove it and end the DFS with `return`.\n        - Otherwise, remove the first element.\n3. Return the `queue`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/CXAfPvgN/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"CXAfPvgN\"></iframe>\n\n#### Complexity Analysis\n\nGiven $$n$$ as the number of nodes in the tree,\n\n* Time complexity: $$O(n)$$\n\n    We visit each node at most once during the traversal. With an efficient `deque` implementation, the work done at each node is $$O(1)$$.\n\n* Space complexity: $$O(n + k)$$\n\n    We use $$O(n)$$ space for the recursion call stack and $$O(k)$$ space for `queue`.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

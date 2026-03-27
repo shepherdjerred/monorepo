@@ -1,0 +1,137 @@
+{
+  "questionId": "413",
+  "questionFrontendId": "413",
+  "title": "Arithmetic Slices",
+  "titleSlug": "arithmetic-slices",
+  "difficulty": "Medium",
+  "content": "<p>An integer array is called arithmetic if it consists of <strong>at least three elements</strong> and if the difference between any two consecutive elements is the same.</p>\n\n<ul>\n\t<li>For example, <code>[1,3,5,7,9]</code>, <code>[7,7,7,7]</code>, and <code>[3,-1,-5,-9]</code> are arithmetic sequences.</li>\n</ul>\n\n<p>Given an integer array <code>nums</code>, return <em>the number of arithmetic <strong>subarrays</strong> of</em> <code>nums</code>.</p>\n\n<p>A <strong>subarray</strong> is a contiguous subsequence of the array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We have 3 arithmetic slices in nums: [1, 2, 3], [2, 3, 4] and [1,2,3,4] itself.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1]\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 5000</code></li>\n\t<li><code>-1000 &lt;= nums[i] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"numberOfArithmeticSlices\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"365.6K\", \"totalSubmission\": \"563.9K\", \"totalAcceptedRaw\": 365560, \"totalSubmissionRaw\": 563934, \"acRate\": \"64.8%\"}",
+  "likes": 5632,
+  "dislikes": 306,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Arithmetic Slices II - Subsequence\", \"titleSlug\": \"arithmetic-slices-ii-subsequence\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Arithmetic Subarrays\", \"titleSlug\": \"arithmetic-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Zero-Filled Subarrays\", \"titleSlug\": \"number-of-zero-filled-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Length of the Longest Alphabetical Continuous Substring\", \"titleSlug\": \"length-of-the-longest-alphabetical-continuous-substring\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4]",
+    "[1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"aetion\", \"name\": \"Aetion\"}, {\"timesEncountered\": 2, \"slug\": \"baidu\", \"name\": \"Baidu\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numberOfArithmeticSlices(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numberOfArithmeticSlices(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfArithmeticSlices(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfArithmeticSlices(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar numberOfArithmeticSlices = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfArithmeticSlices(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumberOfArithmeticSlices(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numberOfArithmeticSlices(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfArithmeticSlices(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfArithmeticSlices(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfArithmeticSlices(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_arithmetic_slices(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef number_of_arithmetic_slices(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function numberOfArithmeticSlices($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numberOfArithmeticSlices(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfArithmeticSlices(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_arithmetic_slices(nums :: [integer]) :: integer\n  def number_of_arithmetic_slices(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_arithmetic_slices(Nums :: [integer()]) -> integer().\nnumber_of_arithmetic_slices(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-arithmetic-slices nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "219",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force \n\nThe most naive solution is to consider every pair of elements(with atleast 1 element between them), so that the range of elements lying between these two elements acts as a slice. Then, we can iterate over every such slice(range) to check if all the consecutive elements within this range have the same difference. For every such range found, we can increment the $$count$$ that is used to keep a track of the required result.\n\n<iframe src=\"https://leetcode.com/playground/PX6fR73F/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"PX6fR73F\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^3)$$. We iterate over the range formed by every pair of elements. Here, $$n$$ refers to the number of elements in the given array $$A$$.\n\n* Space complexity : $$O(1)$$. Constant extra space is used.\n\n<br />\n<br />\n\n\n---\n### Approach 2: Better Brute Force\n\n**Algorithm**\n\nIn the last approach, we considered every possible range and then iterated over the range to check if the difference between every consercutive element in this range is the same. We can optimize this approach to some extent, by making a small observation. \n\nWe can see, that if we are currently considering the range bound by the elements, let's say, $$A[s]$$(start) and $$A[e]$$(end), we have checked the consecutive elements in this range to have the same difference. Now, when we move on to the next range between the indices $$s$$ and $$e+1$$, we again perform a check on all the elements in the range $$s:e$$, along with one additional pair $$A[e+1]$$ and $$A[e]$$. We can remove this redundant check in the range $$s:e$$ and just check the last pair to have the same difference as the one used for the previous range(same $$s$$, incremented $$e$$).\n\nNote that if the last range didn't constitute an arithmetic slice, the same elements will be a part of the updated range as well. Thus, we can omit the rest of the ranges consisting of the same starting index. The rest of the process remains the same as in the last approach.\n\n<iframe src=\"https://leetcode.com/playground/Xfy3PjX8/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"Xfy3PjX8\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^2)$$. Two for loops are used.\n\n* Space complexity : $$O(1)$$. Constant extra space is used.\n\n<br />\n<br />\n\n\n---\n### Approach 3: Using Recursion\n\n**Algorithm**\n\nBy making use of the observation discussed in the last approach, we know, that if a range of elements between the indices $$(i,j)$$ constitute an Arithmetic Slice, and another element $$A[j+1]$$ is included such that $$A[j+1]$$ and $$A[j]$$ have the same difference as that of the previous common difference, the ranges between $$(i,j+1)$$ will constitutes an arithmetic slice. Further, if the original range $$(i,j)$$ doesn't form an arithmetic slice, adding new elements to this range won't do us any good. Thus, no more arithmetic slices can be obtained by adding new elements to it.\n\nBy making use of this observation, we can develop a recursive solution for the given problem as well. Assume that a $$sum$$ variable is used to store the total number of arithmetic slices in the given array $$A$$. We make use of a recursive function `slices(A,i)` which returns the number of Arithmetic Slices in the range $$(k,i)$$, but which are not a part of any range $$(k,j)$$ such that $$j<i$$. It also updates $$sum$$ with the number of arithmetic slices(total) in the current range. Thus, $$k$$ refers to  the minimum index such that the range $$(k,i)$$ constitutes a valid arithmetic slice.\n\nNow, suppose we know the number of arithmetic slices in the range $$(0,i-1)$$ constituted by the elements $$[a_0,a_1,a_2,...a_(i-1)]$$, to be say $$x$$. If this range itself is an arithmetic slice, all the consecutive elements have the same difference(equal to say, $$a_(i-1)-a_(i-2)$$). Now, adding a new element $$a_i$$ to it to extend the range to $$(0,i)$$ will constitute an arithmetic slice only if this new element satisfies $$a_i-a_(i-1)=a_(i-1)-a_(i-2)$$. Thus, now, the addition of this new element, will lead to an addition of $$ap$$ number of arithmetic slices to the ones obtained in the range $$(0,i-1)$$. The new arithmetic slices will be the ones constituting the ranges $$(0,i), (1,i), ... (i-2,i)$$, which are a total of  $$x+1$$ additional arithmetic slices. This is because, apart from the range $$(0,i)$$ the rest of the ranges $$(1,i), (2,i),...(i-2,i)$$ can be mapped to $$(0,i-1), (1,i-1),...(i-3,i-1)$$, with count equal to $$x$$. \n\nThus, in every call to `slices`, if the $$i^{th}$$ element has the same common difference with the last element as the previous common difference, we can find the number of new arithmetic slices added by the use of this element, $$ap$$ and also update the $$sum$$ to include this $$ap$$ into it, apart from the count obtained by the smaller ranges. But, if the new element doesn't have the same common difference, extra arithmetic slices can't be contributed by it and hence, no addition is done to $$sum$$ for the current element. But, of course $$sum$$ will be updated as per the count obtained from the smaller ranges.\n\n<iframe src=\"https://leetcode.com/playground/QkFmtscC/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"QkFmtscC\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. The recursive function is called at most $$n-2$$ times.\n\n* Space complexity : $$O(n)$$. The depth of the recursion tree goes upto $$n-2$$.\n\n<br />\n<br />\n\n\n---\n### Approach 4: Dynamic Programming\n\n**Algorithm**\n\nIn the last approach, we start with the full range $$(0,n-1)$$, where $$n$$ is the number of elements in the given $$A$$ array. We can observe that the result for the range $$(0,i)$$ only depends on the elements in the range $$(0,i)$$ and not on any element beyond this range. Thus, we can make use of Dynamic Programming to solve the given problem.\n\nWe can make use of a 1-D $$dp$$ with number of elements equal to $$n$$. $$dp[i]$$ is used to store the number of arithmetic slices possible in the range $$(k,i)$$ and not in any range $$(k,j)$$ such that $$j<i$$. Again, $$k$$ refers to the minimum index possible such that $$(k,j)$$ constitutes a valid Arithmetic Slice.\n\nInstead of going in the reverse order as in the recursive approach, we can start filling the $$dp$$ in a forward manner. The intuition remains the same as in the last approach. For the $$i^{th}$$ element being considered, we check if this element satsfies the common difference criteria with the previous element. If so, we know the number of new arithmetic slices added will be $$1+dp[i-1]$$ as discussed in the last approach. The $$sum$$ is also updated by the same count to reflect the new arithmetic slices added.  \n\nThe following animation illustrates the $$dp$$ filling process.\n\n!?!../Documents/413_Arithmetic_Slices.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/hznFkN9u/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"hznFkN9u\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. We traverse over the given $$A$$ array with $$n$$ elements once only.\n\n* Space complexity : $$O(n)$$. 1-D $$dp$$ of size $$n$$ is used.\n\n<br />\n<br />\n\n\n---\n### Approach 5: Constant Space Dynamic Programming\n\n**Algorithm**\n\nIn the last approach, we can observe that we only require the element $$dp[i-1]$$ to determine the value to be entered at $$dp[i]$$. Thus, instead of making use of a 1-D array to store the required data, we can simply keep a track of just the last element. \n\n<iframe src=\"https://leetcode.com/playground/ipe73wTC/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"ipe73wTC\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. We traverse over the given $$A$$ array with $$n$$ elements once only.\n\n* Space complexity : $$O(1)$$. Constant extra space is used.\n\n---\n### Approach 6: Using Formula\n\n**Algorithm**\n\nFrom the $$dp$$ solution, we can observe that for $$k$$ consecutive elements sastisfying the common difference criteria, we update the $$sum$$ for each such element by $$1, 2, 3, ..., k$$ counts in that order. Thus, instead of updating the $$sum$$ at the same time, we can just keep a track of the number of consecutive elements satisfying the common differnce criteria in a $$count$$ variable and just update the $$sum$$ directly as $$count*(count+1)/2$$ whenver an element not satisfying this criteria is found. At the same time, we also need to reset the $$count$$ value. \n\n<iframe src=\"https://leetcode.com/playground/hEgGzX3a/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"hEgGzX3a\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. We iterate over $$A$$ with $$n$$ elements exactly once.\n\n* Space complexity : $$O(1)$$. Constant extra space is used.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

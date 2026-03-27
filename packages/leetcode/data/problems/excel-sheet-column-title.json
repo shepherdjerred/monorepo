@@ -1,0 +1,134 @@
+{
+  "questionId": "168",
+  "questionFrontendId": "168",
+  "title": "Excel Sheet Column Title",
+  "titleSlug": "excel-sheet-column-title",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer <code>columnNumber</code>, return <em>its corresponding column title as it appears in an Excel sheet</em>.</p>\n\n<p>For example:</p>\n\n<pre>\nA -&gt; 1\nB -&gt; 2\nC -&gt; 3\n...\nZ -&gt; 26\nAA -&gt; 27\nAB -&gt; 28 \n...\n</pre>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> columnNumber = 1\n<strong>Output:</strong> &quot;A&quot;\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> columnNumber = 28\n<strong>Output:</strong> &quot;AB&quot;\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> columnNumber = 701\n<strong>Output:</strong> &quot;ZY&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= columnNumber &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"convertToTitle\",\n  \"params\": [\n    {\n      \"name\": \"columnNumber\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"734.4K\", \"totalSubmission\": \"1.6M\", \"totalAcceptedRaw\": 734369, \"totalSubmissionRaw\": 1592547, \"acRate\": \"46.1%\"}",
+  "likes": 6066,
+  "dislikes": 919,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Excel Sheet Column Number\", \"titleSlug\": \"excel-sheet-column-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Cells in a Range on an Excel Sheet\", \"titleSlug\": \"cells-in-a-range-on-an-excel-sheet\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Design Spreadsheet\", \"titleSlug\": \"design-spreadsheet\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "1",
+    "28",
+    "701"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"zenefits\", \"name\": \"Zenefits\"}]}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string convertToTitle(int columnNumber) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String convertToTitle(int columnNumber) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def convertToTitle(self, columnNumber: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def convertToTitle(self, columnNumber):\n        \"\"\"\n        :type columnNumber: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} columnNumber\n * @return {string}\n */\nvar convertToTitle = function(columnNumber) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function convertToTitle(columnNumber: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string ConvertToTitle(int columnNumber) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* convertToTitle(int columnNumber) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func convertToTitle(columnNumber int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun convertToTitle(columnNumber: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func convertToTitle(_ columnNumber: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn convert_to_title(column_number: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} column_number\n# @return {String}\ndef convert_to_title(column_number)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $columnNumber\n     * @return String\n     */\n    function convertToTitle($columnNumber) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String convertToTitle(int columnNumber) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def convertToTitle(columnNumber: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec convert_to_title(column_number :: integer) :: String.t\n  def convert_to_title(column_number) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec convert_to_title(ColumnNumber :: integer()) -> unicode:unicode_binary().\nconvert_to_title(ColumnNumber) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (convert-to-title columnNumber)\n  (-> exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2001",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Convert\n\n#### Intuition\n\nIn Excel, the columns are letters that correspond to numbers. We start with `A = 1`. Similarly, `2` corresponds to `B`  until `26` for `Z`. Once we run out of letters, we start appending them. `27` will correspond to `AA`, `28` for `AB`, and so on. In this problem, we are given the integer which is the column number and we need to return the corresponding letters for it.\n\nAt first glance, it might be tempting to say that these numbers are just base 26, but the catch is that in a base 26 system, the numbers would start from `0`. The mapping would be like below:\n\n![fig](../Figures/168/168A_resize.png)\n\nHowever, in the problem, we have the number starting from `1`, not `0`. But we can change them to process them like base 26 numbers. The important point to observe here is that every column title has the corresponding column number as a number in base 26 plus one. For example, let's convert the number `2002` to the letters `BXZ` by representing it as a number in base 26. Note that each part will have an extra `1` added to compensate for the fact that we are starting from `1` in our system. See the below example for a better understanding of the algorithm:\n\n`N = 2002` corresponds to `BXZ`.\n\nIn terms of base 26:\n\n$N = (B + 1) \\cdot 26^2 + (X + 1) \\cdot 26^1 + (Z + 1) * 26^0$\n\n$N = (1 + 1) \\cdot 676 + (23 + 1) \\cdot 26 + (25 + 1) \\cdot 1 = 2002$\n\nSteps to get the letters:\n\n1. Subtract `1` from `N`. Now, `N = 2001`. Take N modulo 26 and convert the result to the corresponding position in the alphabet. `2001 % 26 = 25`, which corresponds to `Z`, since we start with `A = 0`.\n2. Divide `N` by 26. We have $N = \\frac{2001}{26} = 76$.\n3. Repeat the process until `N = 0`. We subtract `1`, so now `N = 75`. Take it modulo 26: `75 % 26 = 23`. This corresponds to `X`.\n4. Divide `N` by 26. We have $N = \\frac{75}{26} = 2$.\n5. Subtract `1`, so now `N = 1`. Take it modulo 26: `1 % 26 = 1`. This corresponds to `B`.\n\nFinally, we are done, because $\\frac{N}{26} = 0$. The result is `BXZ`, the reverse order in which we found the letters.\n\n#### Algorithm\n\n1. Initialize an empty string `ans` which would store the column title.\n2. Do the following as long as `columnNumber` is greater than `0`:\n\n    1. Subtract `1` from the `columnNumber`\n    2. Find the character corresponding to `columnNumber % 26` and append it to the `ans` in the end.\n    3. Assign `columnNumber` to `columnNumber / 26`.\n3. Reverse the string `columnNumber` and return it.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7NWY4WGn/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"7NWY4WGn\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the column number given in the problem.\n\n* Time complexity: $O(\\log N)$\n\n  The number of operations would be equal to the number of while loop iterations. In each iteration, the number $N$ gets divided by $26$. Hence the time complexity would be $O(\\log{_{26}}{N})$. Note that the base of the logarithm is not relevant when it comes to big O, since all logarithms are related by a constant factor.\n\n* Space complexity: $O(1)$\n\n  We only need one string to store the output, but generally the space to store the output is not considered as part of space complexity and hence the space complexity is constant.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

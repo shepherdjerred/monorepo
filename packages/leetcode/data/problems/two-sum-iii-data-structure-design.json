@@ -1,0 +1,144 @@
+{
+  "questionId": "170",
+  "questionFrontendId": "170",
+  "title": "Two Sum III - Data structure design",
+  "titleSlug": "two-sum-iii-data-structure-design",
+  "difficulty": "Easy",
+  "content": "<p>Design a data structure that accepts a stream of integers and checks if it has a pair of integers that sum up to a particular value.</p>\n\n<p>Implement the <code>TwoSum</code> class:</p>\n\n<ul>\n\t<li><code>TwoSum()</code> Initializes the <code>TwoSum</code> object, with an empty array initially.</li>\n\t<li><code>void add(int number)</code> Adds <code>number</code> to the data structure.</li>\n\t<li><code>boolean find(int value)</code> Returns <code>true</code> if there exists any pair of numbers whose sum is equal to <code>value</code>, otherwise, it returns <code>false</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;TwoSum&quot;, &quot;add&quot;, &quot;add&quot;, &quot;add&quot;, &quot;find&quot;, &quot;find&quot;]\n[[], [1], [3], [5], [4], [7]]\n<strong>Output</strong>\n[null, null, null, null, true, false]\n\n<strong>Explanation</strong>\nTwoSum twoSum = new TwoSum();\ntwoSum.add(1);   // [] --&gt; [1]\ntwoSum.add(3);   // [1] --&gt; [1,3]\ntwoSum.add(5);   // [1,3] --&gt; [1,3,5]\ntwoSum.find(4);  // 1 + 3 = 4, return true\ntwoSum.find(7);  // No two integers sum up to 7, return false\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>-10<sup>5</sup> &lt;= number &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-2<sup>31</sup> &lt;= value &lt;= 2<sup>31</sup> - 1</code></li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>add</code> and <code>find</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"TwoSum\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"number\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"void\"\n      },\n      \"name\": \"add\"\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"value\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"boolean\"\n      },\n      \"name\": \"find\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"181.6K\", \"totalSubmission\": \"464.3K\", \"totalAcceptedRaw\": 181603, \"totalSubmissionRaw\": 464264, \"acRate\": \"39.1%\"}",
+  "likes": 711,
+  "dislikes": 462,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Two Sum\", \"titleSlug\": \"two-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Unique Word Abbreviation\", \"titleSlug\": \"unique-word-abbreviation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Two Sum IV - Input is a BST\", \"titleSlug\": \"two-sum-iv-input-is-a-bst\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"TwoSum\",\"add\",\"add\",\"add\",\"find\",\"find\"]\n[[],[1],[3],[5],[4],[7]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Data Stream",
+      "slug": "data-stream"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class TwoSum {\npublic:\n    TwoSum() {\n        \n    }\n    \n    void add(int number) {\n        \n    }\n    \n    bool find(int value) {\n        \n    }\n};\n\n/**\n * Your TwoSum object will be instantiated and called as such:\n * TwoSum* obj = new TwoSum();\n * obj->add(number);\n * bool param_2 = obj->find(value);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class TwoSum {\n\n    public TwoSum() {\n        \n    }\n    \n    public void add(int number) {\n        \n    }\n    \n    public boolean find(int value) {\n        \n    }\n}\n\n/**\n * Your TwoSum object will be instantiated and called as such:\n * TwoSum obj = new TwoSum();\n * obj.add(number);\n * boolean param_2 = obj.find(value);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class TwoSum:\n\n    def __init__(self):\n        \n\n    def add(self, number: int) -> None:\n        \n\n    def find(self, value: int) -> bool:\n        \n\n\n# Your TwoSum object will be instantiated and called as such:\n# obj = TwoSum()\n# obj.add(number)\n# param_2 = obj.find(value)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class TwoSum(object):\n\n    def __init__(self):\n        \n\n    def add(self, number):\n        \"\"\"\n        :type number: int\n        :rtype: None\n        \"\"\"\n        \n\n    def find(self, value):\n        \"\"\"\n        :type value: int\n        :rtype: bool\n        \"\"\"\n        \n\n\n# Your TwoSum object will be instantiated and called as such:\n# obj = TwoSum()\n# obj.add(number)\n# param_2 = obj.find(value)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar TwoSum = function() {\n    \n};\n\n/** \n * @param {number} number\n * @return {void}\n */\nTwoSum.prototype.add = function(number) {\n    \n};\n\n/** \n * @param {number} value\n * @return {boolean}\n */\nTwoSum.prototype.find = function(value) {\n    \n};\n\n/** \n * Your TwoSum object will be instantiated and called as such:\n * var obj = new TwoSum()\n * obj.add(number)\n * var param_2 = obj.find(value)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class TwoSum {\n    constructor() {\n        \n    }\n\n    add(number: number): void {\n        \n    }\n\n    find(value: number): boolean {\n        \n    }\n}\n\n/**\n * Your TwoSum object will be instantiated and called as such:\n * var obj = new TwoSum()\n * obj.add(number)\n * var param_2 = obj.find(value)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class TwoSum {\n\n    public TwoSum() {\n        \n    }\n    \n    public void Add(int number) {\n        \n    }\n    \n    public bool Find(int value) {\n        \n    }\n}\n\n/**\n * Your TwoSum object will be instantiated and called as such:\n * TwoSum obj = new TwoSum();\n * obj.Add(number);\n * bool param_2 = obj.Find(value);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} TwoSum;\n\n\nTwoSum* twoSumCreate() {\n    \n}\n\nvoid twoSumAdd(TwoSum* obj, int number) {\n    \n}\n\nbool twoSumFind(TwoSum* obj, int value) {\n    \n}\n\nvoid twoSumFree(TwoSum* obj) {\n    \n}\n\n/**\n * Your TwoSum struct will be instantiated and called as such:\n * TwoSum* obj = twoSumCreate();\n * twoSumAdd(obj, number);\n \n * bool param_2 = twoSumFind(obj, value);\n \n * twoSumFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type TwoSum struct {\n    \n}\n\n\nfunc Constructor() TwoSum {\n    \n}\n\n\nfunc (this *TwoSum) Add(number int)  {\n    \n}\n\n\nfunc (this *TwoSum) Find(value int) bool {\n    \n}\n\n\n/**\n * Your TwoSum object will be instantiated and called as such:\n * obj := Constructor();\n * obj.Add(number);\n * param_2 := obj.Find(value);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class TwoSum() {\n\n    fun add(number: Int) {\n        \n    }\n\n    fun find(value: Int): Boolean {\n        \n    }\n\n}\n\n/**\n * Your TwoSum object will be instantiated and called as such:\n * var obj = TwoSum()\n * obj.add(number)\n * var param_2 = obj.find(value)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass TwoSum {\n\n    init() {\n        \n    }\n    \n    func add(_ number: Int) {\n        \n    }\n    \n    func find(_ value: Int) -> Bool {\n        \n    }\n}\n\n/**\n * Your TwoSum object will be instantiated and called as such:\n * let obj = TwoSum()\n * obj.add(number)\n * let ret_2: Bool = obj.find(value)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct TwoSum {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl TwoSum {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn add(&self, number: i32) {\n        \n    }\n    \n    fn find(&self, value: i32) -> bool {\n        \n    }\n}\n\n/**\n * Your TwoSum object will be instantiated and called as such:\n * let obj = TwoSum::new();\n * obj.add(number);\n * let ret_2: bool = obj.find(value);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class TwoSum\n    def initialize()\n        \n    end\n\n\n=begin\n    :type number: Integer\n    :rtype: Void\n=end\n    def add(number)\n        \n    end\n\n\n=begin\n    :type value: Integer\n    :rtype: Boolean\n=end\n    def find(value)\n        \n    end\n\n\nend\n\n# Your TwoSum object will be instantiated and called as such:\n# obj = TwoSum.new()\n# obj.add(number)\n# param_2 = obj.find(value)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class TwoSum {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $number\n     * @return NULL\n     */\n    function add($number) {\n        \n    }\n  \n    /**\n     * @param Integer $value\n     * @return Boolean\n     */\n    function find($value) {\n        \n    }\n}\n\n/**\n * Your TwoSum object will be instantiated and called as such:\n * $obj = TwoSum();\n * $obj->add($number);\n * $ret_2 = $obj->find($value);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class TwoSum {\n\n  TwoSum() {\n    \n  }\n  \n  void add(int number) {\n    \n  }\n  \n  bool find(int value) {\n    \n  }\n}\n\n/**\n * Your TwoSum object will be instantiated and called as such:\n * TwoSum obj = TwoSum();\n * obj.add(number);\n * bool param2 = obj.find(value);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class TwoSum() {\n\n    def add(number: Int): Unit = {\n        \n    }\n\n    def find(value: Int): Boolean = {\n        \n    }\n\n}\n\n/**\n * Your TwoSum object will be instantiated and called as such:\n * val obj = new TwoSum()\n * obj.add(number)\n * val param_2 = obj.find(value)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule TwoSum do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec add(number :: integer) :: any\n  def add(number) do\n    \n  end\n\n  @spec find(value :: integer) :: boolean\n  def find(value) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# TwoSum.init_()\n# TwoSum.add(number)\n# param_2 = TwoSum.find(value)\n\n# TwoSum.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec two_sum_init_() -> any().\ntwo_sum_init_() ->\n  .\n\n-spec two_sum_add(Number :: integer()) -> any().\ntwo_sum_add(Number) ->\n  .\n\n-spec two_sum_find(Value :: integer()) -> boolean().\ntwo_sum_find(Value) ->\n  .\n\n\n%% Your functions will be called as such:\n%% two_sum_init_(),\n%% two_sum_add(Number),\n%% Param_2 = two_sum_find(Value),\n\n%% two_sum_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define two-sum%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; add : exact-integer? -> void?\n    (define/public (add number)\n      )\n    ; find : exact-integer? -> boolean?\n    (define/public (find value)\n      )))\n\n;; Your two-sum% object will be instantiated and called as such:\n;; (define obj (new two-sum%))\n;; (send obj add number)\n;; (define param_2 (send obj find value))"
+    }
+  ],
+  "solution": {
+    "id": "829",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach 1: Sorted List\n\n**Intuition**\n\nFirst of all, the problem description is not terribly clear on the requirements of _time_ and _space_ complexity. But let us consider this as part of the challenge or a freedom of design. We could figure out the desired complexity for each function, by trial and error.\n\nThis is one of the followup problems to the first programming problem on LeetCode called [Two Sum](https://leetcode.com/problems/two-sum/), where one is asked to return the indice of two numbers from a **_list_** that could sum up to a given value.\n\n>Let us take the inspiration from the origin problem, by keeping all the incoming numbers in a _list_.\n\nGiven a list, one of the solutions to the Two Sum problem is called **_Two-Pointers Iteration_** where we iterate through the list from two directions with _two pointers_ approaching each other.\n\n![pic](../Figures/170/170_two_pointers.png)\n\n>However, one of the preconditions for the Two-Pointers Iteration solution is that the input list should be _**sorted**_. \n\nSo now, here are the questions:\n\n- Should we keep the list in order while inserting new numbers in the function `add(number)` ? \n\n- Or should we do the sorting on demand, _i.e._ at the invocation of `find(value)` ?\n\nWe will address the above two questions later in the Algorithm section.\n\n**Algorithm**\n\nLet us first give the algorithm of Two-Pointers Iteration to find the two-sum solution from a _sorted_ list:\n\n- We initialize **two pointers** `low` and `high` which point to the head and the tail elements of the list respectively.\n\n- With the two pointers, we start a **loop** to iterate the list. The loop would terminate either we find the two-sum solution or the two pointers meet each other.\n\n- Within the loop, at each step, we would move either of the pointers, according to different conditions:\n\n    - If the sum of the elements pointed by the current pointers is _**less than**_ the desired value, then we should try to increase the sum to meet the desired value, _i.e._ we should move the `low` pointer forwards to have a larger value.\n\n    - Similarly if the sum of the elements pointed by the current pointers is _**greater than**_ the desired value, we then should try to reduce the sum by moving the `high` pointer towards the `low` pointer. \n\n    - If the sum happen to the desired value, then we could simply do an **early return** of the function.\n\n- If the loop is terminated at the case where the two pointers meet each other, then we can be sure that there is no solution to the desired value.\n\n\n<iframe src=\"https://leetcode.com/playground/7crJauhd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7crJauhd\"></iframe>\n\n> The problem statement does not specify how often each operation will be called, so in theory any pattern is possible. In practice though, the online judge tends to issue many `add(number)` calls before a `find(value)` call. Because of this input structure, it is more efficient to keep insertions inexpensive and postpone sorting until it is actually needed. Sorting only when the list has been modified allows the sorting cost to be amortized over many insertions, which results in significantly better performance on the judge’s test cases.\n\nThe usage pattern implies that we should try to minimize the cost of `add(number)` function. As a result, we sort the list within the `find(value)` function instead of the `add(number)` function.\n\n_So to the above questions about where to place the sort operation, actually both options are valid and correct._ Due to the usage pattern of the two functions though, it is **less optimal** to sort the list at each _add_ operation.\n\nOn the other hand, we do not do sorting at each occasion of `find(value)` neither. But rather, we sort on demand, _i.e._ only when the list is updated. As a result, we **_amortize_** the cost of the sorting over the time. And this is the optimization trick for the solution to pass the online judge.\n\n**Complexity Analysis**\n\n- Time Complexity:\n\n    - For the `add(number)` function: $$\\mathcal{O}(1)$$, since we simply append the element into the list.\n\n    - For the `find(value)` function: $$\\mathcal{O}(N \\cdot \\log(N))$$. In the worst case, we would need to sort the list first, which is of $$\\mathcal{O}(N \\cdot \\log(N))$$  time complexity normally. And later, again in the worst case we need to iterate through the entire list, which is of $$\\mathcal{O}(N)$$ time complexity. As a result, the overall time complexity of the function lies on  $$\\mathcal{O}(N \\cdot \\log(N))$$ of the sorting operation, which dominates over the later iteration part.\n\n- Space Complexity: the overall space complexity of the data structure is $$\\mathcal{O}(N)$$ where $$N$$ is the total number of _numbers_ that have been added.\n<br/>\n<br/>\n\n---\n### Approach 2: HashTable\n\n**Intuition**\n\nAs an alternative solution to the original [Two Sum](https://leetcode.com/problems/two-sum/) problem, one could employ the _HashTable_ to index each number.\n\n>Given a desired sum value `S`, for each number `a`, we just need to verify if there exists a complement number (`S-a`) in the table.\n\nAs we know, the data structure of hashtable could offer us a quick _lookup_ as well as _insertion_ operations, which fits well with the above requirements.\n\n\n**Algorithm**\n\n- First, we initialize a _hashtable_ container in our data structure.\n\n- For the `add(number)` function, we build a frequency hashtable with the _number_ as key and the frequency of the _number_ as the value in the table.\n\n- For the `find(value)` function, we then iterate through the hashtable over the keys. For each key (`number`), we check if there exists a complement (`value - number`) in the table. If so, we could terminate the loop and return the result.\n\n- In a particular case, where the number and its complement are equal, we then need to check if there exists _at least_ **two copies** of the _number_ in the table.\n\nWe illustrate the algorithm in the following figure:\n\n![pic](../Figures/170/170_hashtable.png)\n\n<iframe src=\"https://leetcode.com/playground/U3ZwFDkT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"U3ZwFDkT\"></iframe>\n\n\n**Complexity Analysis**\n\n- Time Complexity:\n\n    - For the `add(number)` function: $$\\mathcal{O}(1)$$, since it takes a constant time to update an entry in hashtable.\n\n    - For the `find(value)` function: $$\\mathcal{O}(N)$$, where $$N$$ is the total number of **unique** _numbers_. In the worst case, we would iterate through the entire table.\n\n- Space Complexity: $$\\mathcal{O}(N)$$, where $$N$$ is the total number of **unique** _numbers_ that we will see during the usage of the data structure.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

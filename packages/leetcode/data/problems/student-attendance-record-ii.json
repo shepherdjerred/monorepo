@@ -1,0 +1,130 @@
+{
+  "questionId": "552",
+  "questionFrontendId": "552",
+  "title": "Student Attendance Record II",
+  "titleSlug": "student-attendance-record-ii",
+  "difficulty": "Hard",
+  "content": "<p>An attendance record for a student can be represented as a string where each character signifies whether the student was absent, late, or present on that day. The record only contains the following three characters:</p>\n\n<ul>\n\t<li><code>&#39;A&#39;</code>: Absent.</li>\n\t<li><code>&#39;L&#39;</code>: Late.</li>\n\t<li><code>&#39;P&#39;</code>: Present.</li>\n</ul>\n\n<p>Any student is eligible for an attendance award if they meet <strong>both</strong> of the following criteria:</p>\n\n<ul>\n\t<li>The student was absent (<code>&#39;A&#39;</code>) for <strong>strictly</strong> fewer than 2 days <strong>total</strong>.</li>\n\t<li>The student was <strong>never</strong> late (<code>&#39;L&#39;</code>) for 3 or more <strong>consecutive</strong> days.</li>\n</ul>\n\n<p>Given an integer <code>n</code>, return <em>the <strong>number</strong> of possible attendance records of length</em> <code>n</code><em> that make a student eligible for an attendance award. The answer may be very large, so return it <strong>modulo</strong> </em><code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> There are 8 records with length 2 that are eligible for an award:\n&quot;PP&quot;, &quot;AP&quot;, &quot;PA&quot;, &quot;LP&quot;, &quot;PL&quot;, &quot;AL&quot;, &quot;LA&quot;, &quot;LL&quot;\nOnly &quot;AA&quot; is not eligible because there are 2 absences (there need to be fewer than 2).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1\n<strong>Output:</strong> 3\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 10101\n<strong>Output:</strong> 183236316\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"checkRecord\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"158K\", \"totalSubmission\": \"279.8K\", \"totalAcceptedRaw\": 158029, \"totalSubmissionRaw\": 279839, \"acRate\": \"56.5%\"}",
+  "likes": 2368,
+  "dislikes": 290,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Student Attendance Record I\", \"titleSlug\": \"student-attendance-record-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2",
+    "1",
+    "10101"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"sprinklr\", \"name\": \"Sprinklr\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int checkRecord(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int checkRecord(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def checkRecord(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def checkRecord(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar checkRecord = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function checkRecord(n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CheckRecord(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int checkRecord(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func checkRecord(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun checkRecord(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func checkRecord(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn check_record(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef check_record(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function checkRecord($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int checkRecord(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def checkRecord(n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec check_record(n :: integer) :: integer\n  def check_record(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec check_record(N :: integer()) -> integer().\ncheck_record(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (check-record n)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2300",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Top-Down Dynamic Programming with Memoization\n\n#### Intuition  \n\nA trivial way to approach this problem would be to generate all possible combinations of `'P'`, `'A'`, and `'L'` of length `n`, and then check whether the currently generated combination is eligible for an attendance award (for convenience, let's call the combination eligible for an attendance award a **valid combination**, and its opposite an **invalid combination**). \n\n![all_combinations](../Figures/552/Slide1.jpg)\n\n> **Note:** This approach will generate all possible combinations, so it is a sub-optimal approach and will result in a TLE. However, understanding this approach is a stepping stone to further optimization.\n\n<br /> \n\n\nTo generate all combinations of length `n`, we will choose a character from `'P'`, `'A'`, and `'L'` for all `n` positions one by one. \n\nWhen we choose a character for the first position, we will be left with `n - 1` positions, so now we have to make a combination of length `n - 1`. We can use a recursive approach here as our bigger problem reduces to a smaller similar sub-problem with each step.    \nWe choose any character from `'P'`, `'A'`, and `'L'` for the current position and then recursively generate the remaining combination of length `n - 1`.\n\n**Note:** This article uses recursion techniques; if you are not familiar with recursion, check out our [recursion explore card](https://leetcode.com/explore/learn/card/recursion-i/250/principle-of-recursion/1439/).\n\n\n\n**Determining the recurrence relation:**\n\nWe define a recursive function `generate_combination(n)` that generates combinations of length `n`.   \nFirst, we choose a character for the current position (choose, `'P'`, `'A'`, and `'L'` one by one), and then we recursively get the combinations of length `n - 1` using the function `generate_combination(n - 1)` to make combinations of length `n`. \n\n```python3\ncurrent_subproblem_combinations  = 'P' + generate_combination(n - 1) \ncurrent_subproblem_combinations += 'A' + generate_combination(n - 1) \ncurrent_subproblem_combinations += 'L' + generate_combination(n - 1) \n```\n\n\nInstead of getting combinations of length `n - 1`  three times, we will get those combinations once and store and use them three times. Thus, saving us some runtime.\n\n```python3\nsmaller_subproblem_combinations = generate_combination(n - 1)\n\ncurrent_subproblem_combinations  = 'P' + smaller_subproblem_combinations \ncurrent_subproblem_combinations += 'A' + smaller_subproblem_combinations \ncurrent_subproblem_combinations += 'L' + smaller_subproblem_combinations \n```\n\n<br />\n\n**Determining the base case:**\n\nIf `n` is `0`, it means we have to generate a combination of length `0`, thus, we can return an empty string from here.\n\n<br />\n\n```python\ndef generate_combination(n) -> List:\n    # Base case.\n    if n == 0:\n        return ['']\n\n    # Get all combinations of length 'n - 1'.\n    smaller_subproblem_combinations = generate_combination(n - 1)\n\n    # Generate and return all combinations of length 'n' using combinations of length 'n - 1'.\n    current_subproblem_combinations  = 'P' + smaller_subproblem_combinations \n    current_subproblem_combinations += 'A' + smaller_subproblem_combinations \n    current_subproblem_combinations += 'L' + smaller_subproblem_combinations\n    return current_subproblem_combinations\n\n# Get all combinations.\nall_combinations = generate_combination(n)\n# Then check all combinations eligible for the award.\n```\n\n![recursion_image](../Figures/552/Slide2.jpg)\n\n\nIn this approach, we can see a problem: if the combination becomes invalid at the beginning, then there is no benefit in generating all the combinations of suffixes that follow it.\n\n![early_exit](../Figures/552/Slide3.jpg)\n\n<br />\n\n**Optimizing the recursion:**\n\nIf the current combination so far is invalid, it is best to stop the recursive call early to save some time. Remember that the problem states that we can have at most `1` `'A'` and `2` consecutive `'L'`, so these conditions can be used to perform the early exit.   \n\nTo do this, while generating combinations we need to keep track of the total number of `'A'` (absences) so far and the number of consecutive `'L'` (lates) at the end of our combination so far.     \nWhen we choose a character for the current position, we change the respective counts and then make the next recursive call so that our combination doesn't exceed the maximum allowed counts.\n\n\nWhen `n` becomes `0`, it will be guaranteed that the combination is eligible for the award, otherwise, we would have already exited from the function. Previously, we were returning the whole combination string as we were required to verify if that particular combination would be eligible for the award or not, but this is not required now, so we can return `1` to indicate that we will count this combination.     \nSimilarly, we will return `0` whenever we exit from the function and do not need to count the combinations.\n\n```python\n# Exit condition / Base case.\nif total_absences >= 2 or consecutive_lates >= 3: return 0\nif n == 0: return 1\n```\n\n<br />\n\nSo, our function will now return the number of combinations of length `n` eligible for the award, `eligible_combinations(n, total_absences, consecutive_lates) -> int`. \n\n\nWhenever we choose an option either `'P'`, `'A'`, or `'L'`, we increment their counts in subsequent recursive calls to keep track of the number of absences and consecutive lates.\n\n1. If we choose `'P'`, it will not change the total number of absences, but it will reset the number of consecutive lates to zero in our combination.\n2. If we choose `'A'`, it will increase the total number of absences in our combination by one and reset the number of consecutive lates to zero.\n3. If we choose `'L'`, it will not change the total number of absences, but it will increase the number of consecutive lates by one in our combination.\n\n\n```python\ndef eligible_combinations(n, total_absences, consecutive_lates) -> int:\n    # Do not generate further combinations if the combination is not eligible for the award.\n    if total_absences >= 2 or consecutive_lates >= 3: return 0\n    # We have created a combination of length 'n' which is eligible for the award, thus, include it in the count.\n    if n == 0: return 1\n\n    # Choose a character for the current position and make further recursive calls.\n    counts = eligible_combinations(n - 1, total_absences, 0) # Choose 'P'.\n    counts += eligible_combinations(n - 1, total_absences + 1, 0) # Choose 'A'.\n    counts += eligible_combinations(n - 1, total_absences, consecutive_lates + 1) # Choose 'L'.\n    return counts \n```\n\n<br />\n\n**Memoization:**\n\nWe can also see that some of the sub-problems recur; this can be better understood if we draw the recursive call tree; for example, in the image below we would have to compute `eligible_combinations(2, 0, 1)` and `eligible_combinations(2, 0, 0)` many times.\n\n![recursive_tree](../Figures/552/Slide4.jpg)\n\nBy caching the result of each subproblem, we can avoid recalculating previously seen sub-problems, thus improving the time complexity.\n\n> This optimization technique of storing the results of the expensive function calls and returning the cached result when the input occurs again is called memoization.\n\nEach subproblem is defined by three variables `n`, `total_absences`, and `consecutive_lates`.                  \nSo, we will store the subproblem results in a three-dimensional array `memo[n][total_absences][consecutive_lates]`.\n\n\n\n#### Algorithm\n\n1. Initialization:\n    - Create a constant `MOD` equal to `1000000007`.\n    - Create the cache `memo` as a 3D vector.\n2. Define a function `eligible_combinations(n, total_absences, consecutive_lates)`:\n    - If the combination is not eligible for the award (`total_absences>= 2` or `consecutive_lates >= 3`), return `0`.\n    - If we created a combination eligible for award (`n == 0`), return `1`.\n    - If the sub-problem has been solved earlier, then, return the stored result from the cache.\n    - Initialize a variable `count` to `0`.\n    - Recursively call the function for three choices and perform the modular addition of the respective recursive call result with `count`:\n        - Choose `'P'` for the current position: `count = eligible_combinations(n - 1, total_absences, 0)`.\n        - Choose `'A'` for the current position: `count = (count + eligible_combinations(n - 1, total_absences + 1, 0)) % MOD`.\n        - Choose `'L'` for the current position: `count = (count + eligible_combinations(n - 1, total_absences, consecutive_lates + 1)) % MOD`.\n    - Store the result in the cache and return `count`.\n3. In `checkRecord(n)` function:\n    - Initialize an empty cache `memo` with dimensions `(n + 1) x 2 x 3` and fill it with `-1` indicating we have not stored the result of sub-problems (as counts will always be `0` or more).\n    - Return the result given by `eligible_combinations` function with initial parameters `(n, 0, 0)` indicating no absence and no consecutive late count in the initial combination.\n\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/kqRsRkfg/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"kqRsRkfg\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $O(n)$  \n    - Our recursive function will only evaluate $n \\times 2 \\times 3$ unique sub-problems due to memoization. \n    - So, this approach will take $O(6 \\cdot n) = O(n)$ time.\n* Space complexity: $O(n)$\n    - We initialized an additional array `memo` of size $n \\times 2 \\times 3$ that takes $O(n)$ space.\n    - The recursive call stack will also take $O(n)$ space in the worst-case.\n    - So, this approach will take $O(6 \\cdot n + n) = O(n)$ space.\n\n\n<br />\n\n---\n\n\n### Approach 2: Bottom-Up Dynamic Programming\n\n#### Intuition  \n\nThe previous recursive dynamic programming approach can also be converted to an iterative dynamic programming approach.                \nIn the iterative dynamic programming (tabulation), we create a dp table, fill in the results of the smaller sub-problems, and solve the larger sub-problems iteratively. \n\nFrom the previous approach, we know that the state of each sub-problem depends on three variables `n`, `total_absences`, and `consecutive_lates`.                  \nTherefore, we will store the results of the sub-problem in a three-dimensional array `dp`, where `dp[len][total_absences][consecutive_lates]` stores the number of combinations of length `len` eligible for the award having `total_absences` `'A'` and `consecutive_lates` `'L'` at the end of the combination.\n\n<br />\n\n**Determining the base case:**\n\nThe simplest case to fill in the table is to store the sub-problem results when the combination length is `0`.\n- `dp[0][0][0] = 1`, as there is only one combination of length `0` with zero `'A'` and zero consecutive `'L'`.\n- All other cases like `dp[0][x][y]` will store `0`, because it's not possible to make a combination of length `0` with any number of `'A'` or `'L'` in it.\n\n<br />\n\n**Generating bigger sub-problem result using a smaller sub-problem:**\n\nWe will iterate on all sub-problems using nested for loops (combination length `len` will go from `0` to `n - 1`, `total_absences` from `0` to `1`, and `consecutive_lates` from `0` to `2`) and try to generate the bigger sub-problem result using the current smaller sub-problem result.\n\nSay we are at the current sub-problem `dp[len][total_absences][consecutive_lates]`, using this sub-problem we will generate results for a bigger sub-problem when we append `'P'`, `'A'`, or `'L'` at the end.\n\n1. If we choose `'P'`:    \n    - We can append `'P'` to all combinations of the current sub-problem, `bigger_subproblem_result = dp[len][total_absences][consecutive_lates]`\n    - Appending `'P'` will increase `len` by `1`, keep the `total_absences` same, and reset `consecutive_lates` to `0`, so we store the result at `dp[len + 1][total_absences][0]`, i.e. `dp[len + 1][total_absences][0] += bigger_subproblem_result` in the table. \n2. If we choose `'A'`:    \n    - We can append `'A'` to all combinations of the current sub-problem if it has `total_absences = 0`, `bigger_subproblem_result = dp[len][total_absences][consecutive_lates]` \n    - If the combinations of the current sub-problem have `total_absences > 0`, then adding one more `'A'` will increase the count of absences to `2` or more and will make the combination invalid, so, there is no need to count these combinations.\n    - Appending `'A'` will increase the `len` and `total_absences` by `1` and reset `consecutive_lates` to `0`, so we store the result at `dp[len + 1][total_absences+ 1][0]`, i.e. `dp[len + 1][total_absences+ 1][0] += bigger_subproblem_result` in the table. \n3. If we choose `'L'`:    \n    - We can append `'L'` to all combinations of the current sub-problem if it has `consecutive_lates = 0 or 1`, `bigger_subproblem_result = dp[len][total_absences][consecutive_lates]`\n    - If the combinations of the current sub-problem have `consecutive_lates > 1`, then adding one more `'L'` will increase the count of consecutive lates to `3` or more and will make the combination invalid, so, there is no need to count these combinations.\n    - Appending `'L'` will increase the `len` and `consecutive_lates` by `1` but keep the `total_absences` same, so we store the result at `dp[len + 1][total_absences][consecutive_lates + 1]`, i.e. `dp[len + 1][total_absences][consecutive_lates + 1] += bigger_subproblem_result` in the table. \n\n<br />\n \n\n**Calculating required result:**\n\nIn the end, to calculate the final result (count of all eligible combinations of length `n`) we will need to sum all the valid combinations of length `n`, thus, counting all the results stored in `dp[n][0 to 1][0 to 2]`.\n\n<br />\n\n#### Algorithm\n\n1. Initialization:\n    - Create a constant `MOD` equal to `1000000007`.\n    - Create the cache `dp` as a 3D vector with dimensions `(n + 1) x 2 x 3` and fill it with `0`.\n2. Set `dp[0][0][0] = 1`.\n3. Iterate over the sub-problems using three nested loops for `len`, `total_absences`, and `consecutive_lates`.\n    - If we choose `'P'`: `dp[len + 1][total_absences][0] = (dp[len + 1][total_absences][0] + dp[len][total_absences][consecutive_lates]) % MOD`\n    - If we choose `'A'` and `total_absences < 1`: `dp[len + 1][total_absences + 1][0] = (dp[len + 1][total_absences + 1][0] + dp[len][total_absences][consecutive_lates]) % MOD`\n    - If we choose `'L'` and `consecutive_lates < 2`: `dp[len + 1][total_absences][consecutive_lates + 1] = (dp[len + 1][total_absences][consecutive_lates + 1] + dp[len][total_absences][consecutive_lates]) % MOD;`\n4. Sum up the `counts` for all combinations of length `n` with different `total_absences` and `consecutive_lates` counts using modular addition with `MOD`.\n5. Return the final `count`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LJjsiYFN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LJjsiYFN\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $O(n)$  \n    - We iterate over $n \\times 2 \\times 3$ sub-problems using nested for loops.\n    - Thus, this approach will take $O(6 \\cdot n) = O(n)$ time.\n* Space complexity: $O(n)$\n    - We initialized an additional array of size $n \\cdot 2 \\cdot 3$.\n    - Thus, this approach will take $O(6 \\cdot n) = O(n)$ space.\n\n\n<br />\n\n---\n\n\n### Approach 3: Bottom-Up Dynamic Programming, Space Optimized\n\n#### Intuition  \n\n> **Note:** The previous approaches will be sufficient during the limited time availability of a real interview setting. Here we offer a more optimized approach based on it, which will also likely appear as a follow-up question.\n\nIn the previous approach, when computing the numbers of combinations of length `len `, we only need the numbers of combinations of length `len - 1`. The shorter combinations of length `len - 2`, `len - 3`, etc. are no longer needed.    \nIt means all other length sub-problem results are kept unnecessarily in the `dp` table.    \n\n\n![dp](../Figures/552/Slide5.jpg)\n\n<br />\n\nThus, instead of keeping one 3-dimensional `dp` array, we can keep two 2-dimensional arrays `dp_curr_state`, and `dp_next_state`.\n\n`dp_curr_state[total_absences][consecutive_lates]` and `dp_next_state[total_absences][consecutive_lates]` will store the number of valid combinations of current length `len` and next length `len + 1`, respectively with `total_absences` `'A'` and `consecutive_lates` `'L'`. The values eligible for the award are `0, 1` for `total_absences` and `0, 1, 2`, for `consecutive_lates`; thus, these 2-dimensional arrays will have size `2 x 3` each.    \n\nUsing the current length `len` combination counts stored in `dp_curr_state` we will compute the next length `len + 1` combination counts and store them in `dp_next_state`. Then, length `len + 1` will become our current length, `dp_next_state` will become `dp_curr_state` and similarly, we will compute the next length `len + 2`  combination counts and continue.\n\n<br />\n\n#### Algorithm\n\n1. Initialization:\n    - Create a constant `MOD` equal to `1000000007`.\n    - Create the two 2-dimensional arrays `dp_curr_state` and `dp_next_state` with dimensions `2 x 3` and fill it with `0`.\n2. Set `dp_curr_state[0][0] = 1`.\n3. Iterate over the sub-problems using a for loop for `len`:\n    - Iterate over the combinations of `total_absences`, and `consecutive_lates` using nested for loops:\n        - If we choose `'P'`: `dp_next_state[total_absences][0] = (dp_next_state[total_absences][0] + dp_curr_state[total_absences][consecutive_lates]) % MOD`\n        - If we choose `'A'` and `total_absences < 1`: `dp_next_state[total_absences + 1][0] = (dp_next_state[total_absences + 1][0] + dpCurrState[total_absences][consecutive_lates]) % MOD;`\n        - If we choose `'L'` and `consecutive_lates < 2`: `dp_next_state[total_absences][consecutive_lates + 1] = (dp_next_state[total_absences][consecutive_lates + 1] + dp_curr_state[total_absences][consecutive_lates]) % MOD`\n    - Set the `dp_curr_state` to `dp_next_state` and reset `dp_next_state` to `0`.\n4. Sum up the `counts` for all combinations of length `n` (`dp_curr_state`) with different `total_absences` and `consecutive_lates` counts using modular addition with `MOD`.\n5. Return the final `count`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/FYFbUVMn/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FYFbUVMn\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $O(n)$  \n    - We iterate over $2 \\times 3 \\times n$ states once using the nested for-loops.\n    - Thus, this approach will take $O(6 \\cdot n) = O(n)$ time.\n* Space complexity: $O(1)$\n    - We use two $2 \\times 3$ arrays and a handful of variables. Since the space used is not affected by the size of $n$, we only use constant space in this approach.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

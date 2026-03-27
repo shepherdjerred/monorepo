@@ -1,0 +1,135 @@
+{
+  "questionId": "762",
+  "questionFrontendId": "760",
+  "title": "Find Anagram Mappings",
+  "titleSlug": "find-anagram-mappings",
+  "difficulty": "Easy",
+  "content": "<p>You are given two integer arrays <code>nums1</code> and <code>nums2</code> where <code>nums2</code> is <strong>an anagram</strong> of <code>nums1</code>. Both arrays may contain duplicates.</p>\n\n<p>Return <em>an index mapping array </em><code>mapping</code><em> from </em><code>nums1</code><em> to </em><code>nums2</code><em> where </em><code>mapping[i] = j</code><em> means the </em><code>i<sup>th</sup></code><em> element in </em><code>nums1</code><em> appears in </em><code>nums2</code><em> at index </em><code>j</code>. If there are multiple answers, return <strong>any of them</strong>.</p>\n\n<p>An array <code>a</code> is <strong>an anagram</strong> of an array <code>b</code> means <code>b</code> is made by randomizing the order of the elements in <code>a</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [12,28,46,32,50], nums2 = [50,12,32,46,28]\n<strong>Output:</strong> [1,4,3,2,0]\n<strong>Explanation:</strong> As mapping[0] = 1 because the 0<sup>th</sup> element of nums1 appears at nums2[1], and mapping[1] = 4 because the 1<sup>st</sup> element of nums1 appears at nums2[4], and so on.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [84,46], nums2 = [84,46]\n<strong>Output:</strong> [0,1]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums1.length &lt;= 100</code></li>\n\t<li><code>nums2.length == nums1.length</code></li>\n\t<li><code>0 &lt;= nums1[i], nums2[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>nums2</code> is an anagram of <code>nums1</code>.</li>\n</ul>\n",
+  "hints": [
+    "Create a hashmap so that D[x] = i  whenever B[i] = x.  Then, the answer is [D[x] for x in A]."
+  ],
+  "metaData": "{\n  \"name\": \"anagramMappings\",\n  \"params\": [\n    {\n      \"name\": \"nums1\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"nums2\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"112K\", \"totalSubmission\": \"133.4K\", \"totalAcceptedRaw\": 112031, \"totalSubmissionRaw\": 133411, \"acRate\": \"84.0%\"}",
+  "likes": 624,
+  "dislikes": 234,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[12,28,46,32,50]\n[50,12,32,46,28]",
+    "[84,46]\n[84,46]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> anagramMappings(vector<int>& nums1, vector<int>& nums2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] anagramMappings(int[] nums1, int[] nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def anagramMappings(self, nums1: List[int], nums2: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def anagramMappings(self, nums1, nums2):\n        \"\"\"\n        :type nums1: List[int]\n        :type nums2: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums1\n * @param {number[]} nums2\n * @return {number[]}\n */\nvar anagramMappings = function(nums1, nums2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function anagramMappings(nums1: number[], nums2: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] AnagramMappings(int[] nums1, int[] nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* anagramMappings(int* nums1, int nums1Size, int* nums2, int nums2Size, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func anagramMappings(nums1 []int, nums2 []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun anagramMappings(nums1: IntArray, nums2: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func anagramMappings(_ nums1: [Int], _ nums2: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn anagram_mappings(nums1: Vec<i32>, nums2: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums1\n# @param {Integer[]} nums2\n# @return {Integer[]}\ndef anagram_mappings(nums1, nums2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums1\n     * @param Integer[] $nums2\n     * @return Integer[]\n     */\n    function anagramMappings($nums1, $nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> anagramMappings(List<int> nums1, List<int> nums2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def anagramMappings(nums1: Array[Int], nums2: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec anagram_mappings(nums1 :: [integer], nums2 :: [integer]) :: [integer]\n  def anagram_mappings(nums1, nums2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec anagram_mappings(Nums1 :: [integer()], Nums2 :: [integer()]) -> [integer()].\nanagram_mappings(Nums1, Nums2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (anagram-mappings nums1 nums2)\n  (-> (listof exact-integer?) (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1786",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/824222070\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Overview\n\nWe have two lists of $N$ integers `nums1` and `nums2`; both lists may have duplicates. We want to map each integer in the first list, `nums1`, to any index having the same integer in the second list, `nums2`. There could be many-to-one mappings, i.e., if there are duplicate integers in the list `nums1`, each of them can be mapped to the same index in the list `nums2`.\n</br>\n\n---\n\n### Approach 1: Brute Force\n\n**Intuition**\n\nThe first approach one can think of is to iterate over each integer in the list `nums1`, and for each integer, iterate over the integers in the list `nums2`. If the integer in the list `nums2` is the same as in the list `nums1`, we can store the index and break out as the search for the integer in `nums1` is done.\n\n**Algorithm**\n\n1. Create a list `mappings` of size $N$ to store the final mappings.\n2. Iterate over the list `nums1`, and for each integer `num`:\n\n    - Iterate over each integer in the list `nums2`. If an integer is equal to `num`, break here and store the index in the list `mappings`.\n\n3. Return `mappings`.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/dQRxtVTi/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"dQRxtVTi\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $N$ is the number of integers in the list `nums1` and `nums2`.\n\n* Time complexity: $O(N^2)$.\n\n  Consider the case when `nums1 = {a, b, c, d}` and `nums2 = {d, c, b, a}`; the number of operations in these cases where the second array is just the reverse of the first one will be `N + (N - 1) + (N - 2) + ...  + 1`. This sum can be written as $\\dfrac{N \\cdot (N + 1)}{2}$, and therefore the total time complexity in the worst case is equal to $O(N^2)$.\n\n* Space complexity: $$O(1)$$.\n\n  We just need $O(N)$ space to store the final mappings; however, the space needed to store the output is not considered under the space complexity, and hence the space complexity is constant.\n  <br/>\n\n---\n\n### Approach 2: HashMap\n\n**Intuition**\n\nWe can observe that for each integer in the list `nums1`, we need to find any index in the second list `nums2` with the same integer. Finding the index in the second list can become much simpler if we store the integers and their corresponding indices of the second list in an unordered hash map. Using this map, instead of linearly searching each element in list `nums2` which takes $O(N)$ time, we can find the index in $O(1)$ for each integer in the list `nums1`.\n\n**Algorithm**\n\n1. Iterate over the integers in the list `nums2` and store the index corresponding to its value in the hash map `valueToPos`.\n2. Iterate over the integers in the list `nums1`, and for each integer `num`, insert the index stored at `valueToPos[num]` in the list `mappings`.\n3. Return `mappings`.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/2r76bRsF/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"2r76bRsF\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $N$ is the number of integers in the list `nums1` and `nums2`.\n\n* Time complexity: $O(N)$.\n\n  We first iterate over the list `nums1` to store the indices in the map and then iterate over the first list `nums1` to get the corresponding index in the second list from the map. Therefore, the total time complexity equals $O(N)$.\n\n* Space complexity: $O(N)$.\n\n  We need $O(N)$ space to store the indices in the unordered map `valueToPos`; thus, the total space complexity equals $O(N)$.\n  <br/>\n\n---\n\n### Approach 3: Bit Manipulation + Sorting\n\n**Intuition**\n\n> Note: This approach is more advanced, requires changing the input lists, is slower than the previous approach, and hence is not advisable. This approach has been added for the sake of completion or if the interviewer specifically asks for it. We will assume that you are already familiar with bit operations.\n\nBoth given lists are anagrams of each other, so if we sort both of them, then the same integers would come at the same indices (the arrays are equal). For example, `nums1 = {2, 3, 2, 1}` and `nums2 = {3, 2, 1, 2}`, then after sorting both lists will be `{1, 2, 2, 3}`. Now, before sorting, we can store each element with its index (using pair or tuple etc.) to keep track of the original indices as in the final mapping, we will be storing the original index of each integer in the list `nums2`.\n\n![fig](../Figures/760/760B.png)\n\nInstead of storing indices separately, we can save space using bit manipulation to store the index within the integer itself. This can be done using the left shift ($<<$) operator; we will shift both integer lists before sorting and adding their indices to them; these indices would be in the `0's` that would have been created due to shifting. Also, after sorting, we can fetch the original index of integers by performing bit-wise AND ($&$) operations and use them to create the final mappings.\n\nNow, the next question is, how many bits should we shift the integers to the left? After shifting, we need to add an index to the number, which could be at max $99$. So we need to at least create as many `0's` in the end to accommodate $99$. Hence, if we left shift the integer by, say, $x$ bits, then the last $x$ bits can make the maximum number as $2^x - 1$, which has to be greater than or equal to $99$, i.e. $2^x - 1 \\geq 99$. This implies $x$ should be equal to $7$ at least.\n\n> **Note** that we are working with integers here that have 32 bits in C++/Java; in total, we will need 24 bits: 17 bits for the original integer ($10^5$) and 7 extra bits for the left shift. Hence, this logic can work here; any change in the problem constraint might invalidate this approach.\n\nAlso, to get the original index from the left-shifted integer, we can perform the AND (&) operation with $2^ 7 -1 = 127$. This is because $127$ equals $01111111$, i.e. the last $7$ bits are $1$, and the rest are $0$. Hence, when we perform the AND operation, every bit except the last $7$ will become $0$.\n\n![fig](../Figures/760/760A.png)\n\n**Algorithm**\n\n1. Iterate over each integer in the list `nums1` and `nums2` and shift them by `bitsToShift = 7` bits to the left and then add their indices to it.\n2. Sort the list `nums1` and `nums2`.\n3. Iterate over the indices from $0$ to $N - 1$, and for each, store the index of the integer in the list `nums2` in the list `mappings` at the index of the integer in the list `nums1`. We can use bit manipulation as described above to retrieve the indices.\n4. Return `mappings`.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/PKaFvHpN/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"PKaFvHpN\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $N$ is the number of integers in the list `nums1` and `nums2`.\n\n* Time complexity: $O(N \\log N)$.\n\n  We first iterate over the lists; this takes $O(N)$ time. Then we sort the lists, which would take $O(N \\log N)$ time. Then we again iterate over the list to create mappings. Therefore the total time complexity equals $O(N \\log N)$.\n\n* Space complexity: $O(\\log N)$.\n\n  The lists used for input and output are not considered in the space complexity. However, some space is required for sorting. The space complexity of the sorting algorithm depends on the implementation of each programming language. For instance, in Java, the `Arrays.sort()` for primitives is implemented as a variant of the quicksort algorithm whose space complexity is $O(\\log⁡ N)$. In C++ `sort()` function provided by STL is a hybrid of Quick Sort, Heap Sort, and Insertion Sort and has a worst-case space complexity of $O(\\log⁡ N)$. Thus, the inbuilt sort() function might add up to $O(\\log⁡ N)$ to space complexity. Hence, the space complexity equals $O(\\log⁡ N)$.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

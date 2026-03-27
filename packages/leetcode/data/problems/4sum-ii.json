@@ -1,0 +1,133 @@
+{
+  "questionId": "454",
+  "questionFrontendId": "454",
+  "title": "4Sum II",
+  "titleSlug": "4sum-ii",
+  "difficulty": "Medium",
+  "content": "<p>Given four integer arrays <code>nums1</code>, <code>nums2</code>, <code>nums3</code>, and <code>nums4</code> all of length <code>n</code>, return the number of tuples <code>(i, j, k, l)</code> such that:</p>\n\n<ul>\n\t<li><code>0 &lt;= i, j, k, l &lt; n</code></li>\n\t<li><code>nums1[i] + nums2[j] + nums3[k] + nums4[l] == 0</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [1,2], nums2 = [-2,-1], nums3 = [-1,2], nums4 = [0,2]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong>\nThe two tuples are:\n1. (0, 0, 0, 1) -&gt; nums1[0] + nums2[0] + nums3[0] + nums4[1] = 1 + (-2) + (-1) + 2 = 0\n2. (1, 1, 0, 0) -&gt; nums1[1] + nums2[1] + nums3[0] + nums4[0] = 2 + (-1) + (-1) + 0 = 0\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [0], nums2 = [0], nums3 = [0], nums4 = [0]\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums1.length</code></li>\n\t<li><code>n == nums2.length</code></li>\n\t<li><code>n == nums3.length</code></li>\n\t<li><code>n == nums4.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 200</code></li>\n\t<li><code>-2<sup>28</sup> &lt;= nums1[i], nums2[i], nums3[i], nums4[i] &lt;= 2<sup>28</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"fourSumCount\",\n  \"params\": [\n    {\n      \"name\": \"nums1\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"nums2\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"nums3\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"nums4\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"384.3K\", \"totalSubmission\": \"663.9K\", \"totalAcceptedRaw\": 384320, \"totalSubmissionRaw\": 663908, \"acRate\": \"57.9%\"}",
+  "likes": 5077,
+  "dislikes": 151,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"4Sum\", \"titleSlug\": \"4sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2]\n[-2,-1]\n[-1,2]\n[0,2]",
+    "[0]\n[0]\n[0]\n[0]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int fourSumCount(vector<int>& nums1, vector<int>& nums2, vector<int>& nums3, vector<int>& nums4) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int fourSumCount(int[] nums1, int[] nums2, int[] nums3, int[] nums4) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def fourSumCount(self, nums1: List[int], nums2: List[int], nums3: List[int], nums4: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def fourSumCount(self, nums1, nums2, nums3, nums4):\n        \"\"\"\n        :type nums1: List[int]\n        :type nums2: List[int]\n        :type nums3: List[int]\n        :type nums4: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums1\n * @param {number[]} nums2\n * @param {number[]} nums3\n * @param {number[]} nums4\n * @return {number}\n */\nvar fourSumCount = function(nums1, nums2, nums3, nums4) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function fourSumCount(nums1: number[], nums2: number[], nums3: number[], nums4: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FourSumCount(int[] nums1, int[] nums2, int[] nums3, int[] nums4) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int fourSumCount(int* nums1, int nums1Size, int* nums2, int nums2Size, int* nums3, int nums3Size, int* nums4, int nums4Size) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func fourSumCount(nums1 []int, nums2 []int, nums3 []int, nums4 []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun fourSumCount(nums1: IntArray, nums2: IntArray, nums3: IntArray, nums4: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func fourSumCount(_ nums1: [Int], _ nums2: [Int], _ nums3: [Int], _ nums4: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn four_sum_count(nums1: Vec<i32>, nums2: Vec<i32>, nums3: Vec<i32>, nums4: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums1\n# @param {Integer[]} nums2\n# @param {Integer[]} nums3\n# @param {Integer[]} nums4\n# @return {Integer}\ndef four_sum_count(nums1, nums2, nums3, nums4)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums1\n     * @param Integer[] $nums2\n     * @param Integer[] $nums3\n     * @param Integer[] $nums4\n     * @return Integer\n     */\n    function fourSumCount($nums1, $nums2, $nums3, $nums4) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int fourSumCount(List<int> nums1, List<int> nums2, List<int> nums3, List<int> nums4) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def fourSumCount(nums1: Array[Int], nums2: Array[Int], nums3: Array[Int], nums4: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec four_sum_count(nums1 :: [integer], nums2 :: [integer], nums3 :: [integer], nums4 :: [integer]) :: integer\n  def four_sum_count(nums1, nums2, nums3, nums4) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec four_sum_count(Nums1 :: [integer()], Nums2 :: [integer()], Nums3 :: [integer()], Nums4 :: [integer()]) -> integer().\nfour_sum_count(Nums1, Nums2, Nums3, Nums4) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (four-sum-count nums1 nums2 nums3 nums4)\n  (-> (listof exact-integer?) (listof exact-integer?) (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "960",
+    "content": "[TOC]\n\n## Solution\n\n### Overview\n\nThis problem is a variation of [4Sum](https://leetcode.com/articles/4sum/), and we recommend checking that problem first. The main difference is that here we pick each element from a different array, while in 4Sum all elements come from the same array. For that reason, we cannot use the [Two Pointers](https://leetcode.com/articles/4sum/#approach-1-two-pointers) approach, where elements must be in the same sorted array.\n\nOn the bright side, we do not need to worry about using the same element twice - we pick one element at a time from each array. As you will see later, this help reduce the time complexity.\n\nFinally, we do not need to return actual values and ensure they are unique; we just count each combination of four elements that sums to zero.\n\n---\n\n### Approach 1: Hashmap\n\nA brute force solution will be to enumerate all combinations of elements using four nested loops, which results in $\\mathcal{O}(n^4)$ time complexity. A faster approach is to use three nested loops, and, for each sum `a + b + c`, search for a complementary value `d == -(a + b + c)` in the fourth array. We can do the search in $\\mathcal{O}(1)$ if we populate the fourth array into a hashmap.\n\n> Note that we need to track the frequency of each element in the fourth array. If an element is repeated multiple times, it will form multiple quadruples. Therefore, we will use hashmap values to store counts.\n\nBuilding further on this idea, we can observe that `a + b == -(c + d)`. First, we will count sums of elements `a + b` from the first two arrays using a hashmap. Then, we will enumerate elements from the third and fourth arrays, and search for a complementary sum `a + b == -(c + d)` in the hashmap.\n\n!?!../Documents/454_4Sum_II.json:1200,500!?!\n\n#### Algorithm\n\n1. For each `a` in `A`.\n    - For each `b` in `B`.\n        - If `a + b` exists in the hashmap `m`, increment the value.\n        - Else add a new key `a + b` with the value `1`.\n\n2. For each `c` in `C`.\n    - For each `d` in `D`.\n        - Lookup key `-(c + d)` in the hashmap `m`.\n        - Add its value to the count `cnt`.\n\n3. Return the count `cnt`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/2jXLyRui/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"2jXLyRui\"></iframe>\n\n#### Complexity Analysis\n\n- Time Complexity: $\\mathcal{O}(n^2)$. We have 2 nested loops to count sums, and another 2 nested loops to find complements.\n\n- Space Complexity: $\\mathcal{O}(n^2)$ for the hashmap. There could be up to $\\mathcal{O}(n^2)$ distinct `a + b` keys.\n\n---\n\n### Approach 2: kSum II\n\nAfter you solve 4Sum II, an interviewer can follow-up with 5Sum II, 6Sum II, and so on. What they are really expecting is a generalized solution for `k` input arrays. Fortunately, the hashmap approach can be easily extended to handle more than 4 arrays.\n\nAbove, we divided four arrays into two equal groups and processed each group independently. Same way, we will divide $k$ arrays into two groups. For the first group, we will have $\\lfloor k/2 \\rfloor$ nested loops to count sums. Another $\\lceil k/2 \\lceil$ nested loops will enumerate arrays in the second group to count sums as before. Finally, we count the pairs from the two groups with sums as 0.\n\n#### Algorithm\n\n1. Initialize the final result count `res` as 0.\n2. Divide the $k$ given arrays into two groups:\n    - `left`: the first $\\lfloor k/2 \\rfloor$ arrays\n    - `right`: the rest $\\lceil k/2 \\lceil$ arrays\n3. Enumerate within each group, count the sums of tuples that pick exactly one number from each array in the group. Now, we have the sums of all possible tuples within `left` and `right` respectively.\n4. For each sum `s` in group `left`, multiple the count with the number of how many `-s` are counted in group `right`, and add the product to our final result. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/JZLAcVQ3/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"JZLAcVQ3\"></iframe>\n\n#### Complexity Analysis\n\n- Time Complexity: $\\mathcal{O}(n^{\\lceil k/2 \\rceil})$, or $\\mathcal{O}(n^2)$ for 4Sum II. We have to enumerate over at most $n^{\\lfloor k/2 \\rfloor}$ sums in the left group and $n^{\\lceil k/2 \\rceil}$ sums in the right group. Finally, we just need to check $\\mathcal{O}{n^{\\lfloor k/2 \\rfloor}}$ sums in the left group and search if their negated number exists in the right group.\n\n- Space Complexity: $\\mathcal{O}(n^{\\lceil k/2 \\rceil})$, similarly, we create a HashMap for each group to store all sums, which contains at most $n^{\\lceil k/2 \\rceil}$ keys.\n\n---\n\n### Further Thoughts\n\nFor an interview, keep in mind the generalized implementation. Even if your interviewer is OK with a simpler code, you'll get some extra points by describing how your solution can handle more than 4 arrays.\n\nIt's also important to discuss trade-offs with your interviewer. If we are tight on memory, we can move some arrays from the first group to the second. This, of course, will increase the time complexity.\n\nIn other words, the time complexity can range from $\\mathcal{O}(n^k)$ to $\\mathcal{O}(n^{k/2})$, and the memory complexity ranges from $\\mathcal{O}(1)$ to $\\mathcal{O}(n^{k/2})$ accordingly.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

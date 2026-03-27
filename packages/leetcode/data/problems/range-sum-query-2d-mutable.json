@@ -1,0 +1,139 @@
+{
+  "questionId": "308",
+  "questionFrontendId": "308",
+  "title": "Range Sum Query 2D - Mutable",
+  "titleSlug": "range-sum-query-2d-mutable",
+  "difficulty": "Medium",
+  "content": "<p>Given a 2D matrix <code>matrix</code>, handle multiple queries of the following types:</p>\n\n<ol>\n\t<li><strong>Update</strong> the value of a cell in <code>matrix</code>.</li>\n\t<li>Calculate the <strong>sum</strong> of the elements of <code>matrix</code> inside the rectangle defined by its <strong>upper left corner</strong> <code>(row1, col1)</code> and <strong>lower right corner</strong> <code>(row2, col2)</code>.</li>\n</ol>\n\n<p>Implement the NumMatrix class:</p>\n\n<ul>\n\t<li><code>NumMatrix(int[][] matrix)</code> Initializes the object with the integer matrix <code>matrix</code>.</li>\n\t<li><code>void update(int row, int col, int val)</code> <strong>Updates</strong> the value of <code>matrix[row][col]</code> to be <code>val</code>.</li>\n\t<li><code>int sumRegion(int row1, int col1, int row2, int col2)</code> Returns the <strong>sum</strong> of the elements of <code>matrix</code> inside the rectangle defined by its <strong>upper left corner</strong> <code>(row1, col1)</code> and <strong>lower right corner</strong> <code>(row2, col2)</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/14/summut-grid.jpg\" style=\"width: 500px; height: 222px;\" />\n<pre>\n<strong>Input</strong>\n[&quot;NumMatrix&quot;, &quot;sumRegion&quot;, &quot;update&quot;, &quot;sumRegion&quot;]\n[[[[3, 0, 1, 4, 2], [5, 6, 3, 2, 1], [1, 2, 0, 1, 5], [4, 1, 0, 1, 7], [1, 0, 3, 0, 5]]], [2, 1, 4, 3], [3, 2, 2], [2, 1, 4, 3]]\n<strong>Output</strong>\n[null, 8, null, 10]\n\n<strong>Explanation</strong>\nNumMatrix numMatrix = new NumMatrix([[3, 0, 1, 4, 2], [5, 6, 3, 2, 1], [1, 2, 0, 1, 5], [4, 1, 0, 1, 7], [1, 0, 3, 0, 5]]);\nnumMatrix.sumRegion(2, 1, 4, 3); // return 8 (i.e. sum of the left red rectangle)\nnumMatrix.update(3, 2, 2);       // matrix changes from left image to right image\nnumMatrix.sumRegion(2, 1, 4, 3); // return 10 (i.e. sum of the right red rectangle)\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == matrix.length</code></li>\n\t<li><code>n == matrix[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 200</code></li>\n\t<li><code>-1000 &lt;= matrix[i][j] &lt;= 1000</code></li>\n\t<li><code>0 &lt;= row &lt; m</code></li>\n\t<li><code>0 &lt;= col &lt; n</code></li>\n\t<li><code>-1000 &lt;= val &lt;= 1000</code></li>\n\t<li><code>0 &lt;= row1 &lt;= row2 &lt; m</code></li>\n\t<li><code>0 &lt;= col1 &lt;= col2 &lt; n</code></li>\n\t<li>At most <code>5000</code> calls will be made to <code>sumRegion</code> and <code>update</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n    \"classname\": \"NumMatrix\",\r\n    \"maxbytesperline\": 115000,\r\n    \"constructor\": {\r\n        \"params\": [\r\n            {\r\n                \"type\": \"integer[][]\",\r\n                \"name\": \"matrix\"\r\n            },\r\n            {\r\n                \"type\": \"integer\",\r\n                \"name\": \"matrixRowSize\",\r\n                \"lang\": \"c\",\r\n                \"value\": \"size_1\"\r\n            },\r\n            {\r\n                \"type\": \"integer\",\r\n                \"name\": \"matrixColSize\",\r\n                \"lang\": \"c\",\r\n                \"value\": \"col_size_1\"\r\n            }\r\n        ]\r\n    },\r\n    \"methods\": [\r\n        {\r\n            \"name\" : \"update\",\r\n            \"params\": [\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"row\"\r\n                },\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"col\"\r\n                },\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"val\"\r\n                }\r\n            ],\r\n            \"return\": {\r\n                \"type\": \"void\"\r\n            }\r\n        },\r\n        {\r\n            \"name\" : \"sumRegion\",\r\n            \"params\": [\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"row1\"\r\n                },\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"col1\"\r\n                },\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"row2\"\r\n                },\r\n                {\r\n                    \"type\": \"integer\",\r\n                    \"name\": \"col2\"\r\n                }\r\n            ],\r\n            \"return\": {\r\n                \"type\": \"integer\"\r\n            }\r\n        }\r\n    ],\r\n    \"systemdesign\": true,\r\n    \"params\": [\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        },\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        }\r\n    ],\r\n    \"return\": {\r\n        \"type\": \"list<String>\",\r\n        \"dealloc\": true\r\n    }\r\n}",
+  "stats": "{\"totalAccepted\": \"83.6K\", \"totalSubmission\": \"184K\", \"totalAcceptedRaw\": 83598, \"totalSubmissionRaw\": 183978, \"acRate\": \"45.4%\"}",
+  "likes": 821,
+  "dislikes": 97,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Range Sum Query 2D - Immutable\", \"titleSlug\": \"range-sum-query-2d-immutable\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Range Sum Query - Mutable\", \"titleSlug\": \"range-sum-query-mutable\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Increment Submatrices by One\", \"titleSlug\": \"increment-submatrices-by-one\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sum of Matrix After Queries\", \"titleSlug\": \"sum-of-matrix-after-queries\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"NumMatrix\",\"sumRegion\",\"update\",\"sumRegion\"]\n[[[[3,0,1,4,2],[5,6,3,2,1],[1,2,0,1,5],[4,1,0,1,7],[1,0,3,0,5]]],[2,1,4,3],[3,2,2],[2,1,4,3]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Binary Indexed Tree",
+      "slug": "binary-indexed-tree"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class NumMatrix {\npublic:\n    NumMatrix(vector<vector<int>>& matrix) {\n        \n    }\n    \n    void update(int row, int col, int val) {\n        \n    }\n    \n    int sumRegion(int row1, int col1, int row2, int col2) {\n        \n    }\n};\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * NumMatrix* obj = new NumMatrix(matrix);\n * obj->update(row,col,val);\n * int param_2 = obj->sumRegion(row1,col1,row2,col2);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class NumMatrix {\n\n    public NumMatrix(int[][] matrix) {\n        \n    }\n    \n    public void update(int row, int col, int val) {\n        \n    }\n    \n    public int sumRegion(int row1, int col1, int row2, int col2) {\n        \n    }\n}\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * NumMatrix obj = new NumMatrix(matrix);\n * obj.update(row,col,val);\n * int param_2 = obj.sumRegion(row1,col1,row2,col2);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class NumMatrix:\n\n    def __init__(self, matrix: List[List[int]]):\n        \n\n    def update(self, row: int, col: int, val: int) -> None:\n        \n\n    def sumRegion(self, row1: int, col1: int, row2: int, col2: int) -> int:\n        \n\n\n# Your NumMatrix object will be instantiated and called as such:\n# obj = NumMatrix(matrix)\n# obj.update(row,col,val)\n# param_2 = obj.sumRegion(row1,col1,row2,col2)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class NumMatrix(object):\n\n    def __init__(self, matrix):\n        \"\"\"\n        :type matrix: List[List[int]]\n        \"\"\"\n        \n\n    def update(self, row, col, val):\n        \"\"\"\n        :type row: int\n        :type col: int\n        :type val: int\n        :rtype: None\n        \"\"\"\n        \n\n    def sumRegion(self, row1, col1, row2, col2):\n        \"\"\"\n        :type row1: int\n        :type col1: int\n        :type row2: int\n        :type col2: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your NumMatrix object will be instantiated and called as such:\n# obj = NumMatrix(matrix)\n# obj.update(row,col,val)\n# param_2 = obj.sumRegion(row1,col1,row2,col2)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} matrix\n */\nvar NumMatrix = function(matrix) {\n    \n};\n\n/** \n * @param {number} row \n * @param {number} col \n * @param {number} val\n * @return {void}\n */\nNumMatrix.prototype.update = function(row, col, val) {\n    \n};\n\n/** \n * @param {number} row1 \n * @param {number} col1 \n * @param {number} row2 \n * @param {number} col2\n * @return {number}\n */\nNumMatrix.prototype.sumRegion = function(row1, col1, row2, col2) {\n    \n};\n\n/** \n * Your NumMatrix object will be instantiated and called as such:\n * var obj = new NumMatrix(matrix)\n * obj.update(row,col,val)\n * var param_2 = obj.sumRegion(row1,col1,row2,col2)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class NumMatrix {\n    constructor(matrix: number[][]) {\n        \n    }\n\n    update(row: number, col: number, val: number): void {\n        \n    }\n\n    sumRegion(row1: number, col1: number, row2: number, col2: number): number {\n        \n    }\n}\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * var obj = new NumMatrix(matrix)\n * obj.update(row,col,val)\n * var param_2 = obj.sumRegion(row1,col1,row2,col2)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class NumMatrix {\n\n    public NumMatrix(int[][] matrix) {\n        \n    }\n    \n    public void Update(int row, int col, int val) {\n        \n    }\n    \n    public int SumRegion(int row1, int col1, int row2, int col2) {\n        \n    }\n}\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * NumMatrix obj = new NumMatrix(matrix);\n * obj.Update(row,col,val);\n * int param_2 = obj.SumRegion(row1,col1,row2,col2);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} NumMatrix;\n\n\nNumMatrix* numMatrixCreate(int** matrix, int matrixSize, int* matrixColSize) {\n    \n}\n\nvoid numMatrixUpdate(NumMatrix* obj, int row, int col, int val) {\n    \n}\n\nint numMatrixSumRegion(NumMatrix* obj, int row1, int col1, int row2, int col2) {\n    \n}\n\nvoid numMatrixFree(NumMatrix* obj) {\n    \n}\n\n/**\n * Your NumMatrix struct will be instantiated and called as such:\n * NumMatrix* obj = numMatrixCreate(matrix, matrixSize, matrixColSize);\n * numMatrixUpdate(obj, row, col, val);\n \n * int param_2 = numMatrixSumRegion(obj, row1, col1, row2, col2);\n \n * numMatrixFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type NumMatrix struct {\n    \n}\n\n\nfunc Constructor(matrix [][]int) NumMatrix {\n    \n}\n\n\nfunc (this *NumMatrix) Update(row int, col int, val int)  {\n    \n}\n\n\nfunc (this *NumMatrix) SumRegion(row1 int, col1 int, row2 int, col2 int) int {\n    \n}\n\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * obj := Constructor(matrix);\n * obj.Update(row,col,val);\n * param_2 := obj.SumRegion(row1,col1,row2,col2);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class NumMatrix(matrix: Array<IntArray>) {\n\n    fun update(row: Int, col: Int, `val`: Int) {\n        \n    }\n\n    fun sumRegion(row1: Int, col1: Int, row2: Int, col2: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * var obj = NumMatrix(matrix)\n * obj.update(row,col,`val`)\n * var param_2 = obj.sumRegion(row1,col1,row2,col2)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass NumMatrix {\n\n    init(_ matrix: [[Int]]) {\n        \n    }\n    \n    func update(_ row: Int, _ col: Int, _ val: Int) {\n        \n    }\n    \n    func sumRegion(_ row1: Int, _ col1: Int, _ row2: Int, _ col2: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * let obj = NumMatrix(matrix)\n * obj.update(row, col, val)\n * let ret_2: Int = obj.sumRegion(row1, col1, row2, col2)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct NumMatrix {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl NumMatrix {\n\n    fn new(matrix: Vec<Vec<i32>>) -> Self {\n        \n    }\n    \n    fn update(&self, row: i32, col: i32, val: i32) {\n        \n    }\n    \n    fn sum_region(&self, row1: i32, col1: i32, row2: i32, col2: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * let obj = NumMatrix::new(matrix);\n * obj.update(row, col, val);\n * let ret_2: i32 = obj.sum_region(row1, col1, row2, col2);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class NumMatrix\n\n=begin\n    :type matrix: Integer[][]\n=end\n    def initialize(matrix)\n        \n    end\n\n\n=begin\n    :type row: Integer\n    :type col: Integer\n    :type val: Integer\n    :rtype: Void\n=end\n    def update(row, col, val)\n        \n    end\n\n\n=begin\n    :type row1: Integer\n    :type col1: Integer\n    :type row2: Integer\n    :type col2: Integer\n    :rtype: Integer\n=end\n    def sum_region(row1, col1, row2, col2)\n        \n    end\n\n\nend\n\n# Your NumMatrix object will be instantiated and called as such:\n# obj = NumMatrix.new(matrix)\n# obj.update(row, col, val)\n# param_2 = obj.sum_region(row1, col1, row2, col2)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class NumMatrix {\n    /**\n     * @param Integer[][] $matrix\n     */\n    function __construct($matrix) {\n        \n    }\n  \n    /**\n     * @param Integer $row\n     * @param Integer $col\n     * @param Integer $val\n     * @return NULL\n     */\n    function update($row, $col, $val) {\n        \n    }\n  \n    /**\n     * @param Integer $row1\n     * @param Integer $col1\n     * @param Integer $row2\n     * @param Integer $col2\n     * @return Integer\n     */\n    function sumRegion($row1, $col1, $row2, $col2) {\n        \n    }\n}\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * $obj = NumMatrix($matrix);\n * $obj->update($row, $col, $val);\n * $ret_2 = $obj->sumRegion($row1, $col1, $row2, $col2);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class NumMatrix {\n\n  NumMatrix(List<List<int>> matrix) {\n    \n  }\n  \n  void update(int row, int col, int val) {\n    \n  }\n  \n  int sumRegion(int row1, int col1, int row2, int col2) {\n    \n  }\n}\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * NumMatrix obj = NumMatrix(matrix);\n * obj.update(row,col,val);\n * int param2 = obj.sumRegion(row1,col1,row2,col2);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class NumMatrix(_matrix: Array[Array[Int]]) {\n\n    def update(row: Int, col: Int, `val`: Int): Unit = {\n        \n    }\n\n    def sumRegion(row1: Int, col1: Int, row2: Int, col2: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your NumMatrix object will be instantiated and called as such:\n * val obj = new NumMatrix(matrix)\n * obj.update(row,col,`val`)\n * val param_2 = obj.sumRegion(row1,col1,row2,col2)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule NumMatrix do\n  @spec init_(matrix :: [[integer]]) :: any\n  def init_(matrix) do\n    \n  end\n\n  @spec update(row :: integer, col :: integer, val :: integer) :: any\n  def update(row, col, val) do\n    \n  end\n\n  @spec sum_region(row1 :: integer, col1 :: integer, row2 :: integer, col2 :: integer) :: integer\n  def sum_region(row1, col1, row2, col2) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# NumMatrix.init_(matrix)\n# NumMatrix.update(row, col, val)\n# param_2 = NumMatrix.sum_region(row1, col1, row2, col2)\n\n# NumMatrix.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_matrix_init_(Matrix :: [[integer()]]) -> any().\nnum_matrix_init_(Matrix) ->\n  .\n\n-spec num_matrix_update(Row :: integer(), Col :: integer(), Val :: integer()) -> any().\nnum_matrix_update(Row, Col, Val) ->\n  .\n\n-spec num_matrix_sum_region(Row1 :: integer(), Col1 :: integer(), Row2 :: integer(), Col2 :: integer()) -> integer().\nnum_matrix_sum_region(Row1, Col1, Row2, Col2) ->\n  .\n\n\n%% Your functions will be called as such:\n%% num_matrix_init_(Matrix),\n%% num_matrix_update(Row, Col, Val),\n%% Param_2 = num_matrix_sum_region(Row1, Col1, Row2, Col2),\n\n%% num_matrix_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define num-matrix%\n  (class object%\n    (super-new)\n    \n    ; matrix : (listof (listof exact-integer?))\n    (init-field\n      matrix)\n    \n    ; update : exact-integer? exact-integer? exact-integer? -> void?\n    (define/public (update row col val)\n      )\n    ; sum-region : exact-integer? exact-integer? exact-integer? exact-integer? -> exact-integer?\n    (define/public (sum-region row1 col1 row2 col2)\n      )))\n\n;; Your num-matrix% object will be instantiated and called as such:\n;; (define obj (new num-matrix% [matrix matrix]))\n;; (send obj update row col val)\n;; (define param_2 (send obj sum-region row1 col1 row2 col2))"
+    }
+  ],
+  "solution": null
+}

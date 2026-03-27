@@ -1,0 +1,121 @@
+{
+  "questionId": "283",
+  "questionFrontendId": "283",
+  "title": "Move Zeroes",
+  "titleSlug": "move-zeroes",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer array <code>nums</code>, move all <code>0</code>&#39;s to the end of it while maintaining the relative order of the non-zero elements.</p>\n\n<p><strong>Note</strong> that you must do this in-place without making a copy of the array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> nums = [0,1,0,3,12]\n<strong>Output:</strong> [1,3,12,0,0]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> nums = [0]\n<strong>Output:</strong> [0]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>-2<sup>31</sup> &lt;= nums[i] &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<strong>Follow up:</strong> Could you minimize the total number of operations done?",
+  "hints": [
+    "<b>In-place</b> means we should not be allocating any space for extra array. But we are allowed to modify the existing array. However, as a first step, try coming up with a solution that makes use of additional space. For this problem as well, first apply the idea discussed using an additional array and the in-place solution will pop up eventually.",
+    "A <b>two-pointer</b> approach could be helpful here. The idea would be to have one pointer for iterating the array and another pointer that just works on the non-zero elements of the array."
+  ],
+  "metaData": "{\r\n  \"name\": \"moveZeroes\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"void\"\r\n  },\r\n  \"output\": {\r\n    \"paramindex\": 0\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"5M\", \"totalSubmission\": \"7.9M\", \"totalAcceptedRaw\": 5009659, \"totalSubmissionRaw\": 7866932, \"acRate\": \"63.7%\"}",
+  "likes": 19381,
+  "dislikes": 600,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Remove Element\", \"titleSlug\": \"remove-element\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Apply Operations to an Array\", \"titleSlug\": \"apply-operations-to-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[0,1,0,3,12]",
+    "[0]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 9, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"epam-systems\", \"name\": \"EPAM Systems\"}, {\"timesEncountered\": 3, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 3, \"slug\": \"qualcomm\", \"name\": \"Qualcomm\"}, {\"timesEncountered\": 2, \"slug\": \"sigmoid\", \"name\": \"Sigmoid\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 2, \"slug\": \"lti\", \"name\": \"LTI\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"amd\", \"name\": \"AMD\"}], \"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 8, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 6, \"slug\": \"josh-technology\", \"name\": \"josh technology\"}, {\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 5, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 4, \"slug\": \"capgemini\", \"name\": \"Capgemini\"}, {\"timesEncountered\": 4, \"slug\": \"vk\", \"name\": \"VK\"}, {\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 3, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    void moveZeroes(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public void moveZeroes(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def moveZeroes(self, nums: List[int]) -> None:\n        \"\"\"\n        Do not return anything, modify nums in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def moveZeroes(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: None Do not return anything, modify nums in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {void} Do not return anything, modify nums in-place instead.\n */\nvar moveZeroes = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n Do not return anything, modify nums in-place instead.\n */\nfunction moveZeroes(nums: number[]): void {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public void MoveZeroes(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "void moveZeroes(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func moveZeroes(nums []int)  {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun moveZeroes(nums: IntArray): Unit {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func moveZeroes(_ nums: inout [Int]) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn move_zeroes(nums: &mut Vec<i32>) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Void} Do not return anything, modify nums in-place instead.\ndef move_zeroes(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return NULL\n     */\n    function moveZeroes(&$nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  void moveZeroes(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def moveZeroes(nums: Array[Int]): Unit = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "52",
+    "content": "[TOC]\n\n\n## Video Solution\n\n---\n <div>\n    <div class=\"video-container\">\n      <iframe src=\"https://player.vimeo.com/video/875703716?texttrack=en-x-autogenerated\" frameborder=\"0\"\n        allow=\"autoplay; fullscreen\"></iframe>\n    </div>\n</div>\n\n## Solution\n---\n\nThis question comes under a broad category of \"Array Transformation\". This category is the meat of tech interviews. Mostly because arrays are such a simple and easy to use data structure. Traversal or representation doesn't require any boilerplate code and most of your code will look like the Pseudocode itself.\n\nThe 2 requirements of the question are:\n\n1. Move all the 0's to the end of array.\n\n2. All the non-zero elements must retain their original order.\n\nIt's good to realize here that both the requirements are mutually exclusive, i.e., you can solve the individual sub-problems and then combine them for the final solution.\n\n### Approach #1 (Space Sub-Optimal) [Accepted]\n\nTraverse the `nums` list first to count the number of zeroes. Then traverse the `nums` list again to store all non-zero elements in `ans`.\n\n#### Algorithm:\n\n- Determine the size of the `nums` array and store it in `n`.\n\n- Count the number of zeroes in `nums`:\n  - Initialize `numZeroes` to 0.\n  - Iterate through each element in `nums`:\n    - Increment `numZeroes` for each zero encountered.\n\n- Create a new vector `ans` to store non-zero elements in their original order:\n  - Iterate through each element in `nums`:\n    - Add non-zero elements to `ans`.\n\n- Append all zeroes to the end of the `ans` vector:\n  - Append `numZeroes` zeroes to `ans`.\n\n- Update the original `nums` array with the elements from `ans`:\n  - Copy each element from `ans` back to `nums`.\n\n\n<iframe src=\"https://leetcode.com/playground/ZftizFjx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZftizFjx\"></iframe>\n\n**Complexity Analysis**\n\nSpace Complexity : $$O(n)$$. Since we are creating the \"ans\" array to store results.\n\nTime Complexity: $$O(n)$$. We traverse the nums list first to count the number of zeroes using $O(n)$ time. Then, we traverse the nums list again to store all non-zero elements in ans which also costs $O(n)$ time. Hence, the overall time complexity is $O(2n)$, which is simplified to $O(n)$. However, the total number of operations are sub-optimal. We can achieve the same result in less number of operations.\n\nIf asked in an interview, the above solution would be a good start. You can explain the interviewer(not code) the above and build your base for the next Optimal Solution.\n\n---\n### Approach #2 (Space Optimal, Operation Sub-Optimal) [Accepted]\n\nThis approach works the same way as above, i.e. , first fulfills one requirement and then another. The catch? It does it in a clever way. The above problem can also be stated in alternate way, \" Bring all the non 0 elements to the front of array keeping their relative order same\".\n\nThis is a 2 pointer approach. The fast pointer(`nums[i]`) does the job of processing new elements. If the newly found element is not a 0, we record it just after the last found non-0 element. The position of last found non-0 element is denoted by the slow pointer `lastNonZeroFoundAt` variable. As we keep finding new non-0 elements, we just overwrite them at the `lastNonZeroFoundAt + 1` 'th index. This overwrite will not result in any loss of data because we already processed what was there(if it were non-0,it already is now written at it's corresponding index,or if it were 0 it will be handled later in time).\n\nAfter the `nums[i]` reaches the end of array, we now know that all the non-0 elements have been moved to beginning of array in their original order. Now comes the time to fulfil other requirement, \"Move all 0's to the end\". We now simply need to fill all the indexes after the `lastNonZeroFoundAt` index with 0.\n\n#### Algorithm:\n\n- Initialize `lastNonZeroFoundAt` to 0:\n  - This variable tracks the position where the next non-zero element should be placed.\n\n- Iterate through each element in `nums`:\n  - If the current element `nums[i]` is not zero:\n    - Place `nums[i]` at index `lastNonZeroFoundAt`.\n    - Increment `lastNonZeroFoundAt` to move to the next position for future non-zero elements.\n\n- After processing all elements:\n  - Fill the remaining positions in the array (from `lastNonZeroFoundAt` to the end) with zeros.\n\n- This ensures that all non-zero elements are moved to the beginning of the array and all zeros are placed at the end.\n\n\n<iframe src=\"https://leetcode.com/playground/Vbpqu24K/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"Vbpqu24K\"></iframe>\n\n**Complexity Analysis**\n\nSpace Complexity : $$O(1)$$. Only constant space is used.\n\nTime Complexity: $$O(n)$$. We traverse the nums list first to move all non-zero elements to the beginning of array which costs $O(n)$ time. At the worst case when the original array only consists of 0s, we will use $O(n)$ time to fill all remaining elements with 0s. Hence, the overall time complexity is $O(2n)$, which is simplified to $O(n)$. However, the total number of operations are still sub-optimal. The total operations (array writes) that code does is $$n$$ (Total number of elements).\n\n---\n### Approach #3 (Optimal) [Accepted]\n\nThe total number of operations of the previous approach is sub-optimal. For example, the array which has all (except last) leading zeroes: [0, 0, 0, ..., 0, 1].How many write operations to the array? For the previous approach, it writes 0's $$n-1$$ times, which is not necessary. We could have instead written just once. How?\n.....\nBy only fixing the non-0 element,i.e., 1.\n\nThe optimal approach is again a subtle extension of above solution. A simple realization is if the current element is non-0, its' correct position can at best be it's current position or a position earlier. If it's the latter one, the current position will be eventually occupied by a non-0 ,or a 0, which lies at a index greater than 'cur' index. We fill the current position by 0 right away,so that unlike the previous solution, we don't need to come back here in next iteration.\n\nIn other words, the code will maintain the following invariant:\n\n>1. All elements before the slow pointer (lastNonZeroFoundAt) are non-zeroes.\n>\n>2. All elements between the current and slow pointer are zeroes.\n\nTherefore, when we encounter a non-zero element, we need to swap elements pointed by current and slow pointer, then advance both pointers. If it's zero element, we just advance current pointer.\n\nWith this invariant in-place, it's easy to see that the algorithm will work.\n\n#### Algorithm:\n\n- Initialize `lastNonZeroFoundAt` to 0 to track the position of the last non-zero element.\n- Iterate through each element in `nums` using `cur` as the index:\n  - If `nums[cur]` is not zero:\n    - Swap `nums[lastNonZeroFoundAt]` with `nums[cur]` to move the non-zero element to the correct position.\n    - Increment `lastNonZeroFoundAt` to update the position for the next non-zero element.\n\n- Continue iterating until all elements are processed, ensuring all non-zero elements are moved to the front of the array and zeros are pushed to the end.\n\n\n<iframe src=\"https://leetcode.com/playground/4YFvmDiq/shared\" frameBorder=\"0\" width=\"100%\" height=\"225\" name=\"4YFvmDiq\"></iframe>\n\n**Complexity Analysis**\n\nSpace Complexity : $$O(1)$$. Only constant space is used.\n\nTime Complexity: $$O(n)$$. However, the total number of operations are optimal. The total operations (array writes) that code does is Number of non-0 elements.This gives us a much better best-case (when most of the elements are 0) complexity than last solution. However, the worst-case (when all elements are non-0) complexity for both the algorithms is same.\n\nAnalysis written by: @spandan.pathak",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

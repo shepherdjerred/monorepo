@@ -1,0 +1,140 @@
+{
+  "questionId": "63",
+  "questionFrontendId": "63",
+  "title": "Unique Paths II",
+  "titleSlug": "unique-paths-ii",
+  "difficulty": "Medium",
+  "content": "<p>You are given an <code>m x n</code> integer array <code>grid</code>. There is a robot initially located at the <b>top-left corner</b> (i.e., <code>grid[0][0]</code>). The robot tries to move to the <strong>bottom-right corner</strong> (i.e., <code>grid[m - 1][n - 1]</code>). The robot can only move either down or right at any point in time.</p>\n\n<p>An obstacle and space are marked as <code>1</code> or <code>0</code> respectively in <code>grid</code>. A path that the robot takes cannot include <strong>any</strong> square that is an obstacle.</p>\n\n<p>Return <em>the number of possible unique paths that the robot can take to reach the bottom-right corner</em>.</p>\n\n<p>The testcases are generated so that the answer will be less than or equal to <code>2 * 10<sup>9</sup></code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/11/04/robot1.jpg\" style=\"width: 242px; height: 242px;\" />\n<pre>\n<strong>Input:</strong> obstacleGrid = [[0,0,0],[0,1,0],[0,0,0]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> There is one obstacle in the middle of the 3x3 grid above.\nThere are two ways to reach the bottom-right corner:\n1. Right -&gt; Right -&gt; Down -&gt; Down\n2. Down -&gt; Down -&gt; Right -&gt; Right\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/11/04/robot2.jpg\" style=\"width: 162px; height: 162px;\" />\n<pre>\n<strong>Input:</strong> obstacleGrid = [[0,1],[0,0]]\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == obstacleGrid.length</code></li>\n\t<li><code>n == obstacleGrid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 100</code></li>\n\t<li><code>obstacleGrid[i][j]</code> is <code>0</code> or <code>1</code>.</li>\n</ul>\n",
+  "hints": [
+    "Use dynamic programming since, from each cell, you can move to the right or down.",
+    "assume dp[i][j] is the number of unique paths to reach (i, j). dp[i][j] = dp[i][j -1] + dp[i - 1][j]. Be careful when you encounter an obstacle. set its value in dp to 0."
+  ],
+  "metaData": "{\r\n  \"name\": \"uniquePathsWithObstacles\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"obstacleGrid\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.5M\", \"totalSubmission\": \"3.3M\", \"totalAcceptedRaw\": 1455406, \"totalSubmissionRaw\": 3286787, \"acRate\": \"44.3%\"}",
+  "likes": 9678,
+  "dislikes": 561,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Unique Paths\", \"titleSlug\": \"unique-paths\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Unique Paths III\", \"titleSlug\": \"unique-paths-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Path Cost in a Grid\", \"titleSlug\": \"minimum-path-cost-in-a-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Paths in Matrix Whose Sum Is Divisible by K\", \"titleSlug\": \"paths-in-matrix-whose-sum-is-divisible-by-k\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,0,0],[0,1,0],[0,0,0]]",
+    "[[0,1],[0,0]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"agoda\", \"name\": \"Agoda\"}, {\"timesEncountered\": 4, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}, {\"timesEncountered\": 2, \"slug\": \"zepto\", \"name\": \"Zepto\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int uniquePathsWithObstacles(vector<vector<int>>& obstacleGrid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int uniquePathsWithObstacles(int[][] obstacleGrid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def uniquePathsWithObstacles(self, obstacleGrid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def uniquePathsWithObstacles(self, obstacleGrid):\n        \"\"\"\n        :type obstacleGrid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} obstacleGrid\n * @return {number}\n */\nvar uniquePathsWithObstacles = function(obstacleGrid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function uniquePathsWithObstacles(obstacleGrid: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int UniquePathsWithObstacles(int[][] obstacleGrid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int uniquePathsWithObstacles(int** obstacleGrid, int obstacleGridSize, int* obstacleGridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func uniquePathsWithObstacles(obstacleGrid [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun uniquePathsWithObstacles(obstacleGrid: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func uniquePathsWithObstacles(_ obstacleGrid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn unique_paths_with_obstacles(obstacle_grid: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} obstacle_grid\n# @return {Integer}\ndef unique_paths_with_obstacles(obstacle_grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $obstacleGrid\n     * @return Integer\n     */\n    function uniquePathsWithObstacles($obstacleGrid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int uniquePathsWithObstacles(List<List<int>> obstacleGrid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def uniquePathsWithObstacles(obstacleGrid: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec unique_paths_with_obstacles(obstacle_grid :: [[integer]]) :: integer\n  def unique_paths_with_obstacles(obstacle_grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec unique_paths_with_obstacles(ObstacleGrid :: [[integer()]]) -> integer().\nunique_paths_with_obstacles(ObstacleGrid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (unique-paths-with-obstacles obstacleGrid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "597",
+    "content": "[TOC]\n\n## Solution\n---\n\n### Approach 1: Dynamic Programming\n\n**Intuition**\n\nThe robot can only move either down or right.\nHence any cell in the first row can only be reached from the cell left to it.\n\n<center>\n\n!?!../Documents/63_Unique_Paths_2_1.json:500,415!?!\n\n</center>\n\nAnd, any cell in the first column can only be reached from the cell above it.\n\n<center>\n\n!?!../Documents/63_Unique_Paths_2_2.json:500,415!?!\n\n</center>\n\nFor any other cell in the grid, we can reach it either from the cell to left of it or the cell above it.\n\nIf any cell has an obstacle, we won't let that cell contribute to any path.\n\nWe will be iterating the array from left-to-right and top-to-bottom. Thus, before reaching any cell we would have the number of ways of reaching the predecessor cells. This is what makes it a `Dynamic Programming` problem. We will be using the `obstacleGrid` array as the DP array thus not utilizing any additional space.\n\n`Note:` As per the question, cell with an obstacle has a value `1`. We would use this value to make sure if a cell needs to be included in the path or not. After that we can use the same cell to store the number of ways to reach that cell.\n\n**Algorithm**\n\n1. If the first cell i.e. `obstacleGrid[0,0]` contains `1`, this means there is an obstacle in the first cell. Hence the robot won't be able to make any move and we would return the number of ways as `0`.\n2. Otherwise, if `obstacleGrid[0,0]` has a `0` originally we set it to `1` and move ahead.\n3. Iterate the first row. If a cell originally contains a `1`, this means the current cell has an obstacle and shouldn't contribute to any path. Hence, set the value of that cell to `0`. Otherwise, set it to the value of previous cell i.e. `obstacleGrid[i,j] = obstacleGrid[i,j-1]`\n4. Iterate the first column. If a cell originally contains a `1`, this means the current cell has an obstacle and shouldn't contribute to any path. Hence, set the value of that cell to `0`. Otherwise, set it to the value of previous cell i.e. `obstacleGrid[i,j] = obstacleGrid[i-1,j]`\n5. Now, iterate through the array starting from cell `obstacleGrid[1,1]`. If a cell originally doesn't contain any obstacle then the number of ways of reaching that cell would be the sum of number of ways of reaching the cell above it and number of ways of reaching the cell to the left of it.\n    <pre>\n    obstacleGrid[i,j] = obstacleGrid[i-1,j] + obstacleGrid[i,j-1]</pre>\n6. If a cell contains an obstacle set it to `0` and continue. This is done to make sure it doesn't contribute to any other path.\n\nFollowing is the animation to explain the algorithm's steps:\n<center>\n\n!?!../Documents/63_Unique_Paths_2_3.json:500,415!?!\n\n</center>\n\n<br>\n\n<iframe src=\"https://leetcode.com/playground/GCm2G9nF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GCm2G9nF\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(M \\times N)$$. The rectangular grid given to us is of size $$M \\times N$$ and we process each cell just once.  \n* Space Complexity: $$O(1)$$. We are utilizing the `obstacleGrid` as the DP array. Hence, no extra space.\n\n<br /><br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

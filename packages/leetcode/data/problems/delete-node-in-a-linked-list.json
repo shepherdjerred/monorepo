@@ -1,0 +1,104 @@
+{
+  "questionId": "237",
+  "questionFrontendId": "237",
+  "title": "Delete Node in a Linked List",
+  "titleSlug": "delete-node-in-a-linked-list",
+  "difficulty": "Medium",
+  "content": "<p>There is a singly-linked list <code>head</code> and we want to delete a node <code>node</code> in it.</p>\n\n<p>You are given the node to be deleted <code>node</code>. You will <strong>not be given access</strong> to the first node of <code>head</code>.</p>\n\n<p>All the values of the linked list are <strong>unique</strong>, and it is guaranteed that the given node <code>node</code> is not the last node in the linked list.</p>\n\n<p>Delete the given node. Note that by deleting the node, we do not mean removing it from memory. We mean:</p>\n\n<ul>\n\t<li>The value of the given node should not exist in the linked list.</li>\n\t<li>The number of nodes in the linked list should decrease by one.</li>\n\t<li>All the values before <code>node</code> should be in the same order.</li>\n\t<li>All the values after <code>node</code> should be in the same order.</li>\n</ul>\n\n<p><strong>Custom testing:</strong></p>\n\n<ul>\n\t<li>For the input, you should provide the entire linked list <code>head</code> and the node to be given <code>node</code>. <code>node</code> should not be the last node of the list and should be an actual node in the list.</li>\n\t<li>We will build the linked list and pass the node to your function.</li>\n\t<li>The output will be the entire list after calling your function.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/01/node1.jpg\" style=\"width: 400px; height: 286px;\" />\n<pre>\n<strong>Input:</strong> head = [4,5,1,9], node = 5\n<strong>Output:</strong> [4,1,9]\n<strong>Explanation: </strong>You are given the second node with value 5, the linked list should become 4 -&gt; 1 -&gt; 9 after calling your function.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/01/node2.jpg\" style=\"width: 400px; height: 315px;\" />\n<pre>\n<strong>Input:</strong> head = [4,5,1,9], node = 1\n<strong>Output:</strong> [4,5,9]\n<strong>Explanation: </strong>You are given the third node with value 1, the linked list should become 4 -&gt; 5 -&gt; 9 after calling your function.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of the nodes in the given list is in the range <code>[2, 1000]</code>.</li>\n\t<li><code>-1000 &lt;= Node.val &lt;= 1000</code></li>\n\t<li>The value of each node in the list is <strong>unique</strong>.</li>\n\t<li>The <code>node</code> to be deleted is <strong>in the list</strong> and is <strong>not a tail</strong> node.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"deleteNode\",\n  \"params\": [\n    {\n      \"name\": \"head\",\n      \"type\": \"ListNode\"\n    },\n    {\n      \"name\": \"node\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"void\"\n  },\n  \"output\": {\n    \"paramindex\": 0\n  },\n  \"manual\": true,\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"c\",\n    \"csharp\",\n    \"javascript\",\n    \"ruby\",\n    \"swift\",\n    \"golang\",\n    \"python3\",\n    \"scala\",\n    \"kotlin\",\n    \"php\",\n    \"typescript\"\n  ]\n}",
+  "stats": "{\"totalAccepted\": \"2M\", \"totalSubmission\": \"2.4M\", \"totalAcceptedRaw\": 1998025, \"totalSubmissionRaw\": 2387147, \"acRate\": \"83.7%\"}",
+  "likes": 6293,
+  "dislikes": 1787,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Remove Linked List Elements\", \"titleSlug\": \"remove-linked-list-elements\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Remove Nodes From Linked List\", \"titleSlug\": \"remove-nodes-from-linked-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Delete Nodes From Linked List Present in Array\", \"titleSlug\": \"delete-nodes-from-linked-list-present-in-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,5,1,9]\n5",
+    "[4,5,1,9]\n1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 2, \"slug\": \"samsung\", \"name\": \"Samsung\"}]}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode(int x) : val(x), next(NULL) {}\n * };\n */\nclass Solution {\npublic:\n    void deleteNode(ListNode* node) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode(int x) { val = x; }\n * }\n */\nclass Solution {\n    public void deleteNode(ListNode node) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, x):\n#         self.val = x\n#         self.next = None\n\nclass Solution:\n    def deleteNode(self, node):\n        \"\"\"\n        :type node: ListNode\n        :rtype: void Do not return anything, modify node in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, x):\n#         self.val = x\n#         self.next = None\n\nclass Solution(object):\n    def deleteNode(self, node):\n        \"\"\"\n        :type node: ListNode\n        :rtype: void Do not return anything, modify node in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val) {\n *     this.val = val;\n *     this.next = null;\n * }\n */\n/**\n * @param {ListNode} node\n * @return {void} Do not return anything, modify node in-place instead.\n */\nvar deleteNode = function(node) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\n/**\n Do not return anything, modify it in-place instead.\n */\nfunction deleteNode(node: ListNode | null): void {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int x) { val = x; }\n * }\n */\npublic class Solution {\n    public void DeleteNode(ListNode node) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\nvoid deleteNode(struct ListNode* node) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc deleteNode(node *ListNode) {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\n\nclass Solution {\n    fun deleteNode(node: ListNode?) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init(_ val: Int) {\n *         self.val = val\n *         self.next = nil\n *     }\n * }\n */\n\nclass Solution {\n    func deleteNode(_ node: ListNode?) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val)\n#         @val = val\n#         @next = nil\n#     end\n# end\n\n# @param {ListNode} node\n# @return {Void} Do not return anything, modify node in-place instead.\ndef delete_node(node)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val) { $this->val = $val; }\n * }\n */\n\nclass Solution {\n    /**\n     * @param ListNode $node\n     * @return \n     */\n    function deleteNode($node) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(var _x: Int = 0) {\n *   var next: ListNode = null\n *   var x: Int = _x\n * }\n */\n\nobject Solution {\n    def deleteNode(node: ListNode): Unit = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "2290",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nTo delete a node from a linked list, we typically redirect the previous node's `next` pointer to the subsequent node of the one being deleted. For example, to remove node 3 from a linked list, we would adjust node 2's `next` pointer to reference node 4 directly. This effectively excludes node 3 from the traversal path, rendering it inaccessible during iteration, and thus, it is considered deleted.\n\n![initial_linkedlist](../Documents/237/237-Page-1.svg)\n\n![changing_pointers](../Documents/237/237-Page-2.svg)\n\n<br />\n\nHowever, a challenge arises when we cannot access the previous node, as is the case in this specific problem. Since we can only traverse forward from the node to be deleted, the conventional deletion method is not feasible.\n\n**Key Observations:** \n- We've been presented with a scenario where we can't access the entire linked list structure, forcing us to devise a strategy that works within those limitations.\n- This problem goes beyond rote memorization of DSA techniques. **It emphasizes the importance of creative thinking under limitations.** It highlights the assessment of the candidate's problem-solving approach.\n\n---\n\n### Approach: Data Overwriting\n\n#### Intuition\n\nTo circumvent this limitation, we can employ an alternative strategy. By comparing the original linked list with the desired outcome post-deletion, we notice that the nodes following the target node appear to shift one position to the left. \n\n![initial_linkedlist](../Documents/237/237-Page-3.svg)\n\n\n![after_deletion](../Documents/237/237-Page-4.svg)\n\n<br />\n\n\nWe can replicate this effect by copying the data from each subsequent node into its predecessor, starting from the node to be deleted, and then unlinking the last node.\n\n![overwrite_linkedlist](../Documents/237/237-Page-5.svg)\n\n\n![after_overwrite](../Documents/237/237-Page-6.svg)\n\n<br />\n\nThis approach can be further optimized. Instead of shifting the data of all subsequent nodes, we only need to overwrite the data of the node to be deleted with that of its immediate successor. Subsequently, we update the `next` pointer of the node to be deleted to point to the successor's next node. This effectively removes the successor node, achieving the desired result with minimal operations.\n\n![overwrite_linkedlist](../Documents/237/237-Page-7.svg)\n\n\n![after_overwrite_1_node](../Documents/237/237-Page-8.svg)\n\nLet's take a simpler example to understand this approach.    \nImagine the linked list as a train with connected cars (nodes). We want to remove a specific car (target node), but the conductor (you) can only access the current car and not the engine (head).\nBy shifting all passengers from current car (\"overwriting\" the data of the current node) with the data from the next car, and then connecting the current car to the car after the next (skipping the unwanted car), we achieve the deletion effect.\n\n**Note:** This method will not work if we need to delete the last node of the linked list since there is no immediate successor. However, the problem description explicitly states that the node to be deleted is not the tail node in the list.\n\n<br />\n\n#### Algorithm\n\n1. Copy the data from the successor node into the current node to be deleted.\n2. Update the `next` pointer of the current node to reference the `next` pointer of the successor node.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/WZX53viv/shared\" frameBorder=\"0\" width=\"100%\" height=\"208\" name=\"WZX53viv\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity: $O(1)$\n\n    - The method involves a constant number of operations: updating the data of the current node and altering its `next` pointer. Each of these operations requires a fixed amount of time, irrespective of the size of the linked list.\n    \n* Space Complexity: $O(1)$\n\n    - This deletion technique does not necessitate any extra memory allocation, as it operates directly on the existing nodes without creating additional data structures.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

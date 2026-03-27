@@ -1,0 +1,144 @@
+{
+  "questionId": "307",
+  "questionFrontendId": "307",
+  "title": "Range Sum Query - Mutable",
+  "titleSlug": "range-sum-query-mutable",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code>, handle multiple queries of the following types:</p>\n\n<ol>\n\t<li><strong>Update</strong> the value of an element in <code>nums</code>.</li>\n\t<li>Calculate the <strong>sum</strong> of the elements of <code>nums</code> between indices <code>left</code> and <code>right</code> <strong>inclusive</strong> where <code>left &lt;= right</code>.</li>\n</ol>\n\n<p>Implement the <code>NumArray</code> class:</p>\n\n<ul>\n\t<li><code>NumArray(int[] nums)</code> Initializes the object with the integer array <code>nums</code>.</li>\n\t<li><code>void update(int index, int val)</code> <strong>Updates</strong> the value of <code>nums[index]</code> to be <code>val</code>.</li>\n\t<li><code>int sumRange(int left, int right)</code> Returns the <strong>sum</strong> of the elements of <code>nums</code> between indices <code>left</code> and <code>right</code> <strong>inclusive</strong> (i.e. <code>nums[left] + nums[left + 1] + ... + nums[right]</code>).</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;NumArray&quot;, &quot;sumRange&quot;, &quot;update&quot;, &quot;sumRange&quot;]\n[[[1, 3, 5]], [0, 2], [1, 2], [0, 2]]\n<strong>Output</strong>\n[null, 9, null, 8]\n\n<strong>Explanation</strong>\nNumArray numArray = new NumArray([1, 3, 5]);\nnumArray.sumRange(0, 2); // return 1 + 3 + 5 = 9\nnumArray.update(1, 2);   // nums = [1, 2, 5]\nnumArray.sumRange(0, 2); // return 1 + 2 + 5 = 8\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>-100 &lt;= nums[i] &lt;= 100</code></li>\n\t<li><code>0 &lt;= index &lt; nums.length</code></li>\n\t<li><code>-100 &lt;= val &lt;= 100</code></li>\n\t<li><code>0 &lt;= left &lt;= right &lt; nums.length</code></li>\n\t<li>At most <code>3 * 10<sup>4</sup></code> calls will be made to <code>update</code> and <code>sumRange</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"NumArray\",\n  \"maxbytesperline\": 170000,\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer[]\",\n        \"name\": \"nums\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"name\": \"update\",\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"index\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"val\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"name\": \"sumRange\",\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"left\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"right\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"systemdesign\": true,\n  \"params\": [\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"inputs\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<String>\",\n    \"dealloc\": true\n  }\n}",
+  "stats": "{\"totalAccepted\": \"342.3K\", \"totalSubmission\": \"800.6K\", \"totalAcceptedRaw\": 342307, \"totalSubmissionRaw\": 800631, \"acRate\": \"42.8%\"}",
+  "likes": 5127,
+  "dislikes": 272,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Range Sum Query - Immutable\", \"titleSlug\": \"range-sum-query-immutable\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Range Sum Query 2D - Mutable\", \"titleSlug\": \"range-sum-query-2d-mutable\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Shifting Letters II\", \"titleSlug\": \"shifting-letters-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"NumArray\",\"sumRange\",\"update\",\"sumRange\"]\n[[[1,3,5]],[0,2],[1,2],[0,2]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Binary Indexed Tree",
+      "slug": "binary-indexed-tree"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class NumArray {\npublic:\n    NumArray(vector<int>& nums) {\n        \n    }\n    \n    void update(int index, int val) {\n        \n    }\n    \n    int sumRange(int left, int right) {\n        \n    }\n};\n\n/**\n * Your NumArray object will be instantiated and called as such:\n * NumArray* obj = new NumArray(nums);\n * obj->update(index,val);\n * int param_2 = obj->sumRange(left,right);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class NumArray {\n\n    public NumArray(int[] nums) {\n        \n    }\n    \n    public void update(int index, int val) {\n        \n    }\n    \n    public int sumRange(int left, int right) {\n        \n    }\n}\n\n/**\n * Your NumArray object will be instantiated and called as such:\n * NumArray obj = new NumArray(nums);\n * obj.update(index,val);\n * int param_2 = obj.sumRange(left,right);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class NumArray:\n\n    def __init__(self, nums: List[int]):\n        \n\n    def update(self, index: int, val: int) -> None:\n        \n\n    def sumRange(self, left: int, right: int) -> int:\n        \n\n\n# Your NumArray object will be instantiated and called as such:\n# obj = NumArray(nums)\n# obj.update(index,val)\n# param_2 = obj.sumRange(left,right)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class NumArray(object):\n\n    def __init__(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        \"\"\"\n        \n\n    def update(self, index, val):\n        \"\"\"\n        :type index: int\n        :type val: int\n        :rtype: None\n        \"\"\"\n        \n\n    def sumRange(self, left, right):\n        \"\"\"\n        :type left: int\n        :type right: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your NumArray object will be instantiated and called as such:\n# obj = NumArray(nums)\n# obj.update(index,val)\n# param_2 = obj.sumRange(left,right)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n */\nvar NumArray = function(nums) {\n    \n};\n\n/** \n * @param {number} index \n * @param {number} val\n * @return {void}\n */\nNumArray.prototype.update = function(index, val) {\n    \n};\n\n/** \n * @param {number} left \n * @param {number} right\n * @return {number}\n */\nNumArray.prototype.sumRange = function(left, right) {\n    \n};\n\n/** \n * Your NumArray object will be instantiated and called as such:\n * var obj = new NumArray(nums)\n * obj.update(index,val)\n * var param_2 = obj.sumRange(left,right)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class NumArray {\n    constructor(nums: number[]) {\n        \n    }\n\n    update(index: number, val: number): void {\n        \n    }\n\n    sumRange(left: number, right: number): number {\n        \n    }\n}\n\n/**\n * Your NumArray object will be instantiated and called as such:\n * var obj = new NumArray(nums)\n * obj.update(index,val)\n * var param_2 = obj.sumRange(left,right)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class NumArray {\n\n    public NumArray(int[] nums) {\n        \n    }\n    \n    public void Update(int index, int val) {\n        \n    }\n    \n    public int SumRange(int left, int right) {\n        \n    }\n}\n\n/**\n * Your NumArray object will be instantiated and called as such:\n * NumArray obj = new NumArray(nums);\n * obj.Update(index,val);\n * int param_2 = obj.SumRange(left,right);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} NumArray;\n\n\nNumArray* numArrayCreate(int* nums, int numsSize) {\n    \n}\n\nvoid numArrayUpdate(NumArray* obj, int index, int val) {\n    \n}\n\nint numArraySumRange(NumArray* obj, int left, int right) {\n    \n}\n\nvoid numArrayFree(NumArray* obj) {\n    \n}\n\n/**\n * Your NumArray struct will be instantiated and called as such:\n * NumArray* obj = numArrayCreate(nums, numsSize);\n * numArrayUpdate(obj, index, val);\n \n * int param_2 = numArraySumRange(obj, left, right);\n \n * numArrayFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type NumArray struct {\n    \n}\n\n\nfunc Constructor(nums []int) NumArray {\n    \n}\n\n\nfunc (this *NumArray) Update(index int, val int)  {\n    \n}\n\n\nfunc (this *NumArray) SumRange(left int, right int) int {\n    \n}\n\n\n/**\n * Your NumArray object will be instantiated and called as such:\n * obj := Constructor(nums);\n * obj.Update(index,val);\n * param_2 := obj.SumRange(left,right);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class NumArray(nums: IntArray) {\n\n    fun update(index: Int, `val`: Int) {\n        \n    }\n\n    fun sumRange(left: Int, right: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your NumArray object will be instantiated and called as such:\n * var obj = NumArray(nums)\n * obj.update(index,`val`)\n * var param_2 = obj.sumRange(left,right)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass NumArray {\n\n    init(_ nums: [Int]) {\n        \n    }\n    \n    func update(_ index: Int, _ val: Int) {\n        \n    }\n    \n    func sumRange(_ left: Int, _ right: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your NumArray object will be instantiated and called as such:\n * let obj = NumArray(nums)\n * obj.update(index, val)\n * let ret_2: Int = obj.sumRange(left, right)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct NumArray {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl NumArray {\n\n    fn new(nums: Vec<i32>) -> Self {\n        \n    }\n    \n    fn update(&self, index: i32, val: i32) {\n        \n    }\n    \n    fn sum_range(&self, left: i32, right: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your NumArray object will be instantiated and called as such:\n * let obj = NumArray::new(nums);\n * obj.update(index, val);\n * let ret_2: i32 = obj.sum_range(left, right);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class NumArray\n\n=begin\n    :type nums: Integer[]\n=end\n    def initialize(nums)\n        \n    end\n\n\n=begin\n    :type index: Integer\n    :type val: Integer\n    :rtype: Void\n=end\n    def update(index, val)\n        \n    end\n\n\n=begin\n    :type left: Integer\n    :type right: Integer\n    :rtype: Integer\n=end\n    def sum_range(left, right)\n        \n    end\n\n\nend\n\n# Your NumArray object will be instantiated and called as such:\n# obj = NumArray.new(nums)\n# obj.update(index, val)\n# param_2 = obj.sum_range(left, right)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class NumArray {\n    /**\n     * @param Integer[] $nums\n     */\n    function __construct($nums) {\n        \n    }\n  \n    /**\n     * @param Integer $index\n     * @param Integer $val\n     * @return NULL\n     */\n    function update($index, $val) {\n        \n    }\n  \n    /**\n     * @param Integer $left\n     * @param Integer $right\n     * @return Integer\n     */\n    function sumRange($left, $right) {\n        \n    }\n}\n\n/**\n * Your NumArray object will be instantiated and called as such:\n * $obj = NumArray($nums);\n * $obj->update($index, $val);\n * $ret_2 = $obj->sumRange($left, $right);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class NumArray {\n\n  NumArray(List<int> nums) {\n    \n  }\n  \n  void update(int index, int val) {\n    \n  }\n  \n  int sumRange(int left, int right) {\n    \n  }\n}\n\n/**\n * Your NumArray object will be instantiated and called as such:\n * NumArray obj = NumArray(nums);\n * obj.update(index,val);\n * int param2 = obj.sumRange(left,right);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class NumArray(_nums: Array[Int]) {\n\n    def update(index: Int, `val`: Int): Unit = {\n        \n    }\n\n    def sumRange(left: Int, right: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your NumArray object will be instantiated and called as such:\n * val obj = new NumArray(nums)\n * obj.update(index,`val`)\n * val param_2 = obj.sumRange(left,right)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule NumArray do\n  @spec init_(nums :: [integer]) :: any\n  def init_(nums) do\n    \n  end\n\n  @spec update(index :: integer, val :: integer) :: any\n  def update(index, val) do\n    \n  end\n\n  @spec sum_range(left :: integer, right :: integer) :: integer\n  def sum_range(left, right) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# NumArray.init_(nums)\n# NumArray.update(index, val)\n# param_2 = NumArray.sum_range(left, right)\n\n# NumArray.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_array_init_(Nums :: [integer()]) -> any().\nnum_array_init_(Nums) ->\n  .\n\n-spec num_array_update(Index :: integer(), Val :: integer()) -> any().\nnum_array_update(Index, Val) ->\n  .\n\n-spec num_array_sum_range(Left :: integer(), Right :: integer()) -> integer().\nnum_array_sum_range(Left, Right) ->\n  .\n\n\n%% Your functions will be called as such:\n%% num_array_init_(Nums),\n%% num_array_update(Index, Val),\n%% Param_2 = num_array_sum_range(Left, Right),\n\n%% num_array_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define num-array%\n  (class object%\n    (super-new)\n    \n    ; nums : (listof exact-integer?)\n    (init-field\n      nums)\n    \n    ; update : exact-integer? exact-integer? -> void?\n    (define/public (update index val)\n      )\n    ; sum-range : exact-integer? exact-integer? -> exact-integer?\n    (define/public (sum-range left right)\n      )))\n\n;; Your num-array% object will be instantiated and called as such:\n;; (define obj (new num-array% [nums nums]))\n;; (send obj update index val)\n;; (define param_2 (send obj sum-range left right))"
+    }
+  ],
+  "solution": {
+    "id": "29",
+    "content": "[TOC]\n\n## Summary\nThis article is for intermediate level readers. It introduces the following concepts:\nRange sum query, Sqrt decomposition, Segment tree.\n\n## Solution\n\n---\n### Approach 1: Naive\n\n**Algorithm**\n\nA trivial solution for Range Sum Query - `RSQ(i, j)` is to iterate the array from index $$i$$ to $$j$$ and sum each element.\n\n\n<iframe src=\"https://leetcode.com/playground/gMwdcBSW/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"gMwdcBSW\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$ - range sum query, $$O(1)$$ - update query\n\n    For range sum query we access each element from the array for constant time and in the worst case we access $$n$$ elements. Therefore time complexity is $$O(n)$$. Time complexity of update query is $$O(1)$$.\n\n* Space complexity : $$O(1)$$.\n<br/>\n<br/>\n\n---\n### Approach 2: Sqrt Decomposition\n\n**Intuition**\n\nThe idea is to  split the array in blocks with length of $$\\sqrt{n}$$. Then we calculate the sum of each block and store it in auxiliary memory `b`.\nTo query `RSQ(i, j)`, we will add the sums of all the blocks lying inside and those that partially overlap with range $$[i \\ldots j]$$.\n\n**Algorithm**\n\n![Range sum query using SQRT decomposition](../Figures/307/307_RSQ_Sqrt.png)\n\n\n*Figure 1. Range sum query using SQRT decomposition.*\n\n\nIn the example above, the array `nums`'s length is `9`, which is split into blocks of size $$\\sqrt{9}$$. To get `RSQ(1, 7)` we add `b[1]`.  It stores the sum of `range [3, 5]` and partially sums from `block 0`  and `block 2`, which are overlapping boundary blocks.\n\n\n<iframe src=\"https://leetcode.com/playground/chp8Ambx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"chp8Ambx\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$ - preprocessing, $$O(\\sqrt{n})$$ - range sum query, $$O(1)$$ - update query\n\n    For range sum query in the worst-case scenario we have to sum approximately $$3 \\sqrt{n}$$ elements. In this case the range includes $$\\sqrt{n} - 2$$ blocks, which total sum costs $$\\sqrt{n} - 2$$ operations. In addition to this we have to add the sum of the two boundary blocks. This takes another $$2 (\\sqrt{n} - 1)$$ operations. The total amount of operations is around $$3 \\sqrt{n}$$.\n\n* Space complexity : $$O(\\sqrt{n})$$.\n\n    We need additional $$\\sqrt{n}$$ memory to store all block sums.\n<br/>\n<br/>\n\n---\n### Approach 3: Segment Tree\n\n**Algorithm**\n\nSegment tree is a very flexible data structure, because it is used to solve numerous range query problems like finding minimum, maximum, sum, greatest common divisor, least common denominator in array in logarithmic time.\n\n![Illustration of Segment Tree](../Figures/307/307_segment_tree.png)\n\n*Figure 2. Illustration of Segment tree.*\n\n\nThe segment tree for array $$a[0, 1, \\ldots ,n-1]$$ is a binary tree in which each node contains **aggregate** information (min, max, sum, etc.) for a subrange $$[i \\ldots j]$$ of the array, as its left and right child hold information for range $$[i \\ldots \\frac{i+j}{2}]$$ and $$[\\frac{i + j}{2} + 1, j]$$.\n\nSegment tree could be implemented using either an array or a tree. For an array implementation, if the element at index $$i$$ is not a leaf, its left and right child are stored at index $$2i$$ and $$2i + 1$$ respectively.\n\nIn the example above (Figure 2), every leaf node contains the initial array elements `{2,4,5,7}`.\nThe internal nodes contain the sum of the corresponding elements in range, _e.g._ `(6)` is the sum for the elements from index 0 to index 1. The root `(18)` is the sum  of its children `(6)` and `(12)`, which also holds the total sum of the entire array.\n\nSegment Tree can be broken down to the three following steps:\n\n1. Pre-processing step which builds the segment tree from a given array.\n2. Update the segment tree when an element is modified.\n3. Calculate the Range Sum Query using the segment tree.\n\n##### 1. Build segment tree\n\nWe will use a very effective bottom-up approach to build segment tree. We already know from the above that if some node $$p$$ holds the sum of $$[i \\ldots j]$$ range, its left and right children hold the sum for range $$[i \\ldots \\frac{i + j}{2}]$$ and $$[\\frac{i + j}{2} + 1, j]$$ respectively.\n\nTherefore to find the sum of node $$p$$, we need to calculate the sum of its right and left child in advance.\n\nWe begin from the leaves, initialize them with input array elements $$a[0, 1, \\ldots, n-1]$$. Then we move upward to the higher level to calculate the parents' sum till we get to the root of the segment tree.\n\n\n<iframe src=\"https://leetcode.com/playground/h4VVQjkr/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"h4VVQjkr\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$\n\n    Time complexity is  $$O(n)$$, because we calculate the sum of one node during each iteration of the for loop. There are approximately $$2n$$ nodes in a segment tree.\n\n    This could be proved in the following way: Segmented tree for array with $$n$$ elements has $$n$$ leaves (the array elements itself). The number of nodes in each level is half the number in the level below.\n\n    So if we sum the number by level we will get:\n\n    $$\n    n + n/2  + n/4 + n/8 + \\ldots + 1 \\approx 2n\n    $$\n\n* Space complexity : $$O(n)$$.\n\n    We used $$2n$$ extra space to store the segment tree.\n\n##### 2. Update segment tree\n\nWhen we update the array at some index $$i$$ we need to rebuild the segment tree, because there are tree nodes which contain the sum of the modified element. Again we will use a bottom-up approach. We update the leaf node that stores $$a[i]$$. From there we will follow the path up to the root updating the value of each parent as a sum of its children values.\n\n\n<iframe src=\"https://leetcode.com/playground/5c4a42rG/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"5c4a42rG\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(\\log n)$$.\n\n    Algorithm  has $$O(\\log n)$$ time complexity, because there are a few tree nodes with range that include  $$i$$th array element, one on each level. There are $$\\log(n)$$  levels.\n\n* Space complexity : $$O(1)$$.\n\n##### 3. Range Sum Query\n\nWe can find range sum query  $$[L, R]$$ using segment tree in the following way:\n\nAlgorithm hold loop invariant:\n\n$$l \\le r$$ and sum of $$[L \\ldots l]$$ and $$[r \\ldots R]$$ has been calculated, where $$l$$ and $$r$$ are the left and right boundary of calculated sum.\nInitially we set $$l$$ with left leaf $$L$$ and $$r$$ with right leaf $$R$$.\nRange $$[l, r]$$ shrinks on each iteration till range borders meets after approximately $$\\log n$$ iterations of the algorithm\n\n* Loop till $$l \\le r$$\n\n    * Check if $$l$$ is right child of its parent $$P$$\n\n        * $$l$$ is right child of $$P$$. Then $$P$$ contains sum of range of $$l$$ and another  child which is outside the range $$[l, r]$$ and we don't need parent $$P$$ sum. Add $$l$$ to $$sum$$ without its parent $$P$$ and set $$l$$ to point to the right of $$P$$ on the upper level.\n\n        * $$l$$ is not right child of $$P$$. Then parent $$P$$ contains sum of range which lies in $$[l, r]$$. Add $$P$$ to $$sum$$ and set $$l$$ to point to the parent of $$P$$\n\n    * Check if $$r$$ is left child of its parent $$P$$\n\n        * $$r$$ is left child of $$P$$. Then $$P$$ contains sum of range of $$r$$ and another  child which is outside the range $$[l, r]$$ and we don't need parent $$P$$ sum. Add $$r$$  to $$sum$$ without its parent $$P$$ and set $$r$$ to point to the left of $$P$$ on the upper level.\n\n        * $$r$$ is not left child of $$P$$. Then parent $$P$$ contains sum of range which lies in $$[l, r]$$. Add $$P$$ to $$sum$$ and set $$r$$ to point to the parent of $$P$$\n\n\n<iframe src=\"https://leetcode.com/playground/R8TMjpoq/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"R8TMjpoq\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(\\log n)$$\n\n    Time complexity is $$O(\\log n)$$ because on each iteration of the algorithm we move one level up, either to the parent of the  current node or to the next sibling of parent to the left or right direction till the two boundaries meet. In the worst-case scenario this happens at the root after $$\\log n$$ iterations of the algorithm.\n\n* Space complexity : $$O(1)$$.\n\n\n## Further Thoughts\n\nThe iterative version of Segment Trees was introduced in this article. A more intuitive, recursive version of Segment Trees to solve this problem is discussed [here](https://leetcode.com/articles/a-recursive-approach-to-segment-trees-range-sum-queries-lazy-propagation/). The concept of Lazy Propagation is also introduced there.\n\nThere is an alternative solution of the problem using Binary Indexed Tree. It is faster and simpler to code.\nYou can find it [here](https://leetcode.com/problems/range-sum-query-mutable/discuss/75753/Java-using-Binary-Indexed-Tree-with-clear-explanation).",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

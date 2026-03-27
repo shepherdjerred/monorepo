@@ -1,0 +1,58 @@
+{
+  "questionId": "596",
+  "questionFrontendId": "596",
+  "title": "Classes With at Least 5 Students",
+  "titleSlug": "classes-with-at-least-5-students",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Courses</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| student     | varchar |\n| class       | varchar |\n+-------------+---------+\n(student, class) is the primary key (combination of columns with unique values) for this table.\nEach row of this table indicates the name of a student and the class in which they are enrolled.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find all the classes that have <strong>at least five students</strong>.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nCourses table:\n+---------+----------+\n| student | class    |\n+---------+----------+\n| A       | Math     |\n| B       | English  |\n| C       | Math     |\n| D       | Biology  |\n| E       | Math     |\n| F       | Computer |\n| G       | Math     |\n| H       | Math     |\n| I       | Math     |\n+---------+----------+\n<strong>Output:</strong> \n+---------+\n| class   |\n+---------+\n| Math    |\n+---------+\n<strong>Explanation:</strong> \n- Math has 6 students, so we include it.\n- English has 1 student, so we do not include it.\n- Biology has 1 student, so we do not include it.\n- Computer has 1 student, so we do not include it.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Courses (student varchar(255), class varchar(255))\"], \"mssql\": [\"Create table Courses (student varchar(255), class varchar(255))\"], \"oraclesql\": [\"Create table Courses (student varchar(255), class varchar(255))\"], \"database\": true, \"name\": \"find_classes\", \"pythondata\": [\"Courses = pd.DataFrame([], columns=['student', 'class']).astype({'student':'object', 'class':'object'})\"], \"postgresql\": [\"Create table If Not Exists Courses (student varchar(255), class varchar(255))\"], \"database_schema\": {\"Courses\": {\"student\": \"VARCHAR(255)\", \"class\": \"VARCHAR(255)\"}}}",
+  "stats": "{\"totalAccepted\": \"851.5K\", \"totalSubmission\": \"1.3M\", \"totalAcceptedRaw\": 851486, \"totalSubmissionRaw\": 1342008, \"acRate\": \"63.4%\"}",
+  "likes": 1321,
+  "dislikes": 1084,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Courses\": [\"student\", \"class\"]}, \"rows\": {\"Courses\": [[\"A\", \"Math\"], [\"B\", \"English\"], [\"C\", \"Math\"], [\"D\", \"Biology\"], [\"E\", \"Math\"], [\"F\", \"Computer\"], [\"G\", \"Math\"], [\"H\", \"Math\"], [\"I\", \"Math\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}]}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_classes(courses: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "202",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Approach: Group By\n\n#### Algorithm\nWe need to count the number of each unique classes, so we can group the DataFrame `courses` by the `class` column using the function `groupby('class')`. Then, we use the function `size()` to count the number of occurrences for each unique class, which gives us the count of students in each class. We use `reset_index(name='count')` to name this column as `count`.\n\nThe result DataFrame `df` consists of two columns: `class` and `count`.\n\n\n```python\ndf = courses.groupby('class').size().reset_index(name='count')\n```\n\nWe will have the following DataFrame `df`:\n\n<table>\n  <tr>\n    <th>class</th>\n    <th>count</th>\n  </tr>\n  <tr>\n    <td>Biology</td>\n    <td>1</td>\n  </tr>\n  <tr>\n    <td>Computer</td>\n    <td>1</td>\n  </tr>\n  <tr>\n    <td>English</td>\n    <td>1</td>\n  </tr>\n  <tr>\n    <td>Math</td>\n    <td>6</td>\n  </tr>\n</table>\n\n\n<br>\n\nNext, we filter `df` to select only the rows where the `count` column is greater than or equal to 5, which helps us identify the classes with more than 5 students. \n\n```python\ndf = df[df['count'] >= 5]\n```\n\n<table>\n  <tr>\n    <th>class</th>\n    <th>count</th>\n  </tr>\n  <tr>\n    <td>Math</td>\n    <td>6</td>\n  </tr>\n</table>\n\n<br>\n\nWe need to return the required column `class`, thus the complete code is as follows:\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/CdymVeDg/shared\" frameBorder=\"0\" width=\"100%\" height=\"191\" name=\"CdymVeDg\"></iframe>\n\nWe will obtain the following DataFrame:\n<table>\n  <tr>\n    <th>class</th>\n  </tr>\n  <tr>\n    <td>Math</td>\n  </tr>\n</table>\n\n<br>\n\n---\n\n## Database\n\n### Approach: Group By\n\n#### Algorithm\n\nFirst, we can count the student number in each class. And then select the ones have more than 5 students.\n\nTo get the student number in each class. We can use `GROUP BY` and `COUNT`, which is very popular used to statistic bases on some character in a table.\n\n```sql\nSELECT\n    class, COUNT(student)\nFROM\n    courses\nGROUP BY class\n;\n```\n\n<table>\n  <tr>\n    <th>class</th>\n    <th>COUNT(student)</th>\n  </tr>\n  <tr>\n    <td>Biology</td>\n    <td>1</td>\n  </tr>\n  <tr>\n    <td>Computer</td>\n    <td>1</td>\n  </tr>\n  <tr>\n    <td>English</td>\n    <td>1</td>\n  </tr>\n  <tr>\n    <td>Math</td>\n    <td>6</td>\n  </tr>\n</table>\n\n<br>\n\nTo continue, we can filter the classes by taking the above query as a sub-query.\n\n#### Implementation\n\n```sql\nSELECT\n    class\nFROM\n    (SELECT\n        class, COUNT(student) AS num\n    FROM\n        courses\n    GROUP BY class) AS temp_table\nWHERE\n    num >= 5\n;\n```\n>Note: Make an alias of `COUNT(student)` ('num' in this case) so that you can use in the `WHERE` clause because it cannot be used directly over there.\n\n<br>\n\n### Approach 2: Using `GROUP BY` and `HAVING` condition\n\n#### Algorithm\n\nUsing sub-query is one way to add some condition to a `GROUP BY` clause, however, using [`HAVING`](https://dev.mysql.com/doc/refman/5.7/en/group-by-handling.html) is another simpler and natural approach. So we can rewrite the above solution as below.\n\n#### Implementation\n\n```sql\nSELECT\n    class\nFROM\n    courses\nGROUP BY class\nHAVING COUNT(student) >= 5\n;\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

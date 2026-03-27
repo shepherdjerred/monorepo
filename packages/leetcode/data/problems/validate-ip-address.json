@@ -1,0 +1,130 @@
+{
+  "questionId": "468",
+  "questionFrontendId": "468",
+  "title": "Validate IP Address",
+  "titleSlug": "validate-ip-address",
+  "difficulty": "Medium",
+  "content": "<p>Given a string <code>queryIP</code>, return <code>&quot;IPv4&quot;</code> if IP is a valid IPv4 address, <code>&quot;IPv6&quot;</code> if IP is a valid IPv6 address or <code>&quot;Neither&quot;</code> if IP is not a correct IP of any type.</p>\n\n<p><strong>A valid IPv4</strong> address is an IP in the form <code>&quot;x<sub>1</sub>.x<sub>2</sub>.x<sub>3</sub>.x<sub>4</sub>&quot;</code> where <code>0 &lt;= x<sub>i</sub> &lt;= 255</code> and <code>x<sub>i</sub></code> <strong>cannot contain</strong> leading zeros. For example, <code>&quot;192.168.1.1&quot;</code> and <code>&quot;192.168.1.0&quot;</code> are valid IPv4 addresses while <code>&quot;192.168.01.1&quot;</code>, <code>&quot;192.168.1.00&quot;</code>, and <code>&quot;192.168@1.1&quot;</code> are invalid IPv4 addresses.</p>\n\n<p><strong>A valid IPv6</strong> address is an IP in the form <code>&quot;x<sub>1</sub>:x<sub>2</sub>:x<sub>3</sub>:x<sub>4</sub>:x<sub>5</sub>:x<sub>6</sub>:x<sub>7</sub>:x<sub>8</sub>&quot;</code> where:</p>\n\n<ul>\n\t<li><code>1 &lt;= x<sub>i</sub>.length &lt;= 4</code></li>\n\t<li><code>x<sub>i</sub></code> is a <strong>hexadecimal string</strong> which may contain digits, lowercase English letter (<code>&#39;a&#39;</code> to <code>&#39;f&#39;</code>) and upper-case English letters (<code>&#39;A&#39;</code> to <code>&#39;F&#39;</code>).</li>\n\t<li>Leading zeros are allowed in <code>x<sub>i</sub></code>.</li>\n</ul>\n\n<p>For example, &quot;<code>2001:0db8:85a3:0000:0000:8a2e:0370:7334&quot;</code> and &quot;<code>2001:db8:85a3:0:0:8A2E:0370:7334&quot;</code> are valid IPv6 addresses, while &quot;<code>2001:0db8:85a3::8A2E:037j:7334&quot;</code> and &quot;<code>02001:0db8:85a3:0000:0000:8a2e:0370:7334&quot;</code> are invalid IPv6 addresses.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> queryIP = &quot;172.16.254.1&quot;\n<strong>Output:</strong> &quot;IPv4&quot;\n<strong>Explanation:</strong> This is a valid IPv4 address, return &quot;IPv4&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> queryIP = &quot;2001:0db8:85a3:0:0:8A2E:0370:7334&quot;\n<strong>Output:</strong> &quot;IPv6&quot;\n<strong>Explanation:</strong> This is a valid IPv6 address, return &quot;IPv6&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> queryIP = &quot;256.256.256.256&quot;\n<strong>Output:</strong> &quot;Neither&quot;\n<strong>Explanation:</strong> This is neither a IPv4 address nor a IPv6 address.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>queryIP</code> consists only of English letters, digits and the characters <code>&#39;.&#39;</code> and <code>&#39;:&#39;</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"validIPAddress\",\n  \"params\": [\n    {\n      \"name\": \"queryIP\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"200.8K\", \"totalSubmission\": \"710.8K\", \"totalAcceptedRaw\": 200767, \"totalSubmissionRaw\": 710800, \"acRate\": \"28.2%\"}",
+  "likes": 1122,
+  "dislikes": 2746,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"IP to CIDR\", \"titleSlug\": \"ip-to-cidr\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Strong Password Checker II\", \"titleSlug\": \"strong-password-checker-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"172.16.254.1\"",
+    "\"2001:0db8:85a3:0:0:8A2E:0370:7334\"",
+    "\"256.256.256.256\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"turing\", \"name\": \"Turing\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}, {\"timesEncountered\": 2, \"slug\": \"flexport\", \"name\": \"Flexport\"}]}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string validIPAddress(string queryIP) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String validIPAddress(String queryIP) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def validIPAddress(self, queryIP: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def validIPAddress(self, queryIP):\n        \"\"\"\n        :type queryIP: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} queryIP\n * @return {string}\n */\nvar validIPAddress = function(queryIP) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function validIPAddress(queryIP: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string ValidIPAddress(string queryIP) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* validIPAddress(char* queryIP) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func validIPAddress(queryIP string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun validIPAddress(queryIP: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func validIPAddress(_ queryIP: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn valid_ip_address(query_ip: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} query_ip\n# @return {String}\ndef valid_ip_address(query_ip)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $queryIP\n     * @return String\n     */\n    function validIPAddress($queryIP) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String validIPAddress(String queryIP) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def validIPAddress(queryIP: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec valid_ip_address(query_ip :: String.t) :: String.t\n  def valid_ip_address(query_ip) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec valid_ip_address(QueryIP :: unicode:unicode_binary()) -> unicode:unicode_binary().\nvalid_ip_address(QueryIP) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (valid-ip-address queryIP)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "853",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThe first idea is to use try/catch construct with built-in \nfacilities: [ipaddress](https://docs.python.org/3/library/ipaddress.html) \nlib in Python and [InetAddress](https://docs.oracle.com/javase/7/docs/api/java/net/InetAddress.html) \nclass in Java.\n\n**Note that the code below validates the _real-life_ IPv4, \nand _real-life_ IPv6. \nIt will not work for this problem because the problem validates \nnot _real-life_ but _\"simplified\"_ versions of IPv4 and IPv6.**\n\nSome big companies, for example, Microsoft and Amazon, \nredefine IPv4 and IPv6 on the interviews for the sake of simplicity.\nBelow one could find an extended discussion about the differences.\n\n<iframe src=\"https://leetcode.com/playground/Jq9A7FGf/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"Jq9A7FGf\"></iframe>\n\nNote that these facilities both refer to \n[POSIX-compatible](https://linux.die.net/man/3/inet_addr) \n`inet-addr()` routine for parsing addresses. \nThat's why they consider chunks with leading zeros\nnot as an error, but as an _octal_ representation.\n\n> Components of the dotted address can be specified in decimal, \n_octal (with a leading 0)_, or hexadecimal, with a leading 0X). \n\nAs a result, `01.01.01.012` will be a valid IP address in \noctal representation, as it should be. \nTo check this behaviour, one can run the command `ping 01.01.01.012` \nin the console. The address `01.01.01.012` will be considered \nas the one in octal representation, \nconverted into its decimal representation `1.1.1.10`,\ntherefore the ping command would be executed without errors.\n\nBy contrary, problem description directly states that \n_leading zeros in the IPv4 is invalid_.\nThat's not a real-life case, but probably done for the sake \nof simplicity.\nImho, that makes the problem to be a bit schoolish and less fun.\nThough let's deal with it anyway, since the problem is very popular recently \nin Microsoft and Amazon. \n\nThere are three main ways to solve it:\n \n- Regex (_i.e._ regular expression). Less performing one, though it's a good way to demonstrate \nyour knowledge of regex.\n\n- Divide and Conquer, the simplest one.\n\n- Mix of \"Divide and Conquer\" and \"Try/Catch with built-in facilities\", \nthis time with ones to convert string to integer. \nTry/catch in this situation is a sort of \"dirty\"\nsolution because [usually the code inside try blocks is not optimized as \nit'd otherwise be by the compiler](https://blogs.msmvps.com/peterritchie/2007/06/22/performance-implications-of-try-catch-finally/),\nand it's better not to use it during the interview.\n<br />\n<br />\n\n\n---\n### Approach 1: Regex\n\nLet's construct step by step regex for \"IPv4\" \nas it's described in the problem description. Note, that it's not\na real-life IPv4 because of leading zeros problem as we've discussed above. \n\nAnyway, we start to construct regex pattern by using raw string in Python \n`r''` and standard string `\"\"` in Java. Here is how its skeleton looks like for Python\n\n![diff](../Figures/468/regex_ipv4.png)\n\nand here is for Java\n\n![diff](../Figures/468/java_ipv4.png)\n\nNow the problem is reduced to the construction of pattern to match each chunk.\nIt's an integer in range (0, 255), and the leading zeros are not allowed.\nThat results in five possible situations:\n\n1. Chunk contains only one digit, from 0 to 9.\n\n2. Chunk contains two digits. The first one could be from 1 to 9, and the second \none from 0 to 9.\n\n3. Chunk contains three digits, and the first one is `1`. The second and the third ones \ncould be from 0 to 9.\n\n4. Chunk contains three digits, the first one is `2` and the second one is from 0 to 4.\nThen the third one could be from 0 to 9.\n\n5. Chunk contains three digits, the first one is `2`,  and the second one is `5`.\nThen the third one could be from 0 to 5.\n\nLet's use pipe to create a regular expression that will match either case 1, or \ncase 2, ..., or case 5. \n\n![diff](../Figures/468/chunk_regex.png) \n\nThe job is done. The same logic could be used to construct \"IPv6\" regex pattern.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/SuRTfqgi/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"SuRTfqgi\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(1)$$ because the patterns to match have \nconstant length.\n    \n* Space complexity: $$\\mathcal{O}(1)$$. \n<br />\n<br />\n\n\n---\n### Approach 2: Divide and Conquer\n\n**Intuition**\n\nBoth IPv4 and IPv6 addresses are composed of several substrings separated by certain delimiter,\nand each of the substrings is of the same format.\n\n![diff](../Figures/468/divide_conquer.png)\n\nTherefore, intuitively, we could break down the address into chunks, \nand then verify them one by one.\n\nThe address is valid _if and only if_ each of the chunks is valid.\nWe can call this methodology _divide and conquer_.\n\n**Algorithm**\n\n- For the IPv4 address, we split IP into four chunks by the delimiter `.`,\nwhile for IPv6 address, we split IP into eight chunks by the delimiter `:`.\n\n- For each substring of \"IPv4\" address, \nwe check if it is an integer between `0 - 255`, and there is no leading zeros.\n\n- For each substring of \"IPv6\" address, \nwe check if it's a hexadecimal number of length `1 - 4`.\n \n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/9PJVJNRm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"9PJVJNRm\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ because to count number of dots requires to\nparse the entire input string.\n    \n* Space complexity: $$\\mathcal{O}(1)$$. \n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

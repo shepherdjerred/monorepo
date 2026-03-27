@@ -1,0 +1,135 @@
+{
+  "questionId": "722",
+  "questionFrontendId": "722",
+  "title": "Remove Comments",
+  "titleSlug": "remove-comments",
+  "difficulty": "Medium",
+  "content": "<p>Given a C++ program, remove comments from it. The program source is an array of strings <code>source</code> where <code>source[i]</code> is the <code>i<sup>th</sup></code> line of the source code. This represents the result of splitting the original source code string by the newline character <code>&#39;\\n&#39;</code>.</p>\n\n<p>In C++, there are two types of comments, line comments, and block comments.</p>\n\n<ul>\n\t<li>The string <code>&quot;//&quot;</code> denotes a line comment, which represents that it and the rest of the characters to the right of it in the same line should be ignored.</li>\n\t<li>The string <code>&quot;/*&quot;</code> denotes a block comment, which represents that all characters until the next (non-overlapping) occurrence of <code>&quot;*/&quot;</code> should be ignored. (Here, occurrences happen in reading order: line by line from left to right.) To be clear, the string <code>&quot;/*/&quot;</code> does not yet end the block comment, as the ending would be overlapping the beginning.</li>\n</ul>\n\n<p>The first effective comment takes precedence over others.</p>\n\n<ul>\n\t<li>For example, if the string <code>&quot;//&quot;</code> occurs in a block comment, it is ignored.</li>\n\t<li>Similarly, if the string <code>&quot;/*&quot;</code> occurs in a line or block comment, it is also ignored.</li>\n</ul>\n\n<p>If a certain line of code is empty after removing comments, you must not output that line: each string in the answer list will be non-empty.</p>\n\n<p>There will be no control characters, single quote, or double quote characters.</p>\n\n<ul>\n\t<li>For example, <code>source = &quot;string s = &quot;/* Not a comment. */&quot;;&quot;</code> will not be a test case.</li>\n</ul>\n\n<p>Also, nothing else such as defines or macros will interfere with the comments.</p>\n\n<p>It is guaranteed that every open block comment will eventually be closed, so <code>&quot;/*&quot;</code> outside of a line or block comment always starts a new comment.</p>\n\n<p>Finally, implicit newline characters can be deleted by block comments. Please see the examples below for details.</p>\n\n<p>After removing the comments from the source code, return <em>the source code in the same format</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> source = [&quot;/*Test program */&quot;, &quot;int main()&quot;, &quot;{ &quot;, &quot;  // variable declaration &quot;, &quot;int a, b, c;&quot;, &quot;/* This is a test&quot;, &quot;   multiline  &quot;, &quot;   comment for &quot;, &quot;   testing */&quot;, &quot;a = b + c;&quot;, &quot;}&quot;]\n<strong>Output:</strong> [&quot;int main()&quot;,&quot;{ &quot;,&quot;  &quot;,&quot;int a, b, c;&quot;,&quot;a = b + c;&quot;,&quot;}&quot;]\n<strong>Explanation:</strong> The line by line code is visualized as below:\n/*Test program */\nint main()\n{ \n  // variable declaration \nint a, b, c;\n/* This is a test\n   multiline  \n   comment for \n   testing */\na = b + c;\n}\nThe string /* denotes a block comment, including line 1 and lines 6-9. The string // denotes line 4 as comments.\nThe line by line output code is visualized as below:\nint main()\n{ \n  \nint a, b, c;\na = b + c;\n}\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> source = [&quot;a/*comment&quot;, &quot;line&quot;, &quot;more_comment*/b&quot;]\n<strong>Output:</strong> [&quot;ab&quot;]\n<strong>Explanation:</strong> The original source string is &quot;a/*comment\\nline\\nmore_comment*/b&quot;, where we have bolded the newline characters.  After deletion, the implicit newline characters are deleted, leaving the string &quot;ab&quot;, which when delimited by newline characters becomes [&quot;ab&quot;].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= source.length &lt;= 100</code></li>\n\t<li><code>0 &lt;= source[i].length &lt;= 80</code></li>\n\t<li><code>source[i]</code> consists of printable <strong>ASCII</strong> characters.</li>\n\t<li>Every open block comment is eventually closed.</li>\n\t<li>There are no single-quote or&nbsp;double-quote in the input.</li>\n</ul>\n",
+  "hints": [
+    "Carefully parse each line according to the following rules:\r\n\r\n* If we start a block comment and we aren't in a block, then we will skip over the next two characters and change our state to be in a block.\r\n\r\n* If we end a block comment and we are in a block, then we will skip over the next two characters and change our state to be *not* in a block.\r\n\r\n* If we start a line comment and we aren't in a block, then we will ignore the rest of the line.\r\n\r\n* If we aren't in a block comment (and it wasn't the start of a comment), we will record the character we are at.\r\n\r\n* At the end of each line, if we aren't in a block, we will record the line."
+  ],
+  "metaData": "{\r\n  \"name\": \"removeComments\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"source\",\r\n      \"type\": \"string[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<string>\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"85.2K\", \"totalSubmission\": \"212.7K\", \"totalAcceptedRaw\": 85206, \"totalSubmissionRaw\": 212672, \"acRate\": \"40.1%\"}",
+  "likes": 757,
+  "dislikes": 1847,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Mini Parser\", \"titleSlug\": \"mini-parser\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Ternary Expression Parser\", \"titleSlug\": \"ternary-expression-parser\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"/*Test program */\", \"int main()\", \"{ \", \"  // variable declaration \", \"int a, b, c;\", \"/* This is a test\", \"   multiline  \", \"   comment for \", \"   testing */\", \"a = b + c;\", \"}\"]",
+    "[\"a/*comment\", \"line\", \"more_comment*/b\"]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> removeComments(vector<string>& source) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> removeComments(String[] source) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def removeComments(self, source: List[str]) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def removeComments(self, source):\n        \"\"\"\n        :type source: List[str]\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} source\n * @return {string[]}\n */\nvar removeComments = function(source) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function removeComments(source: string[]): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> RemoveComments(string[] source) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** removeComments(char** source, int sourceSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func removeComments(source []string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun removeComments(source: Array<String>): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func removeComments(_ source: [String]) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn remove_comments(source: Vec<String>) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} source\n# @return {String[]}\ndef remove_comments(source)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $source\n     * @return String[]\n     */\n    function removeComments($source) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> removeComments(List<String> source) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def removeComments(source: Array[String]): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec remove_comments(source :: [String.t]) :: [String.t]\n  def remove_comments(source) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec remove_comments(Source :: [unicode:unicode_binary()]) -> [unicode:unicode_binary()].\nremove_comments(Source) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (remove-comments source)\n  (-> (listof string?) (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "285",
+    "content": "[TOC]\n\n### Approach #1: Parsing [Accepted]\n\n**Intuition and Algorithm**\n\nWe need to parse the `source` line by line. Our state is that we either are in a block comment or not.\n\n* If we start a block comment and we aren't in a block, then we will skip over the next two characters and change our state to be in a block.\n\n* If we end a block comment and we are in a block, then we will skip over the next two characters and change our state to be *not* in a block.\n\n* If we start a line comment and we aren't in a block, then we will ignore the rest of the line.\n\n* If we aren't in a block comment (and it wasn't the start of a comment), we will record the character we are at.\n\n* At the end of each line, if we aren't in a block, we will record the line.\n\n**Python**\n```python\nclass Solution(object):\n    def removeComments(self, source):\n        in_block = False\n        ans = []\n        for line in source:\n            i = 0\n            if not in_block:\n                newline = []\n            while i < len(line):\n                if line[i:i+2] == '/*' and not in_block:\n                    in_block = True\n                    i += 1\n                elif line[i:i+2] == '*/' and in_block:\n                    in_block = False\n                    i += 1\n                elif not in_block and line[i:i+2] == '//':\n                    break\n                elif not in_block:\n                    newline.append(line[i])\n                i += 1\n            if newline and not in_block:\n                ans.append(\"\".join(newline))\n\n        return ans\n```\n\n**Java**\n```java\nclass Solution {\n    public List<String> removeComments(String[] source) {\n        boolean inBlock = false;\n        StringBuilder newline = new StringBuilder();\n        List<String> ans = new ArrayList();\n        for (String line: source) {\n            int i = 0;\n            char[] chars = line.toCharArray();\n            if (!inBlock) {\n                newline = new StringBuilder();\n            }\n            while (i < line.length()) {\n                if (!inBlock && i+1 < line.length() && chars[i] == '/' && chars[i+1] == '*') {\n                    inBlock = true;\n                    i++;\n                } else if (inBlock && i+1 < line.length() && chars[i] == '*' && chars[i+1] == '/') {\n                    inBlock = false;\n                    i++;\n                } else if (!inBlock && i+1 < line.length() && chars[i] == '/' && chars[i+1] == '/') {\n                    break;\n                } else if (!inBlock) {\n                    newline.append(chars[i]);\n                }\n                i++;\n            }\n            if (!inBlock && newline.length() > 0) {\n                ans.add(new String(newline));\n            }\n        }\n        return ans;\n    }\n}\n```\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(S)$$, where $$S$$ is the total length of the source code.\n\n* Space Complexity: $$O(S)$$, the space used by recording the source code into `ans`.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

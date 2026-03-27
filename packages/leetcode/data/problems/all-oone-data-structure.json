@@ -1,0 +1,140 @@
+{
+  "questionId": "432",
+  "questionFrontendId": "432",
+  "title": "All O`one Data Structure",
+  "titleSlug": "all-oone-data-structure",
+  "difficulty": "Hard",
+  "content": "<p>Design a data structure to store the strings&#39; count with the ability to return the strings with minimum and maximum counts.</p>\n\n<p>Implement the <code>AllOne</code> class:</p>\n\n<ul>\n\t<li><code>AllOne()</code> Initializes the object of the data structure.</li>\n\t<li><code>inc(String key)</code> Increments the count of the string <code>key</code> by <code>1</code>. If <code>key</code> does not exist in the data structure, insert it with count <code>1</code>.</li>\n\t<li><code>dec(String key)</code> Decrements the count of the string <code>key</code> by <code>1</code>. If the count of <code>key</code> is <code>0</code> after the decrement, remove it from the data structure. It is guaranteed that <code>key</code> exists in the data structure before the decrement.</li>\n\t<li><code>getMaxKey()</code> Returns one of the keys with the maximal count. If no element exists, return an empty string <code>&quot;&quot;</code>.</li>\n\t<li><code>getMinKey()</code> Returns one of the keys with the minimum count. If no element exists, return an empty string <code>&quot;&quot;</code>.</li>\n</ul>\n\n<p><strong>Note</strong> that each function must run in <code>O(1)</code> average time complexity.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;AllOne&quot;, &quot;inc&quot;, &quot;inc&quot;, &quot;getMaxKey&quot;, &quot;getMinKey&quot;, &quot;inc&quot;, &quot;getMaxKey&quot;, &quot;getMinKey&quot;]\n[[], [&quot;hello&quot;], [&quot;hello&quot;], [], [], [&quot;leet&quot;], [], []]\n<strong>Output</strong>\n[null, null, null, &quot;hello&quot;, &quot;hello&quot;, null, &quot;hello&quot;, &quot;leet&quot;]\n\n<strong>Explanation</strong>\nAllOne allOne = new AllOne();\nallOne.inc(&quot;hello&quot;);\nallOne.inc(&quot;hello&quot;);\nallOne.getMaxKey(); // return &quot;hello&quot;\nallOne.getMinKey(); // return &quot;hello&quot;\nallOne.inc(&quot;leet&quot;);\nallOne.getMaxKey(); // return &quot;hello&quot;\nallOne.getMinKey(); // return &quot;leet&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= key.length &lt;= 10</code></li>\n\t<li><code>key</code> consists of lowercase English letters.</li>\n\t<li>It is guaranteed that for each call to <code>dec</code>, <code>key</code> is existing in the data structure.</li>\n\t<li>At most <code>5 * 10<sup>4</sup></code>&nbsp;calls will be made to <code>inc</code>, <code>dec</code>, <code>getMaxKey</code>, and <code>getMinKey</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"AllOne\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"key\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"void\"\n      },\n      \"name\": \"inc\"\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"key\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"void\"\n      },\n      \"name\": \"dec\"\n    },\n    {\n      \"params\": [],\n      \"return\": {\n        \"type\": \"string\"\n      },\n      \"name\": \"getMaxKey\"\n    },\n    {\n      \"params\": [],\n      \"return\": {\n        \"type\": \"string\"\n      },\n      \"name\": \"getMinKey\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"203.6K\", \"totalSubmission\": \"460.5K\", \"totalAcceptedRaw\": 203615, \"totalSubmissionRaw\": 460502, \"acRate\": \"44.2%\"}",
+  "likes": 2229,
+  "dislikes": 224,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"AllOne\",\"inc\",\"inc\",\"getMaxKey\",\"getMinKey\",\"inc\",\"getMaxKey\",\"getMinKey\"]\n[[],[\"hello\"],[\"hello\"],[],[],[\"leet\"],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}], \"six_months\": [{\"timesEncountered\": 14, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 10, \"slug\": \"nextdoor\", \"name\": \"Nextdoor\"}, {\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Doubly-Linked List",
+      "slug": "doubly-linked-list"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class AllOne {\npublic:\n    AllOne() {\n        \n    }\n    \n    void inc(string key) {\n        \n    }\n    \n    void dec(string key) {\n        \n    }\n    \n    string getMaxKey() {\n        \n    }\n    \n    string getMinKey() {\n        \n    }\n};\n\n/**\n * Your AllOne object will be instantiated and called as such:\n * AllOne* obj = new AllOne();\n * obj->inc(key);\n * obj->dec(key);\n * string param_3 = obj->getMaxKey();\n * string param_4 = obj->getMinKey();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class AllOne {\n\n    public AllOne() {\n        \n    }\n    \n    public void inc(String key) {\n        \n    }\n    \n    public void dec(String key) {\n        \n    }\n    \n    public String getMaxKey() {\n        \n    }\n    \n    public String getMinKey() {\n        \n    }\n}\n\n/**\n * Your AllOne object will be instantiated and called as such:\n * AllOne obj = new AllOne();\n * obj.inc(key);\n * obj.dec(key);\n * String param_3 = obj.getMaxKey();\n * String param_4 = obj.getMinKey();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class AllOne:\n\n    def __init__(self):\n        \n\n    def inc(self, key: str) -> None:\n        \n\n    def dec(self, key: str) -> None:\n        \n\n    def getMaxKey(self) -> str:\n        \n\n    def getMinKey(self) -> str:\n        \n\n\n# Your AllOne object will be instantiated and called as such:\n# obj = AllOne()\n# obj.inc(key)\n# obj.dec(key)\n# param_3 = obj.getMaxKey()\n# param_4 = obj.getMinKey()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class AllOne(object):\n\n    def __init__(self):\n        \n\n    def inc(self, key):\n        \"\"\"\n        :type key: str\n        :rtype: None\n        \"\"\"\n        \n\n    def dec(self, key):\n        \"\"\"\n        :type key: str\n        :rtype: None\n        \"\"\"\n        \n\n    def getMaxKey(self):\n        \"\"\"\n        :rtype: str\n        \"\"\"\n        \n\n    def getMinKey(self):\n        \"\"\"\n        :rtype: str\n        \"\"\"\n        \n\n\n# Your AllOne object will be instantiated and called as such:\n# obj = AllOne()\n# obj.inc(key)\n# obj.dec(key)\n# param_3 = obj.getMaxKey()\n# param_4 = obj.getMinKey()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar AllOne = function() {\n    \n};\n\n/** \n * @param {string} key\n * @return {void}\n */\nAllOne.prototype.inc = function(key) {\n    \n};\n\n/** \n * @param {string} key\n * @return {void}\n */\nAllOne.prototype.dec = function(key) {\n    \n};\n\n/**\n * @return {string}\n */\nAllOne.prototype.getMaxKey = function() {\n    \n};\n\n/**\n * @return {string}\n */\nAllOne.prototype.getMinKey = function() {\n    \n};\n\n/** \n * Your AllOne object will be instantiated and called as such:\n * var obj = new AllOne()\n * obj.inc(key)\n * obj.dec(key)\n * var param_3 = obj.getMaxKey()\n * var param_4 = obj.getMinKey()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class AllOne {\n    constructor() {\n        \n    }\n\n    inc(key: string): void {\n        \n    }\n\n    dec(key: string): void {\n        \n    }\n\n    getMaxKey(): string {\n        \n    }\n\n    getMinKey(): string {\n        \n    }\n}\n\n/**\n * Your AllOne object will be instantiated and called as such:\n * var obj = new AllOne()\n * obj.inc(key)\n * obj.dec(key)\n * var param_3 = obj.getMaxKey()\n * var param_4 = obj.getMinKey()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class AllOne {\n\n    public AllOne() {\n        \n    }\n    \n    public void Inc(string key) {\n        \n    }\n    \n    public void Dec(string key) {\n        \n    }\n    \n    public string GetMaxKey() {\n        \n    }\n    \n    public string GetMinKey() {\n        \n    }\n}\n\n/**\n * Your AllOne object will be instantiated and called as such:\n * AllOne obj = new AllOne();\n * obj.Inc(key);\n * obj.Dec(key);\n * string param_3 = obj.GetMaxKey();\n * string param_4 = obj.GetMinKey();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} AllOne;\n\n\nAllOne* allOneCreate() {\n    \n}\n\nvoid allOneInc(AllOne* obj, char* key) {\n    \n}\n\nvoid allOneDec(AllOne* obj, char* key) {\n    \n}\n\nchar* allOneGetMaxKey(AllOne* obj) {\n    \n}\n\nchar* allOneGetMinKey(AllOne* obj) {\n    \n}\n\nvoid allOneFree(AllOne* obj) {\n    \n}\n\n/**\n * Your AllOne struct will be instantiated and called as such:\n * AllOne* obj = allOneCreate();\n * allOneInc(obj, key);\n \n * allOneDec(obj, key);\n \n * char* param_3 = allOneGetMaxKey(obj);\n \n * char* param_4 = allOneGetMinKey(obj);\n \n * allOneFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type AllOne struct {\n    \n}\n\n\nfunc Constructor() AllOne {\n    \n}\n\n\nfunc (this *AllOne) Inc(key string)  {\n    \n}\n\n\nfunc (this *AllOne) Dec(key string)  {\n    \n}\n\n\nfunc (this *AllOne) GetMaxKey() string {\n    \n}\n\n\nfunc (this *AllOne) GetMinKey() string {\n    \n}\n\n\n/**\n * Your AllOne object will be instantiated and called as such:\n * obj := Constructor();\n * obj.Inc(key);\n * obj.Dec(key);\n * param_3 := obj.GetMaxKey();\n * param_4 := obj.GetMinKey();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class AllOne() {\n\n    fun inc(key: String) {\n        \n    }\n\n    fun dec(key: String) {\n        \n    }\n\n    fun getMaxKey(): String {\n        \n    }\n\n    fun getMinKey(): String {\n        \n    }\n\n}\n\n/**\n * Your AllOne object will be instantiated and called as such:\n * var obj = AllOne()\n * obj.inc(key)\n * obj.dec(key)\n * var param_3 = obj.getMaxKey()\n * var param_4 = obj.getMinKey()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass AllOne {\n\n    init() {\n        \n    }\n    \n    func inc(_ key: String) {\n        \n    }\n    \n    func dec(_ key: String) {\n        \n    }\n    \n    func getMaxKey() -> String {\n        \n    }\n    \n    func getMinKey() -> String {\n        \n    }\n}\n\n/**\n * Your AllOne object will be instantiated and called as such:\n * let obj = AllOne()\n * obj.inc(key)\n * obj.dec(key)\n * let ret_3: String = obj.getMaxKey()\n * let ret_4: String = obj.getMinKey()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct AllOne {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl AllOne {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn inc(&self, key: String) {\n        \n    }\n    \n    fn dec(&self, key: String) {\n        \n    }\n    \n    fn get_max_key(&self) -> String {\n        \n    }\n    \n    fn get_min_key(&self) -> String {\n        \n    }\n}\n\n/**\n * Your AllOne object will be instantiated and called as such:\n * let obj = AllOne::new();\n * obj.inc(key);\n * obj.dec(key);\n * let ret_3: String = obj.get_max_key();\n * let ret_4: String = obj.get_min_key();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class AllOne\n    def initialize()\n        \n    end\n\n\n=begin\n    :type key: String\n    :rtype: Void\n=end\n    def inc(key)\n        \n    end\n\n\n=begin\n    :type key: String\n    :rtype: Void\n=end\n    def dec(key)\n        \n    end\n\n\n=begin\n    :rtype: String\n=end\n    def get_max_key()\n        \n    end\n\n\n=begin\n    :rtype: String\n=end\n    def get_min_key()\n        \n    end\n\n\nend\n\n# Your AllOne object will be instantiated and called as such:\n# obj = AllOne.new()\n# obj.inc(key)\n# obj.dec(key)\n# param_3 = obj.get_max_key()\n# param_4 = obj.get_min_key()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class AllOne {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param String $key\n     * @return NULL\n     */\n    function inc($key) {\n        \n    }\n  \n    /**\n     * @param String $key\n     * @return NULL\n     */\n    function dec($key) {\n        \n    }\n  \n    /**\n     * @return String\n     */\n    function getMaxKey() {\n        \n    }\n  \n    /**\n     * @return String\n     */\n    function getMinKey() {\n        \n    }\n}\n\n/**\n * Your AllOne object will be instantiated and called as such:\n * $obj = AllOne();\n * $obj->inc($key);\n * $obj->dec($key);\n * $ret_3 = $obj->getMaxKey();\n * $ret_4 = $obj->getMinKey();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class AllOne {\n\n  AllOne() {\n    \n  }\n  \n  void inc(String key) {\n    \n  }\n  \n  void dec(String key) {\n    \n  }\n  \n  String getMaxKey() {\n    \n  }\n  \n  String getMinKey() {\n    \n  }\n}\n\n/**\n * Your AllOne object will be instantiated and called as such:\n * AllOne obj = AllOne();\n * obj.inc(key);\n * obj.dec(key);\n * String param3 = obj.getMaxKey();\n * String param4 = obj.getMinKey();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class AllOne() {\n\n    def inc(key: String): Unit = {\n        \n    }\n\n    def dec(key: String): Unit = {\n        \n    }\n\n    def getMaxKey(): String = {\n        \n    }\n\n    def getMinKey(): String = {\n        \n    }\n\n}\n\n/**\n * Your AllOne object will be instantiated and called as such:\n * val obj = new AllOne()\n * obj.inc(key)\n * obj.dec(key)\n * val param_3 = obj.getMaxKey()\n * val param_4 = obj.getMinKey()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule AllOne do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec inc(key :: String.t) :: any\n  def inc(key) do\n    \n  end\n\n  @spec dec(key :: String.t) :: any\n  def dec(key) do\n    \n  end\n\n  @spec get_max_key() :: String.t\n  def get_max_key() do\n    \n  end\n\n  @spec get_min_key() :: String.t\n  def get_min_key() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# AllOne.init_()\n# AllOne.inc(key)\n# AllOne.dec(key)\n# param_3 = AllOne.get_max_key()\n# param_4 = AllOne.get_min_key()\n\n# AllOne.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec all_one_init_() -> any().\nall_one_init_() ->\n  .\n\n-spec all_one_inc(Key :: unicode:unicode_binary()) -> any().\nall_one_inc(Key) ->\n  .\n\n-spec all_one_dec(Key :: unicode:unicode_binary()) -> any().\nall_one_dec(Key) ->\n  .\n\n-spec all_one_get_max_key() -> unicode:unicode_binary().\nall_one_get_max_key() ->\n  .\n\n-spec all_one_get_min_key() -> unicode:unicode_binary().\nall_one_get_min_key() ->\n  .\n\n\n%% Your functions will be called as such:\n%% all_one_init_(),\n%% all_one_inc(Key),\n%% all_one_dec(Key),\n%% Param_3 = all_one_get_max_key(),\n%% Param_4 = all_one_get_min_key(),\n\n%% all_one_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define all-one%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; inc : string? -> void?\n    (define/public (inc key)\n      )\n    ; dec : string? -> void?\n    (define/public (dec key)\n      )\n    ; get-max-key : -> string?\n    (define/public (get-max-key)\n      )\n    ; get-min-key : -> string?\n    (define/public (get-min-key)\n      )))\n\n;; Your all-one% object will be instantiated and called as such:\n;; (define obj (new all-one%))\n;; (send obj inc key)\n;; (send obj dec key)\n;; (define param_3 (send obj get-max-key))\n;; (define param_4 (send obj get-min-key))"
+    }
+  ],
+  "solution": {
+    "id": "2448",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview:\n\nWe need to create a specialized data structure that efficiently handles the following operations on strings and their associated counts:\n\n- Increase the count of a specified string.\n- Decrease the count of a specified string.\n- Retrieve the string with the highest count.\n- Retrieve the string with the lowest count.\n\nA key requirement is that each of these operations must be performed in constant time, $Θ(1)$ on average.\n\n![AllOone](../Figures/432/432_allOone.png)\n\n### Approach: Using Doubly Linked List\n\n#### Intuition\n\nTo manage a collection of keys and their frequencies, we need a structure that updates easily and provides quick access to maximum and minimum frequencies. We start with a hashmap to look up each key’s frequency quickly.\n\nHowever, a hashmap alone does not track frequencies well. We need a way to group keys by their frequencies and find keys with the same frequency. We use a doubly linked list for this. Each node represents a frequency and holds all keys linked to that frequency. This setup allows us to add and remove keys efficiently as their frequencies change.\n\nTo handle edge cases better, we include dummy head and tail nodes in the list. These nodes make it easier to manage operations when the list is empty or when we add or remove nodes at the ends.\n\nWhen we increment a key, we first check if it exists in the hashmap. If the key is new, we look at the node after the dummy head. If that node does not have a frequency of 1, we create a new node for frequency 1. We add the key to this node and update the hashmap. If the key already exists, we find its current frequency node and check the next node, which shows the next higher frequency. If that next node is the tail or does not have the expected frequency, we create a new node with the increased frequency. We then move the key to the right node, remove it from the old node, and delete the old node if it becomes empty.\n\nWhen we decrement a key, we first check if it is in the hashmap. If it is, we remove it from its current node. If the key’s frequency is greater than one, we check the previous node. If needed, we create a new node for the decreased frequency and add the key to the appropriate previous node, updating the hashmap. If the frequency is one, we remove the key from the hashmap completely.\n\nTo find the key with the maximum frequency, we return one of the keys from the last node in the list. For the minimum frequency key, we get a key from the first node after the dummy head. If there are no keys, we return an empty string.\n\n#### Algorithm\n\n - `Node` Class:\n  - Each `Node` contains:\n    - `freq`: the frequency of the keys.\n    - `prev`: a pointer to the previous node.\n    - `next`: a pointer to the next node.\n    - `keys`: a set of strings representing the keys with this frequency.\n  - The constructor initializes the `freq`, and sets `prev` and `next` to `nullptr`.\n\n- `AllOne` Class:\n  - Create a dummy head node and a dummy tail node.\n  - Link the dummy head to the dummy tail and vice versa.\n\n  - Incrementing a Key (`inc` function):\n    - If the key already exists:\n      - Retrieve the corresponding `node` from the `map`.\n      - Erase the key from the current `node`.\n      - Check the next node:\n        - If it doesn’t exist or its frequency is not `freq + 1`:\n          - Create a new node with frequency `freq + 1`.\n          - Insert the key into this new node.\n          - Link the new node with the current and next nodes.\n          - Update the `map` to point to the new node.\n        - Otherwise, insert the key into the existing next node.\n      - If the current node has no keys left, remove it.\n      \n    - If the key does not exist:\n      - Check the first node after the head:\n        - If it doesn’t exist or its frequency is greater than `1`:\n          - Create a new node with frequency `1`.\n          - Insert the key into this new node.\n          - Link this new node with the head and the first node.\n        - Otherwise, insert the key into the first node.\n\n  - Decrementing a Key (`dec` function):\n    - If the key does not exist in the `map`, return immediately.\n    - Retrieve the node corresponding to the key.\n    - Erase the key from the current node.\n    - If the frequency is `1`:\n      - Remove the key from the `map`.\n    - Otherwise, check the previous node:\n      - If it doesn’t exist or its frequency is not `freq - 1`:\n        - Create a new node with frequency `freq - 1`.\n        - Insert the key into this new node and link it with the current node and the previous node.\n      - Otherwise, insert the key into the existing previous node.\n    - If the node has no keys left, remove it.\n\n  - Getting the Maximum Key (`getMaxKey` function):\n    - If there are no keys (i.e., the tail's previous node points to the head), return an empty string.\n    - Return one of the keys from the tail's previous node.\n\n  - Getting the Minimum Key (`getMinKey` function):\n    - If there are no keys (i.e., the head's next node points to the tail), return an empty string.\n    - Return one of the keys from the head's next node.\n\n- Removing a Node (`removeNode` function):\n  - Link the previous node to the next node and vice versa to remove the specified node from the linked list.\n  - Delete the removed node to free its memory.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/eRAv3tYP/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"eRAv3tYP\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of unique keys.\n\n- Time complexity: $O(1)$\n\n    The `inc` and `dec` methods both perform operations that are constant time. In `inc`, whether inserting a new key or updating an existing one, the operations primarily involve updating pointers in the linked list and updating the hash map, which are $O(1)$ operations.\n    \n    Similarly, in `dec`, removing a key, updating the hash map, and possibly creating a new node or modifying the previous node also take constant time. Therefore, both operations run in $O(1)$.\n    \n    The `getMaxKey` and `getMinKey` methods return a key from the front or back of the linked list, which is also $O(1)$ since it involves accessing the first or last element of the list.\n\n> This assumes that map operations typically run in \"average-case $Θ(1)$\". However, in the worst case, where many hash collisions occur, these operations can degrade to $O(N)$.\n\n- Space complexity: $O(N)$\n\n    The space used by the `AllOne` data structure is primarily due to the hash map and the linked list of `Node`s. \n\n    The hash map stores pointers to nodes for each unique key, requiring $O(N)$ space where $N$ is the number of unique keys.\n\n    Each `Node` contains a set of `keys`, which can also grow with the number of unique keys in the worst case. Hence, the total space consumed by the linked list of nodes will also contribute to $O(N)$.\n\n---\n\n</br>\n\n<details>\n<summary>Further Thoughts: Understanding Hashmap Time Complexity [Click Here]</summary>\n\n</br>\n\nA common question that always arises is: why are hashmap lookups considered $O(1)$ in terms of time complexity, even in worst-case scenarios? This seems counterintuitive, especially considering that hash collisions can occur.\n\nIf we use a predetermined hash function, the worst-case time for hashmap operations could indeed be $O(n)$. Why? Because someone could craft a set of keys that all hash to the same value, causing a chain of collisions. This would force the lookup to scan through all $n$ elements, resulting in $O(n)$ time complexity.\n\nThe key to achieving $O(1)$ time complexity lies in randomization. Instead of using a fixed hash function like `h(x) = (constant_a . x + constant_b) % constant_prime`, we can use a randomized approach. For example, we might choose random values for the parameters in our hash function each time we initialize our hashmap, such as `h(x) = (random_a . x + random_b) % random_prime`. (This is just one way to construct a hash function; there are many other types you can design.)\n\nThis randomization makes it virtually impossible for someone to predict and exploit the hash function's behavior.\n\nFrom a mathematical perspective, when analyzing the \"expected runtime\" of hashmap operations using a randomized hash function, it averages out to $O(1)$. While some individual operations might take longer due to collisions, the overall average remains constant.\n\nIt's crucial to understand that when we say \"expected worst-case time is $O(1)$\", we're referring to the average over all possible random choices of the hash function, for any given input.\n\nThis isn't just theoretical—it’s applied in practice. For instance, Google’s Abseil library randomizes hash functions at the program start. This helps prevent attacks that exploit hash collisions and makes systems more secure. Randomization also ensures that software doesn't become dependent on a specific hash function. Hardcoding a hash function and never changing it makes future updates to improve security or performance challenging.\n\nThis concept illustrates a broader principle in system design: the power of introducing controlled randomness to improve system performance and security. It also relates to Hyrum's Law, which suggests that all observable behaviors of a system will eventually be depended on by somebody. By randomizing hash functions, we prevent dependencies on specific hash behaviors, making systems more robust and flexible.\n\nAdditionally, when we say \"expected value,\" it's not just a random term; it is formally defined, similar to worst-case and average-case scenarios. You can read the definition and understand the concept here in [probability theory: Expected value](https://en.m.wikipedia.org/wiki/Expected_value).\n\n</details>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

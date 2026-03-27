@@ -1,0 +1,141 @@
+{
+  "questionId": "547",
+  "questionFrontendId": "547",
+  "title": "Number of Provinces",
+  "titleSlug": "number-of-provinces",
+  "difficulty": "Medium",
+  "content": "<p>There are <code>n</code> cities. Some of them are connected, while some are not. If city <code>a</code> is connected directly with city <code>b</code>, and city <code>b</code> is connected directly with city <code>c</code>, then city <code>a</code> is connected indirectly with city <code>c</code>.</p>\n\n<p>A <strong>province</strong> is a group of directly or indirectly connected cities and no other cities outside of the group.</p>\n\n<p>You are given an <code>n x n</code> matrix <code>isConnected</code> where <code>isConnected[i][j] = 1</code> if the <code>i<sup>th</sup></code> city and the <code>j<sup>th</sup></code> city are directly connected, and <code>isConnected[i][j] = 0</code> otherwise.</p>\n\n<p>Return <em>the total number of <strong>provinces</strong></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/12/24/graph1.jpg\" style=\"width: 222px; height: 142px;\" />\n<pre>\n<strong>Input:</strong> isConnected = [[1,1,0],[1,1,0],[0,0,1]]\n<strong>Output:</strong> 2\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/12/24/graph2.jpg\" style=\"width: 222px; height: 142px;\" />\n<pre>\n<strong>Input:</strong> isConnected = [[1,0,0],[0,1,0],[0,0,1]]\n<strong>Output:</strong> 3\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 200</code></li>\n\t<li><code>n == isConnected.length</code></li>\n\t<li><code>n == isConnected[i].length</code></li>\n\t<li><code>isConnected[i][j]</code> is <code>1</code> or <code>0</code>.</li>\n\t<li><code>isConnected[i][i] == 1</code></li>\n\t<li><code>isConnected[i][j] == isConnected[j][i]</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"findCircleNum\",\n  \"params\": [\n    {\n      \"name\": \"isConnected\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"1.5M\", \"totalSubmission\": \"2.1M\", \"totalAcceptedRaw\": 1495477, \"totalSubmissionRaw\": 2132335, \"acRate\": \"70.1%\"}",
+  "likes": 11112,
+  "dislikes": 425,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Connected Components in an Undirected Graph\", \"titleSlug\": \"number-of-connected-components-in-an-undirected-graph\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Robot Return to Origin\", \"titleSlug\": \"robot-return-to-origin\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sentence Similarity\", \"titleSlug\": \"sentence-similarity\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sentence Similarity II\", \"titleSlug\": \"sentence-similarity-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"The Earliest Moment When Everyone Become Friends\", \"titleSlug\": \"the-earliest-moment-when-everyone-become-friends\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Detonate the Maximum Bombs\", \"titleSlug\": \"detonate-the-maximum-bombs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,1,0],[1,1,0],[0,0,1]]",
+    "[[1,0,0],[0,1,0],[0,0,1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 4, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"two-sigma\", \"name\": \"Two Sigma\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}]}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findCircleNum(vector<vector<int>>& isConnected) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findCircleNum(int[][] isConnected) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findCircleNum(self, isConnected: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findCircleNum(self, isConnected):\n        \"\"\"\n        :type isConnected: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} isConnected\n * @return {number}\n */\nvar findCircleNum = function(isConnected) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findCircleNum(isConnected: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindCircleNum(int[][] isConnected) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findCircleNum(int** isConnected, int isConnectedSize, int* isConnectedColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findCircleNum(isConnected [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findCircleNum(isConnected: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findCircleNum(_ isConnected: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_circle_num(is_connected: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} is_connected\n# @return {Integer}\ndef find_circle_num(is_connected)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $isConnected\n     * @return Integer\n     */\n    function findCircleNum($isConnected) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findCircleNum(List<List<int>> isConnected) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findCircleNum(isConnected: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_circle_num(is_connected :: [[integer]]) :: integer\n  def find_circle_num(is_connected) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_circle_num(IsConnected :: [[integer()]]) -> integer().\nfind_circle_num(IsConnected) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-circle-num isConnected)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1848",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given `n` cities, some of which are connected to other cities given by an `n x n` matrix `isConnected`. The connectivity is transitive, which means that if city `a` is directly connected with city `b` and city `b` is directly connected with city `c`, then city `a` is indirectly connected with city `c`.\n\nA province is defined as a group of directly or indirectly connected cities with no other cities outside of the group.\n\nOur task is to return the total number of provinces.\n\n---\n\n### Approach 1: Depth First Search\n\n#### Intuition\n\nWe can see that two cities `x` and `y` belong to the same province if there is a **path** from city `x` to city `y` using the cities that are directly connected.\n\nThis leads us to consider the problem in terms of graphs.\n\nEach city can be thought of as a node in a graph. The roads that directly connect the cities are the edges. If there is a path in this graph connecting cities `x` and `y`, then `x` and `y` are in the same province. Because the graph is undirected, `x` and `y` belong to the same province if and only if they are part of the same graph component.\n\n**The number of required provinces is the number of connected components formed in such a graph.**\n\nTo check the number of connected components in a graph, we can use a graph traversal algorithm like depth first search (DFS).\n\nIn DFS, we use a recursive function to explore nodes as far as possible along each branch. Upon reaching the end of a branch, we backtrack to the next branch and continue exploring.\n\nOnce we encounter an unvisited node, we will take one of its neighbor nodes (if exists) as the next node on this branch. Recursively call the function to take the next node as the 'starting node' and solve the subproblem.\n\n![img](../Figures/547/547-dfs.png)\n\nIf you are new to Depth First Search, please see our [LeetCode Explore Card](https://leetcode.com/explore/featured/card/graph/619/depth-first-search-in-graph/3882/) for more information on it!\n\nTo figure out how many connected components there are in the graph, we first mark all nodes as unvisited.\n\nWe iterate through all the nodes from `0` to `n - 1`, checking whether each `node` has been visited or not. As the graph is undirected, a DFS traversal from `node` would visit all of the nodes in the component to which `node` belongs. Whenever we see an unvisited node while looping through all the nodes, it means we have found a new component. We run the DFS traversal from the unvisited node to traverse over all the nodes in the new component, marking all these nodes as visited to avoid counting a component more than once.\n\nThe number of connected components in the graph is equal to the number of unvisited nodes we encounter (the number of times we start a DFS traversal) in this process.\n\n#### Algorithm\n\n1. Create an integer variable `n` which stores the number of cities.\n2. Create a `visit` array of length `n` to keep track of nodes that have been visited.\n3. Create an integer `numberOfComponents` which stores the number of connected components in the graph. Initialize it to `0`.\n4. Iterate through all of the nodes, and for each node `i` check if it has been visited or not. If node `i` is not visited, we increment `numberOfComponents` by `1` and start a DFS traversal:\n    - We use the `dfs` function to perform the traversal. For each call, pass `node`, `isConnected`, and `visit` as the parameters. We start with node `i`.\n    - We mark `node` as visited.\n    - We iterate over all the values in `isConnected[node]` to get the neighbors of `node`. If `isConnected[node][i] == 1`, one neighbor of `node` is `i` (as we have a direct edge between `node` and `i`). For each neighbor `i` that has not yet been visited, we recursively call `dfs` with `i` as the node.\n5. Return `numberOfComponents`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Z8EQGch8/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"Z8EQGch8\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the number of cities.\n\n* Time complexity: $O(n^2)$.\n    - Initializing the `visit` array takes $O(n)$ time.\n    - The `dfs` function visits each node once, which takes $O(n)$ time because there are $n$ nodes in total. From each `node`, we iterate over all possible edges using `isConnected[node]` which takes $O(n)$ time for each visited node. As a result, it takes a total of $O(n^2)$ time to visit all the nodes and iterate over its edges.\n\n* Space complexity: $O(n)$.\n    - The `visit` array takes $O(n)$ space.\n    - The recursion call stack used by `dfs` can have no more than $n$ elements in the worst-case scenario. It would take up $O(n)$ space in that case. \n\n---\n\n### Approach 2: Breadth First Search\n\n#### Intuition\n\nAs we just have to find the number of connected components in the graph, another method is to use a breadth-first search (BFS).\n\nBFS is an algorithm for traversing or searching a graph. It traverses in a level-wise manner, i.e., all the nodes at the present level (say `l`) are explored before moving on to the nodes at the next level (`l + 1`), where a level's number is the distance from a starting node. BFS is implemented with a queue.\n\nHere is an example with the steps:\n\n![img](../Figures/547/547-bfs.png)\n\nIf you are not familiar with BFS traversal, we suggest you read our [LeetCode Explore Card](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/).\n\n#### Algorithm\n\n1. Create an integer variable `n` which stores the number of cities.\n2. Create a `visit` array of length `n` to keep track of nodes that have been visited.\n3. Create an integer `numberOfComponents` which stores the number of connected components in the graph. Initialize it to `0`.\n4. Iterate through all of the nodes, and for each node `i` check if it has been visited or not. If node `i` is not visited, we increment `numberOfComponents` by `1` and start a BFS traversal:\n    - We use the `bfs` function to perform the traversal. For each call, pass `node`, `isConnected`, and `visit` as the parameters. We start with node `i`.\n    - We create an integer queue `q` and push `node` into it. We also mark `node` as visited.\n    - We now loop until the queue is empty. The queue's first element, `node`, is popped out. We iterate over all the neighbors of `node` where the neighboring nodes are found using `isConnected[node]`. If any `neighbor` has not yet been visited, we mark it as visited and push it into the queue.\n5. Return `numberOfComponents`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/i3nKSSz5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"i3nKSSz5\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the number of cities.\n\n* Time complexity: $O(n^2)$.\n    - Initializing the `visit` array takes $O(n)$ time.\n    - Each queue operation in the BFS algorithm takes $O(1)$ time, and a single node can only be pushed once, leading to $O(n)$ operations for $n$ nodes. As discussed above, we iterate over all possible edges using `isConnected[node]` which takes $O(n)$ time for each visited node, resulting in $O(n^2)$ operations in total in the worst-case scenario while visiting all nodes.\n\n* Space complexity: $O(n)$.\n    - The BFS queue takes $O(n)$ because each node is added, and in the worst-case scenario you could have a linear amount of nodes in the queue at once.\n    - The `visit` array takes $O(n)$ space as well.\n\n---\n\n### Approach 3: Union-find\n\n#### Intuition\n\nAnother approach to solving questions based on graph connectivity is the union-find data structure.\n\nA disjoint-set data structure also called a union–find data structure or merge–find set, is a data structure that stores a collection of disjoint (non-overlapping) sets. Equivalently, it stores a partition of a set into disjoint subsets. It provides operations for adding new sets, merging sets (replacing them by their union), and finding a representative member of a set. It implements two useful operations:\n\n1. `Find`: Determine which subset a particular element is in. This can be used to determine if two elements are in the same subset.\n2. `Union`: Join two subsets into a single subset.\n\nIf you are new to Union-Find, we suggest you read our [LeetCode Explore Card](https://leetcode.com/explore/learn/card/graph/618/disjoint-set/3881/). We will not talk about implementation details in this article, but only about the interface to the data structure.\n\nOur task, as with the previous approaches, is to count the number of connected components formed in the graph with cities acting as nodes and an edge between directly connected cities.\n\nWe initialize all nodes as separate components in the union-find data structure. We create a variable called `numberOfComponents` to count the number of connected components in the graph and initialize it to the number to the nodes.\n\nWe iterate over all the edges, decrementing `numberOfComponents` by `1` for each edge whenever two different components are merged into a single one using that edge.\n\n#### Algorithm\n\n1. Create an integer variable `n` which stores the number of cities.\n2. Create an instance of `UnionFind` of size `n`.\n3. Create an integer variable `numberOfComponents` to count the number of connected components in the graph. We initialize it to `n` as each node initially behaves as a separate component.\n4. We iterate over `isConnected` using two loops, outer loop running from `i = 0` to `n - 1` and an inner loop running from `j = i + 1` to `n - 1`. For each pair of directly connected cities `i` and `j`, i.e., `isConnected[i][j] == 1`, we use the `find` operation to determine which components both of them belong to. If they belong to different components, i.e., `find(i)!= find(j)`, we perform a `union` operation on both nodes, combining the two different connected components into a single connected component. We also reduce `numberOfComponents` by one as we just merged two different components. We don't do anything if `i` and `j` already belong to the same component.\n5. Return `numberOfComponents`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/bLutVW9r/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bLutVW9r\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the number of cities.\n\n* Time complexity: $O(n^2)$.\n    - We need $O(n^2)$ time to iterate over all the values in `isConnected`.\n    - For $T$ operations, the amortized time complexity of the union-find algorithm (using path compression with union by rank) is $O(alpha(T))$. Here, $\\alpha(T)$ is the inverse Ackermann function that grows so slowly, that it doesn't exceed $4$ for all reasonable $T$ (approximately $ T < 10^{600}$). You can read more about the complexity of union-find [here](https://en.wikipedia.org/wiki/Disjoint-set_data_structure#Time_complexity).  Because the function grows so slowly, we consider it to be $O(1)$.\n    - Initializing `UnionFind` takes $O(n)$ time beacuse we are initializing the `parent` and `rank` arrays of size `n` each.\n    - We iterate through every edge and use the `find` operation to find the component of nodes connected by each edge. It takes $O(1)$ per operation and takes $O(e)$ time for all the $e$ edges. We can have a maximum of $O(n^2)$ edges in between $n$ nodes (each node is connected to other), so it would take $O(n^2)$ time. If nodes from different components are connected by an edge, we also perform `union` of the nodes, which takes $O(1)$ time per operation. In the worst-case scenario, it may be called $O(n)$ times to connect all the components to form a connected graph with only one component.\n\n* Space complexity: $O(n)$.\n    - We are using the `parent` and `rank` arrays, both of which require $O(n)$ space each.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

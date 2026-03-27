@@ -1,0 +1,137 @@
+{
+  "questionId": "423",
+  "questionFrontendId": "423",
+  "title": "Reconstruct Original Digits from English",
+  "titleSlug": "reconstruct-original-digits-from-english",
+  "difficulty": "Medium",
+  "content": "<p>Given a string <code>s</code> containing an out-of-order English representation of digits <code>0-9</code>, return <em>the digits in <strong>ascending</strong> order</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> s = \"owoztneoer\"\n<strong>Output:</strong> \"012\"\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> s = \"fviefuro\"\n<strong>Output:</strong> \"45\"\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s[i]</code> is one of the characters <code>[&quot;e&quot;,&quot;g&quot;,&quot;f&quot;,&quot;i&quot;,&quot;h&quot;,&quot;o&quot;,&quot;n&quot;,&quot;s&quot;,&quot;r&quot;,&quot;u&quot;,&quot;t&quot;,&quot;w&quot;,&quot;v&quot;,&quot;x&quot;,&quot;z&quot;]</code>.</li>\n\t<li><code>s</code> is <strong>guaranteed</strong> to be valid.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{ \r\n  \"name\": \"originalDigits\",\r\n  \"params\": [\r\n    { \r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"99.2K\", \"totalSubmission\": \"187.9K\", \"totalAcceptedRaw\": 99174, \"totalSubmissionRaw\": 187869, \"acRate\": \"52.8%\"}",
+  "likes": 894,
+  "dislikes": 2808,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"owoztneoer\"",
+    "\"fviefuro\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"wix\", \"name\": \"Wix\"}, {\"timesEncountered\": 2, \"slug\": \"netapp\", \"name\": \"NetApp\"}, {\"timesEncountered\": 2, \"slug\": \"kickdrum\", \"name\": \"Kickdrum\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string originalDigits(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String originalDigits(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def originalDigits(self, s: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def originalDigits(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {string}\n */\nvar originalDigits = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function originalDigits(s: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string OriginalDigits(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* originalDigits(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func originalDigits(s string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun originalDigits(s: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func originalDigits(_ s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn original_digits(s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {String}\ndef original_digits(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return String\n     */\n    function originalDigits($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String originalDigits(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def originalDigits(s: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec original_digits(s :: String.t) :: String.t\n  def original_digits(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec original_digits(S :: unicode:unicode_binary()) -> unicode:unicode_binary().\noriginal_digits(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (original-digits s)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "691",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Hashmap\n\n**Intuition**\n\nThe naive approach would be to construct as many `\"zero\"`s as it's possible from letters available in the input string, then as many `\"one\"`s as it's possible, etc. The problem is that the letters `\"o\"`, `\"n\"`, `\"e\"` could be present as well in the other numbers which mean that the straightforward approach could be misleading.\n\n![compute](../Figures/423/misleading.png)\n\nHence the idea is to look for something unique. One could notice all even numbers contain a unique letter :\n\n* The letter \"z\" is present only in \"zero\".\n* The letter \"w\" is present only in \"two\".\n* The letter \"u\" is present only in \"four\".\n* The letter \"x\" is present only in \"six\".\n* The letter \"g\" is present only in \"eight\".\n\n> Hence there is a good way to count even numbers.\n\nThat is actually the key to how to count `3`s, `5`s, and `7`s since some letters are present only in one odd and one even number (and all even numbers have already been counted) :\n\n* The letter \"h\" is present only in \"three\" and \"eight\".\n* The letter \"f\" is present only in \"five\" and \"four\".\n* The letter \"s\" is present only in \"seven\" and \"six\".\n\nNow one needs to count `9`s and `1`s only, and the logic is basically the same :\n\n* Letter \"i\" is present in \"nine\", \"five\", \"six\", and \"eight\".\n* Letter \"n\" is present in \"one\", \"seven\", and \"nine\".\n\n**Implementation**\n\n!?!../Documents/423_LIS.json:1000,626!?!\n\n<iframe src=\"https://leetcode.com/playground/DAibWhUq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DAibWhUq\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ where `N` is the number of characters in the input string. $$\\mathcal{O}(N)$$ time is needed to compute hashmap `count`\n\"letter -> its frequency in the input string\". Then we deal with a data structure `out` which contains `10` elements only and all operations are done in a constant time.\n \n* Space complexity: $$\\mathcal{O}(1)$$. `count` contains a constant number of elements since the input string contains only lowercase English letters, and `out` contains not more than `10` elements.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

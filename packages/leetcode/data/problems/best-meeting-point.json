@@ -1,0 +1,143 @@
+{
+  "questionId": "296",
+  "questionFrontendId": "296",
+  "title": "Best Meeting Point",
+  "titleSlug": "best-meeting-point",
+  "difficulty": "Hard",
+  "content": "<p>Given an <code>m x n</code> binary grid <code>grid</code> where each <code>1</code> marks the home of one friend, return <em>the minimal <strong>total travel distance</strong></em>.</p>\n\n<p>The <strong>total travel distance</strong> is the sum of the distances between the houses of the friends and the meeting point.</p>\n\n<p>The distance is calculated using <a href=\"http://en.wikipedia.org/wiki/Taxicab_geometry\" target=\"_blank\">Manhattan Distance</a>, where <code>distance(p1, p2) = |p2.x - p1.x| + |p2.y - p1.y|</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/14/meetingpoint-grid.jpg\" style=\"width: 413px; height: 253px;\" />\n<pre>\n<strong>Input:</strong> grid = [[1,0,0,0,1],[0,0,0,0,0],[0,0,1,0,0]]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> Given three friends living at (0,0), (0,4), and (2,2).\nThe point (0,2) is an ideal meeting point, as the total travel distance of 2 + 2 + 2 = 6 is minimal.\nSo return 6.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[1,1]]\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 200</code></li>\n\t<li><code>grid[i][j]</code> is either <code>0</code> or <code>1</code>.</li>\n\t<li>There will be <strong>at least two</strong> friends in the <code>grid</code>.</li>\n</ul>\n",
+  "hints": [
+    "Try to solve it in one dimension first. How can this solution apply to the two dimension case?"
+  ],
+  "metaData": "{\r\n  \"name\": \"minTotalDistance\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"grid\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"97.2K\", \"totalSubmission\": \"158.3K\", \"totalAcceptedRaw\": 97203, \"totalSubmissionRaw\": 158253, \"acRate\": \"61.4%\"}",
+  "likes": 1215,
+  "dislikes": 108,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Shortest Distance from All Buildings\", \"titleSlug\": \"shortest-distance-from-all-buildings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Moves to Equal Array Elements II\", \"titleSlug\": \"minimum-moves-to-equal-array-elements-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,0,0,0,1],[0,0,0,0,0],[0,0,1,0,0]]",
+    "[[1,1]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 3, \"slug\": \"snapchat\", \"name\": \"Snap\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"applied-intuition\", \"name\": \"Applied Intuition\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minTotalDistance(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minTotalDistance(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minTotalDistance(self, grid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minTotalDistance(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number}\n */\nvar minTotalDistance = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minTotalDistance(grid: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinTotalDistance(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minTotalDistance(int** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minTotalDistance(grid [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minTotalDistance(grid: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minTotalDistance(_ grid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_total_distance(grid: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer}\ndef min_total_distance(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer\n     */\n    function minTotalDistance($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minTotalDistance(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minTotalDistance(grid: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_total_distance(grid :: [[integer]]) :: integer\n  def min_total_distance(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_total_distance(Grid :: [[integer()]]) -> integer().\nmin_total_distance(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-total-distance grid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "16",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach #1 (Breadth-first Search) [Time Limit Exceeded]\n\nA brute force approach is to evaluate all possible meeting points in the grid. We could apply breadth-first search originating from each of the points.\n\nWhile inserting a point into the queue, we need to record the distance of that point from the meeting point.  Also, we need an extra `visited` table to record which point had already been visited to avoid being inserted into the queue again.\n\n\n<iframe src=\"https://leetcode.com/playground/AM4Nf9Ke/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"AM4Nf9Ke\"></iframe>\n\n**Complexity analysis**\n\n* Time complexity : $$O(m^2n^2)$$.\nFor each point in the $$m \\times n$$ size grid, the breadth-first search takes at most $$m \\times n$$ steps to reach all points. Therefore the time complexity is $$O(m^2n^2)$$.\n\n* Space complexity : $$O(mn)$$.\nThe `visited` table consists of $$m \\times n$$ elements map to each point in the grid. We insert at most $$m \\times n$$ points into the queue.\n\n---\n### Approach #2 (Manhattan Distance Formula) [Time Limit Exceeded]\n\nYou may notice that breadth-first search is unnecessary. You can just calculate the Manhattan distance using the formula:\n\n$$\ndistance(p1, p2) = \\left | p2.x - p1.x \\right | + \\left | p2.y - p1.y \\right |\n$$\n\n<iframe src=\"https://leetcode.com/playground/hkbREMpy/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"hkbREMpy\"></iframe>\n\n**Complexity analysis**\n\n* Time complexity : $$O(m^2n^2)$$.\nAssume that $$k$$ is the total number of houses. For each point in the $$m \\times n$$ size grid, we calculate the manhattan distance in $$O(k)$$. Therefore the time complexity is $$O(mnk)$$. But do note that there could be up to $$m \\times n$$ houses, making the worst case time complexity to be $$O(m^2n^2)$$.\n\n* Space complexity : $$O(mn)$$.\n\n---\n### Approach #3 (Sorting) [Accepted]\n\nFinding the best meeting point in a 2D grid seems difficult. Let us take a step back and solve the 1D case which is much simpler. Notice that the Manhattan distance is the sum of two independent variables. Therefore, once we solve the 1D case, we can solve the 2D case as two independent 1D problems.\n\nLet us look at some 1D examples below:\n\n    Case #1: 1-0-0-0-1\n\n    Case #2: 0-1-0-1-0\n\nWe know the best meeting point must be located somewhere between the left-most and right-most point. For the above two cases, we would select the center point at $$x = 2$$ as the best meeting point. How about choosing the mean of all points as the meeting point?\n\nConsider this case:\n\n    Case #3: 1-0-0-0-0-0-0-1-1\n\n\n\nUsing the mean gives us $$\\bar{x} = \\frac{0 + 7 + 8}{3} = 5$$ as the meeting point. The total distance is $$10$$.\n\nBut the best meeting point should be at $$x = 7$$ and the total distance is $$8$$.\n\nYou may argue that the mean is *close* to the optimal point. But imagine a larger case with many 1's congregating on the right side and just a single 1 on the left-most side. Using the mean as the meeting point would be far from optimal.\n\nBesides mean, what is a better way to represent the distribution of points? Would median be a better representation? Indeed. In fact, the median *must* be the optimal meeting point.\n\n    Case #4: 1-1-0-0-1\n\nTo see why this is so, let us look at case #4 above and choose the median $$x = 1$$ as our initial meeting point. Assume that the total distance traveled is *d*. Note that we have equal number of points distributed to its left and to its right. Now let us move one step to its right where $$x = 2$$ and notice how the distance changes accordingly.\n\nSince there are two points to the left of $$x = 2$$, we add $$2 * (+1)$$ to *d*. And *d* is offset by –1 since there is one point to the right. This means the distance had overall increased by 1.\n\nTherefore, it is clear that:\n\n>As long as there is equal number of points to the left and right of the meeting point, the total distance is minimized.\n\n    Case #5: 1-1-0-0-1-1\n\nOne may think that the optimal meeting point must fall on one of the 1's. This is true for cases with odd number of 1's, but not necessarily true when there are even number of 1's, just like case #5 does. You can choose any of the $$x = 1$$ to $$x = 4$$ points and the total distance is minimized. Why?\n\nThe implementation is direct. First we collect both the row and column coordinates, sort them and select their middle elements. Then we calculate the total distance as the sum of two independent 1D problems.\n\n\n<iframe src=\"https://leetcode.com/playground/43zgaQfx/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"43zgaQfx\"></iframe>\n\nNote that in the code above we do not need to sort *rows*, why?\n\n**Complexity analysis**\n\n* Time complexity : $$O(mn + n \\log n)$$.\nSince there could be at most $$m \\times n$$ points, therefore the time complexity is $$O(mn + n \\log n)$$ due to sorting. Only the columns are sorted, using collections.sort, which has the time complexity $O(n \\log n)$.\n\n* Space complexity : $$O(mn)$$.\n\n---\n### Approach #4 (Collect Coordinates in Sorted Order) [Accepted]\n\nWe could use the [Selection algorithm](https://en.wikipedia.org/wiki/Selection_algorithm) to select the median in $$O(mn)$$ time, but there is an easier way. Notice that we can collect both the row and column coordinates in sorted order.\n\n\n<iframe src=\"https://leetcode.com/playground/Q3Vag83a/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Q3Vag83a\"></iframe>\n\n<br>\nYou can calculate the distance without knowing the median using a two pointer approach. This neat approach is inspired by [@larrywang2014's solution](https://leetcode.com/discuss/65336/14ms-java-solution).\n\n\n<iframe src=\"https://leetcode.com/playground/JjHq4B7U/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"JjHq4B7U\"></iframe>\n\n**Complexity analysis**\n\n* Time complexity : $$O(mn)$$.\n\n* Space complexity : $$O(mn)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

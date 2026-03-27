@@ -1,0 +1,142 @@
+{
+  "questionId": "568",
+  "questionFrontendId": "568",
+  "title": "Maximum Vacation Days",
+  "titleSlug": "maximum-vacation-days",
+  "difficulty": "Hard",
+  "content": "<p>LeetCode wants to give one of its best employees the option to travel among <code>n</code> cities to collect algorithm problems. But all work and no play makes Jack a dull boy, you could take vacations in some particular cities and weeks. Your job is to schedule the traveling to maximize the number of vacation days you could take, but there are certain rules and restrictions you need to follow.</p>\n\n<p>Rules and restrictions:</p>\n\n<ol>\n\t<li>You can only travel among <code>n</code> cities, represented by indexes from <code>0</code> to <code>n - 1</code>. Initially, you are in the city indexed <code>0</code> on <strong>Monday</strong>.</li>\n\t<li>The cities are connected by flights. The flights are represented as an <code>n x n</code> matrix (not necessarily symmetrical), called <code>flights</code> representing the airline status from the city <code>i</code> to the city <code>j</code>. If there is no flight from the city <code>i</code> to the city <code>j</code>, <code>flights[i][j] == 0</code>; Otherwise, <code>flights[i][j] == 1</code>. Also, <code>flights[i][i] == 0</code> for all <code>i</code>.</li>\n\t<li>You totally have <code>k</code> weeks (each week has <strong>seven days</strong>) to travel. You can only take flights at most once per day and can only take flights on each week&#39;s Monday morning. Since flight time is so short, we do not consider the impact of flight time.</li>\n\t<li>For each city, you can only have restricted vacation days in different weeks, given an <code>n x k</code> matrix called <code>days</code> representing this relationship. For the value of <code>days[i][j]</code>, it represents the maximum days you could take a vacation in the city <code>i</code> in the week <code>j</code>.</li>\n\t<li>You could stay in a city beyond the number of vacation days, but you should work on the extra days, which will not be counted as vacation days.</li>\n\t<li>If you fly from city <code>A</code> to city <code>B</code> and take the vacation on that day, the deduction towards vacation days will count towards the vacation days of city <code>B</code> in that week.</li>\n\t<li>We do not consider the impact of flight hours on the calculation of vacation days.</li>\n</ol>\n\n<p>Given the two matrices <code>flights</code> and <code>days</code>, return <em>the maximum vacation days you could take during </em><code>k</code><em> weeks</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> flights = [[0,1,1],[1,0,1],[1,1,0]], days = [[1,3,1],[6,0,3],[3,3,3]]\n<strong>Output:</strong> 12\n<strong>Explanation:</strong>\nOne of the best strategies is:\n1st week : fly from city 0 to city 1 on Monday, and play 6 days and work 1 day.\n(Although you start at city 0, we could also fly to and start at other cities since it is Monday.)\n2nd week : fly from city 1 to city 2 on Monday, and play 3 days and work 4 days.\n3rd week : stay at city 2, and play 3 days and work 4 days.\nAns = 6 + 3 + 3 = 12.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> flights = [[0,0,0],[0,0,0],[0,0,0]], days = [[1,1,1],[7,7,7],[7,7,7]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong>\nSince there are no flights that enable you to move to another city, you have to stay at city 0 for the whole 3 weeks. \nFor each week, you only have one day to play and six days to work.\nSo the maximum number of vacation days is 3.\nAns = 1 + 1 + 1 = 3.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> flights = [[0,1,1],[1,0,1],[1,1,0]], days = [[7,0,0],[0,7,0],[0,0,7]]\n<strong>Output:</strong> 21\n<strong>Explanation:</strong>\nOne of the best strategies is:\n1st week : stay at city 0, and play 7 days.\n2nd week : fly from city 0 to city 1 on Monday, and play 7 days.\n3rd week : fly from city 1 to city 2 on Monday, and play 7 days.\nAns = 7 + 7 + 7 = 21\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == flights.length</code></li>\n\t<li><code>n == flights[i].length</code></li>\n\t<li><code>n == days.length</code></li>\n\t<li><code>k == days[i].length</code></li>\n\t<li><code>1 &lt;= n, k &lt;= 100</code></li>\n\t<li><code>flights[i][j]</code> is either <code>0</code> or <code>1</code>.</li>\n\t<li><code>0 &lt;= days[i][j] &lt;= 7</code></li>\n</ul>\n",
+  "hints": [
+    "First try to understand the problem carefully and then take some example and solve it on a paper.",
+    "Can you interpret the given input as a graph? Which graph traversal technique is suitable here?",
+    "Can we use some space to avoid redundant function calls?"
+  ],
+  "metaData": "{\r\n  \"name\": \"maxVacationDays\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"flights\",\r\n      \"type\": \"integer[][]\"\r\n    },\r\n    {\r\n      \"name\": \"days\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"41.3K\", \"totalSubmission\": \"88.4K\", \"totalAcceptedRaw\": 41341, \"totalSubmissionRaw\": 88431, \"acRate\": \"46.7%\"}",
+  "likes": 584,
+  "dislikes": 121,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Cheapest Flights Within K Stops\", \"titleSlug\": \"cheapest-flights-within-k-stops\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,1,1],[1,0,1],[1,1,0]]\n[[1,3,1],[6,0,3],[3,3,3]]",
+    "[[0,0,0],[0,0,0],[0,0,0]]\n[[1,1,1],[7,7,7],[7,7,7]]",
+    "[[0,1,1],[1,0,1],[1,1,0]]\n[[7,0,0],[0,7,0],[0,0,7]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"datadog\", \"name\": \"Datadog\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxVacationDays(vector<vector<int>>& flights, vector<vector<int>>& days) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxVacationDays(int[][] flights, int[][] days) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxVacationDays(self, flights: List[List[int]], days: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxVacationDays(self, flights, days):\n        \"\"\"\n        :type flights: List[List[int]]\n        :type days: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} flights\n * @param {number[][]} days\n * @return {number}\n */\nvar maxVacationDays = function(flights, days) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxVacationDays(flights: number[][], days: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxVacationDays(int[][] flights, int[][] days) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxVacationDays(int** flights, int flightsSize, int* flightsColSize, int** days, int daysSize, int* daysColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxVacationDays(flights [][]int, days [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxVacationDays(flights: Array<IntArray>, days: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxVacationDays(_ flights: [[Int]], _ days: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_vacation_days(flights: Vec<Vec<i32>>, days: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} flights\n# @param {Integer[][]} days\n# @return {Integer}\ndef max_vacation_days(flights, days)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $flights\n     * @param Integer[][] $days\n     * @return Integer\n     */\n    function maxVacationDays($flights, $days) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxVacationDays(List<List<int>> flights, List<List<int>> days) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxVacationDays(flights: Array[Array[Int]], days: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_vacation_days(flights :: [[integer]], days :: [[integer]]) :: integer\n  def max_vacation_days(flights, days) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_vacation_days(Flights :: [[integer()]], Days :: [[integer()]]) -> integer().\nmax_vacation_days(Flights, Days) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-vacation-days flights days)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "122",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach #1 Using Depth First Search [Time Limit Exceeded]\n\n**Algorithm**\n\nIn the brute force approach, we make use of a recursive function $$dfs$$, which returns the number of vacations which can be taken startring from $$cur\\_city$$ as the current city and $$weekno$$ as the starting week.\n\nIn every function call, we traverse over all the cities(represented by $$i$$) and find out all the cities which are connected to the current city, $$cur\\_city$$. Such a city is represented by a 1 at the corresponding $$flights[cur\\_city][i]$$ position. Now, for the current city, we can either travel to the city which is connected to it or we can stay in the same city. Let's say the city to which we change our location from the current city be represented by $$j$$. Thus, after changing the city, we need to find the number of vacations which we can take from the new city as the current city and the incremented week as the new starting week. This count of vacations can be represented as: $$days[j][weekno] + dfs(flights, days, j, weekno + 1)$$.\n\nThus, for the current city, we obtain a number of vacations by choosing different cities as the next cities. Out of all of these vacations coming from different cities, we can find out the maximum number of vacations that need to be returned for every $$dfs$$ function call.\n\n<iframe src=\"https://leetcode.com/playground/8ouYLNFV/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"8ouYLNFV\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^k)$$. Depth of Recursion tree will be $$k$$ and each node contains $$n$$ branches in the worst case. Here $$n$$ represents the number of cities and $$k$$ is the total number of weeks.\n\n* Space complexity : $$O(k)$$. The depth of the recursion tree is $$k$$.\n\n---\n\n### Approach #2 Using DFS with memoization [Accepted]:\n\n**Algorithm**\n\nIn the last approach, we make a number of redundant function calls, since the same function call of the form `dfs(flights, days, cur_city, weekno)` can be made multiple number of times with the same $$cur\\_city$$ and $$weekno$$. These redundant calls can be pruned off if we make use of memoization.\n\nIn order to remove these redundant function calls, we make use of a 2-D memoization array $$memo$$. In this array, $$memo[i][j]$$ is used to store the number of vacactions that can be taken using the $$i^{th}$$ city as the current city and the $$j^{th}$$ week as the starting week. This result is equivalent to that obtained using the function call: `dfs(flights, days, i, j)`. Thus, if the $$memo$$ entry corresponding to the current function call already contains a valid value, we can directly obtain the result from this array instead of going deeper into recursion.\n\n<iframe src=\"https://leetcode.com/playground/aoygCX5A/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"aoygCX5A\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^2k)$$. $$memo$$ array of size $$n*k$$ is filled and each cell filling takes O(n) time .\n\n* Space complexity : $$O(n*k)$$. $$memo$$ array of size $$n*k$$ is used. Here $$n$$ represents the number of cities and $$k$$ is the total number of weeks.\n\n---\n\n### Approach #3 Using 2-D Dynamic Programming [Accepted]:\n\n**Algorithm**\n\nThe idea behind this approach is as follows. The maximum number of vacations that can be taken given we start from the $$i^{th}$$ city in the $$j^{th}$$ week is not dependent on the the vacations that can be taken in the earlier weeks. It only depends on the number of vacations that can be taken in the upcoming weeks and also on the connections between the various cities($$flights$$).\n\nTherefore, we can make use of a 2-D $$dp$$, in which $$dp[i][k]$$ represents the maximum number of vacations which can be taken starting from the $$i^{th}$$ city in the $$k^{th}$$ week. This $$dp$$ is filled in the backward manner(in terms of the week number).\n\nWhile filling up the entry for $$dp[i][k]$$, we need to consider the following cases:\n\n1. We start from the $$i^{th}$$ city in the $$k^{th}$$ week and stay in the same city for the $$(k+1)^{th}$$ week. Thus, the factor to be considered for updating the $$dp[i][k]$$ entry will be given by: $$days[i][k] + dp[i, k+1]$$.\n\n2. We start from the $$i^{th}$$ city in the $$k^{th}$$ week and move to the $$j^{th}$$ city in the $$(k+1)^{th}$$ week. But, for changing the city in this manner, we need to be able to move from the $$i^{th}$$ city to the $$j^{th}$$ city i.e. $$flights[i][j]$$ should be 1 for such $$i$$ and $$j$$.\n\nBut, while changing the city from $$i^{th}$$ city in the $$k^{th}$$ week, we can move to any $$j^{th}$$ city such that a connection exists between the $$i^{th}$$ city and the $$j^{th}$$ city i.e. $$flights[i][j]=1$$. But, in order to maximize the number of vacations that can be taken starting from the $$i^{th}$$ city in the $$k^{th}$$ week, we need to choose the destination city that leads to maximum no. of vacations. Thus, the factor to be considered here, is given by: $$\\text{max}days[j][k] + days[j, k+1]$$, for all $$i$$, $$j$$, $$k$$ satisfying $$flights[i][j] = 1$$, $$0 &leq; i,j &leq; n$$, where $$n$$ refers to the number of cities.\n\nAt the end, we need to find the maximum out of these two factors to update the $$dp[i][k]$$ value.\n\nIn order to fill the $$dp$$ values, we start by filling the entries for the last week and proceed backwards. At last, the value of $$dp[0][0]$$ gives the required result.\n\nThe following animation illustrates the process of filling the $$dp$$ array.\n\n!?!../Documents/568_Maximum_Vacation_Days.json:1000,563!?!\n\nBelow code is inspired by [@hackerhuang](http://leetcode.com/hackerhuang)\n\n<iframe src=\"https://leetcode.com/playground/ecd9NkNY/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"ecd9NkNY\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^2k)$$. $$dp$$ array of size $$n*k$$ is filled and each cell filling takes O(n) time. Here $$n$$ represents the number of cities and $$k$$ is the total number of weeks.\n\n* Space complexity : $$O(n*k)$$. $$dp$$ array of size $$n*k$$ is used.\n\n---\n\n### Approach #4 Using 1-D Dynamic Programming [Accepted]:\n\n**Algorithm**\n\nAs can be observed in the previous approach, in order to update the $$dp$$ entries for $$i^{th}$$ week, we only need the values corresponding to $$(i+1)^{th}$$ week along with the $$days$$ and $$flights$$ array. Thus, instead of using a 2-D $$dp$$ array, we can omit the dimension corresponding to the weeks and make use of a 1-D $$dp$$ array.\n\nNow, $$dp[i]$$ is used to store the number of vacations that provided that we start from the $$i^{th}$$ city in the current week. The procedure remains the same as that of the previous approach, except that we make the updations in the same $$dp$$ row again and again. In order to store the $$dp$$ values corresponding to the current week temporarily, we make use of a $$temp$$ array so that the original $$dp$$ entries corresponding to $$week+1$$ aren't altered.\n\n<iframe src=\"https://leetcode.com/playground/WBzLLgF3/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"WBzLLgF3\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^2k)$$. $$dp$$ array of size $$n*k$$ is filled and each cell filling takes O(n) time. Here $$n$$ represents the number of cities and $$k$$ is the total number of weeks.\n\n* Space complexity : $$O(k)$$. $$dp$$ array of size $$nk$$ is used.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

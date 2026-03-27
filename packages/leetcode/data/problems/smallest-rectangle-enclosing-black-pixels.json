@@ -1,0 +1,145 @@
+{
+  "questionId": "302",
+  "questionFrontendId": "302",
+  "title": "Smallest Rectangle Enclosing Black Pixels",
+  "titleSlug": "smallest-rectangle-enclosing-black-pixels",
+  "difficulty": "Hard",
+  "content": "<p>You are given an <code>m x n</code> binary matrix <code>image</code> where <code>0</code> represents a white pixel and <code>1</code> represents a black pixel.</p>\n\n<p>The black pixels are connected (i.e., there is only one black region). Pixels are connected horizontally and vertically.</p>\n\n<p>Given two integers <code>x</code> and <code>y</code> that represents the location of one of the black pixels, return <em>the area of the smallest (axis-aligned) rectangle that encloses all black pixels</em>.</p>\n\n<p>You must write an algorithm with less than <code>O(mn)</code> runtime complexity</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/14/pixel-grid.jpg\" style=\"width: 333px; height: 253px;\" />\n<pre>\n<strong>Input:</strong> image = [[&quot;0&quot;,&quot;0&quot;,&quot;1&quot;,&quot;0&quot;],[&quot;0&quot;,&quot;1&quot;,&quot;1&quot;,&quot;0&quot;],[&quot;0&quot;,&quot;1&quot;,&quot;0&quot;,&quot;0&quot;]], x = 0, y = 2\n<strong>Output:</strong> 6\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> image = [[&quot;1&quot;]], x = 0, y = 0\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == image.length</code></li>\n\t<li><code>n == image[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 100</code></li>\n\t<li><code>image[i][j]</code> is either <code>&#39;0&#39;</code> or <code>&#39;1&#39;</code>.</li>\n\t<li><code>0 &lt;= x &lt; m</code></li>\n\t<li><code>0 &lt;= y &lt; n</code></li>\n\t<li><code>image[x][y] == &#39;1&#39;.</code></li>\n\t<li>The black pixels in the <code>image</code> only form <strong>one component</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"minArea\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"image\",\r\n      \"type\": \"character[][]\"\r\n    },\r\n    {\r\n      \"name\": \"x\",\r\n      \"type\": \"integer\"\r\n    },\r\n    {\r\n      \"name\": \"y\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"57.2K\", \"totalSubmission\": \"94K\", \"totalAcceptedRaw\": 57171, \"totalSubmissionRaw\": 93958, \"acRate\": \"60.8%\"}",
+  "likes": 564,
+  "dislikes": 107,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Find the Minimum Area to Cover All Ones II\", \"titleSlug\": \"find-the-minimum-area-to-cover-all-ones-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Minimum Area to Cover All Ones I\", \"titleSlug\": \"find-the-minimum-area-to-cover-all-ones-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[\"0\",\"0\",\"1\",\"0\"],[\"0\",\"1\",\"1\",\"0\"],[\"0\",\"1\",\"0\",\"0\"]]\n0\n2",
+    "[[\"1\"]]\n0\n0"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minArea(vector<vector<char>>& image, int x, int y) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minArea(char[][] image, int x, int y) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minArea(self, image: List[List[str]], x: int, y: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minArea(self, image, x, y):\n        \"\"\"\n        :type image: List[List[str]]\n        :type x: int\n        :type y: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {character[][]} image\n * @param {number} x\n * @param {number} y\n * @return {number}\n */\nvar minArea = function(image, x, y) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minArea(image: string[][], x: number, y: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinArea(char[][] image, int x, int y) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minArea(char** image, int imageSize, int* imageColSize, int x, int y) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minArea(image [][]byte, x int, y int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minArea(image: Array<CharArray>, x: Int, y: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minArea(_ image: [[Character]], _ x: Int, _ y: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_area(image: Vec<Vec<char>>, x: i32, y: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Character[][]} image\n# @param {Integer} x\n# @param {Integer} y\n# @return {Integer}\ndef min_area(image, x, y)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[][] $image\n     * @param Integer $x\n     * @param Integer $y\n     * @return Integer\n     */\n    function minArea($image, $x, $y) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minArea(List<List<String>> image, int x, int y) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minArea(image: Array[Array[Char]], x: Int, y: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_area(image :: [[char]], x :: integer, y :: integer) :: integer\n  def min_area(image, x, y) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_area(Image :: [[char()]], X :: integer(), Y :: integer()) -> integer().\nmin_area(Image, X, Y) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-area image x y)\n  (-> (listof (listof char?)) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "72",
+    "content": "[TOC]\n\n## Summary\n\nThis article is for intermediate readers. It introduces the following ideas:\nDepth First Search (DFS), Breadth First Search (BFS) and Binary Search\n\n## Solution\n\n### Approach 1: Naive Linear Search\n\n**Intuition**\n\nTraversal all the pixels. Keep the maximum and minimum values of black pixels coordinates.\n\n**Algorithm**\n\nWe keep four boundaries, `left`, `right`, `top` and `bottom` of the rectangle.\nNote that `left` and `top` are inclusive while `right` and `bottom` are exclusive.\nWe then traversal all the pixels and update the four boundaries accordingly.\n\nThe recipe is following:\n\n* Initialize left, right, top and bottom\n* Loop through all `(x, y)` coordinates\n  * if `image[x][y]` is black\n    * `left = min(left, x)`\n    * `right = max(right, x + 1)`\n    * `top = min(top, y)`\n    * `bottom = max(bottom, y + 1)`\n* Return `(right - left) * (bottom - top)`\n\n\n<iframe src=\"https://leetcode.com/playground/fn66ntdb/shared\" frameBorder=\"0\" name=\"fn66ntdb\" width=\"100%\" height=\"343\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(mn)$$. $$m$$ and $$n$$ are the height and width of the image.\n\n* Space complexity : $$O(1)$$. All we need to store are the four boundaries.\n\n**Comment**\n* One may optimize this algorithm to stop early. But it doesn't change the asymptotic performance.\n* This naive approach is certainly not the best answer to this problem. However, it gives you a good entry point to tackle the problem. Most of the time the good algorithms come from identifying the repeat calculation a naive approach. And it also sets up a baseline of the time and space complexity, so that one can see whether or not other approaches are better than it.\n\n---\n### Approach 2: DFS or BFS\n\n**Intuition**\n\nExplore all the connected black pixel from the given pixel and update the boundaries.\n\n**Algorithm**\n\nThe naive approach did not use the condition that all the black pixels are connected and that one of the black pixels is given.\n\nA simple way to use these facts is to do an exhaustive search starting from the given pixel. Since all the black pixels are connected, DFS or BFS will visit all of them starting from the given black pixel. The idea is similar to what we did for [200. Number of Island](https://leetcode.com/problems/number-of-islands/). Instead of many islands, we have only one island here, and we know one pixel of it.\n\n<iframe src=\"https://leetcode.com/playground/ZQBcLdXE/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"ZQBcLdXE\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(E) = O(B) = O(mn)$$.\n\nHere $$E$$ is the number of edges in the traversed graph. $$B$$ is the total number of black pixels. Since each pixel have four edges at most, $$O(E) = O(B)$$. In the worst case, $$O(B) = O(mn)$$.\n\n* Space complexity : $$O(V) = O(B) = O(mn)$$.\n\nThe space complexity is $$O(V)$$ where $$V$$ is the number of vertices in the traversed graph. In this problem $$O(V) = O(B)$$. Again, in the worst case, $$O(B) = O(mn)$$.\n\n**Comment**\n\nAlthough this approach is better than naive approach when $$B$$ is much smaller than $$mn$$, it is asymptotically the same as approach #1 when $$B$$ is comparable to $$mn$$. And it costs a lot more auxiliary space.\n\n---\n### Approach 3: Binary Search\n\n**Intuition**\n\nProject the 2D image into a 1D array and use binary search to find the boundaries.\n\n**Algorithm**\n\n![matrix projection](../Figures/302_matrix_projection.svg){:width=\"539px\"}\n\n\n*Figure 1. Illustration of image projection.\n\n\nSuppose we have a $$10 \\times 11$$ image as shown in figure 1, if we project each column of the image into an entry of row vector `v` with the following rule:\n\n* `v[i] = 1`   if exists `x` such that `image[x][i] = 1`\n* `v[i] = 0`   otherwise\n\nThat is\n\n> If a column has any black pixel it's projection is black otherwise white.\n\nSimilarly, we can do the same for the rows, and project the image into a 1D column vector. The two projected vectors are shown in figure 1.\n\nNow, we claim the following lemma:\n\n*Lemma*\n>If there are only one black pixel region, then in a projected 1D array all the black pixels are connected.\n\n*Proof by contradiction*\n>Assume to the contrary that there are disconnected black pixels at `i` and `j` where `i < j` in the 1D projection array. Thus, there exists one column `k`, `k` in `(i, j)` and the column `k` in the 2D array has no black pixel. Therefore, in the 2D array there exist at least two black pixel regions separated by column `k` which contradicting the condition of \"only one black pixel region\".\nTherefore, we conclude that all the black pixels in the 1D projection array are connected.\n\nWith this lemma, we have the following algorithm:\n\n* Project the 2D array into a column array and a row array\n* Binary search to find `left` in the row array within `[0, y)`\n* Binary search to find `right` in the row array within `[y + 1, n)`\n* Binary search to find `top` in the column array within `[0, x)`\n* Binary search to find `bottom` in the column array within `[x + 1, m)`\n* Return `(right - left) * (bottom - top)`\n\nHowever, the projection step cost $$O(mn)$$ time which dominates the entire algorithm.If so, we gain nothing comparing with previous approaches.\n\nThe trick is that we do not need to do the projection step as a preprocess. We can do it on the fly, i.e. \"don't project the column/row unless needed\".\n\nRecall the binary search algorithm in a 1D array, each time we only check one element, the pivot, to decide which half we go next.\n\nIn a 2D array, we can do something similar. The only difference here is that the element is not a number but a vector. For example, a `m` by `n` matrix can be seen as `n` column vectors.\n\nIn these `n` elements/vectors, we do a binary search to find `left` or `right`. Each time we only check one element/vector, the pivot, to decide which half we go next.\nIn total it checks $$O(\\log n)$$ vectors, and each check is $$O(m)$$ (we simply traverse all the `m` entries of the pivot vector).\n\nSo it costs $$O(m \\log n)$$ to find `left` and `right`.\nSimilarly it costs $$O(n \\log m)$$ to find `top` and `bottom`. The entire algorithm has a time complexity of $$O(m \\log n + n \\log m)$$\n\n<iframe src=\"https://leetcode.com/playground/KTQbCbG3/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KTQbCbG3\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(m \\log n + n \\log m)$$.\n\nHere, $$m$$ and $$n$$ are the height and width of the image. We embedded a linear search for every iteration of binary search. See previous sections for details.\n\n* Space complexity : $$O(1)$$.\n\nBoth binary search and linear search used only constant extra space.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

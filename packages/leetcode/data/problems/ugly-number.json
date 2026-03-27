@@ -1,0 +1,130 @@
+{
+  "questionId": "263",
+  "questionFrontendId": "263",
+  "title": "Ugly Number",
+  "titleSlug": "ugly-number",
+  "difficulty": "Easy",
+  "content": "<p>An <strong>ugly number</strong> is a <em>positive</em> integer which does not have a prime factor other than 2, 3, and 5.</p>\n\n<p>Given an integer <code>n</code>, return <code>true</code> <em>if</em> <code>n</code> <em>is an <strong>ugly number</strong></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 6\n<strong>Output:</strong> true\n<strong>Explanation:</strong> 6 = 2 &times; 3\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1\n<strong>Output:</strong> true\n<strong>Explanation:</strong> 1 has no prime factors.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 14\n<strong>Output:</strong> false\n<strong>Explanation:</strong> 14 is not ugly since it includes the prime factor 7.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>-2<sup>31</sup> &lt;= n &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"isUgly\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"764.8K\", \"totalSubmission\": \"1.8M\", \"totalAcceptedRaw\": 764809, \"totalSubmissionRaw\": 1766824, \"acRate\": \"43.3%\"}",
+  "likes": 3849,
+  "dislikes": 1797,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Happy Number\", \"titleSlug\": \"happy-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count Primes\", \"titleSlug\": \"count-primes\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Ugly Number II\", \"titleSlug\": \"ugly-number-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "6",
+    "1",
+    "14"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 3, \"slug\": \"github\", \"name\": \"Github\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isUgly(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isUgly(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isUgly(self, n: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isUgly(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {boolean}\n */\nvar isUgly = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isUgly(n: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsUgly(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isUgly(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isUgly(n int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isUgly(n: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isUgly(_ n: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_ugly(n: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Boolean}\ndef is_ugly(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Boolean\n     */\n    function isUgly($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isUgly(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isUgly(n: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_ugly(n :: integer) :: boolean\n  def is_ugly(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_ugly(N :: integer()) -> boolean().\nis_ugly(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-ugly n)\n  (-> exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1591",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nThe problem asks us to check if a given integer falls in the problem-made definition of **Ugly Number**. Following and analyzing the definition religiously is the best we can do.\n\n---\n\n### Approach: Definition\n\n#### Intuition\n\nLet's follow the definition. \n\n> *An **ugly number** is a positive integer whose prime factors are limited to 2, 3, and 5*.\n\nAn **ugly number** is a *positive integer*. As per constraints $ -2^{31} \\leq n \\leq 2^{31} - 1$, we can have non-positive integers. Since a non-positive integer cannot be ugly, we can immediately `return false` if $ n \\leq 0 $.\n\nFor $ n > 0 $, we have to examine if the integer is an ugly number or not.   \nAs per the given definition, the only permitted prime factors for an ugly number are 2, 3, and 5.  Thus, if we remove all 2's, 3's, and 5's from the prime factorization of this integer, we can check if there is some other prime in the remaining factorization or not.     \n   \n- What we can do is check if the integer is divisible by 2 or not. If yes, then we have obtained one prime factor as 2. Then, we have to find the prime factors of the integer obtained by dividing this integer by 2. We will keep dividing our integer by 2 when it is divisible by 2. \n \n- At this point, this integer is no longer divisible by 2. Thus, try dividing it with the next permitted factor, i. e. 3. Keep dividing the integer by 3 when it is divisible by 3.\n\n- At this point, this integer is no longer divisible by 2 or by 3. Thus, try dividing it with the next permitted factor, i. e. 5. Keep dividing the integer by 5 when it is divisible by 5.\n \n- Now, the integer is no longer divisible by 2, 3, or 5. If this integer is not equal to 1, we can deduce that there are other prime factors of this integer, apart from 2, 3, and 5. Hence, the number is not ugly. If the integer was 1, the number is ugly.\n\n#### Algorithm\n\n1. If the given integer `n` is non-positive, we can `return false` since a non-positive integer cannot be ugly. \n   \n2. Define a function `keepDividingWhenDivisible` which takes two arguments, `dividend` and `divisor`.   \n   \n    This function will keep dividing the `dividend` by `divisor` when it is divisible by `divisor`.  An integer `dividend` is divisible by `divisor` if it gives the remainder as 0 when divided by `divisor`. Many programming languages provide `mod` (`%`) binary operator for computing the remainder. This function then returns the modified `dividend`.\n   \n3. Keep dividing `n` by 2 when it is divisible by 2 by calling `keepDividingWhenDivisible(n, 2)`.    \n   \n    > **Note:** We can use bit manipulation to check if an integer is divisible by 2. We can check the Least Significant Bit (LSB) in the binary representation of the integer. If **LSB is 1**, it means the **number is odd**, and hence not divisible by 2. If **LSB is 0**, it means the **number is even**, and hence divisible by 2. We can check if LSB is 1 or not by $n \\& 1$.\n    >\n    > And to divide the integer by 2, we can simply right-shift the integer by 1-bit. This can be done by $ n = n \\gg 1 $. \n   \n4. At this point, the integer is no longer divisible by 2. Now, keep dividing `n` by 3 when it is divisible by 3 by calling `keepDividingWhenDivisible(n, 3)`.\n   \n5. Now, the integer is neither divisible by 2, nor by 3. Now, keep dividing `n` by 5 when it is divisible by 5 by calling `keepDividingWhenDivisible(n, 5)`.\n   \n6. At this point, the integer is not divisible by any of 2, 3, or 5. Thus, as per the definition of Ugly Number, our integer, if it was ugly must have been reduced to 1. Thus, if `n` is 1, return `true`, otherwise `false`.\n\n**Note:** Since steps 3, 4, and 5 are similar, we can use a loop to perform these steps.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/99LHBJiZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"99LHBJiZ\"></iframe>\n\n**Implementation Note**   \n\nFor unifying the approach for all three permitted factors, bit manipulation is not used in implementation because we cannot use $O(1)$ bit manipulation to divide by 3 or 5. \n\n#### Complexity Analysis\n\nLet $N$ be the **magnitude** of the input integer.\n\n* Time complexity: $O(\\log (N))$. \n    \n    We are dividing the integer by 2, 3, and 5 and terminating when it is not divisible by any of them.     \n    > **When dividing an integer $ x $ by $ y $, there can be at most $O( \\log_y(x) )$ divisions.**    \n    >        \n    > Assume we perform the division by $2$ for $K$ times. Then, we can say that the number $N$ is at least $2^K$, which means $2^K \\leq N$. Therefore $K \\leq \\log_2 N$.         \n\n    Thus, there can be at most $\\log_2(N)$ divisions by 2, $\\log_3(N)$ divisions by 3 and $\\log_5(N)$ divisions by 5. Thus, total number of divisions will be at most $\\log_2(N) + \\log_3(N) + \\log_5(N)$, which is $O(\\log (N))$.  \n\n* Space complexity: $O(1)$. \n    \n    There are a handful of variables in the code, and all of them use constant space, hence, space complexity is constant\n  \n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

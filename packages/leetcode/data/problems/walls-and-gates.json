@@ -1,0 +1,122 @@
+{
+  "questionId": "286",
+  "questionFrontendId": "286",
+  "title": "Walls and Gates",
+  "titleSlug": "walls-and-gates",
+  "difficulty": "Medium",
+  "content": "<p>You are given an <code>m x n</code> grid <code>rooms</code>&nbsp;initialized with these three possible values.</p>\n\n<ul>\n\t<li><code>-1</code>&nbsp;A wall or an obstacle.</li>\n\t<li><code>0</code> A gate.</li>\n\t<li><code>INF</code> Infinity means an empty room. We use the value <code>2<sup>31</sup> - 1 = 2147483647</code> to represent <code>INF</code> as you may assume that the distance to a gate is less than <code>2147483647</code>.</li>\n</ul>\n\n<p>Fill each empty room with the distance to <em>its nearest gate</em>. If it is impossible to reach a gate, it should be filled with <code>INF</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/01/03/grid.jpg\" style=\"width: 500px; height: 223px;\" />\n<pre>\n<strong>Input:</strong> rooms = [[2147483647,-1,0,2147483647],[2147483647,2147483647,2147483647,-1],[2147483647,-1,2147483647,-1],[0,-1,2147483647,2147483647]]\n<strong>Output:</strong> [[3,-1,0,1],[2,2,1,-1],[1,-1,2,-1],[0,-1,3,4]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> rooms = [[-1]]\n<strong>Output:</strong> [[-1]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == rooms.length</code></li>\n\t<li><code>n == rooms[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 250</code></li>\n\t<li><code>rooms[i][j]</code> is <code>-1</code>, <code>0</code>, or <code>2<sup>31</sup> - 1</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"wallsAndGates\",\n  \"params\": [\n    {\n      \"name\": \"rooms\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"void\"\n  },\n  \"output\": {\n    \"paramindex\": 0\n  }\n}",
+  "stats": "{\"totalAccepted\": \"424K\", \"totalSubmission\": \"663.8K\", \"totalAcceptedRaw\": 423971, \"totalSubmissionRaw\": 663755, \"acRate\": \"63.9%\"}",
+  "likes": 3326,
+  "dislikes": 72,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Surrounded Regions\", \"titleSlug\": \"surrounded-regions\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Islands\", \"titleSlug\": \"number-of-islands\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Shortest Distance from All Buildings\", \"titleSlug\": \"shortest-distance-from-all-buildings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Battleships in a Board\", \"titleSlug\": \"battleships-in-a-board\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Robot Room Cleaner\", \"titleSlug\": \"robot-room-cleaner\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Rotting Oranges\", \"titleSlug\": \"rotting-oranges\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Houses at a Certain Distance I\", \"titleSlug\": \"count-the-number-of-houses-at-a-certain-distance-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Houses at a Certain Distance II\", \"titleSlug\": \"count-the-number-of-houses-at-a-certain-distance-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[2147483647,-1,0,2147483647],[2147483647,2147483647,2147483647,-1],[2147483647,-1,2147483647,-1],[0,-1,2147483647,2147483647]]",
+    "[[-1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"doordash\", \"name\": \"DoorDash\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 6, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 4, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 2, \"slug\": \"ebay\", \"name\": \"eBay\"}, {\"timesEncountered\": 2, \"slug\": \"spotify\", \"name\": \"Spotify\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    void wallsAndGates(vector<vector<int>>& rooms) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public void wallsAndGates(int[][] rooms) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def wallsAndGates(self, rooms: List[List[int]]) -> None:\n        \"\"\"\n        Do not return anything, modify rooms in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def wallsAndGates(self, rooms):\n        \"\"\"\n        :type rooms: List[List[int]]\n        :rtype: None Do not return anything, modify rooms in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} rooms\n * @return {void} Do not return anything, modify rooms in-place instead.\n */\nvar wallsAndGates = function(rooms) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n Do not return anything, modify rooms in-place instead.\n */\nfunction wallsAndGates(rooms: number[][]): void {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public void WallsAndGates(int[][] rooms) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "void wallsAndGates(int** rooms, int roomsSize, int* roomsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func wallsAndGates(rooms [][]int)  {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun wallsAndGates(rooms: Array<IntArray>): Unit {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func wallsAndGates(_ rooms: inout [[Int]]) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn walls_and_gates(rooms: &mut Vec<Vec<i32>>) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} rooms\n# @return {Void} Do not return anything, modify rooms in-place instead.\ndef walls_and_gates(rooms)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $rooms\n     * @return NULL\n     */\n    function wallsAndGates(&$rooms) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  void wallsAndGates(List<List<int>> rooms) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def wallsAndGates(rooms: Array[Array[Int]]): Unit = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "15",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach #1 (Brute Force) [Time Limit Exceeded]\n\nThe brute force approach is simple, we just implement a breadth-first search from each empty room to its nearest gate.\n\nWhile we are doing the search, we use a 2D array called `distance` to keep track of the distance from the starting point. It also implicitly tell us whether a position had been visited so it won't be inserted into the queue again.\n\n<iframe src=\"https://leetcode.com/playground/4aSKL2xH/shared\" frameBorder=\"0\" name=\"4aSKL2xH\" width=\"100%\" height=\"515\"></iframe>\n\n**Complexity analysis**\n\n* Time complexity : $$O(m^2n^2)$$.\nFor each point in the $$m \\times n$$ size grid, the gate could be at most $$m \\times n$$ steps away.\n\n* Space complexity : $$O(mn)$$.\nThe space complexity depends on the queue's size. Since we won't insert points that have been visited before into the queue, we insert at most $$m \\times n$$ points into the queue.\n\n---\n### Approach #2 (Breadth-first Search) [Accepted]\n\nInstead of searching from an empty room to the gates, how about searching the other way round? In other words, we initiate breadth-first search (BFS) from all gates at the same time. Since BFS guarantees that we search all rooms of distance *d* before searching rooms of distance *d* + 1, the distance to an empty room must be the shortest.\n\n<iframe src=\"https://leetcode.com/playground/rDRFjuqK/shared\" frameBorder=\"0\" name=\"rDRFjuqK\" width=\"100%\" height=\"515\"></iframe>\n\n**Complexity analysis**\n\n* Time complexity : $$O(mn)$$.\n\n    If you are having difficulty to derive the time complexity, start simple.\n\n    Let us start with the case with only one gate. The breadth-first search takes at most $$m \\times n$$ steps to reach all rooms, therefore the time complexity is $$O(mn)$$. But what if you are doing breadth-first search from $$k$$ gates?\n\n    Once we set a room's distance, we are basically marking it as visited, which means each room is visited at most once. Therefore, the time complexity does not depend on the number of gates and is $$O(mn)$$.\n\n* Space complexity : $$O(mn)$$.\nThe space complexity depends on the queue's size. We insert at most $$m \\times n$$ points into the queue.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

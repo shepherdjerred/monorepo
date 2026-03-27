@@ -1,0 +1,60 @@
+{
+  "questionId": "602",
+  "questionFrontendId": "602",
+  "title": "Friend Requests II: Who Has the Most Friends",
+  "titleSlug": "friend-requests-ii-who-has-the-most-friends",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>RequestAccepted</code></p>\n\n<pre>\n+----------------+---------+\n| Column Name    | Type    |\n+----------------+---------+\n| requester_id   | int     |\n| accepter_id    | int     |\n| accept_date    | date    |\n+----------------+---------+\n(requester_id, accepter_id) is the primary key (combination of columns with unique values) for this table.\nThis table contains the ID of the user who sent the request, the ID of the user who received the request, and the date when the request was accepted.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find the people who have the most friends and the most friends number.</p>\n\n<p>The test cases are generated so that only one person has the most friends.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nRequestAccepted table:\n+--------------+-------------+-------------+\n| requester_id | accepter_id | accept_date |\n+--------------+-------------+-------------+\n| 1            | 2           | 2016/06/03  |\n| 1            | 3           | 2016/06/08  |\n| 2            | 3           | 2016/06/08  |\n| 3            | 4           | 2016/06/09  |\n+--------------+-------------+-------------+\n<strong>Output:</strong> \n+----+-----+\n| id | num |\n+----+-----+\n| 3  | 3   |\n+----+-----+\n<strong>Explanation:</strong> \nThe person with id 3 is a friend of people 1, 2, and 4, so he has three friends in total, which is the most number than any others.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> In the real world, multiple people could have the same most number of friends. Could you find all these people in this case?</p>\n",
+  "hints": [
+    "Being friends is bidirectional. If you accept someone's adding friend request, both you and the other person will have one more friend."
+  ],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists RequestAccepted (requester_id int not null, accepter_id int null, accept_date date null)\"], \"mssql\": [\"Create table RequestAccepted (requester_id int not null, accepter_id int null, accept_date date null)\"], \"oraclesql\": [\"Create table RequestAccepted (requester_id int not null, accepter_id int null, accept_date date null)\", \"Alter SESSION set NLS_DATE_FORMAT = 'YYYY/MM/DD'\"], \"database\": true, \"name\": \"most_friends\", \"pythondata\": [\"RequestAccepted = pd.DataFrame([], columns=['requester_id', 'accepter_id', 'accept_date']).astype({'requester_id':'Int64', 'accepter_id':'Int64', 'accept_date':'datetime64[ns]'})\"], \"postgresql\": [\"\\nCreate table If Not Exists RequestAccepted (requester_id int not null, accepter_id int null, accept_date date null)\"], \"database_schema\": {\"RequestAccepted\": {\"requester_id\": \"INT\", \"accepter_id\": \"INT\", \"accept_date\": \"DATE\"}}}",
+  "stats": "{\"totalAccepted\": \"333.7K\", \"totalSubmission\": \"534.8K\", \"totalAcceptedRaw\": 333715, \"totalSubmissionRaw\": 534760, \"acRate\": \"62.4%\"}",
+  "likes": 973,
+  "dislikes": 152,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"RequestAccepted\":[\"requester_id\",\"accepter_id\",\"accept_date\"]},\"rows\":{\"RequestAccepted\":[[1,2,\"2016/06/03\"],[1,3,\"2016/06/08\"],[2,3,\"2016/06/08\"],[3,4,\"2016/06/09\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 9, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef most_friends(request_accepted: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2230",
+    "content": "​\n<!-- Don't delete this -->\n[TOC]\n​\n# Solution\n​\n---\n​\n## pandas\n\n<!-- h3 for approaches -->\n### Approach: Combining DataFrames Using concat() and Finding the Top Values Using sort_values() and head()\n\n\n<!-- h4 for sections -->\n#### Algorithm\n\n<!-- Describe your approach to solving the problem. -->\nSince one person can acquire a friend by either requesting or accepting a friend request, to get how many friends each person has, we can count how many times their id appeared in either the column `requester_id` or the column `accepter_id`. It's generally a good idea to combine the two columns into one for easier calculation. \n\nLet's start by combining the two columns. We can leverage the function `concat()` to combine DataFrames just like using `UNION/UNION ALL` in MySQL, or, in this case, combine only the columns. We add the function `to_frame()` to convert the result from a Series to a DataFrame. For later calculation, we also renamed the newly created column as `id`.\n\n```python\nvalues = pd.concat([request_accepted[\"requester_id\"], request_accepted[\"accepter_id\"]]).to_frame('id')\n```\n\nWe now have the two columns `requester_id` and `accepter_id` combined into one. \n\n| id |\n| -- |\n| 1  |\n| 1  |\n| 2  |\n| 3  |\n| 2  |\n| 3  |\n| 3  |\n| 4  |\n\nNow we only need to count how many times each `id` appeared in the list and identify the `id` with the maximum count. To do this, we can apply `count()` to `id` and group the result at the `id` level. We can leverage the function `agg()` to get the aggregate value and rename the result at the same time. To look for the maximum count, we sort the list by the count (the newly created column `num`) in descending order using the function `sort_values()` and passing the parameter `ascending=False` to the function. The `id` that has the most friends is now listed at the top, and we can select this record using the function `head()`.  \n\n```python\ndf = values.groupby('id', as_index=False).agg(num=('id', 'count')).sort_values('num', ascending=False).head(1)\n```\n\n<!-- h4 for sections -->\n#### Implementation\n​<iframe src=\"https://leetcode.com/playground/mLCXWMTb/shared\" frameBorder=\"0\" width=\"100%\" height=\"191\" name=\"mLCXWMTb\"></iframe>\n<!-- an empty line to separate approaches -->\n\n----\n​\n​\n## Database\n\n\n<!-- h3 for approaches -->\n### Approach 1: Combining Tables Using UNION ALL and Finding the Top Values Using ORDER BY + LIMIT\n\n<!-- h4 for sections -->\n#### Algorithm\n\n<!-- Describe your approach to solving the problem. -->\n\nSince one person can acquire a friend by either requesting or accepting a friend request, to get how many friends each person has, we can count how many times their id appeared in either the column `requester_id` or the column `accepter_id`. It's generally a good idea to combine the two columns into one for easier calculation. \n\nLet's start by combining the two columns. For this problem, it's important to use `UNION ALL` so all duplicate values are kept. Both columns are renamed as `id`, and we can put this step in a CTE for later usage. \n\n```sql\nWITH all_ids AS (\n   SELECT requester_id AS id \n   FROM RequestAccepted\n   UNION ALL\n   SELECT accepter_id AS id\n   FROM RequestAccepted)\n```\n\nNext, we can count how many times each `id` appeared in the list and identify the `id` with the maximum count. To do this, we can group the aggregate value `COUNT(id)` at the `id` level. To retain only the `id` that has the maximum counts, we can sort the result by the `COUNT(id)` in descending order and take only the first record using `LIMIT`. Last but not least, we rename the aggregate count to `num` for the final output. All of these steps can be achieved in the main query without creating any subqueries. \n\n\n```sql\nSELECT id, \n   COUNT(id) AS num\nFROM all_ids\nGROUP BY id\nORDER BY COUNT(id) DESC\nLIMIT 1\n```\n\n<!-- h4 for sections -->\n#### Implementation\n\n```mysql []\nWITH all_ids AS (\n   SELECT requester_id AS id \n   FROM RequestAccepted\n   UNION ALL\n   SELECT accepter_id AS id\n   FROM RequestAccepted)\nSELECT id, \n   COUNT(id) AS num\nFROM all_ids\nGROUP BY id\nORDER BY COUNT(id) DESC\nLIMIT 1\n```\n​\n<!-- an empty line to separate approaches -->\n\n\n### Approach 2: Combining Tables Using UNION ALL and Finding Top Values Using RANK()\n\n<!-- h4 for sections -->\n#### Algorithm\n\n<!-- Describe your approach to solving the problem. -->\nThe main difference between this approach and the first one is that this approach can include multiple `id`s if there is more than one person who has the most number of friends. Also, it's never a bad idea to use the window function.  \n\nSimilarly, we can start by combining the two columns into one. For this problem, it's important to use `UNION ALL` so all duplicate values are kept. Both columns are renamed as `id`, and we can put this step in a CTE for later usage. \n\n\n```sql\nWITH all_ids AS (\n   SELECT requester_id AS id \n   FROM RequestAccepted\n   UNION ALL\n   SELECT accepter_id AS id\n   FROM RequestAccepted)\n```\n\nIn the subquery, we can count how many times each `id` appeared in the list using `COUNT()` and `GROUP` the result at the `id` level. The calculated result is renamed to `num` as requested by the final output. Additionally, we can append a rank to the records per the aggregate count in descending order. \n\n```sql\n   (\n   SELECT id, \n      COUNT(id) AS num, \n      RANK () OVER(ORDER BY COUNT(id) DESC) AS rnk\n   FROM all_ids\n   GROUP BY id\n   )t0\n```\n\nNow we can select the top record, which is the `id` that has the maximum count (number of friends), in the main query. \n\n```sql\nSELECT id, num\nFROM \n   (\n   SELECT id, \n      COUNT(id) AS num, \n      RANK () OVER(ORDER BY COUNT(id) DESC) AS rnk\n   FROM all_ids\n   GROUP BY id\n   )t0\nWHERE rnk=1\n```\n\n<!-- h4 for sections -->\n#### Implementation\n\n```mysql []\nWITH all_ids AS (\n   SELECT requester_id AS id \n   FROM RequestAccepted\n   UNION ALL\n   SELECT accepter_id AS id\n   FROM RequestAccepted)\nSELECT id, num\nFROM \n   (\n   SELECT id, \n      COUNT(id) AS num, \n      RANK () OVER(ORDER BY COUNT(id) DESC) AS rnk\n   FROM all_ids\n   GROUP BY id\n   )t0\nWHERE rnk=1\n```\n----",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

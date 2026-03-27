@@ -1,0 +1,134 @@
+{
+  "questionId": "414",
+  "questionFrontendId": "414",
+  "title": "Third Maximum Number",
+  "titleSlug": "third-maximum-number",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer array <code>nums</code>, return <em>the <strong>third distinct maximum</strong> number in this array. If the third maximum does not exist, return the <strong>maximum</strong> number</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,2,1]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>\nThe first distinct maximum is 3.\nThe second distinct maximum is 2.\nThe third distinct maximum is 1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong>\nThe first distinct maximum is 2.\nThe second distinct maximum is 1.\nThe third distinct maximum does not exist, so the maximum (2) is returned instead.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,2,3,1]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>\nThe first distinct maximum is 3.\nThe second distinct maximum is 2 (both 2&#39;s are counted together since they have the same value).\nThe third distinct maximum is 1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>-2<sup>31</sup> &lt;= nums[i] &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<strong>Follow up:</strong> Can you find an <code>O(n)</code> solution?",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"thirdMax\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"825.3K\", \"totalSubmission\": \"2.1M\", \"totalAcceptedRaw\": 825288, \"totalSubmissionRaw\": 2110500, \"acRate\": \"39.1%\"}",
+  "likes": 3530,
+  "dislikes": 3527,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Kth Largest Element in an Array\", \"titleSlug\": \"kth-largest-element-in-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Neither Minimum nor Maximum\", \"titleSlug\": \"neither-minimum-nor-maximum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,2,1]",
+    "[1,2]",
+    "[2,2,3,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int thirdMax(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int thirdMax(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def thirdMax(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def thirdMax(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar thirdMax = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function thirdMax(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ThirdMax(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int thirdMax(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func thirdMax(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun thirdMax(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func thirdMax(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn third_max(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef third_max(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function thirdMax($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int thirdMax(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def thirdMax(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec third_max(nums :: [integer]) :: integer\n  def third_max(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec third_max(Nums :: [integer()]) -> integer().\nthird_max(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (third-max nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1563",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nIn this problem, we have to return the $3^{rd}$ largest number and if it does not exist we have to return the largest number.    \n\nIn problems where we have to find $k^{th}$ largest/smallest number, we can always start by using any one of these three methods: sorting the array, using a priority queue, or using a sorted set. \nAs these three methods keep array elements in sorted order and it's easy to find the required element.\n\nAlso, we can keep track of the $3^{rd}$ largest number using 3 pointers which point to the top 3 largest numbers of the array.    \nLet's explore all of these approaches in detail.\n\n---\n\n### Approach 1: Sorting\n\n#### Intuition\n\nThe most intuitive approach will be sorting the array and finding the $3^{rd}$ largest number.     \nWe also have to take care of duplicates, we have to consider only distinct numbers.\n\nAfter the array is sorted in non-increasing order, we can check the current number with the previous number. If the current number is different from the previous number it means the current number can be counted.    \nAnd whenever we count 3 different numbers we return that $3^{rd}$ distinct number.\n\n![sorting](../Figures/414/Slide1.png)\n\n#### Algorithm\n\n1. Sort the `nums` array in non-increasing order.\n\n2. Initialize variables:\n    - `elemCounted = 1`, it counts the number of distinct numbers that occurred till now.\n    - `prevElem` to the first array number, it denotes the previous counted number of the array.\n\n3. Iterate on `nums` array's second number to the last number:\n    - If the current number is different than `prevElem`, it means it is a new distinct number, thus increment `elemCounted` by `1` and store the current number in `prevElem`.\n    - If `elemCounted` reaches `3`, it means the current number is the third largest number, thus return this number.\n\n4. If we traversed on the whole array it means `3` distinct numbers were not present in the array, thus we return the largest number, which is at the beginning of the `nums` array.\n \n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/XsVibfJU/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XsVibfJU\"></iframe>\n\n\n#### Complexity Analysis\n\nIf $N$ is the number of elements in the input array.\n\n* Time complexity: $O(N \\log N)$.\n  - We sort the `nums` array, which takes $O(N \\log N)$ time.\n  - We iterate on the `nums` array once to find the $3^{rd}$ distinct number.\n  - Thus, overall it takes, $O(N \\log N + N) = O(N \\log N)$ time.\n\n* Space complexity: $O(1)$.\n    - We don't use any additional space.    \n       > **Note:** The built-in sort methods do use some additional space, you can tell this during the interview, but, the interviewer does not expect us to go into much detail about it, and it will be fine if we state the above space complexity analysis. \n\n---\n\n\n### Approach 2: Min Heap Data Structure\n\n#### Intuition\n\nWe can use one max heap data structure and keep all distinct numbers of our array in sorted order.    \n\n> A max heap is a complete binary tree, in which the key present at the root node must be greatest among the keys present at all of it’s children. And the same property must be recursively true for all sub-trees in that tree.         \nIf you are not familiar with heaps and priority queues, you can learn about them in our [explore card](https://leetcode.com/explore/featured/card/heap/643/heap/4018/).      \n\nThe max heap will keep the largest number on the top, thus we can get the $3^{rd}$ largest number from it.  \n\nBut we can further optimize this method.      \n\nWe are keeping all array numbers in the heap instead while iterating the given array we can keep the three largest numbers till now in the heap and when a new number comes which is larger than any one of those three numbers, we remove the smallest among them and push this new number in the heap.    \nAt any moment, the heap will only have three numbers in it.\n\nBut we need to tell which is the smallest number among all numbers in the heap, thus we have to use a **min heap**.\n\nIf after iterating over the given array, the heap does not contain three elements, it means that three distinct elements were not present in the array, thus in that case we return the maximum element among the elements stored in the min heap.\n\nAlso, we can keep one hash set to prevent the insertion of already used numbers in the min heap and the hash set can also maintain a size of three elements just like the min heap.        \nIf a number is removed from the min heap it can also be removed from the hash set as all the numbers in the min heap are greater than the removed number and it will never be inserted again in the heap.\n\n\nYou can better understand the whole approach with the following slideshow:\n\n!?!../Documents/414/slideshow1.json:960,540!?!\n\n<br />\n\n#### Algorithm\n\n1. Initialize variables:\n    - `minHeap`, a min heap to keep the smallest element on top.\n    - `taken`, a hash set to track inserted numbers in min heap. \n\n2. Iterate on all numbers of `nums` array:\n    - If the current number is already in the min heap, we skip it.\n    - If the min heap has three numbers in it, and if the current number is greater than the smallest in the min heap, then remove the smallest number and push the current number in both the min heap and the hash set.\n   - Otherwise, if the min heap has less than three elements, then just push the current number in the min heap and the hash set.\n\n3. If the min heap has less than three elements at the end, return the maximum element among all elements present in the min heap, which will be the largest number of the `nums` array.\n\n4. Otherwise, return the top element of the min heap, which will be the third largest number.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/MuSCYiN9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"MuSCYiN9\"></iframe>\n\n\n#### Complexity Analysis\n\nIf $N$ is the number of elements in the input array.\n\n* Time complexity: $O(N)$.\n\n  - We iterate on `nums` array and can push each element in the min heap and hash set once. \n\n  - Time taken to push and pop elements from min heap depends on number of elements in the heap (or height of the heap), and as here the heap will have at most three elements in it, those operations are considered constant time operations.\n\n  - Thus, overall it takes $O(N)$ time.\n\n\n* Space complexity: $O(1)$.\n    - Both the min heap and hashset will only have at most three elements in them  thus, it is considered as constant space usage.\n\n\n---\n\n### Approach 3: Ordered Set\n\n#### Intuition\n\nA set is a data structure that only keeps unique elements in it and an ordered set keeps those unique elements in sorted order.     \n> **Note:** If you don't know, the inner implementation of this data structure is basically a self-balancing binary search tree. Thus, insertions, deletions, searching, etc. basically take logarithmic time.        \nNot going into much detail about their implementation we will now focus on the problem statement.\n\nSimilar to the previous approach, instead of priority queue, we can use an ordered set to keep track of largest three elements of the array at any time. And as we can search any element in the set we don't have to use any other data structure to track already used elements.      \n\n\n#### Algorithm\n\n1. Initialize variables:\n    - `sortedNums`, an ordered set to store elements\n\n2. Iterate on all numbers of the `nums` array:\n    - If the current number is already in the ordered set, we skip it.\n    - If the ordered set has three numbers in it, and if the current number is greater than the smallest number in it, then remove the smallest number and push the current number in it.\n   - Otherwise, if the ordered set has less than three elements, then just push the current number in it.\n\n3. If the ordered set has three elements in it, return the smallest element among all elements present in the set, which will be the third largest number of the `nums` array.\n\n4. Otherwise, return the biggest element of the ordered set, which will be the largest number of the `nums` array.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/ZNuNqpBp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZNuNqpBp\"></iframe>\n\n\n#### Complexity Analysis\n\nIf $N$ is the number of elements in the input array.\n\n* Time complexity: $O(N)$.\n\n  - We iterate on the `nums` array and can push each element in the ordered set once. \n\n  - Time is taken to push and pop elements from the ordered set depends on the number of elements in it, and as here the ordered set will have at most three elements in it, those operations are considered constant time operations.\n\n  - Thus, overall it takes $O(N)$ time.\n\n\n* Space complexity: $O(1)$.\n    - The ordered set will only have at most three elements in it, thus, it is considered as constant space usage.\n\n---\n\n### Approach 4: 3 Pointers\n\n#### Intuition\n\nWe know that when traversing an array, we only need to keep track of the first three largest numbers in the array.     \nThis could also be done by using three variables, `firstMax`, which stores the largest number in the array till now, `secondMax`, which stores the second largest number till now, and, `thirdMax`, which stores the third largest number.\n\nWe will use long integer variable because the minimum possible value in the input array is $-2^{31}$, and initially, we need to store a value lower than this.\nIn the end we compared if the `thirdMax` variable is equal to the initial value, to check if we had three different numbers in our array or not.\nBut if we store $-2^{31}$ as the initial value then, it will not give the correct answer.\n\nFor example, consider a case where the array is $[1, 2, -2^{31}]$.     \nNow at the end, we have $\\text{firstMax} = 2$, $\\text{secondMax} = 1$, and $\\text{thirdMax} = -2^{31}$.     \nThus, now we will think `thirdMax` still has the initial value thus this variable is not changed and we will assume the array doesn't have 3 different numbers and will return the wrong answer.\n\n\nNow, if while traversing the array:\n  - the current number is already stored in any of the three variables, it means we will not use it again.\n  - the current number is greater than `firstMax`, then, the current number will become the largest of all numbers and `firstMax` will become the second largest, and `secondMax` will become the third largest number.\n  - the current number is not greater than `firstMax` but greater than `secondMax`, then, the current number will become the second largest, and `secondMax` will become the third largest number.\n  - the current number is smaller than `firstMax` and `secondMax`, but greater than `thirdMax`, then, the current number will become the third largest number.\n  - the current number is smaller than all three, then it will have no effect on those three variables.\n\nSo, while traversing the array we update these three variables based on the current number.\n\nYou can better understand it with the following slideshow:\n\n!?!../Documents/414/slideshow2.json:960,540!?!\n\n<br />\n\n#### Algorithm\n\n1. Initialize variables:\n    - `firstMax`, `secondMax`, and `thirdMax`, to a value less than the minimum possible integer in the array.\n\n2. Iterate on all numbers of the `nums` array:\n    - If the current number is already stored in any of three variables we will skip this number.\n    - If the current number is greater than, `firstMax`, update all three variables.\n    - Otherwise, if the current number if greater than, `secondMax`, update `secondMax` and `thirdMax`.\n    - Otherwise, if the current number if greater than, `thirdMax`, update `thirdMax`. \n\n3. If `thirdMax` still has the initial value it means we, never had three distinct numbers, return `firstMax`, the largest number.\n\n4. Otherwise, return the third largest number, `thirdMax`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/R2Lpv2rH/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"R2Lpv2rH\"></iframe>\n\n\n#### Complexity Analysis\n\nIf $N$ is the number of elements in the input array.\n\n* Time complexity: $O(N)$.\n\n  - We iterate on the `nums` array once and update some variables.       \n    Thus, overall it takes $O(N)$ time.\n\n* Space complexity: $O(1)$.\n    - We only used three extra variables.\n\n---\n\n\n### Approach 5: 3 Pointers (Follow-Up)\n\n#### Intuition\n\nAfter giving the previous approach, the interviewer might come up with a restriction, that our environment doesn't support long, big integers, etc.            \nWe used long integer variable because the minimum possible value in the input array was $-2^{31}$, and initially, we need to store a value lower than this and used it to check if `thirdMax` was updated or not.\n\nBut, we can also keep some boolean variables to indicate if `firstMax`, `secondMax`, `thirdMax` were ever changed or not.     \nThus, here we keep pairs of int (to store the int variable) and boolean (to show if the number was ever updated).\n\n#### Algorithm\n\n1. Initialize variables:\n    - `firstMax`, `secondMax`, and `thirdMax`, pairs of int and bool, where bool must be `false` to show they are not updated.\n\n2. Iterate on all numbers of the `nums` array:\n    - If the current number is already stored in any of three variables we will skip this number.\n    - If `firstMax` was never updated or the current number is greater than `firstMax`, update all three variables. And mark `firstMax` updated as `true`.\n    - Otherwise, if `secondMax` was never updated or the current number is greater than `secondMax`, update `secondMax` and `thirdMax`. And mark `secondMax` updated as `true`. \n    - Otherwise, if `thirdMax` was never updated or the current number is greater than `thirdMax`, update `thirdMax`. And mark `thirdMax` updated as `true`.   \n\n3. If `thirdMax` was not updated, then return the largest number stored in `firstMax`.\n\n4. Otherwise, return the third largest number stored in `thirdMax`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/8FiVXfzh/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8FiVXfzh\"></iframe>\n\n\n#### Complexity Analysis\n\nIf $N$ is the number of elements in the input array.\n\n* Time complexity: $O(N)$.\n  - We iterate on the `nums` array once. Thus, overall it takes $O(N)$ time.\n\n* Space complexity: $O(1)$.\n    - We only used three extra variables.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "questionId": "625",
+  "questionFrontendId": "625",
+  "title": "Minimum Factorization",
+  "titleSlug": "minimum-factorization",
+  "difficulty": "Medium",
+  "content": "<p>Given a positive integer num, return <em>the smallest positive integer </em><code>x</code><em> whose multiplication of each digit equals </em><code>num</code>. If there is no answer or the answer is not fit in <strong>32-bit</strong> signed integer, return <code>0</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> num = 48\n<strong>Output:</strong> 68\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> num = 15\n<strong>Output:</strong> 35\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= num &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"smallestFactorization\",\n  \"params\": [\n    {\n      \"name\": \"num\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"12.2K\", \"totalSubmission\": \"36K\", \"totalAcceptedRaw\": 12216, \"totalSubmissionRaw\": 35989, \"acRate\": \"33.9%\"}",
+  "likes": 133,
+  "dislikes": 112,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "48",
+    "15"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"tencent\", \"name\": \"Tencent\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int smallestFactorization(int num) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int smallestFactorization(int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def smallestFactorization(self, num: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def smallestFactorization(self, num):\n        \"\"\"\n        :type num: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} num\n * @return {number}\n */\nvar smallestFactorization = function(num) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function smallestFactorization(num: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int SmallestFactorization(int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int smallestFactorization(int num) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func smallestFactorization(num int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun smallestFactorization(num: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func smallestFactorization(_ num: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn smallest_factorization(num: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num\n# @return {Integer}\ndef smallest_factorization(num)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $num\n     * @return Integer\n     */\n    function smallestFactorization($num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int smallestFactorization(int num) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def smallestFactorization(num: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec smallest_factorization(num :: integer) :: integer\n  def smallest_factorization(num) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec smallest_factorization(Num :: integer()) -> integer().\nsmallest_factorization(Num) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (smallest-factorization num)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "173",
+    "content": "[TOC]\n\n\n## Video Solution\n\n---\n <div>\n    <div class=\"video-container\">\n      <iframe src=\"https://player.vimeo.com/video/868867811?texttrack=en-x-autogenerated\" frameborder=\"0\"\n        allow=\"autoplay; fullscreen\"></iframe>\n    </div>\n</div>\n\n\n\n\n## Solution\n\n---\n### Approach #1 Brute Force [Time Limit Exceeded]\n\nThe simplest solution is to consider every possible 32-bit number starting from 1 which satisfies the given criteria. To check this, we obtain each individual digit of every such number and check if their product is equal to the given number $$a$$. As soon as such a number is found, we return the same. If no such 32-bit number is found, we return a 0 value.\n\n<iframe src=\"https://leetcode.com/playground/W7M6JELz/shared\" frameBorder=\"0\" name=\"W7M6JELz\" width=\"100%\" height=\"309\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(9999999999)$$. In the case of prime numbers loop can go up to this large number.\n\n* Space complexity : $$O(1)$$. Constant space is used.\n\n---\n### Approach #2 Better Brute Force [Time Limit Exceeded]\n\n**Algorithm**\n\nInstead of considering every possible number from the total search space, we can do the search in a smarter way. We can start putting the numbers from 9 to 2 at the ones position and keep on proceeding towards more significant places. For every number currently generated, we can check if the product of its digits exceeds the given number $$a$$. If so, there is no point in appending more digitas to this number. Thus, we can change the composition of the number generated till now and continue the checking process. \n\nFor doing this, we make use of a recursive function `search()`, which takes the number generated till now, $$res$$(as a string) as one of its arguments along with the number to be appended next as the $$res$$ as a prefix as one of the other arguments. We can note that to obtain the smallest possible number, we need to try to put the largest number(which will be one of the factors for constituting the product $$a$$) at the least significant position and the smallest one at the most significant position. Thus, we start from the least significant position by trying to place a 9 at this position and then continue by trying to place smaller numbers at this position if the numbers generated by the previous arrangements fail. If some arrangement leads to a product of digits not larger than $$a$$, we continue with placing digits, equal to or smaller than the last digit placed, at the more significant positions.\n\nThe following animation illustrates the recursive process:\n\n!?!../Documents/625_Minimum_Factorization.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/mq3fEUtA/shared\" frameBorder=\"0\" name=\"mq3fEUtA\" width=\"100%\" height=\"411\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(l)$$. Here $$l$$ refers to the total number of combinations.\n\n* Space complexity : $$O(log(a))$$. In the worst-case scenario, the depth of the recursion tree can go up to $$O(log(a))$$\n.\n\n---\n### Approach #3  Using Factorization[Accepted]\n\n**Algorithm**\n\nWe know that the final number generated, $$res$$, should be such that its digits should have a product equal to the given number $$a$$. In other words, the digits of $$res$$ will be the factors of the given number $$a$$. Thus, our problem reduces to finding the factors(not necessarily prime) of $$a$$ and finding their smallest possible arrangement. Thus, we start with trying with the largest possible factor $$9$$, obtain as many such counts of this factor as possible in $$res$$ and place such factors obtianed at its least significant positions. Then, we go on decrementing the number currently considered as the possible factor and if it is a factor, we keep on placing it at relatively more significant positions in $$res$$. We go on getting such factors till we are done considering all the numbers from 9 to 2.  At the end, $$res$$ gives the required result.\n\n<iframe src=\"https://leetcode.com/playground/WHBgGGcX/shared\" frameBorder=\"0\" name=\"WHBgGGcX\" width=\"100%\" height=\"309\"></iframe>\n**Complexity Analysis**\n\n* Time complexity : $$O(8loga)$$. Outer loop will iterate only 8 times, while inner loop takes $$O(logi)$$ for particular $$i$$.\n\n* Space complexity : $$O(1)$$. Constant space is used.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

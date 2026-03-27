@@ -1,0 +1,142 @@
+{
+  "questionId": "224",
+  "questionFrontendId": "224",
+  "title": "Basic Calculator",
+  "titleSlug": "basic-calculator",
+  "difficulty": "Hard",
+  "content": "<p>Given a string <code>s</code> representing a valid expression, implement a basic calculator to evaluate it, and return <em>the result of the evaluation</em>.</p>\n\n<p><strong>Note:</strong> You are <strong>not</strong> allowed to use any built-in function which evaluates strings as mathematical expressions, such as <code>eval()</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;1 + 1&quot;\n<strong>Output:</strong> 2\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot; 2-1 + 2 &quot;\n<strong>Output:</strong> 3\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;(1+(4+5+2)-3)+(6+8)&quot;\n<strong>Output:</strong> 23\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 3 * 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists of digits, <code>&#39;+&#39;</code>, <code>&#39;-&#39;</code>, <code>&#39;(&#39;</code>, <code>&#39;)&#39;</code>, and <code>&#39; &#39;</code>.</li>\n\t<li><code>s</code> represents a valid expression.</li>\n\t<li><code>&#39;+&#39;</code> is <strong>not</strong> used as a unary operation (i.e., <code>&quot;+1&quot;</code> and <code>&quot;+(2 + 3)&quot;</code> is invalid).</li>\n\t<li><code>&#39;-&#39;</code> could be used as a unary operation (i.e., <code>&quot;-1&quot;</code> and <code>&quot;-(2 + 3)&quot;</code> is valid).</li>\n\t<li>There will be no two consecutive operators in the input.</li>\n\t<li>Every number and running calculation will fit in a signed 32-bit integer.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"calculate\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"694K\", \"totalSubmission\": \"1.5M\", \"totalAcceptedRaw\": 694019, \"totalSubmissionRaw\": 1485661, \"acRate\": \"46.7%\"}",
+  "likes": 6959,
+  "dislikes": 558,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Evaluate Reverse Polish Notation\", \"titleSlug\": \"evaluate-reverse-polish-notation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Basic Calculator II\", \"titleSlug\": \"basic-calculator-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Different Ways to Add Parentheses\", \"titleSlug\": \"different-ways-to-add-parentheses\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Expression Add Operators\", \"titleSlug\": \"expression-add-operators\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Basic Calculator III\", \"titleSlug\": \"basic-calculator-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"The Score of Students Solving Math Expression\", \"titleSlug\": \"the-score-of-students-solving-math-expression\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimize Result by Adding Parentheses to Expression\", \"titleSlug\": \"minimize-result-by-adding-parentheses-to-expression\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"1 + 1\"",
+    "\" 2-1 + 2 \"",
+    "\"(1+(4+5+2)-3)+(6+8)\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"ericsson\", \"name\": \"ericsson\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"squarepoint-capital\", \"name\": \"Squarepoint Capital\"}, {\"timesEncountered\": 2, \"slug\": \"boeing\", \"name\": \"Boeing\"}, {\"timesEncountered\": 2, \"slug\": \"rokt\", \"name\": \"Rokt\"}], \"more_than_six_months\": [{\"timesEncountered\": 18, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 12, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 8, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 7, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 7, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}, {\"timesEncountered\": 3, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 3, \"slug\": \"canva\", \"name\": \"Canva\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}]}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int calculate(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int calculate(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def calculate(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def calculate(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar calculate = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function calculate(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int Calculate(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int calculate(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func calculate(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun calculate(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func calculate(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn calculate(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef calculate(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function calculate($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int calculate(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def calculate(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec calculate(s :: String.t) :: integer\n  def calculate(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec calculate(S :: unicode:unicode_binary()) -> integer().\ncalculate(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (calculate s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "744",
+    "content": "[TOC]\n\n## Solution\n\nThis problem is all about understanding the following:\n\n* Input always contains valid strings\n* The rules of addition and subtraction\n* Implication of precedence by parenthesis\n* Spaces do not affect the evaluation of the input expression\n\n<center>\n<img src=\"../Figures/224/Basic_Calculator_0.png\" width=\"600\"/>\n</center>\n\n### Approach 1: Stack and String Reversal\n\n**Intuition**\n\nThis question qualifies really well for a stack question. Since the expression might have parenthesis, we can use a stack to find the value for each sub-expression within a parenthesis. Essentially, we need to *delay* processing the main expression until we are done evaluating the interim sub-expressions within parenthesis and to introduce this delay, we use a stack.\n\nWe push the elements of the expression one by one onto the stack until we get a closing bracket `)`. Then we pop the elements from the stack one by one and evaluate the expression on-the-go. This is done till we find the corresponding `(` opening bracket. This kind of evaluation is very common when using the stack data structure. However, if you notice the way we calculate the final answer, you will realize that we actually process the values from right to left whereas it should be the other way around.\n\n<center>\n<img src=\"../Figures/224/Basic_Calculator_1.png\" width=\"600\"/>\n</center>\n\nFrom the above example we realize that following the simple stack push and pop methodology will not help us here. We need to understand how `+` and `-` work. `+` follows the associative property. For the expression $$A+B+C$$,  we have $$(A+B)+C = A+(B+C)$$. However,  `-` does not follow this rule which is the root cause of all the problems in this approach.\n\nIf we use a stack and read the elements of the expression from left to right, we end up evaluating the expression from right-to-left. This means we are expecting $$(A-B)-C$$ to be equal to $$(C-B)-A$$ which is not correct. Subtraction is neither associative nor commutative.\n\nThis problem could be solved very easily by reversing the string and then using basic drill using a stack. Reversing a string helps since we now put the elements of the expression into the stack from right to left and evaluation for the expression is done correctly from left to right.\n\n<center>\n<img src=\"../Figures/224/Basic_Calculator_2.png\" width=\"600\"/>\n</center>\n\n**Algorithm**\n\n1. Iterate the expression string in reverse order one character at a time. Since we are reading the expression character by character, we need to be careful when we are reading digits and non-digits.\n2. The operands could be formed by multiple characters. A string \"123\" would mean a numeric 123, which could be formed as: `123` >> `120 + 3` >> `100 + 20 + 3`. Thus, if the character read is a digit we need to form the operand by multiplying a power of `10` to the current digit and adding it to the overall operand. We do this since we are processing the string in the reverse order.\n3. The operands could be formed by multiple characters. We need to keep track of an on-going operand. This part is a bit tricky since in this case the string is reversed. Once we encounter a character which is not a digit, we push the operand onto the stack.\n4. When we encounter an opening parenthesis `(`, this means an expression just ended. Recall we have reversed the expression. So an opening bracket would signify the end of the an expression. This calls for evaluation of the expression by popping operands and operators off the stack till we pop corresponding closing parenthesis. The final result of the expression is pushed back onto the stack.\n\n    >Note: We are evaluating all the sub-expressions within the main expression. The sub-expressions on the right get evaluated first but the main expression itself is evaluated from left to right when all its components are resolved, which is very important for correct results.\n\n    For eg. For expression $$A - (B+C) + (D+E-F)$$, $$D+E-F$$ is evaluated before $$B+C$$. While evaluating $$D+E-F$$ the order is from left to right. Similarly for the parent expression, all the child components are evaluated and stored on the stack so that final evaluation is left to right.\n\n5. Push the other non-digits onto to the stack.\n6. Do this until we get the final result. It's possible that we don't have any more characters left to process but the stack is still non-empty. This would happen when the main expression is not enclosed by parenthesis. So, once we are done evaluating the entire expression, we check if the stack is non-empty. If it is, we treat the elements in it as one final expression and evaluate it the same way we would if we had encountered an opening bracket.\n\n    We can also cover the original expression with a set of parenthesis to avoid this extra call.\n\n<iframe src=\"https://leetcode.com/playground/kdn6DGoL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"kdn6DGoL\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$, where N is the length of the string.\n\n* Space Complexity: $$O(N)$$, where N is the length of the string.\n<br/>\n<br/>\n\n---\n\n### Approach 2: Stack and No String Reversal\n\n**Intuition**\n\nA very easy way to solve the problem of associativity for `-` we tackled in the previous approach, is to use `-` operator as the magnitude for the operand to the right of the operator. Once we start using `-` as a magnitude for the operands, we just have one operator left which is addition and `+` is associative.\n\nfor e.g. $$A - B - C$$ could be re-written as $$A + (-B) + (-C)$$.\n\n> The re-written expression would follow associativity rule. Thus evaluating the expression from right or left, won't change the result.\n\nWhat we need to keep in mind is that the expressions given would be complicated, i.e. there would be expressions nested within other expressions. Even if we have something like `(A - (B - C))` we need to associate the `negative sign` outside of `B-C` with the result of `B-C` instead of just with `B`.\n\nWe can solve this problem by following the basic drill before and associating the sign with the expression to the right of it. However, the approach that we will instead take has a small twist to it in that we will be evaluating most of the expression on-the-go. This reduces the number of push and pop operations.\n\n<center>\n<img src=\"../Figures/224/Basic_Calculator_3.png\" width=\"600\"/>\n</center>\n\nFollow the below steps closely. This algorithm is inspired from [discussion post](https://leetcode.com/problems/basic-calculator/discuss/62361/southpenguin) by [southpenguin](https://leetcode.com/southpenguin/).\n\n**Algorithm**\n\n1. Iterate the expression string one character at a time. Since we are reading the expression character by character, we need to be careful when we are reading digits and non-digits.\n2. The operands could be formed by multiple characters. A string \"123\" would mean a numeric 123, which could be formed as: `123` >> `120 + 3` >> `100 + 20 + 3`. Thus, if the character read is a digit we need to form the operand by multiplying `10` to the previously formed continuing operand and adding the digit to it.\n3. Whenever we encounter an operator such as `+` or `-` we first evaluate the expression to the left and then save this `sign` for the next evaluation.\n    <center>\n    <img src=\"../Figures/224/Basic_Calculator_4.png\" width=\"600\"/>\n    </center>\n4. If the character is an opening parenthesis `(`, we just push the result calculated so far and the `sign` on to the stack (the sign and the magnitude) and start a fresh as if we are calculating a new expression.\n5. If the character is a closing parenthesis `)`, we first calculate the expression to the left. The result from this would be the result of the expression within the set of parenthesis that just concluded. This result is then multiplied with the sign, if there is any on top of the stack.\nRemember we saved the `sign` on top of the stack when we had encountered an open parenthesis? This sign is associated with the parenthesis that started then, thus when the expression ends or concludes, we pop the `sign` and multiply it with result of the expression. It is then just added to the next element on top of the stack.\n\n<iframe src=\"https://leetcode.com/playground/dAjj5PB6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dAjj5PB6\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$, where N is the length of the string. The difference in time complexity between this approach and the previous one is that every character in this approach will get processed exactly once. However, in the previous approach, each character can potentially get processed twice, once when it's pushed onto the stack and once when it's popped for processing of the final result (or a subexpression). That's why this approach is faster.\n\n* Space Complexity: $$O(N)$$, where N is the length of the string.\n<br/>\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

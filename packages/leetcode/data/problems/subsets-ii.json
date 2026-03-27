@@ -1,0 +1,137 @@
+{
+  "questionId": "90",
+  "questionFrontendId": "90",
+  "title": "Subsets II",
+  "titleSlug": "subsets-ii",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code> that may contain duplicates, return <em>all possible</em> <span data-keyword=\"subset\"><em>subsets</em></span><em> (the power set)</em>.</p>\n\n<p>The solution set <strong>must not</strong> contain duplicate subsets. Return the solution in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> nums = [1,2,2]\n<strong>Output:</strong> [[],[1],[1,2],[1,2,2],[2],[2,2]]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> nums = [0]\n<strong>Output:</strong> [[],[0]]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10</code></li>\n\t<li><code>-10 &lt;= nums[i] &lt;= 10</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"subsetsWithDup\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<list<integer>>\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.5M\", \"totalSubmission\": \"2.4M\", \"totalAcceptedRaw\": 1465560, \"totalSubmissionRaw\": 2400710, \"acRate\": \"61.0%\"}",
+  "likes": 10923,
+  "dislikes": 414,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Subsets\", \"titleSlug\": \"subsets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Array Given Subset Sums\", \"titleSlug\": \"find-array-given-subset-sums\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,2]",
+    "[0]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 16, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> subsetsWithDup(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> subsetsWithDup(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def subsetsWithDup(self, nums: List[int]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def subsetsWithDup(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number[][]}\n */\nvar subsetsWithDup = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function subsetsWithDup(nums: number[]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> SubsetsWithDup(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** subsetsWithDup(int* nums, int numsSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func subsetsWithDup(nums []int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun subsetsWithDup(nums: IntArray): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func subsetsWithDup(_ nums: [Int]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn subsets_with_dup(nums: Vec<i32>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer[][]}\ndef subsets_with_dup(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer[][]\n     */\n    function subsetsWithDup($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> subsetsWithDup(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def subsetsWithDup(nums: Array[Int]): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec subsets_with_dup(nums :: [integer]) :: [[integer]]\n  def subsets_with_dup(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec subsets_with_dup(Nums :: [integer()]) -> [[integer()]].\nsubsets_with_dup(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (subsets-with-dup nums)\n  (-> (listof exact-integer?) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1152",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nThis problem is a successor to another LeetCode problem [78. Subsets](https://leetcode.com/problems/subsets/). We are given an array `nums` of size `n` where `1 <= n <= 10`. We need to find the power set (all possible subsets) excluding duplicate subsets. The maximum number of subsets exists when `nums` contains unique numbers only. In a subset, each number could be present or absent. Thus, for `n` numbers, the power set will consist of no more than $$2^n$$ subsets.\n\nSince we may need to generate $$2^n$$ subsets, no solution can achieve better than exponential time complexity.  However, when the value of `n` is small (between 1 and 10 in this case), exponential time complexity is acceptable.  As such, in each of the following solutions, we'll focus our attention on generating all unique subsets while efficiently omitting all duplicate subsets.\n\n</br>\n\n---\n\n### Approach 1: Bitmasking \n\n**Intuition**\n\nAs discussed earlier, each element could be present in or absent from the subset, so there will be a total of $$2^n$$ distinct subsets for an array of length `n` with no duplicates. The maximum possible value of `n` is 10. Thus, no more than $$2 ^ {10} = 1024$$ subsets will be generated. Since this number is small, we can represent all the subsets using bitmasking. \n\n>The idea is that we map each subset to a bitmask of length n, where 1 in the $$i ^ {th}$$ position of the bitmask implies nums[i] is in the subset, and 0 implies nums[i] is not in the subset.\n\nBitmask `000...0` signifies an empty subset, while bitmask `111...1` signifies that all numbers from the given array `nums` are present in the set. Thus, bitmask values from $$0$$ to $$2^n - 1$$ represent all possible subsets. We need to iterate over the binary representation of each number and depending on the position of set bits (bit value = 1) we can determine which numbers are present in the current subset. An unsigned integer can represent at most 32 (64 if we use `long` datatype for `mask`) positions via bitmasking. Since the given array size (ranging from 1 to 10) is less than 32, we can use bitmasking to represent all subsets. This can be better understood in the following illustration: \n\n![fig](../Figures/90/90_approach1.png)\n\n\n<br/>\n\nHowever, in this approach, some of the generated subsets will be duplicates. So we need to use an additional set, `seen`, to detect duplicate subsets. In order to make use of `seen`, we must first sort the given array. Otherwise, `seen` won't be able to distinguish between duplicate subsets. For example, without sorting `nums = [2,1,2]` our algorithm will generate subsets `[], [2], [1], [2], [2, 1], [2,2], [1, 2], [2, 1, 2]`. Here subset `[1, 2]` should be considered as a duplicate of subset `[2, 1]`. To detect such duplicate subsets, prior sorting of the array is needed. This ensures all the included subsets are unique.\n\n**Algorithm**\n\n1. Sort `nums` array. Sorting is required to ensure all the generated subsets will also be sorted. This helps to identify duplicates.\n\n2. Initialize `maxNumberOfSubsets` to the maximum number of subsets that can be generated, i.e., $$2^n$$.\n\n3. Initialize a set, `seen`, of type `string` to store all the generated subsets. Adding all the sorted subsets to the set gives us the opportunity to catch any duplicate subsets.\n\n4. Iterate from `0` to `maxNumberOfSubsets - 1`. The set bits in the binary representation of the `subsetIndex` indicate the position of the elements in the `nums` array that are present in the current subset.\n\n5. Intialize a string `hashcode` which will store a comma separated list of numbers in the `currentSubset` as a string. `hashcode` is necessary to uniquely identify each subset via the use of a set.\n\n6. We run an inner `for` loop from `j = 0` to `n - 1` to check the position of set bits in `subsetIndex`. If at the $$j^{th}$$ position bit is set, add `nums[j]` to the current subset `currentSubset` and append `nums[j]` to `hashcode` string. \n\n7. Add the current subset `currentSubset` to `seen` and to the `subsets` list if the generated `hashcode` is not in `seen`.\n\n8. Return `subsets`.\n\n**Implementation**\n\n\n\n<iframe src=\"https://leetcode.com/playground/V2C8bonA/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"V2C8bonA\"></iframe>\n\n**Complexity Analysis**\n\nHere $$n$$ is the size of the `nums` array.\n\n* Time complexity: $$O(n \\cdot 2 ^ n)$$\n\n    Sorting the `nums` array requires $$n \\log n$$ time. The outer `for` loop runs $$2 ^ n$$ times. The inner loop runs $$n$$ times. We know that average case time complexity for set operations is $$O(1)$$. Although, to generate a hash value for each subset $$O(n)$$ time will be required. However, we are generating the `hashcode` while iterating the inner `for` loop. So the overall time complexity is $$O(n \\log n + 2^n \\cdot (n$$ (for inner loop) + $$n$$ (for stringbuilder to string conversion in Java) $$))$$ = $$O(2 ^ n \\cdot n)$$. \n\n* Space complexity: $$O(n \\cdot 2^n)$$\n\n    We need to store at most $$2 ^ n$$ number of subsets in the set, `seen`. The maximum length of any subset can be `n`. \n\n    The space complexity of the sorting algorithm depends on the implementation of each programming language. For instance, in Java, the Arrays.sort() for primitives is implemented as a variant of quicksort algorithm whose space complexity is $$O(\\log n)$$. In C++ sort() function provided by STL is a hybrid of Quick Sort, Heap Sort and Insertion Sort with the worst case space complexity of $$O(\\log n)$$. Thus the use of inbuilt sort() function adds $$O(\\log n)$$ to space complexity.\n\n    The space required for the output list is not considered while analyzing space complexity. Thus the overall space complexity in Big O Notation is $$O(n \\cdot 2^n)$$.\n\n    \n\n<br/>\n\n---\n\n### Approach 2: Cascading (Iterative)\n\n**Intuition**\n\nAssume the given array has no duplicate elements. In this case, there will be a total of $$2 ^ n$$ distinct subsets. To find all the subsets we start with an empty subset. This will be the first subset. Next, we consider one element at a time and add it to each of the existing subsets. This can be better understood in the following animation:\n\n!?!../Documents/90_SubsetsII_Approach2a.json:960,540!?!\n\n<br/>\n\nHowever, in this problem, the given array can have duplicate elements which will produce duplicate subsets if we follow the previously mentioned approach. Thus, we need to omit the duplicate subsets. For this, we need to sort the given array first. To avoid adding duplicate subsets we follow this rule:\n\n > Whenever the element under consideration has duplicates, we add one of the duplicate elements to all the existing subsets to create new subsets. For the rest of the duplicates, we only add them to the subsets created in the previous step. By convention, whenever a value is encountered for the first time, we add it to all the existing subsets. Then onwards we add its duplicates only to the subsets created in the previous step.\n\nIn other words, we treat a group of duplicate elements as an array. Suppose we have an array `[3, 3, 3]`. The ways to add the elements from this array to the existing subsets are as follows:\n\n1. Not add any element having value `3` in any subset.\n\n2. Add one `3` in all the subsets.\n\n3. Add two `3` in all the subsets.\n\n4. Add three `3` in all the subsets.\n\nThis can be better understood with the following animation:\n\n!?!../Documents/90_SubsetsII_Approach2b.json:960,540!?!\n\n<br/>\n\n**Algorithm**\n\n1. First, sort the array in ascending order.\n\n2. Initialize a variable `subsetSize` to 0. `subsetSize` holds the index of the subset in the `subsets` list from where we should start adding the current element if the current element is a duplicate. In other words, it holds the index of the first subset generated in the previous step.\n\n3. Iterate over the `nums` array considering one element at a time.\n\n4. If we haven't seen the value of the current element before, we need to add this element to all the previously generated subsets. So set `startingIndex` to 0.\n\n5. If the current element is a duplicate element, add it only to subsets that were created in the previous iteration. This means we will skip every subset that was created earlier than the previous iteration.  So instead of setting `startingIndex` to 0, set it equal to `subsetSize`.\n\n6. Set `subsetSize` to the current `subsets` size. This will be the starting index of the subsets generated in this iteration.\n\n7. Add the current element to all the subsets in the `subsets` list created before the current iteration starting from `startingIndex`.\n\n8. Return `subsets` list.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/3UUthCSW/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3UUthCSW\"></iframe>\n\n\n**Complexity Analysis**\n\nHere $$n$$ is the number of elements present in the given array.\n\n* Time complexity: $$O(n \\cdot 2 ^ n)$$\n\n    At first, we need to sort the given array which adds $$O(n \\log n)$$ to the time complexity. Next, we use two for loops to create all possible subsets. In the worst case, i.e., with an array of `n` distinct integers, we will have a total of $$2 ^ n$$ subsets. Thus the two for loops will add $$O(2 ^ n)$$ to time complexity. Also in the inner loop, we deep copy the previously generated subset before adding the current integer (to create a new subset). This in turn requires the time of order $$n$$ as the maximum number of elements in the `currentSubset` will be at most $$n$$. Thus, the time complexity in the subset generation step using two loops is $$O(n \\cdot 2 ^ n)$$. Thereby, the overall time complexity is $$O(n \\log n + n \\cdot 2 ^ n)$$ = $$O(n \\cdot (\\log n + 2 ^ n))$$ ~ $$O(n \\cdot 2 ^ n)$$.\n\n* Space complexity: $$O(\\log n)$$\n    \n    The space complexity of the sorting algorithm depends on the implementation of each programming language. For instance, in Java, the Arrays.sort() for primitives is implemented as a variant of quicksort algorithm whose space complexity is $$O(\\log n)$$. In C++ sort() function provided by STL is a hybrid of Quick Sort, Heap Sort and Insertion Sort with the worst case space complexity of $$O(\\log n)$$. Thus the use of inbuilt sort() function adds $$O(\\log n)$$ to space complexity.\n\n    The space required for the output list is not considered while analyzing space complexity. Thus the overall space complexity in Big O Notation is $$O(\\log n)$$.\n\n<br/>\n\n---\n\n### Approach 3: Backtracking\n\n**Intuition**\n\nIf you're not familiar with backtracking, check out our [Explore Card](https://leetcode.com/explore/learn/card/recursion-ii/472/backtracking/).\n\nAs demonstrated in the previous approaches, the key to this problem is figuring out how to avoid duplicate subsets. In the previous approach, we discussed an iterative way to do so. Although the iterative approach is optimal in terms of time and space complexity, recursive approaches tend to be more intuitive, so let's see how we can solve this problem recursively.\n\nWhen designing our recursive function, there are two main points that we need to consider at each function call:\n\n- Whether the element under consideration has duplicates or not.\n- If the element has duplicates, which element among the duplicates should be considered while creating a subset.\n\nBefore discussing the approach in detail, let's first have a quick look at the recursion tree for better understanding:\n\n![fig](../Figures/90/90_approach3_1.png)\n\n\n*The recursion tree illustrating how distinct subsets are created at each function call.Here the numbers in blue indicate the starting position of the nums array where we should start scanning at that function call.*\n\n\n<br/>\n\nThe above illustration gives us a rough idea about how we get the solution in a backtracking manner. Note that the order of the subsets in the result is the preorder traversal of the recursion tree. All that is left to do is to code the solution.\n\nStart with an empty list and the starting index set to 0. At each function call, add a new subset to the output list of subsets. Scan through all the elements in the `nums` array from the starting index (written in blue in the above diagram) to the end. Consider one element at a time and decide whether to keep it or not. If we haven't seen the current element before, then add it to the current list and make a recursive function call with the starting index incremented by one. Otherwise, the subset is a duplicate and so we ignore it. Thus, if in a particular function call we scan through `k` distinct elements, there will be `k` different branches.\n\n\n**Algorithm**\n\n1. First, sort the array in ascending order.\n\n2. Use a recursive helper function `subsetsWithDupHelper` to generate all possible subsets. The `subsetsWithDupHelper` has the following parameters:\n\n    - Output list of subsets (`subsets`).\n    - Current subset (`currentSubset`).\n    - `nums` array.\n    - the index in the `nums` array from where we should start scanning elements at that function call (`index`).\n\n3. At each recursive function call:\n\n    - Add the `currentSubset` to the `subsets` list.\n    - Iterate over the `nums` array from `index` to the array end.\n\n        - If the element is considered for the first time in that function call, add it to the `currentSubset` list. Make a function call to `subsetsWithDupHelper` with `index = current element position + 1`.\n        - Otherwise, the element is a duplicate. So we skip it as it will generate duplicate subsets (refer to the figure above).\n        - While backtracking, remove the last added element from the `currentSubset` and continue the iteration.\n\n4. Return `subsets` list.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/jyuXcbcX/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jyuXcbcX\"></iframe>\n\n\n**Complexity Analysis**\n\nHere $$n$$ is the number of elements present in the given array.\n\n* Time complexity: $$O(n \\cdot 2 ^ n)$$\n\n    As we can see in the diagram above, this approach does not generate any duplicate subsets. Thus, in the worst case (array consists of $$n$$ distinct elements), the total number of recursive function calls will be $$2 ^ n$$. Also, at each function call, a deep copy of the subset `currentSubset` generated so far is created and added to the `subsets` list. This will incur an additional $$O(n)$$ time (as the maximum number of elements in the `currentSubset` will be $$n$$). So overall, the time complexity of this approach will be $$O(n \\cdot 2 ^ n)$$.\n\n* Space complexity: $$O(n)$$\n    \n    The space complexity of the sorting algorithm depends on the implementation of each programming language. For instance, in Java, the Arrays.sort() for primitives is implemented as a variant of quicksort algorithm whose space complexity is $$O(\\log n)$$. In C++ sort() function provided by STL is a hybrid of Quick Sort, Heap Sort and Insertion Sort with the worst case space complexity of $$O(\\log n)$$. Thus the use of inbuilt sort() function adds $$O(\\log n)$$ to space complexity.\n\n    The recursion call stack occupies at most $$O(n)$$ space. The output list of subsets is not considered while analyzing space complexity. So, the space complexity of this approach is $$O(n)$$.\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

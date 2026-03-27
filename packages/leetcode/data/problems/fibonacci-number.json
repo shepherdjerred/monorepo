@@ -1,0 +1,122 @@
+{
+  "questionId": "1013",
+  "questionFrontendId": "509",
+  "title": "Fibonacci Number",
+  "titleSlug": "fibonacci-number",
+  "difficulty": "Easy",
+  "content": "<p>The <b>Fibonacci numbers</b>, commonly denoted <code>F(n)</code> form a sequence, called the <b>Fibonacci sequence</b>, such that each number is the sum of the two preceding ones, starting from <code>0</code> and <code>1</code>. That is,</p>\n\n<pre>\nF(0) = 0, F(1) = 1\nF(n) = F(n - 1) + F(n - 2), for n &gt; 1.\n</pre>\n\n<p>Given <code>n</code>, calculate <code>F(n)</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> F(2) = F(1) + F(0) = 1 + 0 = 1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> F(3) = F(2) + F(1) = 1 + 1 = 2.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 4\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> F(4) = F(3) + F(2) = 2 + 1 = 3.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= n &lt;= 30</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"fib\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"3M\", \"totalSubmission\": \"4M\", \"totalAcceptedRaw\": 2988452, \"totalSubmissionRaw\": 4039333, \"acRate\": \"74.0%\"}",
+  "likes": 9344,
+  "dislikes": 410,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Climbing Stairs\", \"titleSlug\": \"climbing-stairs\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Split Array into Fibonacci Sequence\", \"titleSlug\": \"split-array-into-fibonacci-sequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Length of Longest Fibonacci Subsequence\", \"titleSlug\": \"length-of-longest-fibonacci-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"N-th Tribonacci Number\", \"titleSlug\": \"n-th-tribonacci-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2",
+    "3",
+    "4"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"six_months\": [{\"timesEncountered\": 14, \"slug\": \"htc\", \"name\": \"HTC\"}, {\"timesEncountered\": 4, \"slug\": \"cognizant\", \"name\": \"Cognizant\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 7, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 4, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"lti\", \"name\": \"LTI\"}, {\"timesEncountered\": 2, \"slug\": \"intel\", \"name\": \"Intel\"}, {\"timesEncountered\": 2, \"slug\": \"spotify\", \"name\": \"Spotify\"}, {\"timesEncountered\": 2, \"slug\": \"nokia\", \"name\": \"Nokia\"}]}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    },
+    {
+      "name": "Memoization",
+      "slug": "memoization"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int fib(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int fib(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def fib(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def fib(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar fib = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function fib(n: number): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int Fib(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\nint fib(int n){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func fib(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun fib(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func fib(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn fib(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef fib(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function fib($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def fib(n: Int): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "762",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Recursion\n\n**Intuition**\n\nUse recursion to compute the Fibonacci number of a given integer.\n\n![fib(5) Recursion diagram](../Figures/509/fibonacciRecursion5.png){:width=\"539px\"}\n\n\n*Figure 1. An example tree representing what `fib(5)` would look like*\n\n\n**Algorithm**\n\n- Check if the provided input value, $$N$$, is less than or equal to 1. If true, return $$N$$.\n- Otherwise, the function `fib(int N)` calls itself, with the result of the 2 previous numbers being added to each other, passed in as the argument.\nThis is derived directly from the `recurrence relation`:\n$$F_{n} = F_{n-1} + F_{n-2}$$\n\n- Do this until all numbers have been computed, then return the resulting answer.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/WZveQzdi/shared\" frameBorder=\"0\" width=\"100%\" height=\"191\" name=\"WZveQzdi\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(2^N)$$. This is the slowest way to solve the `Fibonacci Sequence` because it takes exponential time. The amount of operations needed, for each level of recursion, grows exponentially as the depth approaches `N`.\n\n* Space complexity: $$O(N)$$. We need space proportional to `N` to account for the max size of the stack, in memory. This stack keeps track of the function calls to `fib(N)`. This has the potential to be bad in cases that there isn't enough physical memory to handle the increasingly growing stack, leading to a `StackOverflowError`. The [Java docs](https://docs.oracle.com/javase/7/docs/api/java/lang/StackOverflowError.html) have a good explanation of this, describing it as an error that occurs because an application recurses too deeply.\n\n<br />\n\n---\n\n### Approach 2: Bottom-Up Approach using Tabulation\n\n**Intuition**\n\nImprove upon the recursive approach by using iteration, still solving for all of the sub-problems and returning the answer for $$N$$, using already computed Fibonacci values. While using a bottom-up approach, we can iteratively compute and store the values, only returning once we reach the result.\n\n**Algorithm**\n\n- If `N` is less than or equal to 1, return `N`\n- Otherwise, iterate through `N`, storing each computed answer in an array along the way.\n- Use this array as a reference to the 2 previous numbers to calculate the current Fibonacci number.\n- Once we've reached the last number, return it's Fibonacci number.\n\n**Implementation**\n    \n<iframe src=\"https://leetcode.com/playground/752hRLRe/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"752hRLRe\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(N)$$. Each number, starting at 2 up to and including `N`, is visited, computed and then stored for $$O(1)$$ access later on.\n\n* Space complexity: $$O(N)$$. The size of the data structure is proportional to `N`.\n\n<br />\n\n---\n\n### Approach 3: Top-Down Approach using Memoization\n\n**Intuition**\n\nSolve for all of the sub-problems, use memoization to store the pre-computed answers, then return the answer for $$N$$. We will leverage recursion, but in a smarter way by not repeating the work to calculate existing values.\n\n**Algorithm**\n\n- At first, create a map with `0` -> `0` and `1` -> `1` pairs.\n- Call `fib(N)` function.\n    - At every recursive call of `fib(N)`, if `N` exists in the map, return the cached value for `N`.\n    - Otherwise, set the key `N`, in our mapping, to the value of `fib(N - 1) + fib(N - 2)` and return the computed value.\n\n> For Python, instead of manually maintaining a dictionary (`cache`) we can use the built-in decorator @cache or @lru_cache(None). You can read more about these decorators [here](https://docs.python.org/3/library/functools). We decided not to use the decorators in this approach so that the solution gives a clear idea about what actually happens when memoization is added to a function.\n\n**Implementation**\n                   \n<iframe src=\"https://leetcode.com/playground/fnNGtVWw/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"fnNGtVWw\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(N)$$. Each number, starting at 2 up to and including `N`, is visited, computed and then stored for $$O(1)$$ access later on.\n\n* Space complexity: $$O(N)$$. The size of the stack in memory is proportional to `N`. Also, the memoization hash table is used, which occupies $$O(N)$$ space.\n\n<br />\n\n---\n\n### Approach 4: Iterative Bottom-Up Approach\n\n**Intuition**\n\nLet's get rid of the need to use all of that space and instead use the minimum amount of space required.  Notice that during each recursive call in the top-down approach and each iteration in the bottom-up approach, we only needed to look at the results of `fib(N-1)` and `fib(N-2)` to determine the result of `fib(N)`.  Therefore, we can achieve $$O(1)$$ space complexity by only storing the value of the two previous numbers and updating them as we iterate to `N`.\n\n**Algorithm**\n\n- Check if `N <= 1`, if it is, then we should return `N`.\n- We need 3 variables to store each state `fib(N)`, `fib(N-1)`, and `fib(N-2)`.\n- Preset the initial values:\n    - Initialize `current` with 0.\n    - Initialize `prev1` with 1, since this will represent `fib(N-1)` when computing the current value.\n    - Initialize `prev2` with 0, since this will represent `fib(N-2)` when computing the current value.\n- Iterate, incrementally by 1, all the way up to and including `N`. Starting at 2, since `0` and `1` are pre-computed.\n- Set the `current` value to `prev1 + prev2` because that is the value we are currently computing.\n- Set the `prev2` value to `prev1`.\n- Set the `prev1` value to `current`.\n- When we reach `N+1`, we will exit the loop and return the previously set `current` value.\n\n**Implementation**\n                   \n<iframe src=\"https://leetcode.com/playground/7Cx6e4Ek/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"7Cx6e4Ek\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(N)$$. Each value from `2` to `N` is computed once. Thus, the time it takes to find the answer is directly proportional to `N` where `N` is the Fibonacci Number we are looking to compute.\n\n* Space complexity: $$O(1)$$. This requires 1 unit of space for the integer `N` and 3 units of space to store the computed values (`current`, `prev1`, and `prev2`) for every loop iteration. The amount of space used is independent of $$N$$, so this approach uses a constant amount of space.\n\n<br />\n\n---\n\n### Approach 5: Matrix Exponentiation\n\n**Intuition**\n\nUse Matrix Exponentiation to get the Fibonacci number from the element at (0, 0) in the resultant matrix.\n\nIn order to do this we can rely on the matrix equation for the Fibonacci sequence, to find the `Nth` Fibonacci number:\n$$\n\\begin{pmatrix}\n 1\\,\\,1 \\\\\n 1\\,\\,0\n\\end{pmatrix}^{n}=\\begin{pmatrix}\n \\: F_{(n+1)}\\;\\;\\:F_{(n)}\\\\\n \\: F_{(n)}\\;\\;\\:F_{(n-1)}\n\\end{pmatrix}\n$$\n\n**Algorithm**\n\n- Check if `N` is less than or equal to 1. If it is, return `N`.\n- Use a recursive function, `matrixPower`, to calculate the power of a given matrix `A`. The power will be `N-1`, where `N` is the `Nth` Fibonacci number.\n- The `matrixPower` function will be performed for `N/2` of the Fibonacci numbers.\n- Within `matrixPower`, call the `multiply` function to multiply 2 matrices.\n- Once we finish doing the calculations, return `A[0][0]` to get the `Nth` Fibonacci number.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/8BkHviGN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8BkHviGN\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(\\log N)$$. By halving the `N` value in every `matrixPower`'s call to itself, we are halving the work needed to be done.\n\n* Space complexity: $$O(\\log N)$$. The size of the stack in memory is proportional to the function calls to `matrixPower` plus the memory used to account for the matrices which use constant space.\n\n<br />\n\n---\n\n### Approach 6: Math\n\n**Intuition**\n    \nLet's use the `golden ratio`, a.k.a `Binet's forumula`: $$ \\varphi = \\frac{1 + \\sqrt{5}}{2} \\approx 1.6180339887.... $$\n\nHere's a [link](http://demonstrations.wolfram.com/GeneralizedFibonacciSequenceAndTheGoldenRatio/) to find out more about how the Fibonacci sequence and the golden ratio work.\n\nWe can derive the most efficient solution to this problem using only constant space!\n\n**Algorithm**\n\n- Use the `golden ratio` formula to calculate the `Nth` Fibonacci number.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/8mCRrVE6/shared\" frameBorder=\"0\" width=\"100%\" height=\"157\" name=\"8mCRrVE6\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(\\log N)$$. We do not use loops or recursion, so the time required equals the time spent performing the calculation using `Binet's formula`. However, raising the `golden_ratio` to the power of $$N$$ requires $$O(\\log N)$$ time.\n\n* Space complexity: $$O(1)$$. The space used is the space needed to create the variable to store the `golden ratio`.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

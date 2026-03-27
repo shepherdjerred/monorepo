@@ -1,0 +1,129 @@
+{
+  "questionId": "660",
+  "questionFrontendId": "660",
+  "title": "Remove 9",
+  "titleSlug": "remove-9",
+  "difficulty": "Hard",
+  "content": "<p>Start from integer <code>1</code>, remove any integer that contains <code>9</code> such as <code>9</code>, <code>19</code>, <code>29</code>...</p>\n\n<p>Now, you will have a new integer sequence <code>[1, 2, 3, 4, 5, 6, 7, 8, 10, 11, ...]</code>.</p>\n\n<p>Given an integer <code>n</code>, return <em>the</em> <code>n<sup>th</sup></code> (<strong>1-indexed</strong>) integer in the new sequence.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 9\n<strong>Output:</strong> 10\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 10\n<strong>Output:</strong> 11\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 8 * 10<sup>8</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"newInteger\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"11.3K\", \"totalSubmission\": \"19.7K\", \"totalAcceptedRaw\": 11307, \"totalSubmissionRaw\": 19676, \"acRate\": \"57.5%\"}",
+  "likes": 166,
+  "dislikes": 204,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "9",
+    "10"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"houzz\", \"name\": \"Houzz\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int newInteger(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int newInteger(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def newInteger(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def newInteger(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar newInteger = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function newInteger(n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NewInteger(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int newInteger(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func newInteger(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun newInteger(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func newInteger(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn new_integer(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef new_integer(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function newInteger($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int newInteger(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def newInteger(n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec new_integer(n :: integer) :: integer\n  def new_integer(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec new_integer(N :: integer()) -> integer().\nnew_integer(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (new-integer n)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "322",
+    "content": "[TOC]\n\n---\n### Approach #1: Mathematical\n\n**Intuition**\n\nLet's write the first numbers and try to notice a pattern. Those numbers are:\n\n```python\n1, 2, 3, 4, 5, 6, 7, 8,\n10, 11, 12, 13, 14, 15, 16, 17, 18,\n20, 21, 22, 23, 24, 25, 26, 27, 28,\n...\n80, 81, 82, 83, 84, 85, 86, 87, 88,\n100, 101, 102, ...\n```\n\nThese numbers look exactly like all base-9 numbers!\n\nIndeed, every base-9 number is a number in this sequence, and every number in this sequence is a base-9 number. Both this sequence and the sequence of all base-9 numbers are in increasing order. The answer is therefore just the n-th base-9 number.\n\n<iframe src=\"https://leetcode.com/playground/AH46q66m/shared\" frameBorder=\"0\" width=\"100%\" height=\"191\" name=\"AH46q66m\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(1)$$, since $$N$$ has at most 9 digits.\n\n* Space Complexity: $$O(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

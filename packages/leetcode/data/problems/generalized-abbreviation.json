@@ -1,0 +1,137 @@
+{
+  "questionId": "320",
+  "questionFrontendId": "320",
+  "title": "Generalized Abbreviation",
+  "titleSlug": "generalized-abbreviation",
+  "difficulty": "Medium",
+  "content": "<p>A word&#39;s <strong>generalized abbreviation</strong> can be constructed by taking any number of <strong>non-overlapping</strong> and <strong>non-adjacent</strong> <span data-keyword=\"substring-nonempty\">substrings</span> and replacing them with their respective lengths.</p>\n\n<ul>\n\t<li>For example, <code>&quot;abcde&quot;</code> can be abbreviated into:\n\n\t<ul>\n\t\t<li><code>&quot;a3e&quot;</code> (<code>&quot;bcd&quot;</code> turned into <code>&quot;3&quot;</code>)</li>\n\t\t<li><code>&quot;1bcd1&quot;</code> (<code>&quot;a&quot;</code> and <code>&quot;e&quot;</code> both turned into <code>&quot;1&quot;</code>)</li>\n\t\t<li><code>&quot;5&quot;</code> (<code>&quot;abcde&quot;</code> turned into <code>&quot;5&quot;</code>)</li>\n\t\t<li><code>&quot;abcde&quot;</code> (no substrings replaced)</li>\n\t</ul>\n\t</li>\n\t<li>However, these abbreviations are <strong>invalid</strong>:\n\t<ul>\n\t\t<li><code>&quot;23&quot;</code> (<code>&quot;ab&quot;</code> turned into <code>&quot;2&quot;</code> and <code>&quot;cde&quot;</code> turned into <code>&quot;3&quot;</code>) is invalid as the substrings chosen are adjacent.</li>\n\t\t<li><code>&quot;22de&quot;</code> (<code>&quot;ab&quot;</code> turned into <code>&quot;2&quot;</code> and <code>&quot;bc&quot;</code> turned into <code>&quot;2&quot;</code>) is invalid as the substring chosen overlap.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>Given a string <code>word</code>, return <em>a list of all the possible <strong>generalized abbreviations</strong> of</em> <code>word</code>. Return the answer in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> word = \"word\"\n<strong>Output:</strong> [\"4\",\"3d\",\"2r1\",\"2rd\",\"1o2\",\"1o1d\",\"1or1\",\"1ord\",\"w3\",\"w2d\",\"w1r1\",\"w1rd\",\"wo2\",\"wo1d\",\"wor1\",\"word\"]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> word = \"a\"\n<strong>Output:</strong> [\"1\",\"a\"]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= word.length &lt;= 15</code></li>\n\t<li><code>word</code> consists of only lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"generateAbbreviations\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"word\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<string>\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"75.7K\", \"totalSubmission\": \"125.4K\", \"totalAcceptedRaw\": 75714, \"totalSubmissionRaw\": 125401, \"acRate\": \"60.4%\"}",
+  "likes": 712,
+  "dislikes": 232,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Subsets\", \"titleSlug\": \"subsets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Unique Word Abbreviation\", \"titleSlug\": \"unique-word-abbreviation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Unique Word Abbreviation\", \"titleSlug\": \"minimum-unique-word-abbreviation\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"word\"",
+    "\"a\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> generateAbbreviations(string word) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> generateAbbreviations(String word) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def generateAbbreviations(self, word: str) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def generateAbbreviations(self, word):\n        \"\"\"\n        :type word: str\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} word\n * @return {string[]}\n */\nvar generateAbbreviations = function(word) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function generateAbbreviations(word: string): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> GenerateAbbreviations(string word) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** generateAbbreviations(char* word, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func generateAbbreviations(word string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun generateAbbreviations(word: String): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func generateAbbreviations(_ word: String) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn generate_abbreviations(word: String) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} word\n# @return {String[]}\ndef generate_abbreviations(word)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $word\n     * @return String[]\n     */\n    function generateAbbreviations($word) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> generateAbbreviations(String word) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def generateAbbreviations(word: String): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec generate_abbreviations(word :: String.t) :: [String.t]\n  def generate_abbreviations(word) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec generate_abbreviations(Word :: unicode:unicode_binary()) -> [unicode:unicode_binary()].\ngenerate_abbreviations(Word) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (generate-abbreviations word)\n  (-> string? (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2412",
+    "content": "## Solution\n\n---\n\n### Approach 1: Backtracking\n\n#### Intuition\n\nWe are given a string `word` of $N$ lowercase English letters. Our task is to choose any number of non-overlapping and non-adjacent substrings from the string and replace them with their length, resulting in an abbreviated string of the original one. \n\nFor example, given the string `abcde`, we can choose substrings `bc` and `e`, replacing `bc` with `2` and `e` with `1`, resulting in the abbreviated string `a2d1`. Note that substrings like `bc` and `cd` are invalid because they are adjacent, and substrings like `abc` and `cd` are invalid because they overlap.\n\nAn important observation is that the length of the string `word` will be less than 15. To generate all possible abbreviated strings, we need to explore all options. Each character in `word` can either be part of an abbreviated substring or remain as a separate character. We will explore both options for each character and store the resulting strings in a list.\n\nFor each character, the first option is to keep it as part of the current string without abbreviation. The second option is to abbreviate it. We track three things: the current string being constructed (`currWord`), the current index in `word` (`index`), and the length of the current substring being abbreviated (`abbreviatedCount`).\n\nWhen we choose to abbreviate a character, we increment the `abbreviatedCount` by 1 and move to the next index. When we choose not to abbreviate, we add the `abbreviatedCount` to `currWord` (since the current substring ends), then add the character `word[index]` to `currWord`, and reset `abbreviatedCount` to 0.\n\nAfter iterating over all characters in `word`, we add the final `abbreviatedCount` to `currWord` and store the resulting string in a list of all possible abbreviations.\n\n#### Algorithm\n\n1. Initialize an empty list of strings `abbreviations`.\n\n2. Define the method `storeAbbreviations` that has three parameters to track `currWord`, `index`, and `abbreviatedCount`. Do the following:\n    - If the `index` is equal to the `word` size, store the abbreviated integer corresponding to the last substring to `currWord` and then store it in the list `abbreviations`.\n    - Define the string `abbreviatedString` as the `abbreviatedCount` in the form of a string or an empty string if the integer is `0`.\n    - Recursively call the method when we choose not to abbreviate the current character with `index = index + 1`, `abbreviatedCount = 0`, add the`abbreviatedString` and `word[index]` to `currWord`.\n    - When we choose to abbreviate the current character, make a recursive call with `index = index + 1`, `abbreviatedCount = abbreviatedCount + 1`.\n \n3. Call the method `storeAbbreviations` with `index = 0` and `abbreviatedCount = 0`.\n4. Return `abbreviations`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/mnybzYD4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"mnybzYD4\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the length of the string `word`.\n\n* Time complexity: $O(N \\times 2^N)$.\n\n  Each of the $N$ characters in the string `word` has two choices that we will make until we do it for all the characters. Also, for each string produced, we are appending the `abbreviatedString` during the process which adds another $O(N)$ time. Since we are going to generate $2^N$ strings, therefore the time complexity is equal to $O(2^N)$.\n\n* Space complexity: $O(N)$.\n\n    The space used to store the output is generally not considered part of the space complexity. Thus, the only space required is the stack space, the maximum number of active function calls in the stack will be equal to $N$ one for each character in the string `word`. Hence, the space complexity is equal to $O(N)$.\n\n---\n\n### Approach 2: Bit Manipulation\n\n#### Intuition\n\nThis approach is very similar to the previous one, following the same procedure but in an iterative manner. From the previous approach, we know that each character has two choices, and we will expand each choice for all characters to generate all $2^N$ strings. Another way to view this is by using bits: consider the numbers from `0` to $2^N - 1$ and their binary representation. If a bit in the binary representation is `0`, it means we are not going to abbreviate the corresponding character; if the bit is `1`, it means this character will be abbreviated.\n\nThe starting number `0` has all bits as `0`, meaning none of the characters should be abbreviated, while the last number $2^N - 1$ has all bits as `1`, meaning all characters should be abbreviated as a single substring. The integers in between represent the different combinations of choices for each character.\n\nTo represent all possible combinations for choices of all characters, we convert these binary numbers to strings that represent the abbreviated form of the original string. When a bit is `1`, we need to add it to the abbreviated string and hence we keep an integer `abbreviatedCount` to track the length of the current substring that is being abbreviated. We increment this counter when the bit is `1`. When the bit is `0`, we append the current character as it is to the current word we are preparing, `currWord`. However, before appending the character, we append the abbreviated string of the last substring length represented by `abbreviatedCount`, then reset `abbreviatedCount` to `0`.\n\nFor each of the integers from `0` to $2^N - 1$, we repeat this process and store the `currWord` in the list of strings `abbreviations`, which we can return at the end.\n\n![fig](../Figures/320/320A.png)\n\n#### Algorithm\n\n1. Initialize an empty list of strings `abbreviations`.\n2. Iterate over each number from `0` to `$2^N$ - 1` and for each such integer `mask` do the following:\n\n    - Initialize an empty string `currWord` and integer `abbreviatedCount` to `0`.\n    - Iterate over the integers from `0` to `N - 1` `Index` that represents the bits, for each `Index`\n        - If the bit at `Index` is `1`, increment the counter `abbreviatedCount`\n        - If the bit at `Index` is `0`, append the integer `abbreviatedCount` (if not `0`) and then append the character `word[Index]` to `currWord`. Reset `abbreviatedCount` to `0`.\n    - After iterating over all bits, append the last substring length (if not `0`) using the variable `abbreviatedCount` to `currWord`.\n    - Add the string `currWord` to `abbreviations`.\n\n3. Return `abbreviations`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TRMro2mK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TRMro2mK\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the length of the string `word`.\n\n* Time complexity: $O(N \\times 2^N)$.\n\n    We iterate over the integers from `0` to `$2^N$ - 1` and for each one of these we will iterate over the bits from `0` to `N`, hence the total time complexity is equal to $O(N \\times 2^N)$.\n\n* Space complexity: $O(1)$.\n\n    The space used to store the output is generally not considered part of the space complexity. Thus no extra space is required. Hence, the space complexity is constant.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

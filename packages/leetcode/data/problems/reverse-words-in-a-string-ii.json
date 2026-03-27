@@ -1,0 +1,118 @@
+{
+  "questionId": "186",
+  "questionFrontendId": "186",
+  "title": "Reverse Words in a String II",
+  "titleSlug": "reverse-words-in-a-string-ii",
+  "difficulty": "Medium",
+  "content": "<p>Given a character array <code>s</code>, reverse the order of the <strong>words</strong>.</p>\n\n<p>A <strong>word</strong> is defined as a sequence of non-space characters. The <strong>words</strong> in <code>s</code> will be separated by a single space.</p>\n\n<p>Your code must solve the problem&nbsp;<strong>in-place,</strong> i.e. without allocating extra space.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> s = [\"t\",\"h\",\"e\",\" \",\"s\",\"k\",\"y\",\" \",\"i\",\"s\",\" \",\"b\",\"l\",\"u\",\"e\"]\n<strong>Output:</strong> [\"b\",\"l\",\"u\",\"e\",\" \",\"i\",\"s\",\" \",\"s\",\"k\",\"y\",\" \",\"t\",\"h\",\"e\"]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> s = [\"a\"]\n<strong>Output:</strong> [\"a\"]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s[i]</code> is an English letter (uppercase or lowercase), digit, or space <code>&#39; &#39;</code>.</li>\n\t<li>There is <strong>at least one</strong> word in <code>s</code>.</li>\n\t<li><code>s</code> does not contain leading or trailing spaces.</li>\n\t<li>All the words in <code>s</code> are guaranteed to be separated by a single space.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"reverseWords\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"character[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"void\"\n  },\n  \"output\": {\n    \"paramindex\": 0\n  }\n}",
+  "stats": "{\"totalAccepted\": \"180.6K\", \"totalSubmission\": \"318.8K\", \"totalAcceptedRaw\": 180572, \"totalSubmissionRaw\": 318839, \"acRate\": \"56.6%\"}",
+  "likes": 1118,
+  "dislikes": 146,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Reverse Words in a String\", \"titleSlug\": \"reverse-words-in-a-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Rotate Array\", \"titleSlug\": \"rotate-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"t\",\"h\",\"e\",\" \",\"s\",\"k\",\"y\",\" \",\"i\",\"s\",\" \",\"b\",\"l\",\"u\",\"e\"]",
+    "[\"a\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    void reverseWords(vector<char>& s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public void reverseWords(char[] s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def reverseWords(self, s: List[str]) -> None:\n        \"\"\"\n        Do not return anything, modify s in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def reverseWords(self, s):\n        \"\"\"\n        :type s: List[str]\n        :rtype: None Do not return anything, modify s in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {character[]} s\n * @return {void} Do not return anything, modify s in-place instead.\n */\nvar reverseWords = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n Do not return anything, modify s in-place instead.\n */\nfunction reverseWords(s: string[]): void {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public void ReverseWords(char[] s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "void reverseWords(char* s, int sSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func reverseWords(s []byte)  {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun reverseWords(s: CharArray): Unit {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func reverseWords(_ s: inout [Character]) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn reverse_words(s: &mut Vec<char>) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Character[]} s\n# @return {Void} Do not return anything, modify s in-place instead.\ndef reverse_words(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $s\n     * @return NULL\n     */\n    function reverseWords(&$s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  void reverseWords(List<String> s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def reverseWords(s: Array[Char]): Unit = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "856",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/844727300\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Approach 1: Reverse the Whole String and Then Reverse Each Word\n\nTo have this problem in Amazon interview is a good situation since the input is a mutable structure and hence one could aim $$\\mathcal{O}(1)$$ space solution without any technical difficulties.\n\n> The idea is simple: reverse the whole string and then reverse each word. \n\n![fig](../Figures/186/reverse.png)\n\n**Algorithm**\n\nLet's first implement two functions:\n\n- `reverse(l: list, left: int, right: int)`, which reverses array characters between left and right pointers. C++ users could directly use built-in `std::reverse`. \n\n- `reverse_each_word(l: list)`, which uses two pointers to mark the boundaries of each word and the previous function to reverse it. \n\nNow `reverseWords(s: List[str])` implementation is straightforward:\n\n- Reverse the whole string: `reverse(s, 0, len(s) - 1)`.\n\n- Reverse each word: `reverse_each_word(s)`.\n\n**Implementation**\n\n!?!../Documents/186_LIS.json:1000,507!?!\n\n<iframe src=\"https://leetcode.com/playground/DChjKPUj/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DChjKPUj\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$, it's two passes along the string.\n\n* Space complexity: $$\\mathcal{O}(1)$$, it's a constant space solution.\n<br /> \n<br />",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

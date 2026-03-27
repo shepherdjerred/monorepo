@@ -1,0 +1,137 @@
+{
+  "questionId": "16",
+  "questionFrontendId": "16",
+  "title": "3Sum Closest",
+  "titleSlug": "3sum-closest",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code> of length <code>n</code> and an integer <code>target</code>, find three integers at <strong>distinct indices</strong> in <code>nums</code> such that the sum is closest to <code>target</code>.</p>\n\n<p>Return <em>the sum of the three integers</em>.</p>\n\n<p>You may assume that each input would have exactly one solution.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [-1,2,1,-4], target = 1\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The sum that is closest to the target is 2. (-1 + 2 + 1 = 2).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0,0,0], target = 1\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> The sum that is closest to the target is 0. (0 + 0 + 0 = 0).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= nums.length &lt;= 500</code></li>\n\t<li><code>-1000 &lt;= nums[i] &lt;= 1000</code></li>\n\t<li><code>-10<sup>4</sup> &lt;= target &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"threeSumClosest\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"target\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.8M\", \"totalSubmission\": \"3.7M\", \"totalAcceptedRaw\": 1792719, \"totalSubmissionRaw\": 3715313, \"acRate\": \"48.3%\"}",
+  "likes": 11612,
+  "dislikes": 621,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"3Sum\", \"titleSlug\": \"3sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"3Sum Smaller\", \"titleSlug\": \"3sum-smaller\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[-1,2,1,-4]\n1",
+    "[0,0,0]\n1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 9, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}, {\"timesEncountered\": 2, \"slug\": \"harness\", \"name\": \"Harness\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"dream11\", \"name\": \"Dream11\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int threeSumClosest(vector<int>& nums, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int threeSumClosest(int[] nums, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def threeSumClosest(self, nums: List[int], target: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def threeSumClosest(self, nums, target):\n        \"\"\"\n        :type nums: List[int]\n        :type target: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} target\n * @return {number}\n */\nvar threeSumClosest = function(nums, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function threeSumClosest(nums: number[], target: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ThreeSumClosest(int[] nums, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int threeSumClosest(int* nums, int numsSize, int target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func threeSumClosest(nums []int, target int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun threeSumClosest(nums: IntArray, target: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func threeSumClosest(_ nums: [Int], _ target: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn three_sum_closest(nums: Vec<i32>, target: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} target\n# @return {Integer}\ndef three_sum_closest(nums, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $target\n     * @return Integer\n     */\n    function threeSumClosest($nums, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int threeSumClosest(List<int> nums, int target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def threeSumClosest(nums: Array[Int], target: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec three_sum_closest(nums :: [integer], target :: integer) :: integer\n  def three_sum_closest(nums, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec three_sum_closest(Nums :: [integer()], Target :: integer()) -> integer().\nthree_sum_closest(Nums, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (three-sum-closest nums target)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "948",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n <div>\n    <div class=\"video-container\">\n      <iframe src=\"https://player.vimeo.com/video/850690724?texttrack=en-x-autogenerated\" frameborder=\"0\"\n        allow=\"autoplay; fullscreen\"></iframe>\n    </div>\n</div>\n\n## Solution\n\nThis problem is a variation of [3Sum](https://leetcode.com/articles/3sum/). The main difference is that the sum of a triplet is not necessarily equal to the target. Instead, the sum is in some *relation* with the target, which is *closest* to the target for this problem. In that sense, this problem shares similarities with [3Sum Smaller](https://leetcode.com/articles/3sum-smaller/).\n\nBefore jumping in, let's check solutions for the similar problems:\n\n1. [3Sum](https://leetcode.com/articles/3sum/) fixes one number and uses either the two pointers pattern or a hash set to find complementary pairs. Thus, the time complexity is $$\\mathcal{O}(n^2)$$.\n\n2. [3Sum Smaller](https://leetcode.com/articles/3sum-smaller/), similarly to 3Sum, uses the two pointers pattern to enumerate smaller pairs. Note that we cannot use a hash set here because we do not have a specific value to look up.\n\nFor the same reason as for 3Sum Smaller, we cannot use a hash set approach here. So, we will focus on the two pointers pattern and shoot for $$\\mathcal{O}(n^2)$$ time complexity as the best conceivable runtime (BCR).\n\n---\n\n### Approach 1: Two Pointers\n\nThe two pointers pattern requires the array to be sorted, so we do that first. As our BCR is $$\\mathcal{O}(n^2)$$, the sort operation would not change the overall time complexity.\n\nIn the sorted array, we process each value from left to right. For value `v`, we need to find a pair which sum, ideally, is equal to `target - v`. We will follow the same two pointers approach as for 3Sum, however, since this 'ideal' pair may not exist, we will track the smallest absolute difference between the sum and the target. The two pointers approach naturally enumerates pairs so that the sum moves toward the target.\n\n!?!../Documents/16_3Sum_Closest.json:1600,502!?!\n\n**Algorithm**\n\n1. Initialize the minimum difference `diff` with a large value.\n2. Sort the input array `nums`.\n3. Iterate through the array:\n    - For the current position `i`, set `lo` to `i + 1`, and `hi` to the last index.\n    - While the `lo` pointer is smaller than `hi`:\n        - Set `sum` to `nums[i] + nums[lo] + nums[hi]`.\n        - If the absolute difference between `sum` and `target` is smaller than the absolute value of `diff`:\n            - Set `diff` to `target - sum`.\n        - If `sum` is less than `target`, increment `lo`.\n        - Else, decrement `hi`.\n    - If `diff` is zero, break from the loop.\n4. Return the value of the closest triplet, which is `target - diff`.\n\n<iframe src=\"https://leetcode.com/playground/a7Nyq6iY/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"a7Nyq6iY\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(n^2)$$. We have outer and inner loops, each going through $$n$$ elements.\n\n    Sorting the array takes $$\\mathcal{O}(n\\log{n})$$, so overall complexity is $$\\mathcal{O}(n\\log{n} + n^2)$$. This is asymptotically equivalent to $$\\mathcal{O}(n^2)$$.\n\n- Space Complexity: from $$\\mathcal{O}(\\log{n})$$ to $$\\mathcal{O}(n)$$, depending on the implementation of the sorting algorithm.\n\n---\n\n### Approach 2: Binary Search\n\nWe can adapt the [3Sum Smaller: Binary Search](https://leetcode.com/articles/3sum-smaller/#approach-2-binary-search-accepted) approach to this problem.\n\nIn the two pointers approach, we fix one number and use two pointers to enumerate pairs. Here, we fix two numbers, and use a binary search to find the third complement number. This is less efficient than the two pointers approach, however, it could be more intuitive to come up with.\n\nNote that we may not find the exact complement number, so we check the difference between the complement and two numbers: the next higher and the previous lower. For example, if the complement is `42`, and our array is `[-10, -4, 15, 30, 60]`, the next higher is `60` (so the difference is `-18`), and the previous lower is `30` (and the difference is `12`).\n\n**Algorithm**\n\n1. Initialize the minimum difference `diff` with a large value.\n2. Sort the input array `nums`.\n3. Iterate through the array (outer loop):\n    - For the current position `i`, iterate through the array starting from `j = i + 1` (inner loop):\n        - Binary-search for `complement` (`target - nums[i] - nums[j]`) in the rest of the array.\n        - For the next higher value, check its absolute difference with `complement` against `diff`.\n        - For the previous lower value, check its absolute difference with `complement` against `diff`.\n        - Update `diff` based on the smallest absolute difference.\n    - If `diff` is zero, break from the loop.\n4. Return the value of the closest triplet, which is `target - diff`.\n\n<iframe src=\"https://leetcode.com/playground/4ttfd3md/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4ttfd3md\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(n^2\\log{n})$$. Binary search takes $$\\mathcal{O}(\\log{n})$$, and we do it $$n$$ times in the inner loop. Since we are going through $$n$$ elements in the outer loop, the overall complexity is $$\\mathcal{O}(n^2\\log{n})$$.\n\n- Space Complexity: from $$\\mathcal{O}(\\log{n})$$ to $$\\mathcal{O}(n)$$, depending on the implementation of the sorting algorithm.\n\n---\n\n### Further Thoughts\n\n3Sum is a well-known problem with many variations and its own [Wikipedia page](https://en.wikipedia.org/wiki/3SUM).\n\nFor an interview, we recommend focusing on the Two Pointers approach above. It's easier to get it right and adapt for other variations of 3Sum. Interviewers love asking follow-up problems like [3Sum Smaller](https://leetcode.com/articles/3sum-smaller/)!\n\nIf an interviewer asks you whether you can achieve $$\\mathcal{O}(1)$$ memory complexity, you can use the selection sort instead of a built-in sort in the Two Pointers approach. It will make it a bit slower, though the overall time complexity will be still $$\\mathcal{O}(n^2)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

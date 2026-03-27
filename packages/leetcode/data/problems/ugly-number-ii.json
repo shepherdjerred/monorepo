@@ -1,0 +1,146 @@
+{
+  "questionId": "264",
+  "questionFrontendId": "264",
+  "title": "Ugly Number II",
+  "titleSlug": "ugly-number-ii",
+  "difficulty": "Medium",
+  "content": "<p>An <strong>ugly number</strong> is a positive integer whose prime factors are limited to <code>2</code>, <code>3</code>, and <code>5</code>.</p>\n\n<p>Given an integer <code>n</code>, return <em>the</em> <code>n<sup>th</sup></code> <em><strong>ugly number</strong></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 10\n<strong>Output:</strong> 12\n<strong>Explanation:</strong> [1, 2, 3, 4, 5, 6, 8, 9, 10, 12] is the sequence of the first 10 ugly numbers.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> 1 has no prime factors, therefore all of its prime factors are limited to 2, 3, and 5.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 1690</code></li>\n</ul>\n",
+  "hints": [
+    "The naive approach is to call <code>isUgly</code> for every number until you reach the n<sup>th</sup> one. Most numbers are <i>not</i> ugly. Try to focus your effort on generating only the ugly ones.",
+    "An ugly number must be multiplied by either 2, 3, or 5 from a smaller ugly number.",
+    "The key is how to maintain the order of the ugly numbers. Try a similar approach of merging from three sorted lists: L<sub>1</sub>, L<sub>2</sub>, and L<sub>3</sub>.",
+    "Assume you have U<sub>k</sub>, the k<sup>th</sup> ugly number. Then U<sub>k+1</sub> must be Min(L<sub>1</sub> * 2, L<sub>2</sub> * 3, L<sub>3</sub> * 5)."
+  ],
+  "metaData": "{\r\n  \"name\": \"nthUglyNumber\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"532.4K\", \"totalSubmission\": \"1.1M\", \"totalAcceptedRaw\": 532358, \"totalSubmissionRaw\": 1074721, \"acRate\": \"49.5%\"}",
+  "likes": 6860,
+  "dislikes": 448,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Merge k Sorted Lists\", \"titleSlug\": \"merge-k-sorted-lists\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Primes\", \"titleSlug\": \"count-primes\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Ugly Number\", \"titleSlug\": \"ugly-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Perfect Squares\", \"titleSlug\": \"perfect-squares\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Super Ugly Number\", \"titleSlug\": \"super-ugly-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Ugly Number III\", \"titleSlug\": \"ugly-number-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "10",
+    "1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 2, \"slug\": \"paytm\", \"name\": \"Paytm\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int nthUglyNumber(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int nthUglyNumber(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def nthUglyNumber(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def nthUglyNumber(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar nthUglyNumber = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function nthUglyNumber(n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NthUglyNumber(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int nthUglyNumber(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func nthUglyNumber(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun nthUglyNumber(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func nthUglyNumber(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn nth_ugly_number(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef nth_ugly_number(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function nthUglyNumber($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int nthUglyNumber(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def nthUglyNumber(n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec nth_ugly_number(n :: integer) :: integer\n  def nth_ugly_number(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec nth_ugly_number(N :: integer()) -> integer().\nnth_ugly_number(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (nth-ugly-number n)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2409",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nAn ugly number is a positive integer whose prime factors are limited to `2`, `3`, and `5`. This means that for a number to be classified as ugly, it can only be divided by these primes without leaving a remainder.\n\nIn Example 2, we observe that the number `1` is considered an ugly number, even though it lacks any prime factors of `2`, `3`, or `5`. This might seem confusing initially, but the explanation clarifies that \"`1` has no prime factors; therefore, all of its prime factors are limited to `2`, `3`, and `5`.\" This statement can be somewhat misleading if not properly understood. It implies that since `1` has no prime factors, it doesn't violate the rule that ugly numbers can only have prime factors of `2`, `3`, or `5`. In essence, `1` automatically meets the condition, as there are no prime factors to contradict the rule.\n\n> In short `1` is an ugly number because it can be expressed as $2^0 \\times 3^0 \\times 5^0$\n\n### Approach 1: Using Set \n\n#### Intuition\n\nWe begin with a brute force approach where the goal is to count ugly numbers one by one until we reach the nth ugly number. We can create a helper function that checks if a number is ugly by repeatedly dividing it by `2`, `3`, and `5` until it's no longer divisible by these primes. If the result is `1`, the number is ugly. We then iterate through integers applying this check, and count the ugly numbers we encounter. While this method works, it’s inefficient as it checks every number sequentially, including those clearly not ugly (e.g., numbers divisible by other primes). This results in high time complexity, making it unsuitable for large values of `n`.\n\nTo improve upon the brute force method, we can leverage a key property of ugly numbers: if a number is ugly, multiplying it by `2`, `3`, or `5` also yields an ugly number. This insight allows us to generate ugly numbers systematically rather than checking each number individually.\n\nWe start with the first ugly number, which is `1`. From there, we generate the next candidates by multiplying `1` by `2`, `3`, and `5`. These candidates represent the next potential ugly numbers. To ensure we always process the smallest ugly numbers first (necessary to find the nth one), we use a set that keeps elements in sorted order and removes duplicates. We continue this process until we reach the nth ugly number.\n\nThis approach is more efficient as it avoids unnecessary checks and focuses solely on generating and managing ugly numbers. However, it requires maintaining a set, which can grow large and impact memory usage.\n\n#### Algorithm\n\n- Initialize a set named `uglyNumbersSet` to store potential ugly numbers.\n- Insert the first ugly number, `1`, into the `uglyNumbersSet`.\n- Initialize a variable `currentUgly` to store the current smallest ugly number.\n\n- Loop `n` times to find the `n`th ugly number:\n  - In each iteration:\n    - Set `currentUgly` to the smallest number in the `uglyNumbersSet` by accessing the first element.\n    - Remove this smallest number from the `uglyNumbersSet` using `erase`.\n    \n    - Insert the next potential ugly numbers by multiplying `currentUgly` by `2`, `3`, and `5`:\n      - Insert `currentUgly * 2` into the `uglyNumbersSet`.\n      - Insert `currentUgly * 3` into the `uglyNumbersSet`.\n      - Insert `currentUgly * 5` into the `uglyNumbersSet`.\n\n- After the loop completes, `currentUgly` will hold the nth ugly number.\n\n- Return `currentUgly` as the result, casting it to `int`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/EoE3dVbv/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"EoE3dVbv\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the given index value of the ugly number and $m$ be the size of set.\n\n- Time complexity: $O(n \\log m)$\n\n    Each insertion and removal operation in the set takes logarithmic time.\n\n    > In Python, the `min` function has a time complexity of $O(n)$ due to the need to scan through all elements of the set to find the minimum. Since this function is called once per iteration of the loop and there are $n$ iterations, the overall time complexity is $O(n \\times m)$.\n\n- Space complexity: $O(m)$\n\n    The space required depends on the number of unique ugly numbers stored in the set.  \n\n---\n\n### Approach 2: Min-Heap/Priority Queue\n\n#### Intuition\n\nTo further streamline the process, we use a priority queue (min-heap) to efficiently manage and retrieve the smallest ugly number. We start with `1` as our base ugly number and insert it into the min-heap. The priority queue keeps the smallest element at the top, so we can easily access and remove it to get the next ugly number.\n\nAfter popping the smallest ugly number, we generate new ugly numbers by multiplying them by `2`, `3`, and `5`. These new numbers are then pushed back into the queue. To avoid duplicates, we use a set to track numbers that have already been added, ensuring each ugly number is processed only once.\n\n#### Algorithm\n \n- Create a min-heap (`minHeap`) to store ugly numbers and a set (`seenNumbers`) to track numbers already processed.\n- Push the first ugly number (1) into the heap and insert it into the set.\n- For `n` iterations:\n   - Pop the smallest ugly number (`currentUgly`) from the heap.\n   - Generate the next ugly numbers by multiplying `currentUgly` with 2, 3, and 5.\n   - If a generated ugly number is not in the set, push it into the heap and add it to the set.\n- After `n` iterations, the last popped number from the heap is the nth ugly number.\n- Return the `n`th ugly number.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5d395Zkn/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5d395Zkn\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the given index value of the ugly number and $m$ be the size of set.\n\n\n* Time complexity: $O(n \\log m)$\n\n    The operations on the priority queue (`push` and `pop`) take logarithmic time, and there are `m` such operations. \n\n* Space complexity: $O(m)$\n\n    The space is used by the heap and the set, which store up to `m` elements as it depends on the number of unique ugly numbers stored in the set.\n\n---\n\n### Approach 3: Dynamic Programming (DP)\n\n#### Intuition\n\nThe dynamic programming (DP) approach to finding ugly numbers is based on an idea: every ugly number, except for `1`, is generated by multiplying a smaller ugly number by either `2`, `3`, or `5`. This insight allows us to systematically generate ugly numbers in order.\n\nWe start with `1`, the smallest ugly number. To find the next ugly number, we have three options: $1 \\times 2$, $1 \\times 3$, and $1 \\times 5$. The smallest of these, $1 \\times 2 = 2$, becomes our second ugly number. For the third ugly number, we again have three choices: the next multiple of `2` ($2 \\times 2 = 4$), and the unused multiples of `3` and `5` from before ($1 \\times 3 = 3$ and $1 \\times 5 = 5$). We select the smallest of these (which is $3$) and continue this process.\n\nThis approach naturally leads to using three pointers, one each for multiplying by `2`, `3`, and `5`. These pointers track which ugly number should be multiplied by `2`, `3`, and `5` next. Each time, we choose the smallest of these three possible next ugly numbers, add it to our list, and move the pointer that produced this number.\n\nThe efficiency and cleverness of this method lie in its simplicity. We build our list of ugly numbers using the same list we are creating. This self-referencing nature characterizes it as dynamic programming. By maintaining the list in order and using pointers, we avoid the need for sorting or removing duplicates, making the algorithm both fast ($O(n)$) and memory-efficient.\n\nNow, let's think about why this method works for all ugly numbers:\n\nWe always start by choosing the smallest number available and manage the process of multiplying by `2`, `3`, and `5` separately. This approach ensures that no ugly numbers are missed. Specifically, any ugly number must be derived from a previously found smaller ugly number, multiplied by `2`, `3`, or `5`. By maintaining pointers to track these multiplications, we ensure that every number in our list is properly considered for these multiplications.\n\nBy always selecting the smallest number first from the available multiplications, we prevent the introduction of larger numbers before smaller ones. This strategy eliminates the possibility of missing any ugly numbers, ensuring a consistent and complete generation of ugly numbers.\n\n\n<details>\n<summary><b>For A Formal Proof Click Here:</b></summary>\n\n**Proof:**\n\n1. Base Case:\n   - We start with `1`, which is an ugly number because it can be expressed as $2^0 \\times 3^0 \\times 5^0$. This is our starting point and is correctly included in the list.\n\n2. Inductive Hypothesis:\n   - Assume that after generating $k$ ugly numbers, denoted as $U_1, U_2, \\ldots, U_k$, our list contains all ugly numbers up to the $k$-th position in ascending order.\n\n3. Inductive Step:\n   - **Goal:** Show that the algorithm correctly generates the $(k+1)$-th ugly number.\n\n   - Given our current list $U_1, U_2, \\ldots, U_k$, we consider the next possible ugly numbers by multiplying each number in the list by 2, 3, and 5. These potential numbers are $U_i \\times 2$, $U_i \\times 3$, and $U_i \\times 5$, where $U_i$ is the smallest number in the list at that step.\n\n   - We always select the smallest number from these candidates and add it to our list. Let’s denote this smallest number as $N$. By design, $N$ is the next smallest ugly number that hasn't been added to the list yet.\n\n   - Exhaustiveness:\n     - We ensure that every ugly number is generated by considering all possible multiplications of the smallest numbers. This way, we don't miss any possible ugly number.\n\n   - Non-Redundancy:\n     - By selecting the smallest number each time, we avoid adding duplicate numbers. This ensures that each number added to the list is unique and correctly ordered.\n\n   - Completeness:\n     - Every ugly number must be derived from previously generated ugly numbers through multiplication by 2, 3, or 5. Our method covers all such possible combinations, so it will eventually generate every ugly number.\n\n4. Termination:\n   - The algorithm stops once we have generated the desired number of ugly numbers. Since we are systematically adding the smallest possible ugly number at each step, our list will be complete and correctly ordered.\n\n**Conclusion:**\nBy using induction, we see that starting from the base case of `1`, and ensuring each subsequent number is the smallest possible ugly number, we guarantee that our algorithm will generate all ugly numbers in ascending order. This method is both correct and complete, as it ensures that no ugly numbers are missed or duplicated.\n\n</details>\n\n#### Algorithm\n \n1. Initialize a vector `uglyNumbers` of size `n` to store the ugly numbers, with the first ugly number set to `1`.\n2. Set up three pointers (`indexMultipleOf2`, `indexMultipleOf3`, `indexMultipleOf5`) to track the next multiples of 2, 3, and 5, respectively.\n3. Assign initial values to `nextMultipleOf2`, `nextMultipleOf3`, and `nextMultipleOf5` (i.e., `2`, `3`, and `5`).\n4. For `i` from `1` to `n-1`:\n   - Determine the next ugly number by taking the minimum of `nextMultipleOf2`, `nextMultipleOf3`, and `nextMultipleOf5`.\n   - Store this value in `uglyNumbers[i]`.\n   - Update the corresponding pointer and multiple:\n     - If the next ugly number equals `nextMultipleOf2`, increment `indexMultipleOf2` and update `nextMultipleOf2`.\n     - If the next ugly number equals `nextMultipleOf3`, increment `indexMultipleOf3` and update `nextMultipleOf3`.\n     - If the next ugly number equals `nextMultipleOf5`, increment `indexMultipleOf5` and update `nextMultipleOf5`.\n5. After completing the loop, return the last element in `uglyNumbers`, which is the `n`th ugly number.\n\nThe algorithm is visualized below:\n\n!?!../Documents/264/dp.json:975,595!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KLoTWTep/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KLoTWTep\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the given index value of the ugly number.\n\n* Time complexity: $O(n)$\n\n    This approach is linear because we generate each ugly number directly using the three pointers.\n\n* Space complexity: $O(n)$\n\n    We need space to store the first `n` ugly numbers.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

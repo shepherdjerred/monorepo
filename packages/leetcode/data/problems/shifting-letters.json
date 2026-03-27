@@ -1,0 +1,137 @@
+{
+  "questionId": "878",
+  "questionFrontendId": "848",
+  "title": "Shifting Letters",
+  "titleSlug": "shifting-letters",
+  "difficulty": "Medium",
+  "content": "<p>You are given a string <code>s</code> of lowercase English letters and an integer array <code>shifts</code> of the same length.</p>\n\n<p>Call the <code>shift()</code> of a letter, the next letter in the alphabet, (wrapping around so that <code>&#39;z&#39;</code> becomes <code>&#39;a&#39;</code>).</p>\n\n<ul>\n\t<li>For example, <code>shift(&#39;a&#39;) = &#39;b&#39;</code>, <code>shift(&#39;t&#39;) = &#39;u&#39;</code>, and <code>shift(&#39;z&#39;) = &#39;a&#39;</code>.</li>\n</ul>\n\n<p>Now for each <code>shifts[i] = x</code>, we want to shift the first <code>i + 1</code> letters of <code>s</code>, <code>x</code> times.</p>\n\n<p>Return <em>the final string after all such shifts to s are applied</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abc&quot;, shifts = [3,5,9]\n<strong>Output:</strong> &quot;rpl&quot;\n<strong>Explanation:</strong> We start with &quot;abc&quot;.\nAfter shifting the first 1 letters of s by 3, we have &quot;dbc&quot;.\nAfter shifting the first 2 letters of s by 5, we have &quot;igc&quot;.\nAfter shifting the first 3 letters of s by 9, we have &quot;rpl&quot;, the answer.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aaa&quot;, shifts = [1,2,3]\n<strong>Output:</strong> &quot;gfd&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n\t<li><code>shifts.length == s.length</code></li>\n\t<li><code>0 &lt;= shifts[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"shiftingLetters\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"shifts\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"135.3K\", \"totalSubmission\": \"293.3K\", \"totalAcceptedRaw\": 135310, \"totalSubmissionRaw\": 293276, \"acRate\": \"46.1%\"}",
+  "likes": 1551,
+  "dislikes": 142,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Replace All Digits with Characters\", \"titleSlug\": \"replace-all-digits-with-characters\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Shifting Letters II\", \"titleSlug\": \"shifting-letters-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Lexicographically Smallest String After Substring Operation\", \"titleSlug\": \"lexicographically-smallest-string-after-substring-operation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Shift Distance Between Two Strings\", \"titleSlug\": \"shift-distance-between-two-strings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the K-th Character in String Game I\", \"titleSlug\": \"find-the-k-th-character-in-string-game-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the K-th Character in String Game II\", \"titleSlug\": \"find-the-k-th-character-in-string-game-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abc\"\n[3,5,9]",
+    "\"aaa\"\n[1,2,3]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string shiftingLetters(string s, vector<int>& shifts) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String shiftingLetters(String s, int[] shifts) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def shiftingLetters(self, s: str, shifts: List[int]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def shiftingLetters(self, s, shifts):\n        \"\"\"\n        :type s: str\n        :type shifts: List[int]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number[]} shifts\n * @return {string}\n */\nvar shiftingLetters = function(s, shifts) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function shiftingLetters(s: string, shifts: number[]): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string ShiftingLetters(string s, int[] shifts) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* shiftingLetters(char* s, int* shifts, int shiftsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func shiftingLetters(s string, shifts []int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun shiftingLetters(s: String, shifts: IntArray): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func shiftingLetters(_ s: String, _ shifts: [Int]) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn shifting_letters(s: String, shifts: Vec<i32>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer[]} shifts\n# @return {String}\ndef shifting_letters(s, shifts)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer[] $shifts\n     * @return String\n     */\n    function shiftingLetters($s, $shifts) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String shiftingLetters(String s, List<int> shifts) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def shiftingLetters(s: String, shifts: Array[Int]): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec shifting_letters(s :: String.t, shifts :: [integer]) :: String.t\n  def shifting_letters(s, shifts) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec shifting_letters(S :: unicode:unicode_binary(), Shifts :: [integer()]) -> unicode:unicode_binary().\nshifting_letters(S, Shifts) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (shifting-letters s shifts)\n  (-> string? (listof exact-integer?) string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "482",
+    "content": "[TOC]\n\n---\n### Approach #1: Prefix Sum [Accepted]\n\n**Intuition**\n\nLet's ask how many times the `i`th character is shifted.\n\n**Algorithm**\n\nThe `i`th character is shifted `shifts[i] + shifts[i+1] + ... + shifts[shifts.length - 1]` times.  That's because only operations at the `i`th operation and after, affect the `i`th character.\n\nLet `X` be the number of times the current `i`th character is shifted.  Then the next character `i+1` is shifted `X - shifts[i]` times.\n\nFor example, if `S.length = 4` and `S[0]` is shifted `X = shifts[0] + shifts[1] + shifts[2] + shifts[3]` times, then `S[1]` is shifted `shifts[1] + shifts[2] + shifts[3]` times, `S[2]` is shifted `shifts[2] + shifts[3]` times, and so on.\n\nIn general, we need to do `X -= shifts[i]` to maintain the correct value of `X` as we increment `i`.\n\n<iframe src=\"https://leetcode.com/playground/JbgCrRzF/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"JbgCrRzF\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `S` (and `shifts`).\n\n* Space Complexity:  $$O(N)$$, the space needed to output the answer.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

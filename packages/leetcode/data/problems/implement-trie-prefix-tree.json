@@ -1,0 +1,140 @@
+{
+  "questionId": "208",
+  "questionFrontendId": "208",
+  "title": "Implement Trie (Prefix Tree)",
+  "titleSlug": "implement-trie-prefix-tree",
+  "difficulty": "Medium",
+  "content": "<p>A <a href=\"https://en.wikipedia.org/wiki/Trie\" target=\"_blank\"><strong>trie</strong></a> (pronounced as &quot;try&quot;) or <strong>prefix tree</strong> is a tree data structure used to efficiently store and retrieve keys in a dataset of strings. There are various applications of this data structure, such as autocomplete and spellchecker.</p>\n\n<p>Implement the Trie class:</p>\n\n<ul>\n\t<li><code>Trie()</code> Initializes the trie object.</li>\n\t<li><code>void insert(String word)</code> Inserts the string <code>word</code> into the trie.</li>\n\t<li><code>boolean search(String word)</code> Returns <code>true</code> if the string <code>word</code> is in the trie (i.e., was inserted before), and <code>false</code> otherwise.</li>\n\t<li><code>boolean startsWith(String prefix)</code> Returns <code>true</code> if there is a previously inserted string <code>word</code> that has the prefix <code>prefix</code>, and <code>false</code> otherwise.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;Trie&quot;, &quot;insert&quot;, &quot;search&quot;, &quot;search&quot;, &quot;startsWith&quot;, &quot;insert&quot;, &quot;search&quot;]\n[[], [&quot;apple&quot;], [&quot;apple&quot;], [&quot;app&quot;], [&quot;app&quot;], [&quot;app&quot;], [&quot;app&quot;]]\n<strong>Output</strong>\n[null, null, true, false, true, null, true]\n\n<strong>Explanation</strong>\nTrie trie = new Trie();\ntrie.insert(&quot;apple&quot;);\ntrie.search(&quot;apple&quot;);   // return True\ntrie.search(&quot;app&quot;);     // return False\ntrie.startsWith(&quot;app&quot;); // return True\ntrie.insert(&quot;app&quot;);\ntrie.search(&quot;app&quot;);     // return True\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= word.length, prefix.length &lt;= 2000</code></li>\n\t<li><code>word</code> and <code>prefix</code> consist only of lowercase English letters.</li>\n\t<li>At most <code>3 * 10<sup>4</sup></code> calls <strong>in total</strong> will be made to <code>insert</code>, <code>search</code>, and <code>startsWith</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"Trie\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"word\"\n        }\n      ],\n      \"name\": \"insert\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"word\"\n        }\n      ],\n      \"name\": \"search\",\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"prefix\"\n        }\n      ],\n      \"name\": \"startsWith\",\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"1.5M\", \"totalSubmission\": \"2.2M\", \"totalAcceptedRaw\": 1517947, \"totalSubmissionRaw\": 2190583, \"acRate\": \"69.3%\"}",
+  "likes": 12421,
+  "dislikes": 164,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Design Add and Search Words Data Structure\", \"titleSlug\": \"design-add-and-search-words-data-structure\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Design Search Autocomplete System\", \"titleSlug\": \"design-search-autocomplete-system\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Replace Words\", \"titleSlug\": \"replace-words\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Implement Magic Dictionary\", \"titleSlug\": \"implement-magic-dictionary\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Encrypt and Decrypt Strings\", \"titleSlug\": \"encrypt-and-decrypt-strings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Implement Trie II (Prefix Tree)\", \"titleSlug\": \"implement-trie-ii-prefix-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Prefix and Suffix Pairs II\", \"titleSlug\": \"count-prefix-and-suffix-pairs-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Prefix and Suffix Pairs I\", \"titleSlug\": \"count-prefix-and-suffix-pairs-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"Trie\",\"insert\",\"search\",\"search\",\"startsWith\",\"insert\",\"search\"]\n[[],[\"apple\"],[\"apple\"],[\"app\"],[\"app\"],[\"app\"],[\"app\"]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 5, \"slug\": \"mongodb\", \"name\": \"MongoDB\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 9, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 9, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 7, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 5, \"slug\": \"docusign\", \"name\": \"Docusign\"}, {\"timesEncountered\": 3, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 3, \"slug\": \"general-motors\", \"name\": \"General Motors\"}, {\"timesEncountered\": 3, \"slug\": \"grammarly\", \"name\": \"Grammarly\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Trie {\npublic:\n    Trie() {\n        \n    }\n    \n    void insert(string word) {\n        \n    }\n    \n    bool search(string word) {\n        \n    }\n    \n    bool startsWith(string prefix) {\n        \n    }\n};\n\n/**\n * Your Trie object will be instantiated and called as such:\n * Trie* obj = new Trie();\n * obj->insert(word);\n * bool param_2 = obj->search(word);\n * bool param_3 = obj->startsWith(prefix);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Trie {\n\n    public Trie() {\n        \n    }\n    \n    public void insert(String word) {\n        \n    }\n    \n    public boolean search(String word) {\n        \n    }\n    \n    public boolean startsWith(String prefix) {\n        \n    }\n}\n\n/**\n * Your Trie object will be instantiated and called as such:\n * Trie obj = new Trie();\n * obj.insert(word);\n * boolean param_2 = obj.search(word);\n * boolean param_3 = obj.startsWith(prefix);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Trie:\n\n    def __init__(self):\n        \n\n    def insert(self, word: str) -> None:\n        \n\n    def search(self, word: str) -> bool:\n        \n\n    def startsWith(self, prefix: str) -> bool:\n        \n\n\n# Your Trie object will be instantiated and called as such:\n# obj = Trie()\n# obj.insert(word)\n# param_2 = obj.search(word)\n# param_3 = obj.startsWith(prefix)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Trie(object):\n\n    def __init__(self):\n        \n\n    def insert(self, word):\n        \"\"\"\n        :type word: str\n        :rtype: None\n        \"\"\"\n        \n\n    def search(self, word):\n        \"\"\"\n        :type word: str\n        :rtype: bool\n        \"\"\"\n        \n\n    def startsWith(self, prefix):\n        \"\"\"\n        :type prefix: str\n        :rtype: bool\n        \"\"\"\n        \n\n\n# Your Trie object will be instantiated and called as such:\n# obj = Trie()\n# obj.insert(word)\n# param_2 = obj.search(word)\n# param_3 = obj.startsWith(prefix)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar Trie = function() {\n    \n};\n\n/** \n * @param {string} word\n * @return {void}\n */\nTrie.prototype.insert = function(word) {\n    \n};\n\n/** \n * @param {string} word\n * @return {boolean}\n */\nTrie.prototype.search = function(word) {\n    \n};\n\n/** \n * @param {string} prefix\n * @return {boolean}\n */\nTrie.prototype.startsWith = function(prefix) {\n    \n};\n\n/** \n * Your Trie object will be instantiated and called as such:\n * var obj = new Trie()\n * obj.insert(word)\n * var param_2 = obj.search(word)\n * var param_3 = obj.startsWith(prefix)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Trie {\n    constructor() {\n        \n    }\n\n    insert(word: string): void {\n        \n    }\n\n    search(word: string): boolean {\n        \n    }\n\n    startsWith(prefix: string): boolean {\n        \n    }\n}\n\n/**\n * Your Trie object will be instantiated and called as such:\n * var obj = new Trie()\n * obj.insert(word)\n * var param_2 = obj.search(word)\n * var param_3 = obj.startsWith(prefix)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Trie {\n\n    public Trie() {\n        \n    }\n    \n    public void Insert(string word) {\n        \n    }\n    \n    public bool Search(string word) {\n        \n    }\n    \n    public bool StartsWith(string prefix) {\n        \n    }\n}\n\n/**\n * Your Trie object will be instantiated and called as such:\n * Trie obj = new Trie();\n * obj.Insert(word);\n * bool param_2 = obj.Search(word);\n * bool param_3 = obj.StartsWith(prefix);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Trie;\n\n\nTrie* trieCreate() {\n    \n}\n\nvoid trieInsert(Trie* obj, char* word) {\n    \n}\n\nbool trieSearch(Trie* obj, char* word) {\n    \n}\n\nbool trieStartsWith(Trie* obj, char* prefix) {\n    \n}\n\nvoid trieFree(Trie* obj) {\n    \n}\n\n/**\n * Your Trie struct will be instantiated and called as such:\n * Trie* obj = trieCreate();\n * trieInsert(obj, word);\n \n * bool param_2 = trieSearch(obj, word);\n \n * bool param_3 = trieStartsWith(obj, prefix);\n \n * trieFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Trie struct {\n    \n}\n\n\nfunc Constructor() Trie {\n    \n}\n\n\nfunc (this *Trie) Insert(word string)  {\n    \n}\n\n\nfunc (this *Trie) Search(word string) bool {\n    \n}\n\n\nfunc (this *Trie) StartsWith(prefix string) bool {\n    \n}\n\n\n/**\n * Your Trie object will be instantiated and called as such:\n * obj := Constructor();\n * obj.Insert(word);\n * param_2 := obj.Search(word);\n * param_3 := obj.StartsWith(prefix);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Trie() {\n\n    fun insert(word: String) {\n        \n    }\n\n    fun search(word: String): Boolean {\n        \n    }\n\n    fun startsWith(prefix: String): Boolean {\n        \n    }\n\n}\n\n/**\n * Your Trie object will be instantiated and called as such:\n * var obj = Trie()\n * obj.insert(word)\n * var param_2 = obj.search(word)\n * var param_3 = obj.startsWith(prefix)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Trie {\n\n    init() {\n        \n    }\n    \n    func insert(_ word: String) {\n        \n    }\n    \n    func search(_ word: String) -> Bool {\n        \n    }\n    \n    func startsWith(_ prefix: String) -> Bool {\n        \n    }\n}\n\n/**\n * Your Trie object will be instantiated and called as such:\n * let obj = Trie()\n * obj.insert(word)\n * let ret_2: Bool = obj.search(word)\n * let ret_3: Bool = obj.startsWith(prefix)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Trie {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Trie {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn insert(&self, word: String) {\n        \n    }\n    \n    fn search(&self, word: String) -> bool {\n        \n    }\n    \n    fn starts_with(&self, prefix: String) -> bool {\n        \n    }\n}\n\n/**\n * Your Trie object will be instantiated and called as such:\n * let obj = Trie::new();\n * obj.insert(word);\n * let ret_2: bool = obj.search(word);\n * let ret_3: bool = obj.starts_with(prefix);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Trie\n    def initialize()\n        \n    end\n\n\n=begin\n    :type word: String\n    :rtype: Void\n=end\n    def insert(word)\n        \n    end\n\n\n=begin\n    :type word: String\n    :rtype: Boolean\n=end\n    def search(word)\n        \n    end\n\n\n=begin\n    :type prefix: String\n    :rtype: Boolean\n=end\n    def starts_with(prefix)\n        \n    end\n\n\nend\n\n# Your Trie object will be instantiated and called as such:\n# obj = Trie.new()\n# obj.insert(word)\n# param_2 = obj.search(word)\n# param_3 = obj.starts_with(prefix)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Trie {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param String $word\n     * @return NULL\n     */\n    function insert($word) {\n        \n    }\n  \n    /**\n     * @param String $word\n     * @return Boolean\n     */\n    function search($word) {\n        \n    }\n  \n    /**\n     * @param String $prefix\n     * @return Boolean\n     */\n    function startsWith($prefix) {\n        \n    }\n}\n\n/**\n * Your Trie object will be instantiated and called as such:\n * $obj = Trie();\n * $obj->insert($word);\n * $ret_2 = $obj->search($word);\n * $ret_3 = $obj->startsWith($prefix);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Trie {\n\n  Trie() {\n    \n  }\n  \n  void insert(String word) {\n    \n  }\n  \n  bool search(String word) {\n    \n  }\n  \n  bool startsWith(String prefix) {\n    \n  }\n}\n\n/**\n * Your Trie object will be instantiated and called as such:\n * Trie obj = Trie();\n * obj.insert(word);\n * bool param2 = obj.search(word);\n * bool param3 = obj.startsWith(prefix);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Trie() {\n\n    def insert(word: String): Unit = {\n        \n    }\n\n    def search(word: String): Boolean = {\n        \n    }\n\n    def startsWith(prefix: String): Boolean = {\n        \n    }\n\n}\n\n/**\n * Your Trie object will be instantiated and called as such:\n * val obj = new Trie()\n * obj.insert(word)\n * val param_2 = obj.search(word)\n * val param_3 = obj.startsWith(prefix)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Trie do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec insert(word :: String.t) :: any\n  def insert(word) do\n    \n  end\n\n  @spec search(word :: String.t) :: boolean\n  def search(word) do\n    \n  end\n\n  @spec starts_with(prefix :: String.t) :: boolean\n  def starts_with(prefix) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Trie.init_()\n# Trie.insert(word)\n# param_2 = Trie.search(word)\n# param_3 = Trie.starts_with(prefix)\n\n# Trie.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec trie_init_() -> any().\ntrie_init_() ->\n  .\n\n-spec trie_insert(Word :: unicode:unicode_binary()) -> any().\ntrie_insert(Word) ->\n  .\n\n-spec trie_search(Word :: unicode:unicode_binary()) -> boolean().\ntrie_search(Word) ->\n  .\n\n-spec trie_starts_with(Prefix :: unicode:unicode_binary()) -> boolean().\ntrie_starts_with(Prefix) ->\n  .\n\n\n%% Your functions will be called as such:\n%% trie_init_(),\n%% trie_insert(Word),\n%% Param_2 = trie_search(Word),\n%% Param_3 = trie_starts_with(Prefix),\n\n%% trie_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define trie%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; insert : string? -> void?\n    (define/public (insert word)\n      )\n    ; search : string? -> boolean?\n    (define/public (search word)\n      )\n    ; starts-with : string? -> boolean?\n    (define/public (starts-with prefix)\n      )))\n\n;; Your trie% object will be instantiated and called as such:\n;; (define obj (new trie%))\n;; (send obj insert word)\n;; (define param_2 (send obj search word))\n;; (define param_3 (send obj starts-with prefix))"
+    }
+  ],
+  "solution": {
+    "id": "40",
+    "content": "## Summary\n\nThis article is intended for intermediate users. It covers the Trie (Prefix Tree) data structure and its common operations.\n\n## Solution\n\n### Applications\n\nA Trie (pronounced \"try\") or Prefix Tree is a tree data structure used to efficiently retrieve a key from a dataset of strings. Here are some of its key applications:\n\n1. [Autocomplete](https://en.wikipedia.org/wiki/Autocomplete)\n   \n   ![Google Suggest](https://leetcode.com/media/original_images/208_GoogleSuggest.png){:width=\"539px\"}\n   \n   *Figure 1. Google Suggest in action.*\n\n2. [Spell Checker](https://en.wikipedia.org/wiki/Spell_checker)\n   \n   ![Spell Checker](https://leetcode.com/media/original_images/208_SpellCheck.png){:width=\"400px\"}\n   \n   *Figure 2. A spell checker is used in a word processor.*\n\n3. [IP Routing (Longest Prefix Matching)](https://en.wikipedia.org/wiki/Longest_prefix_match)\n   \n   ![IP Routing](https://leetcode.com/media/original_images/208_IPRouting.gif){:width=\"539px\"}\n   \n   *Figure 3. The longest prefix matching algorithm uses Tries in IP routing to select an entry from a forwarding table.*\n\n4. [T9 Predictive Text](https://en.wikipedia.org/wiki/T9_(predictive_text))\n   \n   ![T9 Predictive Text](https://leetcode.com/media/original_images/208_T9.jpg)\n   \n   *Figure 4. T9, which stands for Text on 9 keys, was used on phones to input text in the late 1990s.*\n\n5. [Solving Word Games](https://en.wikipedia.org/wiki/Boggle)\n   \n   ![Boggle](https://leetcode.com/media/original_images/208_Boggle.png){:width=\"350px\"}\n   \n   *Figure 5. Tries are used to solve Boggle efficiently by pruning the search space.*\n\nWhile other data structures like balanced trees and hash tables can be used to search for words, Tries offer advantages in certain operations:\n\n- Prefix Searches: Tries excel in finding all keys with a common prefix.\n- Lexicographical Ordering: They allow efficient enumeration of keys in lexicographical order.\n- Space Efficiency: For keys with common prefixes, Tries use less space compared to hash tables, which can suffer from hash collisions and increased search times as they grow.\n\n### Trie Node Structure\n\nA Trie is a rooted tree where each node has the following attributes:\n\n- Up to $R$ links to its children, with each link corresponding to one of $R$ possible character values. In this article, we assume $R = 26$ for lowercase Latin letters.\n- A boolean field indicating whether the node marks the end of a key or is just a prefix.\n\n![Representation of a key in a Trie](https://leetcode.com/media/original_images/208_Node.png){:width=\"539px\"}\n\n*Figure 6. Representation of the key \"leet\" in a Trie.*\n\n<iframe src=\"https://leetcode.com/playground/abxCjqna/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"abxCjqna\"></iframe>\n\n### Insertion of a Key into a Trie\n\nTo insert a key into a Trie, follow these steps:\n\n1. Start at the root and search for a link corresponding to the first character of the key.\n   - If the link exists, move to the child node and repeat for the next character.\n   - If the link does not exist, create a new node and link it to the parent node.\n2. Continue until you reach the last character of the key, then mark the final node as an end node.\n\n![Insertion of keys into a Trie](https://leetcode.com/media/original_images/208_TrieInsert.png){:width=\"539px\"}\n\n*Figure 7. Insertion of keys into a Trie.*\n\n<iframe src=\"https://leetcode.com/playground/HtVzSrsP/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"HtVzSrsP\"></iframe>\n\nComplexity Analysis\n\n- Time Complexity: $O(m)$, where $m$ is the length of the key. Each operation involves examining or creating a node until the end of the key.\n- Space Complexity: $O(m)$. In the worst case, each newly inserted key might require adding $m$ new nodes, resulting in $O(m)$ space usage.\n\n### Search for a Key in a Trie\n\nTo search for a key in a Trie:\n\n1. Start at the root and examine the current node for a link corresponding to the key's character.\n   - If the link exists, move to the next node and continue searching.\n   - If the link does not exist:\n     - If there are remaining characters and the current node is marked as `isEnd`, return true.\n     - If there are remaining characters but no valid path, or if no characters are left but the node is not marked as `isEnd`, return false.\n\n![Search for a key in a Trie](https://leetcode.com/media/original_images/208_TrieSearchKey.png){:width=\"539px\"}\n\n*Figure 8. Search for a key in a Trie.*\n\n<iframe src=\"https://leetcode.com/playground/6YJ29e5F/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6YJ29e5F\"></iframe>\n\nComplexity Analysis\n\n- Time Complexity: $O(m)$. Each step involves searching for the next character of the key, requiring $m$ operations in the worst case.\n- Space Complexity: $O(1)$.\n\n### Search for a Key Prefix in a Trie\n\nTo search for a key prefix:\n\n1. Traverse the Trie from the root until the end of the prefix or until it is no longer possible to continue the path.\n2. Unlike searching for a full key, when you reach the end of the prefix, return true. The `isEnd` mark is not considered because you are only checking for a prefix.\n\n![Search for a key prefix in a Trie](https://leetcode.com/media/original_images/208_TrieSearchPrefix.png){:width=\"539px\"}\n\n*Figure 9. Search for a key prefix in a Trie.*\n\n<iframe src=\"https://leetcode.com/playground/h9bDZ67Q/shared\" frameBorder=\"0\" width=\"100%\" height=\"225\" name=\"h9bDZ67Q\"></iframe>\n\nComplexity Analysis\n\n- Time Complexity: $O(m)$.\n- Space Complexity: $O(1)$.\n\n## Practice Problems\n\nHere are some problems to practice using the Trie data structure:\n\n1. [Add and Search Word - Data Structure Design](https://leetcode.com/problems/add-and-search-word-data-structure-design/) - A direct application of Trie.\n2. [Word Search II](https://leetcode.com/problems/word-search-ii/) - Similar to Boggle.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

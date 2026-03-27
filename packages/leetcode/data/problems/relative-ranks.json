@@ -1,0 +1,137 @@
+{
+  "questionId": "506",
+  "questionFrontendId": "506",
+  "title": "Relative Ranks",
+  "titleSlug": "relative-ranks",
+  "difficulty": "Easy",
+  "content": "<p>You are given an integer array <code>score</code> of size <code>n</code>, where <code>score[i]</code> is the score of the <code>i<sup>th</sup></code> athlete in a competition. All the scores are guaranteed to be <strong>unique</strong>.</p>\n\n<p>The athletes are <strong>placed</strong> based on their scores, where the <code>1<sup>st</sup></code> place athlete has the highest score, the <code>2<sup>nd</sup></code> place athlete has the <code>2<sup>nd</sup></code> highest score, and so on. The placement of each athlete determines their rank:</p>\n\n<ul>\n\t<li>The <code>1<sup>st</sup></code> place athlete&#39;s rank is <code>&quot;Gold Medal&quot;</code>.</li>\n\t<li>The <code>2<sup>nd</sup></code> place athlete&#39;s rank is <code>&quot;Silver Medal&quot;</code>.</li>\n\t<li>The <code>3<sup>rd</sup></code> place athlete&#39;s rank is <code>&quot;Bronze Medal&quot;</code>.</li>\n\t<li>For the <code>4<sup>th</sup></code> place to the <code>n<sup>th</sup></code> place athlete, their rank is their placement number (i.e., the <code>x<sup>th</sup></code> place athlete&#39;s rank is <code>&quot;x&quot;</code>).</li>\n</ul>\n\n<p>Return an array <code>answer</code> of size <code>n</code> where <code>answer[i]</code> is the <strong>rank</strong> of the <code>i<sup>th</sup></code> athlete.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> score = [5,4,3,2,1]\n<strong>Output:</strong> [&quot;Gold Medal&quot;,&quot;Silver Medal&quot;,&quot;Bronze Medal&quot;,&quot;4&quot;,&quot;5&quot;]\n<strong>Explanation:</strong> The placements are [1<sup>st</sup>, 2<sup>nd</sup>, 3<sup>rd</sup>, 4<sup>th</sup>, 5<sup>th</sup>].</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> score = [10,3,8,9,4]\n<strong>Output:</strong> [&quot;Gold Medal&quot;,&quot;5&quot;,&quot;Bronze Medal&quot;,&quot;Silver Medal&quot;,&quot;4&quot;]\n<strong>Explanation:</strong> The placements are [1<sup>st</sup>, 5<sup>th</sup>, 3<sup>rd</sup>, 2<sup>nd</sup>, 4<sup>th</sup>].\n\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == score.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= score[i] &lt;= 10<sup>6</sup></code></li>\n\t<li>All the values in <code>score</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"findRelativeRanks\",\n  \"params\": [\n    {\n      \"name\": \"score\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"408.3K\", \"totalSubmission\": \"548K\", \"totalAcceptedRaw\": 408274, \"totalSubmissionRaw\": 548010, \"acRate\": \"74.5%\"}",
+  "likes": 2169,
+  "dislikes": 152,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[5,4,3,2,1]",
+    "[10,3,8,9,4]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"electronic-arts\", \"name\": \"Electronic Arts\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> findRelativeRanks(vector<int>& score) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String[] findRelativeRanks(int[] score) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findRelativeRanks(self, score: List[int]) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findRelativeRanks(self, score):\n        \"\"\"\n        :type score: List[int]\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} score\n * @return {string[]}\n */\nvar findRelativeRanks = function(score) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findRelativeRanks(score: number[]): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string[] FindRelativeRanks(int[] score) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** findRelativeRanks(int* score, int scoreSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findRelativeRanks(score []int) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findRelativeRanks(score: IntArray): Array<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findRelativeRanks(_ score: [Int]) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_relative_ranks(score: Vec<i32>) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} score\n# @return {String[]}\ndef find_relative_ranks(score)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $score\n     * @return String[]\n     */\n    function findRelativeRanks($score) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> findRelativeRanks(List<int> score) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findRelativeRanks(score: Array[Int]): Array[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_relative_ranks(score :: [integer]) :: [String.t]\n  def find_relative_ranks(score) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_relative_ranks(Score :: [integer()]) -> [unicode:unicode_binary()].\nfind_relative_ranks(Score) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-relative-ranks score)\n  (-> (listof exact-integer?) (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2305",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nGiven an array `score` with athletes' scores, we need to return their rank. The athlete with the highest score has the lowest place, and the athlete with the second-highest score will have the second-lowest place, and so on. The athletes in first, second, and third place receive gold, silver, and bronze medals, respectively. All other athletes receive their place as their rank.\n\n**Key Observation:**\n- All the scores are guaranteed to be unique.\n\n---\n\n### Approach 1: Sort & Reverse\n\n#### Intuition\n\nConsider Example 1 from the problem description: \n\n> **Input:** `score` = [5, 4, 3, 2, 1]\nPlacements: [1st, 2nd, 3rd, 4th, 5th]\n\nThe placements are assigned in order for this example. This works because the scores are given in decreasing order.\n\nWhen the scores are sorted in decreasing order, each athlete gets assigned the next place.\n\nWe can start developing a solution by sorting the `score` array in decreasing order.\n\nConsider Example 2 from the problem description: \n\n> **Input:** `score` = [10, 3, 8, 9, 4]\n`score` sorted in decreasing order: [10, 9, 8, 4, 3]\nPlacements: [1st, 2nd, 3rd, 4th, 5th]\n\nFor this example, we now have the scores and placements, but because we sorted `score`, we don't know the order the placements should be in the result.\n\nWe can solve this by saving each athlete's original index in a hashmap before sorting the `score` array. The key is the athlete's score, and the value is the athlete's original index.\n\n`scoreToIndex` hashmap: [10 ⟶ 0, 3 ⟶ 1, 8 ⟶ 2, 9 ⟶ 3, 4 ⟶ 4]\n\nThen, we can use the hashmap and the sorted `score` array to add the athletes' ranks to the correct index in the result.\n\n`score` sorted in decreasing order: [10, 9, 8, 4, 3]\n`scoreToIndex` hashmap: [10 ⟶ 0, 3 ⟶ 1, 8 ⟶ 2, 9 ⟶ 3, 4 ⟶ 4]\n\n- Place the 1st ranked athlete, who scored 10, at index 0.\n- Place the 2nd ranked athlete, who scored 9, at index 3.\n- Place the 3rd ranked athlete, who scored 8, at index 2.\n- Place the 4th ranked athlete, who scored 4, at index 4.\n- Place the 5th ranked athlete, who scored 3, at index 1.\n\nFor places 1st, 2nd, and 3rd, we assign medals.\n\n`rank`:\n| index | 0            | 1   | 2              | 3              |   4 |\n| ------| ------------ | --- | -------------- | -------------- | --- |\n| rank  | \"Gold Medal\" | \"5\" | \"Bronze Medal\" | \"Silver Medal\" | \"4\" |\n\n> Output: [\"Gold Medal\", \"5\", \"Bronze Medal\", \"Silver Medal\", \"4\"]\n\n#### Algorithm\n\n1. Initialize a variable `N` to the length of the `score` array.\n2. Initialize a hashmap `scoreToIndex` and save the original index of each athlete based on their `score`. The key is the `score` and the value is the original index.\n3. Sort the `score` array in descending order. Then, the scores will be in order from highest to lowest. Since the highest score corresponds to the lowest place, this means the places will be in order.\n4. Initialize a string array `rank` of size `N` for storing the result.\n5. Assign ranks to athletes. We use the `scoreToIndex` hashmap to retrieve the index in the result of the athlete with `score[i]`. For each rank `i`:\n    - If `i` is `0`, assign the athlete the \"Gold Medal\".\n    - If `i` is `1`, assign the athlete the \"Silver Medal\".\n    - If `i` is `2`, assign the athlete the \"Bronze Medal\".\n    - Otherwise, set `rank[score_to_index[score[i]]] = str(i + 1)`.\n6. Return `rank`.\n\n#### Implementation\n\n> **Notes:** \n> - The best practice is to not modify the input, so we create a copy of the `score` array in the below implementation. We sort the copy, leaving the original array unmodified.\n>\n> - Java does not have a built-in ability to sort an array in reverse order. Therefore, we sort the score array in ascending order and then traverse the array in reverse order using `n - i - 1` when we assign ranks to the athletes.\n\n<iframe src=\"https://leetcode.com/playground/JM7AVNab/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"JM7AVNab\"></iframe>\n\n#### Complexity Analysis\n\n​Let $n$ be the length of `score`.\n​\n* Time complexity: $O(n \\log n)$\n\n    We traverse the score array once and populate `scoreToIndex`. Since inserting in a hashmap takes $O(1)$ time on average, the entire operation takes $O(n)$. Collisions are unlikely since the scores are guaranteed to be unique according to the constraints.\n  \n    Sorting the the score array array takes $O(n \\log n)$.\n  \n    Finally, traversing the score array and assigning ranks to athletes takes $O(n)$.\n  \n    The dominating term is $O(n \\log n)$.\n​\n* Space complexity: $O(n)$\n\n    The hashmap `scoreToIndex` stores $n$ `(key, value)` mappings, so it requires $O(n)$ auxiliary space.\n  \n    The `rank` array is only used to store the result, so it does not contribute towards the space complexity. \n  \n    Note that some extra space is used when we sort the score array. The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the `sort` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(n)$ additional space. \n    - In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$ for sorting two arrays.\n    - In C++, the sort() function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n )$.\n\n    $O(n)$ is the dominating term.\n\n---\n\n### Approach 2: Heap (Priority Queue)\n\n#### Intuition\n\nWhen we assign placements, we assign the next place to the next highest score.\n\nTo assign ranks, we can make use of a max heap. By adding all scores to a heap and subsequently removing them, they'll be in descending order.\n\nHeaps are a data structure that allows us to efficiently find the maximum or minimum value in a dataset. If you are not familiar with heaps, we recommend checking out the [Heap Explore Card](https://leetcode.com/explore/learn/card/heap/).\n\nAs discussed in the previous solution, we need to save each athlete's original index in the `score` array. For each athlete, we will create a `score, index` pair and push it to the heap.\n\nThen, we assign ranks by removing each athlete from the heap and storing their corresponding index as `originalIndex`. We assign the current athlete the next rank and place the rank in the `rank` array at index `originalIndex`. The first three ranks receive medals.\n\n#### Algorithm\n\n1. Initialize a variable `N` to the length of the `score` array.\n2. Initialize a max-heap (priority queue) that will store `(score, index)` pairs.\n3. For each index in `score`, add a pair to the heap with the score and index.\n4. Initialize a string array `rank` of size `N` for storing the answer.\n5. Initialize a varaible `place` to `1`.\n6. Assign ranks to athletes. While the heap is not empty:\n    - Pop the pair with the highest score from the heap. Save the index in `originalIndex`. \n    - Add the corresponding place to the `rank` array at index `originalIndex`:\n        - If `place` is `1`, assign the athlete the \"Gold Medal\".\n        - If `place` is `2`, assign the athlete the \"Silver Medal\".\n        - If `place` is `3`, assign the athlete the \"Bronze Medal\".\n        - Otherwise, set `rank[originalIndex] = str(place)`.\n    - Increment `place`.\n7. Return `rank`.\n\n\n#### Implementation\n\n> **Note:** The Python3 heap implementation is a min-heap by default. We achieve max-heap behavior in the above solution by negating the score when we add it to the heap. Scores with the highest absolute values have the lowest negative values.\n\n<iframe src=\"https://leetcode.com/playground/23Yn9XDm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"23Yn9XDm\"></iframe>\n\n\n#### Complexity Analysis\n\n​Let $n$ be the length of `score`.\n​\n* Time complexity: $O(n \\log n)$\n\n  We traverse the `score` array once and populate the `heap` with each score. Adding an element to the heap takes $\\log n$ time, resulting in a time complexity of $O(n \\log n)$ for this step.\n  \n  When assigning ranks to athletes, we pop each pair from the heap. Removing an element from the heap also takes $\\log n$ time, so removing $n$ elements will take $O(n \\log n)$ time.\n  \n  The overall time complexity is $O(2n \\log n)$, which we can simplify to $O(n \\log n)$.\n​\n* Space complexity: $O(n)$\n\n  The `heap` stores $n$ `(score, index)` pairs, so it requires $O(n)$ auxiliary space.\n  \n  The `rank` array is only used to store the result, so it does not contribute towards the space complexity. \n\n---\n\n### Approach 3: Array as Map\n\n#### Intuition\n\nThe above approaches both have log-linear time complexities. Let's develop a more efficient approach.\n\nIn the first approach, we used a hashmap to save the original indices of the athletes. An alternative to using a map is an array.\n\nWe can use an array `scoreToIndex` to store the athletes' original indices. The \"key\" is the score, and the \"value\" is the original index of the athlete. An athlete's original index can be found at `scoreToIndex[score[i]]`. For example, the original index of an athlete with the score `5` is stored at `scoreToIndex[5]`.\n\nConsider the example `score = [10, 3, 8, 9, 4]`.\n\nThe range of scores may not be equal to the number of athletes. Therefore, we must ensure that the `scoreToIndex` array is large enough to store the entire range of scores. As a result, we will begin by identifying the maximum score, and then declare our array `scoreToIndex` to be of size one greater than that maximum score.\n\nThere may be some indices in the `scoreToIndex` array that do not store indices of athletes, as the array may be larger than the number of athletes. Indices that do not correspond to athletes will contain `0` by default. One athlete will have the original index `0`, which cannot be differentiated from the default `0` indices if we store the athlete's original indices directly, we address this issue by adding one when adding the athletes to the `scoreToIndex` array. Later, when we iterate through the original indices, we subtract one to obtain the correct original index.\n\nThe indices of the `scoreToindex` array represent the scores. The highest score corresponds to the lowest rank, and the second-highest score corresponds to the second-lowest rank, and so on. \n\nIn the first approach, we reversed the scores so we could easily determine the ranks. We can mimic this strategy by traversing the `scoreToIndex` in reverse, from the highest index to the lowest index. We can use a variable `place` to track the placement, and we can find the position in the `rank` array by saving `scoreToIndex[i] - 1` as the `orignalIndex`.\n\n**Example:**\n\n> **Input:** `score` = [10, 3, 8, 9, 4]\n\nThe max score is 10.\n\n`scoreToIndex`:\n| index            | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |\n| ---------------- | - | - | - | - | - | - | - | - | - | - | -  |\n|original index + 1| 0 | 0 | 0 | 2 | 5 | 0 | 0 | 0 | 3 | 4 | 1  |\n \n- Place the 1st ranked athlete, who scored 10, at index 1 - 1 = 0.\n- Place the 2nd ranked athlete, who scored 9, at index 4 - 1 = 3.\n- Place the 3rd ranked athlete, who scored 8, at index 3 - 1 = 2.\n- Place the 4th ranked athlete, who scored 4, at index 5 - 1 = 4.\n- Place the 5th ranked athlete, who scored 3, at index 2 - 1 = 1.\n\nFor places 1st, 2nd, and 3rd, we assign medals.\n\n`rank`:\n| index | 0            | 1   | 2              | 3              |   4 |\n| ----- | ------------ | --- | -------------- | -------------- | --- |\n| rank  | \"Gold Medal\" | \"5\" | \"Bronze Medal\" | \"Silver Medal\" | \"4\" |\n\n> **Output:** Output: [\"Gold Medal\", \"5\", \"Bronze Medal\", \"Silver Medal\", \"4\"]\n\nIn this approach, we use a constant string array to store the medals. We use `MEDALS[place - 1]` to assign medals to the first three places instead of using an `if` statement for each medal.\n\n#### Algorithm\n\n1. Initialize a variable `N` to the length of the `score` array.\n2. Define a function `findMax` that returns the maximum score in the array.\n    - Initialize a variable `maxScore` to `0`.\n    - For each score in the `score` array, if the score is greater than `maxScore`, update `maxScore` to the new score.\n    - Return `maxScore`.\n3. Initialize a variable `M` to the result of `findMax(score)`.\n4. Initialize an array `scoretoIndex` of size `M + 1`. For each score `i` in the score array, set `scoreToIndex[score[i]]` to `i + 1`.\n5. Create a constant string array to store the `MEDALS`: `[\"Gold Medal\", \"Silver Medal\", \"Bronze Medal\"]`.\n6. Initialize a string array `rank` of size `N` for storing the answer.\n7. Initialize a variable `place` to `1`.\n8. Assign ranks to athletes using a `for` loop. For each nonzero entry of `scoreToIndex`, `i`, starting with the last and moving to the first:\n    - Set a variable `originalIndex` to `scoreToIndex[i] - 1`.\n    - Add the place to the `rank` array at index `originalIndex`:\n        - If `place` is less than `4`, assign the athlete `medals[place - 1]`.\n        - Otherwise, set `rank[originalIndex] = str(place)`.\n    - Increment `place`.\n9. Return `rank`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/o47aY2YT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"o47aY2YT\"></iframe>\n\n#### Complexity Analysis\n\n​Let $n$ be the length of `score` and $m$ be the maximum value in the array.\n​\n* Time complexity: $O(n + m)$\n\n  The `findMax` function takes $O(n)$ because it traverses `score` once. We call this function once.\n\n  Populating `scoreToIndex` takes $O(n)$ because we add one entry for each athlete.\n\n  When we assign ranks to athletes, we iterate through every index of the `scoreToIndex` array, which is size $m + 1$. The operations within the loop take constant time, so this step takes $O(m)$.\n  \n  The overall time complexity is $O(2n + m)$, which we can simplify to $O(n + m)$.\n​\n* Space complexity: $O(m)$\n\n  The `scoreToIndex` array is size $m + 1$.\n\n  The `rank` array is only used to store the result, so it does not contribute towards the space complexity. \n\n  Therefore, the overall space complexity is $O(m)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

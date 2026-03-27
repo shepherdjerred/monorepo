@@ -1,0 +1,128 @@
+{
+  "questionId": "842",
+  "questionFrontendId": "822",
+  "title": "Card Flipping Game",
+  "titleSlug": "card-flipping-game",
+  "difficulty": "Medium",
+  "content": "<p>You are given two <strong>0-indexed</strong> integer arrays <code>fronts</code> and <code>backs</code> of length <code>n</code>, where the <code>i<sup>th</sup></code> card has the positive integer <code>fronts[i]</code> printed on the front and <code>backs[i]</code> printed on the back. Initially, each card is placed on a table such that the front number is facing up and the other is facing down. You may flip over any number of cards (possibly zero).</p>\n\n<p>After flipping the cards, an integer is considered <strong>good</strong> if it is facing down on some card and <strong>not</strong> facing up on any card.</p>\n\n<p>Return <em>the minimum possible good integer after flipping the cards</em>. If there are no good integers, return <code>0</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> fronts = [1,2,4,4,7], backs = [1,3,4,1,3]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong>\nIf we flip the second card, the face up numbers are [1,3,4,4,7] and the face down are [1,2,4,1,3].\n2 is the minimum good integer as it appears facing down but not facing up.\nIt can be shown that 2 is the minimum possible good integer obtainable after flipping some cards.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> fronts = [1], backs = [1]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong>\nThere are no good integers no matter how we flip the cards, so we return 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == fronts.length == backs.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 1000</code></li>\n\t<li><code>1 &lt;= fronts[i], backs[i] &lt;= 2000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"flipgame\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"fronts\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"backs\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"26K\", \"totalSubmission\": \"52K\", \"totalAcceptedRaw\": 26044, \"totalSubmissionRaw\": 51983, \"acRate\": \"50.1%\"}",
+  "likes": 192,
+  "dislikes": 797,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,4,4,7]\n[1,3,4,1,3]",
+    "[1]\n[1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int flipgame(vector<int>& fronts, vector<int>& backs) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int flipgame(int[] fronts, int[] backs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def flipgame(self, fronts: List[int], backs: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def flipgame(self, fronts, backs):\n        \"\"\"\n        :type fronts: List[int]\n        :type backs: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} fronts\n * @param {number[]} backs\n * @return {number}\n */\nvar flipgame = function(fronts, backs) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function flipgame(fronts: number[], backs: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int Flipgame(int[] fronts, int[] backs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int flipgame(int* fronts, int frontsSize, int* backs, int backsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func flipgame(fronts []int, backs []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun flipgame(fronts: IntArray, backs: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func flipgame(_ fronts: [Int], _ backs: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn flipgame(fronts: Vec<i32>, backs: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} fronts\n# @param {Integer[]} backs\n# @return {Integer}\ndef flipgame(fronts, backs)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $fronts\n     * @param Integer[] $backs\n     * @return Integer\n     */\n    function flipgame($fronts, $backs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int flipgame(List<int> fronts, List<int> backs) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def flipgame(fronts: Array[Int], backs: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec flipgame(fronts :: [integer], backs :: [integer]) :: integer\n  def flipgame(fronts, backs) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec flipgame(Fronts :: [integer()], Backs :: [integer()]) -> integer().\nflipgame(Fronts, Backs) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (flipgame fronts backs)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

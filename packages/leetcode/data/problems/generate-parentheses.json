@@ -1,0 +1,137 @@
+{
+  "questionId": "22",
+  "questionFrontendId": "22",
+  "title": "Generate Parentheses",
+  "titleSlug": "generate-parentheses",
+  "difficulty": "Medium",
+  "content": "<p>Given <code>n</code> pairs of parentheses, write a function to <em>generate all combinations of well-formed parentheses</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> n = 3\n<strong>Output:</strong> [\"((()))\",\"(()())\",\"(())()\",\"()(())\",\"()()()\"]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> n = 1\n<strong>Output:</strong> [\"()\"]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 8</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"generateParenthesis\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<string>\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"2.8M\", \"totalSubmission\": \"3.6M\", \"totalAcceptedRaw\": 2831140, \"totalSubmissionRaw\": 3609046, \"acRate\": \"78.4%\"}",
+  "likes": 23236,
+  "dislikes": 1079,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Letter Combinations of a Phone Number\", \"titleSlug\": \"letter-combinations-of-a-phone-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Valid Parentheses\", \"titleSlug\": \"valid-parentheses\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Check if a Parentheses String Can Be Valid\", \"titleSlug\": \"check-if-a-parentheses-string-can-be-valid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3",
+    "1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 21, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 10, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}], \"more_than_six_months\": [{\"timesEncountered\": 16, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 9, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 9, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 8, \"slug\": \"grammarly\", \"name\": \"Grammarly\"}, {\"timesEncountered\": 6, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 6, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 5, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 5, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 4, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 4, \"slug\": \"avito\", \"name\": \"Avito\"}]}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> generateParenthesis(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> generateParenthesis(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def generateParenthesis(self, n: int) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def generateParenthesis(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {string[]}\n */\nvar generateParenthesis = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function generateParenthesis(n: number): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> GenerateParenthesis(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** generateParenthesis(int n, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func generateParenthesis(n int) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun generateParenthesis(n: Int): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func generateParenthesis(_ n: Int) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn generate_parenthesis(n: i32) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {String[]}\ndef generate_parenthesis(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return String[]\n     */\n    function generateParenthesis($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> generateParenthesis(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def generateParenthesis(n: Int): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec generate_parenthesis(n :: integer) :: [String.t]\n  def generate_parenthesis(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec generate_parenthesis(N :: integer()) -> [unicode:unicode_binary()].\ngenerate_parenthesis(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (generate-parenthesis n)\n  (-> exact-integer? (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1870",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n <div>\n    <div class=\"video-container\">\n      <iframe src=\"https://player.vimeo.com/video/855854721?texttrack=en-x-autogenerated\" frameborder=\"0\"\n        allow=\"autoplay; fullscreen\"></iframe>\n    </div>\n</div>\n\n\n\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition   \n\nLet's start with the brute-force approach, which involves generating all possible strings of length `2n`, and then verifying their validity.\n\n![img](../Figures/22/1.png)\n\nThe first step is to generate all possible strings of length `2n`. We can utilize a queue data structure, `queue`, for implementing a breadth-first search algorithm. For each string of length `i`, denoted as `cur_string`, we will enqueue two new strings of length `i + 1` by appending either `)` or `(` to `cur_string`. This process continues until the string length reaches `2n`, as shown in the following figure.\n\n![img](../Figures/22/2.png)\n\nOnce we have generated a string of length `2n`, the next step is to verify its validity. As a valid combination of parentheses of length `2n` must have `n` left parentheses, with each of them matched to one of the `n` right parentheses to its right, we can keep track of a parameter called `left_count`. `left_count` represents the number of left parentheses that have not been matched by any right parentheses, and during iteration: \n\n- If we encounter a left parenthesis, we increment `left_count` by 1.\n- If we encounter a right parenthesis, we decrement `left_count` by 1 as it can match and \"offset\" one previous left parenthesis.\n\nHowever, the value of `left_count` cannot be negative, which would mean that there is a right parenthesis without a corresponding left parenthesis to its left. \n\n\n![img](../Figures/22/3.png)\n\n\nFinally, after traversing the entire string, we check if `left_count = 0`. If it is, every left parenthesis is matached to a corresponding right parenthesis, and the string is considered valid. Otherwise, it is not a valid string.\n\n\n![img](../Figures/22/4.png)\n\n\n\n<br>\n\n#### Algorithm\n\n1) Initialize a queue `queue` that contains an empty string `\"\"`, create an empty array `answer` to store all valid strings.\n\n2) Define `isValid(p_string)` to check if `p_string` is valid by setting `left_count = 0` and iterating over `p_string`. For each parenthesis `p`:\n    - We increment `left_count` by 1 if `p` equals `(`, and decrement `left_count` by 1 otherwise.\n    - If `left_count < 0`, return `False`.\n\n    Return `True` if `left_count = 0` after the iteration, and return `False` otherwise.\n\n3) Continuously dequeue strings from `queue` and process each dequeued string `cur_string`.\n\n    - If `len(cur_string) = 2n`, we will add it to `answer` if it is a valid string.\n    - Otherwise (`len(cur_string) < 2n`), we add `(` or `)` at the end of the `cur_string` and enqueue the two new strings.\n\n4) Return `answer` when the process ends.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/f2N5fZHd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"f2N5fZHd\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $$O(2^{2n}\\cdot n)$$\n\n    - We are generating all possible strings of length `2n`. At each character, we have two choices: choosing `(` or `)`, which means there are a total of $$2^{2n}$$ unique strings.\n\n    - For each string of length `2n`, we need to iterate through each character to verify it is a valid combination of parentheses, which takes an average of $$O(n)$$ time. \n    \n\n* Space complexity: $$O(2^{2n}\\cdot n)$$\n\n    - While we don't count the answer as part of the space complexity, for those interested, it is the $n^{th}$ Catalan number, which is asymptotically bounded by $$\\frac{4^n}{n\\sqrt{n}}$$. Thus `answer` takes $$O(\\frac{4^n}{\\sqrt{n}})$$ space.\n\n    > Please find the explanation behind this intuition in approach 3!\n    > You can also refer to [Catalan number on Wikipedia](https://en.wikipedia.org/wiki/Catalan_number) for more information about Catalan numbers.\n\n\n    - Before we dequeue the first string of length `2n` from `queue`, it has stored  $$2^{2n - 1}$$ strings of length $$n - 1$$, which takes $$O(2^{2n} \\cdot n)$$.\n    - To sum up, the overall space complexity is $$O(2^{2n}\\cdot n)$$.\n\n\n<br/>\n\n\n\n---\n\n### Approach 2: Backtracking, Keep Candidate Valid\n\n\n#### Intuition   \n\n> If you are not familiar with backtracking, you can refer to our [Backtracking Explore Card](https://leetcode.com/explore/learn/card/recursion-ii/472/backtracking/) for more information.\n\nThe previous approach of generating all possible strings of length `2n` and checking each one is simple but inefficient, as it generates many invalid strings that must be checked. \n\nA better approach is to use backtracking to generate only valid strings. This involves recursively building strings of length `2n` and checking their validity as we go. In case the current string is invalid, we will not continue the recursive process on it. Instead, we will backtrack to the previous valid string on the recursive path. This approach allows us to focus only on generating valid strings, thus saving us time and resources. We continue the recursion only on the valid strings until we reach the ones of length `2n`.\n\nAs shown in the picture below: `)` is an invalid string, so every string prefixed with it is also invalid, and we can just drop it.\n\n![img](../Figures/22/5.png)\n\nTo ensure that the current string is always valid during the backtracking process, we need two variables `left_count` and `right_count` that record the number of left and right parentheses in it, respectively. \n\nTherefore, we can define our backtracking function as `backtracking(cur_string, left_count, right_count)` that takes the current string, the number of left parentheses, and the number of right parentheses as arguments. This function will build valid combinations of parentheses of length `2n` recursively.\n\nThe function adds more parentheses to `cur_string` only when certain conditions are met:\n\n- If `left_count < n`, it suggests that a left parenthesis can still be added, so we add one left parenthesis to `cur_string`, creating a new string `new_string = cur_string + (`, and then call `backtracking(new_string, left_count + 1, right_count)`. \n\n\n- If `left_count > right_count`, it suggests that a right parenthesis can be added to match a previous unmatched left parenthesis, so we add one right parenthesis to `cur_string`, creating a new string `new_string = cur_string + )`, and then call `backtracking(new_string, left_count, right_count + 1)`.\n\n\nThis function ensures that the generated string of length `2n` is valid, and adds it directly to the answer. By only generating valid strings, we can avoid wasting time checking invalid strings.\n\n<br>\n\n#### Algorithm\n\n1) Initialize an empty list `answer `to store the valid strings.\n\n2) Define `backtracking(cur_string, left_count, right_count)` to generate valid strings recursively.\n    - If `len(cur_string) = 2n`, add it to `answer` and return.\n    - If `left_count < n`, add `(` to `cur_string` and move on to `backtracking(new_string, left_count + 1, right_count)`.\n    - If `left_count > right_count`, add `)` to `cur_string` and move on to `backtracking(new_string, left_count, right_count + 1)`.\n\n3) Call `backtracking` on empty string (`backtracking(\"\", 0, 0)`) and return `answer` once the backtracking process is complete.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/dvq42gzf/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dvq42gzf\"></iframe>\n\n\n#### Complexity Analysis\n\n\n* Time complexity: $$O(\\frac{4^n}{\\sqrt{n}})$$\n    \n    - We only track the valid prefixes during the backtracking procedure. As explained in the approach 1 time complexity analysis, the total number of valid parentheses strings is $$O(\\frac{4^n}{n\\sqrt{n}})$$.\n\n    > Please find the explanation behind this intuition in approach 3!\n    > You can also refer to [Catalan number on Wikipedia](https://en.wikipedia.org/wiki/Catalan_number) for more information about Catalan numbers.\n\n\n    - When considering each valid string, it is important to note that we use a mutable instance (StringBuilder in Java, list in Python etc.). As a result, in order to add each instance of a valid string to `answer`, we must first convert it to a string. This process brings an additional $$n$$ factor in the time complexity.\n\n\n    \n\n* Space complexity: $$O(n)$$\n\n    - The space complexity of a recursive call depends on the maximum depth of the recursive call stack, which is $$2n$$. As each recursive call either adds a left parenthesis or a right parenthesis, and the total number of parentheses is $$2n$$. Therefore, at most $$O(n)$$ levels of recursion will be created, and each level consumes a constant amount of space.  \n\n<br/>\n\n\n---\n\n### Approach 3: Divide and Conquer\n\n\n#### Intuition   \n\nThe problem of generating all well-formed parentheses strings of length `2n` can be decomposed into smaller subproblems of generating valid strings of smaller lengths. \n\nBy leveraging the solutions to these subproblems, we can construct the solutions to the original problem. To illustrate this point, consider the following approach. Let `F(n)` denote the set of all valid strings of length `2n`. We can construct the elements of `F(n)` as follows:\n\n- Contatenating a valid string of length `0`, generated by `F(0)`, with a valid string of length `2n`, generated by `F(n)`. We can represent this concatenation as `F(0) + F(n)` for simplicity.\n- Contatenating a valid string of length `2` from `F(1)` with a valid string of length `2n - 2` from `F(n - 1)`, which is equivalent to `F(1) + F(n - 1)`.\n- `F(2) + F(n - 2)`.\n- `F(3) + F(n - 3)`.\n- ...\n- `F(n - 1) + F(1)`.\n- `F(n) + F(0)`.\n\n\n![img](../Figures/22/6.png)\n\nHowever, this approach poses a problem as it involves repetitive calculations of `F(n)`, rather than reducing the original problem into smaller subproblems.\n\n![img](../Figures/22/7.png)\n\n<br>\n\nBy removing the outermost parentheses from the left string, we can ensure that the maximum number of parentheses pairs in the subproblem is limited to `n - 1`. This strategy solves the issue of redundant computation of the original problem. \n\n![img](../Figures/22/8.png)\n\nThe resulting subproblems, as depicted in the figure above, contain `n - 1` pairs of parentheses in total. The inclusion of the outermost pair of parentheses from the left string results in `n` pairs of parentheses, which aligns with the number of pairs required in the original problem.\n\n![img](../Figures/22/9.png)\n\nTake a look at how valid strings of length `2n` are constructed in the following figure. \n\n![img](../Figures/22/exo.png)\n\n**Catalan Number**\n\n> Recall that we talked about Catalan numbers earlier. \nHere we can find the connection between this number and the answer. According to the definition, the general formula for Catalan numbers is \n> C(n) = C(0) * C(n - 1) + C(1) * C(n - 2) + ... + C(n - 1) * C(0)\n>\n> Looks familiar? \n>\n>We have just deduced the number of valid strings formed with n pairs of parentheses in this section (please refer to the figures above): \nF(n) = F(0)*F(n - 1) + F(1)*F(n - 2) + ... + F(n - 1)*F(0)\n>\n>We observe that this general formula matches exactly with the general formula for Catalan numbers. Therefore, the $$n^{th}$$ Catalan numbers is precisely the number of ways to form valid combinations of $$n$$ pairs of parentheses.\n>\n> Note that the math behind the Catalan numbers is quite complicated and out of the scope of a technical coding interview. If an interviewer asks you to derive the time complexity for a problem like this, do your best to try and find an upper bound. Usually, backtracking solutions have very complicated time complexities that are extremely difficult to derive.\n\n\n\n<br>\n\n#### Algorithm\n\n1) If `n = 0`, return `[\"\"]`.\n\n2) Create an empty array `answer = []`. Iterate over the number of parentheses pairs with a variable `left_count`.\n\n\n3) Iterate over each valid string `left_string` from `generateParenthesis(left_count)`.\n\n4) Iterate over each valid string `right_string` from `generateParenthesis(n - left_count - 1)`.\n\n5) Construct a valid string of length `2n`: We enclose `left_string` by a pair of parentheses, which is denoted as `( + left_string + )`, then contatenate it with `right_string`, and add the resulting string to `answer`.\n\n\n6) Return `answer` when the nested iterations are complete.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DLmEgRdW/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DLmEgRdW\"></iframe>\n\n\n#### Complexity Analysis\n\n\n\n* Time complexity: $$O(\\frac{4^n}{\\sqrt{n}})$$\n\n    - We begin by generating all valid parentheses strings of length `2`, `4`, ..., `2n`. As shown in approach 2, the time complexity for generating all valid parentheses strings of length `2n` is given by the expression $$O(\\frac{4^n}{\\sqrt{n}})$$. Therefore, the total time complexity can be expressed $$T(n) = \\sum\\limits_{i=1}^n{\\frac{4^i}{\\sqrt{i}}}$$ which is asymptotically bounded by $$O(\\frac{4^n}{\\sqrt{n}})$$. \n    \n\n* Space complexity: $$O(n)$$\n    - We don't count the answer as part of the space complexity, so the space complexity would be the maximum depth of the recursion stack. At any given time, the recursive function call stack would contain at most $$n$$ function calls. \n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

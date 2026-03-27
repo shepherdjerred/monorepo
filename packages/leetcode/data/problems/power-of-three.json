@@ -1,0 +1,134 @@
+{
+  "questionId": "326",
+  "questionFrontendId": "326",
+  "title": "Power of Three",
+  "titleSlug": "power-of-three",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer <code>n</code>, return <em><code>true</code> if it is a power of three. Otherwise, return <code>false</code></em>.</p>\n\n<p>An integer <code>n</code> is a power of three, if there exists an integer <code>x</code> such that <code>n == 3<sup>x</sup></code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 27\n<strong>Output:</strong> true\n<strong>Explanation:</strong> 27 = 3<sup>3</sup>\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 0\n<strong>Output:</strong> false\n<strong>Explanation:</strong> There is no x where 3<sup>x</sup> = 0.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = -1\n<strong>Output:</strong> false\n<strong>Explanation:</strong> There is no x where 3<sup>x</sup> = (-1).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>-2<sup>31</sup> &lt;= n &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<strong>Follow up:</strong> Could you solve it without loops/recursion?",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"isPowerOfThree\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.4M\", \"totalSubmission\": \"2.7M\", \"totalAcceptedRaw\": 1367952, \"totalSubmissionRaw\": 2689164, \"acRate\": \"50.9%\"}",
+  "likes": 3714,
+  "dislikes": 317,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Power of Two\", \"titleSlug\": \"power-of-two\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Power of Four\", \"titleSlug\": \"power-of-four\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Check if Number is a Sum of Powers of Three\", \"titleSlug\": \"check-if-number-is-a-sum-of-powers-of-three\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "27",
+    "0",
+    "-1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 35, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 10, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}]}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isPowerOfThree(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isPowerOfThree(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isPowerOfThree(self, n: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isPowerOfThree(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {boolean}\n */\nvar isPowerOfThree = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isPowerOfThree(n: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsPowerOfThree(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isPowerOfThree(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isPowerOfThree(n int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isPowerOfThree(n: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isPowerOfThree(_ n: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_power_of_three(n: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Boolean}\ndef is_power_of_three(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Boolean\n     */\n    function isPowerOfThree($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isPowerOfThree(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isPowerOfThree(n: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_power_of_three(n :: integer) :: boolean\n  def is_power_of_three(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_power_of_three(N :: integer()) -> boolean().\nis_power_of_three(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-power-of-three n)\n  (-> exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "45",
+    "content": "[TOC]\n\n## Solution\n\nIn this article we will look into ways of speeding up simple computations and why that is useful in practice.\n<br>\n<br>\n\n---\n### Approach 1: Loop Iteration\n\nOne simple way of finding out if a number `n` is a power of a number `b` is to keep dividing `n` by `b` as long as the remainder is **0**. This is because we can write\n\n$$\n\\begin{aligned}\nn &= b^x \\\\\nn &= b \\times b \\times \\ldots \\times b\n\\end{aligned}\n$$\n\nHence it should be possible to divide `n` by `b` `x` times, every time with a remainder of **0** and the end result to be **1**.\n\n<iframe src=\"https://leetcode.com/playground/V7gdLNpf/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"V7gdLNpf\"></iframe>\n\nNotice that we need a guard to check that `n != 0`, otherwise the while loop will never finish. For negative numbers, the algorithm does not make sense, so we will include this guard as well.\n\n**Complexity Analysis**\n\n* Time complexity : $$O(\\log_b(n))$$. In our case that is $$O(\\log_3n)$$. The number of divisions is given by that logarithm.\n\n* Space complexity : $$O(1)$$. We are not using any additional memory.\n<br>\n<br>\n\n---\n### Approach 2: Base Conversion\n\nIn Base 10, all powers of 10 start with the digit **1** and then are followed only by **0** (e.g. 10, 100, 1000). This is true for other bases and their respective powers. For instance in *base 2*, the representations of $$10_2$$, $$100_2$$ and $$1000_2$$ are $$2_{10}$$, $$4_{10}$$ and $$8_{10}$$ respectively. Therefore if we convert our number to base 3 and the representation is of the form 100...0, then the number is a power of 3.\n\n**Proof**\n\nGiven the base 3 representation of a number as the array `s`, with the least significant digit on index 0, the formula for converting from base **3** to base **10** is:\n\n$$\n\\sum_{i=0}^{len(s) - 1} s[i] * 3^{i}\n$$\n\nTherefore, having just one digit of **1** and everything else **0** means the number is a power of 3.\n\n**Implementation**\n\nAll we need to do is convert [^note-4] the number to *base 3* and check if it is written as a leading **1** followed by all **0**.\n\nA couple of built-in Java functions will help us along the way.\n\n<iframe src=\"https://leetcode.com/playground/2BgMF9Ep/shared\" frameBorder=\"0\" width=\"100%\" height=\"72\" name=\"2BgMF9Ep\"></iframe>\n\nThe code above converts `number` into base `base` and returns the result as a `String`. For example, `Integer.toString(5, 2) == \"101\"` and `Integer.toString(5, 3) == \"12\"`.\n\n<iframe src=\"https://leetcode.com/playground/Ga9GCybP/shared\" frameBorder=\"0\" width=\"100%\" height=\"72\" name=\"Ga9GCybP\"></iframe>\n\nThe code above checks if a certain **Regular Expression** [^note-2] pattern exists inside a string. For instance the above will return true if the substring \"123\" exists inside the string `myString`.\n\n<iframe src=\"https://leetcode.com/playground/bT75qZyR/shared\" frameBorder=\"0\" width=\"100%\" height=\"72\" name=\"bT75qZyR\"></iframe>\n\nWe will use the regular expression above for checking if the string starts with **1** `^1`, is followed by zero or more **0**s `0*` and contains nothing else `＄`.\n\n<iframe src=\"https://leetcode.com/playground/aFK3YjgS/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"aFK3YjgS\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(\\log_3n)$$.\n\n    Assumptions:\n\n    * `Integer.toString()` - Base conversion is generally implemented as a repeated division. The complexity of  should be similar to our Approach 1: $$O(\\log_3n)$$.\n    * `String.matches()` - Method iterates over the entire string. The number of digits in the base 3 representation of `n` is $$O(\\log_3n)$$.\n\n* Space complexity : $$O(\\log_3n)$$.\n\n    We are using two additional variables,\n\n    * The string of the base 3 representation of the number (size $$\\log_3n$$)\n    * The string of the regular expression (constant size)\n<br>\n<br>\n\n---\n### Approach 3: Mathematics\n\nWe can use mathematics as follows\n\n$$\nn = 3^i \\\\\ni = \\log_3(n) \\\\\ni = \\frac{\\log_b(n)}{\\log_b(3)}\n$$\n\n`n` is a power of three if and only if `i` is an integer. In Java, we check if a number is an integer by taking the decimal part (using `% 1`) and checking if it is 0.\n\n<iframe src=\"https://leetcode.com/playground/UarQJZVn/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"UarQJZVn\"></iframe>\n\n**Common pitfalls**\n\nThis solution is problematic because we start using `double`s, which means we are subject to precision errors. This means, we should never use `==` when comparing `double`s. That is because the result of `Math.log10(n) / Math.log10(3)` could be `5.0000001` or `4.9999999`. This effect can be observed by using the function `Math.log()` instead of `Math.log10()`.\n\nIn order to fix that, we need to compare the result against an `epsilon`.\n\n<iframe src=\"https://leetcode.com/playground/6HKFFwdP/shared\" frameBorder=\"0\" width=\"100%\" height=\"72\" name=\"6HKFFwdP\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$Unknown$$ The expensive operation here is `Math.log`, which upper bounds the time complexity of our algorithm. The implementation is dependent on the language we are using and the compiler [^note-3]\n\n* Space complexity : $$O(1)$$. We are not using any additional memory. The `epsilon` variable can be inlined.\n<br>\n<br>\n\n---\n### Approach 4: Integer Limitations\n\nAn important piece of information can be deduced from the function signature\n\n<iframe src=\"https://leetcode.com/playground/6oTsqpQ8/shared\" frameBorder=\"0\" width=\"100%\" height=\"72\" name=\"6oTsqpQ8\"></iframe>\n\nIn particular, `n` is of type `int`. In Java, this means it is a 4 byte, signed integer [ref]. The maximum value of this data type is **2147483647**. Three ways of calculating this value are\n\n- [Google](http://stackoverflow.com/questions/15004944/max-value-of-integer)\n- ```System.out.println(Integer.MAX_VALUE);```\n- MaxInt = $$\\frac{ 2^{32} }{2} - 1$$ since we use 32 bits to represent the number, half of the range is used for negative numbers and 0 is part of the positive numbers\n\nKnowing the limitation of `n`, we can now deduce that the maximum value of `n` that is also a power of three is **1162261467**. We calculate this as:\n\n$$\n3^{\\lfloor{}\\log_3{MaxInt}\\rfloor{}} = 3^{\\lfloor{}19.56\\rfloor{}} = 3^{19} = 1162261467\n$$\n\nTherefore, the possible values of `n` where we should return `true` are $$3^0$$, $$3^1$$ ... $$3^{19}$$. Since 3 is a prime number, the only divisors of $$3^{19}$$ are $$3^0$$, $$3^1$$ ... $$3^{19}$$, therefore all we need to do is divide $$3^{19}$$ by `n`. A remainder of **0** means `n` is a divisor of $$3^{19}$$ and therefore a power of three.\n\n<iframe src=\"https://leetcode.com/playground/WjBajkrb/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"WjBajkrb\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(1)$$. We are only doing one operation.\n\n* Space complexity : $$O(1)$$. We are not using any additional memory.\n<br>\n<br>\n\n---\n## Performance Measurements\n\nSingle runs of the function make it is hard to accurately measure the difference of the two solutions. On LeetCode, on the *Accepted Solutions Runtime Distribution* page, all solutions being between `15 ms` and `20 ms`. For completeness, we have proposed the following benchmark to see how the two solutions differ.\n\n**Java Benchmark Code**\n\n<iframe src=\"https://leetcode.com/playground/dCXbQsi6/shared\" frameBorder=\"0\" width=\"100%\" height=\"174\" name=\"dCXbQsi6\"></iframe>\n\nIn the table below, the values are in seconds.\n\n| Iterations | $$10^6$$ | $$10^7$$ | $$10^8$$ | $$10^9$$ | $$Maxint$$ |\n|:---:|:---:|:---:|:---:|:---:|:---:|\n| Java Approach 1: (Naive) | 0.04 | 0.07 | 0.30 | 2.47 | 5.26 |\n| Java Approach 2: (Strings) | 0.68 | 4.02 | 38.90 | 409.16 | 893.89 |\n| Java Approach 3: (Logarithms) | 0.09 | 0.50 | 4.59 | 45.53 | 97.50 |\n| Java Approach 4: (Fast) | 0.04 | 0.06 | 0.08 | 0.41 | 0.78 |\n\nAs we can see, for small values of N, the difference is not noticeable, but as we do more iterations and the values of `n` passed to `isPowerOfThree()` grow, we see significant boosts in performance for Approach 4.\n<br>\n<br>\n\n---\n## Conclusion\n\nSimple optimizations like this might seem negligible, but historically, when computation power was an issue, it allowed certain computer programs (such as Quake 3 [^note-1]) possible.\n<br>\n<br>\n\n---\n## References\n\n[^note-1]: [https://en.wikipedia.org/wiki/Fast_inverse_square_root](https://en.wikipedia.org/wiki/Fast_inverse_square_root)\n[^note-2]: [https://en.wikipedia.org/wiki/Regular_expression](https://en.wikipedia.org/wiki/Regular_expression)\n[^note-3]: [http://developer.classpath.org/doc/java/lang/StrictMath-source.html](http://developer.classpath.org/doc/java/lang/StrictMath-source.html)\n[^note-4]: [http://www.cut-the-knot.org/recurrence/conversion.shtml](http://www.cut-the-knot.org/recurrence/conversion.shtml)",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

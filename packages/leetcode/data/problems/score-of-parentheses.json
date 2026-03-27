@@ -1,0 +1,134 @@
+{
+  "questionId": "886",
+  "questionFrontendId": "856",
+  "title": "Score of Parentheses",
+  "titleSlug": "score-of-parentheses",
+  "difficulty": "Medium",
+  "content": "<p>Given a balanced parentheses string <code>s</code>, return <em>the <strong>score</strong> of the string</em>.</p>\n\n<p>The <strong>score</strong> of a balanced parentheses string is based on the following rule:</p>\n\n<ul>\n\t<li><code>&quot;()&quot;</code> has score <code>1</code>.</li>\n\t<li><code>AB</code> has score <code>A + B</code>, where <code>A</code> and <code>B</code> are balanced parentheses strings.</li>\n\t<li><code>(A)</code> has score <code>2 * A</code>, where <code>A</code> is a balanced parentheses string.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;()&quot;\n<strong>Output:</strong> 1\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;(())&quot;\n<strong>Output:</strong> 2\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;()()&quot;\n<strong>Output:</strong> 2\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= s.length &lt;= 50</code></li>\n\t<li><code>s</code> consists of only <code>&#39;(&#39;</code> and <code>&#39;)&#39;</code>.</li>\n\t<li><code>s</code> is a balanced parentheses string.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"scoreOfParentheses\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"221.2K\", \"totalSubmission\": \"347.6K\", \"totalAcceptedRaw\": 221161, \"totalSubmissionRaw\": 347574, \"acRate\": \"63.6%\"}",
+  "likes": 5603,
+  "dislikes": 236,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"()\"",
+    "\"(())\"",
+    "\"()()\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int scoreOfParentheses(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int scoreOfParentheses(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def scoreOfParentheses(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def scoreOfParentheses(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar scoreOfParentheses = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function scoreOfParentheses(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ScoreOfParentheses(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int scoreOfParentheses(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func scoreOfParentheses(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun scoreOfParentheses(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func scoreOfParentheses(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn score_of_parentheses(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef score_of_parentheses(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function scoreOfParentheses($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int scoreOfParentheses(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def scoreOfParentheses(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec score_of_parentheses(s :: String.t) :: integer\n  def score_of_parentheses(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec score_of_parentheses(S :: unicode:unicode_binary()) -> integer().\nscore_of_parentheses(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (score-of-parentheses s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "495",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Divide and Conquer\n\n**Intuition**\n\nSplit the string into `S = A + B` where `A` and `B` are balanced parentheses strings, and `A` is the smallest possible non-empty prefix of `S`.\n\n**Algorithm**\n\nCall a balanced string *primitive* if it cannot be partitioned into two non-empty balanced strings.\n\nBy keeping track of `balance` (the number of `(` parentheses minus the number of `)` parentheses), we can partition `S` into primitive substrings `S = P_1 + P_2 + ... + P_n`.  Then, `score(S) = score(P_1) + score(P_2) + ... + score(P_n)`, by definition.\n\nFor each primitive substring `(S[i], S[i+1], ..., S[k])`, if the string is length 2, then the score of this string is 1.  Otherwise, it's twice the score of the substring `(S[i+1], S[i+2], ..., S[k-1])`.\n\n<iframe src=\"https://leetcode.com/playground/jGJHWpnY/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"jGJHWpnY\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N^2)$$, where $$N$$ is the length of `S`.  An example worst case is `(((((((....)))))))`.\n\n* Space Complexity:  $$O(N)$$, the size of the implied call stack.\n<br />\n<br />\n\n\n---\n### Approach 2: Stack\n\n**Intuition and Algorithm**\n\nEvery position in the string has a *depth* - some number of matching parentheses surrounding it.  For example, the dot in `(()(.()))` has depth 2, because of these parentheses: `(__(.__))`\n\nOur goal is to maintain the score at the current depth we are on.  When we see an opening bracket, we increase our depth, and our score at the new depth is 0.  When we see a closing bracket, we add twice the score of the previous deeper part - except when counting `()`, which has a score of 1.\n\nFor example, when counting `(()(()))`, our stack will look like this:\n\n* `[0, 0]` after parsing `(`\n* `[0, 0, 0]` after `(`\n* `[0, 1]` after `)`\n* `[0, 1, 0]` after `(`\n* `[0, 1, 0, 0]` after `(`\n* `[0, 1, 1]` after `)`\n* `[0, 3]` after `)`\n* `[6]` after `)`\n\n<iframe src=\"https://leetcode.com/playground/fMZ2asWN/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"fMZ2asWN\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `S`.\n\n* Space Complexity:  $$O(N)$$, the size of the stack.\n<br />\n<br />\n\n\n---\n### Approach 3: Count Cores\n\n**Intuition**\n\nThe final sum will be a sum of powers of 2, as every *core* (a substring `()`, with score 1) will have it's score multiplied by 2 for each exterior set of parentheses that contains that core.\n\n**Algorithm**\n\nKeep track of the `balance` of the string, as defined in *Approach #1*.  For every `)` that immediately follows a `(`, the answer is `1 << balance`, as `balance` is the number of exterior set of parentheses that contains this core.\n\n<iframe src=\"https://leetcode.com/playground/WRtdvzzg/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"WRtdvzzg\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `S`.\n\n* Space Complexity:  $$O(1)$$.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

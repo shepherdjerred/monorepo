@@ -1,0 +1,134 @@
+{
+  "questionId": "171",
+  "questionFrontendId": "171",
+  "title": "Excel Sheet Column Number",
+  "titleSlug": "excel-sheet-column-number",
+  "difficulty": "Easy",
+  "content": "<p>Given a string <code>columnTitle</code> that represents the column title as appears in an Excel sheet, return <em>its corresponding column number</em>.</p>\n\n<p>For example:</p>\n\n<pre>\nA -&gt; 1\nB -&gt; 2\nC -&gt; 3\n...\nZ -&gt; 26\nAA -&gt; 27\nAB -&gt; 28 \n...\n</pre>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> columnTitle = &quot;A&quot;\n<strong>Output:</strong> 1\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> columnTitle = &quot;AB&quot;\n<strong>Output:</strong> 28\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> columnTitle = &quot;ZY&quot;\n<strong>Output:</strong> 701\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= columnTitle.length &lt;= 7</code></li>\n\t<li><code>columnTitle</code> consists only of uppercase English letters.</li>\n\t<li><code>columnTitle</code> is in the range <code>[&quot;A&quot;, &quot;FXSHRXW&quot;]</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"titleToNumber\",\n  \"params\": [\n    {\n      \"name\": \"columnTitle\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"895K\", \"totalSubmission\": \"1.3M\", \"totalAcceptedRaw\": 894953, \"totalSubmissionRaw\": 1326476, \"acRate\": \"67.5%\"}",
+  "likes": 5097,
+  "dislikes": 400,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Excel Sheet Column Title\", \"titleSlug\": \"excel-sheet-column-title\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Cells in a Range on an Excel Sheet\", \"titleSlug\": \"cells-in-a-range-on-an-excel-sheet\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"A\"",
+    "\"AB\"",
+    "\"ZY\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"razorpay\", \"name\": \"razorpay\"}, {\"timesEncountered\": 2, \"slug\": \"docusign\", \"name\": \"Docusign\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int titleToNumber(string columnTitle) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int titleToNumber(String columnTitle) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def titleToNumber(self, columnTitle: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def titleToNumber(self, columnTitle):\n        \"\"\"\n        :type columnTitle: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} columnTitle\n * @return {number}\n */\nvar titleToNumber = function(columnTitle) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function titleToNumber(columnTitle: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int TitleToNumber(string columnTitle) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int titleToNumber(char* columnTitle) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func titleToNumber(columnTitle string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun titleToNumber(columnTitle: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func titleToNumber(_ columnTitle: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn title_to_number(column_title: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} column_title\n# @return {Integer}\ndef title_to_number(column_title)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $columnTitle\n     * @return Integer\n     */\n    function titleToNumber($columnTitle) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int titleToNumber(String columnTitle) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def titleToNumber(columnTitle: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec title_to_number(column_title :: String.t) :: integer\n  def title_to_number(column_title) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec title_to_number(ColumnTitle :: unicode:unicode_binary()) -> integer().\ntitle_to_number(ColumnTitle) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (title-to-number columnTitle)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "966",
+    "content": "[TOC]\n\n## Solution\n\n*This problem can be solved as if it is a problem of converting base-26 number \nsystem to base-10 number system.*\n\n---\n\n### Approach 1: Right to Left\n\n**Intuition**\n\nLet's tabulate the titles of an excel sheet in a table. There will be \n26 rows in each column. Each cell in the table represents an excel sheet title.\n\n![alt text](../Figures/171/171_table.png \"Table\")\n\nPay attention to the \"1 green block\", \"1 orange block\" and \"1 blue block\" in the  figure. \nThese tell how bigger blocks are composed of smaller blocks.\nFor example, blocks of 2-character titles are composed of 1-character blocks and \nblocks of 3-character titles are composed of 2-character blocks. This information \nis useful for finding a general pattern when calculating the values of titles.\n\nLet's say we want to get the value of title **AZZC**. This can be broken down as  `'A***' + 'Z**' + 'Z*' + 'C'`. Here, the `*`s represent smaller blocks. \n`*` means a block of 1-character titles. `**` means a block of 2-character titles.\nThere are 26<sup>1</sup> titles in a block of 1-character titles. There are 26<sup>2</sup> titles in a block of 2-character titles.\n\nScanning **AZZC** from right to left while accumulating results:\n\n1. First, ask the question, what the value of `'C'` is:\n    * `'C'` = 3 x 26<sup>0</sup> = 3 x 1 = 3\n    * `result` = 0 + 3 = **3**\n2. Then, ask the question, what the value of `'Z*'` is:\n    * `'Z*'` = 26 x 26<sup>1</sup> = 26 x 26 = 676\n    * `result` = **3** + 676 = **679**\n3. Then, ask the question, what the value of `'Z**'` is:\n    * `'Z**'` = 26 x 26<sup>2</sup> = 26 x 676 = 17576\n    * `result` = **679** + 17576 = **18255**\n4. Finally, ask the question, what the value of `'A***'` is:\n    * `'A***'` = 1 x 26<sup>3</sup> = 1 x 17576 = 17576\n    * `result` = **18255** + 17576 = 35831\n    \n**Algorithm**\n\n* To get indices of alphabets, create a mapping of alphabets and their corresponding values. (1-indexed)\n* Initialize an accumulator variable `result`.\n* Starting from right to left, calculate the value of the character associated \n with its position and add it to `result`. \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/MbuStGWS/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"MbuStGWS\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(N)$$ where $$N$$ is the number of characters in the \ninput string.\n\n* Space complexity : $$O(1)$$. Even though we have an alphabet to index mapping,\nit is always constant.\n\n---\n\n### Approach 2: Left to Right\n\n**Intuition**\n\nRather than scanning from right to left as described in Approach 1, we can also \nscan the title from left to right.\n\nFor example, if we want to get the decimal value of string \"1337\", we can iteratively find the result \nby scanning the string from left to right as follows:\n\n1. '1' = **1**\n2. '13' = (**1** x 10) + 3 = **13**\n3. '133' = (**13** x 10) + 3 = **133**\n4. '1337' = (**133** x 10) + 7 = 1337\n\nInstead of base-10, we are dealing with base-26 number system. Based on the same idea,\nwe can just replace 10s with 26s and convert alphabets to numbers.\n\nFor a title \"LEET\":\n\n1. L = **12**\n2. E = (**12** x 26) + 5 = **317**\n3. E = (**317** x 26) + 5 = **8247**\n4. T = (**8247** x 26) + 20  = 214442\n\nIn Approach 1, we have built a mapping of alphabets to numbers. There is another way \nto get the number value of a character without building an alphabet mapping. You can \ndo this by converting a character to its ASCII value and subtracting ASCII value of character 'A' from that value. By doing so, you will get results from 0 (for A) to 25 (for Z). Since \nwe are indexing from 1, we can just add 1 up to the result. This eliminates a\nloop where you create an alphabet to number mapping which was done in Approach 1.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/Jriv88gv/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"Jriv88gv\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(N)$$ where $$N$$ is the number of characters in the \ninput string.\n\n* Space complexity : $$O(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,153 @@
+{
+  "questionId": "255",
+  "questionFrontendId": "255",
+  "title": "Verify Preorder Sequence in Binary Search Tree",
+  "titleSlug": "verify-preorder-sequence-in-binary-search-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of <strong>unique</strong> integers <code>preorder</code>, return <code>true</code> <em>if it is the correct preorder traversal sequence of a binary search tree</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/12/preorder-tree.jpg\" style=\"width: 292px; height: 302px;\" />\n<pre>\n<strong>Input:</strong> preorder = [5,2,1,3,6]\n<strong>Output:</strong> true\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> preorder = [5,2,6,1,3]\n<strong>Output:</strong> false\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= preorder.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= preorder[i] &lt;= 10<sup>4</sup></code></li>\n\t<li>All the elements of <code>preorder</code> are <strong>unique</strong>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> Could you do it using only constant space complexity?</p>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"verifyPreorder\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"preorder\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"93.9K\", \"totalSubmission\": \"181.7K\", \"totalAcceptedRaw\": 93937, \"totalSubmissionRaw\": 181654, \"acRate\": \"51.7%\"}",
+  "likes": 1266,
+  "dislikes": 90,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Binary Tree Preorder Traversal\", \"titleSlug\": \"binary-tree-preorder-traversal\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,2,1,3,6]",
+    "[5,2,6,1,3]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 2, \"slug\": \"expedia\", \"name\": \"Expedia\"}, {\"timesEncountered\": 2, \"slug\": \"zenefits\", \"name\": \"Zenefits\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Binary Search Tree",
+      "slug": "binary-search-tree"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    },
+    {
+      "name": "Monotonic Stack",
+      "slug": "monotonic-stack"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool verifyPreorder(vector<int>& preorder) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean verifyPreorder(int[] preorder) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def verifyPreorder(self, preorder: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def verifyPreorder(self, preorder):\n        \"\"\"\n        :type preorder: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} preorder\n * @return {boolean}\n */\nvar verifyPreorder = function(preorder) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function verifyPreorder(preorder: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool VerifyPreorder(int[] preorder) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool verifyPreorder(int* preorder, int preorderSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func verifyPreorder(preorder []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun verifyPreorder(preorder: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func verifyPreorder(_ preorder: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn verify_preorder(preorder: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} preorder\n# @return {Boolean}\ndef verify_preorder(preorder)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $preorder\n     * @return Boolean\n     */\n    function verifyPreorder($preorder) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool verifyPreorder(List<int> preorder) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def verifyPreorder(preorder: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec verify_preorder(preorder :: [integer]) :: boolean\n  def verify_preorder(preorder) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec verify_preorder(Preorder :: [integer()]) -> boolean().\nverify_preorder(Preorder) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (verify-preorder preorder)\n  (-> (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1953",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Monotonic Stack\n\n**Intuition**\n\nIn a preorder traversal, a node is handled before its children. This makes our lives a lot easier - if we instead had to verify a postorder or inorder traversal, it would be more challenging.\n\nBecause a node is handled before its children, we can essentially iterate over the sequence `preorder` and decide what subtree each subsequent value should be in. For example, let's say we have `preorder = [5, 2, 1, 3, 6]`. The first value `5` must be the root. We then compare it with the next value `2`. Because `2 < 5`, the `2` must be in the left subtree, so we can \"walk\" left. The next value `1` is less than `2`, so it must be in the left subtree of `2` - we can \"walk\" left again.\n\nThe next value is `3`, which is greater than `1`. You may think: we should put `3` in the right subtree of `1`. This is wrong because we are currently in the left subtree of `2`, and the BST rule is that all nodes in the left subtree of `2` must be less than `2`. As such, we need to backtrack to put the `3` in the right subtree of `2` instead.\n\n<img src=\"../Figures/255/1.png\" width=\"960\"> <br>\n\nWhen we perform a standard DFS on a binary tree with recursion, we traverse as far down the left branch as possible. Once we reach a leaf node, we backtrack up the tree by returning from the DFS function. Under the hood, the computer implements this by using a call stack. We can create our own stack to emulate this functionality.\n\n<img src=\"../Figures/255/2.png\" width=\"960\"> <br>\n\nWhen we encounter a sequence of decreasing numbers, we're happy to continuously \"walk\" left. For example, let's say we had `preorder = [10, 9, 8, 7, 6, 5]`. The `10` is the root. The `9` is the left child of `10`. The `8` is the left child of `9`. The `7` is the left child of `8`, and so on. The issue arises when we find a larger value, because it must be a right child, and we need to identify which node should be its parent.\n\nLet's call this node with a large value `x`. We need to identify which node will have `x` as its right child. As we saw above in the images, we can't just immediately \"walk\" right as we might violate the BST property due to an ancestor that's higher up the tree.\n\n<img src=\"../Figures/255/3.png\" width=\"960\"> <br>\n\nWe need to find the ancestor with the greatest value that is less than `x`. The value needs to be less than `x` because `x` is going to be its right child. We need to find the greatest value, otherwise, there would be some other node that would break the BST property.\n\n<img src=\"../Figures/255/4.png\" width=\"960\"> <br>\n\n<img src=\"../Figures/255/5.png\" width=\"960\"> <br>\n\nWe have established two things so far:\n\n1. We need to use a stack to emulate \"moving\" back up the tree, just like how recursion is implemented under the hood.\n2. When we have decreasing values, we can continuously walk left.\n\n<details><summary><b>A monotonic stack is perfect for this problem. If you aren't familiar with monotonic stacks, click here.</b></summary>\n\nA monotonic stack is a stack whose elements are always sorted. In our case, we want a monotonic **decreasing** stack, i.e. the elements in the stack are always sorted in descending order.\n\nTo maintain this monotonic stack, we need to make sure that whenever we push a new element, it is the smallest value in the stack. Before we push an element `num`, we check the top of the stack. If the top of the stack is less than `num`, we pop from it. Since there may be many elements less than `num` in the stack, we need to use a while loop to \"clean\" the stack before pushing `num`.\n\nOnly once there are no elements in the stack less than `num` will we push `num`.\n\n</details>\n\n<br>\n\nAt any given moment, the node at the top of the stack is the current node we are at in the tree. For each node `num` we encounter, if the top of the stack is greater than `num`, we can just push it onto the stack. If the top of the stack is less than `num`, we will need to backtrack up the tree by popping from the stack.\n\n<img src=\"../Figures/255/6.png\" width=\"960\"> <br>\n\nAfter we clean the stack to ensure monotonic order, we can push `num` to the stack. The interesting thing here is that the entire left subtree of the parent is now irrelevant. In a preorder traversal, a node's left subtree is visited completely before any node in the right subtree is visited. Because we are now in the right subtree, we can completely forget about the left subtree.\n\n> If you're having trouble understanding the \"node at the top of the stack is the current node we are at in the tree\" concept, think about it like this:\n>\n> In any binary tree problem, we typically use a function like `dfs` that takes an argument `node` to traverse the tree. At any given moment, there will be one \"active\" function call to `dfs` (wherever the computer is currently at during execution). Whatever `node` was passed to this call is the current node we are visiting in the tree.\n>\n> The top of the stack is analogous to the current function call we are at. As you can see in the above image, we can move back up the tree by popping from the stack.\n\nWe are missing one thing. What if we have `preorder = [5, 2, 6, 1, 3]`?\n\n<img src=\"../Figures/255/7.png\" width=\"960\"> <br>\n\nWhen we encounter the `6`, we must pop the `2` and `5` to maintain monotonic decreasing order. The next element to handle is `1`.\n\n<img src=\"../Figures/255/8.png\" width=\"960\"> <br>\n\nBecause `1` is less than `6`, we would just push it onto the stack, which is equivalent to walking left. However, this is actually invalid because we are in the right subtree of `5`, and `1 < 5`.\n\nWe said above that in a preorder traversal, the entire left subtree of a node is visited before any node in the right subtree is visited. This means once we start visiting a node's right subtree, there is no way for us to get back to the left subtree. We have started visiting the right subtree of `5`, so **every value we encounter from now on** must be greater than `5`, since there is no way for us to get back to the left subtree.\n\nWe made the analogy between a recursive implementation of a `dfs` function and our stack - popping from the stack is like returning from a function call. When we return from a `node` and go back to the `parent`, we can **never** go back to the left subtree of `parent` again:\n\n1. If `node = parent.left`, then we just finished traversing the left subtree of `parent` and will never come back to it.\n2. If `node = parent.right`, we must have already traversed the left subtree of `parent` earlier, and will never come back to it.\n\nWe can combine these facts to make the following observation:\n\n> When we return from a `node` (pop from the stack), every value we encounter from now on must be greater than `node`.\n\nIf we encountered a value `small` less than or equal to `node` in the future, it would mean that `small` belongs in the left subtree of `node`, but since we already \"returned\" from `node`, we have already visited all the nodes in the left subtree!\n\nWe can use an integer `minLimit` that we update every time we pop from the stack. We need to make sure every value we encounter as we iterate over the input is greater than `minLimit`, otherwise the sequence is invalid.\n\n**Algorithm**\n\n1. Declare an integer `minLimit` to a small value like negative infinity, and a `stack`.\n2. Iterate over `preorder`. For each `num`:\n    - Clean the stack. While the top of the stack is less than `num`, pop from it and update `minLimit`.\n    - If `num <= minLimit`, return `false`.\n    - Push `num` onto the stack.\n3. Return `true` if we get through the whole input.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/SePSHkp8/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"SePSHkp8\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `preorder`,\n\n* Time complexity: $$O(n)$$\n\n    Despite the while loop, each iteration of the for loop is amortized $$O(1)$$. The while loop only runs $$O(n)$$ times across all iterations. This is because each element in `preorder` can only be pushed and popped from the stack at most once, giving us a maximum of $$2n$$ stack operations.\n\n* Space complexity: $$O(n)$$\n\n    The stack can grow to a size of $$O(n)$$, such as in the case where `preorder` is descending.\n    \n<br/>\n\n---\n\n### Approach 2: Constant Auxiliary Space\n\n**Intuition**\n\nWe can implement the stack from the previous approach by modifying the input array.\n\n> It is generally considered a bad practice to modify the input, especially arrays since they are passed by reference. You should always ask an interviewer if it's OK to do so first. The problem description has a follow-up that alludes to this approach, which is why we have included it.\n\nThis algorithm is identical to the previous one. The only difference is how we implement the stack. Let's use an integer `i` that represents the length of the stack. Then `preorder[i - 1]` holds the top of the stack at any given moment. If `i == 0`, the stack is empty.\n\nTo \"add\" an element `num` to the top of the stack, we can do `preorder[i] = num`, and then increment `i`. After incrementing `i`, `preorder[i - 1]` holds the element we just added (the top of the stack). Notice that `i` is the index where an element would end up after being pushed.\n\nTo \"remove\" an element from the stack, we simply decrement `i`. Before doing so, we should update `minLimit` with the top of the stack, which is `preorder[i - 1]`.\n\n**Algorithm**\n\n1. Declare an integer `minLimit` to a small value like negative infinity, and an integer `i = 0`.\n2. Iterate over the elements of `preorder`. For each `num`:\n    - Clean the \"stack\". While `preorder[i - 1]` is less than `num`, \"pop\" it by decrementing `i` while updating `minLimit`.\n    - If `num <= minLimit`, return `false`.\n    - \"Push\" `num` onto the stack by setting `preorder[i] = num` and incrementing `i`.\n3. Return `true` if we get through the whole input.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/Zp2cniHi/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"Zp2cniHi\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `preorder`,\n\n* Time complexity: $$O(n)$$\n\n    The time complexity is identical to the previous approach for the same reasons.\n\n* Space complexity: $$O(1)$$ auxiliary\n\n    A common misconception is that modifying an input array for use in an algorithm leads to an $$O(1)$$ space complexity. In reality, you are still using $$O(n)$$ space, but $$O(1)$$ **auxiliary** space.\n\n    Because we are modifying the input to directly use in the algorithm, we must count it as part of the space complexity. However, we are not using any auxiliary space other than a few integers.\n\n    > The exception to this is in-place algorithms where the input is also returned as the output. For example: sorting algorithms.\n    \n<br/>\n\n---\n\n### Approach 3: Recursion\n\n**Intuition**\n\n> Note: this approach is unintuitive and difficult to implement. Typically, recursion is used to break problems into subproblems and you would expect the recursive function to return the answer to the subproblems.\n>\n> Unfortunately, there is no way easy way to solve this problem recursively in a way that the function returns something uniform. If you face this problem in an interview, we recommend approach 1 or 2. This approach has been added for the sake of completeness. As such, we will not explain the approach in detail.\n\nThis algorithm is similar to the one used to solve [Validate Binary Search Tree](https://leetcode.com/problems/validate-binary-search-tree/). It is highly recommended that you solve that problem recursively before continuing with this approach.\n\nThe key idea in Validate Binary Search Tree is that we pass two parameters with each node that represent the range the node's value is allowed to be in. When we move to `node.left`, we update the max bound with `node.val` to make sure all nodes in the left subtree are less than `node.val`. Vice versa with `node.right` and the min bound.\n\nWe will use a similar idea here. Let's define a function `helper` that takes arguments `i, minLimit, maxLimit`. The limit variables are the same as the ones just mentioned. `i` will be an index variable that we will use to iterate over `preorder`.\n\nThe goal is to process all nodes `(i == preorder.length)`. If we can do that, then the sequence is valid. The previous two approaches had the same idea: if we found a node that broke the sequence, we returned `false`. If we could process all nodes without returning `false`, then we returned `true`.\n\nThe base case of `helper` will be to return `true` if `i == preorder.length`. If **any** call to `helper` returns `true`, then it means we have processed all nodes, and the sequence is valid.\n\n> The thing that makes this solution very unintuitive is that `i` is shared between all function calls - i.e., it acts as a global variable. This is inconsistent with recursive solutions where each function call stores its own state.\n>\n> The reason for this is that we need to process the nodes of `preorder` in the same order that they appear in the input.\n\nNow, the logic of the function. Let the value of the current node at index `i` be `root`. First, check the BST condition: if `root` is not between `minLimit` and `maxLimit`, return `false`.\n\nNext, increment `i` as the current node has passed the test. We will now test the next element as both the left and right child. To treat it as the left child, call `helper` while modifying `maxLimit` to `root`. To treat it as the right child, call `helper` while modifying `minLimit` to `root`. If either of these calls return `true`, then it means we managed to process all elements, and we should return `true` as well.\n\nIf the sequence is invalid, all calls will eventually end up failing the BST condition check.\n\n**Algorithm**\n\n1. Create a function `helper` that takes arguments `i, minLimit, maxLimit`:\n    - If `i == preorder.length`, return `true`.\n    - Set `root = preorder[i]`.\n    - If `root <= minLimit` or `root >= maxLimit`, return `false`. The BST condition is violated.\n    - Increment `i`.\n    - Call `helper` with `maxLimit` as `root`.\n    - Call `helper` with `minLimit` as `root`.\n    - If either call returns `true` return `true`. Otherwise, return `false`.\n2. Call `helper` with `i = 0`, `minLimit = -infinity`, `maxLimit = infinity`.\n\n> Note: because we want `i` to act as a global variable, we must pass it by reference. In Java and Python, we are using an array of length `1`. In C++, we pass the integer by reference.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/GpXwB2Mv/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"GpXwB2Mv\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `preorder`,\n\n* Time complexity: $$O(n)$$\n\n    For each `i`, two calls are made to calculate `left` and `right`. Once entering those calls, we either return `false` due to the BST condition being broken, or we increment `i`.\n\n    Because `i` behaves as a global variable, after incrementing `i`, no more calls can be made from the previous value of `i`. As such, each value of `i` can only make two more calls, and `helper` is called at most $$2n$$ times. Everything else in the function runs in $$O(1)$$, so the time complexity is $$O(n)$$.\n\n* Space complexity: $$O(n)$$\n\n    The recursion call stack uses $$O(n)$$ space.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "questionId": "274",
+  "questionFrontendId": "274",
+  "title": "H-Index",
+  "titleSlug": "h-index",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of integers <code>citations</code> where <code>citations[i]</code> is the number of citations a researcher received for their <code>i<sup>th</sup></code> paper, return <em>the researcher&#39;s h-index</em>.</p>\n\n<p>According to the <a href=\"https://en.wikipedia.org/wiki/H-index\" target=\"_blank\">definition of h-index on Wikipedia</a>: The h-index is defined as the maximum value of <code>h</code> such that the given researcher has published at least <code>h</code> papers that have each been cited at least <code>h</code> times.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> citations = [3,0,6,1,5]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> [3,0,6,1,5] means the researcher has 5 papers in total and each of them had received 3, 0, 6, 1, 5 citations respectively.\nSince the researcher has 3 papers with at least 3 citations each and the remaining two with no more than 3 citations each, their h-index is 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> citations = [1,3,1]\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == citations.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 5000</code></li>\n\t<li><code>0 &lt;= citations[i] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "An easy approach is to sort the array first.",
+    "What are the possible values of h-index?",
+    "A faster approach is to use extra space."
+  ],
+  "metaData": "{\r\n  \"name\": \"hIndex\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"citations\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"855.6K\", \"totalSubmission\": \"2.1M\", \"totalAcceptedRaw\": 855587, \"totalSubmissionRaw\": 2074146, \"acRate\": \"41.3%\"}",
+  "likes": 1894,
+  "dislikes": 906,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"H-Index II\", \"titleSlug\": \"h-index-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,0,6,1,5]",
+    "[1,3,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"more_than_six_months\": [{\"timesEncountered\": 21, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 14, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Counting Sort",
+      "slug": "counting-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int hIndex(vector<int>& citations) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int hIndex(int[] citations) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def hIndex(self, citations: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def hIndex(self, citations):\n        \"\"\"\n        :type citations: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} citations\n * @return {number}\n */\nvar hIndex = function(citations) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function hIndex(citations: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int HIndex(int[] citations) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int hIndex(int* citations, int citationsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func hIndex(citations []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun hIndex(citations: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func hIndex(_ citations: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn h_index(citations: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} citations\n# @return {Integer}\ndef h_index(citations)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $citations\n     * @return Integer\n     */\n    function hIndex($citations) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int hIndex(List<int> citations) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def hIndex(citations: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec h_index(citations :: [integer]) :: integer\n  def h_index(citations) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec h_index(Citations :: [integer()]) -> integer().\nh_index(Citations) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (h-index citations)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "26",
+    "content": "[TOC]\n\n## Summary\nThis article is for intermediate readers. It introduces the following ideas:\nComparison Sort and Counting Sort.\n\n## Solution\n\n### Approach #1 (Sorting) [Accepted]\n\n**Intuition**\n\nThink geometrically. Imagine plotting a histogram where the $$y$$-axis represents the number of citations for each paper. After sorting in *descending* order, $$h$$-index is the length of the largest **square** in the histogram.\n\n![h-index](../Figures/274_H_index.svg){:width=\"539px\"}\n\n\n*Figure 1. $$h$$-index from a plot of decreasing citations for papers*\n\n\n**Algorithm**\n\nTo find such a square length, we first sort the citations array in *descending* order.\nAfter sorting, if $$\\mathrm{citations}[i] \\gt i$$, then papers $$0$$ to $$i$$ all have at least $$i + 1$$ citations.\n\nThus, to find $$h$$-index, we search for the largest $$i$$ (let's call it $$i'$$) such that\n\n$$\n\\mathrm{citations}[i] \\gt i\n$$\n\nand therefore the $$h$$-index is $$i' + 1$$.\n\nFor example:\n\n|                $$i$$                 |  0    |  1    |  2    | 3    | 4    | 5    | 6    |\n|:------------------------------------:|:-----:|:-----:|:-----:|:----:|:----:|:----:|:----:|\n| sorted citations                     | 10    |  9    |  5    | 3    | 3    | 2    | 1    |\n| $$\\mathrm{citations}[i] \\gt i$$? | true | true | true | false | false | false | false |\n\nIn this example, we know that the largest $$i$$ with $$\\mathrm{citations}[i] \\gt i$$ is $$i'=2$$. Thus\n\n$$\nh = i' + 1 = 3\n$$\n\nBecause $$\\mathrm{citations}[i'] \\gt i'$$, $$i' + 1$$ papers (from paper 0 to paper $$i'$$) have citations at least $$i' + 1$$ and $$n - i' - 1$$ papers (from paper $$i' + 1$$ to paper $$n - 1$$) have citations no more than $$i' + 1$$. By the definition of $$h$$-index, $$h = i' + 1$$.\n\nIt is also possible to find $$i'$$ through binary search after sorting. However, since comparison sorting has a time complexity of $$O(n \\log n)$$ which dominates the performance of entire algorithm (linear search is $$O(n)$$). Using a binary search ($$O(\\log n)$$) instead of linear search won't change the asymptotic time complexity.\n\nAlso note that, we deduced the algorithm in descending for simplicity. Usually the sort function provided by default is in ascending order. The same principles applies to both ascending order and descending order. In the case of ascending order, we just scan it from backward.\n\n\n<iframe src=\"https://leetcode.com/playground/Y2ZQtnDD/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"Y2ZQtnDD\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n\\log n)$$. Comparison sorting dominates the time complexity.\n\n* Space complexity : $$O(1)$$. Most libraries using `heap sort` which costs $$O(1)$$ extra space in the worst case.\n\n---\n### Approach #2 (Counting) [Accepted]\n\n**Intuition**\n\nComparison sorting algorithm has a lower bound of $$O(n\\log n)$$. To achieve better performance, we need non-comparison based sorting algorithms.\n\n**Algorithm**\n\nFrom [Approach #1](#approach-1-sorting-accepted), we sort the citations to find the h-index. However, it is well known that comparison sorting algorithms such as `heapsort`, `mergesort` and `quicksort` have a lower bound of $$O(n\\log n)$$. The most commonly used non-comparison sorting is `counting sort`.\n\n> Counting sort operates by counting the number of objects that have each distinct key value, and using arithmetic on those tallies to determine the positions of each key value in the output sequence. Its running time is linear in the number of items and the difference between the maximum and minimum keys, so it is only suitable for direct use in situations where the variation in keys is not significantly greater than the number of items.\n>\n>---by Wikipedia\n\nHowever, in our problem, the keys are the citations of each paper which can be much larger than the number of papers $$n$$. It seems that we cannot use `counting sort`. The trick here is the following observation:\n\n> Any citation larger than $$n$$ can be replaced by $$n$$ and the $$h$$-index will not change after the replacement\n\nThe reason is that $$h$$-index is upper bounded by total number of papers $$n$$, i.e.\n\n$$\nh \\leq n\n$$\n\nIn the diagram, replacing citations greater than $$n$$ with $$n$$ is equivalent to cutting off the area where $$y > n$$.\n\n![h-index cut off](../Figures/274_H_index_2.svg){:width=\"539px\"}\n\n\n*Figure 2. cutting off the area with citations more than $$n$$*\n\n\nApparently, cutting that area off will not change the largest **square** and the $$h$$-index.\n\nAfter we have the counts, we can get a sorted citations by traversing the counts array. And the rest is the same as [Approach #1](#approach-1-sorting-accepted).\n\nBut we can do even better. The idea is that we don't even need to get sorted citations. We can find the $$h$$-index by using the paper counts directly.\n\nTo explain this, let's look at the following example:\n\n$$\n\\mathrm{citations} = [1, 3, 2, 3, 100]\n$$\n\nThe counting results are:\n\n|$$k$$   |  0   | 1   |   2 |   3 |   4 |   5 |\n|:------:|:----:|:---:|:---:|:---:|:---:|:---:|\n|count   |  0   | 1   |   1 |   2 |   0 |   1 |\n|$$s_k$$ |  5   | 5   |   4 |   3 |   1 |   1 |\n\nThe value $$s_k$$ is defined as \"the sum of all counts with citation $$\\geq k$$\" or \"the number of papers having, at least, $$k$$ citations\". By definition of the h-index, the largest $$k$$ with $$k \\leq s_k$$ is our answer.\n\nAfter replacing $$100$$ with $$n = 5$$, we have $$\\mathrm{citations} = [1, 3, 2, 3, 5]$$. Now, we count the number of papers for each citation number $$0$$ to $$5$$. The counts are $$[0, 1, 1, 2, 0, 1]$$. The first $$k$$ from right to left ($$5$$ down to $$0$$) that have $$k \\leq s$$ is the $$h$$-index $$3$$.\n\nSince we can calculate $$s_k$$ on the fly when traverse the count array, we only need one pass through the count array which only costs $$O(n)$$ time.\n\n<iframe src=\"https://leetcode.com/playground/dGSn8Gei/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"dGSn8Gei\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. There are two steps. The counting part is $$O(n)$$ since we traverse the `citations` array once and only once. The second part of finding the $$h$$-index is also $$O(n)$$ since we traverse the `papers` array at most once. Thus, the entire algorithm is $$O(n)$$\n\n* Space complexity : $$O(n)$$. We use $$O(n)$$ auxiliary space to store the counts.\n\n\n## Further Thoughts\n\n> Is it possible to have multiple $$h$$-values?\n\nThe answer is **NO**. One can find this intuitively from Figure 1. The dashed line $$y = x$$ crosses the histogram once and only once, because the sorted bars are monotonic. It can also be proven from the definition of the $$h$$-index.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

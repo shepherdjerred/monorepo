@@ -1,0 +1,134 @@
+{
+  "questionId": "330",
+  "questionFrontendId": "330",
+  "title": "Patching Array",
+  "titleSlug": "patching-array",
+  "difficulty": "Hard",
+  "content": "<p>Given a sorted integer array <code>nums</code> and an integer <code>n</code>, add/patch elements to the array such that any number in the range <code>[1, n]</code> inclusive can be formed by the sum of some elements in the array.</p>\n\n<p>Return <em>the minimum number of patches required</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,3], n = 6\n<strong>Output:</strong> 1\nExplanation:\nCombinations of nums are [1], [3], [1,3], which form possible sums of: 1, 3, 4.\nNow if we add/patch 2 to nums, the combinations are: [1], [2], [3], [1,3], [2,3], [1,2,3].\nPossible sums are 1, 2, 3, 4, 5, 6, which now covers the range [1, 6].\nSo we only need 1 patch.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,5,10], n = 20\n<strong>Output:</strong> 2\nExplanation: The two patches can be [2, 4].\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,2], n = 5\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n\t<li><code>nums</code> is sorted in <strong>ascending order</strong>.</li>\n\t<li><code>1 &lt;= n &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"minPatches\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"182.5K\", \"totalSubmission\": \"337K\", \"totalAcceptedRaw\": 182486, \"totalSubmissionRaw\": 336952, \"acRate\": \"54.2%\"}",
+  "likes": 2436,
+  "dislikes": 203,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Number of Consecutive Values You Can Make\", \"titleSlug\": \"maximum-number-of-consecutive-values-you-can-make\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3]\n6",
+    "[1,5,10]\n20",
+    "[1,2,2]\n5"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minPatches(vector<int>& nums, int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minPatches(int[] nums, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minPatches(self, nums: List[int], n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minPatches(self, nums, n):\n        \"\"\"\n        :type nums: List[int]\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} n\n * @return {number}\n */\nvar minPatches = function(nums, n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minPatches(nums: number[], n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinPatches(int[] nums, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minPatches(int* nums, int numsSize, int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minPatches(nums []int, n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minPatches(nums: IntArray, n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minPatches(_ nums: [Int], _ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_patches(nums: Vec<i32>, n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} n\n# @return {Integer}\ndef min_patches(nums, n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $n\n     * @return Integer\n     */\n    function minPatches($nums, $n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minPatches(List<int> nums, int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minPatches(nums: Array[Int], n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_patches(nums :: [integer], n :: integer) :: integer\n  def min_patches(nums, n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_patches(Nums :: [integer()], N :: integer()) -> integer().\nmin_patches(Nums, N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-patches nums n)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "71",
+    "content": "## Solution\n\n**Intuition**\n\nFor any missing number, if we want to cover it, we have to add at least one number smaller or equal to that number. Otherwise, it will not be covered.\nImagine you want to give someone change of $$x$$ cents, and you don't have enough coins. You will need to ask for coin less than or equal to $$x$$.\n\n**Algorithm**\n\nSuppose `miss` is the smallest missing number, then we know that `[1, miss)` (left-closed, right-open) is already covered . In order to cover `miss`, we have to add something smaller than or equal to `miss`. Otherwise, there is no way we can cover it.\n\nFor example, you have any array `nums = [1,2,3,8]` and `n = 16`. The numbers already covered is in the ranges `[1, 6]` and `[8, 14]`. In other words, `7, 15, 16` are missing. If you add patches larger than `7`, then `7` is still missing.\n\nSuppose the number we added is $$x$$ then, the ranges `[1, miss)` and `[x, x + miss)` are both covered. And since we know that `x <= miss`, the two ranges will cover the range `[1, x + miss)`. We want to choose $$x$$ as large as possible so that the range can cover as large as possible. Therefore, the best option is `x = miss`.\n\nAfter we covered `miss`, we can recalculate the coverage and see what's the new smallest missing number. We then patch that number. We do this repeatedly until no missing number.  \n\nHere is the recipe of this greedy algorithm:\n\n* Initialize the range `[1, miss)` = `[1, 1)` = empty\n* While n is not covered yet\n  * if the current element `nums[i]` is less than or equal to `miss`\n    * extends the range to `[1, miss + nums[i])`\n    * increase `i` by 1\n  * otherwise\n    * patch the array with `miss`, extends the range to `[1, miss + miss)`\n    * increase the number of patches\n* Return the number of patches  \n\n**Example:**\n\n`nums = [1,2,3,8]` and `n = 80`\n\n| iteration | `miss` | covered range | `i` | `nums[i]` | patches | comment  |\n|:---------:|:------:|:-------------:|:-:|:-------:|:-------:|----------|\n|     0     |    1   |     [1, 1)    | 0 |    1    |    0    |          |\n|     1     |    2   |     [1, 2)    | 1 |    2    |    0    |          |\n|     2     |    4   |     [1, 4)    | 2 |    3    |    0    |          |\n|     3     |    7   |     [1, 7)    | 3 |    8    |    0    |          |\n|     4     |   14   |    [1, 14)    | 3 |    8    |    1    | patch 7  |\n|     5     |   22   |    [1, 22)    | 4 |   none  |    1    |          |\n|     6     |   44   |    [1, 44)    | 4 |   none  |    2    | patch 22 |\n|     7     |   88   |    [1, 88)    | 4 |   none  |    3    | patch 44 |\n\n\n**Correctness**\n\nOne may ask how do you know this is correct? In this section, we will prove that the greedy algorithm always gives the smallest possible number of patches:\n\n*Lemma*\n\n> If the greedy algorithm needs to patch $$k$$ numbers to cover $$[1, n]$$, it is impossible to patch less than $$k$$ numbers to do the same.\n\n*Proof by contradiction*\n\n For a given number $$n$$ and array $$\\mathrm{nums}$$, suppose the $$k$$ patches found by greedy algorithm is $$X_1 \\lt X_2 \\lt \\ldots \\lt X_k \\leq n$$. If there is another set of patches $$Y_1 \\leq Y_2 \\leq \\ldots \\leq Y_{k'} \\leq n$$, with $$k' \\lt k$$, then we have $$Y_1 \\leq X_1$$, otherwise $$X_1$$ is not covered. And since adding $$X_1$$ cannot cover $$X_2$$ which means the sum of all the elements including $$X_1$$ is smaller than $$X_2$$. Thus adding $$Y_1$$ will also not cover $$X_2$$. And so we have:\n\n$$\nY_2 \\leq X_2\n$$\n\notherwise $$X_2$$ will not be covered and so on so forth.\n\n$$\nY_i \\leq X_i, i = 1, 2, \\ldots k'\n$$\n\nFinally, we can see that since $$X_1, X_2, \\ldots X_{k'}$$ is not enough to cover $$X_k$$, therefore $$Y_1, Y_2, \\ldots, Y_{k'}$$ is also not enough to cover $$X_k \\leq n$$. This contradicts the fact that $$Y_1 \\leq Y_2 \\leq \\ldots \\leq Y_{k'} \\leq n$$ covers $$[1, n]$$. **This completes the proof.**\n\n\n\nThus, the greedy algorithm will always return the fewest patches possible. Even through for particular cases, there could be many different ways to patch. But none of them will have fewer patches than the greedy algorithm does.\n\n\n\n<iframe src=\"https://leetcode.com/playground/mWaJh5cz/shared\" frameBorder=\"0\" name=\"mWaJh5cz\" width=\"100%\" height=\"309\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(m + \\log n)$$. In each iteration, we either increase the index `i` or we double the variable `miss`. The total number of increment for index `i` is $$m$$ and the total number of doubling `miss` is $$\\log n$$\n\n* Space complexity : $$O(1)$$. We only need three variables, `patches`, `i` and `miss`.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

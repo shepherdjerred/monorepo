@@ -1,0 +1,142 @@
+{
+  "questionId": "384",
+  "questionFrontendId": "384",
+  "title": "Shuffle an Array",
+  "titleSlug": "shuffle-an-array",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code>, design an algorithm to randomly shuffle the array. All permutations of the array should be <strong>equally likely</strong> as a result of the shuffling.</p>\n\n<p>Implement the <code>Solution</code> class:</p>\n\n<ul>\n\t<li><code>Solution(int[] nums)</code> Initializes the object with the integer array <code>nums</code>.</li>\n\t<li><code>int[] reset()</code> Resets the array to its original configuration and returns it.</li>\n\t<li><code>int[] shuffle()</code> Returns a random shuffling of the array.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;Solution&quot;, &quot;shuffle&quot;, &quot;reset&quot;, &quot;shuffle&quot;]\n[[[1, 2, 3]], [], [], []]\n<strong>Output</strong>\n[null, [3, 1, 2], [1, 2, 3], [1, 3, 2]]\n\n<strong>Explanation</strong>\nSolution solution = new Solution([1, 2, 3]);\nsolution.shuffle();    // Shuffle the array [1,2,3] and return its result.\n                       // Any permutation of [1,2,3] must be equally likely to be returned.\n                       // Example: return [3, 1, 2]\nsolution.reset();      // Resets the array back to its original configuration [1,2,3]. Return [1, 2, 3]\nsolution.shuffle();    // Returns the random shuffling of array [1,2,3]. Example: return [1, 3, 2]\n\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 50</code></li>\n\t<li><code>-10<sup>6</sup> &lt;= nums[i] &lt;= 10<sup>6</sup></code></li>\n\t<li>All the elements of <code>nums</code> are <strong>unique</strong>.</li>\n\t<li>At most <code>10<sup>4</sup></code> calls <strong>in total</strong> will be made to <code>reset</code> and <code>shuffle</code>.</li>\n</ul>\n",
+  "hints": [
+    "The solution expects that we always use the original array to shuffle() else some of the test cases fail. (Credits; @snehasingh31)"
+  ],
+  "metaData": "{\n  \"classname\": \"Solution\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer[]\",\n        \"name\": \"nums\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [],\n      \"name\": \"reset\",\n      \"return\": {\n        \"type\": \"integer[]\"\n      }\n    },\n    {\n      \"params\": [],\n      \"return\": {\n        \"type\": \"integer[]\"\n      },\n      \"name\": \"shuffle\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"392.1K\", \"totalSubmission\": \"657.7K\", \"totalAcceptedRaw\": 392132, \"totalSubmissionRaw\": 657713, \"acRate\": \"59.6%\"}",
+  "likes": 1432,
+  "dislikes": 946,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"Solution\",\"shuffle\",\"reset\",\"shuffle\"]\n[[[1,2,3]],[],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Randomized",
+      "slug": "randomized"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    Solution(vector<int>& nums) {\n        \n    }\n    \n    vector<int> reset() {\n        \n    }\n    \n    vector<int> shuffle() {\n        \n    }\n};\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution* obj = new Solution(nums);\n * vector<int> param_1 = obj->reset();\n * vector<int> param_2 = obj->shuffle();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n\n    public Solution(int[] nums) {\n        \n    }\n    \n    public int[] reset() {\n        \n    }\n    \n    public int[] shuffle() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = new Solution(nums);\n * int[] param_1 = obj.reset();\n * int[] param_2 = obj.shuffle();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n\n    def __init__(self, nums: List[int]):\n        \n\n    def reset(self) -> List[int]:\n        \n\n    def shuffle(self) -> List[int]:\n        \n\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution(nums)\n# param_1 = obj.reset()\n# param_2 = obj.shuffle()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n\n    def __init__(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        \"\"\"\n        \n\n    def reset(self):\n        \"\"\"\n        :rtype: List[int]\n        \"\"\"\n        \n\n    def shuffle(self):\n        \"\"\"\n        :rtype: List[int]\n        \"\"\"\n        \n\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution(nums)\n# param_1 = obj.reset()\n# param_2 = obj.shuffle()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n */\nvar Solution = function(nums) {\n    \n};\n\n/**\n * @return {number[]}\n */\nSolution.prototype.reset = function() {\n    \n};\n\n/**\n * @return {number[]}\n */\nSolution.prototype.shuffle = function() {\n    \n};\n\n/** \n * Your Solution object will be instantiated and called as such:\n * var obj = new Solution(nums)\n * var param_1 = obj.reset()\n * var param_2 = obj.shuffle()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Solution {\n    constructor(nums: number[]) {\n        \n    }\n\n    reset(): number[] {\n        \n    }\n\n    shuffle(): number[] {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * var obj = new Solution(nums)\n * var param_1 = obj.reset()\n * var param_2 = obj.shuffle()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n\n    public Solution(int[] nums) {\n        \n    }\n    \n    public int[] Reset() {\n        \n    }\n    \n    public int[] Shuffle() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = new Solution(nums);\n * int[] param_1 = obj.Reset();\n * int[] param_2 = obj.Shuffle();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Solution;\n\n\nSolution* solutionCreate(int* nums, int numsSize) {\n    \n}\n\nint* solutionReset(Solution* obj, int* retSize) {\n    \n}\n\nint* solutionShuffle(Solution* obj, int* retSize) {\n    \n}\n\nvoid solutionFree(Solution* obj) {\n    \n}\n\n/**\n * Your Solution struct will be instantiated and called as such:\n * Solution* obj = solutionCreate(nums, numsSize);\n * int* param_1 = solutionReset(obj, retSize);\n \n * int* param_2 = solutionShuffle(obj, retSize);\n \n * solutionFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Solution struct {\n    \n}\n\n\nfunc Constructor(nums []int) Solution {\n    \n}\n\n\nfunc (this *Solution) Reset() []int {\n    \n}\n\n\nfunc (this *Solution) Shuffle() []int {\n    \n}\n\n\n/**\n * Your Solution object will be instantiated and called as such:\n * obj := Constructor(nums);\n * param_1 := obj.Reset();\n * param_2 := obj.Shuffle();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution(nums: IntArray) {\n\n    fun reset(): IntArray {\n        \n    }\n\n    fun shuffle(): IntArray {\n        \n    }\n\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * var obj = Solution(nums)\n * var param_1 = obj.reset()\n * var param_2 = obj.shuffle()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Solution {\n\n    init(_ nums: [Int]) {\n        \n    }\n    \n    func reset() -> [Int] {\n        \n    }\n    \n    func shuffle() -> [Int] {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * let obj = Solution(nums)\n * let ret_1: [Int] = obj.reset()\n * let ret_2: [Int] = obj.shuffle()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Solution {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Solution {\n\n    fn new(nums: Vec<i32>) -> Self {\n        \n    }\n    \n    fn reset(&self) -> Vec<i32> {\n        \n    }\n    \n    fn shuffle(&self) -> Vec<i32> {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * let obj = Solution::new(nums);\n * let ret_1: Vec<i32> = obj.reset();\n * let ret_2: Vec<i32> = obj.shuffle();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Solution\n\n=begin\n    :type nums: Integer[]\n=end\n    def initialize(nums)\n        \n    end\n\n\n=begin\n    :rtype: Integer[]\n=end\n    def reset()\n        \n    end\n\n\n=begin\n    :rtype: Integer[]\n=end\n    def shuffle()\n        \n    end\n\n\nend\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution.new(nums)\n# param_1 = obj.reset()\n# param_2 = obj.shuffle()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n    /**\n     * @param Integer[] $nums\n     */\n    function __construct($nums) {\n        \n    }\n  \n    /**\n     * @return Integer[]\n     */\n    function reset() {\n        \n    }\n  \n    /**\n     * @return Integer[]\n     */\n    function shuffle() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * $obj = Solution($nums);\n * $ret_1 = $obj->reset();\n * $ret_2 = $obj->shuffle();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n\n  Solution(List<int> nums) {\n    \n  }\n  \n  List<int> reset() {\n    \n  }\n  \n  List<int> shuffle() {\n    \n  }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = Solution(nums);\n * List<int> param1 = obj.reset();\n * List<int> param2 = obj.shuffle();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Solution(_nums: Array[Int]) {\n\n    def reset(): Array[Int] = {\n        \n    }\n\n    def shuffle(): Array[Int] = {\n        \n    }\n\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * val obj = new Solution(nums)\n * val param_1 = obj.reset()\n * val param_2 = obj.shuffle()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec init_(nums :: [integer]) :: any\n  def init_(nums) do\n    \n  end\n\n  @spec reset() :: [integer]\n  def reset() do\n    \n  end\n\n  @spec shuffle() :: [integer]\n  def shuffle() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Solution.init_(nums)\n# param_1 = Solution.reset()\n# param_2 = Solution.shuffle()\n\n# Solution.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec solution_init_(Nums :: [integer()]) -> any().\nsolution_init_(Nums) ->\n  .\n\n-spec solution_reset() -> [integer()].\nsolution_reset() ->\n  .\n\n-spec solution_shuffle() -> [integer()].\nsolution_shuffle() ->\n  .\n\n\n%% Your functions will be called as such:\n%% solution_init_(Nums),\n%% Param_1 = solution_reset(),\n%% Param_2 = solution_shuffle(),\n\n%% solution_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define solution%\n  (class object%\n    (super-new)\n    \n    ; nums : (listof exact-integer?)\n    (init-field\n      nums)\n    \n    ; reset : -> (listof exact-integer?)\n    (define/public (reset)\n      )\n    ; shuffle : -> (listof exact-integer?)\n    (define/public (shuffle)\n      )))\n\n;; Your solution% object will be instantiated and called as such:\n;; (define obj (new solution% [nums nums]))\n;; (define param_1 (send obj reset))\n;; (define param_2 (send obj shuffle))"
+    }
+  ],
+  "solution": {
+    "id": "287",
+    "content": "[TOC]\n\n### Initial Thoughts\n\nNormally I would display more than two approaches, but shuffling is\ndeceptively easy to do _almost_ properly, and the Fisher-Yates algorithm is\nboth the canonical solution and asymptotically optimal.\n\nA few notes on randomness are necessary before beginning - both approaches\ndisplayed below assume that the languages' pseudorandom number generators\n(PRNGs) are sufficiently random. The sample code uses the simplest techniques\navailable for getting pseudorandom numbers, but for each possible permutation\nof the array to be truly equally likely, more care must be taken. For\nexample, an array of length $$n$$ has $$n!$$ distinct permutations. Therefore, in\norder to encode all permutations in an integer space, $$\\lceil lg(n!)\\rceil$$\nbits are necessary, which may not be guaranteed by the default PRNG.\n\n### Approach #1 Brute Force [Accepted]\n\n**Intuition**\n\nIf we put each number in a \"hat\" and draw them out at random, the order in\nwhich we draw them will define a random ordering.\n\n**Algorithm**\n\nThe brute force algorithm essentially puts each number in the aforementioned\n\"hat\", and draws them at random (without replacement) until there are none\nleft. Mechanically, this is performed by copying the contents of `array` into\na second auxiliary array named `aux` before overwriting each element of\n`array` with a randomly selected one from `aux`. After selecting each random\nelement, it is removed from `aux` to prevent duplicate draws. The\nimplementation of `reset` is simple, as we just store the original state of\n`nums` on construction.\n\nThe correctness of the algorithm follows from the fact that an element\n(without loss of generality) is equally likely to be selected during all\niterations of the `for` loop. To prove this, observe that the probability of a\nparticular element $$e$$ being chosen on the $$k$$th iteration (indexed from 0)\nis simply $$P(e$$ being chosen during the $$k$$th iteration$$)\\cdot P(e$$ not being\nchosen before the $$k$$th iteration$$)$$. Given that the array to be shuffled has\n$$n$$ elements, this probability is more concretely stated as the following:\n\n$$\n   \\frac{1}{n-k} \\cdot \\prod_{i=1}^{k} \\frac{n-i}{n-i+1}\n$$\n\nWhen expanded (and rearranged), it looks like this (for sufficiently large\n$$k$$):\n\n$$\n   (\\frac{n-1}{n}\n   \\cdot \\frac{n-2}{n-1}\n   \\cdot (\\ldots)\n   \\cdot \\frac{n-k+1}{n-k+2}\n   \\cdot \\frac{n-k}{n-k+1})\n   \\cdot \\frac{1}{n-k}\n$$\n\nFor the base case ($$k = 0$$), it is trivial to see that\n$$\\frac{1}{n-k} = \\frac{1}{n}$$. For $$k > 0$$, the numerator of each fraction\ncan be cancelled with the denominator of the next, leaving the $$n$$ from the\n0th draw as the only uncancelled denominator. Therefore, no matter on which\ndraw an element is drawn, it is drawn with a $$\\frac{1}{n}$$ chance, so each\narray permutation is equally likely to arise.\n\n<iframe src=\"https://leetcode.com/playground/NMKmaSiN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"NMKmaSiN\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(n^2)$$\n\n    The quadratic time complexity arises from the calls to `list.remove` (or\n    `list.pop`), which run in linear time. $$n$$ linear list removals occur,\n    which results in a fairly easy quadratic analysis.\n\n* Space complexity : $$\\mathcal{O}(n)$$\n\n    Because the problem also asks us to implement `reset`, we must use linear\n    additional space to store the original array. Otherwise, it would be lost\n    upon the first call to `shuffle`.\n\n---\n\n### Approach #2 Fisher-Yates Algorithm [Accepted]\n\n**Intuition**\n\nWe can cut down the time and space complexities of `shuffle` with a bit of\ncleverness - namely, by swapping elements around within the array itself, we\ncan avoid the linear space cost of the auxiliary array and the linear time\ncost of list modification.\n\n**Algorithm**\n\nThe Fisher-Yates algorithm is remarkably similar to the brute force solution.\nOn each iteration of the algorithm, we generate a random integer between the\ncurrent index and the last index of the array. Then, we swap the elements at\nthe current index and the chosen index - this simulates drawing (and\nremoving) the element from the hat, as the next range from which we select a\nrandom index will not include the most recently processed one. One small, yet important\ndetail is that it is possible to swap an element with itself - otherwise, some\narray permutations would be more likely than others. To see this illustrated more\nclearly, consider the animation below:\n\n!?!../Documents/384_Shuffle_an_Array.json:697,161!?!\n\n<iframe src=\"https://leetcode.com/playground/nhPu5mbP/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nhPu5mbP\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(n)$$\n\n    The Fisher-Yates algorithm runs in linear time, as generating a random\n    index and swapping two values can be done in constant time.\n\n* Space complexity : $$\\mathcal{O}(n)$$\n\n    Although we managed to avoid using linear space on the auxiliary array\n    from the brute force approach, we still need it for `reset`, so we're\n    stuck with linear space complexity.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

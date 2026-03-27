@@ -1,0 +1,58 @@
+{
+  "questionId": "196",
+  "questionFrontendId": "196",
+  "title": "Delete Duplicate Emails",
+  "titleSlug": "delete-duplicate-emails",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Person</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| id          | int     |\n| email       | varchar |\n+-------------+---------+\nid is the primary key (column with unique values) for this table.\nEach row of this table contains an email. The emails will not contain uppercase letters.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to<strong> delete</strong> all duplicate emails, keeping only one unique email with the smallest <code>id</code>.</p>\n\n<p>For SQL users, please note that you are supposed to write a <code>DELETE</code> statement and not a <code>SELECT</code> one.</p>\n\n<p>For Pandas users, please note that you are supposed to modify <code>Person</code> in place.</p>\n\n<p>After running your script, the answer shown is the <code>Person</code> table. The driver will first compile and run your piece of code and then show the <code>Person</code> table. The final order of the <code>Person</code> table <strong>does not matter</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nPerson table:\n+----+------------------+\n| id | email            |\n+----+------------------+\n| 1  | john@example.com |\n| 2  | bob@example.com  |\n| 3  | john@example.com |\n+----+------------------+\n<strong>Output:</strong> \n+----+------------------+\n| id | email            |\n+----+------------------+\n| 1  | john@example.com |\n| 2  | bob@example.com  |\n+----+------------------+\n<strong>Explanation:</strong> john@example.com is repeated two times. We keep the row with the smallest Id = 1.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Person (Id int, Email varchar(255))\"], \"mssql\": [\"Create table Person (Id int, Email varchar(255))\"], \"oraclesql\": [\"Create table Person (Id int, Email varchar(255))\"], \"database\": true, \"manual\": true, \"name\": \"delete_duplicate_emails\", \"pythondata\": [\"Person = pd.DataFrame([], columns=['id', 'email']).astype({'id':'int64', 'email':'object'})\"], \"postgresql\": [\"Create table If Not Exists Person (Id int, Email varchar(255))\\n\"], \"database_schema\": {\"Person\": {\"Id\": \"INT\", \"Email\": \"VARCHAR(255)\"}}}",
+  "stats": "{\"totalAccepted\": \"945.9K\", \"totalSubmission\": \"1.4M\", \"totalAcceptedRaw\": 945851, \"totalSubmissionRaw\": 1438283, \"acRate\": \"65.8%\"}",
+  "likes": 2082,
+  "dislikes": 427,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Person\": [\"id\", \"email\"]}, \"rows\": {\"Person\": [[1, \"john@example.com\"], [2, \"bob@example.com\"], [3, \"john@example.com\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"dell\", \"name\": \"Dell\"}]}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef delete_duplicate_emails(person: pd.DataFrame) -> None:\n    "
+    }
+  ],
+  "solution": {
+    "id": "210",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n\n### Approach: Grouping\n\n#### Algorithm\nThe requirement is to keep only the smallest `id` for each unique email. Naturally, we think of using the `groupby` method to achieve this. `person.groupby('email')` will group the `person` by the unique values in the `email` column. We divide `person` into multiple groups based on the unique values in the `email` column. This grouping allows us to group together rows with the same `email` so that we can operate on each group separately.\n\nWe want to find the minimum `id` value within each group to retain the rows with the smallest `id`. To achieve this, we use the `transform('min')` method to generate a new series for each group, containing the minimum values from the `id` column within each respective group.\n\n\n```python\nmin_id = person.groupby('email')['id'].transform('min')\n```\n\nThis gives us a Series with the same length as the original DataFrame `person`, where each value represents the minimum `id` value within its corresponding group.\n\n```\n0    1\n1    2\n2    1\nName: id, dtype: int64\n```\n\n<br>\n\nNext, we can select the rows whose `id` is not the minimum `id` within their corresponding group:\n\n```python\nremoved_person = person[person['id'] != min_id]\n```\nWe will have the following DataFrame `removed_person`:\n\n<table>\n  <thead>\n    <tr>\n      <th>id</th>\n      <th>email</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>3</td>\n      <td>john@example.com</td>\n    </tr>\n  </tbody>\n</table>\n\n<br>\n\nNote that we are asked to modify `person` in-place. Therefore, we can use the `drop` method with `inplace=True` to remove all rows based on the index values provided by `removed_person.index`. The complete code is as follows:\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PCXVqnLP/shared\" frameBorder=\"0\" width=\"100%\" height=\"174\" name=\"PCXVqnLP\"></iframe> \n\n\nWe can expect `person` to look like this.\n\n<table>\n  <thead>\n    <tr>\n      <th>id</th>\n      <th>email</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>1</td>\n      <td>john@example.com</td>\n    </tr>\n    <tr>\n      <td>2</td>\n      <td>bob@example.com</td>\n    </tr>\n  </tbody>\n</table>\n\n\n\n\n<br>\n\n\n---\n\n## Database\n\n\n### Approach: Using `DELETE` and `WHERE` clause\n\n#### Algorithm\n\nBy joining this table with itself on the *Email* column, we can get the following code.\n```sql\nSELECT p1.*\nFROM person p1,\n    person p2\nWHERE\n    p1.Email = p2.Email\n;\n```\n\n\n\nThen we need to find the bigger id having same email address with other records. So we can add a new condition to the `WHERE` clause like this.\n\n```sql\nSELECT p1.*\nFROM person p1,\n    person p2\nWHERE\n    p1.Email = p2.Email AND p1.Id > p2.Id\n;\n```\n\nAs we already get the records to be deleted, we can alter this statement to `DELETE` in the end.\n\n#### Implementation\n\n```sql\nDELETE p1 FROM person p1,\n    person p2\nWHERE\n    p1.Email = p2.Email AND p1.Id > p2.Id\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

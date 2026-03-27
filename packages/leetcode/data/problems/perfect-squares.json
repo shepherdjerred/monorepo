@@ -1,0 +1,137 @@
+{
+  "questionId": "279",
+  "questionFrontendId": "279",
+  "title": "Perfect Squares",
+  "titleSlug": "perfect-squares",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer <code>n</code>, return <em>the least number of perfect square numbers that sum to</em> <code>n</code>.</p>\n\n<p>A <strong>perfect square</strong> is an integer that is the square of an integer; in other words, it is the product of some integer with itself. For example, <code>1</code>, <code>4</code>, <code>9</code>, and <code>16</code> are perfect squares while <code>3</code> and <code>11</code> are not.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 12\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> 12 = 4 + 4 + 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 13\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> 13 = 4 + 9.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"numSquares\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1M\", \"totalSubmission\": \"1.9M\", \"totalAcceptedRaw\": 1048386, \"totalSubmissionRaw\": 1859204, \"acRate\": \"56.4%\"}",
+  "likes": 11830,
+  "dislikes": 493,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Primes\", \"titleSlug\": \"count-primes\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Ugly Number II\", \"titleSlug\": \"ugly-number-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Ways to Express an Integer as Sum of Powers\", \"titleSlug\": \"ways-to-express-an-integer-as-sum-of-powers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "12",
+    "13"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 6, \"slug\": \"revolut\", \"name\": \"Revolut\"}, {\"timesEncountered\": 6, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 3, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"citadel\", \"name\": \"Citadel\"}]}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numSquares(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numSquares(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numSquares(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numSquares(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar numSquares = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numSquares(n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumSquares(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numSquares(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numSquares(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numSquares(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numSquares(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_squares(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef num_squares(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function numSquares($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numSquares(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numSquares(n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_squares(n :: integer) :: integer\n  def num_squares(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_squares(N :: integer()) -> integer().\nnum_squares(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-squares n)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "788",
+    "content": "[TOC]\n\n## Solution\n\n\n---\n\n### Approach 1: Brute-force Enumeration [Time Limit Exceeded]\n\n**Intuition**\n\nThe problem asks us to find the **least** numbers of square numbers that can sum up to a given number. We could rephrase the problem as follows:\n\n>Given a list of square numbers and a positive integer number `n`, one is asked to find a combination of square numbers that sum up to `n`, and the combination should contain the **_least_** numbers among all possible solutions.<br/>\n>_Note:_ one could reuse the square numbers in the combination.\n\nFrom the above narrative of the problem, it seems to be a _combination_ problem, to which an intuitive solution would be the `brute-force enumeration` where we enumerate all possible combinations and find the minimal one of them.\n\nWe could formulate the problem in the following formula:\n\n$$\n\\text{numSquares}(n) = \\min \\Big(\\text{numSquares(n-k) + 1}\\Big) \\qquad \\forall k \\in \\{\\text{square numbers}\\}\n$$\n\nFrom the above formula, one can translate it into a **_recursive_** solution literally. Here is one example.\n\n<iframe src=\"https://leetcode.com/playground/bNapAJPg/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"bNapAJPg\"></iframe>\n\nThe above solution could work for small numbers. However, as one would find out, we would quickly run into the `Time Limit Exceeded` exception even for medium-size numbers (_e.g._ 55).\n\nOr simply we might encounter the `Stack Overflow` due the to the excessive recursion. \n<br/>\n<br/>\n\n---\n\n### Approach 2: Dynamic Programming\n\n**Intuition**\n\nThe reason why it failed with the brute-force approach is simply because we re-calculate the sub-solutions over and over again. However, the formula that we derived before is still valuable. All we need is a better way to implement the formula.\n\n$$\n\\text{numSquares}(n) = \\min \\Big(\\text{numSquares(n-k) + 1}\\Big) \\qquad \\forall k \\in \\{\\text{square numbers}\\}\n$$\n\nOne might notice that, the problem is similar to the [Fibonacci number problem](https://leetcode.com/problems/fibonacci-number/), judging from the formula. And like Fibonacci number, we have several more efficient ways to calculate the solution, other than the simple recursion.\n\nOne of the ideas to solve the stack overflow issue in recursion is to apply the **_Dynamic Programming_** (DP) technique, which is built upon the idea of reusing the results of intermediate sub-solutions to calculate the final solution. \n\nTo calculate the value of $$\\text{numSquares}(n)$$, first we need to calculate all the values before $$n$$, _i.e._ $$\\text{numSquares}(n-k) \\qquad \\forall{k} \\in\\{\\text{square numbers}\\}$$. If we have already kept the solution for the number $$n-k$$ in somewhere, we then would not need to resort to the recursive calculation which prevents the stack overflow. \n\n**Algorithm**\n\nBased on the above intuition, we could implement the DP solution in the following steps.\n\n- As for almost all DP solutions, we first create an array `dp` of one or multiple dimensions to hold the values of intermediate sub-solutions, as well as the final solution which is usually the last element in the array. _Note that_, we create a fictional element `dp[0]=0` to simplify the logic, which helps in the case that the remainder (`n-k`) happens to be a square number.\n<br/>\n- As an additional preparation step, we pre-calculate a list of square numbers (_i.e._ `square_nums`) that is less than the given number `n`.\n<br/>\n- As the main step, we then loop from the number `1` to `n`, to calculate the solution for each number `i` (_i.e._ `numSquares(i)`). At each iteration, we keep the result of `numSquares(i)` in `dp[i]`, while resuing the previous results stored in the array.\n<br/>\n- At the end of the loop, we then return the last element in the array as the result of the solution.\n\nIn the graph below, we illustrate how to calculate the results of `numSquares(4)` and `numSquares(5)` which correspond to the values in `dp[4]` and `dp[5]`.\n\n![pic](../Figures/279/279_dp.png)\n\nHere are some sample implementations. In particular, the Python solution took ~3500 ms, which was faster than ~50% submissions at the time.\n\n**Note:** the following python solution works for Python2 only. For some unknown reason, it takes significantly longer time for Python3 to run the same code.\n\n<iframe src=\"https://leetcode.com/playground/mgeJD3zR/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"mgeJD3zR\"></iframe>\n\n\n**Complexity**\n\n* Time complexity:  $$\\mathcal{O}(n\\cdot\\sqrt{n})$$. In main step, we have a nested loop, where the outer loop is of $$n$$ iterations and in the inner loop it takes at maximum $$\\sqrt{n}$$ iterations.\n\n* Space Complexity: $$\\mathcal{O}(n)$$. We keep all the intermediate sub-solutions in the array `dp[]`.\n<br/>\n<br/>\n\n---\n\n### Approach 3: Greedy Enumeration\n\n**Intuition**\n\nRecursion isn't bad though. Above all, it provides us a concise and intuitive way to understand the problem. We could still resolve the problem with recursion. To improve the above brute-force enumeration solution, we could add a touch of `Greedy` into the recursion process. We could reformulate the enumeration solution as follows:\n> Starting from the combination of one single number to multiple numbers, _once_ we find a combination that can sum up to the given number `n`, then we can say that we must have found the `smallest` combination, since we enumerate the combinations _greedily_ from small to large.\n\nTo better explain the above intuition, let us first define a function called `is_divided_by(n, count)` which returns a boolean value to indicate whether the number `n` can be divided by a combination with `count` number of square numbers, rather than returning the exact size of combination as the previous function `numSquares(n)`.\n\n$$\n\\text{numSquares}(n) = \\argmin_{\\text{count} \\in [1, 2, ...n]} \\Big(\n\\text{is\\_divided\\_by}(n, \\text{count}) \\Big)\n$$\n\nIn addition, the function `is_divided_by(n, count)` could also assume the form of recursion as follows:\n$$\n\\text{is\\_divided\\_by}(n, \\text{count}) = \\text{is\\_divided\\_by}(n-k, \\text{count}-1) \\quad \\exists{k} \\in \\{\\text{square numbers}\\}\n$$\n\n>Different from the recursive function of `numSquare(n)`, the recursion process of `is_divided_by(n, count)` would boil down to its bottom case (_i.e._ `count==1`) much more _rapid_.\n\nHere is one example on how the function `is_divided_by(n, count)` breaks down for the input `n=5` and `count=2`.\n\n<br/>\n\n![pic](../Figures/279/279_greedy.png)\n\nWith this trick of reformulation, we could dramatically reduce the risk of stack overflow.\n\n\n**Algorithm**\n\n- First of all, we prepare a list of square numbers (named `square_nums`) that are less than the given number `n`.\n<br/>\n- In the main loop, iterating the size of combination (named `count`) from one to `n`, we check if the number `n` can be divided by the sum of the combination, _i.e._ `is_divided_by(n, count)`.\n<br>\n- The function `is_divided_by(n, count)` can be implemented in the form of recursion as we defined in the intuition section.\n<br/>\n- In the bottom case, we have `count==1`, we just need to check if the number `n` is a square number itself. We could use the inclusion test with the list `square_nums` that we prepared before, _i.e._ $$n \\in \\text{square\\_nums}$$. And if we use the `set` data structure for `square_nums`, we could obtain a faster running time than the approach of `n == int(sqrt(n)) ^ 2`.\n\nConcerning the correctness of the algorithm, often the case we could prove the Greedy algorithm by **contradiction**. This is no exception. Suppose we find a `count=m` that can divide the number `n`, and suppose in the later iterations there exists another number `count=p` that can also divide the number and the combination is smaller than the found one _i.e._ `p < m`. Given the order of the iteration, the `count=p` would have been discovered before `count=m` which is contradict to the fact that `p` comes later than `m`. Therefore, we can say that the algorithm works as expected, which always finds the minimal size of combination.\n\nHere are some sample implementation. In particular, the Python solution took ~_70ms_, which was faster than ~ _90%_ submissions at the time.\n\n<iframe src=\"https://leetcode.com/playground/2R8WfFbi/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2R8WfFbi\"></iframe>\n\n**Complexity**\n\n* Time complexity:  $$\\mathcal{O}( \\frac{\\sqrt{n}^{h+1} - 1}{\\sqrt{n} - 1} ) = \\mathcal{O}(n^{\\frac{h}{2}}) $$ where `h` is the maximal number of recursion that could happen. As one might notice, the above formula actually resembles the formula to calculate the number of nodes in a complete N-ary tree. Indeed, the trace of recursive calls in the algorithm form a N-ary tree, where N is the number of squares in `square_nums`, _i.e._ $$\\sqrt{n}$$. In the worst case, we might have to traverse the entire tree to find the solution.\n<br/>\n\n* Space Complexity: $$\\mathcal{O}(\\sqrt{n})$$. We keep a list of `square_nums`, which is of $$\\sqrt{n}$$ size. In addition, we would need additional space for the recursive call stack. But as we will learn later, the size of the call track would not exceed 4.\n<br/>\n<br/>\n\n---\n\n### Approach 4: Greedy + BFS (Breadth-First Search)\n\n**Intuition**\n\nAs we mentioned in the complexity analysis in the above Greedy approach, the trace of the call stack forms a N-ary tree where each node represents a call to the `is_divided_by(n, count)` function. Based on the above intuition, again we could reformulate the original problem as follows:\n\n>Given a N-ary tree, where each node represents a **remainder** of the number `n` subtracting a combination of square numbers, our task is to find a node in the tree, which should meet two conditions:\n1). the value of the node (_i.e._ the remainder) should be a square number as well.\n2). the distance between the node and the root should be minimal among all nodes that meet the condition (1).\n\nHere is an example how the tree would look like.\n\n![pic](../Figures/279/279_greedy_tree.png)\n\nIn the previous Approach #3, due to the _Greedy_ strategy that we perform the calls, we were actually constructing the N-ary tree level-by-level from top to down. And the we were traversing it in a **_BFS_** (Breadth-First Search) manner. At each level of the N-ary tree, we were enumerating the combinations that are of the same size.\n\nThe order of traversing is of BFS, rather than DFS (Depth-First Search), is due to the fact that before exhausting all the possibilities of decomposing a number `n` with a fixed amount of squares, we would not explore any potential combination that needs more elements.  \n\n\n**Algorithm**\n\n- Again, first of all, we prepare a list of square numbers (named `square_nums`) that are less than the given number `n`.\n<br/>\n- We then create a `queue` variable which would keep all the remainders to enumerate at each level.\n<br/>\n- In the main loop, we iterate over the `queue` variable. At each iteration, we check if the remainder is one of the square numbers. If the remainder is not a square number, we subtract it with one of the square numbers to obtain a new remainder and then add the new remainder to the `next_queue` for the iteration of the next level. We break out of the loop once we encounter a remainder that is of a square number, which also means that we find the solution. \n\n**_Note_**: in a typical BFS algorithm, the `queue` variable usually would be of array or list type. However, here we use the set type, in order to eliminate the redundancy of remainders within the same level. As it turns out, this tiny trick could even provide a 5 times speedup on running time.\n\nIn the following graph, we illustrate the layout of the queue, on the example of `numSquares(7)`.\n\n![pic](../Figures/279/279_greedy_bfs_edited.png)\n\nHere are some sample implementations. In particular, the Python implementation inspired from the post of [ChrisZhang12240](https://leetcode.com/problems/perfect-squares/discuss/71475/Short-Python-solution-using-BFS) took ~200 ms which was faster than ~72% of submission at that time.\n\n<iframe src=\"https://leetcode.com/playground/54h6TkrV/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"54h6TkrV\"></iframe>\n\n**Complexity**\n\n* Time complexity: $$\\mathcal{O}( \\frac{\\sqrt{n}^{h+1} - 1}{\\sqrt{n} - 1} ) = \\mathcal{O}(n^{\\frac{h}{2}}) $$ where `h` is the height of the N-ary tree. One can see the detailed explanation on the previous Approach #3.\n<br/>\n\n* Space complexity: $$\\mathcal{O}\\Big((\\sqrt{n})^h\\Big)$$, which is also the maximal number of nodes that can appear at the level `h`. As one can see, though we keep a list of `square_nums`, the main consumption of the space is the `queue` variable, which keep track of the remainders to visit for a given level of N-ary tree.\n<br/>\n<br/>\n\n---\n\n### Approach 5: Mathematics \n\n**Intuition**\n\nThe problem can be solved with the mathematical theorems that have been proposed and proved over time. We will break down the problem into several cases in this section.\n\nIn 1770, [Joseph Louis Lagrange](https://en.wikipedia.org/wiki/Lagrange%27s_four-square_theorem) proved a theorem, called _Lagrange's four-square theorem_, also known as Bachet's conjecture, which states that every natural number can be represented as the sum of four integer squares:\n$$\np=a_{0}^{2}+a_{1}^{2}+a_{2}^{2}+a_{3}^{2}\n$$\nwhere the four numbers \n$$a_{0},a_{1},a_{2},a_{3}$$ are integers.\n\nFor example, 3, 31 can be represented as the sum of four squares as follows:\n$$\n3=1^{2}+1^{2}+1^{2}+0^{2} \\qquad\n31=5^{2}+2^{2}+1^{2}+1^{2}\n$$\n\n>Case 1). The Lagrange's four-square theorem sets the upper bound for the results of the problem, _i.e._ if the number `n` cannot be decomposed into a fewer number of squares, _at least_ it can be decomposed into the sum of **4** square numbers, _i.e._ $$\\text{numSquares}(n) \\le 4$$.\n\nAs one might notice in the above example, the number zero is also considered as a square number, so we can consider that the number 3 can either be decomposed into 3 or 4 square numbers.\n\n_However, Lagrange's four-square theorem does not tell us directly the *least* numbers of square to decompose a natural number._ \n\nLater, in 1797, [Adrien-Marie Legendre](https://en.wikipedia.org/wiki/Adrien-Marie_Legendre) completed the four-square theorem with his **_three-square theorem_**, by proving a particular condition that a positive integer can be expressed as the sum of three squares:\n$$\nn \\ne 4^{k}(8m+7) \\iff n = a_{0}^{2}+a_{1}^{2}+a_{2}^{2}\n$$\nwhere $$k$$ and $$m$$ are integers.\n\n> Case 2). Unlike the four-square theorem, Adrien-Marie Legendre's three-square theorem gives us a **necessary** and **sufficient** condition to check if the number can **ONLY** be decomposed into 4 squares, not fewer.\n\nIt might be tricky to see the conclusion that we made in the case (2) from the three-square theorem. Let us elaborate the deduction procedure a bit.\nFirst of all, the three-square theorem tells us that if the number `n` is of the form $$n = 4^{k}(8m+7)$$, then the number `n` cannot be decomposed into the sum of 3 numbers of squares. Further, we can also **assert** that the number `n` cannot be decomposed into the sum of two squares, neither the number itself is a square. Because suppose the number `n` can be decomposed as $$n = a_{0}^{2}+a_{1}^{2}$$, then by adding the square number zero into the expression, _i.e._ $$n = a_{0}^{2}+a_{1}^{2} + 0^2$$, we obtain the conclusion that the number `n` can be decomposed into 3 squares, which is **contradicted** to the three-square theorem. Therefore, together with the four-square theorem, we can assert that if the number does not meet the condition of the three-square theorem, it can ONLY be decomposed into the sum of 4 squares, not fewer.\n<br/>\n\nIf the number meets the condition of the three-square theorem, we know that if can be decomposed into 3 squares. But what we don't know is that whether the number can be decomposed into fewer squares, _i.e._ one or two squares.\nSo before we attribute the number to the bottom case (three-square theorem), here are the two cases remained to check, namely:\n\n>Case 3.1). if the number is a square number itself, which is easy to check _e.g._ `n == int(sqrt(n)) ^ 2`.\n\n>Case 3.2). if the number can be decomposed into the sum of two squares. Unfortunately, there is no mathematical weapon that can help us to check this case in one shot. We need to resort to the **enumeration** approach.\n\n\n**Algorithm**\n\nOne can literally follow the above cases to implement the solution.\n\n- First, we check if the number `n` is of the form $$n = 4^{k}(8m+7)$$, if so we return 4 directly.\n<br/>\n- Otherwise, we further check if the number is of a square number itself or the number can be decomposed the sum of two squares.\n<br/>\n- In the bottom case, the number can be decomposed into the sum of 3 squares, though we can also consider it decomposable by 4 squares by adding zero according to the four-square theorem. But we are asked to find the least number of squares.\n\nWe give some sample implementations here. The solution is inspired from the posts of [TCarmic](https://leetcode.com/problems/perfect-squares/discuss/376795/100-O(log-n)-Python3-Solution-Lagrange's-four-square-theorem) and [StefanPochmann](https://tinyurl.com/y4falx4f) in the [Discussion](https://leetcode.com/problems/perfect-squares/discuss/) forum.\n\n<iframe src=\"https://leetcode.com/playground/R7wxBJ2z/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"R7wxBJ2z\"></iframe>\n\n**Complexity**\n\n* Time complexity: $$\\mathcal{O}(\\sqrt{n})$$. In the main loop, we check if the number can be decomposed into the sum of two squares, which takes $$\\mathcal{O}(\\sqrt{n})$$ iterations. In the rest of cases, we do the check in constant time.\n<br/>\n\n* Space complexity: $$\\mathcal{O}(1)$$. The algorithm consumes a constant space, regardless the size of the input number.\n<br/>\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

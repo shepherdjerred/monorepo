@@ -1,0 +1,145 @@
+{
+  "questionId": "853",
+  "questionFrontendId": "826",
+  "title": "Most Profit Assigning Work",
+  "titleSlug": "most-profit-assigning-work",
+  "difficulty": "Medium",
+  "content": "<p>You have <code>n</code> jobs and <code>m</code> workers. You are given three arrays: <code>difficulty</code>, <code>profit</code>, and <code>worker</code> where:</p>\n\n<ul>\n\t<li><code>difficulty[i]</code> and <code>profit[i]</code> are the difficulty and the profit of the <code>i<sup>th</sup></code> job, and</li>\n\t<li><code>worker[j]</code> is the ability of <code>j<sup>th</sup></code> worker (i.e., the <code>j<sup>th</sup></code> worker can only complete a job with difficulty at most <code>worker[j]</code>).</li>\n</ul>\n\n<p>Every worker can be assigned <strong>at most one job</strong>, but one job can be <strong>completed multiple times</strong>.</p>\n\n<ul>\n\t<li>For example, if three workers attempt the same job that pays <code>$1</code>, then the total profit will be <code>$3</code>. If a worker cannot complete any job, their profit is <code>$0</code>.</li>\n</ul>\n\n<p>Return the maximum profit we can achieve after assigning the workers to the jobs.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> difficulty = [2,4,6,8,10], profit = [10,20,30,40,50], worker = [4,5,6,7]\n<strong>Output:</strong> 100\n<strong>Explanation:</strong> Workers are assigned jobs of difficulty [4,4,6,6] and they get a profit of [20,20,30,30] separately.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> difficulty = [85,47,57], profit = [24,66,99], worker = [40,25,25]\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == difficulty.length</code></li>\n\t<li><code>n == profit.length</code></li>\n\t<li><code>m == worker.length</code></li>\n\t<li><code>1 &lt;= n, m &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= difficulty[i], profit[i], worker[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"maxProfitAssignment\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"difficulty\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"profit\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"worker\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"243.4K\", \"totalSubmission\": \"433.4K\", \"totalAcceptedRaw\": 243433, \"totalSubmissionRaw\": 433438, \"acRate\": \"56.2%\"}",
+  "likes": 2539,
+  "dislikes": 174,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Number of Tasks You Can Assign\", \"titleSlug\": \"maximum-number-of-tasks-you-can-assign\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Successful Pairs of Spells and Potions\", \"titleSlug\": \"successful-pairs-of-spells-and-potions\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Matching of Players With Trainers\", \"titleSlug\": \"maximum-matching-of-players-with-trainers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,4,6,8,10]\n[10,20,30,40,50]\n[4,5,6,7]",
+    "[85,47,57]\n[24,66,99]\n[40,25,25]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 22, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"netease\", \"name\": \"NetEase\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxProfitAssignment(vector<int>& difficulty, vector<int>& profit, vector<int>& worker) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxProfitAssignment(int[] difficulty, int[] profit, int[] worker) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxProfitAssignment(self, difficulty: List[int], profit: List[int], worker: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxProfitAssignment(self, difficulty, profit, worker):\n        \"\"\"\n        :type difficulty: List[int]\n        :type profit: List[int]\n        :type worker: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} difficulty\n * @param {number[]} profit\n * @param {number[]} worker\n * @return {number}\n */\nvar maxProfitAssignment = function(difficulty, profit, worker) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxProfitAssignment(difficulty: number[], profit: number[], worker: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxProfitAssignment(int[] difficulty, int[] profit, int[] worker) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxProfitAssignment(int* difficulty, int difficultySize, int* profit, int profitSize, int* worker, int workerSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxProfitAssignment(difficulty []int, profit []int, worker []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxProfitAssignment(difficulty: IntArray, profit: IntArray, worker: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxProfitAssignment(_ difficulty: [Int], _ profit: [Int], _ worker: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_profit_assignment(difficulty: Vec<i32>, profit: Vec<i32>, worker: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} difficulty\n# @param {Integer[]} profit\n# @param {Integer[]} worker\n# @return {Integer}\ndef max_profit_assignment(difficulty, profit, worker)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $difficulty\n     * @param Integer[] $profit\n     * @param Integer[] $worker\n     * @return Integer\n     */\n    function maxProfitAssignment($difficulty, $profit, $worker) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxProfitAssignment(List<int> difficulty, List<int> profit, List<int> worker) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxProfitAssignment(difficulty: Array[Int], profit: Array[Int], worker: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_profit_assignment(difficulty :: [integer], profit :: [integer], worker :: [integer]) :: integer\n  def max_profit_assignment(difficulty, profit, worker) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_profit_assignment(Difficulty :: [integer()], Profit :: [integer()], Worker :: [integer()]) -> integer().\nmax_profit_assignment(Difficulty, Profit, Worker) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-profit-assignment difficulty profit worker)\n  (-> (listof exact-integer?) (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2343",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given some jobs that each have a difficulty level and an amount of profit that can be made from performing the job. We also have some workers.\n\nYou can think of these jobs as roles within a company. Each worker can have only one role, and the role must not be too difficult for them. However, just like in the real world, the assigned role can be easier than what the worker is capable of handling. Our goal is to assign roles to workers in a way that maximizes the company's profit.\n\nConstraints on `n` and `m` are `1 <= n` & `m <= 10000`, respectively. Therefore, we need to consider an approach with linear or log-linear time complexity.\n\n---\n\n### Approach 1: Binary Search and Greedy (Sort by Job Difficulty)\n\n#### Intuition\n\nWhen assigning a job to any worker, we disregard any jobs that are too difficult and then select the job with the highest profit. An example is shown below:\n\n![figA](../Figures/826/Slide1.PNG)\n\nIf we need to choose the most optimal job for the worker algorithmically, we could use a linear search to find the maximum profit among all jobs. However, this approach would result in a Time Limit Exceeded (TLE) verdict since each job assignment would take $O(n)$ time, where `n` is the size of the job list.\n\nAnother approach is to use a binary search for every worker. We can sort the `difficulty` array in increasing order to apply binary search and rearrange the `profits` array in the same order. \n\nFor each worker, we will find the index where the difficulty value is just less than or equal to the worker's ability. The worker can perform all jobs up to this index. Consequently, the worker will choose the job with the highest profit up to this index. To do this, we can preprocess the array to store the maximum profit values up to each index.\n\nDuring the binary search process, we will add the value of the preprocessed maximum profit of the calculated job for each worker. This sum will give us the total profit. Since the profit for each worker is maximized, the total profit will also be maximized.\n\n#### Algorithm\n\n1. Initialize an array of pairs `jobProfile` with `{0, 0}`.\n2. For `i` from `0` to `n` (where `n` is the size of the `difficulty` and `profit` arrays):\n   - Append `{difficulty[i], profit[i]}` to `jobProfile`.\n3. Sort `jobProfile` by `difficulty` in ascending order.\n4. For `i` from `0` to `n-1`:\n   - Update `jobProfile[i].profit` to be the maximum of its current value and the previous profit value.\n5. Initialize `netProfit` to `0`.\n6. For each `ability` in the `worker` array:\n   - Set binary search parameters: `l = 0`, `r = n-1`, `jobProfit = 0`.\n   - While `l` <= `r`:\n     - Calculate `mid = (l + r) / 2`.\n     - If `jobProfile[mid].difficulty` <= `ability`:\n       - Update `jobProfit` to the maximum of `jobProfit` and `jobProfile[mid].profit`.\n       - Set `l = mid + 1`.\n     - Else:\n       - Set `r = mid - 1`.\n   - Add `jobProfit` to `netProfit`.\n7. Return `netProfit`.\n \n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/kGBK3vMr/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"kGBK3vMr\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `difficulty` and `profit` arrays, and `m` be the size of the `worker` array.\n\n- Time complexity: $O(n \\cdot \\log n + m \\cdot \\log n)$\n\n   The time complexity for sorting the `jobProfile` array is $O(n \\cdot \\log n)$.\n\n   While iterating the `worker` array of size `m`, we perform a binary search with search space size `n`. The time complexity is given by $O(m \\cdot \\log n)$.\n\n   Therefore, the total time complexity is given by $O(n \\cdot \\log n + m \\cdot \\log n)$.\n\n- Space complexity: $O(n)$\n\n   We create an additional `jobProfile` array of size $2 \\cdot n$. Apart from this, some extra space is used when we sort an array in place. The space complexity of the sorting algorithm depends on the programming language.\n   - In Python, the `sort` method sorts a list using the Tim Sort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(n)$ additional space. Additionally, Tim Sort is designed to be a stable algorithm.\n   - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$ for sorting an array.\n   - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n)$.\n\n   Therefore, space complexity is given by $O(n)$.\n\n---\n\n### Approach 2: Binary Search and Greedy (Sort by profit)\n\n#### Intuition\n\nIs it possible to use binary search on the `profit` array to maximize the profit for a worker? \n\nSuppose we sort the `profit` array in decreasing order while rearranging the `difficulty` array to preserve the original ordering of indices. For each worker, we will find the first index where the value of difficulty is less than or equal to the worker's ability. This index will store the maximum profit possible for that worker's ability. To efficiently apply binary search, we can preprocess the array to store the minimum difficulty up to the current index.\n\nSimilar to the previous approach, we will return the sum of all individual job profits as the maximum total profit.\n\n#### Algorithm\n\n1. Initialize an array of pairs `jobProfile` with `{0, 0}`.\n2. For `i` from `0` to `n` (where `n` is the size of the `difficulty` and `profit` arrays):\n   - Append `{difficulty[i], profit[i]}` to `jobProfile`.\n3. Sort `jobProfile` by `profit` in descending order.\n4. For `i` from `0` to `n-1`:\n   - Update `jobProfile[i].difficulty` to be the minimum of its current value and the previous difficulty value.\n5. Initialize `netProfit` to `0`.\n6. For each `ability` in the `worker` array:\n   - Set binary search parameters: `l = 0`, `r = n-1`, `jobProfit = 0`.\n   - While `l` <= `r`:\n     - Calculate `mid = (l + r) / 2`.\n     - If `jobProfile[mid].difficulty` <= `ability`:\n       - Update `jobProfit` to the maximum of `jobProfit` and `jobProfile[mid].profit`.\n       - Set `r = mid - 1`.\n     - Else:\n       - Set `l = mid + 1`.\n   - Add `jobProfit` to `netProfit`.\n7. Return `netProfit`.\n \n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/SqTPfTzF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"SqTPfTzF\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `difficulty` and `profit` arrays and `m` be the size of the `worker` array.\n\n- Time complexity: $O(n \\cdot \\log n + m \\cdot \\log n)$\n\n   The time complexity for sorting the difficulty array is $O(n \\cdot \\log n)$.\n\n   While iterating the `worker` array of size `m`, we perform a binary search with search space size `n`. The time complexity for is given by $O(m \\cdot \\log n)$.\n\n   Therefore, the total time complexity is given by $O(n \\cdot \\log n + m \\cdot \\log n)$.\n\n- Space complexity: $O(n)$\n\n   We create an additional `jobProfile` array of size $2 \\cdot n$. Apart from this, some extra space is used when we sort an array in place. The space complexity of the sorting algorithm depends on the programming language.\n   - In Python, the `sort` method sorts a list using the Tim Sort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(n)$ additional space. Additionally, Tim Sort is designed to be a stable algorithm.\n   - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$ for sorting an array.\n   - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n)$.\n\n   Therefore, space complexity is given by $O(n)$.\n\n---\n\n### Approach 3: Greedy and Two-Pointers\n\n#### Intuition\n\nIn the first approach, we sorted the `jobProfile` array by difficulty values. Now, let's also sort the `worker` array in increasing order.\n\nOnce we've assigned the optimal job to a worker, then all the workers ahead of that worker (in ability) will receive a job with difficulty greater than or equal to the assigned job. Therefore, after assigning a job, we don't need the jobs present before it.\n\nSo, we can use two pointers to find the most optimal job while iterating through the sorted job profile and sorted worker arrays. \n\nStart with the first worker and iterate through the list maintaining a maxima of profits until you find the last assignable job with maximum difficulty. The maximum profit up to this index will give us the profit of the first worker.\n\nSince the worker array is sorted, the ability of the next worker will be greater than all previous workers. So, continue iterating the job profile until you find the last assignable job. Repeat the process for all workers and store the total profit as the sum of the maximum profit.\n\n#### Algorithm\n\n1. Initialize an array of pairs `jobProfile`.\n2. For `i` from `0` to `n` (where `n` is the size of the `difficulty` and `profit` arrays):\n   - Append `{difficulty[i], profit[i]}` to `jobProfile`.\n3. Sort `jobProfile` by `difficulty` in ascending order.\n4. Sort `worker` in ascending order by their abilities.\n5. Initialize `netProfit`, `maxProfit`, and `index` to `0`.\n6. For each `ability` in the `worker` array:\n   - While `index` is within bounds and the worker's ability is greater than or equal to `jobProfile[index].difficulty`:\n     - Update `maxProfit` to the maximum of `maxProfit` and `jobProfile[index].profit`.\n     - Increment `index` by `1`.\n   - Add `maxProfit` to `netProfit`.\n7. Return `netProfit`.\n\n!?!../Documents/826/slideshow1.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/cYrBiVNB/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"cYrBiVNB\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `difficulty` and `profit` arrays and `m` be the size of the `worker` array.\n\n- Time complexity: $O(n \\cdot \\log n + m \\cdot \\log(m))$\n\n   The time taken for sorting the `difficulty` array is $O(n \\cdot \\log n)$ and sorting the `worker` array is $O(m \\cdot \\log(m))$.\n\n   In the two pointers, while iterating through the `worker` array we iterate the `jobProfile` array exactly once. Time complexity is given by $O(n + m)$\n\n   Therefore, the total time complexity is given by $O(n \\cdot \\log n + m \\cdot \\log(m))$.\n\n- Space complexity: $O(n)$\n\n   We create an additional `jobProfile` array of size $2 \\cdot n$. Apart from this, some extra space is used when we sort an array in place. The space complexity of the sorting algorithm depends on the programming language.\n   - In Python, the `sort` method sorts a list using the Tim Sort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(n)$ additional space. Additionally, Tim Sort is designed to be a stable algorithm.\n   - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$ for sorting an array.\n   - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n)$.\n\n   Therefore, space complexity is given by $O(n)$.\n\n---\n\n### Approach 4: Memoization\n\n#### Intuition\n\nGiven the constraints on the maximum values of the `difficulty` and `ability` arrays, we can create an array of this size to store the maximum profit for every possible ability.\n\nWe don't need the profit of jobs with a difficulty level higher than what the worker can handle. Therefore, we can create an array sized to the maximum ability to store the results.\n\nStore the profit in this array with the difficulty of each job as the index. If multiple jobs share the same difficulty (same index), store the maximum profit among them.\n\nNow, what if there exists a job with difficulty lower than another job but provides a higher profit? To find the maximum profit at each index, we must determine the highest value occurrence in all indices up to the current index. To do this, we need to store the maxima of all previous profit values in this array while iterating through the abilities. \n\nTherefore, the maximum total profit is given by the sum of values in this array with worker abilities as the indices.\n\n#### Algorithm\n\n1. Initialize `maxAbility` as the maximum ability in the `worker` array.\n2. Initialize an array `jobs` of size `maxAbility`.\n3. Iterate a variable `i` from 0 to `difficulty.size - 1`:\n    - If the `difficulty` at the current index `i` is less than or equal to the worker's ability:\n      - Store the `profit` at index `i` at the `difficulty[i]` index of `jobs` array. If a value already exists, take the maximum of both values.\n4. Iterate through all values in `jobs`:\n   - Store the maximum of current and previous `jobs` values in the current `jobs` index.\n5. Iterate through all abilities in the `worker` array:\n   - Store `maxProfit` as `jobs[ability]` where `ability` denotes the ability of the current worker.\n   - Increment `maxProfit` to `netProfit`.\n6. Return `netProfit`.\n\n!?!../Documents/826/slideshow2.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PGosiv2m/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PGosiv2m\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `difficulty` and `profit` arrays and `m` be the size of the `worker` array. Also, let `maxAbility` be the maximum value in the `worker` array.\n\n- Time complexity: $O(n + m + maxAbility)$\n\n   In this approach, we iterate through the `difficulty`, `worker` and `jobs` arrays exactly once.\n\n   Therefore, the total time complexity is given by $O(n + m + maxAbility)$.\n\n- Space complexity: $O(maxAbility)$\n\n   We create an additional `jobs` array of size $maxAbility$. Apart from this, no additional space is used.\n\n   Therefore, space complexity is given by $O(maxAbility)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "questionId": "593",
+  "questionFrontendId": "593",
+  "title": "Valid Square",
+  "titleSlug": "valid-square",
+  "difficulty": "Medium",
+  "content": "<p>Given the coordinates of four points in 2D space <code>p1</code>, <code>p2</code>, <code>p3</code> and <code>p4</code>, return <code>true</code> <em>if the four points construct a square</em>.</p>\n\n<p>The coordinate of a point <code>p<sub>i</sub></code> is represented as <code>[x<sub>i</sub>, y<sub>i</sub>]</code>. The input is <strong>not</strong> given in any order.</p>\n\n<p>A <strong>valid square</strong> has four equal sides with positive length and four equal angles (90-degree angles).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> p1 = [0,0], p2 = [1,1], p3 = [1,0], p4 = [0,1]\n<strong>Output:</strong> true\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> p1 = [0,0], p2 = [1,1], p3 = [1,0], p4 = [0,12]\n<strong>Output:</strong> false\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> p1 = [1,0], p2 = [-1,0], p3 = [0,1], p4 = [0,-1]\n<strong>Output:</strong> true\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>p1.length == p2.length == p3.length == p4.length == 2</code></li>\n\t<li><code>-10<sup>4</sup> &lt;= x<sub>i</sub>, y<sub>i</sub> &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"validSquare\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"p1\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"p2\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"p3\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"p4\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"129.3K\", \"totalSubmission\": \"287.8K\", \"totalAcceptedRaw\": 129288, \"totalSubmissionRaw\": 287806, \"acRate\": \"44.9%\"}",
+  "likes": 1123,
+  "dislikes": 913,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[0,0]\n[1,1]\n[1,0]\n[0,1]",
+    "[0,0]\n[1,1]\n[1,0]\n[0,12]",
+    "[1,0]\n[-1,0]\n[0,1]\n[0,-1]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"pure-storage\", \"name\": \"Pure Storage\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Geometry",
+      "slug": "geometry"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool validSquare(vector<int>& p1, vector<int>& p2, vector<int>& p3, vector<int>& p4) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean validSquare(int[] p1, int[] p2, int[] p3, int[] p4) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def validSquare(self, p1: List[int], p2: List[int], p3: List[int], p4: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def validSquare(self, p1, p2, p3, p4):\n        \"\"\"\n        :type p1: List[int]\n        :type p2: List[int]\n        :type p3: List[int]\n        :type p4: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} p1\n * @param {number[]} p2\n * @param {number[]} p3\n * @param {number[]} p4\n * @return {boolean}\n */\nvar validSquare = function(p1, p2, p3, p4) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function validSquare(p1: number[], p2: number[], p3: number[], p4: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool ValidSquare(int[] p1, int[] p2, int[] p3, int[] p4) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool validSquare(int* p1, int p1Size, int* p2, int p2Size, int* p3, int p3Size, int* p4, int p4Size) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func validSquare(p1 []int, p2 []int, p3 []int, p4 []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun validSquare(p1: IntArray, p2: IntArray, p3: IntArray, p4: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func validSquare(_ p1: [Int], _ p2: [Int], _ p3: [Int], _ p4: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn valid_square(p1: Vec<i32>, p2: Vec<i32>, p3: Vec<i32>, p4: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} p1\n# @param {Integer[]} p2\n# @param {Integer[]} p3\n# @param {Integer[]} p4\n# @return {Boolean}\ndef valid_square(p1, p2, p3, p4)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $p1\n     * @param Integer[] $p2\n     * @param Integer[] $p3\n     * @param Integer[] $p4\n     * @return Boolean\n     */\n    function validSquare($p1, $p2, $p3, $p4) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool validSquare(List<int> p1, List<int> p2, List<int> p3, List<int> p4) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def validSquare(p1: Array[Int], p2: Array[Int], p3: Array[Int], p4: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec valid_square(p1 :: [integer], p2 :: [integer], p3 :: [integer], p4 :: [integer]) :: boolean\n  def valid_square(p1, p2, p3, p4) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec valid_square(P1 :: [integer()], P2 :: [integer()], P3 :: [integer()], P4 :: [integer()]) -> boolean().\nvalid_square(P1, P2, P3, P4) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (valid-square p1 p2 p3 p4)\n  (-> (listof exact-integer?) (listof exact-integer?) (listof exact-integer?) (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "139",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach #1 Brute Force [Accepted]\n\nThe idea behind determining whether 4 given set of points constitute a valid square or not is really simple. Firstly, we need to determine if the sides of the quadrilateral formed by these 4 points are equal. But checking only this won't suffice. Since, this condition will be satisfied even in the case of a rhombus, where all the four sides are equal but the adjacent sides aren't perpendicular to each other. Thus, we also need to check if the lengths of the diagonals formed between the corners of the quadrilateral are equal. If both the conditions are satisfied, then only the given set of points can be deemed appropriate for constituting a square.\n\nNow, the problem arises in determining which pairs of points act as the adjacent points on the square boundary. So, the simplest method is to consider every possible case. For the given 4 points, $$[p_0, p_1, p_2, p_3]$$, there are a total of 4! ways in which these points can be arranged to be considered as the square's boundaries. We can generate every possible permutation and check if any permutation leads to the valid square arrangement of points.\n\n<iframe src=\"https://leetcode.com/playground/2NJc8Xxy/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2NJc8Xxy\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(1)$$. Constant number of permutations($$4!$$) are generated.\n\n* Space complexity : $$O(1)$$. Constant space is required.\n\n---\n### Approach #2 Using Sorting [Accepted]\n\nInstead of considering all the permutations of arrangements possible, we can make use of maths to simplify this problem a bit. If we sort the given set of points based on their x-coordinate values, and in the case of a tie, based on their y-coordinate value, we can obtain an arrangement, which directly reflects the arrangement of points on a valid square boundary possible.\n\nConsider the only possible cases as shown in the figure below:\n\n![Valid_Square](../Figures/593_Valid_Square_1.PNG)\n\nIn each case, after sorting, we obtain the following conclusion regarding the connections of the points:\n\n1. $$p_0p_1$$, $$p_1p_3$$, $$p_3p_2$$ and $$p_2p_0$$ form the four sides of any valid square.\n\n2. $$p_0p_3$$ and $$p_1p_2$$ form the diagonals of the square.\n\nThus, once the sorting of the points is done, based on the above knowledge, we can directly compare $$p_0p_1$$, $$p_1p_3$$, $$p_3p_2$$ and $$p_2p_0$$ for equality of lengths(corresponding to the sides); and $$p_0p_3$$ and $$p_1p_2$$ for equality of lengths(corresponding to the diagonals).\n\n<iframe src=\"https://leetcode.com/playground/5985SrgC/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"5985SrgC\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(1)$$. Sorting 4 points takes constant time.\n\n* Space complexity : $$O(1)$$. Constant space is required.\n\n---\n### Approach #3 Checking every case [Accepted]\n\n**Algorithm**\n\nIf we consider all the permutations descripting the arrangement of points as in the brute force approach, we can come up with the following set of 24 arrangements:\n\n![Valid_Square](../Figures/593_Valid_Square_2.PNG)\n\nIn this figure, the rows with the same shaded color indicate that the corresponding arrangements lead to the same set of edges and diagonals. Thus, we can see that only three unique cases exist. Thus, instead of generating all the 24 permutations, we check for the equality of edges and diagonals for only the three distinct cases.\n\n<iframe src=\"https://leetcode.com/playground/UEVGf4Ly/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UEVGf4Ly\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(1)$$. A fixed number of comparisons are done.\n\n* Space complexity : $$O(1)$$. No extra space required.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "questionId": "487",
+  "questionFrontendId": "487",
+  "title": "Max Consecutive Ones II",
+  "titleSlug": "max-consecutive-ones-ii",
+  "difficulty": "Medium",
+  "content": "<p>Given a binary array <code>nums</code>, return <em>the maximum number of consecutive </em><code>1</code><em>&#39;s in the array if you can flip at most one</em> <code>0</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,0,1,1,0]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> \n- If we flip the first zero, nums becomes [1,1,1,1,0] and we have 4 consecutive ones.\n- If we flip the second zero, nums becomes [1,0,1,1,1] and we have 3 consecutive ones.\nThe max number of consecutive ones is 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,0,1,1,0,1]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> \n- If we flip the first zero, nums becomes [1,1,1,1,0,1] and we have 4 consecutive ones.\n- If we flip the second zero, nums becomes [1,0,1,1,1,1] and we have 4 consecutive ones.\nThe max number of consecutive ones is 4.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>nums[i]</code> is either <code>0</code> or <code>1</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> What if the input numbers come in one by one as an infinite stream? In other words, you can&#39;t store all numbers coming from the stream as it&#39;s too large to hold in memory. Could you solve it efficiently?</p>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findMaxConsecutiveOnes\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"183.1K\", \"totalSubmission\": \"352.4K\", \"totalAcceptedRaw\": 183097, \"totalSubmissionRaw\": 352356, \"acRate\": \"52.0%\"}",
+  "likes": 1607,
+  "dislikes": 27,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Max Consecutive Ones\", \"titleSlug\": \"max-consecutive-ones\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Max Consecutive Ones III\", \"titleSlug\": \"max-consecutive-ones-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"All Divisions With the Highest Score of a Binary Array\", \"titleSlug\": \"all-divisions-with-the-highest-score-of-a-binary-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,0,1,1,0]",
+    "[1,0,1,1,0,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findMaxConsecutiveOnes(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findMaxConsecutiveOnes(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findMaxConsecutiveOnes(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findMaxConsecutiveOnes(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar findMaxConsecutiveOnes = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findMaxConsecutiveOnes(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindMaxConsecutiveOnes(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findMaxConsecutiveOnes(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findMaxConsecutiveOnes(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findMaxConsecutiveOnes(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findMaxConsecutiveOnes(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_max_consecutive_ones(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef find_max_consecutive_ones(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function findMaxConsecutiveOnes($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findMaxConsecutiveOnes(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findMaxConsecutiveOnes(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_max_consecutive_ones(nums :: [integer]) :: integer\n  def find_max_consecutive_ones(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_max_consecutive_ones(Nums :: [integer()]) -> integer().\nfind_max_consecutive_ones(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-max-consecutive-ones nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1097",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n**Intuition**\n\nFirst, let's understand our problem.\n\n> *\"Given a binary array, find the maximum number of consecutive 1s in this array...\"*\n\nOkay, it makes sense so far.\n\n> *\"...if you can flip at most one 0.\"*\n\nHuh? What does that even mean?\n\nLet's translate that into something more concrete. We can rephrase *\"if you can flip at most one 0\"*  into *\"allowing at most one 0 within an otherwise consecutive run of 1s\"*. These statements are equal because if we had one 0 in our consecutive array, we could flip it to satisfy our condition. Note that we're not *actually* going to flip the 0 which will make our approach simpler.\n\nSo our new problem statement is:\n\n> *\"Given a binary array, find the maximum number of consecutive 1s in this array, allowing at most one 0 within an otherwise consecutive run of 1s\"*\n\n### Approach 1: Brute Force\n\n**Algorithm**\n\nLet's start simple and work our way up.\n\nA brute force solution usually involves trying to check every single possibility. It'll look something like this:\n- Check every possible consecutive sequence\n- Count how many 0's are in each sequence  \n- If our sequence has one or fewer 0's, check if that's the *longest* consecutive sequence of 1's.\n\n<iframe src=\"https://leetcode.com/playground/CHvZpF8v/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"CHvZpF8v\"></iframe>\n\n> **Interview Tip:** Often the interviewer doesn't need to see you code the brute force solution. State the brute force approach out loud and discuss his/her expectations. Either way, communicating proactively will give you major bonus points.\n\n**Complexity Analysis**\n\nLet $$n$$ be equal to the length of the input `nums` array.  \n\n* Time complexity : $$O(n^2)$$. The nested `for` loops turn our approach into a quadratic solution because, for every index, we have to check every other index in the array.\n\n* Space complexity : $$O(1)$$. We are using 4 variables: `left`, `right`, `numZeroes`, and `longestSequence`. The number of variables is constant and does not change based on the size of the input.\n\n<br />\n\n---\n\n### Approach 2: Sliding Window\n\n**Intuition**\n\nThe naive approach works but our interviewer is not convinced. Let's see how we can optimize the code we just wrote.\n\nThe brute force solution had a time complexity of $$O(n^2)$$. What was the bottleneck? Checking every single consecutive sequence. Intuitively, we know we're doing repeated work because sequences overlap. We are checking consecutive sequences blindly. We need to establish some rules on how to move our sequence forward.\n\n- If our sequence is valid, let's continue expanding our sequence (because our goal is to get the largest sequence possible).\n- If our sequence is invalid, let's stop expanding and contract our sequence (because an invalid sequence will never count towards our largest sequence).\n\nThe pattern that comes to mind for expanding/contracting sequences is the sliding window. Let's define valid and invalid states.\n\n- Valid State = one or fewer 0's in our current sequence\n- Invalid State = two 0's in our current sequence\n\n**Algorithm**\n\nGreat. How do we apply all this to the sliding window?\n\nLet's use left and right pointers to keep track of the current sequence a.k.a. our window. Let's expand our window by moving the right pointer forward until we reach a point where we have more than one 0 in our window. When we reach this invalid state, let's contract our window by moving the left pointer forward until we have a valid window again. By expanding and contracting our window from valid and invalid states, we are able to traverse the array efficiently without repeated overlapping work.\n\nNow we can break this approach down into a few actionable steps:\n\nWhile our window is in the bounds of the array...\n1. Add the rightmost element to our window.\n2. Check if our window is invalid. If so, contract the window until valid.\n3. Update the longest sequence we've seen so far.\n4. Continue to expand our window.\n\nThis will look like this:\n\n!?!../Documents/487/slidingwindow.json:320,220!?!\n\n<iframe src=\"https://leetcode.com/playground/6vr6To85/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6vr6To85\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n$$ be equal to the length of the input `nums` array.  \n\n* Time complexity : $$O(n)$$. Since both the pointers only move forward, each of the left and right pointers traverse a maximum of n steps. Therefore, the time complexity is $$O(n)$$.\n\n* Space complexity : $$O(1)$$. Same as the previous approach. We don't store anything other than variables. Thus, the space we use is constant because it is not correlated to the length of the input array.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "questionId": "599",
+  "questionFrontendId": "599",
+  "title": "Minimum Index Sum of Two Lists",
+  "titleSlug": "minimum-index-sum-of-two-lists",
+  "difficulty": "Easy",
+  "content": "<p>Given two arrays of strings <code>list1</code> and <code>list2</code>, find the <strong>common strings with the least index sum</strong>.</p>\n\n<p>A <strong>common string</strong> is a string that appeared in both <code>list1</code> and <code>list2</code>.</p>\n\n<p>A <strong>common string with the least index sum</strong> is a common string such that if it appeared at <code>list1[i]</code> and <code>list2[j]</code> then <code>i + j</code> should be the minimum value among all the other <strong>common strings</strong>.</p>\n\n<p>Return <em>all the <strong>common strings with the least index sum</strong></em>. Return the answer in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> list1 = [&quot;Shogun&quot;,&quot;Tapioca Express&quot;,&quot;Burger King&quot;,&quot;KFC&quot;], list2 = [&quot;Piatti&quot;,&quot;The Grill at Torrey Pines&quot;,&quot;Hungry Hunter Steakhouse&quot;,&quot;Shogun&quot;]\n<strong>Output:</strong> [&quot;Shogun&quot;]\n<strong>Explanation:</strong> The only common string is &quot;Shogun&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> list1 = [&quot;Shogun&quot;,&quot;Tapioca Express&quot;,&quot;Burger King&quot;,&quot;KFC&quot;], list2 = [&quot;KFC&quot;,&quot;Shogun&quot;,&quot;Burger King&quot;]\n<strong>Output:</strong> [&quot;Shogun&quot;]\n<strong>Explanation:</strong> The common string with the least index sum is &quot;Shogun&quot; with index sum = (0 + 1) = 1.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> list1 = [&quot;happy&quot;,&quot;sad&quot;,&quot;good&quot;], list2 = [&quot;sad&quot;,&quot;happy&quot;,&quot;good&quot;]\n<strong>Output:</strong> [&quot;sad&quot;,&quot;happy&quot;]\n<strong>Explanation:</strong> There are three common strings:\n&quot;happy&quot; with index sum = (0 + 1) = 1.\n&quot;sad&quot; with index sum = (1 + 0) = 1.\n&quot;good&quot; with index sum = (2 + 2) = 4.\nThe strings with the least index sum are &quot;sad&quot; and &quot;happy&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= list1.length, list2.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= list1[i].length, list2[i].length &lt;= 30</code></li>\n\t<li><code>list1[i]</code> and <code>list2[i]</code> consist of spaces <code>&#39; &#39;</code> and English letters.</li>\n\t<li>All the strings of <code>list1</code> are <strong>unique</strong>.</li>\n\t<li>All the strings of <code>list2</code> are <strong>unique</strong>.</li>\n\t<li>There is at least a common string between <code>list1</code> and <code>list2</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findRestaurant\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"list1\",\r\n      \"type\": \"string[]\"\r\n    },\r\n    {\r\n      \"name\": \"list2\",\r\n      \"type\": \"string[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string[]\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"312.3K\", \"totalSubmission\": \"523.8K\", \"totalAcceptedRaw\": 312260, \"totalSubmissionRaw\": 523770, \"acRate\": \"59.6%\"}",
+  "likes": 2111,
+  "dislikes": 416,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Intersection of Two Linked Lists\", \"titleSlug\": \"intersection-of-two-linked-lists\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"Shogun\",\"Tapioca Express\",\"Burger King\",\"KFC\"]\n[\"Piatti\",\"The Grill at Torrey Pines\",\"Hungry Hunter Steakhouse\",\"Shogun\"]",
+    "[\"Shogun\",\"Tapioca Express\",\"Burger King\",\"KFC\"]\n[\"KFC\",\"Shogun\",\"Burger King\"]",
+    "[\"happy\",\"sad\",\"good\"]\n[\"sad\",\"happy\",\"good\"]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"yelp\", \"name\": \"Yelp\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> findRestaurant(vector<string>& list1, vector<string>& list2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String[] findRestaurant(String[] list1, String[] list2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findRestaurant(self, list1: List[str], list2: List[str]) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findRestaurant(self, list1, list2):\n        \"\"\"\n        :type list1: List[str]\n        :type list2: List[str]\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} list1\n * @param {string[]} list2\n * @return {string[]}\n */\nvar findRestaurant = function(list1, list2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findRestaurant(list1: string[], list2: string[]): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string[] FindRestaurant(string[] list1, string[] list2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** findRestaurant(char** list1, int list1Size, char** list2, int list2Size, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findRestaurant(list1 []string, list2 []string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findRestaurant(list1: Array<String>, list2: Array<String>): Array<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findRestaurant(_ list1: [String], _ list2: [String]) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_restaurant(list1: Vec<String>, list2: Vec<String>) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} list1\n# @param {String[]} list2\n# @return {String[]}\ndef find_restaurant(list1, list2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $list1\n     * @param String[] $list2\n     * @return String[]\n     */\n    function findRestaurant($list1, $list2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> findRestaurant(List<String> list1, List<String> list2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findRestaurant(list1: Array[String], list2: Array[String]): Array[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_restaurant(list1 :: [String.t], list2 :: [String.t]) :: [String.t]\n  def find_restaurant(list1, list2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_restaurant(List1 :: [unicode:unicode_binary()], List2 :: [unicode:unicode_binary()]) -> [unicode:unicode_binary()].\nfind_restaurant(List1, List2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-restaurant list1 list2)\n  (-> (listof string?) (listof string?) (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "147",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach #1 Using HashMap [Accepted]\n\nIn this approach, we compare every string in $$list1$$ and $$list2$$ by traversing over the whole list $$list2$$ for every string chosen from $$list1$$. We make use of a hashmap $$map$$, which contains elements of the form $$(sum : list_{sum})$$. Here, $$sum$$ refers to the sum of indices of matching elements and $$list_{sum}$$ refers to the list of matching strings whose indices' sum equals $$sum$$. \n\nThus, while doing the comparisons, whenever a match between a string at $$i^{th}$$ index of $$list1$$ and $$j^{th}$$ index of $$list2$$ is found, we make an entry in the $$map$$ corresponding to the sum $$i + j$$, if this entry isn't already present. If an entry with this sum already exists, we need to keep a track of all the strings which lead to the same index sum. Thus, we append the current string to the list of strings corresponding to sum $$i + j$$.\n\nAt the end, we traverse over the keys of the $$map$$ and find out the list of strings corresponding to the key reprsenting the minimum sum.\n\n<iframe src=\"https://leetcode.com/playground/Rxg7wbHW/shared\" frameBorder=\"0\" name=\"Rxg7wbHW\" width=\"100%\" height=\"394\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(l_1*l_2*x)$$. Every item of $$list1$$ is compared with all the items of $$list2$$. $$l_1$$ and $$l_2$$ are the lengths of $$list1$$ and $$list2$$ respectively. And $$x$$ refers to average string length.\n\n* Space complexity : $$O(l_1*l_2*x)$$. In worst case all items of $$list1$$ and $$list2$$ are same. In that case, hashmap size grows upto $$l_1*l_2*x$$, where $$x$$ refers to average string length.\n\n---\n### Approach #2 Without Using HashMap [Accepted]\n\n**Algorithm**\n\nAnother method could be to traverse over the various $$sum$$(index sum) values and determine if any such string exists in $$list1$$ and $$list2$$ such that the sum of its indices in the two lists equals $$sum$$. \n\nNow, we know that the value of index sum, $$sum$$ could range from 0 to $$m + n - 1$$. Here, $$m$$ and $$n$$ refer to the length of lists $$list1$$ and $$list2$$ respectively. Thus, we choose every value of $$sum$$ in ascending order. For every $$sum$$ chosen, we iterate over $$list1$$. Suppose, currently the string at $$i^{th}$$ index in $$list1$$ is being considered. Now, in order for the index sum $$sum$$ to be the one corresponding to matching strings in $$list1$$ and $$list2$$, the string at index $$j$$ in $$list2$$ should match the string at index $$i$$ in $$list1$$, such that $$sum = i + j$$.\n\nOr, stating in other terms, the string at index $$j$$ in $$list2$$ should be equal to the string at index $$i$$ in $$list1$$, such that $$j = sum - i$$. Thus, for a particular $$sum$$ and $$i$$(from $$list1$$), we can directly determine that we need to check the element at index $$ j= sum - i$$ in $$list2$$, instead of traversing over the whole $$list2$$. \n\nDoing such checks/comparisons, iterate over all the indices of $$list1$$ for every $$sum$$ value chosen. Whenver a match occurs between $$list1$$ and $$list2$$, we put the matching string in a list $$res$$. \n\nWe do the same process of checking the strings for all the  values of $$sum$$ in ascending order. After completing every iteration over $$list1$$ for a particular $$sum$$, we check if the $$res$$ list is empty or not. If it is empty, we need to continue the process with the next $$sum$$ value considered. If not, the current $$res$$ gives the required list with minimum index sum. This is because we are already considering the index sum values in ascending order. So, the first list to be found is the required resultant list.\n\nThe following example depicts the process:\n\n!?!../Documents/599_Min_Index_Sum.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/HhLorCYq/shared\" frameBorder=\"0\" name=\"HhLorCYq\" width=\"100%\" height=\"309\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O((l_1+l_2)^2*x)$$. There are two nested loops upto $$l_1+l_2$$ and string comparison takes $$x$$ time. Here, $$x$$ refers to the average string length.\n\n* Space complexity : $$O(r*x)$$. $$res$$ list is used to store the result. Assuming $$r$$ is the length of $$res$$.\n\n---\n### Approach #3 Using HashMap (linear) [Accepted]\n\nWe make use of a HashMap to solve the given problem in a different way in this approach. Firstly, we traverse over the whole $$list1$$ and create an entry for each element of $$list1$$ in a HashMap $$map$$, of the form $$(list[i], i)$$. Here, $$i$$ refers to the index of the $$i^{th}$$ element, and $$list[i]$$ is the $$i^{th}$$ element itself. Thus, we create a mapping from the elements of $$list1$$ to their indices.\n\nNow, we traverse over $$list2$$. For every element ,$$list2[j]$$, of $$list2$$ encountered, we check if the same element already exists as a key in the $$map$$. If so, it means that the element exists in both $$list1$$ and $$list2$$. Thus, we find out the sum of indices corresponding to this element in the two lists, given by $sum=map.get(list2[j])+j$. If this $sum$ is less than the minimum sum obtained till now, we update the resultant list to be returned, $$res$$, with the element $$list2[j]$$ as the only entry in it. \n\nIf the $$sum$$ is equal to the minimum sum obtained till now, we put an extra entry corresponding to the element $$list2[j]$$ in the $$res$$ list.\n\nBelow code is inspired by [@cloud.runner](http://leetcode.com/cloud.runner)\n\n<iframe src=\"https://leetcode.com/playground/FatTyfy6/shared\" frameBorder=\"0\" name=\"FatTyfy6\" width=\"100%\" height=\"411\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(l_1+l_2)$$. Every item of $$list2$$ is checked in a map of $$list1$$. $$l_1$$ and $$l_2$$ are the lengths of $$list1$$ and $$list2$$ respectively.\n\n* Space complexity : $$O(l_1*x)$$. hashmap size grows upto $$l_1*x$$, where $$x$$ refers to average string length.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

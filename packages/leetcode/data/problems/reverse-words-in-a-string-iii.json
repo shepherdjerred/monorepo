@@ -1,0 +1,133 @@
+{
+  "questionId": "557",
+  "questionFrontendId": "557",
+  "title": "Reverse Words in a String III",
+  "titleSlug": "reverse-words-in-a-string-iii",
+  "difficulty": "Easy",
+  "content": "<p>Given a string <code>s</code>, reverse the order of characters in each word within a sentence while still preserving whitespace and initial word order.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;Let&#39;s take LeetCode contest&quot;\n<strong>Output:</strong> &quot;s&#39;teL ekat edoCteeL tsetnoc&quot;\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;Mr Ding&quot;\n<strong>Output:</strong> &quot;rM gniD&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>s</code> contains printable <strong>ASCII</strong> characters.</li>\n\t<li><code>s</code> does not contain any leading or trailing spaces.</li>\n\t<li>There is <strong>at least one</strong> word in <code>s</code>.</li>\n\t<li>All the words in <code>s</code> are separated by a single space.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"reverseWords\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"1.1M\", \"totalSubmission\": \"1.3M\", \"totalAcceptedRaw\": 1125099, \"totalSubmissionRaw\": 1339996, \"acRate\": \"84.0%\"}",
+  "likes": 6215,
+  "dislikes": 256,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Reverse String II\", \"titleSlug\": \"reverse-string-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"Let's take LeetCode contest\"",
+    "\"Mr Ding\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"zappos\", \"name\": \"Zappos\"}]}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string reverseWords(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String reverseWords(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def reverseWords(self, s: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def reverseWords(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {string}\n */\nvar reverseWords = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function reverseWords(s: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string ReverseWords(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* reverseWords(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func reverseWords(s string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun reverseWords(s: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func reverseWords(_ s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn reverse_words(s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {String}\ndef reverse_words(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return String\n     */\n    function reverseWords($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String reverseWords(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def reverseWords(s: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec reverse_words(s :: String.t) :: String.t\n  def reverse_words(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec reverse_words(S :: unicode:unicode_binary()) -> unicode:unicode_binary().\nreverse_words(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (reverse-words s)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1472",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nThe problem is a variation of similar reverse string problems, [Reverse Words In a String](https://leetcode.com/problems/reverse-words-in-a-string/) and [Reverse Words In String II](https://leetcode.com/problems/reverse-words-in-a-string-ii/).\n\nIn the first one, we had to reverse all characters, and in the second variation, we had to reverse the order of words. In this problem, we have to reverse the characters of each word in the sentences.\n\n---\n### Approach 1: Traverse and Reverse each character one by one\n\n**Intuition**\n\nTo solve the problem let's look at the example carefully,\n```\nInput: \"Let's take LeetCode contest\"`\n\nOutput: \"s'teL ekat edoCteeL tsetnoc\"\n```\nThere are a few observations here,\n- The characters of each word in the string are reversed, but the order of words remains the same.\n\n   For example, in the input, the word `Let's` is the first word in the string. In the output, the characters in the word `Let's` are reversed to `s'teL`. But it is still at the first position in the string.\nSimilarly the second word `take` is reversed as `ekat` and placed at the same second position in the output string.\n\n\n- The words in the string are separated by a space character. So we can say that to build the output string, we must extract and reverse the substring between 2 consecutive space characters.\n\n  ![Second Observation Illustration](../Figures/557/second_observation.png)\n\nUsing this intuition, let's understand how to implement this problem.\n\n**Algorithm**\n\nBy analyzing the above two key observations, we can derive the following algorithm,\n-  Find the starting and ending position of each word in the string.\n\n   As a space character is a separator for each word, we are finding the substrings having a space character before its first character and after its last character.\n   > Note: Take care of 2 edge cases here, the first word does not have a space before its first character. Similarly, the last word does not have a space after its last character.\n\n- For each identified word, reverse the characters of the word one by one.\n\n*Steps*\n\n Traverse the string from left to right, starting from $$0^{th}$$ to $$n^{th}$$ index. As we traverse, the pointer `strIndex` tracks each character.\nThe implementation can be divided into 2 steps,\n\n1. Find the start and end index of every word\n\n    - Traverse over the string until the current pointer `strIndex` points to a space character.\n\n    - As `strIndex` points to the space character, the index `strIndex - 1` points to the last character of the current word.\n\n      ![Current Pointer Traversal](../Figures/557/current_pointer_traversal.png)\n\n   - Let's understand how to find the first character of the word,\n     - For the first word, its first character is always the first character of the string.\n     - For the remaining words, the first character would be the character after the last space character.\n\n        Thus, to mark the start of the current character, we must keep track of the last found space character. Let's use a variable `lastSpaceIndex`. The variable will be initialized to `-1`  and updated every time we find the next space character.\n\n       ![Mark Start And End Index](../Figures/557/start_and_end_index.png)\n\n        The first character of the current word is thus `lastSpaceIndex + 1`.\n\n2. Reverse the characters within the word\n\n   -  Now that we have the first and last index of the current word, we have to reverse the current word and append it to the result string.\n\n   -  To reverse the current word, we can traverse it in reverse order i.e start from the end index `strIndex - 1` to the first index i.e `lastSpaceIndex + 1`, appending each character one by one to the result string.\n\n   - To separate the current word from the next, append a space character (\" \") at the end after the reverse operation. However, for the last word, this step is skipped.\n\nRepeat 1 and 2 for all the words in the string.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/FhDtNBbw/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"FhDtNBbw\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the length of input string `s`.\n\nTime Complexity: $$\\mathcal{O}(N)$$ Every character in the string is traversed twice. First, to find the end of the current word, and second to reverse the word and append it to the result. Thus the time complexity is, $$\\mathcal{O}(N + N) = \\mathcal{O}(N)$$.\n\nSpace Complexity: $$\\mathcal{O}(1)$$ We use constant extra space to track the last space index. You could also argue that we are using $$O(n)$$ space to build the output string (we normally don't count the output as part of the space complexity, but in this case we are temporarily using some space to build it).\n\n---\n\n### Approach 2: Using Two Pointers\n\n**Intuition**\n\nIn the previous approach, the words were reversed by copying every character into another string one by one in reverse order. This operation takes $$\\mathcal{O}(N)$$ time, where `N` is the length of the word.\n\nHowever, there is another optimal approach to reverse the string in $$\\mathcal{O}(N/2)$$ time in place using two pointer approach.  \n\nIn this solution, we will traverse the string and find every word's start and end index. Then, we will reverse each word using the two-pointer approach.\n\n*Approach to reverse a string using a two-pointer approach*\n\n1. Find the start and end index of every word given by `startIndex` and `endIndex`.\n2. Swap the characters in the word pointed by `startIndex` and `endIndex`.\n3. Increment `startIndex` by 1 and decrement `endIndex` by 1.\n4. While `startIndex < endIndex`, repeat steps 2 and 3.\n\n     ![Two Pointer Approach To Reverse String](../Figures/557/2_pointer_approach.png)\n\nHere's the code snippet for reversing the string stored in character array `chArray` using two pointer approach.\n\n```java\nwhile (startIndex < endIndex) {\n        char temp = chArray[startIndex];\n        chArray[startIndex] = chArray[endIndex];\n        chArray[endIndex] = temp;\n        startIndex++;\n        endIndex--;\n}\n```\n\n**Algorithm**\n\n- The variable `lastSpaceIndex` stores the index of space character last found. Initialize its value to `-1`.\n\n- Traverse over each character of the string from $$0^{th}$$ index to $$n^{th}$$ index using pointer `strIndex`.\n- As `strIndex` points to a space character, mark the start and end index of the current word in the variables `startIndex` and `endIndex` as,\n\n  - The `startIndex` of the current word is the value of `lastSpaceIndex + 1`.\n  - The `endIndex` of the current word is the value of `strIndex - 1`.\n\n- Reverse the characters in the current word using two pointer approach.\n\n- Update the `lastSpaceIndex` to the value of `strIndex` i.e the index of current space character. The next iteration will refer to this variable to identify the start position of the next word.\n\n-  Repeat the process for all the words in the string.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/btY3HPsv/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"btY3HPsv\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the length of string `s`.\n* Time Complexity: $$\\mathcal{O}(N)$$ The outer loop iterates over $$\\text{N}$$ characters to find the `start` and `end` index of every word. The algorithm to reverse the word also iterates $$\\text{N}$$ times to perform $$\\text{N/2}$$ swaps. Thus, the time complexity is $$\\mathcal{O}(N + N) = {O}(N)$$.\n\n* Space Complexity: $$\\mathcal{O}(1)$$ We use constant extra space to track the last space index. You could also argue that we are using $$O(n)$$ space to build the output string (we normally don't count the output as part of the space complexity, but in this case we are temporarily using some space to build it).\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

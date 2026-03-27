@@ -1,0 +1,138 @@
+{
+  "questionId": "291",
+  "questionFrontendId": "291",
+  "title": "Word Pattern II",
+  "titleSlug": "word-pattern-ii",
+  "difficulty": "Medium",
+  "content": "<p>Given a <code>pattern</code> and a string <code>s</code>, return <code>true</code><em> if </em><code>s</code><em> <strong>matches</strong> the </em><code>pattern</code><em>.</em></p>\n\n<p>A string <code>s</code> <b>matches</b> a <code>pattern</code> if there is some <strong>bijective mapping</strong> of single characters to <strong>non-empty</strong> strings such that if each character in <code>pattern</code> is replaced by the string it maps to, then the resulting string is <code>s</code>. A <strong>bijective mapping</strong> means that no two characters map to the same string, and no character maps to two different strings.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> pattern = &quot;abab&quot;, s = &quot;redblueredblue&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> One possible mapping is as follows:\n&#39;a&#39; -&gt; &quot;red&quot;\n&#39;b&#39; -&gt; &quot;blue&quot;</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> pattern = &quot;aaaa&quot;, s = &quot;asdasdasdasd&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> One possible mapping is as follows:\n&#39;a&#39; -&gt; &quot;asd&quot;\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> pattern = &quot;aabb&quot;, s = &quot;xyzabcxzyabc&quot;\n<strong>Output:</strong> false\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= pattern.length, s.length &lt;= 20</code></li>\n\t<li><code>pattern</code> and <code>s</code> consist of only lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"wordPatternMatch\",\n  \"params\": [\n    {\n      \"name\": \"pattern\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"83.5K\", \"totalSubmission\": \"171.1K\", \"totalAcceptedRaw\": 83539, \"totalSubmissionRaw\": 171136, \"acRate\": \"48.8%\"}",
+  "likes": 943,
+  "dislikes": 77,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Word Pattern\", \"titleSlug\": \"word-pattern\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abab\"\n\"redblueredblue\"",
+    "\"aaaa\"\n\"asdasdasdasd\"",
+    "\"aabb\"\n\"xyzabcxzyabc\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"dropbox\", \"name\": \"Dropbox\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool wordPatternMatch(string pattern, string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean wordPatternMatch(String pattern, String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def wordPatternMatch(self, pattern: str, s: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def wordPatternMatch(self, pattern, s):\n        \"\"\"\n        :type pattern: str\n        :type s: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} pattern\n * @param {string} s\n * @return {boolean}\n */\nvar wordPatternMatch = function(pattern, s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function wordPatternMatch(pattern: string, s: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool WordPatternMatch(string pattern, string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool wordPatternMatch(char* pattern, char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func wordPatternMatch(pattern string, s string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun wordPatternMatch(pattern: String, s: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func wordPatternMatch(_ pattern: String, _ s: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn word_pattern_match(pattern: String, s: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} pattern\n# @param {String} s\n# @return {Boolean}\ndef word_pattern_match(pattern, s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $pattern\n     * @param String $s\n     * @return Boolean\n     */\n    function wordPatternMatch($pattern, $s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool wordPatternMatch(String pattern, String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def wordPatternMatch(pattern: String, s: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec word_pattern_match(pattern :: String.t, s :: String.t) :: boolean\n  def word_pattern_match(pattern, s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec word_pattern_match(Pattern :: unicode:unicode_binary(), S :: unicode:unicode_binary()) -> boolean().\nword_pattern_match(Pattern, S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (word-pattern-match pattern s)\n  (-> string? string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2317",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nOur objective is to return `true` if `s` matches the `pattern`.\n\nWe can think of the pattern as a code, where each character in the `pattern` is a symbol that corresponds to a substring of `s`.\n\n> **Input:** pattern = \"abab\", s = \"redblueredblue\"\n\n| Symbol | Value |\n|:------:|:-----:|\n|  `'a'` | \"red\" |\n|  `'b'` | \"blue\"|\n\nIf we can build `s` using the code, then `s` matches the `pattern`.\n\nUnderstanding test cases that fail can help us better understand the problem.\n\n> **Input:** pattern = \"ab\", s = \"aa\"\n> **Output:** false\n\n| Symbol | Value 1 | Value 2 |\n|:------:|:-------:|:-------:|\n|  `'a'` |   \"a\"   |   \"aa\"  |\n|  `'b'` |   \"a\"   |   \"\"    |\n\nNeither of the value columns in the above table are valid mappings because each symbol must be mapped to a **unique non-empty** substring of `s`.\n\nOne challenge of this problem is that we are unsure of the number of characters in `s` that correspond to each symbol in the `pattern`. We may need to explore many possibilities before finding a valid mapping or determining that none exists.\n\n---\n\n### Approach 1: Hash Table and Backtracking\n\n#### Intuition\n\nThe code table in the overview looks like a hash table. We can utilize a hash map to store `(symbol, word)` mappings, where a character from `pattern` is the key and a substring of `s` is the value.\n\nEach symbol must be mapped to a unique `word`, so we will also use a hash set to track the `word` values we have stored already.\n\nThe brute force method of solving the problem is to generate all of the possible mappings and then test each one to see if it is valid. This approach would be inefficient, leading to an exponential time complexity.\n\nHow can we reduce the search space?\n\nLet's say we have created the following mapping for the below example:\n\n> **Input:** pattern = \"abab\", s = \"redblueredblue\"\n\n|  Key  | Value |\n|:-----:|:-----:|\n| `'a'` | \"re\"  |\n| `'b'` | \"db\"  |\n\nWhen we reach the next character, `\"l\"`, in `s`, the current symbol is `'a'`. Since `'a'` maps to `\"re\"` according to our mapping, we expect to see `\"re\"` in `s` at that position. However, we find `\"l\"` instead. This mismatch indicates that our current mapping isn't valid for the entire string `s`, and thus, we do not need to check the rest of the string. \n\nNow, we could abandon the current mapping and start over, or we could backtrack to the last point where the mapping was valid to explore other possibilities.\n\n> If you are not familiar with backtracking, we recommend you read our **[Backtracking Explore Card](https://leetcode.com/explore/learn/card/recursion-ii/472/backtracking/2654/)**.\n\nWe will create a recursive function, `isMatch`, that uses backtracking to determine whether `s` matches the `pattern`. The function uses a pointer, `pIndex` to traverse the `pattern` and a pointer `sIndex` to track the current index of `s`.\n\nThe base case is when we have processed the whole pattern. If we have also processed the entirety of `s`, the `pattern` matches `s`, so we return `true`. Otherwise, there are extra characters of `s`, so we return `false`.\n\nFor the recursive case, we start by saving the current character in the pattern as `symbol`.\n\nIf we have encountered the `symbol` before, we check whether the corresponding `word` matches with the next characters in `s`. If so, we move on to the next character in the `pattern` with a recursive call to `isMatch`.\n\nIf the `symbol` is the first occurrence in `pattern`, we need to generate the possible mappings from `symbol` to different substrings of `s`.\n\n> **Input:** pattern = \"abac\", s = \"aabbaac\"\n\nState: `pIndex = 1` and `sIndex = 2`\n\nThe current `symbol` is `b`, which is its first occurrence. The possible mappings are:\n\n```\ns[2] = \"b\"\ns[2:3] = \"bb\"\ns[2:4] = \"bba\"\ns[2:5] = \"bbaa\"\ns[2:6] = \"bbacc\"\n```\n\nThe possible `word` mappings for the `symbol` are the set of substrings that start at `sIndex` and end anywhere between `sIndex` and the last index of `s`. Let such a substring be termed `newWord`. If we find that we have encountered `newWord` before, we continue with the next iteration because each `symbol` to `word` mapping must be unique. Otherwise, we add `newWord` to the hash map and hash set. Then, we call `isMatch` with the next character in the `pattern`. Finally, we backtrack by removing `newWord` from the hash map and hash set to explore other possible mappings.\n\n#### Algorithm\n\n1. Create a hash map `symbolMap` that maps the key, a character from `pattern`, to the value, a substring of `s`.\n2. Create a hash set `wordSet` that stores the unique substrings of `s` that have been mapped to a `symbol`.\n3. Define a recursive function `isMatch` that takes an index in `s`, `sIndex`, and an index in `pattern`, `pIndex` as parameters. The function determines whether `s` matches a given `pattern`. Pass `s` and `pattern` as parameters to the function if needed because of scoping.\n    - Base case: `pIndex` equals the length of `pattern`. Return `true` if `sIndex` equals the length of `s`; `s` matches the pattern. Otherwise, return `false`.\n    - Set `symbol` to `pattern[pIndex]`, the next character in the pattern.\n    - If `symbol` is associated with a substring of `s`, save the substring as `word`, and check if the next characters in `s` match `word`.\n        - If the characters don't match, return `false`.\n        - If they do match, call `isMatch` for the next character in `pattern`.\n    - Otherwise, `symbol` is a new `pattern` character. Try mapping `symbol` to new substrings of `s`, starting with the substring consisting of `s[sIndex]` and extending until the substring reaches the end of `s`.\n        - Save the current substring as `newWord`.\n        - If `newWord` already exists in `wordSet`, continue.\n        - Otherwise, add `newWord` to `wordSet` and to `symbolMap` with the `symbol`.\n        - Call `isMatch` for the next character in `pattern`. If the result is `true`, return `true`.\n        - Remove `newWord` from the `wordSet` and the `symbolMap`.\n4. Call `isMatch` with `sIndex` and `pIndex` as `0` and return the result. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3cwrhJfB/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3cwrhJfB\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `s` and $p$ be the length of `pattern`.\n\n* Time complexity: $O(p \\cdot n^3)$\n\n    The `isMatch` function is called for each character in `pattern` for each `word` that can be formed from substrings of `s`.\n\n    Looking up a `symbol` in the hash map or `word` in the hash set takes $O(1)$ in the average case.\n\n    We generate $n$ substrings of length $1$, $n - 1$ substrings of length $2$, $n - 2$ substrings of length $3$, and so on. We can represent the number of substrings mathematically as $n + (n - 1) + (n - 2) + \\dots + (n - (n - 1))$. This sum can be calculated by the formula $\\frac{n(n + 1)}{2}$, which is a quadratic complexity, $O(n^2)$.\n\n    The function will be called $p \\cdot \\frac{n(n + 1)}{2}$ times. Splicing each substring takes $O(n)$ time, so the overall time complexity is $O(p \\cdot n^3)$.\n\n\n* Space complexity: $O(p + n)$\n\n    `symbolMap` can store a `(symbol, word)` mapping for each unique `symbol` in `pattern`. The set of symbols is the English alphabet, which contains $26$ letters. The length of the substrings of `s` combined is $n$, so it can use up to $O(26 + n)$ space, which can be simplified to $O(n)$.\n\n    `wordSet` stores a `word` for each unique `symbol` in the `symbolMap`. It will use the same amount of space as `symbolMap`, $O(n)$.\n\n    > Note: The number of letters in the alphabet is considered constant, but for this problem, it is not trivial because $p$ and $n$ are constrained to $20$. For inputs where $p < 26$, when every character of `pattern` is unique, we can represent the space required by the hash map and hash set as $O(p + n)$.\n\n    We recursively check each character in `pattern`, so the depth of the recursive call stack can grow up to $p$, requiring $O(p)$ space.\n\n    Therefore, the overall space complexity is $O(p + 2n)$, which we can simplify to $O(p + n)$\n\n---\n\n### Approach 2: Optimized Backtracking\n\n#### Intuition\n\nAn alternative to using a map is an array, which provides constant time complexity for both insertion and retrieval operations. This is faster than the worst-case time complexity of hashmap operations. However, this advantage comes with a trade-off: arrays are only suitable when the range of values is relatively small and can be mapped directly to array indices. Since the set of symbols are the letters in the English alphabet, we can utilize an array.\n\nAssuming that `s` matches the `pattern`, then there are the same number of substrings in `s` as there are characters in `pattern`. We can leverage this observation to further narrow the search space.\n\nThe above approach assumes that for any character `symbol` of the `pattern`, the possible set of corresponding substrings includes all substrings that start with `sIndex` and stop at any point until the end of `s`. We can reason that if the `symbol` is not the last character in the `pattern`, then the corresponding substring must end before the last index of `s` because the remaining characters in the `pattern` also need to be mapped to substrings of `s`.\n\nThe basic idea of this optimization is to peek ahead and check if the `pattern` has additional characters. If so, we count how many characters at the end of `s` the remaining characters in `pattern` must use, and we only explore the new possible substrings for the `symbol` that leave room in `s` for the remaining characters in `pattern`.\n\nThe following example demonstrates this idea.\n\n> **Input:** pattern = \"abac\", s = \"aabbaac\"\n\nState: `pIndex = 1` and `sIndex = 2`\n\n`symbols`:\n| Index  |   0  | 1 | 2 | ... | 25|\n|:------:|:----:|:-:|:-:|:---:|:-:|\n| Letter |  'a' |'b'|'c'| ... |'z'|\n|  Word  | \"aa\" |\"\" |\"\" | ... |\"\" |\n\nThe second character of the `pattern`, `'b'`, is a new `symbol`. How many indices at the end of `s` will be used by the remaining characters in the `pattern`?\n\n- `'a'` is the next symbol in the `pattern`. It maps to `\"aa\"`, so it will take `2` spots.\n- `'c'` is the last symbol in the `pattern`. We don't know what `word` it maps to, but it will require at least `1` spot.\n\nThere are `5` more indices left in `s` total and the remaining characters in `pattern` will fill at least `1 + 2 = 3` spots. `5 - 3 = 2` is the maximum length of the new word.\n\nSo, the `word` substrings we test for symbol `'b'` are:\n\n```\ns[2] = \"b\"\ns[2:3] = \"bb\"\n```\n\nWe can visualize `s` as `\"aa_aax\"`, where `\"aa\"` represents the known mapping of `'a'`, `x` represents a spot for the unknown mapping of `'c'`, and the empty space represents the `word` that corresponds to symbol `'b'`.\n\nWhen we encounter a new `symbol`, before generating the new words, we count how many indices of `s` must be filled by the remaining characters in the `pattern`, which we store in `filledSpots`.\n\nWe compute `filledSpots` by iterating through the symbols from the next to the last index of `pattern` and adding the length of the corresponding `word` for each of the characters remaining in `pattern`. If the symbol is new, we add `1`, because the `word` will consist of at least one index of `s`.\n\nThen, we can identify the last possible ending index in `s` of a new word that could correspond to a given `symbol` as `s.length() - filledSpots`, which we use to narrow the search space when we generate new words.\n\n#### Algorithm\n\n1. Create an array `symbols` of size `26` that maps a character from `pattern` to a substring of `s`. Each index corresponds to a letter of the alphabet.\n2. Create a hash set `wordSet` that stores the unique substrings of `s` that have been mapped to a symbol.\n3. Define a recursive function `isMatch` that takes an index in `s`, `sIndex`, and an index in `pattern`, `pIndex` as parameters. The function determines whether `s` matches a given `pattern`.\n    - Base case: `pIndex` equals the length of `pattern`. Return `true` if `sIndex` equals the length of `s`; `s` matches the pattern. Otherwise, return `false`.\n    - Set `symbol` to `pattern[pIndex]`, the next character in `pattern`.\n    - If `symbol` is associated with a substring of `s`, save the substring as `word`, and check if the next characters in `s` match `word`.\n        - If the characters don't match, return `false`.\n        - If they do match, call `isMatch` for the next character in `pattern`.\n    - Otherwise, `symbol` is a new `pattern` character. Find the last possible end index in `s` of a new word that could correspond to `sybmol`.\n      - Set a variable `filledSpots` to `0`.\n      - Iterate from `pIndex + 1` to the last character of `pattern`. If the symbol `p` is associated with a `word`, add the length of the `word` to `filledSpots`. Otherwise, add `1` to `filledSpots`.\n    - Try mapping `symbol` to new substrings of `s`, starting with the substring consisting of `s[sIndex]` and extending until the substring reaches the last possible end index of the new word, which is `s.length() - filledSpots`.\n        - Save the current substring as `newWord`.\n        - If `newWord` already exists in `wordSet`, continue.\n        - Otherwise, add `newWord` to `wordSet` and `symbols` with `symbol`.\n        - Call `isMatch` for the next character in `pattern`. If the result is `true`, return `true`.\n        - Remove `newWord` from the `wordSet` and the `symbols` array.\n4. Call `isMatch` with the starting indices in `s` and the `pattern` as `0` and return the result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/m6EfZMET/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"m6EfZMET\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `s` and $p$ be the length of `pattern`.\n\n* Time complexity: $O(p \\cdot n \\cdot (n - p)^2)$\n\n    The `isMatch` function is called for each character in `pattern` for each `word` that can be formed from substrings of `s`.\n    \n    We only generate substrings that leave space for the rest of the characters in `pattern`. We generate $(n - p + 1) + 1$ substrings of length $1$, $(n - p + 1)$ substrings of length $2$, $(n - p + 1) - 1$ substrings of length $3$, and so on. We can calculate the number of substrings we generate as $\\frac{(n - p + 1)((n - p + 1) + 1)}{2} + (n - p + 1)$, which has a quadratic complexity of $O((n - p)^2)$.\n\n    The `isMatch` function will be called $p \\cdot (n - p)^2$ times. Splicing each substring takes $O(n)$, so the overall time complexity is $O(p \\cdot n \\cdot (n - p)^2)$.\n\n\n* Space complexity: $O(p + n)$\n\n    The `symbols` array can store a substring for each letter in the English alphabet. It stores up to $26$ substrings with a combined length of $n$, so it requires $O(26 + n)$ space, which can be simplified to $O(n)$.\n\n    The `wordSet` can store a `word` for each unique symbol in `pattern`. The combined length of the substrings is $n$, so it can use up to $O(26 + n)$ space, which is simplified to $O(n)$.\n\n    > Note: The number of letters in the alphabet is considered constant, but for this problem, it is not trivial because $p$ and $n$ are constrained to $20$. For inputs where $p < 26$, when every character of `pattern` is unique, we can represent the space required by the hash set as $O(p + n)$.\n\n    We recursively check each character in the `pattern` so the depth of the recursive call stack can grow up to $p$, requiring $O(p)$ space.\n\n    Therefore, the overall space complexity is $O(p + 2n)$, which we can simplify to $O(p + n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

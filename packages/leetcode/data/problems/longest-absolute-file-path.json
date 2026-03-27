@@ -1,0 +1,133 @@
+{
+  "questionId": "388",
+  "questionFrontendId": "388",
+  "title": "Longest Absolute File Path",
+  "titleSlug": "longest-absolute-file-path",
+  "difficulty": "Medium",
+  "content": "<p>Suppose we have a file system that stores both files and directories. An example of one system is represented in the following picture:</p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/28/mdir.jpg\" style=\"width: 681px; height: 322px;\" /></p>\n\n<p>Here, we have <code>dir</code> as the only directory in the root. <code>dir</code> contains two subdirectories, <code>subdir1</code> and <code>subdir2</code>. <code>subdir1</code> contains a file <code>file1.ext</code> and subdirectory <code>subsubdir1</code>. <code>subdir2</code> contains a subdirectory <code>subsubdir2</code>, which contains a file <code>file2.ext</code>.</p>\n\n<p>In text form, it looks like this (with ⟶ representing the tab character):</p>\n\n<pre>\ndir\n⟶ subdir1\n⟶ ⟶ file1.ext\n⟶ ⟶ subsubdir1\n⟶ subdir2\n⟶ ⟶ subsubdir2\n⟶ ⟶ ⟶ file2.ext\n</pre>\n\n<p>If we were to write this representation in code, it will look like this: <code>&quot;dir\\n\\tsubdir1\\n\\t\\tfile1.ext\\n\\t\\tsubsubdir1\\n\\tsubdir2\\n\\t\\tsubsubdir2\\n\\t\\t\\tfile2.ext&quot;</code>. Note that the <code>&#39;\\n&#39;</code> and <code>&#39;\\t&#39;</code> are the new-line and tab characters.</p>\n\n<p>Every file and directory has a unique <strong>absolute path</strong> in the file system, which is the order of directories that must be opened to reach the file/directory itself, all concatenated by <code>&#39;/&#39;s</code>. Using the above example, the <strong>absolute path</strong> to <code>file2.ext</code> is <code>&quot;dir/subdir2/subsubdir2/file2.ext&quot;</code>. Each directory name consists of letters, digits, and/or spaces. Each file name is of the form <code>name.extension</code>, where <code>name</code> and <code>extension</code> consist of letters, digits, and/or spaces.</p>\n\n<p>Given a string <code>input</code> representing the file system in the explained format, return <em>the length of the <strong>longest absolute path</strong> to a <strong>file</strong> in the abstracted file system</em>. If there is no file in the system, return <code>0</code>.</p>\n\n<p><strong>Note</strong> that the testcases are generated such that the file system is valid and no file or directory name has length 0.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/28/dir1.jpg\" style=\"width: 401px; height: 202px;\" />\n<pre>\n<strong>Input:</strong> input = &quot;dir\\n\\tsubdir1\\n\\tsubdir2\\n\\t\\tfile.ext&quot;\n<strong>Output:</strong> 20\n<strong>Explanation:</strong> We have only one file, and the absolute path is &quot;dir/subdir2/file.ext&quot; of length 20.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/08/28/dir2.jpg\" style=\"width: 641px; height: 322px;\" />\n<pre>\n<strong>Input:</strong> input = &quot;dir\\n\\tsubdir1\\n\\t\\tfile1.ext\\n\\t\\tsubsubdir1\\n\\tsubdir2\\n\\t\\tsubsubdir2\\n\\t\\t\\tfile2.ext&quot;\n<strong>Output:</strong> 32\n<strong>Explanation:</strong> We have two files:\n&quot;dir/subdir1/file1.ext&quot; of length 21\n&quot;dir/subdir2/subsubdir2/file2.ext&quot; of length 32.\nWe return 32 since it is the longest absolute path to a file.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> input = &quot;a&quot;\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> We do not have any files, just a single directory named &quot;a&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= input.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>input</code> may contain lowercase or uppercase English letters, a new line character <code>&#39;\\n&#39;</code>, a tab character <code>&#39;\\t&#39;</code>, a dot <code>&#39;.&#39;</code>, a space <code>&#39; &#39;</code>, and digits.</li>\n\t<li>All file and directory names have <strong>positive</strong> length.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"lengthLongestPath\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"input\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"182.5K\", \"totalSubmission\": \"370.2K\", \"totalAcceptedRaw\": 182480, \"totalSubmissionRaw\": 370195, \"acRate\": \"49.3%\"}",
+  "likes": 1390,
+  "dislikes": 2605,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"dir\\n\\tsubdir1\\n\\tsubdir2\\n\\t\\tfile.ext\"",
+    "\"dir\\n\\tsubdir1\\n\\t\\tfile1.ext\\n\\t\\tsubsubdir1\\n\\tsubdir2\\n\\t\\tsubsubdir2\\n\\t\\t\\tfile2.ext\"",
+    "\"a\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}]}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int lengthLongestPath(string input) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int lengthLongestPath(String input) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def lengthLongestPath(self, input: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def lengthLongestPath(self, input):\n        \"\"\"\n        :type input: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} input\n * @return {number}\n */\nvar lengthLongestPath = function(input) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function lengthLongestPath(input: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LengthLongestPath(string input) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int lengthLongestPath(char* input) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func lengthLongestPath(input string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun lengthLongestPath(input: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func lengthLongestPath(_ input: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn length_longest_path(input: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} input\n# @return {Integer}\ndef length_longest_path(input)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $input\n     * @return Integer\n     */\n    function lengthLongestPath($input) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int lengthLongestPath(String input) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def lengthLongestPath(input: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec length_longest_path(input :: String.t) :: integer\n  def length_longest_path(input) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec length_longest_path(Input :: unicode:unicode_binary()) -> integer().\nlength_longest_path(Input) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (length-longest-path input)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

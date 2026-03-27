@@ -1,0 +1,132 @@
+{
+  "questionId": "555",
+  "questionFrontendId": "555",
+  "title": "Split Concatenated Strings",
+  "titleSlug": "split-concatenated-strings",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array of strings <code>strs</code>. You could concatenate these strings together into a loop, where for each string, you could choose to reverse it or not. Among all the possible loops</p>\n\n<p>Return <em>the lexicographically largest string after cutting the loop, which will make the looped string into a regular one</em>.</p>\n\n<p>Specifically, to find the lexicographically largest string, you need to experience two phases:</p>\n\n<ol>\n\t<li>Concatenate all the strings into a loop, where you can reverse some strings or not and connect them in the same order as given.</li>\n\t<li>Cut and make one breakpoint in any place of the loop, which will make the looped string into a regular one starting from the character at the cutpoint.</li>\n</ol>\n\n<p>And your job is to find the lexicographically largest one among all the possible regular strings.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> strs = [&quot;abc&quot;,&quot;xyz&quot;]\n<strong>Output:</strong> &quot;zyxcba&quot;\n<strong>Explanation:</strong> You can get the looped string &quot;-abcxyz-&quot;, &quot;-abczyx-&quot;, &quot;-cbaxyz-&quot;, &quot;-cbazyx-&quot;, where &#39;-&#39; represents the looped status. \nThe answer string came from the fourth looped one, where you could cut from the middle character &#39;a&#39; and get &quot;zyxcba&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> strs = [&quot;abc&quot;]\n<strong>Output:</strong> &quot;cba&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= strs.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= strs[i].length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= sum(strs[i].length) &lt;= 1000</code></li>\n\t<li><code>strs[i]</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"splitLoopedString\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"strs\",\r\n      \"type\": \"string[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"7.5K\", \"totalSubmission\": \"17.2K\", \"totalAcceptedRaw\": 7507, \"totalSubmissionRaw\": 17227, \"acRate\": \"43.6%\"}",
+  "likes": 80,
+  "dislikes": 265,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"abc\",\"xyz\"]",
+    "[\"abc\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"alibaba\", \"name\": \"Alibaba\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string splitLoopedString(vector<string>& strs) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String splitLoopedString(String[] strs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def splitLoopedString(self, strs: List[str]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def splitLoopedString(self, strs):\n        \"\"\"\n        :type strs: List[str]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} strs\n * @return {string}\n */\nvar splitLoopedString = function(strs) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function splitLoopedString(strs: string[]): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string SplitLoopedString(string[] strs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* splitLoopedString(char** strs, int strsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func splitLoopedString(strs []string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun splitLoopedString(strs: Array<String>): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func splitLoopedString(_ strs: [String]) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn split_looped_string(strs: Vec<String>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} strs\n# @return {String}\ndef split_looped_string(strs)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $strs\n     * @return String\n     */\n    function splitLoopedString($strs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String splitLoopedString(List<String> strs) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def splitLoopedString(strs: Array[String]): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec split_looped_string(strs :: [String.t]) :: String.t\n  def split_looped_string(strs) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec split_looped_string(Strs :: [unicode:unicode_binary()]) -> unicode:unicode_binary().\nsplit_looped_string(Strs) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (split-looped-string strs)\n  (-> (listof string?) string?)\n  )"
+    }
+  ],
+  "solution": null
+}

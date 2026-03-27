@@ -1,0 +1,144 @@
+{
+  "questionId": "719",
+  "questionFrontendId": "719",
+  "title": "Find K-th Smallest Pair Distance",
+  "titleSlug": "find-k-th-smallest-pair-distance",
+  "difficulty": "Hard",
+  "content": "<p>The <strong>distance of a pair</strong> of integers <code>a</code> and <code>b</code> is defined as the absolute difference between <code>a</code> and <code>b</code>.</p>\n\n<p>Given an integer array <code>nums</code> and an integer <code>k</code>, return <em>the</em> <code>k<sup>th</sup></code> <em>smallest <strong>distance among all the pairs</strong></em> <code>nums[i]</code> <em>and</em> <code>nums[j]</code> <em>where</em> <code>0 &lt;= i &lt; j &lt; nums.length</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,3,1], k = 1\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> Here are all the pairs:\n(1,3) -&gt; 2\n(1,1) -&gt; 0\n(3,1) -&gt; 2\nThen the 1<sup>st</sup> smallest distance pair is (1,1), and its distance is 0.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,1,1], k = 2\n<strong>Output:</strong> 0\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,6,1], k = 3\n<strong>Output:</strong> 5\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums.length</code></li>\n\t<li><code>2 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 10<sup>6</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= n * (n - 1) / 2</code></li>\n</ul>\n",
+  "hints": [
+    "Binary search for the answer.  How can you check how many pairs have distance <= X?"
+  ],
+  "metaData": "{\r\n  \"name\": \"smallestDistancePair\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"k\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"211.3K\", \"totalSubmission\": \"455.3K\", \"totalAcceptedRaw\": 211345, \"totalSubmissionRaw\": 455284, \"acRate\": \"46.4%\"}",
+  "likes": 3930,
+  "dislikes": 125,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find K Pairs with Smallest Sums\", \"titleSlug\": \"find-k-pairs-with-smallest-sums\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Kth Smallest Element in a Sorted Matrix\", \"titleSlug\": \"kth-smallest-element-in-a-sorted-matrix\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find K Closest Elements\", \"titleSlug\": \"find-k-closest-elements\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Kth Smallest Number in Multiplication Table\", \"titleSlug\": \"kth-smallest-number-in-multiplication-table\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"K-th Smallest Prime Fraction\", \"titleSlug\": \"k-th-smallest-prime-fraction\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Median of the Uniqueness Array\", \"titleSlug\": \"find-the-median-of-the-uniqueness-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximize Score of Numbers in Ranges\", \"titleSlug\": \"maximize-score-of-numbers-in-ranges\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,1]\n1",
+    "[1,1,1]\n2",
+    "[1,6,1]\n3"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int smallestDistancePair(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int smallestDistancePair(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def smallestDistancePair(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def smallestDistancePair(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar smallestDistancePair = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function smallestDistancePair(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int SmallestDistancePair(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int smallestDistancePair(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func smallestDistancePair(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun smallestDistancePair(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func smallestDistancePair(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn smallest_distance_pair(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef smallest_distance_pair(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function smallestDistancePair($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int smallestDistancePair(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def smallestDistancePair(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec smallest_distance_pair(nums :: [integer], k :: integer) :: integer\n  def smallest_distance_pair(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec smallest_distance_pair(Nums :: [integer()], K :: integer()) -> integer().\nsmallest_distance_pair(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (smallest-distance-pair nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2404",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThe goal is to find the `k`-th smallest distance between any two different elements in an array `nums`. The distance between two elements `nums[i]` and `nums[j]` is defined as the absolute difference between their values, `|nums[i] - nums[j]|`. We only consider pairs where `i` is less than `j` to avoid counting the same pair twice.\n\nFor example:\n> **Input:** `nums = [1, 3, 1]`, `k = 1`\n> **Output:** `0`\n\nLet's look at all possible pairs of elements and their distances:\n\n1. Pair (1, 3):\n   - Distance: |1 - 3| = 2\n\n2. Pair (1, 1):\n   - Distance: |1 - 1| = 0\n\n3. Pair (3, 1):\n   - Distance: |3 - 1| = 2\n\nSo, the distances are `[2, 0, 2]`.\n\nTo find the `k`-th smallest distance, we sort these distances: `[0, 2, 2]`.\n\nSince `k = 1`, we need the 1st smallest distance, which is `0`.\n\nThus, the result is `0`.\n\nThe brute-force approach involves checking the distance for every possible pair of elements in the array and maintaining the `k` smallest distances using a heap. Specifically, we iterate over all pairs, calculate their absolute distances, and use a max-heap to keep track of the `k` smallest distances. If the heap size exceeds `k`, we remove the largest element. After processing all pairs, the root of the heap will represent the `k-th` smallest distance.\n\nHowever, this method is computationally heavy and will lead to a Time Limit Exceeded (TLE) error. The time complexity is dominated by the need to examine all pairs, which is $O(n^2)$, combined with the overhead of maintaining a heap of size `k`, resulting in an overall time complexity of $O(n^2 \\log k)$, where `n` is the number of elements. This makes the approach impractical for large values of `n`.\n\n---\n\n### Approach 1: Bucket Sort\n\n#### Intuition\n\nGiven that array elements can be as large as `1,000,000`, a direct comparison approach would be computationally expensive. However, since the distances are bounded by the maximum element in the array, we can leverage this property to use a bucket sort approach, which is efficient for problems with a known range of values. This transforms the problem of finding the `k`-th smallest distance into a counting problem within a fixed range.\n\nWe first observe that the range of possible distances is finite and bounded:\n- The minimum distance is 0, occurring when two numbers in the array are identical.\n- The maximum distance is the difference between the largest and smallest numbers in the array.\n\nThis bounded range forms the foundation of our approach. With this range established, we conceptualize a series of \"buckets,\" each representing a specific distance within our range. These buckets serve as counters, allowing us to tally the frequency of each distance without needing to store the actual pairs that produce them. This abstraction significantly reduces memory requirements and computational complexity.\n\nNow for each pair of numbers in the array, calculate the absolute difference and increment the corresponding bucket count.\n\nAfter processing all pairs, our bucket array contains a comprehensive frequency distribution of all distances present in the original array. Now traverse the bucket array from the smallest distance upwards, maintaining a running sum of counts. The distance where this running sum first equals or exceeds is the  k-th smallest distance.\n\n#### Algorithm\n\n- Determine the size of the input array `nums` and store it in `arraySize`.\n\n- Find the maximum element in the array `nums` and store it in `maxElement`.\n\n- Create a bucket array `distanceBucket` with size `maxElement + 1`, initialized to 0, to store the counts of each distance.\n\n- Populate the `distanceBucket` array:\n  - Iterate over all pairs of indices `(i, j)` where `i < j` in the array `nums`.\n    - Calculate the distance between `nums[i]` and `nums[j]` as `abs(nums[i] - nums[j])`.\n    - Increment the count for this distance in the `distanceBucket` array.\n\n- Find the k-th smallest distance:\n  - Iterate over all possible distances from 0 to `maxElement`.\n    - Subtract the count of pairs with the current distance from `k`.\n    - If `k` becomes less than or equal to 0, return the current distance as it is the k-th smallest distance.\n\n- If the function does not return within the loop, return `-1` indicating no distance was found, although this case should not occur with valid inputs.\n\n#### Implementation\n\n> Note: The Python implementation for this approach will encounter a Time Limit Exceeded (TLE) error because Python's inherent slower execution speed.\n\n<iframe src=\"https://leetcode.com/playground/H5scviJc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"H5scviJc\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of elements and $M$ be the maximum possible distance.\n\n- Time complexity: $O(n^2 + M)$\n\n    The $O(n^2)$ term arises from the nested loops used to calculate all pairwise distances between elements. Since we are examining every possible pair of elements in the array, this results in $n(n-1)/2$ comparisons, which simplifies to $O(n^2)$.\n\n    After calculating all distances, we traverse the `distanceBucket` array to find the k-th smallest distance. This traversal is $O(M)$, where $M$ is the maximum possible distance, which is proportional to the largest element in the array. Thus, the total time complexity is $O(n^2 + M)$, accounting for both the pair distance calculations and the bucket traversal.\n\n- Space complexity: $O(M)$\n\n    The space complexity is dominated by the `distanceBucket` array, which is used to count occurrences of each possible distance. The size of this array is proportional to the maximum possible distance $M$. Aside from this array, the space usage is minimal and does not depend on the number of elements, leading to a space complexity of $O(M)$.\n\n---\n\n### Approach 2: Binary Search + Dynamic Programming (DP)\n\n#### Intuition\n\nWe now explore a sophisticated approach that combines binary search with dynamic programming, especially effective for arrays with a broad range of values where bucket sort might be impractical due to memory constraints.\n\nFirst, recognize that our solution space—the range of possible distances—is bounded. The minimum distance is 0, and the maximum is the difference between the largest and smallest elements in the array. This bounded range allows us to use binary search to efficiently find the `k`-th smallest distance.\n\nOur key insight is that for any given distance `d`, we can count the number of pairs in the array with a distance less than or equal to `d`. If this count is less than `k`, the `k`-th smallest distance must be greater than `d`. Conversely, if the count is at least `k`, the `k`-th smallest distance must be less than or equal to `d`. This forms the basis of our binary search approach.\n\nTo implement this, we first sort the input array. Sorting is crucial because it enables us to efficiently count pairs with distances less than or equal to a given value.\n\nWe then set up our binary search:\n\n- The lower bound of our search range is `0`, and the upper bound is the difference between the maximum and minimum elements in the sorted array.\n- In each iteration, we calculate the midpoint of the current range and count the number of pairs with distances less than or equal to this midpoint.\n\nThe counting process is where dynamic programming comes into play. We use two auxiliary arrays to optimize our pair counting:\n\n1. **prefixCount**: This array maintains the cumulative count of elements up to each value in the sorted array. For any index `i`, `prefixCount[i]` represents the number of elements less than or equal to `i`.\n2. **valueCount**: Implemented as a hash map, `valueCount[i]` stores the count of occurrences of the value `i` in the array.\n\nTo count pairs for a given distance `d`, we iterate through the sorted array. For each element `x`, we calculate:\n\n- The number of elements within distance `d` of `x` using `prefixCount`.\n- The number of pairs formed by duplicate occurrences of `x` using `valueCount`.\n\nBased on the count of pairs at the current midpoint distance, we adjust our binary search range:\n\n- If the count is less than `k`, we need to look at larger distances by adjusting the lower bound.\n- If the count is greater than or equal to `k`, we need to look at smaller distances by adjusting the upper bound.\n\nWe repeat this process, halving the search range each time, until the lower and upper bounds converge, giving us the `k`-th smallest pair distance.\n\n#### Algorithm\n \n- Sort the array `nums` to simplify distance calculations.\n\n- Determine the size of the sorted array `nums` and store it in `arraySize`.\n\n- Find the largest element in the sorted array `nums` and store it in `maxElement`.\n\n- Calculate the maximum possible distance as `maxElement * 2`.\n\n- Initialize arrays and maps:\n  - Create an array `prefixCount` with size `maxPossibleDistance` to store prefix counts of distances.\n  - Create a map `valueCount` to count occurrences of each value in the array.\n\n- Populate the `prefixCount` array:\n  - Iterate through possible distance values from 0 to `maxPossibleDistance - 1`.\n    - For each distance value, determine the number of elements in the array `nums` that are less than or equal to this distance.\n    - Store this count in `prefixCount` for the current distance.\n\n- Populate the `valueCount` map:\n  - Iterate through the array `nums`.\n    - Count occurrences of each value and store in `valueCount`.\n\n- Perform binary search for the k-th smallest distance:\n  - Set `low` to 0 and `high` to `maxElement`.\n  - While `low` is less than `high`:\n    - Calculate the middle point `mid` as `(low + high) / 2`.\n    - Count the number of pairs with distance ≤ `mid` using the helper function `countPairs`.\n    - Adjust the binary search bounds based on whether the count is less than or greater than or equal to `k`.\n\n- Return the smallest distance found by the binary search.\n\n- Helper function `countPairs`:\n  - Count the number of pairs with distance ≤ `maxDistance`:\n    - Iterate through the array `nums`.\n    - Calculate the number of pairs involving the current value that are within the allowed distance.\n    - Accumulate the total count of such pairs.\n  - Return the count of pairs with distance ≤ `maxDistance`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/SU4MpYrm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"SU4MpYrm\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of elements and $M$ be the maximum possible distance.\n\n- Time complexity: $O(n \\log n + n \\log M + M)$\n\n    The $O(n \\log n)$ term arises from sorting the array, which is necessary for efficiently calculating distances and performing binary search. Sorting takes $O(n \\log n)$ time.\n    \n    The $O(n \\log M)$ term comes from the binary search over the range of possible distances and counting pairs for each mid-value. Counting pairs involves traversing the array, and the binary search operations are logarithmic with respect to the maximum possible distance $M$. And we populate the `prefixCount` array by iterating through the possible values from 0 to `maxPossibleDistance` - 1 taking $O(M)$. Hence, the combined time complexity is $O(n \\log n + n \\log M + M)$.\n\n- Space complexity: $O(n + M + S)$\n\n    The space complexity includes $O(n)$ for storing the `prefixCount` array and the value counts in the `valueCount` map. The `prefixCount` array tracks the number of elements up to each possible distance, while `valueCount` stores counts of each unique element. Additionally, $O(M)$ is required for the `prefixCount` array. \n    \n    Some extra space is used when we sort an array of size $n$ in place. The space complexity of the sorting algorithm ($S$) depends on the programming language. The value of $S$ depends on the programming language and the sorting algorithm being used:\n    - In Python, the sort method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(n)$\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O( \\log n )$\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$\n    \n    Thus, the total space complexity of the algorithm is $O(n + M + S)$.\n\n---\n\n### Approach 3: Binary Search + Sliding Window\n\n#### Intuition\n\nThe core idea remains similar to our previous approach: for any given distance `d`, we aim to count the number of pairs in the array with a distance less than or equal to `d`. If this count is less than `k`, we know the `k`-th smallest distance must be greater than `d`. If the count is greater than or equal to `k`, the `k`-th smallest distance must be less than or equal to `d`.\n\nWhere this approach diverges is in how we perform this counting operation. Instead of using pre-computed dynamic programming arrays, we employ a sliding window technique that takes advantage of the sorted nature of our array.\n\nWe begin by sorting the input array and then we set up binary search as before, with the lower bound at 0 and the upper bound at the difference between the maximum and minimum elements in the sorted array. In each iteration of the binary search, we calculate the midpoint of our current range.\n\nThe key innovation in this approach is the sliding window method used to count pairs with distances less than or equal to our current midpoint distance. Here's how it works:\n\n- Start with two pointers, `left` and `right`, both at the start of the array. Move the `right` pointer to check distances.\n- As long as the distance between `right` and `left` is within the allowed range, keep moving `right` forward. Once we find a distance greater than our midpoint, we know that all elements between `left` and `right` (exclusive) form valid pairs with the element at `left`. We add this count to our total and then move the `left` pointer forward. Repeat until all pairs are checked.\n\nThis sliding window technique counts valid pairs in linear time for each binary search iteration. The efficiency arises because the `right` pointer doesn't need to reset for each new `left` position; it continues from where it left off, leveraging the sorted array.\n\nBased on the count of pairs for the current midpoint distance, we adjust our binary search range as follows:\n\n- If the count is less than `k`, we increase the distance by adjusting our lower bound.\n- If the count is greater than or equal to `k`, we decrease the distance by adjusting our upper bound.\n\nWe continue this process, halving our search range each time, until the lower and upper bounds converge. At this point, we identify the `k`-th smallest pair distance.\n\nThe efficiency of this approach is due to the combination of binary search, which reduces the search space logarithmically, and the sliding window technique, which allows us to count pairs in linear time for each binary search iteration, given that the array is sorted.\n\n#### Algorithm\n\n- Sort the array `nums` to simplify distance calculations.\n\n- Determine the size of the sorted array `nums` and store it in `arraySize`.\n\n- Initialize the binary search range:\n  - Set `low` to 0.\n  - Set `high` to the difference between the maximum and minimum elements in `nums` (i.e., `nums[arraySize - 1] - nums[0]`).\n\n- Perform binary search to find the smallest distance:\n  - While `low` is less than `high`:\n    - Calculate the middle point `mid` as `(low + high) / 2`.\n    - Count the number of pairs with distance ≤ `mid` using the helper function `countPairsWithMaxDistance`.\n    - Adjust the binary search bounds:\n      - If the count of pairs is less than `k`, set `low` to `mid + 1`.\n      - Otherwise, set `high` to `mid`.\n\n- Return the smallest distance found by the binary search.\n\n- Helper function `countPairsWithMaxDistance`:\n  - Count the number of pairs with distance ≤ `maxDistance` using a sliding window:\n    - Initialize `count` to 0.\n    - Set `left` pointer to 0.\n    - Iterate with `right` pointer from 0 to the end of the array:\n      - Adjust the `left` pointer to maintain the window where the distance between `nums[right]` and `nums[left]` is ≤ `maxDistance`.\n      - Add the number of valid pairs ending at the current `right` index to `count` (i.e., `right - left`).\n  - Return the total count of pairs with distance ≤ `maxDistance`.\n\nThe algorithm is visualized below:\n\n!?!../Documents/719/approach4.json:980,760!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/VeCnLoRm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VeCnLoRm\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of elements and $M$ be the maximum possible distance.\n\n- Time complexity: $O(n \\log M + n \\log n)$\n\n    The $O(n \\log M)$ term arises from the binary search over possible distances, where the search space is up to the maximum possible distance $M$. For each mid-value in the binary search, the `countPairsWithMaxDistance` function is called, which operates in linear time $O(n)$.\n\n    The binary search itself runs in $O(\\log M)$ time. Hence, the combined time complexity is $O(n \\log M + n \\log n)$, where the binary search and pair counting operations are combined.\n\n- Space complexity: $O(S)$\n\n    The space complexity is constant because the algorithm only uses a fixed amount of extra space for the left and right pointers, the mid-value, and counters. It does not require additional data structures that scale with the input size, so the space complexity is $O(1)$, excluding the space used to store the input array.  \n\n    Some extra space is used when we sort an array of size $n$ in place. The space complexity of the sorting algorithm ($S$) depends on the programming language. The value of $S$ depends on the programming language and the sorting algorithm being used:\n    - In Python, the `sort()` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(n)$\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O( \\log n )$\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$\n    \n    Thus, the total space complexity of the algorithm is $O(S)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

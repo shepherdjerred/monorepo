@@ -1,0 +1,145 @@
+{
+  "questionId": "480",
+  "questionFrontendId": "480",
+  "title": "Sliding Window Median",
+  "titleSlug": "sliding-window-median",
+  "difficulty": "Hard",
+  "content": "<p>The <strong>median</strong> is the middle value in an ordered integer list. If the size of the list is even, there is no middle value. So the median is the mean of the two middle values.</p>\n\n<ul>\n\t<li>For examples, if <code>arr = [2,<u>3</u>,4]</code>, the median is <code>3</code>.</li>\n\t<li>For examples, if <code>arr = [1,<u>2,3</u>,4]</code>, the median is <code>(2 + 3) / 2 = 2.5</code>.</li>\n</ul>\n\n<p>You are given an integer array <code>nums</code> and an integer <code>k</code>. There is a sliding window of size <code>k</code> which is moving from the very left of the array to the very right. You can only see the <code>k</code> numbers in the window. Each time the sliding window moves right by one position.</p>\n\n<p>Return <em>the median array for each window in the original array</em>. Answers within <code>10<sup>-5</sup></code> of the actual value will be accepted.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,3,-1,-3,5,3,6,7], k = 3\n<strong>Output:</strong> [1.00000,-1.00000,-1.00000,3.00000,5.00000,6.00000]\n<strong>Explanation:</strong> \nWindow position                Median\n---------------                -----\n[<strong>1  3  -1</strong>] -3  5  3  6  7        1\n 1 [<strong>3  -1  -3</strong>] 5  3  6  7       -1\n 1  3 [<strong>-1  -3  5</strong>] 3  6  7       -1\n 1  3  -1 [<strong>-3  5  3</strong>] 6  7        3\n 1  3  -1  -3 [<strong>5  3  6</strong>] 7        5\n 1  3  -1  -3  5 [<strong>3  6  7</strong>]       6\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4,2,3,1,4,2], k = 3\n<strong>Output:</strong> [2.00000,3.00000,3.00000,3.00000,2.00000,3.00000,2.00000]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-2<sup>31</sup> &lt;= nums[i] &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n",
+  "hints": [
+    "The simplest of solutions comes from the basic idea of finding the median given a set of numbers. We know that by definition, a median is the center element (or an average of the two center elements). Given an unsorted list of numbers, how do we find the median element? If you know the answer to this question, can we extend this idea to every sliding window that we come across in the array?",
+    "Is there a better way to do what we are doing in the above hint? Don't you think there is duplication of calculation being done there? Is there some sort of optimization that we can do to achieve the same result? This approach is merely a modification of the basic approach except that it simply reduces duplication of calculations once done.",
+    "The third line of thought is also based on this same idea but achieving the result in a different way. We obviously need the window to be sorted for us to be able to find the median. Is there a data-structure out there that we can use (in one or more quantities) to obtain the median element extremely fast, say O(1) time while having the ability to perform the other operations fairly efficiently as well?"
+  ],
+  "metaData": "{ \n  \"name\": \"medianSlidingWindow\",\n  \"params\": [\n    { \n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"double[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"217.8K\", \"totalSubmission\": \"559.1K\", \"totalAcceptedRaw\": 217780, \"totalSubmissionRaw\": 559102, \"acRate\": \"39.0%\"}",
+  "likes": 3577,
+  "dislikes": 239,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find Median from Data Stream\", \"titleSlug\": \"find-median-from-data-stream\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make Median of Array Equal to K\", \"titleSlug\": \"minimum-operations-to-make-median-of-array-equal-to-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,-1,-3,5,3,6,7]\n3",
+    "[1,2,3,4,2,3,1,4,2]\n3"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"datadog\", \"name\": \"Datadog\"}, {\"timesEncountered\": 4, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 4, \"slug\": \"spotify\", \"name\": \"Spotify\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<double> medianSlidingWindow(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public double[] medianSlidingWindow(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def medianSlidingWindow(self, nums: List[int], k: int) -> List[float]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def medianSlidingWindow(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: List[float]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number[]}\n */\nvar medianSlidingWindow = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function medianSlidingWindow(nums: number[], k: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public double[] MedianSlidingWindow(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\ndouble* medianSlidingWindow(int* nums, int numsSize, int k, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func medianSlidingWindow(nums []int, k int) []float64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun medianSlidingWindow(nums: IntArray, k: Int): DoubleArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func medianSlidingWindow(_ nums: [Int], _ k: Int) -> [Double] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn median_sliding_window(nums: Vec<i32>, k: i32) -> Vec<f64> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Float[]}\ndef median_sliding_window(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Float[]\n     */\n    function medianSlidingWindow($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<double> medianSlidingWindow(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def medianSlidingWindow(nums: Array[Int], k: Int): Array[Double] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec median_sliding_window(nums :: [integer], k :: integer) :: [float]\n  def median_sliding_window(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec median_sliding_window(Nums :: [integer()], K :: integer()) -> [float()].\nmedian_sliding_window(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (median-sliding-window nums k)\n  (-> (listof exact-integer?) exact-integer? (listof flonum?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "86",
+    "content": "[TOC]\n\n### A word of advice\n\nThis problem is a companion problem to [295. Find Median From Data Stream](https://leetcode.com/problems/find-median-from-data-stream/). This means that a lot of approaches to solve this problem are based on the [methods to solve 295. Find Median From Data Stream](https://leetcode.com/articles/find-median-from-data-stream). Perhaps try that problem before you approach this one.\n\n## Solution\n---\n### Approach 1: Simple Sorting\n\n**Intuition**\n\nDo what the question says.\n\n**Algorithm**\n\nStore the numbers in a window container of size $$k$$. The following operations must take place:\n\n1. **Inserting** the incoming element.\n2. **Deleting** the outgoing element.\n3. **Sorting** the window to find the medians.\n\nOne primitive approach is to copy $$k$$ consecutive elements from the input to the window and keep sorting these every time. This constitutes duplication of effort.\n\nWe can do a bit better if we instead *insert* and *delete* one element per window shift. The challenge then is to maintain the window as **sorted**, before and after the *insert* and *delete* operations.\n\n<iframe src=\"https://leetcode.com/playground/jf8e5V6E/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"jf8e5V6E\"></iframe>\n\nPython comes with an excellent `bisect` module to help perform efficient insert operations on lists while maintaining their sorted property.\n\n**Complexity Analysis**\n\n* Time complexity: $$O(n \\cdot k)$$.\n\n    + Copying elements into the container takes about $$O(k)$$ time each. This happens about $$(n-k)$$ times.\n\n    + Bisected insertion or deletion takes about $$O(\\log k)$$ for searching and $$O(k)$$ for actual shifting of elements. This takes place about $$n$$ times.\n\n* Space complexity: $$O(k)$$ extra linear space for the window container.\n\n---\n### Approach 2: Two Heaps (Lazy Removal)\n\n**Intuition**\n\nThe idea is the same as [Approach 3](https://leetcode.com/articles/find-median-from-data-stream/#approach-3-two-heaps) from [295. Find Median From Data Stream](https://leetcode.com/problems/find-median-from-data-stream/). The only additional requirement is removing the outgoing elements from the window.\n\nSince the window elements are stored in heaps, deleting elements that are not at the top of the heaps is a pain.\n\nSome languages (like **Java**) provide implementations of the `PriorityQueue` class that allow for removing *arbitrarily* placed elements. Generally, using such features is not efficient nor is their portability assured.\n\nAssuming that only the tops of heaps (and by extension the `PriorityQueue` class) are accessible, we need to find a way to efficiently invalidate and remove elements that are moving out of the sliding window.\n\nAt this point, an important thing to notice is the fact that if the two heaps are balanced, only the top of the heaps are actually needed to find the medians. This means that as long as we can somehow keep the heaps balanced, we could also keep some extraneous elements.\n\nThus, we can use hash-tables to keep track of invalidated elements. Once they reach the heap tops, we remove them from the heaps. This is the lazy removal technique.\n\nAn immediate challenge at this point is balancing the heaps while keeping extraneous elements. This is done by actually moving some elements to the heap which has extraneous elements, from the other heap. This cancels out the effect of having extraneous elements and maintains the invariant that the heaps are balanced.\n\n**NOTE:** When we talk about keeping the heaps balanced, we are **not** referring to the actual heap sizes. We are only concerned with valid elements and hence when we talk about balancing heaps, we are referring to count of such elements.\n\n**Algorithm**\n\n+ Two priority queues:\n\n    1. A max-heap `lo` to store the smaller half of the numbers\n    2. A min-heap `hi` to store the larger half of the numbers\n\n+ A hash-map or hash-table `hash_table` for keeping track of invalid numbers. It holds the count of the occurrences of all such numbers that have been invalidated and yet remain in the heaps.\n\n+ The max-heap `lo` is allowed to store, at worst, one more element more than the min-heap `hi`. Hence if we have processed $$k$$ elements:\n\n    + If $$k = 2 \\cdot n + 1 \\quad (\\forall \\, n \\in \\mathbb{Z})$$, then `lo` is allowed to hold $$n+1$$ elements, while `hi` can hold $$n$$ elements.\n    + If $$k = 2 \\cdot n \\quad (\\forall \\, n \\in \\mathbb{Z})$$, then both heaps are balanced and hold $$n$$ elements each.\n\n    This gives us the nice property that when the heaps are perfectly balanced, the median can be derived from the tops of both heaps. Otherwise, the top of the max-heap `lo` holds the legitimate median.\n\n**NOTE:** As mentioned before, when we are talking about keeping the heaps balanced, the actual sizes of the heaps are irrelevant. Only the count of valid elements in both heaps matter.\n\n+ Keep a `balance` factor. It indicates three situations:\n\n    + `balance` $$= 0$$: Both heaps are balanced or nearly balanced.\n    + `balance` $$< 0$$: `lo` needs more valid elements. Elements from `hi` are moved to `lo`.\n    + `balance` $$> 0$$: `hi` needs more valid elements. Elements from `lo` are moved to `hi`.\n\n+ Inserting an incoming number `in_num`:\n\n    + If `in_num` is less than or equal to the top element of `lo`, then it can be inserted to `lo`. However this unbalances `hi` (`hi` has lesser valid elements now). Hence `balance` is incremented.\n\n    + Otherwise, `in_num` must be added to `hi`. Obviously, now `lo` is unbalanced. Hence `balance` is decremented.\n\n+ Lazy removal of an outgoing number `out_num`:\n\n    + If `out_num` is present in `lo`, then invalidating this occurrence will unbalance `lo` itself. Hence `balance` must be decremented.\n    + If `out_num` is present in `hi`, then invalidating this occurrence will unbalance `hi` itself. Hence `balance` must be incremented.\n\n    + We increment the count of this element in the hash_table table.\n    + Once an invalid element reaches either of the heap tops, we remove them and decrement their counts in the hash_table table.\n\n<iframe src=\"https://leetcode.com/playground/nN7XDGax/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nN7XDGax\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $O(n \\log n)$\n\n    Since `hi` and `lo` may grow up to $O(n)$ elements due to the unbounded nature of their sizes in certain sequences (like a descending sequence), each insertion or removal operation in either heap takes $O(\\log n)$ time. Over `n` steps, this results in a complexity of `O(n \\log n)`.\n\n    These still take $O(1)$ time on average, but they don't change the overall time complexity, as $O(n \\log n)$ dominates.\n\n* Space complexity: $$O(n) + O(n-k) \\approx O(n)$$ extra linear space.\n\n    + The heaps collectively require $$O(n)$$ space. Due to lazy removal, invalidated elements may remain in the heaps. For example, in a descending sequence, removed elements are never at the heap tops and accumulate, causing the heaps to grow up to $$O(n)$$ in size.\n    + The hash table needs about $$O(n-k)$$ space.\n\n---\n### Approach 3: Two Multisets\n\n**Intuition**\n\nOne can see that `multiset`s are a great way to keep elements sorted while providing efficient access to the first and last elements. Inserting and deleting arbitrary elements are also fairly efficient operations in a `multiset`. (Refer to [Approach 4 Intuition](https://leetcode.com/articles/find-median-from-data-stream/#approach-4-multiset-and-two-pointers) for [295. Find Median From Data Stream](https://leetcode.com/problems/find-median-from-data-stream/))\n\nThus, if the previous approach gives you too much heartburn, consider replacing the use of `priority_queue` with `multiset`.\n\n**Algorithm**\n\nInserting or deleting an element is straight-forward. Balancing the heaps takes the same route as [Approach 3](https://leetcode.com/articles/find-median-from-data-stream/#approach-3-two-heaps) of [295. Find Median From Data Stream](https://leetcode.com/problems/find-median-from-data-stream/).\n\n<iframe src=\"https://leetcode.com/playground/QyHbBe5N/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QyHbBe5N\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O((n-k) \\cdot 6 \\cdot \\log k) \\approx O(n \\log k)$$.\n\n    + At worst, there are three set insertions and three set deletions from the start or end. Each of these takes about $$O(\\log k)$$ time.\n    + Finding the mean takes constant $$O(1)$$ time since the start or ends of sets are directly accessible.\n    + Each of these steps takes place about $$(n-k)$$ times (the number of sliding window instances).\n\n* Space complexity: $$O(k)$$ extra linear space to hold contents of the window.\n\n---\n### Approach 4: Multiset and Two Pointers\n\n**Intuition**\n\nThis is same as [Approach 4](https://leetcode.com/articles/find-median-from-data-stream/#approach-4-multiset-and-two-pointers) for [295. Find Median From Data Stream](https://leetcode.com/problems/find-median-from-data-stream/).\n\n> But, we don't actually need two pointers.\n\nMedian elements are derived using a single iterator position (when the window size $$k$$ is odd) or two consecutive iterator positions (when $$k$$ is even). Hence keeping track of *only* one pointer is sufficient. The other pointer can be *implicitly derived* when required.\n\n**Algorithm**\n\n+ A single iterator `mid`, which iterates over the `window` multiset. It is analogous to `upper_median` in [Approach 4](https://leetcode.com/articles/find-median-from-data-stream/#approach-4-multiset-and-two-pointers) for [295. Find Median From Data Stream](https://leetcode.com/problems/find-median-from-data-stream/). `lower_median` is *implicitly derived* from `mid`. It's either equal to `mid` (when the window size $$k$$ is odd) or `prev(mid)` [^note-1] \\(when the window size $$k$$ is even\\).\n\n+ We start with populating our multiset `window` with the first $$k$$ elements. We set `mid` to the $$\\lfloor k/2 \\rfloor$$ indexed element in `window` (`0`-based indexing; Multisets always maintain their sorted property).\n\n+ While inserting an element `num` into `window`, three cases arise:\n\n    1. `num` is less than the value of upper median `mid`.\n\n    2. `num` is greater than the value of upper median `mid`.\n\n    3. `num` is equal to the value of upper median `mid`. This situation is often handled as language-dependent. Since C++ `multiset` insert elements at the end of their equal range, this situation is essentially the same as the previous case.\n\n    + For the first case, `num` is inserted before the upper median element `mid`. Thus `mid` now, no longer points to the $$\\lfloor k/2 \\rfloor$$ indexed element. In fact it points to the $$\\lfloor k/2 \\rfloor + 1$$ indexed element. We fix that by decrementing `mid`.\n\n    + For the second and third cases, `num` is inserted after the upper median element `mid` and hence does not spoil the `mid` iterator. It still points to the $$\\lfloor k/2 \\rfloor$$ indexed element.\n\n    + Of course, the window size just increased to $$k + 1$$ in all three cases. That will easily be fixed by removing the element that is about to exit the window.\n\n+ While removing an element `num`, the same three cases arise as when we wanted to insert an element:\n\n    1. `num` is less than the value of upper median `mid`.\n\n    2. `num` is greater than the value of upper median `mid`.\n\n    3. `num` is equal to the value of upper median `mid`. Since `mid` will point to the first occurrence of `num` in the multiset `window` and we deterministically remove the first occurrence (take note that we use `std::multiset::lower_bound()` [^note-2] to find the correct occurrence to erase), this case is handled in the same manner as the first case.\n\n    + In the first and third cases, removing `num` will spoil the `mid` iterator. Thus we need to fix that by incrementing `mid` before we remove that element.\n\n    + For the second case, the `mid` iterator is not spoiled. No further action is required.\n\n    + Once this element has been removed, the window size returns to being $$k$$.\n\n+ After insertion of the incoming element and removal of the outgoing element, we are left again with some nice invariants:\n\n    1. Window size is again $$k$$.\n    2. The window is still fully sorted.\n    3. `mid` still points to the $$\\lfloor k/2 \\rfloor$$ indexed element.\n\n+ Finding the median of the window is easy! It is simply the **mean** of the elements pointed to by the two pointers `lo_median` and `hi_median`. In our case those are `mid` or `prev(mid)` (as decided by whether $$k$$ is odd or even) , and `mid` respectively.\n\n[^note-3]\n\n<iframe src=\"https://leetcode.com/playground/dsPB75n8/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dsPB75n8\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O((n-k) \\log k) + O(k) \\approx O(n \\log k)$$.\n\n    + Initializing `mid` takes about $$O(k)$$ time.\n    + Inserting or deleting a number takes $$O(\\log k)$$ time for a standard `multiset` scheme. [^note-4]\n    + Finding the mean takes constant $$O(1)$$ time since the median elements are directly accessible from `mid` iterator.\n    + The last two steps take place about $$(n-k)$$ times (the number of sliding window instances).\n\n* Space complexity: $$O(k)$$ extra linear space to hold contents of the window.\n\n---\n### Further Thoughts\n\nAs noted before, this problem is essentially an extension to [295. Find Median From Data Stream](https://leetcode.com/problems/find-median-from-data-stream/). That problem had a lot of ways to go about, that frankly, are not of much use in an interview. But they are interesting to follow all the same. If you are interested take a look [here.](https://leetcode.com/articles/find-median-from-data-stream#further-thoughts) Try extending those methods to this problem.\n\n\n\n[^note-1]: `std::prev()` is a C++ method to find the previous element to the current one being pointed to by an iterator.\n[^note-2]: Had we used `std::multiset::find()`, there was no guarantee that the first occurrence of `num` would be found. Although the contrary did happen in all of our tests, I don't recommend using it. Your mileage may vary.\n[^note-3]: Shout-out to [@votrubac](https://leetcode.com/votrubac/) and [@StefanPochmann](https://leetcode.com/stefanpochmann)!\n[^note-4]: [Hinting](http://en.cppreference.com/w/cpp/container/multiset/insert) can reduce that to amortized constant $$O(1)$$ time.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

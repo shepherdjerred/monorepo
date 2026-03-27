@@ -1,0 +1,59 @@
+{
+  "questionId": "176",
+  "questionFrontendId": "176",
+  "title": "Second Highest Salary",
+  "titleSlug": "second-highest-salary",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Employee</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| id          | int  |\n| salary      | int  |\n+-------------+------+\nid is the primary key (column with unique values) for this table.\nEach row of this table contains information about the salary of an employee.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to find&nbsp;the second highest <strong>distinct</strong> salary from the <code>Employee</code> table. If there is no second highest salary,&nbsp;return&nbsp;<code>null (return&nbsp;None in Pandas)</code>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nEmployee table:\n+----+--------+\n| id | salary |\n+----+--------+\n| 1  | 100    |\n| 2  | 200    |\n| 3  | 300    |\n+----+--------+\n<strong>Output:</strong> \n+---------------------+\n| SecondHighestSalary |\n+---------------------+\n| 200                 |\n+---------------------+\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nEmployee table:\n+----+--------+\n| id | salary |\n+----+--------+\n| 1  | 100    |\n+----+--------+\n<strong>Output:</strong> \n+---------------------+\n| SecondHighestSalary |\n+---------------------+\n| null                |\n+---------------------+\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Employee (id int, salary int)\"], \"mssql\": [\"Create table Employee (id int, salary int)\"], \"oraclesql\": [\"Create table Employee (id int, salary int)\"], \"database\": true, \"name\": \"second_highest_salary\", \"pythondata\": [\"Employee = pd.DataFrame([], columns=['id', 'salary']).astype({'id':'int64', 'salary':'int64'})\"], \"manual\": false, \"postgresql\": [\"Create table If Not Exists Employee (id int, salary int)\"], \"database_schema\": {\"Employee\": {\"id\": \"INT\", \"salary\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"1.5M\", \"totalSubmission\": \"3.2M\", \"totalAcceptedRaw\": 1499077, \"totalSubmissionRaw\": 3216287, \"acRate\": \"46.6%\"}",
+  "likes": 4237,
+  "dislikes": 1013,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Employee\":[\"id\",\"salary\"]},\"rows\":{\"Employee\":[[1,100],[2,200],[3,300]]}}",
+    "{\"headers\":{\"Employee\":[\"id\",\"salary\"]},\"rows\":{\"Employee\":[[1,100]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 11, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 6, \"slug\": \"deloitte\", \"name\": \"Deloitte\"}, {\"timesEncountered\": 6, \"slug\": \"cognizant\", \"name\": \"Cognizant\"}, {\"timesEncountered\": 4, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"zs-associates\", \"name\": \"ZS Associates\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"meesho\", \"name\": \"Meesho\"}, {\"timesEncountered\": 2, \"slug\": \"barclays\", \"name\": \"Barclays\"}]}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef second_highest_salary(employee: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "217",
+    "content": "<!-- Don't delete this -->\n[TOC] \n\n# Solution\n\n---\n\n## pandas\n\n### Approach: Sorting\n\n#### Algorithm\nGiven the table `employee` as follows:\n<table>\n    <tr>\n        <th>id</th>\n        <th>salary</th>\n    </tr>\n    <tr>\n        <td>1</td>\n        <td>100</td>\n    </tr>\n    <tr>\n        <td>2</td>\n        <td>200</td>\n    </tr>\n    <tr>\n        <td>3</td>\n        <td>300</td>\n    </tr>\n    <tr>\n        <td>4</td>\n        <td>200</td>\n    </tr>\n</table>\n<br>\n\nWe first drop any duplicate salaries.\n<table>\n    <tr>\n        <th>id</th>\n        <th>salary</th>\n    </tr>\n    <tr>\n        <td>1</td>\n        <td>100</td>\n    </tr>\n    <tr>\n        <td>2</td>\n        <td>200</td>\n    </tr>\n    <tr>\n        <td>3</td>\n        <td>300</td>\n    </tr>\n</table>\n<br>\n\nThen we handle the case if there are less than two unique salaries. If there are less than two unique salaries, then we return `np.NaN` as the second highest salary. Otherwise, we sort the table by salary in descending order.\n\n<table>\n    <tr>\n        <th>id</th>\n        <th>salary</th>\n    </tr>\n    <tr>\n        <td>3</td>\n        <td>300</td>\n    </tr>\n    <tr>\n        <td>2</td>\n        <td>200</td>\n    </tr>\n    <tr>\n        <td>1</td>\n        <td>100</td>\n    </tr>\n</table>\n<br>\nThen we drop the `id` column.\n<table>\n    <tr>\n        <th>salary</th>\n    </tr>\n    <tr>\n        <td>300</td>\n    </tr>\n    <tr>\n        <td>200</td>\n    </tr>\n    <tr>\n        <td>100</td>\n    </tr>\n</table>\n<br>\nRename the salary column to `SecondHighestSalary` \n<table>\n    <tr>\n        <th>SecondHighestSalary</th>\n    </tr>\n    <tr>\n        <td>300</td>\n    </tr>\n    <tr>\n        <td>200</td>\n    </tr>\n    <tr>\n        <td>100</td>\n    </tr>\n</table>\n<br>\nNow we get the first two rows (via `.head(2)`).\n<table>\n    <tr>\n        <th>SecondHighestSalary</th>\n    </tr>\n    <tr>\n        <td>300</td>\n    </tr>\n    <tr>\n        <td>200</td>\n    </tr>\n</table>\n<br>\nThe last of which is the second highest salary (via `.tail(1)`).\n\n<table>\n    <tr>\n        <th>SecondHighestSalary</th>\n    </tr>\n    <tr>\n        <td>200</td>\n    </tr>\n</table>\n<br>\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/myX5kixv/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"myX5kixv\"></iframe>\n\n---\n<br>\n\n## Database\n\n### Approach 1: Using sub-query and `LIMIT` clause\n#### Algorithm\n\nSort the distinct salary in descend order and then utilize the [`LIMIT`](https://dev.mysql.com/doc/refman/5.7/en/select.html) clause to get the second highest salary.\n\n```sql\nSELECT DISTINCT\n    Salary AS SecondHighestSalary\nFROM\n    Employee\nORDER BY Salary DESC\nLIMIT 1 OFFSET 1\n```\n\nHowever, this solution will be judged as 'Wrong Answer' if there is no such second highest salary since there might be only one record in this table. To overcome this issue, we can take this as a temp table. The complete code is as follows:\n\n#### Implementation\n\n```sql\nSELECT\n    (SELECT DISTINCT\n            Salary\n        FROM\n            Employee\n        ORDER BY Salary DESC\n        LIMIT 1 OFFSET 1) AS SecondHighestSalary\n;\n```\n\n### Approach 2: Using `IFNULL` and `LIMIT` clause\n\n#### Algorithm\n\nAnother way to solve the 'NULL' problem is to use `IFNULL` function as below. The `IFNULL` function will return the first argument if it is not `NULL`, otherwise it returns the second argument. \nThis gives us the correct solution of *one row* containing `NULL` (if there is no such second highest salary) instead of just an empty table.\n\n#### Implementation\n\n```sql\nSELECT\n    IFNULL(\n      (SELECT DISTINCT Salary\n       FROM Employee\n       ORDER BY Salary DESC\n        LIMIT 1 OFFSET 1),\n    NULL) AS SecondHighestSalary\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

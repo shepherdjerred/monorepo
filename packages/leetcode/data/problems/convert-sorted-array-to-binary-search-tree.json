@@ -1,0 +1,145 @@
+{
+  "questionId": "108",
+  "questionFrontendId": "108",
+  "title": "Convert Sorted Array to Binary Search Tree",
+  "titleSlug": "convert-sorted-array-to-binary-search-tree",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer array <code>nums</code> where the elements are sorted in <strong>ascending order</strong>, convert <em>it to a </em><span data-keyword=\"height-balanced\"><strong><em>height-balanced</em></strong></span> <em>binary search tree</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/02/18/btree1.jpg\" style=\"width: 302px; height: 222px;\" />\n<pre>\n<strong>Input:</strong> nums = [-10,-3,0,5,9]\n<strong>Output:</strong> [0,-3,9,-10,null,5]\n<strong>Explanation:</strong> [0,-10,5,null,-3,null,9] is also accepted:\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/02/18/btree2.jpg\" style=\"width: 302px; height: 222px;\" />\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/02/18/btree.jpg\" style=\"width: 342px; height: 142px;\" />\n<pre>\n<strong>Input:</strong> nums = [1,3]\n<strong>Output:</strong> [3,1]\n<strong>Explanation:</strong> [1,null,3] and [3,1] are both height-balanced BSTs.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>-10<sup>4</sup> &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n\t<li><code>nums</code> is sorted in a <strong>strictly increasing</strong> order.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"sortedArrayToBST\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"TreeNode\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.7M\", \"totalSubmission\": \"2.3M\", \"totalAcceptedRaw\": 1703340, \"totalSubmissionRaw\": 2260597, \"acRate\": \"75.3%\"}",
+  "likes": 11905,
+  "dislikes": 642,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Convert Sorted List to Binary Search Tree\", \"titleSlug\": \"convert-sorted-list-to-binary-search-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[-10,-3,0,5,9]",
+    "[1,3]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Binary Search Tree",
+      "slug": "binary-search-tree"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    TreeNode* sortedArrayToBST(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public TreeNode sortedArrayToBST(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def sortedArrayToBST(self, nums: List[int]) -> Optional[TreeNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def sortedArrayToBST(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: Optional[TreeNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {number[]} nums\n * @return {TreeNode}\n */\nvar sortedArrayToBST = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction sortedArrayToBST(nums: number[]): TreeNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public TreeNode SortedArrayToBST(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nstruct TreeNode* sortedArrayToBST(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc sortedArrayToBST(nums []int) *TreeNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun sortedArrayToBST(nums: IntArray): TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func sortedArrayToBST(_ nums: [Int]) -> TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn sorted_array_to_bst(nums: Vec<i32>) -> Option<Rc<RefCell<TreeNode>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {Integer[]} nums\n# @return {TreeNode}\ndef sorted_array_to_bst(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return TreeNode\n     */\n    function sortedArrayToBST($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  TreeNode? sortedArrayToBST(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def sortedArrayToBST(nums: Array[Int]): TreeNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec sorted_array_to_bst(nums :: [integer]) :: TreeNode.t | nil\n  def sorted_array_to_bst(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec sorted_array_to_bst(Nums :: [integer()]) -> #tree_node{} | null.\nsorted_array_to_bst(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (sorted-array-to-bst nums)\n  (-> (listof exact-integer?) (or/c tree-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "815",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n <div>\n    <div class=\"video-container\">\n      <iframe src=\"https://player.vimeo.com/video/895977931?texttrack=en-x-autogenerated\" frameborder=\"0\"\n        allow=\"autoplay; fullscreen\"></iframe>\n    </div>\n</div>\n\n## Solution\n\n--- \n\n### How to Traverse the Tree. DFS: Preorder, Inorder, Postorder; BFS.\n\nThere are two general strategies to traverse a tree:\n     \n- *Depth First Search* (`DFS`)\n\n    In this strategy, we adopt the `depth` as the priority, so that one would start from a root and reach all the way down to a certain leaf, and then back to the root to reach another branch.\n\n    The DFS strategy can further be distinguished as `preorder`, `inorder`, and `postorder` depending on the relative order among the root node, left node, and right node.\n    \n- *Breadth First Search* (`BFS`)\n\n    We scan through the tree level by level, following the order of height, from top to bottom. The nodes on higher levels would be visited before the ones with lower levels.\n    \nIn the following figure, the nodes are enumerated in the order you visit them, please follow `1-2-3-4-5` to compare different strategies.\n\n![postorder](../Figures/108/bfs_dfs.png)\n<br /> \n<br />\n\n\n---\n### Construct BST from Inorder Traversal: Why the Solution is _Not_ Unique \n\nIt's known that [inorder traversal of BST is an array sorted in the ascending order](https://leetcode.com/articles/delete-node-in-a-bst/).\n\nHaving the sorted array as an input, we could rewrite the problem as _Construct Binary Search Tree from Inorder Traversal_.\n\n> Does this problem have a unique solution, i.e. could inorder traversal be used as a unique identifier to encore/decode BST? The answer is _no_. \n\nHere is the funny thing about BST. Inorder traversal is _not_ a unique identifier of BST. At the same time, both preorder and postorder traversals _are_ unique identifiers of BST. [From these traversals one could restore the inorder one](https://leetcode.com/articles/construct-bst-from-preorder-traversal/): \n`inorder = sorted(postorder) = sorted(preorder)`, and [inorder + postorder or inorder + preorder are both unique identifiers of whatever binary tree](https://leetcode.com/articles/construct-binary-tree-from-inorder-and-postorder-t/).\n\nSo, the problem \"sorted array -> BST\" has multiple solutions.\n\n![postorder](../Figures/108/bst2.png)\n\nHere we have an additional condition: _the tree should be height-balanced_, i.e. the depths of the two subtrees of every node never differ by more than 1. \n\n> Does it make the solution to be unique? Still no.\n\n![postorder](../Figures/108/height.png)\n\nBasically, the height-balanced restriction means that at each step one has to pick up the number in the middle as a root. That works fine with arrays containing an odd number of elements but there is no predefined choice for arrays with an even number of elements.\n\n![postorder](../Figures/108/pick.png)\n\nOne could choose the left middle element, or the right middle one, and both choices will lead to _different_ height-balanced BSTs. Let's see that in practice: in Approach 1 we will always pick up the left middle element and in Approach 2 - the right middle one. That will generate _different_ BSTs but both solutions will be accepted.\n<br /> \n<br />\n\n\n---\n### Approach 1: Preorder Traversal: Always Choose Left Middle Node as a Root\n\n**Algorithm**\n\n![postorder](../Figures/108/left.png)\n\n- Implement helper function `helper(left, right)`, which constructs BST from nums elements between indexes `left` and `right`:\n\n    - If left > right, then there is no elements available for that subtree. Return None.\n    \n    - Pick left middle element: `p = (left + right) // 2`.\n    \n    - Initiate the root: `root = TreeNode(nums[p])`. \n    \n    - Compute recursively left and right subtrees: `root.left = helper(left, p - 1)`, `root.right = helper(p + 1, right)`.\n    \n- Return `helper(0, len(nums) - 1)`.  \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/7EQYUegL/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"7EQYUegL\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(N)$$ since we visit each node exactly once.\n\n* Space complexity: $$O(\\log N)$$. \n   \n  The recursion stack requires $$O(\\log N)$$ space because the tree is height-balanced. Note that the $$O(N)$$ space used to store the output does not count as auxiliary space, so it is not included in the space complexity. \n<br /> \n<br />\n\n\n---\n### Approach 2: Preorder Traversal: Always Choose Right Middle Node as a Root\n\n**Algorithm**\n\n![postorder](../Figures/108/right.png)\n\n- Implement helper function `helper(left, right)`, which constructs BST from nums elements between indexes `left` and `right`:\n\n    - If left > right, then there are no elements available for that subtree. Return None.\n    \n    - Pick the right middle element: \n        \n        - `p = (left + right) // 2`.\n    \n        - If `left + right` is odd, add 1 to p-index.\n    \n    - Initiate the root: `root = TreeNode(nums[p])`. \n    \n    - Compute recursively left and right subtrees: `root.left = helper(left, p - 1)`, `root.right = helper(p + 1, right)`.\n    \n- Return `helper(0, len(nums) - 1)`. \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/SnhYWWcg/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"SnhYWWcg\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(N)$$ since we visit each node exactly once.\n\n* Space complexity: $$O(\\log N)$$. \n\n  The recursion stack requires $$O(\\log N)$$ space because the tree is height-balanced. Note that the $$O(N)$$ space used to store the output does not count as auxiliary space, so it is not included in the space complexity.\n<br /> \n<br />\n\n\n---\n### Approach 3: Preorder Traversal: Choose a Random Middle Node as a Root\n\nThis one is for fun. Instead of a predefined choice, we will pick randomly the left or right middle node at each step. Each run will result in a different solution and they all will be accepted. \n\n![postorder](../Figures/108/random.png)\n\n**Algorithm**\n\n- Implement helper function `helper(left, right)`, which constructs BST from nums elements between indexes `left` and `right`:\n\n    - If left > right, then there are no elements available for that subtree. Return None.\n    \n    - Pick a random middle element: \n        \n        - `p = (left + right) // 2`.\n    \n        - If `left + right` is odd, add randomly 0 or 1 to p-index.\n    \n    - Initiate the root: `root = TreeNode(nums[p])`. \n    \n    - Compute recursively left and right subtrees: `root.left = helper(left, p - 1)`, `root.right = helper(p + 1, right)`.\n    \n- Return `helper(0, len(nums) - 1)`. \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/bfA8T5F7/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"bfA8T5F7\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(N)$$ since we visit each node exactly once.\n\n* Space complexity: $$O(\\log N)$$. \n\n  The recursion stack requires $$O(\\log N)$$ space because the tree is height-balanced. Note that the $$O(N)$$ space used to store the output does not count as auxiliary space, so it is not included in the space complexity.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

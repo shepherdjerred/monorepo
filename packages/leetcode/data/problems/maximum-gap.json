@@ -1,0 +1,141 @@
+{
+  "questionId": "164",
+  "questionFrontendId": "164",
+  "title": "Maximum Gap",
+  "titleSlug": "maximum-gap",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code>, return <em>the maximum difference between two successive elements in its sorted form</em>. If the array contains less than two elements, return <code>0</code>.</p>\n\n<p>You must write an algorithm that runs in linear time and uses linear extra space.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,6,9,1]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The sorted form of the array is [1,3,6,9], either (3,6) or (6,9) has the maximum difference 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [10]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> The array contains less than 2 elements, therefore return 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"maximumGap\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"334.5K\", \"totalSubmission\": \"647.7K\", \"totalAcceptedRaw\": 334545, \"totalSubmissionRaw\": 647698, \"acRate\": \"51.7%\"}",
+  "likes": 3559,
+  "dislikes": 440,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Widest Vertical Area Between Two Points Containing No Points\", \"titleSlug\": \"widest-vertical-area-between-two-points-containing-no-points\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Maximum Consecutive Floors Without Special Floors\", \"titleSlug\": \"maximum-consecutive-floors-without-special-floors\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,6,9,1]",
+    "[10]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"doordash\", \"name\": \"DoorDash\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Bucket Sort",
+      "slug": "bucket-sort"
+    },
+    {
+      "name": "Radix Sort",
+      "slug": "radix-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumGap(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumGap(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumGap(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumGap(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar maximumGap = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumGap(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumGap(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumGap(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumGap(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumGap(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumGap(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_gap(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef maximum_gap(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function maximumGap($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumGap(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumGap(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_gap(nums :: [integer]) :: integer\n  def maximum_gap(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_gap(Nums :: [integer()]) -> integer().\nmaximum_gap(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-gap nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "81",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach 1: Comparison Sorting\n\n#### Intuition\n\nDo what the question says.\n\n#### Algorithm\n\nSort the entire array. Then iterate over it to find the maximum gap between two successive elements.\n\n<iframe src=\"https://leetcode.com/playground/MTcmKG6N/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"MTcmKG6N\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $$O(n\\log n)$$.\n\n    Time taken to sort the array is $$O(n\\log n)$$ (average case). Time taken for linear iteration through the array is of $$O(n)$$ complexity. Hence overall time complexity is $$O(n\\log n)$$.\n\n* Space complexity: No extra space needed, other than the input array (since sorting can usually be done in-place).\n<br />\n<br />\n\n---\n\n### Approach 2: Radix Sort\n\n#### Algorithm\n\nThis approach is similar to [Approach 1](#approach-1-comparison-sorting), except we use [Radix Sort](https://en.wikipedia.org/wiki/Radix_sort) instead of a traditional comparison sort.\n\n<iframe src=\"https://leetcode.com/playground/X7NTScKL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"X7NTScKL\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $$O(d \\cdot (n + k)) \\approx O(n)$$.\n\n    Since a linear iteration over the array (once it is sorted) is of linear (i.e. $$O(n)$$) complexity, the performance of this approach is limited by the performance of Radix sort.\n\n    Radix sort uses [Counting sort](https://en.wikipedia.org/wiki/Counting_sort) as a subroutine.\n\n    + Counting sort runs in $$O(n + k)$$ time (where $$k$$ is the radix or base of the digits comprising the $$n$$ elements in the array). If $$k \\leq O(n)$$, Counting sort would run in linear time. In our case, the radix is fixed (i.e. $$k = 10$$). Hence our Counting sort subroutine runs in $$O(n)$$ linear time.\n\n    + Radix sort works by running $$d$$ passes of the Counting sort subroutine (where the elements are composed of, maximally, $$d$$ digits). Hence effective runtime of Radix sort would be $$O(d \\cdot (n + k))$$. However, in our case an element can, maximally, be the maximum 32-bit signed integer `2,147,483,647`. Hence $$d \\leq 10$$ is a constant.\n\n    Thus Radix sort has a runtime performance complexity of about $$O(n)$$ for reasonably large input.\n\n* Space complexity: $$O(n + k) \\approx O(n)$$ extra space.\n\n    Counting sort requires $$O(k)$$ extra space. Radix sort requires an auxiliary array of the same size as input array. However given that $$k$$ is a small fixed constant, the space required by Counting sort can be ignored for reasonably large input.\n\n<br />\n\n---\n### Approach 3: Buckets and The Pigeonhole Principle\n\n#### Intuition\n\nSorting an entire array can be costly. At worst, it requires comparing each element with *every* other element.\nWhat if we didn't need to compare all pairs of elements? That would be possible if we could somehow divide the elements into representative groups, or rather, *buckets*. Then we would only need to compare these buckets.\n\n> **Digression: The Pigeonhole Principle**\nThe [Pigeonhole Principle](https://en.wikipedia.org/wiki/Pigeonhole_principle) states that if $$n$$ items are put into $$m$$ containers, with $$n > m$$, then at least one container must contain more than one item.\n\nSuppose for each of the $$n$$ elements in our array, there was a bucket. Then each element would occupy one bucket. Now what if we reduced, the number of buckets? Some buckets would have to accommodate more than one element.\n\nNow let's talk about the gaps between the elements. Let's take the best case, where all elements of the array are sorted and have a uniform gap between them. This means every adjacent pair of elements differ by the same constant value. So for $$n$$ elements of the array, there are $$n-1$$ gaps, each of width, say, $$t_0$$. It is trivial to deduce that $$t_0 = (max - min)/(n-1)$$ (where $$max$$ and $$min$$ are the minimum and maximum elements of the array). This width is the maximal width/gap between two adjacent elements in the array; precisely the quantity we are looking for!\n\nOne can safely argue that this value of $$t_0$$, is in fact, the smallest value that $$t$$ can ever accomplish of any array with the same number of elements (i.e. $$n$$) and the same range (i.e. $$(max - min)$$). To test this fact, you can start with a uniform width array (as described above) and try to reduce the gap between any two adjacent elements. If you reduce the gap between $$arr[i-1]$$ and $$arr[i]$$ to some value $$t - p$$, then you will notice that the gap between $$arr[i]$$ and $$arr[i+1]$$ would have increased to $$t + p$$. Hence the maximum attainable gap would have become $$t + p$$ from $$t$$. Thus the value of the **maximum gap** $$t$$ can only increase.\n\n**Buckets!**\n\nComing back to our problem, we have already established by application of the Pigeonhole Principle, that if we used *buckets* instead of individual elements as our base for comparison, the number of comparisons would reduce if we could accommodate more than one element in a single bucket. That does not immediately solve the problem though. What if we had to compare elements *within* a bucket? We would end up no better.\n\nSo the current motivation remains: somehow, if we only had to compare among the buckets, and *not* the elements *within* the buckets, we would be good. It would also solve our sorting problem: we would just distribute the elements to the right buckets. Since the buckets can be already ordered, and we only compare among buckets, we wouldn't have to compare all elements to sort them!\n\nBut if we only had buckets to compare, we would have to *ensure*, that the gap between the buckets itself represent the maximal gap in the input array. How do we go about doing that?\n\nWe could do that just by setting the buckets to be smaller than $$t_0 = (max - min)/(n-1)$$ (as described above). Since the gaps (between elements) within the same bucket would only be $$\\leq t$$, we could deduce that the maximal gap would *indeed* occur **only between two adjacent buckets**.\n\nHence by setting bucket size $$b$$ to be $$1 < b \\leq (max - min)/(n-1)$$, we can ensure that at least one of the gaps between adjacent buckets would serve as the **maximal gap.**\n\n**Clarifications**\n\nA few clarifications are in order:\n\n+ **Would the buckets be of uniform size?**\nYes. Each bucket has a fixed size of $$b$$.  \n\n+ **But, then wouldn't the gap between them be uniform and constant as well?**\nYes, the boundaries of the buckets are evenly spaced, with a fixed gap of $$1$$ integer unit. That means two adjacent buckets of size $$3$$ could hold integers in ranges like $$3$$ to $$6$$ and $$7$$ to $$9$$. We avoid overlapping buckets.  \n\n+ **Then what do you mean when you say the gap between two adjacent buckets could be the maximal gap?**\nThe bucket size refers to its capacity, which is the range of values it *could* hold. However, the actual numbers that end up in a bucket depend on the input values. The *actual extent* of a bucket is determined by the maximum and minimum values it contains.  \nFor example, a bucket of size $$5$$ could theoretically hold values from $$6$$ to $$10$$. But if it only contains $$7$$, $$8$$, and $$9$$, then its actual extent is $$(9 - 7) + 1 = 3$$, which is smaller than its full capacity.  \nThis is why the gap between two occupied buckets, meaning the difference between the maximum value in one bucket and the minimum value in the next occupied bucket, can be larger than the fixed boundary gap of $$1$$.  \n\n+ **Then how do you compare adjacent buckets?**\nWe do that by comparing their extents. Thus we compare the minimum element of the next bucket to the maximum element of the current bucket. For example: if we have two buckets of size $$5$$ each, holding elements $$[1, 2, 3]$$ and $$[9, 10]$$ respectively, then the gap between the buckets would essentially refer to the value $$9 - 3 = 6$$ (which is larger than the size of either bucket).\n\n+ **But then aren't we comparing elements again?!**\nWe are, yes! But only compare about twice the elements as the number of buckets (i.e. the minimum and maximum elements of each bucket). If you followed the above, you would realize that this amount is certainly less than the actual number of elements in the array, given a suitable bucket size was chosen.\n\n#### Algorithm\n\n+ We choose a bucket size $$b$$ such that $$1 < b \\leq (max - min)/(n-1)$$. Let's just choose $$b = \\lfloor (max - min)/(n-1) \\rfloor$$.\n\n+ Thus all the $$n$$ elements would be divided among $$k = \\lceil (max - min)/b \\rceil$$ buckets.\n\n+ Hence the $$i^{th}$$ bucket would hold the range of values: $$\\bigg [min + (i-1) * b, \\space min + i*b \\bigg )$$ (`1`-based indexing).\n\n+ It is trivial to calculate the index of the bucket to which a particular element belongs. That is given by $$\\lfloor (num - min)/b \\rfloor$$ (`0`-based indexing) where $$num$$ is the element in question.\n\n+ Once all $$n$$ elements have been distributed, we compare $$k-1$$ adjacent bucket pairs to find the maximum gap.\n\n<iframe src=\"https://leetcode.com/playground/4DVzeNdT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4DVzeNdT\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $$O(n + k) \\approx O(n)$$.\n\n    Distributing the elements of the array takes one linear pass (i.e., $$O(n)$$ complexity). Finding the maximum gap among the buckets takes a linear pass over the bucket storage (i.e., $$O(k)$$ complexity). Since the number of buckets is at most the number of elements (i.e., $$k \\leq n$$), the overall process takes linear time: $$O(n + k) = O(n)$$.  \n\n* Space complexity: $$O(2 \\cdot k) \\approx O(k)$$ extra space.\n\n    Each bucket stores a maximum and a minimum element. Hence, extra space proportional to the number of buckets is required.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

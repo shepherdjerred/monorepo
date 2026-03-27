@@ -1,0 +1,134 @@
+{
+  "questionId": "60",
+  "questionFrontendId": "60",
+  "title": "Permutation Sequence",
+  "titleSlug": "permutation-sequence",
+  "difficulty": "Hard",
+  "content": "<p>The set <code>[1, 2, 3, ...,&nbsp;n]</code> contains a total of <code>n!</code> unique permutations.</p>\n\n<p>By listing and labeling all of the permutations in order, we get the following sequence for <code>n = 3</code>:</p>\n\n<ol>\n\t<li><code>&quot;123&quot;</code></li>\n\t<li><code>&quot;132&quot;</code></li>\n\t<li><code>&quot;213&quot;</code></li>\n\t<li><code>&quot;231&quot;</code></li>\n\t<li><code>&quot;312&quot;</code></li>\n\t<li><code>&quot;321&quot;</code></li>\n</ol>\n\n<p>Given <code>n</code> and <code>k</code>, return the <code>k<sup>th</sup></code> permutation sequence.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> n = 3, k = 3\n<strong>Output:</strong> \"213\"\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> n = 4, k = 9\n<strong>Output:</strong> \"2314\"\n</pre><p><strong class=\"example\">Example 3:</strong></p>\n<pre><strong>Input:</strong> n = 3, k = 1\n<strong>Output:</strong> \"123\"\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 9</code></li>\n\t<li><code>1 &lt;= k &lt;= n!</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"getPermutation\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    },\r\n    {\r\n      \"name\": \"k\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"564.9K\", \"totalSubmission\": \"1.1M\", \"totalAcceptedRaw\": 564902, \"totalSubmissionRaw\": 1075316, \"acRate\": \"52.5%\"}",
+  "likes": 7247,
+  "dislikes": 510,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Next Permutation\", \"titleSlug\": \"next-permutation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Permutations\", \"titleSlug\": \"permutations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3\n3",
+    "4\n9",
+    "3\n1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"jump-trading\", \"name\": \"Jump Trading\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string getPermutation(int n, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String getPermutation(int n, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def getPermutation(self, n: int, k: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def getPermutation(self, n, k):\n        \"\"\"\n        :type n: int\n        :type k: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} k\n * @return {string}\n */\nvar getPermutation = function(n, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function getPermutation(n: number, k: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string GetPermutation(int n, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* getPermutation(int n, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func getPermutation(n int, k int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun getPermutation(n: Int, k: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func getPermutation(_ n: Int, _ k: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn get_permutation(n: i32, k: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} k\n# @return {String}\ndef get_permutation(n, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $k\n     * @return String\n     */\n    function getPermutation($n, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String getPermutation(int n, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def getPermutation(n: Int, k: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec get_permutation(n :: integer, k :: integer) :: String.t\n  def get_permutation(n, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec get_permutation(N :: integer(), K :: integer()) -> unicode:unicode_binary().\nget_permutation(N, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (get-permutation n k)\n  (-> exact-integer? exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "850",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Solution Pattern\n\nThere are three main types of interview questions about permutations:\n\n- 1. [Generate all permutations](https://leetcode.com/articles/permutations/).\n\n- 2. [Generate next permutation](https://leetcode.com/articles/next-permutation/).\n\n- 3. Generate the permutation number k (current problem).\n\nIf the order of generated permutations is not important, one could use [\"swap\" backtracking](https://leetcode.com/articles/permutations/) to solve the first problem and to generate all $$N!$$ permutations in $$\\mathcal{O}(N \\times N!)$$ time. \n\nAlthough, it is better to generate permutations in lexicographically sorted order using [D.E. Knuth algorithm](https://leetcode.com/articles/next-permutation/). This algorithm generates a new permutation from the previous one in $$\\mathcal{O}(N)$$ time. The same algorithm could be used to solve the second problem above.\n\nThe problem number three is where the fun starts because the above two algorithms do not apply: \n\n- You will be asked to fit into polynomial time complexity, _i.e._ no backtracking.\n\n- The previous permutation is unknown, _i.e._ you cannot use the D.E. Knuth algorithm. \n\nTo solve the problem, one could use a pretty elegant idea that is based on the mapping. It's much easier to generate numbers than combinations or permutations.\n\n>So let us generate numbers, and then map them to combinations/subsets/permutations.\n\nThis sort of encoding is widely used in password-cracking algorithms. \n\nFor example, [in a previous article](https://leetcode.com/articles/subsets/) we discussed how one could map a subset with a binary bitmask of length N, where i*th* `0` means \"the element number i is absent\" and i*th* `1` means \"the element number i is present\".\n\nOne could do the same for permutations, mapping permutation with the integer in [Factorial Number System Representation](https://en.wikipedia.org/wiki/Factorial_number_system). \n\n---\n### Approach 1: Factorial Number System\n\n**Why Do We Need Factorial Number System**\n\nUsually standard decimal or binary [positional system](https://en.wikipedia.org/wiki/Numeral_system#Positional_systems_in_detail) could meet our needs. For example, each subset could be described by a number in binary representation\n\n$$\nk = \\sum\\limits_{m = 0}^{N - 1}{k_m 2^m}, \\qquad 0 \\le k_m \\le 1 \n$$\n\nHere is how it works:\n\n![diff](../Figures/60/subsets.png)\n\nThe problem with permutations is that there is a much more permutations than subsets, $$N!$$ grows up much faster than $$2^N$$. Therefore, the solution space provided by the positional system with a constant base cannot match with the number of permutations.\n\nHere is where the factorial number system enters the scene. It's a positional system with _non-constant base_ $$m!$$\n\n$$\nk = \\sum\\limits_{m = 0}^{N - 1}{k_m m!}, \\qquad 0 \\le k_m \\le m \n$$\n \nNote, that the magnitude of weights is not constant as well and depends on the base: $$0 \\le k_m \\le m$$ for the base $$m!$$, _i.e._ $$k_0 = 0$$, $$0 \\le k_1 \\le 1$$, $$0 \\le k_2 \\le 2$$, etc. \n\nHere is how this mapping works:\n\n![diff](../Figures/60/permutations2.png)\n\nWe could now map all permutations, from permutation number zero: $$k = 0 = \\sum\\limits_{m = 0}^{N - 1}{0 \\times m!}$$ to permutation number $$N! - 1$$: $$k = N! - 1 = \\sum\\limits_{m = 0}^{N - 1}{m \\times m!}$$.\n\n> Hence we have a way to encode permutation numbers into factorial representation. Now let us use this factorial representation to construct the permutation itself.\n\n**How to Construct the Permutation from its Factorial Representation**\n\nLet us pick up $$N = 3$$, which corresponds to the input array `nums = [1, 2, 3]`, and construct its permutation number $$k = 3$$. Since we number the permutations from 0 to $$N! - 1$$ (and _not_ from 1 to $$N!$$ as in the problem description), for us that will be the permutation number $$k = 2$$.\n\nLet us first construct the factorial representation of $$k = 2$$:\n\n$$\nk = 2 = 1 \\times 2! + 0 \\times 1! + 0 \\times 0! = (1, 0, 0)\n$$\n\n> The coefficients in factorial representation are indexes of elements in the input array. These are not direct indexes, but the indexes after the removal of already used elements. That's a consequence of the fact that each element should be used in permutation only once.\n\n![diff](../Figures/60/index.png)\n\nHere the first number is `1`, _i.e._ the first element in the permutation is `nums[1] = 2`. Let us use `nums[1] = 2` in the permutation and then delete it from `nums`, since each element should be used only once.\n\n![diff](../Figures/60/step1.png)\n\nThe next coefficient in factorial representation is `0`. Let's use `nums[0] = 1` in the permutation and then delete it from `nums`.\n\n![diff](../Figures/60/step2.png)\n\nThe next coefficient in factorial representation is `0`. Let's use `nums[0] = 3` in the permutation and then delete it from `nums`. The job is done.\n\n![diff](../Figures/60/step3.png)\n\n**Algorithm**\n\n- Generate input array `nums` of numbers from $$1$$ to $$N$$.\n\n- Compute all factorial bases from $$0$$ to $$(N  - 1)!$$.  \n\n- Decrease $$k$$ by 1 to make it fit into $$(0, N! - 1)$$ interval.\n\n- Compute factorial representation of $$k$$. Use factorial coefficients to construct the permutation. \n\n- Return the permutation string.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/dKGrpoMk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dKGrpoMk\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N^2)$$, because to delete elements from the list in a loop one has to perform $$N + (N - 1) + ... + 1 = N(N - 1)/2$$ operations. \n    \n* Space complexity: $$\\mathcal{O}(N)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

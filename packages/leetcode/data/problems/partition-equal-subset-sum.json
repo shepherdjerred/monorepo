@@ -1,0 +1,133 @@
+{
+  "questionId": "416",
+  "questionFrontendId": "416",
+  "title": "Partition Equal Subset Sum",
+  "titleSlug": "partition-equal-subset-sum",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code>, return <code>true</code> <em>if you can partition the array into two subsets such that the sum of the elements in both subsets is equal or </em><code>false</code><em> otherwise</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,5,11,5]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The array can be partitioned as [1, 5, 5] and [11].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,5]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> The array cannot be partitioned into equal sum subsets.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 200</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"canPartition\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.5M\", \"totalSubmission\": \"3M\", \"totalAcceptedRaw\": 1474560, \"totalSubmissionRaw\": 2990573, \"acRate\": \"49.3%\"}",
+  "likes": 13838,
+  "dislikes": 298,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Partition to K Equal Sum Subsets\", \"titleSlug\": \"partition-to-k-equal-sum-subsets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimize the Difference Between Target and Chosen Elements\", \"titleSlug\": \"minimize-the-difference-between-target-and-chosen-elements\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Ways to Partition an Array\", \"titleSlug\": \"maximum-number-of-ways-to-partition-an-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Partition Array Into Two Arrays to Minimize Sum Difference\", \"titleSlug\": \"partition-array-into-two-arrays-to-minimize-sum-difference\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find Subarrays With Equal Sum\", \"titleSlug\": \"find-subarrays-with-equal-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Number of Great Partitions\", \"titleSlug\": \"number-of-great-partitions\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Split With Minimum Sum\", \"titleSlug\": \"split-with-minimum-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,5,11,5]",
+    "[1,2,3,5]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 5, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 4, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 3, \"slug\": \"epam-systems\", \"name\": \"EPAM Systems\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"dream11\", \"name\": \"Dream11\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 2, \"slug\": \"ebay\", \"name\": \"eBay\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool canPartition(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean canPartition(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def canPartition(self, nums: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def canPartition(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {boolean}\n */\nvar canPartition = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function canPartition(nums: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CanPartition(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool canPartition(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func canPartition(nums []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun canPartition(nums: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func canPartition(_ nums: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn can_partition(nums: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Boolean}\ndef can_partition(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Boolean\n     */\n    function canPartition($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool canPartition(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def canPartition(nums: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec can_partition(nums :: [integer]) :: boolean\n  def can_partition(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec can_partition(Nums :: [integer()]) -> boolean().\ncan_partition(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (can-partition nums)\n  (-> (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1000",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/487088932?texttrack=en\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n---\n\n### Overview ####\n\nThe problem is similar to the classic _Knapsack_ problem. The basic idea is to understand that to partition an array into two subsets of equal sum say $$\\text{subSetSum}$$,  the $$\\text{totalSum}$$ of given array must be twice the $$\\text{subSetSum}$$\n\n$$\\text{totalSum} = \\text{subSetSum} * 2$$\n\nThis could also be written as,\n$$\\text{subSetSum} = \\text{totalSum}/2$$\n\n_Example_\nAssume $$\\text{totalSum}$$ of an array is $$20$$ and if we want to partition it into 2 subsets of equal sum, then the $$\\text{subSetSum}$$ must be $$(20/2) = 10$$.\n\nNow, the problem to find the subset with a sum equals a given target. Here target is $$\\text{subSetSum}$$.\n\nIt must be noted that the total sum of an array must be _even_, only then we can divide it into 2 equal subsets. For instance, we cannot have an equal $$\\text{subSetSum}$$ for an array with total sum as $$21$$.\n\n**Note:**\n\n>Finding a subset with a sum equal to a given target is different than [Subarray sum equals k](https://leetcode.com/problems/subarray-sum-equals-k/). Subarray is a contiguous sequence of array elements, whereas the subset could consist of any array elements regardless of the sequence. But each array element must belong to exactly one subset.\n\nLet's discuss different algorithms to find the subset with a given sum.\n\n---\n\n### Approach 1: Brute Force\n\n**Intuition**\n\nWe have to find a subset in an array where the sum must be equal to $$\\text{subSetSum}$$ that we calculated above. The brute force approach would be to generate all the possible subsets of an array and return true if we find a subset with the required sum.\n\n**Algorithm**\n\nAssume, there is an array $$\\text{nums}$$ of size $$n$$ and we have to find if there exists a subset with total $$\\text{sum} = \\text{subSetSum}$$.\nFor a given array element $$x$$, there could be either of 2 possibilities:\n\n- Case 1) $$x$$ is included in subset sum. $$\\text{subSetSum} = \\text{subSetSum} - x$$\n\n- Case 2) $$x$$ is not included in subset sum, so we must take previous sum without $$x$$. $$\\text{subSetSum} = \\text{subSetSum}$$\n\nWe can use _depth first search_ and recursively calculate the $$\\text{subSetSum}$$ for each case and check if either of them is true. This can be formulated as\n\n```java\nisSum (subSetSum, n) = isSum(subSetSum- nums[n], n-1) ||  isSum(subSetSum, n-1)\n```\n\n_Base Cases_\n\n- If $$\\text{subSetSum}$$ is $$0$$, return _true_ ( Since we found a subset with sum subSetSum )\n- If $$\\text{subSetSum}$$ is less than $$0$$, return _false_\n\n<iframe src=\"https://leetcode.com/playground/SFRRwWQj/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"SFRRwWQj\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$\\mathcal{O}(2^{n})$$, where $$n$$ is equal to number of array elements.\nThe recursive solution takes the form of a binary tree where there are 2 possibilities for every array element and the maximum depth of the tree could be $$n$$.  The time complexity is exponential, hence this approach is exhaustive and results in _Time Limit Exceeded (TLE)_.\n\n- Space Complexity: $$\\mathcal{O}(N)$$ This space will be used to store the recursion stack. We can’t have more than $$n$$ recursive calls on the call stack at any time.\n\n---\n\n### Approach 2: Top Down Dynamic Programming - Memoization\n\n**Intuition**\n\nIn the above approach, we observe that the same subproblem is computed and solved multiple times.\n\nExample :\n\n![img](../Figures/416/subset_sum_rec_tree.png)\n\nIn the above recursion tree, we could see that   $$\\text{isSum}( 3,[6] )$$  is computed twice and the result is always the same. Since the same subproblem is computed again and again, the problem has _Overlapping Subproblem_ property and can be solved using _Dynamic Programming_.\n\n**Algorithm**\n\n We could have stored the results of our computation for the first time and used it later.\n This technique of computing once and returning the stored value is called memoization.\nWe use a two dimensional array $$\\text{memo}$$ and follow the following steps for each recursive call :\n- Check if subSetSum for a given $$n$$ exists in $$\\text{memo}$$ to see if we can avoid computing the answer and return the result stored in memo.\n- Save the results of any calculations to $$\\text{memo}$$.\n\n<iframe src=\"https://leetcode.com/playground/cKT8aG9C/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"cKT8aG9C\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n$$ be the number of array elements and $$m$$ be the $$\\text{subSetSum}$$.\n\n- Time Complexity : $$\\mathcal{O}(m \\cdot n)$$.\n\n    - In the worst case where there is no overlapping calculation, the maximum number of entries in the `memo` would be $$m \\cdot n$$. For each entry, overall we could consider that it takes constant time, _i.e._ each invocation of `dfs()` at most emits one entry in the `memo`.\n\n    - The overall computation is proportional to the number of entries in `memo`. Hence, the overall time complexity is $$\\mathcal{O}(m \\cdot n)$$.\n\n- Space Complexity: $$\\mathcal{O}(m \\cdot n)$$. We are using a 2 dimensional array $$\\text{memo}$$ of size $$(m \\cdot n)$$ and $$\\mathcal{O}(n)$$ space to store the recursive call stack. This gives us the space complexity as $$\\mathcal{O}(n)$$ + $$\\mathcal{O}(m \\cdot n)$$ = $$\\mathcal{O}(m \\cdot n)$$\n\n---\n\n### Approach 3: Bottom Up Dynamic Programming\n\n**Intuition**\n\nThis is another approach to solving the Dynamic Programming problems. We use the iterative approach and store the result of subproblems in bottom-up fashion also known as Tabulation.\n\n**Algorithm**\n\nWe maintain a 2D array ,\n$$\\text{dp}[n][\\text{subSetSum}]$$\nFor an array element $$i$$ and sum $$j$$ in array $$\\text{nums}$$,\n\n$$\\text{dp}[i][j] =\n\\text{true}$$ if the sum $$j$$ can be formed by array elements in subset $$\\text{nums[0]} .. \\text{nums[i]}$$,otherwise $$\\text{dp}[i][j] = \\text{false}$$\n\n$$\\text{dp}[i][j]$$ is $$\\text{true}$$ it satisfies one of the following conditions :\n\n- Case 1) sum $$j$$ can be formed without including $$i^{th}$$ element,\n\n$$\\text{if } \\text{dp}[i-1][j] ==   \\text{true}$$\n\n- Case 2) sum $$j$$ can be formed including $$i^{th}$$ element,\n\n$$\\text{if } \\text{dp}[i-1][j - \\text{nums}[i]] == \\text{true}$$\n\n!?!../Documents/416_LIS.json:1094,378!?!\n\n<iframe src=\"https://leetcode.com/playground/nE8wLBQ6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nE8wLBQ6\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$\\mathcal{O}(m \\cdot n)$$, where $$m$$ is the $$\\text{subSetSum}$$, and $$n$$ is the number of array elements. We iteratively fill the array of size $$m \\cdot n$$.\n\n- Space Complexity : $$\\mathcal{O}(m \\cdot n)$$ , where $$n$$ is the number of array elements and $$m$$ is the $$\\text{subSetSum}$$. We are using a 2 dimensional array $$\\text{dp}$$ of size $$m \\cdot n$$\n\n---\n\n### Approach 4: Optimised Dynamic Programming - Using 1D Array\n\n**Intuition**\n\nWe could further optimize _Approach 3_. We must understand that for any array element $$i$$, we need results of the previous iteration (i-1) only. Hence, we could achieve the same using a one-dimensional array as well.\n\n<iframe src=\"https://leetcode.com/playground/kok79NAa/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"kok79NAa\"></iframe>\n\n**Complexity Analysis**\n\n- Time Complexity : $$\\mathcal{O}(m \\cdot n)$$, where $$m$$ is the $$\\text{subSetSum}$$, and $$n$$ is the number of array elements. The time complexity is the same as _Approach 3_.\n\n- Space Complexity: $$\\mathcal{O}(m)$$, As we use an array of size $$m$$ to store the result of subproblems.\n\n**Note:**\n\nThe overall performance of _Approach 2_ is better than all the approaches discussed above. This is because we terminate our search as soon as we find a subset with the required sum. Hence, it performs better in most cases except for the worst case.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

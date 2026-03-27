@@ -1,0 +1,142 @@
+{
+  "questionId": "209",
+  "questionFrontendId": "209",
+  "title": "Minimum Size Subarray Sum",
+  "titleSlug": "minimum-size-subarray-sum",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of positive integers <code>nums</code> and a positive integer <code>target</code>, return <em>the <strong>minimal length</strong> of a </em><span data-keyword=\"subarray-nonempty\"><em>subarray</em></span><em> whose sum is greater than or equal to</em> <code>target</code>. If there is no such subarray, return <code>0</code> instead.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> target = 7, nums = [2,3,1,2,4,3]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The subarray [4,3] has the minimal length under the problem constraint.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> target = 4, nums = [1,4,4]\n<strong>Output:</strong> 1\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> target = 11, nums = [1,1,1,1,1,1,1,1]\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= target &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<strong>Follow up:</strong> If you have figured out the <code>O(n)</code> solution, try coding another solution of which the time complexity is <code>O(n log(n))</code>.",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"minSubArrayLen\",\n  \"params\": [\n    {\n      \"name\": \"target\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1.8M\", \"totalSubmission\": \"3.6M\", \"totalAcceptedRaw\": 1830730, \"totalSubmissionRaw\": 3568646, \"acRate\": \"51.3%\"}",
+  "likes": 14363,
+  "dislikes": 541,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Window Substring\", \"titleSlug\": \"minimum-window-substring\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Size Subarray Sum Equals k\", \"titleSlug\": \"maximum-size-subarray-sum-equals-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Length of Repeated Subarray\", \"titleSlug\": \"maximum-length-of-repeated-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Reduce X to Zero\", \"titleSlug\": \"minimum-operations-to-reduce-x-to-zero\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"K Radius Subarray Averages\", \"titleSlug\": \"k-radius-subarray-averages\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Product After K Increments\", \"titleSlug\": \"maximum-product-after-k-increments\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Shortest Subarray With OR at Least K I\", \"titleSlug\": \"shortest-subarray-with-or-at-least-k-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Positive Sum Subarray \", \"titleSlug\": \"minimum-positive-sum-subarray\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "7\n[2,3,1,2,4,3]",
+    "4\n[1,4,4]",
+    "11\n[1,1,1,1,1,1,1,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 21, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 8, \"slug\": \"bcg\", \"name\": \"BCG\"}, {\"timesEncountered\": 7, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 6, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 4, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"autodesk\", \"name\": \"Autodesk\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minSubArrayLen(int target, vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minSubArrayLen(int target, int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minSubArrayLen(self, target: int, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minSubArrayLen(self, target, nums):\n        \"\"\"\n        :type target: int\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} target\n * @param {number[]} nums\n * @return {number}\n */\nvar minSubArrayLen = function(target, nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minSubArrayLen(target: number, nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinSubArrayLen(int target, int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minSubArrayLen(int target, int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minSubArrayLen(target int, nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minSubArrayLen(target: Int, nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minSubArrayLen(_ target: Int, _ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_sub_array_len(target: i32, nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} target\n# @param {Integer[]} nums\n# @return {Integer}\ndef min_sub_array_len(target, nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $target\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function minSubArrayLen($target, $nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minSubArrayLen(int target, List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minSubArrayLen(target: Int, nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_sub_array_len(target :: integer, nums :: [integer]) :: integer\n  def min_sub_array_len(target, nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_sub_array_len(Target :: integer(), Nums :: [integer()]) -> integer().\nmin_sub_array_len(Target, Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-sub-array-len target nums)\n  (-> exact-integer? (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1915",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nGiven an array of positive integers `nums` and a positive integer `target`, our task is to return the minimal length of a subarray whose sum is greater than or equal to `target`. If there is no such subarray, we have to return `0`.\n\n---\n\n### Approach: Sliding Window\n\n#### Intuition\n\nAn intuitive technique is to go through all the subarrays one by one and check the sum of each one. If the total of the subarray under consideration is larger than or equal to `target`, we attempt to update our answer variable by using the minimum of the current answer and the length of this subarray. To get all the subarrays, we can run two loops: the outer loop selects a starting point and the inner loop selects an ending point. This solution, however, will take $O(n^2)$ time, resulting in a time limit exceeded (TLE).\n\nLet's think whether we really need to iterate over all the subarrays. \n\nGiven that we only have positive integers, there is no purpose in adding further elements to a subarray if its sum exceeds or equals `target`. Adding more elements to such a subarray will result in the construction of longer subarrays, which is useless because we have already found a smaller subarray that meets our requirements.\n\nOnly if the sum of the current subarray under consideration is smaller than `target`, we should append elements to the subarray. When the sum of the subarrays exceeds or equals `target`, we will attempt to update our answer with the length of the current subarray.\n\nWe now try to remove the elements from the start and see if we can form a smaller subarray that meets our requirements. We remove the first element from the subarray and check if we still have the total higher than or equal to `target`. If the total exceeds or equals `target`, we have a smaller subarray that meets our requirement. As a result, we again try to update our answer with the length of the current subarray and repeat the process of eliminating the first element from the current subarray until the sum no longer exceeds or equals `target`.\n\nNow after removing elements, if the sum of the subarray is less than `target`, we have to append more elements to it until the sum becomes larger than or equal to `target`. We append elements until the sum equals or exceeds `target`, then try to update our answer variable and repeat the process of eliminating the first element.\n\nThe above approach can be efficiently solved using the **sliding window approach**.\n\nIf you are not familiar with sliding window, please refer to our explore cards [Sliding Window Explore Card](https://leetcode.com/explore/featured/card/leetcodes-interview-crash-course-data-structures-and-algorithms/703/arraystrings/4502/).\n\nA sliding window is achieved by using two pointers `left` and `right`, which point to the starting and ending indices of the subarray. We set them to a value of `0`.\n\nTo \"add\" elements to the window, we loop over the array by incrementing `right`. In this problem, if the sum of the window exceeds or equals `target`, we try to update our answer and then \"remove\" elements from the window by incrementing `left` until the sum is less than `target` again.\n\nHere's a visual representation of how the approach works:\n\n!?!../Documents/209/209-slides.json:601,301!?!\n\n#### Algorithm\n\n1. Create three integer variables `left`, `right` and `sumOfCurrentWindow`. The variables `left` and `right` form a subarray by pointing to the starting and ending indices of the current subarray (or window), and `sumOfCurrentWindow` stores the sum of this window. Initialize all of them with `0`.\n2. Create another variable `res` to store the answer to the problem. We initialize it to a large integer value.\n3. We iterate over `nums` using `right` starting from `right = 0` till `nums.length - 1` incrementing `right` by `1` after each iteration. We perform the following inside this iteration: \n    - Add element at index `right` to the current window, incrementing `sumOfCurrentWindow` by `nums[right]`.\n    - We check if `sumOfCurrentWindow >= target`. If so, we have a subarray that satisfies our condition. As a result, we attempt to update our answer variable with the length of this subarray. We perform `res = min(res, right - left + 1)`. We then remove the first element from this window by reducing `sumOfCurrentWindow` by `nums[left]` and incrementing `left` by `1`. This step is repeated in an inner loop as long as `sumOfCurrentWindow >= target`.\n    - The current window's sum is now smaller than `target`. We need to add more elements to it. As a result, `right` is incremented by `1`.\n4. Return `res`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/AX72e7bN/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"AX72e7bN\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the length of `nums`.\n\n* Time complexity: $O(n)$.\n    - You may be thinking: there is an inner while loop inside another for loop, isn't the time complexity $O(n^2)$? The reason it is still $O(n)$ is because the right pointer `right` can move $n$ times and the left pointer `left` can move also $n$ times in total. The inner loop is not running $n$ times for each iteration of the outer loop. A sliding window guarantees a maximum of $2n$ window iterations. This is what is referred to as [amortized analysis](https://en.wikipedia.org/wiki/Amortized_analysis) - even though the worst case for an iteration inside the for loop is $O(n)$, it averages out to $O(1)$ when you consider the entire runtime of the algorithm.\n\n* Space complexity: $O(1)$.\n    - We are not using any extra space other than a few integer variables:`left`, `right`, `sumOfCurrentWindow`, and `res`, which takes up constant space each.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

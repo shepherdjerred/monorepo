@@ -1,0 +1,134 @@
+{
+  "questionId": "422",
+  "questionFrontendId": "422",
+  "title": "Valid Word Square",
+  "titleSlug": "valid-word-square",
+  "difficulty": "Easy",
+  "content": "<p>Given an array of strings <code>words</code>, return <code>true</code> <em>if it forms a valid <strong>word square</strong></em>.</p>\n\n<p>A sequence of strings forms a valid <strong>word square</strong> if the <code>k<sup>th</sup></code> row and column read the same string, where <code>0 &lt;= k &lt; max(numRows, numColumns)</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/09/validsq1-grid.jpg\" style=\"width: 333px; height: 333px;\" />\n<pre>\n<strong>Input:</strong> words = [&quot;abcd&quot;,&quot;bnrt&quot;,&quot;crmy&quot;,&quot;dtye&quot;]\n<strong>Output:</strong> true\n<strong>Explanation:</strong>\nThe 1<sup>st</sup> row and 1<sup>st</sup> column both read &quot;abcd&quot;.\nThe 2<sup>nd</sup> row and 2<sup>nd</sup> column both read &quot;bnrt&quot;.\nThe 3<sup>rd</sup> row and 3<sup>rd</sup> column both read &quot;crmy&quot;.\nThe 4<sup>th</sup> row and 4<sup>th</sup> column both read &quot;dtye&quot;.\nTherefore, it is a valid word square.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/09/validsq2-grid.jpg\" style=\"width: 333px; height: 333px;\" />\n<pre>\n<strong>Input:</strong> words = [&quot;abcd&quot;,&quot;bnrt&quot;,&quot;crm&quot;,&quot;dt&quot;]\n<strong>Output:</strong> true\n<strong>Explanation:</strong>\nThe 1<sup>st</sup> row and 1<sup>st</sup> column both read &quot;abcd&quot;.\nThe 2<sup>nd</sup> row and 2<sup>nd</sup> column both read &quot;bnrt&quot;.\nThe 3<sup>rd</sup> row and 3<sup>rd</sup> column both read &quot;crm&quot;.\nThe 4<sup>th</sup> row and 4<sup>th</sup> column both read &quot;dt&quot;.\nTherefore, it is a valid word square.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/09/validsq3-grid.jpg\" style=\"width: 333px; height: 333px;\" />\n<pre>\n<strong>Input:</strong> words = [&quot;ball&quot;,&quot;area&quot;,&quot;read&quot;,&quot;lady&quot;]\n<strong>Output:</strong> false\n<strong>Explanation:</strong>\nThe 3<sup>rd</sup> row reads &quot;read&quot; while the 3<sup>rd</sup> column reads &quot;lead&quot;.\nTherefore, it is NOT a valid word square.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 500</code></li>\n\t<li><code>1 &lt;= words[i].length &lt;= 500</code></li>\n\t<li><code>words[i]</code> consists of only lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"validWordSquare\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"words\",\r\n      \"type\": \"list<string>\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"71K\", \"totalSubmission\": \"165.6K\", \"totalAcceptedRaw\": 70964, \"totalSubmissionRaw\": 165588, \"acRate\": \"42.9%\"}",
+  "likes": 449,
+  "dislikes": 274,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Word Squares\", \"titleSlug\": \"word-squares\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Toeplitz Matrix\", \"titleSlug\": \"toeplitz-matrix\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"abcd\",\"bnrt\",\"crmy\",\"dtye\"]",
+    "[\"abcd\",\"bnrt\",\"crm\",\"dt\"]",
+    "[\"ball\",\"area\",\"read\",\"lady\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool validWordSquare(vector<string>& words) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean validWordSquare(List<String> words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def validWordSquare(self, words: List[str]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def validWordSquare(self, words):\n        \"\"\"\n        :type words: List[str]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @return {boolean}\n */\nvar validWordSquare = function(words) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function validWordSquare(words: string[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool ValidWordSquare(IList<string> words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool validWordSquare(char** words, int wordsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func validWordSquare(words []string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun validWordSquare(words: List<String>): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func validWordSquare(_ words: [String]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn valid_word_square(words: Vec<String>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @return {Boolean}\ndef valid_word_square(words)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @return Boolean\n     */\n    function validWordSquare($words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool validWordSquare(List<String> words) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def validWordSquare(words: List[String]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec valid_word_square(words :: [String.t]) :: boolean\n  def valid_word_square(words) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec valid_word_square(Words :: [unicode:unicode_binary()]) -> boolean().\nvalid_word_square(Words) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (valid-word-square words)\n  (-> (listof string?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1669",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nIn this problem, we have been given strings (i.e. a word) in an array `words`.   \nWe need to check: when all these words are written in a matrix with each row having one word, does the $k^{th}$ row of the matrix match the $k^{th}$ column?\n\n![show_using_image](../Figures/422/Slide1.PNG)\n\n---\n\n### Approach 1: Storing New Words\n\n#### Intuition\n\nWe can start this problem by thinking of generating and storing the new words, (i.e. words represented by each column) and then matching them with the respective row's words.\n\nWe will take an empty strings array `newWords` and fill it by generating new words by iterating on the matrix column-wise.   \nIn the end, we will check if both the array's words at the same index match or not. \n\nGet a brief idea through this slideshow:\n\n!?!../Documents/422/slideshow1.json:1024,768!?!\n\n<br />\n\nAlso we can make note of two facts:  \n\n**First, to form a valid square the number of rows and columns must be equal.**   \nLet's say we have two words with 3 and 2 characters respectively. Thus, columns will represent 3 words but rows will represent only 2 words so we can't make a valid square in this case.\n\n**Second, in a valid square, the first row must have the most characters**   \nLet's say the second row has $6$ characters and the first row has only $5$ characters.    \nThus, the word represented by the $5^{th}$ index column has the first character empty but not the next character(s), so to match the $5^{th}$ index column with the $5^{th}$ index row, the word represented by the row should also have the first character empty (a whitespace), but this is not possible, as given the constraints the row characters will only have alphabetic characters from `'a'` to `'z'`.\n\n![show_using_image_2](../Figures/422/Slide25.PNG)\n\nThus, the first row will denote the number of columns in our matrix and if the first row has less characters than any other row, the matrix won't be a valid square. \n\n\n\n#### Algorithm\n\n1. Initialize variables:\n    - `cols` to `0`, used to store the maximum number of characters of any word in the matrix.\n    - `rows` to `words.size()`, used to store the number of rows in the matrix.\n    - `newWords`, an empty string array to store new words represented by each column of the matrix.\n2. Iterate over all elements in the `words` array and store the length of the maximum length word in `cols` which will be the number of columns in the matrix. \n3. If the first row doesn't have the maximum number of characters or the number of rows is not equal to the number of columns, we can't form a valid square thus we can return `false`.\n4. For each column `col` from `0` to `cols - 1`:\n    - We initialize an empty string variable `newWord`.\n    - Then, we iterate over each row `row`, and if a character exists at the current position `(row, col)` in the matrix we append it in `newWord`.\n    - After generating the word `newWord` represented by the current column `col`, we store it in `newWords` array.\n5. At the end, if `newWords` and `words` have the same elements at the same index we return `true`, otherwise return `false`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/2UdkQcK2/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2UdkQcK2\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number of strings in the `words` array and $m$ is the maximum length of a string.\n\n* Time complexity: $O(n \\cdot m)$          \n  - We iterate on the `words` array to find the maximum number of characters in a word in $O(n)$ time.\n  - Then we iterate over each element of a column to form a word which will take $O(n)$ time, so for $m$ columns, it will take $O(n \\cdot m)$ time.\n  - At the end, we compare strings at same index in `words` and `newWords` arrays which will take $O(m)$ time for each index, so for $n$ strings, we will take $O(n \\cdot m)$ time.\n  - Thus, overall we take $O(n \\cdot m)$ time.\n                    \n* Space complexity: $O(n \\cdot m)$   \n  - We are storing $n$ strings of length $m$ in an additional array. \n  - Thus, we use $O(n \\cdot m)$ space.         \n\n---\n\n### Approach 2: Iterate on the Matrix\n\n#### Intuition\n\nThe previous approach is fairly efficient in terms of run-time and will be accepted, but we can still optimize it further.  \nWe were generating and storing the words represented by each column and then we were comparing them with words represented by rows. Instead, we can directly iterate over the $k^{th}$ row and column characters simultaneously and check if all positions have the same characters or not without storing them. \n\nThis will help in saving computation time like generating new words and comparing them at the end, and the space used to store them.\n\nWe will keep a variable `wordNum` to represent the index of the row and column and a variable `currPos` to point to the current index of the word of the current row and column. Then we will increment `currPos` to match all characters of the current row and column.\nIf all characters match we move to the next word, thus incrementing `wordNum` and checking again.\n\n\nYou can get a brief idea of it with this slideshow:\n\n!?!../Documents/422/slideshow2.json:1024,768!?!\n\n<br />\n\n#### Algorithm\n\n1. Initialize variables, \n    - `wordNum`, representing the number of the row and column of the current word.  \n    - `charPos`, representing the index of the current character of the `wordNum` word.\n2. Iterate over each `wordNum` from `0` to `words.size() - 1`, representing the number of each word:\n    - Then we iterate over each character `charPos` from `0` to `words[wordNum].size() - 1`:\n        - If `currPos` is greater than or equal to `words.size()`, that is, the word represented by the `wordNum`-th row is larger than the respective column's word, or\n        - if `wordNum` is greater than or equal to `words[charPos].size()`, that is, the word represented by the `wordNum`-th column is larger than the respective row's word, or\n        - if the character at index `(wordNum, charPos)` does not match character at index `(charPos, wordNum)` in matrix, then we return `false`.\n3. At the end all words represented by each row would have matched with words represented by respective columns, thus we will return `true`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/henaLJbc/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"henaLJbc\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the number of strings in the $words$ array and $m$ is the maximum length of a string.\n\n* Time complexity: $O(n \\cdot m)$          \n  - We iterate over all characters of a word represented by a row and column which will take $O(m)$ time, thus for $n$ rows we will take $O(n \\cdot m)$ time.\n                    \n* Space complexity: $O(1)$   \n  - We are not using any auxiliary space.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

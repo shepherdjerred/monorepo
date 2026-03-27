@@ -1,0 +1,138 @@
+{
+  "questionId": "628",
+  "questionFrontendId": "628",
+  "title": "Maximum Product of Three Numbers",
+  "titleSlug": "maximum-product-of-three-numbers",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer array <code>nums</code>, <em>find three numbers whose product is maximum and return the maximum product</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> nums = [1,2,3]\n<strong>Output:</strong> 6\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> nums = [1,2,3,4]\n<strong>Output:</strong> 24\n</pre><p><strong class=\"example\">Example 3:</strong></p>\n<pre><strong>Input:</strong> nums = [-1,-2,-3]\n<strong>Output:</strong> -6\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= nums.length &lt;=&nbsp;10<sup>4</sup></code></li>\n\t<li><code>-1000 &lt;= nums[i] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"maximumProduct\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"486.9K\", \"totalSubmission\": \"1.1M\", \"totalAcceptedRaw\": 486859, \"totalSubmissionRaw\": 1062193, \"acRate\": \"45.8%\"}",
+  "likes": 4531,
+  "dislikes": 716,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Product Subarray\", \"titleSlug\": \"maximum-product-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Product of Three Elements After One Replacement\", \"titleSlug\": \"maximum-product-of-three-elements-after-one-replacement\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3]",
+    "[1,2,3,4]",
+    "[-1,-2,-3]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 4, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"keeptruckin\", \"name\": \"Motive\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"siemens\", \"name\": \"Siemens\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumProduct(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumProduct(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumProduct(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumProduct(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar maximumProduct = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumProduct(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumProduct(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumProduct(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumProduct(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumProduct(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumProduct(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_product(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef maximum_product(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function maximumProduct($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumProduct(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumProduct(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_product(nums :: [integer]) :: integer\n  def maximum_product(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_product(Nums :: [integer()]) -> integer().\nmaximum_product(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-product nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "186",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach 1: Brute Force\n\nThe simplest solution is to consider every triplet out of the given $$nums$$ array and check their product and find out the maximum product out of them.\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^3)$$. We need to consider every triplet from $$nums$$ array of length $$n$$.\n\n* Space complexity : $$O(1)$$. Constant extra space is used.\n<br>\n<br>\n\n---\n### Approach 2: Using Sorting\n\n**Algorithm**\n\nAnother solution could be to sort the given $$nums$$ array(in ascending order) and find out the product of the last three numbers. \n\nBut, we can note that this product will be maximum only if all the numbers in $$nums$$ array are positive. But, in the given problem statement, negative elements could exist as well. \n\nThus, it could also be possible that two negative numbers lying at the left extreme end could also contribute to lead to a larger product if the third number in the triplet being considered is the largest positive number in the $$nums$$ array. \n\nThus, either the product $$nums[0] \\times nums[1] \\times nums[n-1]$$ or $$nums[n-3] \\times nums[n-2] \\times nums[n-1]$$ will give the required result. Thus, we need to find the larger one from out of these values.\n\n<iframe src=\"https://leetcode.com/playground/DWuby9Q7/shared\" frameBorder=\"0\" width=\"100%\" height=\"157\" name=\"DWuby9Q7\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O\\big(n\\log n\\big)$$. Sorting the $$nums$$ array takes $$n\\log n$$ time.\n\n* Space complexity : $$O(\\log n)$$. Sorting takes $$O(\\log n)$$ space.\n<br>\n<br>\n\n---\n### Approach 3: Single Scan\n\n**Algorithm**\n\nWe need not necessarily sort the given $$nums$$ array to find the maximum product. Instead, we can only find the required 2 smallest values($$min1$$ and $$min2$$) and the three largest values($$max1, max2, max3$$) in the $$nums$$ array, by iterating over the $$nums$$ array only once. \n\nAt the end, again we can find out the larger value out of $$min1 \\times min2 \\times max1$$ and $$max1 \\times max2 \\times max3$$ to find the required maximum product.\n\n<iframe src=\"https://leetcode.com/playground/eRfoh7yo/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"eRfoh7yo\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. Only one iteration over the $$nums$$ array of length $$n$$ is required.\n\n* Space complexity : $$O(1)$$. Constant extra space is used.\n<br>\n<br>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

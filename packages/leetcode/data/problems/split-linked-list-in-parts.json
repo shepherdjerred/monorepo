@@ -1,0 +1,131 @@
+{
+  "questionId": "725",
+  "questionFrontendId": "725",
+  "title": "Split Linked List in Parts",
+  "titleSlug": "split-linked-list-in-parts",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>head</code> of a singly linked list and an integer <code>k</code>, split the linked list into <code>k</code> consecutive linked list parts.</p>\n\n<p>The length of each part should be as equal as possible: no two parts should have a size differing by more than one. This may lead to some parts being null.</p>\n\n<p>The parts should be in the order of occurrence in the input list, and parts occurring earlier should always have a size greater than or equal to parts occurring later.</p>\n\n<p>Return <em>an array of the </em><code>k</code><em> parts</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/13/split1-lc.jpg\" style=\"width: 400px; height: 134px;\" />\n<pre>\n<strong>Input:</strong> head = [1,2,3], k = 5\n<strong>Output:</strong> [[1],[2],[3],[],[]]\n<strong>Explanation:</strong>\nThe first element output[0] has output[0].val = 1, output[0].next = null.\nThe last element output[4] is null, but its string representation as a ListNode is [].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/06/13/split2-lc.jpg\" style=\"width: 600px; height: 60px;\" />\n<pre>\n<strong>Input:</strong> head = [1,2,3,4,5,6,7,8,9,10], k = 3\n<strong>Output:</strong> [[1,2,3,4],[5,6,7],[8,9,10]]\n<strong>Explanation:</strong>\nThe input has been split into consecutive parts with size difference at most 1, and earlier parts are a larger size than the later parts.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the list is in the range <code>[0, 1000]</code>.</li>\n\t<li><code>0 &lt;= Node.val &lt;= 1000</code></li>\n\t<li><code>1 &lt;= k &lt;= 50</code></li>\n</ul>\n",
+  "hints": [
+    "If there are N nodes in the list, and k parts, then every part has N/k elements, except the first N%k parts have an extra one."
+  ],
+  "metaData": "{\n  \"name\": \"splitListToParts\",\n  \"params\": [\n    {\n      \"name\": \"head\",\n      \"type\": \"ListNode\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"ListNode[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"353.9K\", \"totalSubmission\": \"501.9K\", \"totalAcceptedRaw\": 353858, \"totalSubmissionRaw\": 501871, \"acRate\": \"70.5%\"}",
+  "likes": 4726,
+  "dislikes": 373,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Rotate List\", \"titleSlug\": \"rotate-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Odd Even Linked List\", \"titleSlug\": \"odd-even-linked-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Split a Circular Linked List\", \"titleSlug\": \"split-a-circular-linked-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3]\n5",
+    "[1,2,3,4,5,6,7,8,9,10]\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    vector<ListNode*> splitListToParts(ListNode* head, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public ListNode[] splitListToParts(ListNode head, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def splitListToParts(self, head: Optional[ListNode], k: int) -> List[Optional[ListNode]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def splitListToParts(self, head, k):\n        \"\"\"\n        :type head: Optional[ListNode]\n        :type k: int\n        :rtype: List[Optional[ListNode]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} head\n * @param {number} k\n * @return {ListNode[]}\n */\nvar splitListToParts = function(head, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction splitListToParts(head: ListNode | null, k: number): Array<ListNode | null> {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public ListNode[] SplitListToParts(ListNode head, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nstruct ListNode** splitListToParts(struct ListNode* head, int k, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc splitListToParts(head *ListNode, k int) []*ListNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun splitListToParts(head: ListNode?, k: Int): Array<ListNode?> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func splitListToParts(_ head: ListNode?, _ k: Int) -> [ListNode?] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn split_list_to_parts(head: Option<Box<ListNode>>, k: i32) -> Vec<Option<Box<ListNode>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {ListNode} head\n# @param {Integer} k\n# @return {ListNode[]}\ndef split_list_to_parts(head, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $head\n     * @param Integer $k\n     * @return ListNode[]\n     */\n    function splitListToParts($head, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *   int val;\n *   ListNode? next;\n *   ListNode([this.val = 0, this.next]);\n * }\n */\nclass Solution {\n  List<ListNode?> splitListToParts(ListNode? head, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def splitListToParts(head: ListNode, k: Int): Array[ListNode] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for singly-linked list.\n#\n# defmodule ListNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           next: ListNode.t() | nil\n#         }\n#   defstruct val: 0, next: nil\n# end\n\ndefmodule Solution do\n  @spec split_list_to_parts(head :: ListNode.t | nil, k :: integer) :: [ListNode.t | nil]\n  def split_list_to_parts(head, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for singly-linked list.\n%%\n%% -record(list_node, {val = 0 :: integer(),\n%%                     next = null :: 'null' | #list_node{}}).\n\n-spec split_list_to_parts(Head :: #list_node{} | null, K :: integer()) -> [#list_node{} | null].\nsplit_list_to_parts(Head, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n(define/contract (split-list-to-parts head k)\n  (-> (or/c list-node? #f) exact-integer? (listof (or/c list-node? #f)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2432",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a linked list `head` and an integer `k`. We want to split `head` evenly into `k` equally sized parts and return an array of the `k` parts. If `head` cannot be split evenly, the sizes of the `k` parts can differ by at most 1, with the larger parts appearing before the smaller ones.\n\n### Approach 1: Create New Parts\n\n### Intuition\n\nWe can split the linked list into `k` parts by considering two scenarios: when the list can be split evenly and when it cannot.\n\n- **Even Split**: If the list's size `size` is divisible by `k`, each part will have exactly `size / k` nodes.\n- **Uneven Split**: If `size` is not divisible by `k`, a remainder of `size % k` nodes will remain after dividing `size / k` nodes among the parts. To handle this, we add one extra node to the first `size % k` parts, making their size `size / k + 1`. The rest of the parts will have `size / k` nodes.\n\nIn short, each part will have at least `size / k` nodes. If the list doesn't split evenly, the first `size % k` parts will have one extra node.\n\nTo create these parts, we determine each part's size `currentSize`, then use a pointer to traverse the list. We visit the next `currentSize` nodes for each part and build a new linked list. Once the nodes for that part are processed, we assign the new list to the corresponding element in our array. We repeat this process for all `k` parts.\n\n### Algorithm\n\n1. Initialize `ans` array to store the `k` parts.\n2. Initialize `size = 0` and pointer `current = head`. \n3. Iterate through `head` via `current` and increment `size` at each step to find the total size of `head`.\n4. Now that `size` has the total size of the linked list, we can calculate the minimum size for the `k` parts: `splitSize = size / k`.\n5. We can also calculate how many remaining nodes we have: `numRemainingParts = size % k`. \n6. Reset `current` back to `head` so we can iterate through the linked list again to create our `k` parts.\n7. For `i` where `0 < i < k`:\n    * Initialize the head of the new part `newPart` to a dummy node and initialize a new pointer `tail` to keep track of the end of `newPart` for efficient appending\n    * Calculate the current size `currentSize` of the current part:\n        * Initialize `currentSize = splitSize`\n        * If there are any remaining parts (`numRemainingParts > 0`), then increment `currentSize` and decrement `numRemainingParts` to assign the remaining nodes to the first `size % k` parts\n    * Initialize a counter `j = 0`.\n    * While `j < currentSize`:\n        * Copy the current node and append it to `newPart` by performing `tail.next = new ListNode(current.val)`.\n        * Advance `tail` since a new node just got added to the end\n        * Advance `current` to move on to the next node\n        * Increment `j`\n    * Now that `newPart` is fully built, we can assign it in our array: `ans[i] = newPart.next`\n8. Return `ans`\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/S29dXQKK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"S29dXQKK\"></iframe>\n\n### Complexity Analysis \n\nLet $N$ be the size of the linked list `head.`\n\n* Time Complexity: $O(N)$\n\n    We traverse the entire linked list `head` twice, where each time takes $O(N)$ time. Thus, the total time complexity is $O(N)$.\n\n* Space Complexity: $O(N)$\n\n    There are $N$ new nodes created. This results in a space complexity of $O(N)$. We ignore the $O(K)$ space needed for `ans` since the array is required for the question. \n\n### Approach 2: Modify Linked List\n\n### Intuition\n\nIn the previous approach, we required extra space because we created new nodes for the `k` parts, resulting in a space complexity of $O(N)$. In our second approach, we can modify the input linked list `head` to form the `k` parts directly, eliminating the need for extra space and reducing the space complexity to $O(1)$.\n\nAs before, we iterate through the linked list, processing the next `currentSize` nodes for each part. However, this time, when we reach the last node of a part, we set its `next` field to `null`, effectively dividing the linked list in place without creating new nodes.\n\n> Before presenting this approach to the interviewer, check if modifications are allowed. Some interviewers permit changes, while others do not.\n\n### Algorithm \n\n1. Repeat steps 1-6 from Approach 1 to calculate the total size of the linked list, as well as the minimum size of the `k` parts and the number of remainder nodes.\n2. Initialize a pointer `prev = current` to keep track of the node preceding `current`\n3. For `i` where `0 < i < k`:\n    * Initialize `newPart` to `current`, which will be the head of part `i`.\n    * Calculate the current size `currentSize` of the current part using the same logic in Approach 1\n    * Initialize a counter `j = 0`.\n    * While `j < currentSize`:\n        * Update `prev` to `current`\n        * Advance `current` to next node\n        * Increment `j`\n    * Now, `prev` is pointing to the last node of part `i`, and `current` is pointing to the head of part `i+1`. To cut off the rest of the linked list for part `i`, we reassign `prev.next` to null.\n    * Set `ans[i] = newPart`.\n4. Return `ans`\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/69vsAB8a/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"69vsAB8a\"></iframe>\n\n### Complexity Analysis\n\nLet $N$ be the size of the linked list `head.`\n\n* Time Complexity: $O(N)$\n\n    `head` is traversed twice, which takes $O(N)$ time.\n\n* Space Complexity: $O(1)$\n\n    In contrast to Approach 1, no new nodes are created and the input is modified to create `k` parts. Thus, the space complexity is a constant $O(1)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

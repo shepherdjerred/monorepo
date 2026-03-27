@@ -1,0 +1,133 @@
+{
+  "questionId": "72",
+  "questionFrontendId": "72",
+  "title": "Edit Distance",
+  "titleSlug": "edit-distance",
+  "difficulty": "Medium",
+  "content": "<p>Given two strings <code>word1</code> and <code>word2</code>, return <em>the minimum number of operations required to convert <code>word1</code> to <code>word2</code></em>.</p>\n\n<p>You have the following three operations permitted on a word:</p>\n\n<ul>\n\t<li>Insert a character</li>\n\t<li>Delete a character</li>\n\t<li>Replace a character</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> word1 = &quot;horse&quot;, word2 = &quot;ros&quot;\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> \nhorse -&gt; rorse (replace &#39;h&#39; with &#39;r&#39;)\nrorse -&gt; rose (remove &#39;r&#39;)\nrose -&gt; ros (remove &#39;e&#39;)\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> word1 = &quot;intention&quot;, word2 = &quot;execution&quot;\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> \nintention -&gt; inention (remove &#39;t&#39;)\ninention -&gt; enention (replace &#39;i&#39; with &#39;e&#39;)\nenention -&gt; exention (replace &#39;n&#39; with &#39;x&#39;)\nexention -&gt; exection (replace &#39;n&#39; with &#39;c&#39;)\nexection -&gt; execution (insert &#39;u&#39;)\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= word1.length, word2.length &lt;= 500</code></li>\n\t<li><code>word1</code> and <code>word2</code> consist of lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{ \r\n  \"name\": \"minDistance\",\r\n  \"params\": [\r\n    { \r\n      \"name\": \"word1\",\r\n      \"type\": \"string\"\r\n    },\r\n    { \r\n      \"name\": \"word2\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.4M\", \"totalSubmission\": \"2.4M\", \"totalAcceptedRaw\": 1421289, \"totalSubmissionRaw\": 2356470, \"acRate\": \"60.3%\"}",
+  "likes": 16394,
+  "dislikes": 324,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"One Edit Distance\", \"titleSlug\": \"one-edit-distance\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Delete Operation for Two Strings\", \"titleSlug\": \"delete-operation-for-two-strings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum ASCII Delete Sum for Two Strings\", \"titleSlug\": \"minimum-ascii-delete-sum-for-two-strings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Uncrossed Lines\", \"titleSlug\": \"uncrossed-lines\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum White Tiles After Covering With Carpets\", \"titleSlug\": \"minimum-white-tiles-after-covering-with-carpets\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Longest Palindrome After Substring Concatenation II\", \"titleSlug\": \"longest-palindrome-after-substring-concatenation-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Steps to Convert String with Operations\", \"titleSlug\": \"minimum-steps-to-convert-string-with-operations\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"horse\"\n\"ros\"",
+    "\"intention\"\n\"execution\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"axon\", \"name\": \"Axon\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 2, \"slug\": \"swiggy\", \"name\": \"Swiggy\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 4, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"deloitte\", \"name\": \"Deloitte\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"epam-systems\", \"name\": \"EPAM Systems\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}]}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minDistance(string word1, string word2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minDistance(String word1, String word2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minDistance(self, word1: str, word2: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minDistance(self, word1, word2):\n        \"\"\"\n        :type word1: str\n        :type word2: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} word1\n * @param {string} word2\n * @return {number}\n */\nvar minDistance = function(word1, word2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minDistance(word1: string, word2: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinDistance(string word1, string word2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minDistance(char* word1, char* word2) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minDistance(word1 string, word2 string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minDistance(word1: String, word2: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minDistance(_ word1: String, _ word2: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_distance(word1: String, word2: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} word1\n# @param {String} word2\n# @return {Integer}\ndef min_distance(word1, word2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $word1\n     * @param String $word2\n     * @return Integer\n     */\n    function minDistance($word1, $word2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minDistance(String word1, String word2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minDistance(word1: String, word2: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_distance(word1 :: String.t, word2 :: String.t) :: integer\n  def min_distance(word1, word2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_distance(Word1 :: unicode:unicode_binary(), Word2 :: unicode:unicode_binary()) -> integer().\nmin_distance(Word1, Word2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-distance word1 word2)\n  (-> string? string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1681",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\n\nEdit distance is a term used in computer science. By definition, _Edit distance_ is a string metric, a way of quantifying how dissimilar two strings (e.g. words) are to one another, measured by counting the minimum number of operations required to transform one string into the other. Source: [Wikipedia](https://en.wikipedia.org/wiki/Edit_distance).\n\n> There are different types of \"edit distance\" each having different types of operations to transform one string to another. In this problem, we are referring to [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance).\nThe Levenshtein distance finds edit distances by allowing three types of transformation operations: addition, deletions, and replacements. \n\n<center>\n<img src=\"../Figures/72/transform_example.png\"/>\n</center>\n\nWhat also makes it more interesting to solve this problem is that this problem has several real-world applications.\nThink of it like this, if you want to find the similarity score between 2 strings. The lower the edit distance, the more similar they are.\n\n> One of the real-world applications of this algorithm is the auto-correct feature used in text editors. When you make a spelling mistake, the text editor (a few advanced ones like Microsoft word) highlights the nearest matching words to the typed word. The list of words with the least edit distance from the dictionary would pop up for suggestions.\n\n<center>\n<img src=\"../Figures/72/text_editor_example.png\"/>\n</center>\n\nFurthermore, there are applications in fields like computational biology and natural language processing. [Edit Distance Applications](https://en.wikipedia.org/wiki/Edit_distance#Applications)\n\nThe goal is to find the edit distance between 2 given strings, `word1` and `word2`. Let us now discuss the approaches to solving this problem. \n\n---\n\n### Approach 1: Recursion\n\n#### Intuition\n\nLet us start by first identifying the ground rules.\n\n1. \"If the two strings are the same, the edit distance is zero\".\n\n`word1 = \"abcd\"`, `word2 = \"abcd\"`\n\nEdit Distance = 0  \nword1 is equal to word2; no need to add, remove or replace any character.\n\n2. \"The operations (add/delete/replace) are performed if and only if a character at a certain position in `word1` is not equal to the corresponding character in `word2`\".\n\nExample, \n\n`word1 = \"abc\"`, `word2 = \"abe\"`\n\nThe words are not the same. \nThe character at $$3^{rd}$$ position in word1 `c` is different than the character in word2 `e`. \n\n\nIn this case, we have to perform some operation in `word1` to transform it into `word2`. There are 3 options, \n\nOption 1 - Delete `c` from `word1`. \n\nOption 2 - Insert `e` into `word1`. \n\nOption 3 - Replace `c` with `e` in `word1`.\n\nThe goal is to choose an option such that `word1` is transformed into `word2` by applying the minimum number of operations. How can we do that? For that, let's try to perform each operation one by one. \n\n> Before reading ahead, take a pen and paper and transform `word1'  'abc'  to `word2`  'abe' by applying operations in each of the above options. \n\n<center>\n<img src=\"../Figures/72/all_illustrations.png\"/>\n</center>\n\nFrom the above illustrations, it is clear that Option 1 and Option 2 transform `word1` to `word2` in 2 operations.  Thus, the edit distance is 2. And, Option 3 transforms `word1` to `word2` in just 1 operation, thus edit distance is 1.\n\nThus, in this case, we will choose Option 3 and the edit distance would be 1. \n\nFrom this, we can conclude that,\n\n```\nEdit distance to transform \"word1\" to \"word2\" =\n\nMinimum (Number of operations after deleting e from \"word1\", \nNumber of operations after inserting c in \"word1\",\nNumber operations after replacing e with c in \"word1\") + 1\n```\n\nThe +1 in the end, is for the current operation.\n\n> When it comes to trying all possible solutions and finding the most optimal solution, recursion is the most natural way to implement such solutions. More details are in the Algorithm section.\n\nSimilarly, whenever there is a mismatch between 2 characters in the string, we have to try all possible operations and choose the best among all. \n\nLet us look at the algorithm to implement this solution.\n\n#### Algorithm\n\nThere are two input strings, `word1` and `word2`. Start by comparing every character in `word1` and `word2`. Let's track the current character index as `word1Index` and `word2Index`. \nHere, we are comparing the last index of both strings.\nFor every comparison, there are two possibilities,\n - The characters in the current position match\n\n           `word1[word1Index] = word2[word2Index]`\n   \n    Move to the next index. No operation is performed.\n\n - The characters in their current position do not match\n\n           `word1[word1Index] != word2[word2Index]`\n   \n    In this case, we must delete, insert or replace a character in `word1`.\n    From intuition, we have deduced that we must try all three operations and find the minimum.\n    One of the intuitive ways to implement such problems is by using recursion.\n\n    Let's define the recursive function `minDistanceRecur`, which finds the edit distance for `word1` ending at index  `word1Index` and `word2` ending at `word2Index`.\n  \n       `minDistanceRecur(word1, word2, word1Index, word2Index)`\n    \n      Next, let's derive the recurrence relation for each possible operation.\n      Let `word1 = \"abc\"` and `word2 = \"abe\"`\n\n      1. Replace the character at `word1Index` in `word1` with the character at `word2Index` in `word2`.\n\n         <center>\n               <img src=\"../Figures/72/replace_illustration.png\"/>\n         </center>\n\n         Recurrence Relation: ```minDistanceRecur(word1, word2, word1Index - 1, word2Index - 1) + 1```\n\n      2. Inserting the character at `word2Index` in `word2` in `word1`.\n\n         <center>\n               <img src=\"../Figures/72/insert_illustration.png\"/>\n         </center>\n\n         Recurrence Relation: ```minDistanceRecur(word1, word2, word1Index, word2Index - 1) + 1```\n\n      3. Deleting the character at `word1Index` in `word1`.\n\n         <center>\n               <img src=\"../Figures/72/delete_illustration.png\"/>\n         </center>\n\n         Recurrence Relation: ```minDistanceRecur(word1, word2, word1Index - 1, word2Index) + 1```\n\n    In the end, the minimum of all the above operations will be the minimum edit distance. \n\n    Thus, we can define the overall recurrence relation as, \n \n```\n    if word1[word1Index] != word2[word2Index]:\n\n     minDistanceRecur(word1, word2, word1Index, word2Index) =\n       minimum (\n            minDistanceRecur(word1, word2, word1Index - 1, word2Index - 1),\n            minDistanceRecur(word1, word2, word1Index, word2Index - 1),\n            minDistanceRecur(word1, word2, word1Index - 1, word2Index)\n         ) + 1\n\n     else if word1[word1Index] == word2[word2Index]:\n\n            minDistanceRecur(word1, word2, word1Index - 1, word2Index - 1)\n ```      \n\n   _Base Case_\n\n  The base case is the terminating condition for the recursive function when there are no other paths to explore. In this problem, let us define all possible base cases, \n\n1. `word1` is empty \n\n      If `word1` is an empty string, there could be zero or more characters left in `word2`. The only possible operation is to add the characters of `word2` in `word1`. The edit distance is the number of characters in `word2`.\n\n2. `word2` is empty\n\n      If `word2` is an empty string, there could be zero or more characters left in `word1`. The only possible operation is to delete all the remaining characters in `word1`. The edit distance is the number of characters in `word1`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/NZM6Cy73/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"NZM6Cy73\"></iframe>\n\n#### Complexity Analysis\n\nLet $K$ be the length of string `word1` and $N$ be the length of string `word2`. Let $M = max(K, N)$.\n\n* Time Complexity: $\\mathcal{O}(3 ^ {M})$           \n  - The time complexity is exponential. For every pair of `word1` and `word2`, if the characters do not match, we recursively explore three possibilities. In the worst case, if none of the characters match, we will end up exploring $\\mathcal{O}(3 ^ {M})$ possibilities. \n\n* Space Complexity: $\\mathcal{O}(M)$          \n  - The recursion uses an internal call stack equal to the depth of the recursion tree. The recursive process will terminate when either `word1` or `word2` is empty. \n\n---\n### Approach 2: Memoization: Top-Down Dynamic Programming\n\n#### Intuition\n\nSo far, we have discussed the recursive solution in _Approach 1_. The solution works well but is pretty exhaustive. For further understanding, let us look at the following recursive tree.\n\n> Take a pen and paper and try to draw the recursive tree for the _Approach 1_ and encircle the repetitive calculations. \n\n<center>\n<img src=\"../Figures/72/edit_distance_tree.png\"/>\n</center>\n\nThere is a substring combination of `word1` and `word2` evaluated multiple times (highlighted in the same color in the above illustration). There is no need for this repeated computation. \n\n> Can we find a way to optimize these recursive calls? \n\nIf we can find that a certain sub-problem has been computed before, we can re-use that result and terminate it. For this, we must store the results of every computed sub-problem. \n\nIn a way, we enable the algorithm to cache or memorize the result of every operation, so that every time before computing the result for a problem, we can look if the result is already present in the cache. \n\nThis brings us to understand a widely used programming paradigm, [Dynamic Programming](https://leetcode.com/explore/featured/card/dynamic-programming/630/an-introduction-to-dynamic-programming/). In this approach, we use Top Down Dynamic Programming approach also called as [Memoization](https://en.wikipedia.org/wiki/Memoization).\n\nLet us look at the algorithm to implement this problem.\n\n#### Algorithm\n\nThe top-down dynamic programming approach is implemented by adding caching in the recursive function calls. \n\n  For example, in a recursive call, we will have the following parameters, \n`word1 = abc` and `word2 = ad` and `word1Index = 2` (0-indexed) and `word2Index = 1` (0-indexed)\n\n To cache the result of this sub-problem, we must use a data structure that stores the result of `word1` ending at index `word1Index`, that is 2, and `word2` ending at `word2Index`, that is 1. One possible way to implement this is by using a 2-dimensional array say, `memo` where `memo[word1Index][word2Index]` caches the result of `word1` ending at `word1Index` and `word2` ending at `word2Index`.\n\nThe `word1Index` and `word2Index` points at the current character for strings `word1` and `word2` respectively. The algorithm is implemented by following the recursive function implementation as discussed in _Approach 1_ with the following additions,\n\n- Before computing the result of the subproblem, check if it is already present in `memo[word1Index][word2Index]`. If yes, return the stored result. \n\n- After computing the result of every sub-problem, store the result in a `memo` for future reference.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/deucH7hx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"deucH7hx\"></iframe>\n\n#### Complexity Analysis\n\nLet $M$ be the length of string `word1` and $N$ be the length of string `word2`.\n\n* Time Complexity: $\\mathcal{O}(M \\cdot N)$ \n\n  - As the memoization approach uses the cache, for every combination of `word1` and `word2` the result is computed only once.\n\n* Space Complexity: $\\mathcal{O}(M \\cdot N)$ \n\n  - The space is for the additional 2-dimensional array `memo` of size $(M \\cdot N)$.\n\n---\n\n### Approach 3: Bottom-Up Dynamic Programming: Tabulation\n\n#### Intuition\n\nIn this approach, we discuss the bottom-up approach to solving the dynamic programming problem. As the name suggests, the algorithm starts from the bottom, that is, the smallest sub-problem, and iteratively computes the results of the larger sub-problem.\n\nIn this problem, the smallest sub-problem is the base case where `word1` or `word2` is empty. Furthermore, the larger sub-problems are built by adding a character one by one to each of the words. \nThe results of smaller sub-problems can be used to compute the results of larger ones. For this purpose, we must store the results of every sub-problem in a 2D array `dp`.\n\n\n#### Algorithm\n\nLet `word1Length` be the length of string `word1` and `word2Length` be the length of string `word2`.\n- Build a 2D array `dp` of size `word1Length * word2Length` that stores the result of every sub-problem.\n- Calculate the edit distance for each sub-problem. \n\nBase Cases:\nThe approach starts by computing the result of the smallest subproblem and filling in the `dp` array.\n - If `word1` is empty, the edit distance is equal to the length of `word2`.\n - If `word2` is empty, the edit distance is equal to the length of `word1`.\n\n<center>\n<img src=\"../Figures/72/dp_base_case.png\"/>\n</center>\n\n- Use a nested for-loop to iterate over each combination of input strings `word1` and `word2`. The edit distance is calculated as follows:\n\n- Track the current character in `word1` and `word2` using pointers `word1Index` and `word2Index` respectively. \n`dp[word1Index][word2Index]` stores the edit distance of strings `word1` ending at `word1Index` and `word2` ending at `word2Index`. \n\n- If the characters at current indexes in `word1` and `word2` are the same,\n\nThe edit distance will be the same as the result of `word1` ending at `word1Index - 1` and word2 ending at `word2Index - 1`.\n\n<center>\n<img src=\"../Figures/72/dp_equal_characters.png\"/>\n</center>\n\n- If the characters at current indexes in `word1` and `word2` are different,\nExample, `word1` = `a` and `word2` = `aq`.\n\n     <center>\n     <img src=\"../Figures/72/dp_character_not_equal.png\"/>\n     </center>\n\nThe edit distance will be a minimum of 3 operations, \n\n  i. Add a character at `word1Index` in `word1`. \n\n   \"If we add `q` in `word1`, the edit distance for `word1` = `a` and `word2` = `aq` will be equal to the edit distance for `word1` = `a` and `word2` = `a` plus one\".\n\n  The result of the sub-problem `word1` = `a` and `word2` = `a` can be referred from `dp[word1Index][word2Index - 1]`.\n\n  <center>\n    <img src=\"../Figures/72/dp_add_operation.png\"/>\n    </center>\n          \n   ii. Delete the character at `word1Index` in `word1`.\n\n   \"If we delete `a` in `word1`, the edit distance for `word1` = `a` and `word2` = `aq` will be equal to the edit distance for `word1` = `\" \"` and `word2` = `aq` plus one\".\n\n   The result of the sub-problem `word1` = `\" \"` and `word2` = `aq` can be referred from `dp[word1Index - 1][word2Index]`.\n\n   <center>\n     <img src=\"../Figures/72/dp_delete_operation.png\"/>\n   </center>\n\n   iii. Replace a character at `word1Index` in `word1`.\n\n   \"If we replace `a` in `word1`, the edit distance for `word1` = `a` and `word2` = `aq` will be equal to the edit distance for `word1` = `\" \"` and `word2` = `a` plus one\".\n\n   The result of the sub-problem `word1` = `\" \"` and `word2` = `a` can be referred from `dp[word1Index - 1][word2Index - 1]`.\n\n\n   <center>\n     <img src=\"../Figures/72/dp_replace_operation.png\"/>\n   </center>\n\n\n   <center>\n     <img src=\"../Figures/72/dp_all_operations.png\"/>\n   </center>\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Q5ceDDzn/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Q5ceDDzn\"></iframe>\n\n#### Complexity Analysis\n\nLet $M$ be the length of string `word1` and $N$ be the length of string `word2`.\n\n* Time Complexity: $\\mathcal{O}(M \\cdot N)$\n\n  - In the nested `for` loop, the outer loop iterates $M$ times, and the inner loop iterates $N$ times.\n\nThus, the time complexity is $\\mathcal{O}(M \\cdot N)$.\n\n * Space Complexity: $\\mathcal{O}(M \\cdot N)$\n \n   - The space is for the additional 2-dimensional array `dp` of size $(M \\cdot N)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

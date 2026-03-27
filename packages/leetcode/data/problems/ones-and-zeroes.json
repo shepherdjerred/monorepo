@@ -1,0 +1,137 @@
+{
+  "questionId": "474",
+  "questionFrontendId": "474",
+  "title": "Ones and Zeroes",
+  "titleSlug": "ones-and-zeroes",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array of binary strings <code>strs</code> and two integers <code>m</code> and <code>n</code>.</p>\n\n<p>Return <em>the size of the largest subset of <code>strs</code> such that there are <strong>at most</strong> </em><code>m</code><em> </em><code>0</code><em>&#39;s and </em><code>n</code><em> </em><code>1</code><em>&#39;s in the subset</em>.</p>\n\n<p>A set <code>x</code> is a <strong>subset</strong> of a set <code>y</code> if all elements of <code>x</code> are also elements of <code>y</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> strs = [&quot;10&quot;,&quot;0001&quot;,&quot;111001&quot;,&quot;1&quot;,&quot;0&quot;], m = 5, n = 3\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The largest subset with at most 5 0&#39;s and 3 1&#39;s is {&quot;10&quot;, &quot;0001&quot;, &quot;1&quot;, &quot;0&quot;}, so the answer is 4.\nOther valid but smaller subsets include {&quot;0001&quot;, &quot;1&quot;} and {&quot;10&quot;, &quot;1&quot;, &quot;0&quot;}.\n{&quot;111001&quot;} is an invalid subset because it contains 4 1&#39;s, greater than the maximum of 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> strs = [&quot;10&quot;,&quot;0&quot;,&quot;1&quot;], m = 1, n = 1\n<strong>Output:</strong> 2\n<b>Explanation:</b> The largest subset is {&quot;0&quot;, &quot;1&quot;}, so the answer is 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= strs.length &lt;= 600</code></li>\n\t<li><code>1 &lt;= strs[i].length &lt;= 100</code></li>\n\t<li><code>strs[i]</code> consists only of digits <code>&#39;0&#39;</code> and <code>&#39;1&#39;</code>.</li>\n\t<li><code>1 &lt;= m, n &lt;= 100</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"findMaxForm\",\n  \"params\": [\n    {\n      \"name\": \"strs\",\n      \"type\": \"string[]\"\n    },\n    {\n        \"name\": \"m\",\n        \"type\": \"integer\"\n    },\n    {\n        \"name\": \"n\",\n        \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}\n",
+  "stats": "{\"totalAccepted\": \"346K\", \"totalSubmission\": \"651K\", \"totalAcceptedRaw\": 345980, \"totalSubmissionRaw\": 650985, \"acRate\": \"53.1%\"}",
+  "likes": 6077,
+  "dislikes": 508,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Subarrays With More Ones Than Zeros\", \"titleSlug\": \"count-subarrays-with-more-ones-than-zeros\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Non-negative Integers without Consecutive Ones\", \"titleSlug\": \"non-negative-integers-without-consecutive-ones\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"All Divisions With the Highest Score of a Binary Array\", \"titleSlug\": \"all-divisions-with-the-highest-score-of-a-binary-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"10\",\"0001\",\"111001\",\"1\",\"0\"]\n5\n3",
+    "[\"10\",\"0\",\"1\"]\n1\n1"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findMaxForm(vector<string>& strs, int m, int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findMaxForm(String[] strs, int m, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findMaxForm(self, strs: List[str], m: int, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findMaxForm(self, strs, m, n):\n        \"\"\"\n        :type strs: List[str]\n        :type m: int\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} strs\n * @param {number} m\n * @param {number} n\n * @return {number}\n */\nvar findMaxForm = function(strs, m, n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findMaxForm(strs: string[], m: number, n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindMaxForm(string[] strs, int m, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findMaxForm(char** strs, int strsSize, int m, int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findMaxForm(strs []string, m int, n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findMaxForm(strs: Array<String>, m: Int, n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findMaxForm(_ strs: [String], _ m: Int, _ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_max_form(strs: Vec<String>, m: i32, n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} strs\n# @param {Integer} m\n# @param {Integer} n\n# @return {Integer}\ndef find_max_form(strs, m, n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $strs\n     * @param Integer $m\n     * @param Integer $n\n     * @return Integer\n     */\n    function findMaxForm($strs, $m, $n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findMaxForm(List<String> strs, int m, int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findMaxForm(strs: Array[String], m: Int, n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_max_form(strs :: [String.t], m :: integer, n :: integer) :: integer\n  def find_max_form(strs, m, n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_max_form(Strs :: [unicode:unicode_binary()], M :: integer(), N :: integer()) -> integer().\nfind_max_form(Strs, M, N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-max-form strs m n)\n  (-> (listof string?) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "112",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach #1 Brute Force [Time Limit Exceeded]\n\nIn the brute force approach we will consider every subset of $$strs$$ array and count the total number of zeroes and ones in that subset. The subset with zeroes less than equal to $$m$$ and ones less than equal to $$n$$ will be considered as the valid subsets. The maximum length subset among all valid subsets will be  our required subset.\n\nObviously, there are $$2^n$$ subsets possible for the list of length $$n$$ and here we are using int(32 bits) for iterating every subset. So this method will not work for the list having length greater than 32.\n\n<iframe src=\"https://leetcode.com/playground/PB4G7F5Z/shared\" frameBorder=\"0\" name=\"PB4G7F5Z\" width=\"100%\" height=\"515\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(2^l*x)$$. $$2^l$$ possible subsets, where $$l$$ is the length of the list $$strs$$ and $$x$$ is the average string length.\n\n* Space complexity : $$O(1)$$. Constant Space required.\n\n---\n### Approach #2 Better Brute Force [Time Limit Exceeded]\n\n**Algorithm**\n\nIn the previous approach we were considering every possible subset and then we were counting its zeroes and ones. We can limit the number of subsets by breaking the loop when total number of zeroes exceed $$m$$ or total number of ones exceed $$n$$. This will reduce little computation not the complexity.\n\n\n<iframe src=\"https://leetcode.com/playground/XyDP2sRL/shared\" frameBorder=\"0\" name=\"XyDP2sRL\" width=\"100%\" height=\"515\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(2^l*x)$$. $$2^l$$ possible subsets, where $$l$$ is the length of the list $$strs$$ and $$x$$ is the average string length.\n\n* Space complexity : $$O(1)$$. Constant Space required.\n\n---\n\n### Approach #3 Using Recursion [Time Limit Exceeded]\n\n**Algorithm**\n\nIn the above approaches we were considering every subset iteratively. The subset formation can also be done in a recursive manner. For this, we make use of a function `calculate(strs, i, ones, zeroes)`. This function takes the given list of strings $$strs$$ and gives the size of the largest subset with $$ones$$ 1's and $$zeroes$$  0's considering the strings lying after the $$i^{th}$$ index(including itself) in $$strs$$.\n\nNow, in every function call of `calculate(...)`, we can:\n\n1. Include the current string in the subset currently being considered. But if we include the current string, we'll need to deduct the number of 0's and 1's in the current string from the total available respective counts. Thus, we make a function call of the form $$calculate(strs,i+1,zeroes-zeroes_{current\\_string},ones-ones_{current\\_string})$$. We also need to increment the total number of strings considered so far by 1. We store the result obtained from this call(including the +1) in $$taken$$ variable.\n\n2. Not include the current string in the current subset. In this case, we need not update the count of $$ones$$ and $$zeroes$$. Thus, the new function call takes the form $$calculate(strs,i+1,zeroes,ones)$$. The result obtained from this function call is stored in $$notTaken$$ variable.\n\nThe larger value out of $$taken$$ and $$notTaken$$ represents the required result to be returned for the current function call.\n\nThus, the function call $$calculate(strs, 0, m, n)$$ gives us the required maximum number of subsets possible satisfying the given constraints.\n\n\n\n<iframe src=\"https://leetcode.com/playground/SjPQE6wg/shared\" frameBorder=\"0\" name=\"SjPQE6wg\" width=\"100%\" height=\"428\"></iframe>\n\n**Complexity Analysis**\n* Time complexity : $$O(2^l*x)$$. $$2^l$$ possible subsets, where $$l$$ is the length of the list $$strs$$ and $$x$$ is the average string length.\n\n* Space complexity : $$O(l)$$. Depth of recursion tree grows upto $$l$$.\n\n---\n### Approach #4 Using Memoization [Accepted]\n\n**Algorithm**\n\nIn the recursive approach just discussed, a lot of redundant function calls will be made taking the same values of $$(i, zeroes, ones)$$. This redundancy in the recursive tree can be pruned off by making use of a 3-D memoization array, $$memo$$.\n\n$$memo[i][j][k]$$ is used to store the result obtained for the function call `calculate(strs, i, j, k)`. Or in other words, it stores the maximum number of subsets possible considering the strings starting from the $$i^{th}$$ index onwards, provided only $$j$$ 0's and $$k$$ 1's are available to be used.\n\nThus, whenever $$memo[i][j][k]$$ already contains a valid entry, we need not make use of the function calls again, but we can pick up the result directly from the $$memo$$ array.\n\nThe rest of the procedure remains the same as that of the recursive approach.\n\n<iframe src=\"https://leetcode.com/playground/oVimjcfS/shared\" frameBorder=\"0\" name=\"oVimjcfS\" width=\"100%\" height=\"515\"></iframe>\n**Complexity Analysis**\n\n* Time complexity : $$O(l*m*n)$$. $$memo$$ array of size $$l*m*n$$ is filled, where $$l$$ is the length of $$strs$$, $$m$$ and $$n$$ are the number of zeroes and ones respectively.\n\n* Space complexity : $$O(l*m*n)$$. 3D array $$memo$$ is used.\n\n---\n### Approach #5 Dynamic Programming [Accepted]\n\n**Algorithm**\n\nThis problem can be solved by using 2-D Dynamic Programming. We can make use of a $$dp$$ array, such that an entry $$dp[i][j]$$ denotes the maximum number of strings that can be included in the subset given only $$i$$ 0's and $$j$$ 1's are available.\n\nNow, let's look at the process by which we'll fill the $$dp$$ array. We traverse the given list of strings one by one. Suppose, at some point, we pick up any string $$s_k$$ consisting of $$x$$ zeroes and $$y$$ ones. Now, choosing to put this string in any of the subset possible by using the previous strings traversed so far will impact the element denoted by $$dp[i][j]$$ for $$i$$ and $$j$$ satisfying $$x &leq; i &leq; m$$, $$y &leq; j &leq; n$$. This is because for entries $$dp[i][j]$$ with $$i < x$$ or $$j < y$$, there won't be sufficient number of 1's and 0's available to accomodate the current string in any subset.\n\nThus, for every string encountered, we need to appropriately update the $$dp$$ entries within the correct range.\n\nFurther, while updating the $$dp$$ values, if we consider choosing the current string to be a part of the subset, the updated result will depend on whether it is profitable to include the current string in any subset or not. If included in the subset, the $$dp[i][j]$$ entry needs to be updated as $$dp[i][j]=1 + dp[i - zeroes_{current\\_string}][j - ones_{current\\_string}]$$, where the factor of +1 takes into account the number of elements in the current subset being increased due to a new entry.\n\nBut, it could be possible that the current string could be so long that it could be profitable not to include it in any of the subsets. Thus, the correct equation for $$dp$$ updation becomes:\n\n$$dp[i][j]= max(1+dp[i - zeroes_{current\\_string}][j - ones_{current\\_string}],dp[i][j])$$\n\nThus, after the complete list of strings has been traversed, $$dp[m][n]$$ gives the required size of the largest subset.\n\nWatch this animation for clear understanding:\n\n!?!../Documents/474_Ones_Zeroes.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/uSvKvaat/shared\" frameBorder=\"0\" name=\"uSvKvaat\" width=\"100%\" height=\"411\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(l*m*n)$$. Three nested loops are their, where $$l$$ is the length of $$strs$$, $$m$$ and $$n$$ are the number of zeroes and ones respectively.\n\n\n* Space complexity : $$O(m*n)$$. $$dp$$ array of size $$m*n$$ is used.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

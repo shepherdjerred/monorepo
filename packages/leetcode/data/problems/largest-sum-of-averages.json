@@ -1,0 +1,137 @@
+{
+  "questionId": "831",
+  "questionFrontendId": "813",
+  "title": "Largest Sum of Averages",
+  "titleSlug": "largest-sum-of-averages",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code> and an integer <code>k</code>. You can partition the array into <strong>at most</strong> <code>k</code> non-empty adjacent subarrays. The <strong>score</strong> of a partition is the sum of the averages of each subarray.</p>\n\n<p>Note that the partition must use every integer in <code>nums</code>, and that the score is not necessarily an integer.</p>\n\n<p>Return <em>the maximum <strong>score</strong> you can achieve of all the possible partitions</em>. Answers within <code>10<sup>-6</sup></code> of the actual answer will be accepted.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [9,1,2,3,9], k = 3\n<strong>Output:</strong> 20.00000\n<strong>Explanation:</strong> \nThe best choice is to partition nums into [9], [1, 2, 3], [9]. The answer is 9 + (1 + 2 + 3) / 3 + 9 = 20.\nWe could have also partitioned nums into [9, 1], [2], [3, 9], for example.\nThat partition would lead to a score of 5 + 2 + 6 = 13, which is worse.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4,5,6,7], k = 4\n<strong>Output:</strong> 20.50000\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= nums.length</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"largestSumOfAverages\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"double\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"66.7K\", \"totalSubmission\": \"121.5K\", \"totalAcceptedRaw\": 66678, \"totalSubmissionRaw\": 121465, \"acRate\": \"54.9%\"}",
+  "likes": 2203,
+  "dislikes": 105,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[9,1,2,3,9]\n3",
+    "[1,2,3,4,5,6,7]\n4"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    double largestSumOfAverages(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public double largestSumOfAverages(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def largestSumOfAverages(self, nums: List[int], k: int) -> float:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def largestSumOfAverages(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: float\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar largestSumOfAverages = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function largestSumOfAverages(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public double LargestSumOfAverages(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "double largestSumOfAverages(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func largestSumOfAverages(nums []int, k int) float64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun largestSumOfAverages(nums: IntArray, k: Int): Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func largestSumOfAverages(_ nums: [Int], _ k: Int) -> Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn largest_sum_of_averages(nums: Vec<i32>, k: i32) -> f64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Float}\ndef largest_sum_of_averages(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Float\n     */\n    function largestSumOfAverages($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  double largestSumOfAverages(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def largestSumOfAverages(nums: Array[Int], k: Int): Double = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec largest_sum_of_averages(nums :: [integer], k :: integer) :: float\n  def largest_sum_of_averages(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec largest_sum_of_averages(Nums :: [integer()], K :: integer()) -> float().\nlargest_sum_of_averages(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (largest-sum-of-averages nums k)\n  (-> (listof exact-integer?) exact-integer? flonum?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "446",
+    "content": "[TOC]\n\n---\n### Approach #1: Dynamic Programming [Accepted]\n\n**Intuition**\n\nThe best score partitioning `A[i:]` into at most `K` parts depends on answers to paritioning `A[j:]` (`j > i`) into less parts.  We can use dynamic programming as the states form a directed acyclic graph.\n\n**Algorithm**\n\nLet `dp(i, k)` be the best score partioning `A[i:]` into at most `K` parts.\n\nIf the first group we partition `A[i:]` into ends before `j`, then our candidate partition has score `average(i, j) + dp(j, k-1))`, where `average(i, j) = (A[i] + A[i+1] + ... + A[j-1]) / (j - i)` (floating point division).  We take the highest score of these, keeping in mind we don't necessarily need to partition - `dp(i, k)` can also be just `average(i, N)`.\n\nIn total, our recursion in the general case is `dp(i, k) = max(average(i, N), max_{j > i}(average(i, j) + dp(j, k-1)))`.\n\nWe can calculate `average` a little bit faster by remembering prefix sums.  If `P[x+1] = A[0] + A[1] + ... + A[x]`, then `average(i, j) = (P[j] - P[i]) / (j - i)`.\n\nOur implementation showcases a \"bottom-up\" style of dp.  Here at loop number `k` in our outer-most loop, `dp[i]` represents `dp(i, k)` from the discussion above, and we are calculating the next layer `dp(i, k+1)`.  The end of our second loop `for i = 0..N-1` represents finishing the calculation of the correct value for `dp(i, t)`, and the inner-most loop performs the calculation `max_{j > i}(average(i, j) + dp(j, k))`.\n\n<iframe src=\"https://leetcode.com/playground/EVHLr3KQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"EVHLr3KQ\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(K * N^2)$$, where $$N$$ is the length of `A`.\n\n* Space Complexity: $$O(N)$$, the size of `dp`.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "questionId": "150",
+  "questionFrontendId": "150",
+  "title": "Evaluate Reverse Polish Notation",
+  "titleSlug": "evaluate-reverse-polish-notation",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array of strings <code>tokens</code> that represents an arithmetic expression in a <a href=\"http://en.wikipedia.org/wiki/Reverse_Polish_notation\" target=\"_blank\">Reverse Polish Notation</a>.</p>\n\n<p>Evaluate the expression. Return <em>an integer that represents the value of the expression</em>.</p>\n\n<p><strong>Note</strong> that:</p>\n\n<ul>\n\t<li>The valid operators are <code>&#39;+&#39;</code>, <code>&#39;-&#39;</code>, <code>&#39;*&#39;</code>, and <code>&#39;/&#39;</code>.</li>\n\t<li>Each operand may be an integer or another expression.</li>\n\t<li>The division between two integers always <strong>truncates toward zero</strong>.</li>\n\t<li>There will not be any division by zero.</li>\n\t<li>The input represents a valid arithmetic expression in a reverse polish notation.</li>\n\t<li>The answer and all the intermediate calculations can be represented in a <strong>32-bit</strong> integer.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> tokens = [&quot;2&quot;,&quot;1&quot;,&quot;+&quot;,&quot;3&quot;,&quot;*&quot;]\n<strong>Output:</strong> 9\n<strong>Explanation:</strong> ((2 + 1) * 3) = 9\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> tokens = [&quot;4&quot;,&quot;13&quot;,&quot;5&quot;,&quot;/&quot;,&quot;+&quot;]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> (4 + (13 / 5)) = 6\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> tokens = [&quot;10&quot;,&quot;6&quot;,&quot;9&quot;,&quot;3&quot;,&quot;+&quot;,&quot;-11&quot;,&quot;*&quot;,&quot;/&quot;,&quot;*&quot;,&quot;17&quot;,&quot;+&quot;,&quot;5&quot;,&quot;+&quot;]\n<strong>Output:</strong> 22\n<strong>Explanation:</strong> ((10 * (6 / ((9 + 3) * -11))) + 17) + 5\n= ((10 * (6 / (12 * -11))) + 17) + 5\n= ((10 * (6 / -132)) + 17) + 5\n= ((10 * 0) + 17) + 5\n= (0 + 17) + 5\n= 17 + 5\n= 22\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= tokens.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>tokens[i]</code> is either an operator: <code>&quot;+&quot;</code>, <code>&quot;-&quot;</code>, <code>&quot;*&quot;</code>, or <code>&quot;/&quot;</code>, or an integer in the range <code>[-200, 200]</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"evalRPN\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"tokens\",\r\n      \"type\": \"string[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.7M\", \"totalSubmission\": \"3M\", \"totalAcceptedRaw\": 1709131, \"totalSubmissionRaw\": 2981699, \"acRate\": \"57.3%\"}",
+  "likes": 8686,
+  "dislikes": 1185,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Basic Calculator\", \"titleSlug\": \"basic-calculator\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Expression Add Operators\", \"titleSlug\": \"expression-add-operators\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"2\",\"1\",\"+\",\"3\",\"*\"]",
+    "[\"4\",\"13\",\"5\",\"/\",\"+\"]",
+    "[\"10\",\"6\",\"9\",\"3\",\"+\",\"-11\",\"*\",\"/\",\"*\",\"17\",\"+\",\"5\",\"+\"]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"citadel\", \"name\": \"Citadel\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"grammarly\", \"name\": \"Grammarly\"}, {\"timesEncountered\": 2, \"slug\": \"citi\", \"name\": \"Citigroup\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 4, \"slug\": \"canonical\", \"name\": \"Canonical\"}, {\"timesEncountered\": 3, \"slug\": \"apolloio\", \"name\": \"Apollo.io\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"tesla\", \"name\": \"Tesla\"}, {\"timesEncountered\": 2, \"slug\": \"anduril\", \"name\": \"Anduril\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int evalRPN(vector<string>& tokens) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int evalRPN(String[] tokens) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def evalRPN(self, tokens: List[str]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def evalRPN(self, tokens):\n        \"\"\"\n        :type tokens: List[str]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} tokens\n * @return {number}\n */\nvar evalRPN = function(tokens) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function evalRPN(tokens: string[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int EvalRPN(string[] tokens) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int evalRPN(char** tokens, int tokensSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func evalRPN(tokens []string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun evalRPN(tokens: Array<String>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func evalRPN(_ tokens: [String]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn eval_rpn(tokens: Vec<String>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} tokens\n# @return {Integer}\ndef eval_rpn(tokens)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $tokens\n     * @return Integer\n     */\n    function evalRPN($tokens) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int evalRPN(List<String> tokens) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def evalRPN(tokens: Array[String]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec eval_rpn(tokens :: [String.t]) :: integer\n  def eval_rpn(tokens) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec eval_rpn(Tokens :: [unicode:unicode_binary()]) -> integer().\neval_rpn(Tokens) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (eval-rpn tokens)\n  (-> (listof string?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "871",
+    "content": "[TOC]\n\n## Solution\n\nIf you've attempted this question and can't figure out why you're getting wrong answers, here are a couple of things to check *before* reading the article:\n\n1. Reverse Polish Notation **is not a \"reverse\" form of Polish Notation**. It is a bit different.\n\n2. If you're using Java, note that **the input type is an array of strings**, *not* an array of chars. This means that you should be comparing them with `.equals(...)`, *not* `==`. If your code is working on your computer but not on Leetcode, this is probably why. *It is a bug in your code, not in the Leetcode platform*.\n\n3. **Some programming languages** (e.g. Python, but not C++ and Java) **do not truncate towards 0 with division**, so you'll need to figure out how to make them do so (we'll discuss ways in the article). For example, if we put `-121 // 7` into Python, we get `-18`, but we actually wanted `-17`. If unsure about your programming language, either check the documentation or simply write a program that does `-121 / 7` (as integer division) and see which result you get.\n\n4. **Did you put numbers around the correct way?** e.g. the test case `[\"12\", \"7\", \"-\"]` means you should calculate `12 - 7 = 5`, and ***not*** `7 - 12 = -5`. In most implementations, getting them the correct way around is not immediately obvious. If you aren't *certain* you have it right, try this test case (`[\"12\", \"7\", \"-]`) and check whether you get `5` or `-5`.\n\n5. At the time of writing this solution article, the Wikipedia article has a number of errors and sections that are confusing (in particular, parsing the list in reverse). Try to understand how Reverse Polish Notation works and then design an algorithm yourself rather than following the provided pseudocode too closely. The Introduction section of this solution article also explains how Reverse Polish Notation works.\n\n---\n\n### Overview\n\nWe'll start with looking at what it means for integer division to truncate towards zero, and then at what Reverse Polish Notation is. Feel free to skip these sections if you already know this stuff.\n\n**Division between two integers should truncate towards zero**\n\nEarly on in your programming career, you probably learned about integer division. When dividing 2 positive numbers, we always *truncate down* to the nearest integer. The non-integer values are in parenthesis afterwards for reference.\n\n```\n6 / 2 = 3 (3.0)\n11 / 5 = 2 (2.2)\n9 / 5 = 1 (1.8)\n```\n\nMost programming languages do integer division by default (as opposed to float division, where decimal places are kept), and this is how they handle positive integers. Both of the following definitions could be (and are) used to describe the truncation.\n\n1. The result is truncated to a *less than or equal number*. i.e. `1` is less than `1.8`.\n2. The truncation is towards zero, i.e. `1` is closer to zero than `1.8` is.\n\nFor negative numbers however, it is *impossible* to satisfy both of these, so one or the other has to be picked. For example, consider the following:\n\n```\n-9 / 5 = ? (-1.8)\n```\n\n1. If we wanted the truncated result to be *smaller*, we'd have to go to `-2`, as `-2 < -1`.\n2. If we wanted the truncated result to be *nearer to zero*, we'd have to go to `-1` as `-1` is nearer to zero than `-2` is.\n\nSome programming languages go with the first definition, and others go with the second. For this problem, you are expected to go with the second definition, regardless of what your chosen programming language uses.\n\nPython, for example, goes with the first definition. This means that we need to find a way of doing the division. Luckily, the `int(...)` function *does* truncate towards zero, and therefore we can use the `int(a / b)` trick. Note that this is *not* the same as `int(a // b)`. We haven't checked what all the programming languages available on Leetcode do, so if your chosen programming language is not truncating division towards zero, have a look in the math libraries for your chosen programming language or do a web search.\n\n**What is Infix Notation?**\n\nAnalysing Infix Notation provides some great context for understanding Reverse Polish Notation.\n\nMost people know how to read expressions written using Infix Notation. Evaluating the following expression is something you will have learned to do in elementary school.\n\n```\n3 + 1 + 9 - 5 = 8\n```\n\nThis isn't too difficult. However, many of you will also have seen viral posts circulating social media websites, such as Facebook, that challenge you to evaluate an expression like:\n\n```\n5 * 4 + 9 - 2 / 3 + 1 = ?\n```\n\nWhen you check the comments, among many other strange answers, you'll probably see people arguing about whether the answer is `10`, `27.33`, or `29.33`.\n\nThe reason for the disagreement is because different people have different understandings about how such an expression should be evaluated. \n\nThose who say the answer is `10` evaluated it strictly from left to right, with the following steps:\n\n```\n5 * 4 = 20\n20 + 9 = 29\n29 - 2 = 27\n27 / 3 = 9\n9 + 1 = 10\n```\n\nThose who say the answer is `27.33` follow a rule where we evaluate operations in the following order; division, multiplication, addition, and subtraction. This method comes from a common misunderstanding of the widely used mnemonics: PEMDAS/BODMAS/BEDMAS. The steps with this method are as follows:\n\n```\n= 5 * 4 + 9 - 0.66 + 1 (Do division first.)\n= 20 + 9 - 0.66 + 1 (Do multiplication second.)\n= 29 - 1.66 (Do the additions third.)\n= 27.33 (Do the subtraction fourth.)\n```\n\nThose who say the answer is `29.33` use the rules most programming languages use, and that is also the correct interpretation of the mnemonics (PEMDAS/BODMAS/BEDMAS). That is to do division *and* multiplication first, in order from left to right, and then addition *and* subtraction, in order from left to right. Their steps are as follows:\n\n```\n= 20 + 9 - 2 / 3 + 1 (Do the multiplication.)\n= 20 + 9 - 0.66 + 1 (Do the division.)\n= 29 - 0.66 + 1 (Do the first addition.)\n= 28.33 + 1 (Do the subtraction, as it's next.)\n= 29.33 (Do the last addition.)\n```\n\nMost mathematicians would agree that the correct answer is `29.33`. Yet, this is probably not the answer you'd get if you asked a random sample of people in the general public (just look at the Facebook posts!). In school for example, I was taught the method that gives `28.33`. It wasn't until I learned programming in university that I learned the correct way!\n\nWhen we want to do the operations in a different order, we use parenthesis (brackets) around the parts to do first. The parts in parenthesis are always done before the parts outside.\n\nThe big *disadvantage* of **Infix Notation** is hopefully clear now. The rules for evaluating it are surprisingly complex, cause a lot of confusion, and in fact most people don't understand them properly. Additionally, the need to use parentheses correctly adds another layer of complexity.\n\nAs we move towards understanding what **Reverse Polish Notation** is, keep in mind that while it seems a bit strange and un-intuitive (at first!), that **Infix Notation** is actually more confusing. The *only* reason Infix Notation seems intuitive is because you've probably been using it all your life and so it is now second nature to you. People who use Reverse Polish Notation on a daily basis find it very intuitive! Some hand-held calculators still use it!\n\n**What is Reverse Polish Notation?**\n\nJust like Infix Notation, or in fact any other notation, **Reverse Polish Notation** has rules for how to evaluate it. You'll need to know these rules before you can write an algorithm. The rules could either be prior knowledge or supplied by an interviewer.\n\n> While there are operators remaining in the list, find the left-most operator. Apply it to the 2 numbers immediately before it, and replace all 3 tokens (the operator and 2 numbers) with the result. \n\nFor example in the most simplest case of `3 4 +` when we reach `+` we can replace `3 4 +` with it's result `7`.\n\nAs long as the input was valid, this rule will always work and leave a *single number* that should be returned. The leftmost operator that hasn't yet been removed will *always* have 2 numbers immediately before it. \n\nHere is an animation showing a more complicated example.\n\n!?!../Documents/150_reverse_polish_notation.json:960,180!?!\n\nHopefully the advantage is obvious now. Reverse Polish Notation doesn't require brackets, and the rules for evaluating it are far simpler. In-fact, our [equivalent question for Infix Notation](https://leetcode.com/problems/basic-calculator-iii/) is much more difficult than this one!\n\n\n</br>\n\n---\n\n\n### Approach 1: Reducing the List In-place\n\n#### Intuition\n\nThis approach literally follows the animation above. A pointer is used to step through the list, and each time an operator (`+-*/) is found, that operator is then applied to the 2 values before it (which are always numbers, as long as the original input was valid). The 3 values are then replaced with the result. This process is repeated until the list is of length 1, containing a single number that is the answer to be returned.\n\n#### Algorithm\n\nThe code is simpler for Python than Java. For Java (and other languages where the input type is a fixed size array), we have to define our own method to delete values from an array. This is done by shuffling the other elements down into the gap. Of course, you could start by copying the input into an `ArrayList` (so that you could then use its delete method), but then the algorithm would require $$O(n)$$ space instead of $$O(1)$$ space.\n\n![Diagram showing the in-place shuffles.](../Figures/150/inplace_array_replacement.png)\n\nWe have to be a little careful about the types in the Python code, as in the middle of processing the list, some numbers will be represent as strings, and others as ints. Additionally, we also need to be aware that *python division does not truncate towards zero*. We can instead use `int(a / b)` to achieve the desired result. Note that this is *not* the same as `int(a // b)`.\n\nIn the Java code, we have to convert ints back to Strings, because Java doesn't support mixed lists of Strings and ints.\n\nFinally, If you know how to use `lambda` functions in your chosen programming language, an ideal solution would use them to elegantly handle the 4 operations (`+-*/`). The first set of solutions here use `lambda` functions. If you aren't familiar with `lambda` functions though (or your chosen programming language doesn't support them), that's fine. You'll get a chance to learn them when you're ready! Scroll down a little more, as we have also provided solutions that don't use them. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DxyeqYXg/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DxyeqYXg\"></iframe>\n\nHere are the solutions without the use of `lambda` functions.\n\n<iframe src=\"https://leetcode.com/playground/ckX9XHTG/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ckX9XHTG\"></iframe>\n\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the list.\n\n- Time Complexity : $$O(n^2)$$.\n\n    Firstly, it helps to calculate how many *operators* and how many *numbers* are in the initial list. Each step of the algorithm removes 1 operator, 2 numbers, and adds back 1 number. This is an overall loss of 1 number and 1 operator per step. At the end, we have 1 number left. Therefore, we can infer that at the start, there must always be **exactly 1 more number than there is operators**.\n\n    The big inefficiency of this approach is more obvious in the Java code than the Python. Deleting an item from an ArrayList or Array is $$O(n)$$, because all the items after have to be shuffled down one place to fill in the gap. The number of these deletions we need to do is the same as the number of operators, which is proportional to $$n$$. Therefore, the cost of the deletions is $$O(n^2)$$.\n    \n    This is more obvious in the Java code, because we had to define the deletion method ourselves. However, the Python deletion method works the same way, it's just that you can't see it because it's hidden in a library function call. It's important to always be aware of the cost of library functions as they can sometimes look like they're $$O(1)$$ when they're not!\n\n- Space Complexity : $$O(1)$$.\n    \n    The only extra space used is a constant number of single-value variables. Therefore, the overall algorithm requires $$O(1)$$ space.\n\nInterestingly, this approach could be adapted to work with a **Double-Linked List**. It would require $$O(n)$$ space to create the list, and then take $$O(n)$$ time to process it using a similar algorithm to above. This works because the algorithm is traversing the list in a linear fashion and modifications only impact the tokens immediately to the left of the current token.\n\n</br>\n\n---\n\n### Approach 2: Evaluate with Stack\n\n#### Intuition\n\nThe first approach worked, but $$O(n^2)$$ is too slow for large $$n$$. As hinted at above, a **Double-Linked List** could be an option. However, it requires a lot of set-up code, and in practice requires more space than the elegant **Stack** approach we're going to look at now.\n\nWe don't want to repeatedly delete items from the middle of a list, as this inevitably leads to $$O(n^2)$$ time performance. So recall that the above algorithm scanned through the list from left to right, and each time it reached an operator, it'd replace the operator and the 2 numbers immediately before it with the result of applying the operator to the 2 numbers.\n\nThe two key steps of the above algorithm were:\n\n1. Visit each operator, in linear order. Finding these can be done with a linear search of the original list.\n2. Get the 2 most recently seen numbers that haven't yet been replaced. These could be tracked using a **Stack**.\n\n#### Algorithm\n\nThe algorithm would be as follows:\n\n```text\nstack = new Stack()\nfor each token in tokens:\n    if token is a number:\n        stack.push(token)\n    else (token is operator):\n        number_2 = stack.pop()  \n        number_1 = stack.pop()\n        result = apply_operator(token, number_1, number_2)\n        stack.push(result)\nreturn stack.pop()\n```\n\nHere is an animation showing the algorithm.\n\n!?!../Documents/150_reverse_polish_stack.json:960,270!?!\n\nYou might have noticed the following 2 lines of the pseudocode could look like they're around the wrong way.\n\n```text\nnumber_2 = stack.pop()  \nnumber_1 = stack.pop()\n```\n\nThey are correct though. Remember that for division and subtraction, the order of the numbers matters. i.e. `7 - 5 ≠ 5 - 7`. On the `Stack`, we have the *second* on the top. So we need to reverse them before applying the operator.\n\n\n#### Implementation\n\nHere is code that uses `lambda` functionality. Scroll down for code that doesn't.\n\n<iframe src=\"https://leetcode.com/playground/GNRXyWWY/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GNRXyWWY\"></iframe>\n\nHere are the solutions without `lambda`.\n\n<iframe src=\"https://leetcode.com/playground/LwaGMuvN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LwaGMuvN\"></iframe>\n\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the list.\n\n- Time Complexity : $$O(n)$$.\n\n    We do a linear search to put all numbers on the stack, and process all operators. Processing an operator requires removing 2 numbers off the stack and replacing them with a single number, which is an $$O(1)$$ operation. Therefore, the total cost is proportional to the length of the input array. Unlike before, we're no longer doing expensive deletes from the middle of an Array or List.\n\n- Space Complexity : $$O(n)$$.\n\n    In the worst case, the stack will have all the numbers on it at the same time. This is never more than half the length of the input array.\n\n</br>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

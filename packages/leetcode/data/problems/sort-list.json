@@ -1,0 +1,146 @@
+{
+  "questionId": "148",
+  "questionFrontendId": "148",
+  "title": "Sort List",
+  "titleSlug": "sort-list",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>head</code> of a linked list, return <em>the list after sorting it in <strong>ascending order</strong></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/14/sort_list_1.jpg\" style=\"width: 450px; height: 194px;\" />\n<pre>\n<strong>Input:</strong> head = [4,2,1,3]\n<strong>Output:</strong> [1,2,3,4]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/14/sort_list_2.jpg\" style=\"width: 550px; height: 184px;\" />\n<pre>\n<strong>Input:</strong> head = [-1,5,3,4,0]\n<strong>Output:</strong> [-1,0,3,4,5]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> head = []\n<strong>Output:</strong> []\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the list is in the range <code>[0, 5 * 10<sup>4</sup>]</code>.</li>\n\t<li><code>-10<sup>5</sup> &lt;= Node.val &lt;= 10<sup>5</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> Can you sort the linked list in <code>O(n logn)</code> time and <code>O(1)</code> memory (i.e. constant space)?</p>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"sortList\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"head\",\r\n      \"type\": \"ListNode\",\r\n      \"dealloc\": false\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"ListNode\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.3M\", \"totalSubmission\": \"2M\", \"totalAcceptedRaw\": 1252236, \"totalSubmissionRaw\": 1954256, \"acRate\": \"64.1%\"}",
+  "likes": 13009,
+  "dislikes": 416,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Merge Two Sorted Lists\", \"titleSlug\": \"merge-two-sorted-lists\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sort Colors\", \"titleSlug\": \"sort-colors\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Insertion Sort List\", \"titleSlug\": \"insertion-sort-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sort Linked List Already Sorted Using Absolute Values\", \"titleSlug\": \"sort-linked-list-already-sorted-using-absolute-values\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,2,1,3]",
+    "[-1,5,3,4,0]",
+    "[]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"lyft\", \"name\": \"Lyft\"}, {\"timesEncountered\": 2, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}]}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Merge Sort",
+      "slug": "merge-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    ListNode* sortList(ListNode* head) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public ListNode sortList(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def sortList(self, head: Optional[ListNode]) -> Optional[ListNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def sortList(self, head):\n        \"\"\"\n        :type head: Optional[ListNode]\n        :rtype: Optional[ListNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} head\n * @return {ListNode}\n */\nvar sortList = function(head) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction sortList(head: ListNode | null): ListNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public ListNode SortList(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\nstruct ListNode* sortList(struct ListNode* head) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc sortList(head *ListNode) *ListNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun sortList(head: ListNode?): ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func sortList(_ head: ListNode?) -> ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn sort_list(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {ListNode} head\n# @return {ListNode}\ndef sort_list(head)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $head\n     * @return ListNode\n     */\n    function sortList($head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *   int val;\n *   ListNode? next;\n *   ListNode([this.val = 0, this.next]);\n * }\n */\nclass Solution {\n  ListNode? sortList(ListNode? head) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def sortList(head: ListNode): ListNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for singly-linked list.\n#\n# defmodule ListNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           next: ListNode.t() | nil\n#         }\n#   defstruct val: 0, next: nil\n# end\n\ndefmodule Solution do\n  @spec sort_list(head :: ListNode.t | nil) :: ListNode.t | nil\n  def sort_list(head) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for singly-linked list.\n%%\n%% -record(list_node, {val = 0 :: integer(),\n%%                     next = null :: 'null' | #list_node{}}).\n\n-spec sort_list(Head :: #list_node{} | null) -> #list_node{} | null.\nsort_list(Head) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n(define/contract (sort-list head)\n  (-> (or/c list-node? #f) (or/c list-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1006",
+    "content": "[TOC]\n\n## Solution\n---\n\n### Overview ####\n\nThe problem is to sort the linked list in $$\\mathcal{O}(n \\log n)$$ time and using only constant extra space. If we look at various sorting algorithms, [Merge Sort](https://en.wikipedia.org/wiki/Merge_sort) is one of the efficient sorting algorithms that is popularly used for sorting the linked list. The merge sort algorithm runs in $$\\mathcal{O}(n \\log n)$$ time in all the cases. Let's discuss approaches to sort linked list using merge sort.\n\n> [Quicksort](https://en.wikipedia.org/wiki/Quicksort) is also one of the efficient algorithms with the average time complexity of $$\\mathcal{O}(n \\log n)$$. But the worst-case time complexity is $$\\mathcal{O}(n ^{2})$$. Also, variations of the quick sort like randomized quicksort are not efficient for the linked list because unlike arrays, random access in the linked list is not possible in $$\\mathcal{O}(1)$$ time.\nIf we sort the linked list using quicksort, we would end up using the head as a pivot element which may not be efficient in all scenarios.\n---\n\n### Approach 1: Top Down Merge Sort\n\n**Intuition**\n\nMerge sort is a popularly known algorithm that follows the[ Divide and Conquer Strategy](https://en.wikipedia.org/wiki/Divide-and-conquer_algorithm). The divide and conquer strategy can be split into 2 phases:\n\n _Divide phase_: Divide the problem into subproblems.\n\n_Conquer phase_: Repeatedly solve each subproblem independently and combine the result to form the original problem.\n\nThe Top Down approach for merge sort recursively splits the original list into sublists of equal sizes, sorts each sublist independently, and eventually merge the sorted lists.  Let's look at the algorithm to implement merge sort in Top Down Fashion.\n\n**Algorithm**\n\n- Recursively split the original list into two halves. The split continues until there is only one node in the linked list (Divide phase). To split the list into two halves, we find the middle of the linked list using the Fast and Slow pointer approach as mentioned in [Find Middle Of Linked List](https://leetcode.com/problems/middle-of-the-linked-list/).\n\n- Recursively sort each sublist and combine it into a single sorted list. (Merge Phase). This is similar to the problem [Merge two sorted linked lists](https://leetcode.com/problems/merge-two-sorted-lists/)\n\n\nThe process continues until we get the original list in sorted order.\n\nFor the linked list = `[10,1,60,30,5]`, the following figure illustrates the merge sort process using a top down approach.\n\n![img](../Figures/148/topDown_merge_sort.png)\n\nIf we have sorted lists, list1 = `[1,10]` and list2 = `[5,30,60]`. The following animation illustrates the merge process of both lists into a single sorted list.\n\n!?!../Documents/148_sort_list.json:1584,570!?!\n\n<iframe src=\"https://leetcode.com/playground/dMKDsGHM/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dMKDsGHM\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$\\mathcal{O}(n \\log n)$$, where $$n$$ is the number of nodes in linked list.\nThe algorithm can be split into 2 phases, Split and Merge.\n\nLet's assume that $$n$$ is power of $$2$$. For `n = 16`, the split and merge operation in  Top Down fashion can be visualized as follows\n\n![img](../Figures/148/top_down_time_complexity.png)\n\n**_Split_**\n\nThe recursion tree expands in form of a complete binary tree, splitting the list into two halves recursively. The number of levels in a complete binary tree is given by $$\\log_{2} n$$. For $$n=16$$, number of splits = $$\\log_{2} 16 = 4$$\n\n**_Merge_**  \n\nAt each level, we merge n nodes which takes $$\\mathcal{O}(n)$$ time.\nFor $$n = 16$$, we perform merge operation on $$16$$ nodes in each of the $$4$$ levels.\n\nSo the time complexity for split and merge operation is $$\\mathcal{O}(n \\log n)$$\n\n* Space Complexity: $$\\mathcal{O}(\\log n)$$ , where $$n$$ is the number of nodes in linked list. Since the problem is recursive, we need additional space to store the recursive call stack. The maximum depth of the recursion tree is $$\\log n$$\n\n---\n\n### Approach 2: Bottom Up Merge Sort\n\n**Intuition**\n\nThe Top Down Approach for merge sort uses $$\\mathcal{O}(\\log n)$$ extra space due to recursive call stack. Let's understand how we can implement merge sort using constant extra space using Bottom Up Approach.\n\nThe Bottom Up approach for merge sort starts by splitting the problem into the smallest subproblem and iteratively merge the result to solve the original problem.\n- First, the list is split into sublists of size 1 and merged iteratively in sorted order. The merged list is solved similarly.\n\n- The process continues until we sort the entire list.\n\nThis approach is solved iteratively and can be implemented using constant extra space. Let's look at the algorithm to implement merge sort in Bottom Up Fashion.\n\n\n**Algorithm**\n\nAssume, $$n$$ is the number of nodes in the linked list.\n- Start with splitting the list into sublists of size $$1$$. Each adjacent pair of sublists of size $$1$$ is merged in sorted order. After the first iteration, we get the sorted lists of size $$2$$. A similar process is repeated for a sublist of size $$2$$. In this way, we iteratively split the list into sublists of size $$1,2,4,8 ..$$ and so on until we reach $$n$$.\n\n- To split the list into two sublists of given $$\\text{size}$$ beginning from $$\\text{start}$$, we use two pointers, $$\\text{mid}$$ and $$\\text{end}$$ that references to the start and end of second linked list respectively. The split process finds the middle of linked lists for the given $$\\text{size}$$.\n\n- Merge the lists in sorted order as discussed in  _Approach 1_\n\n- As we iteratively split the list and merge, we have to keep track of the previous merged list using pointer $$\\text{tail}$$ and the next sublist to be sorted using pointer $$\\text{nextSubList}$$.\n\nFor the linked list = `[10,1,30,2,5]`, the following figure illustrates the merge sort process using a Bottom Up approach.\n\n![img](../Figures/148/bottom_up_merge_sort.png)\n\n\n<iframe src=\"https://leetcode.com/playground/6UQoZ2eW/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6UQoZ2eW\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$\\mathcal{O}(n \\log n)$$, where $$n$$ is the number of nodes in linked list.\n Let's analyze the time complexity of each step:\n\n1) Count Nodes - Get the count of number nodes in the linked list requires $$\\mathcal{O}(n)$$ time.\n\n2) Split and Merge - This operation is similar to _Approach 1_ and takes  $$ \\mathcal{O}(n \\log n)$$ time.\nFor `n = 16`, the split and merge operation in Bottom Up fashion can be visualized as follows\n\n![img](../Figures/148/bottom_up_time_complexity.png)\n\nThis gives us total time complexity as\n$$\\mathcal{O}(n) + \\mathcal{O}(n \\log n) = \\mathcal{O}(n \\log n)$$\n\n* Space Complexity: $$\\mathcal{O}(1)$$ We use only constant space for storing the reference pointers  $$\\text{tail}$$ , $$\\text{nextSubList}$$ etc.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

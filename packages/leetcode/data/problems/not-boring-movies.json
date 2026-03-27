@@ -1,0 +1,58 @@
+{
+  "questionId": "620",
+  "questionFrontendId": "620",
+  "title": "Not Boring Movies",
+  "titleSlug": "not-boring-movies",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Cinema</code></p>\n\n<pre>\n+----------------+----------+\n| Column Name    | Type     |\n+----------------+----------+\n| id             | int      |\n| movie          | varchar  |\n| description    | varchar  |\n| rating         | float    |\n+----------------+----------+\nid is the primary key (column with unique values) for this table.\nEach row contains information about the name of a movie, its genre, and its rating.\nrating is a 2 decimal places float in the range [0, 10]\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the movies with an odd-numbered ID and a description that is not <code>&quot;boring&quot;</code>.</p>\n\n<p>Return the result table ordered by <code>rating</code> <strong>in descending order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nCinema table:\n+----+------------+-------------+--------+\n| id | movie      | description | rating |\n+----+------------+-------------+--------+\n| 1  | War        | great 3D    | 8.9    |\n| 2  | Science    | fiction     | 8.5    |\n| 3  | irish      | boring      | 6.2    |\n| 4  | Ice song   | Fantacy     | 8.6    |\n| 5  | House card | Interesting | 9.1    |\n+----+------------+-------------+--------+\n<strong>Output:</strong> \n+----+------------+-------------+--------+\n| id | movie      | description | rating |\n+----+------------+-------------+--------+\n| 5  | House card | Interesting | 9.1    |\n| 1  | War        | great 3D    | 8.9    |\n+----+------------+-------------+--------+\n<strong>Explanation:</strong> \nWe have three movies with odd-numbered IDs: 1, 3, and 5. The movie with ID = 3 is boring so we do not include it in the answer.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists cinema (id int, movie varchar(255), description varchar(255), rating float(2, 1))\"], \"mssql\": [\"Create table cinema (id int, movie varchar(255), description varchar(255), rating decimal(2, 1))\"], \"oraclesql\": [\"Create table cinema (id int, movie varchar(255), description varchar(255), rating number(2, 1))\"], \"database\": true, \"name\": \"not_boring_movies\", \"pythondata\": [\"cinema = pd.DataFrame([], columns=['id', 'movie', 'description', 'rating']).astype({'id':'Int64', 'movie':'object', 'description':'object', 'rating':'Float64'})\"], \"postgresql\": [\"Create table If Not Exists cinema (id int, movie varchar(255), description varchar(255), rating NUMERIC(3, 1))\"], \"manual\": false, \"database_schema\": {\"cinema\": {\"id\": \"INT\", \"movie\": \"VARCHAR(255)\", \"description\": \"VARCHAR(255)\", \"rating\": \"FLOAT(2, 1)\"}}}",
+  "stats": "{\"totalAccepted\": \"1.1M\", \"totalSubmission\": \"1.4M\", \"totalAcceptedRaw\": 1081623, \"totalSubmissionRaw\": 1439995, \"acRate\": \"75.1%\"}",
+  "likes": 1533,
+  "dislikes": 563,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"cinema\":[\"id\", \"movie\", \"description\", \"rating\"]},\"rows\":{\"cinema\":[[1, \"War\", \"great 3D\", 8.9], [2, \"Science\", \"fiction\", 8.5], [3, \"irish\", \"boring\", 6.2], [4, \"Ice song\", \"Fantacy\", 8.6], [5, \"House card\", \"Interesting\", 9.1]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}]}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef not_boring_movies(cinema: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "204",
+    "content": "[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Approach 1: Filtering and Sorting\n\n#### Intuition\n\n![fig](../Figures/620/620-1.png)\n\nThe objective of the function is to filter and sort movies based on specific criteria.\n\n1. **Selecting Odd Movie IDs:** The cinema might have a sequential system of assigning unique identifiers (IDs) to movies. By checking if a movie's ID is odd, we are effectively filtering for every alternate movie starting from the first one. This could be useful for scenarios where, for instance, alternate movies are to be considered for a particular kind of analysis or representation.\n```python\ncinema['id'] % 2 == 1\n```\n\n2. **Excluding Movies with 'boring' Descriptions:** The cinema might categorize or tag movies with a description. By filtering out movies that have a 'boring' description, we are focusing on movies that potentially have more engaging, thrilling, or intriguing content.\n```python\ncinema['description'] != 'boring'\n```\n\n3. **Sorting by Rating:** After filtering, it's intuitive to sort movies by their ratings so that the most critically acclaimed or popular movies appear first. Sorting in descending order by rating ensures that the highest-rated movies are at the top.\n```python\nsort_values(by='rating', ascending=False)\n```\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/8LVYA35p/shared\" frameBorder=\"0\" width=\"100%\" height=\"191\" name=\"8LVYA35p\"></iframe>\n\n\n## Database\n\n### Approach 1: Using `MOD()` function [Accepted]\n\n#### Intuition\nWe can use the `mod(id,2)=1` to determine the odd id, and then add a `description != 'boring'` should address this problem.\n\n#### Implementation\n\n```sql\nselect *\nfrom cinema\nwhere mod(id, 2) = 1 and description != 'boring'\norder by rating DESC\n;\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

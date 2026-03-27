@@ -1,0 +1,129 @@
+{
+  "questionId": "77",
+  "questionFrontendId": "77",
+  "title": "Combinations",
+  "titleSlug": "combinations",
+  "difficulty": "Medium",
+  "content": "<p>Given two integers <code>n</code> and <code>k</code>, return <em>all possible combinations of</em> <code>k</code> <em>numbers chosen from the range</em> <code>[1, n]</code>.</p>\n\n<p>You may return the answer in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 4, k = 2\n<strong>Output:</strong> [[1,2],[1,3],[1,4],[2,3],[2,4],[3,4]]\n<strong>Explanation:</strong> There are 4 choose 2 = 6 total combinations.\nNote that combinations are unordered, i.e., [1,2] and [2,1] are considered to be the same combination.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1, k = 1\n<strong>Output:</strong> [[1]]\n<strong>Explanation:</strong> There is 1 choose 1 = 1 total combination.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 20</code></li>\n\t<li><code>1 &lt;= k &lt;= n</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"combine\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    },\r\n    {\r\n      \"name\": \"k\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<list<integer>>\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.3M\", \"totalSubmission\": \"1.8M\", \"totalAcceptedRaw\": 1311353, \"totalSubmissionRaw\": 1763659, \"acRate\": \"74.4%\"}",
+  "likes": 8908,
+  "dislikes": 255,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Combination Sum\", \"titleSlug\": \"combination-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Permutations\", \"titleSlug\": \"permutations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "4\n2",
+    "1\n1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 16, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}]}",
+  "topicTags": [
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> combine(int n, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> combine(int n, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def combine(self, n: int, k: int) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def combine(self, n, k):\n        \"\"\"\n        :type n: int\n        :type k: int\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} k\n * @return {number[][]}\n */\nvar combine = function(n, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function combine(n: number, k: number): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> Combine(int n, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** combine(int n, int k, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func combine(n int, k int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun combine(n: Int, k: Int): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func combine(_ n: Int, _ k: Int) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn combine(n: i32, k: i32) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} k\n# @return {Integer[][]}\ndef combine(n, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $k\n     * @return Integer[][]\n     */\n    function combine($n, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> combine(int n, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def combine(n: Int, k: Int): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec combine(n :: integer, k :: integer) :: [[integer]]\n  def combine(n, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec combine(N :: integer(), K :: integer()) -> [[integer()]].\ncombine(N, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (combine n k)\n  (-> exact-integer? exact-integer? (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1937",
+    "content": "[TOC]\n\n## Solution\n\n---\n \n### Approach: Backtracking\n\n**Intuition**\n\nWe are given that `n <= 20`. Typically, problems that ask you to find **all** of something with low bounds can be solved with backtracking.\n\nIn backtracking, we generate all solutions one element at a time. This problem is asking us to generate all possible combinations, so we will generate combinations one element at a time.\n\nThe range of elements we are working with is `[1, n]`. To generate a combination one element at a time, we will use an array `curr` that represents the current combination we are building.\n\nTo start, we add the first element `1`, so we have `curr = [1]`. We are **locking** in this `1` and we will now find all combinations that start with `1`.\n\nTo find all combinations that start with `1`, we start by adding the first element after `1`, which is `2`. We now have `curr = [1, 2]`. We are **locking** in this `2` and we will now find all combinations that start with `1, 2`.\n\nThis continues until we reach the target length `k`. Let's say that we have finished finding all combinations that start with `[1, 2]`. Now what? We **backtrack** by removing the `2`, and we have `curr = [1]` again. Now, we add the second element that comes after `1`, which is `3`. We have `curr = [1, 3]`, and now we need to find all combinations that start with `[1, 3]`.\n\nOnce we find all the combinations that start with `[1]`, we backtrack by removing the `1` from `curr` and adding the next element. We have `curr = [2]`, and now we need to find all combinations that start with `2`.\n\nThis process is very recursive in nature. Each time we add an element, we solve a new version of the problem (find all combinations that start with `curr`). The initial version of the problem is to find all combinations that start with `[]`, which represents all possible combinations.\n\n**Trees**\n\nThe best way to think about the backtracking process is by modeling it as a tree. You can imagine the solution space as a tree, with each node representing a version of `curr`. Label each node with a number that represents the last number in `curr`. Moving to a child is like adding the child's label to `curr`.\n\nTo prevent duplicate combinations like `[1, 2]` and `[2, 1]`, a node only has children with labels greater than its own.\n\nGiven `n = 4` and `k = 2`, here is the backtracking tree:\n\n<img src=\"../Figures/77/1.png\" width=\"960\"> <br>\n\nThe root node represents an empty `[]`. From the root, every node's `curr` represents the path taken from the root. The nodes at depth `k` represent the answer combinations (highlighted in green).\n\nSolving this problem is equivalent to \"traversing\" this tree. The easiest way to perform the traversal is by using recursion and passing `curr` as an argument.\n\nThink of each call to the recursive function as being a node in the tree. In each call, we need to iterate over the numbers greater than the label of the current node. We can pass an argument `firstNum` representing the first number we should start iterating from.\n\nFor each `num` in `[firstNum, n]`, we add it to `curr` and then make a recursive call passing `curr` and `num + 1` as `firstNum`. This ensures that we only consider numbers greater than the ones we have already added. Modifying `curr` and making a recursive call is equivalent to \"traversing\" to a child node in the tree.\n\nWhen we return from a function call, it's equivalent to moving back up the tree (exactly like in a DFS). When we moved from a parent to a child, we added an element to `curr`. When we move from a child back to its parent, we need to remove the element we added from `curr`. This is the \"backtracking\" step.\n\nThe following is an implementation of this backtrack function, which is essentially performing a DFS on the solution space tree.\n\n<iframe src=\"https://leetcode.com/playground/Hp9MnshW/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"Hp9MnshW\"></iframe>\n\n\n**An optimization step**\n\nYou may notice in the solution tree image above, we have a path that does not lead to any solutions (the `4` node).\n\nThis path doesn't lead to any solutions because there aren't enough elements after `4` to reach a path length of `k`. We should avoid paths like these as they are a waste of time. It would be better if our tree looked like this:\n\n<img src=\"../Figures/77/2.png\" width=\"960\"> <br>\n\nAt each node, we have `curr.length` elements so far. We need to reach `k` elements. Therefore, we can calculate `need = k - curr.length` as the number of elements we still need to add.\n\nThe range of numbers we are considering in the subtree is `[firstNum, n]`. The size of this range is `remain = n - firstNum + 1`.\n\nFinally, we can calculate `available = remain - need`. This value represents the count of numbers available to us as children. We should only consider children in the range `[firstNum, firstNum + available]` instead of the range `[firstNum, n]` like in the above code.\n\nIf we moved to a child outside of this range, like `firstNum + available + 1`, then we will run out of numbers to use before reaching a length of `k`.\n\n**Algorithm**\n\n1. Initialize an answer array `ans` and an array to build combinations with `curr`.\n2. Create a `backtrack` function that takes `curr` as an argument as well as an integer `firstNum`:\n    - if `curr.length == k`, add a copy of `curr` to `ans` and return.\n    - Calculate `available`, the amount of numbers we can consider at the current node.\n    - Iterate `num` from `firstNum` up to and including `firstNum + available`.\n    - For each `num`, add it to `curr`, call `backtrack(curr, num + 1)`, and then remove `num` from `curr`.\n3. Call `backtrack` with an initially empty `curr` and `firstNum = 1`.\n4. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/VxkqY5me/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VxkqY5me\"></iframe>\n\n**Complexity Analysis**\n\n> Note: most backtracking problems, including this one, have extremely difficult time complexities to derive. Don't be discouraged if you can't derive it on your own - most of the time, the analysis requires an esoteric understanding of math. If you are asked this question in an interview, do your best to state an upper bound on the complexity by analyzing the number of nodes in the tree and the work done at each node.\n\n* Time complexity: $$O(\\dfrac{n!}{(k - 1)! \\cdot (n-k)!})$$\n\n    Finding combinations is a [well-studied problem in combinatorics](https://en.wikipedia.org/wiki/Combination). The number of combinations of length `k` from a set of `n` elements is equal to the [binomial coefficient](https://en.wikipedia.org/wiki/Binomial_coefficient), also known as \"n choose k\".\n\n    $$\\dbinom{n}{k} = \\dfrac{n!}{k!(n-k)!}$$\n\n    How many nodes are in the tree?\n\n    After applying the optimization, we only consider paths that lead to answers. This means that the number of leaf nodes is equal to the number of answers.\n\n    Each path to a leaf has `k` nodes. However, there is a huge amount of overlap. It would be extremely difficult to calculate the exact number of nodes, but we know that it can't be greater than `k` times the number of leaves (which would occur if there was no overlap, i.e. every node had a maximum of 1 child, which is only possible for `n = k`). Therefore, an upper bound on the number of nodes is:\n\n    $$\\dfrac{k \\cdot n!}{k!(n-k)!} = \\dfrac{n!}{(k - 1)! \\cdot (n-k)!}$$\n\n    The fact that this is an upper bound is great news for us. Why? Because at each of the leaves, we need to perform $$O(k)$$ work to create a copy of `curr` to add to the answer. The work we perform to copy all the combinations is equal to the upper bound on the number of nodes. Therefore, the work done for the traversal will inevitably be dominated, and the fact that we can't calculate the exact number of nodes in the tree is irrelevant.\n\n* Space complexity: $$O(k)$$\n\n    We don't count the answer as part of the space complexity. The extra space we use here is for `curr` and the recursion call stack. The depth of the call stack is equal to the length of `curr`, which is limited to $$k$$.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "questionId": "440",
+  "questionFrontendId": "440",
+  "title": "K-th Smallest in Lexicographical Order",
+  "titleSlug": "k-th-smallest-in-lexicographical-order",
+  "difficulty": "Hard",
+  "content": "<p>Given two integers <code>n</code> and <code>k</code>, return <em>the</em> <code>k<sup>th</sup></code> <em>lexicographically smallest integer in the range</em> <code>[1, n]</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 13, k = 2\n<strong>Output:</strong> 10\n<strong>Explanation:</strong> The lexicographical order is [1, 10, 11, 12, 13, 2, 3, 4, 5, 6, 7, 8, 9], so the second smallest number is 10.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1, k = 1\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= n &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findKthNumber\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    },\r\n    {\r\n        \"name\":\"k\",\r\n        \"type\":\"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"168.7K\", \"totalSubmission\": \"364.8K\", \"totalAcceptedRaw\": 168696, \"totalSubmissionRaw\": 364753, \"acRate\": \"46.2%\"}",
+  "likes": 1648,
+  "dislikes": 147,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Special Integers\", \"titleSlug\": \"count-special-integers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "13\n2",
+    "1\n1"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"hulu\", \"name\": \"Hulu\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Trie",
+      "slug": "trie"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findKthNumber(int n, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findKthNumber(int n, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findKthNumber(self, n: int, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findKthNumber(self, n, k):\n        \"\"\"\n        :type n: int\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} k\n * @return {number}\n */\nvar findKthNumber = function(n, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findKthNumber(n: number, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindKthNumber(int n, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findKthNumber(int n, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findKthNumber(n int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findKthNumber(n: Int, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findKthNumber(_ n: Int, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_kth_number(n: i32, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} k\n# @return {Integer}\ndef find_kth_number(n, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $k\n     * @return Integer\n     */\n    function findKthNumber($n, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findKthNumber(int n, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findKthNumber(n: Int, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_kth_number(n :: integer, k :: integer) :: integer\n  def find_kth_number(n, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_kth_number(N :: integer(), K :: integer()) -> integer().\nfind_kth_number(N, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-kth-number n k)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2444",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe need to find the `K`-th smallest number in lexicographical order within the range `[1, n]`. At first, this might seem like a simple sorting problem. We could list all the numbers, sort them in lexicographical order, and pick the `K`-th number. However, for large values of `n`, this becomes impractical due to the sheer size of the list we'd need to create.\n\nInstead of generating and sorting all the numbers, we can treat numbers as trees, where each node represents a number and its children represent numbers with the same prefix. Structuring numbers this way allows us to find the `K`-th smallest more efficiently.\n\nFor example, the number `1` has children `10`, `11`, `12`, ..., up to `19`. Similarly, `2` has children `20`, `21`,  ..., up to `29` and so on for other numbers. This gives us a prefix tree like structure where each node corresponds to a number and branches out to other numbers by appending digits. If we traverse this tree in lexicographical order, it’s as if we’re listing all numbers in their proper order.\n\n![digit tree](../Figures/440/lexico_number_tree.png)\n\n---\n\n### Approach: Prefix Tree\n\n#### Intuition\n\nWe begin by selecting the smallest lexicographical number, which is `1`. Since we've already counted `1` as the first number, we subtract `1` from `k` to account for that.\n\nNext, we calculate how many numbers exist in the subtree rooted at `curr` by defining a helper function `countSteps`, which counts the numbers between two prefixes [`curr` and `curr + 1`). It calculates numbers at each level, expanding the prefix as we go deeper.\n\nWe know the `k`-th number is not in this subtree if the number of steps (or numbers) under `curr` is smaller than or equal to `k`. Under these circumstances, we skip to the next sibling (`curr++`) and subtract the number of steps from `k` because we've skipped those numbers. \n\nOn the other hand, if the number of steps is larger than `k`, we know the `k`-th number is in the subtree rooted at `curr`. In that case, we move down one level by multiplying `curr` by 10, effectively moving to the next digit in the lexicographical tree. We also decrease `k` by 1 because we've taken one step deeper into the tree.\n\nWe repeat this process until `k` becomes zero, at which point we've found the `k`-th number, and we return `curr`.\n\n#### Algorithm\n\n- Initialize `curr` to 1 (current prefix) and decrement `k` by 1.\n- While `k` is greater than 0:\n  - Calculate the number of steps in the subtree rooted at `curr` using `countSteps(n, curr, curr + 1)`.\n  - If the number of steps is less than or equal to `k`:\n    - Increment `curr` by 1 to move to the next prefix.\n    - Decrement `k` by the number of skipped steps (i.e., `k -= step`).\n  - Otherwise:\n    - Multiply `curr` by 10 to move to the next level in the tree (i.e., `curr *= 10`).\n    - Decrement `k` by 1 to account for the current level.\n- Return the value of `curr` as the `k`-th smallest number in lexicographical order.\n\n- `countSteps` function:\n  - Initialize `steps` to 0 to keep track of the count of numbers in the range.\n  - While `prefix1` is less than or equal to `n`:\n    - Add the number of integers between `prefix1` and `prefix2` to `steps` using `steps += Math.min(n + 1, prefix2) - prefix1`. This ensures the count does not exceed `n` by capping `prefix2` at `n + 1` if `prefix2` is larger than `n`.\n    - Multiply `prefix1` and `prefix2` by 10 to move to the next level in the tree.\n  - Return the total number of steps counted.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KYViuAd9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KYViuAd9\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the input number.\n\n- Time complexity: $O(\\log(n)^2)$\n\n    The outer `while` loop runs as long as `k > 0`. In the worst case, it runs $O(\\log n)$ times, because at each step, we either move to the next prefix or move deeper into the tree (multiplying the current prefix by 10).\n\n    The `countSteps` function, which calculates the number of steps between two prefixes, runs in $O(\\log n)$ time, as it traverses deeper levels of the number range by multiplying the prefixes by 10 in each iteration.\n\n    Since the `countSteps` function is called inside the `while` loop, which also runs $O(\\log n)$ times, the overall time complexity is $O(\\log(n) \\times \\log(n)) = O(\\log(n)^2)$.\n\n- Space complexity: $O(1)$\n\n    The space complexity is $O(1)$ because we're only using a constant amount of additional space for variables like `curr`, `k`, `step`, `prefix1`, `prefix2`, etc. We're not using any data structures that grow with the input size.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

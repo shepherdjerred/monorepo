@@ -1,0 +1,143 @@
+{
+  "questionId": "563",
+  "questionFrontendId": "563",
+  "title": "Binary Tree Tilt",
+  "titleSlug": "binary-tree-tilt",
+  "difficulty": "Easy",
+  "content": "<p>Given the <code>root</code> of a binary tree, return <em>the sum of every tree node&#39;s <strong>tilt</strong>.</em></p>\n\n<p>The <strong>tilt</strong> of a tree node is the <strong>absolute difference</strong> between the sum of all left subtree node <strong>values</strong> and all right subtree node <strong>values</strong>. If a node does not have a left child, then the sum of the left subtree node <strong>values</strong> is treated as <code>0</code>. The rule is similar if the node does not have a right child.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/10/20/tilt1.jpg\" style=\"width: 712px; height: 182px;\" />\n<pre>\n<strong>Input:</strong> root = [1,2,3]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> \nTilt of node 2 : |0-0| = 0 (no children)\nTilt of node 3 : |0-0| = 0 (no children)\nTilt of node 1 : |2-3| = 1 (left subtree is just left child, so sum is 2; right subtree is just right child, so sum is 3)\nSum of every tilt : 0 + 0 + 1 = 1\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/10/20/tilt2.jpg\" style=\"width: 800px; height: 203px;\" />\n<pre>\n<strong>Input:</strong> root = [4,2,9,3,5,null,7]\n<strong>Output:</strong> 15\n<strong>Explanation:</strong> \nTilt of node 3 : |0-0| = 0 (no children)\nTilt of node 5 : |0-0| = 0 (no children)\nTilt of node 7 : |0-0| = 0 (no children)\nTilt of node 2 : |3-5| = 2 (left subtree is just left child, so sum is 3; right subtree is just right child, so sum is 5)\nTilt of node 9 : |0-7| = 7 (no left child, so sum is 0; right subtree is just right child, so sum is 7)\nTilt of node 4 : |(3+5+2)-(9+7)| = |10-16| = 6 (left subtree values are 3, 5, and 2, which sums to 10; right subtree values are 9 and 7, which sums to 16)\nSum of every tilt : 0 + 0 + 0 + 2 + 7 + 6 = 15\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/10/20/tilt3.jpg\" style=\"width: 800px; height: 293px;\" />\n<pre>\n<strong>Input:</strong> root = [21,7,14,1,1,2,2,3,3]\n<strong>Output:</strong> 9\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[0, 10<sup>4</sup>]</code>.</li>\n\t<li><code>-1000 &lt;= Node.val &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Don't think too much, this is an easy problem. Take some small tree as an example.",
+    "Can a parent node use the values of its child nodes? How will you implement it?",
+    "May be recursion and tree traversal can help you in implementing.",
+    "What about postorder traversal, using values of left and right childs?"
+  ],
+  "metaData": "{\r\n  \"name\": \"findTilt\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"266.9K\", \"totalSubmission\": \"407K\", \"totalAcceptedRaw\": 266943, \"totalSubmissionRaw\": 406992, \"acRate\": \"65.6%\"}",
+  "likes": 2383,
+  "dislikes": 2260,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find All The Lonely Nodes\", \"titleSlug\": \"find-all-the-lonely-nodes\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3]",
+    "[4,2,9,3,5,null,7]",
+    "[21,7,14,1,1,2,2,3,3]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"indeed\", \"name\": \"Indeed\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int findTilt(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int findTilt(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def findTilt(self, root: Optional[TreeNode]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def findTilt(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number}\n */\nvar findTilt = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction findTilt(root: TreeNode | null): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int FindTilt(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint findTilt(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc findTilt(root *TreeNode) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun findTilt(root: TreeNode?): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func findTilt(_ root: TreeNode?) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn find_tilt(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer}\ndef find_tilt(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer\n     */\n    function findTilt($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int findTilt(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def findTilt(root: TreeNode): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec find_tilt(root :: TreeNode.t | nil) :: integer\n  def find_tilt(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec find_tilt(Root :: #tree_node{} | null) -> integer().\nfind_tilt(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (find-tilt root)\n  (-> (or/c tree-node? #f) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1037",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nFirst of all, let us clarify the concept of __*tilt*__ for a given node in a tree.\n\nIn order to calculate the tilt value for a node, we need to know the sum of nodes in its left and right subtrees respectively.\n\nAssume that we have a function `valueSum(node)` which gives the sum of all nodes, starting from the input node, then the sum of the node's left subtree would be `valueSum(node.left)`.\nSimilarly, the sum of its right subtree would be `valueSum(node.right)`.\n\nWith the above functions, we can then define the tilt value of a node as follows:\n$$\n    \\text{tilt(node)} = |\\text{valueSum(node.left)} - \\text{valueSum(node.right)}|\n$$\n\nGiven the above formula, we show an example on how the tilt value of each node looks like, in the following graph:\n\n![tilt example](../Figures/563/563_tilt_example.png)\n\n_Note: when a subtree is empty, its value sum is zero._\nAs a result, the tilt value for a leaf node would be zero, since both the left and right subtree of a leaf node are empty.\n\n\n---\n### Approach 1: Post-Order DFS Traversal\n\n**Intuition**\n\n>The overall idea is that we _traverse_ each node, and calculate the _tilt_ value for each node. At the end, we sum up all the tilt values, which is the desired result of the problem.\n\nThere are in general two strategies to traverse a tree data structure, namely [Breadth-First Search](https://leetcode.com/explore/learn/card/queue-stack/231/practical-application-queue/) (**_BFS_**) and [Depth-First Search](https://leetcode.com/explore/learn/card/queue-stack/232/practical-application-stack/) (**_DFS_**).\n\nConcerning the DFS strategy, it can further be divided into three categories: _Pre-Order_, _In-Order_ and _Post-Order_, depending on the relative order of visit among the node and its children nodes.\n\nSometimes, both strategies could work for a specific problem. In other cases, one of them might be more adapted to the problem.\nIn our case here, the _DFS_ is a more optimized choice, as one will see later.\nMore specifically, we could apply the **_Post-Order DFS_** traversal here.\n\n**Algorithm**\n\nAs we discussed before, in order to calculate the tilt value for a node, we need to calculate the sum of its left and right subtrees respectively.\n\nLet us first implement the function `valueSum(node)` which returns the sum of values for all nodes starting from the given `node`, which can be summarized with the following recursive formula:\n\n$$\n    \\text{valueSum(node)} = \\text{node.val} + \\text{valueSum(node.left)} + \\text{valueSum(node.right)}\n$$\n\nFurthermore, the tilt value of a node also depends on the value sum of its left and right subtrees, as follows:\n\n$$\n    \\text{tilt(node)} = |\\text{valueSum(node.left)} - \\text{valueSum(node.right)}|\n$$\n\nIntuitively, we could combine the above calculations within a single recursive function.\nIn this way, we only need to traverse each node once and only once.\n\n>More specifically, we will traverse the tree in the **post-order DFS**, _i.e._ we visit a node's left and right subtrees before processing the value of the current node.\n\nHere are some sample implementations.\n\n<iframe src=\"https://leetcode.com/playground/iY8eedsa/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"iY8eedsa\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of nodes in the input tree.\n\n- Time Complexity: $$\\mathcal{O}(N)$$ \n\n    - We traverse each node once and only once. During the traversal, we calculate the tilt value for each node.\n\n- Space Complexity: $$\\mathcal{O}(N)$$\n\n    - Although the variables that we used in the algorithm are of constant-size, we applied recursion in the algorithm which incurs additional memory consumption in function call stack.\n\n    - In the worst case where the tree is not well balanced, the recursion could pile up $$N$$ times. As a result, the space complexity of the algorithm is $$\\mathcal{O}(N)$$.\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

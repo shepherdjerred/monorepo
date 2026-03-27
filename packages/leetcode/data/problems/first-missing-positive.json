@@ -1,0 +1,138 @@
+{
+  "questionId": "41",
+  "questionFrontendId": "41",
+  "title": "First Missing Positive",
+  "titleSlug": "first-missing-positive",
+  "difficulty": "Hard",
+  "content": "<p>Given an unsorted integer array <code>nums</code>. Return the <em>smallest positive integer</em> that is <em>not present</em> in <code>nums</code>.</p>\n\n<p>You must implement an algorithm that runs in <code>O(n)</code> time and uses <code>O(1)</code> auxiliary space.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,0]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The numbers in the range [1,2] are all in the array.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,4,-1,1]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> 1 is in the array but 2 is missing.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [7,8,9,11,12]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The smallest positive integer 1 is missing.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-2<sup>31</sup> &lt;= nums[i] &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n",
+  "hints": [
+    "Think about how you would solve the problem in non-constant space.  Can you apply that logic to the existing space?",
+    "We don't care about duplicates or non-positive integers",
+    "Remember that O(2n) = O(n)"
+  ],
+  "metaData": "{\r\n  \"name\": \"firstMissingPositive\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.7M\", \"totalSubmission\": \"4M\", \"totalAcceptedRaw\": 1723755, \"totalSubmissionRaw\": 4043949, \"acRate\": \"42.6%\"}",
+  "likes": 18357,
+  "dislikes": 1982,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Missing Number\", \"titleSlug\": \"missing-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Duplicate Number\", \"titleSlug\": \"find-the-duplicate-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find All Numbers Disappeared in an Array\", \"titleSlug\": \"find-all-numbers-disappeared-in-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Couples Holding Hands\", \"titleSlug\": \"couples-holding-hands\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Smallest Number in Infinite Set\", \"titleSlug\": \"smallest-number-in-infinite-set\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Integers to Choose From a Range I\", \"titleSlug\": \"maximum-number-of-integers-to-choose-from-a-range-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Smallest Missing Non-negative Integer After Operations\", \"titleSlug\": \"smallest-missing-non-negative-integer-after-operations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Integers to Choose From a Range II\", \"titleSlug\": \"maximum-number-of-integers-to-choose-from-a-range-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Smallest Missing Integer Greater Than Sequential Prefix Sum\", \"titleSlug\": \"smallest-missing-integer-greater-than-sequential-prefix-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,0]",
+    "[3,4,-1,1]",
+    "[7,8,9,11,12]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 5, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 5, \"slug\": \"makemytrip\", \"name\": \"MakeMyTrip\"}, {\"timesEncountered\": 4, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 4, \"slug\": \"zomato\", \"name\": \"Zomato\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 3, \"slug\": \"myntra\", \"name\": \"Myntra\"}, {\"timesEncountered\": 3, \"slug\": \"netflix\", \"name\": \"Netflix\"}, {\"timesEncountered\": 3, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int firstMissingPositive(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int firstMissingPositive(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def firstMissingPositive(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def firstMissingPositive(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar firstMissingPositive = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function firstMissingPositive(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FirstMissingPositive(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int firstMissingPositive(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func firstMissingPositive(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun firstMissingPositive(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func firstMissingPositive(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn first_missing_positive(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef first_missing_positive(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function firstMissingPositive($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int firstMissingPositive(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def firstMissingPositive(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec first_missing_positive(nums :: [integer]) :: integer\n  def first_missing_positive(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec first_missing_positive(Nums :: [integer()]) -> integer().\nfirst_missing_positive(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (first-missing-positive nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2275",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThe task is to find the smallest positive integer that is not present in `nums`.\n\nNote that positive integers are greater than zero.\n\nLet's discuss the two main cases:\n\n**1. No Missing Integer in `nums`:**\n\n| 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |\n|---|---|---|---|---|---|---|---|---|\n\n`nums` contains `9` elements. The smallest missing positive integer is `10`.\n\nFor an array of length `n`, if the array contains all of the integers in the range `1` to `n`, the smallest missing positive integer is `n + 1`.\n\n**2. Missing Integer in `nums`:**\n\n|-10 | 1 | 2 | 2 | 3 | 4 | 6 | 6 | 8 |\n|----|---|---|---|---|---|---|---|---|\n\n`nums` contains `9` elements. The smallest missing positive integer is `5`.\n\nFor an array of length `n`, if the array does not contain all of the integers in the range `1` to `n`, the smallest missing positive integer is the first integer missing from that range.\n\nLet's also discuss the constraints:\n\n> You must implement an algorithm that runs in $O(n)$ time and uses $O(1)$ auxiliary space.\n\n**1. Time Complexity:**\n\nHint number three reminds us that $O(2n) = O(n)$. While we know that one does not equal two, $O$ notation describes an algorithm's limiting behavior as the input size grows toward infinity.\n\n**2. Space Complexity:**\n\nThe optimized approaches in this article use in-place solutions. Does in-place mean a constant space complexity? By [definition](https://en.wikipedia.org/wiki/In-place_algorithm), an in-place algorithm transforms the input using no auxiliary data structures proportional to the input size. An in-place algorithm does not necessarily mean constant space complexity; for example, an in-place recursive algorithm uses the recursion stack, so the space is not constant.\n\nThe problem specifically asks us to use constant *auxiliary* space, so in-place solutions meet this criterion.\n\n---\n\n### Approach 1: Boolean Array\n\n#### Intuition\n\nWe can solve the problem by iterating through the numbers `1` to `n`, and use linear search to determine whether each number is in the array. The first number we cannot find is the smallest missing integer. This approach would result in a quadratic time complexity.\n\nWe need to determine whether an element is in the array in constant time. Array indexing provides constant lookup time. We need to check the existence of a relatively small range of values, positive numbers between `1` and `n`, so we can use an array like a hash table by using the index as a key and the value as a presence indicator. The default value is `false`, which represents a missing number, and we set the value to `true` for keys that exist in `nums`. Numbers not in the range `1` to `n` are not relevant in the search for the first missing positive, so we do not mark them in the `seen` array.\n\nTo solve the problem, we can create an array of size `n + 1`. For each positive number less than `n` in `nums`, we set `seen[num]` to `true`. Then, we iterate through the integers `1` to `n` and return the first number that is not marked as seen in the array. If the array contains all of the elements `1` to `n`, we return `n + 1`.\n\n> **Note:** This approach does not meet the problem constraint of solving the problem using constant auxiliary space. It is included to make the solution accessible, and it can provide valuable background for solving the problem within the space constraints. Other approaches that do not meet the time and/or space constraints are not included as they are less relevant to understanding the following approaches.\n\n#### Algorithm\n\n1. Initialize a variable `n` to the length of `nums`.\n\n2. Initialize an array `seen` to size `n + 1`.\n\n3. Mark the elements in `nums` as seen in the array `seen`.\n\n    - For each `num` in `nums`, if `num` is greater than `0` and less than or equal to `n`, set `seen[num]` to `true`.\n\n4. Find the smallest missing positive number:\n\n    - For `i` from `1` to `n`, If `seen[i]` is not `true`, return `i`, the smallest missing integer.\n\n5. If `seen` contains all elements `1` to `n`, return `n + 1` as the smallest missing positive number.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ASLfPBW8/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"ASLfPBW8\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `nums`.\n\n* Time complexity: $O(n)$\n\n    Marking the values from `nums` in `seen` takes $O(n)$.\n\n    We check for values `1` to `n` in `seen`, which takes $O(n)$.\n\n    The total time complexity will be $O(2n)$, which we can simplify to $O(n)$.\n\n* Space complexity: $O(n)$\n\n    We initialize the array `seen`, which is size `n + 1`, so the space complexity is $O(n)$.\n\n---\n\n### Approach 2: Index as a Hash Key\n\n#### Intuition\n\n**Data Clean Up**\n\nOur search for the first missing positive focuses on the elements with values `1` through `n`. Negative numbers, zeros, and numbers larger than `n` are not relevant. Let's replace all these with `1`s. \n\n![max_first](../Figures/41/41_replace.png)\n\nTo ensure that the first missing positive is not `1`, we also have to track whether `1` exists in the original array.\n\n**Solving In-Place**\n\nNow we have an array that contains only positive numbers in a range from `1` to `n`, and the goal is to find the first missing positive in linear time and constant auxiliary space. \n\nIn the above approach, using the `seen` array introduced extra space. We can utilize `nums` itself to track which positive integers occur in the array since the range of numbers we have now is the same as the length of the array. We can use the index as a hash key for a positive number, and the sign of the element as a presence indicator.\n\nFor example, the negative sign of `nums[5]` means that the number `5` is present in `nums`. The positive sign of `nums[6]` means that the number `6` is not present (missing) in `nums`.\n\n![max_first](../Figures/41/41_true_solution.png)\n\nTo determine the smallest missing positive, we traverse the array, check each element value `value`, and change the sign of element `nums[value]` to negative to mark the number `value` as present in `nums`. We must be careful with duplicates and ensure that the sign is changed only once.\n\n> **Interview Tip: In-place Algorithms**\n>\n> This approach modifies the input by changing values of `nums`. In-place algorithms overwrite the input to save space, but sometimes this can cause problems.\n>\n> Here are a couple of situations where an in-place algorithm might not be suitable.\n>\n> 1. The algorithm needs to run in a multi-threaded environment, without exclusive access to the array. Other threads might need to read the array too, and might not expect it to be modified.\n>\n> 2. Even if there is only a single thread, or the algorithm has exclusive access to the array while running, the array might need to be reused later or by another thread once the lock has been released.\n>\n> In an interview, you should always check whether the interviewer minds you overwriting the input. Be ready to explain the pros and cons of doing so if asked!\n\n#### Algorithm\n\n1. Initialize a variable `n` to the length of `nums`, and a boolean `contains1` to `false`.\n\n2. Traverse `nums`, check whether `1` occurs, and replace negative numbers, zeros, and numbers larger than `n` with `1`. For each element in nums:\n\n    - If the element equals `1`, set `contains1` to `true`.\n    - If the element is less than or equal to `0` or greater than `n`, replace it with `1`.\n\n3. If the original `nums` array does not contain `1`, return `1`.\n\n4. Traverse `nums` using a `for` loop from `i` equals `0` to `n`. When `value` is encountered, flip the sign of the number at index `value` to negative to indicate that it is present in the array. Use absolute value to prevent duplicate occurrences of `value` from flipping the sign back to positive.\n    - Set an integer `value` to the absolute value of `nums[i]`.\n    - If `value` equals `n`, we use index `0` to save information about the presence of the number `n` since index `n` is not available. Set `nums[0]` to the negative of the absolute value of `nums[0]`.\n    - Otherwise, we use index `value` to store information about the presence of the number `value`. Set `nums[value]` to the negative of the absolute value of `nums[value]`.\n\n5. Find the smallest missing positive number:\n\n    - Iterate through the integers `1` to `n` using iterator `i`. If `nums[i]` is positive, return `i`.\n\n6. If `nums[0]` is greater than `0` return `n`.\n\n7. If `nums` contains all elements `1` to `n`, return `n + 1` as the smallest missing positive number.\n\n!?!../Documents/41_LIS.json:1000,589!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PppX77uq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PppX77uq\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `nums`,\n\n* Time complexity: $O(n)$\n\n    We traverse `nums` using a `for` loop three separate times, so the time complexity is $O(n)$.\n\n* Space complexity: $O(n)$\n\n    We modify the array `nums` and use it to determine the answer, so the space complexity is $O(n)$.\n\n    `nums` is the input array, so the *auxiliary* space used is $O(1)$.\n\n---\n\n### Approach 3: Cycle Sort\n\n#### Intuition\n\nIn the first approach, we discussed that we can solve the problem by iterating through the numbers `1` to `n` and searching for each in the array. If `nums` were sorted, this search process could be done in linear time. The built-in sorting functions in most major languages use linear or logarithmic auxiliary space. We need a way to sort the array in-place, in constant time.\n\nThe numbers we need to check for are in the range `1` to `n`, so we can utilize [cycle sort](https://en.wikipedia.org/wiki/Cycle_sort). Cycle sort is a sorting algorithm that can sort a given sequence in a range from `a` to `n` by putting each element at the index that corresponds to its value.\n\n`nums` is a zero-indexed array, so an element with the value `x` will be located at index `x - 1`. For example, `1` goes at index `0` in the array, `2` goes at index `1`, and `100` goes at index `99`. \n\nFor each element `x` in `nums`, if it is a positive integer between `1` and `n`, we place it at index `nums[x - 1]`. Elements smaller than `1` or larger than `n` will reside at indexes that do not have a corresponding value in `nums`.\n\nThen, to determine the smallest positive integer, we iterate through `nums`, and return the first element that is not equal to its index plus one.\n\nIf we iterate through the whole sorted array without returning a value, the array consists of the sequence of numbers `1` through `n`, so we return `n + 1`.\n\n> **Notes:** \n>   - This approach modifies the input. It changes the order of `nums`, but not the values of `nums`. In-place algorithms overwrite the input to save space, but sometimes this can cause problems. Always check with your interviewer before modifying the input.\n>\n>   - We use a simplified version of cycle sort because it is not a problem if the duplicate of a value is not in the correct position.\n\n#### Algorithm\n\n1. Initialize a variable `n` to the length of `nums`.\n\n2. Use cycle sort to place positive elements smaller than `n` at the correct index.\n\n    - Initialize a variable `i` to `0`.\n    - Iterate through the elements in `nums`:\n        - Set a variable `correctIdx` to `nums[i] - 1`.\n        - If the `nums[i]` is greater than zero, less than or equal to `n`, and does not equal `nums[correctIdx]`, swap the element at `nums[i]` with the element at `nums[correctIdx]`.\n        - Otherwise, increment `i`.\n\n3. Iterate through sorted `nums` and return the smallest missing positive number.\n\n    - For each element in `nums`, if `nums[i]` does not equal `i + 1`, return `i + 1`, the smallest missing positive number.\n\n4. Return `n + 1`, the smallest missing positive number when each number in `nums` is in the correct position.\n\n!?!../Documents/41/41_slideshow.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/efsbaqYc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"efsbaqYc\"></iframe>\n\n> **Note:** The variable `correctIdx` is included in the Python3 and Java implementations for readability. The C++ version directly uses `nums[i] - 1` to prevent integer overflow.\n\n#### Complexity Analysis\n\nLet $n$ be the length of `nums`.\n\n* Time complexity: $O(n)$\n\n    We loop through the elements in `nums` once, swapping elements to sort the array. Swapping takes constant time. Sorting `nums` using cycle sort takes $O(n)$ time. \n    \n    Iterating through the sorted array and finding the first missing positive can take up to $O(n)$. \n    \n    The total time complexity is $O(2n)$, which simplifies to $O(n)$.\n\n\n* Space complexity: $O(n)$\n\n    We modify the array `nums` and use it to determine the answer, so the space complexity is $O(n)$.\n\n    `nums` is the input array, so the *auxiliary* space used is $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "questionId": "670",
+  "questionFrontendId": "670",
+  "title": "Maximum Swap",
+  "titleSlug": "maximum-swap",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>num</code>. You can swap two digits at most once to get the maximum valued number.</p>\n\n<p>Return <em>the maximum valued number you can get</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 2736\n<strong>Output:</strong> 7236\n<strong>Explanation:</strong> Swap the number 2 and the number 7.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 9973\n<strong>Output:</strong> 9973\n<strong>Explanation:</strong> No swap.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= num &lt;= 10<sup>8</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"maximumSwap\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"num\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"511.9K\", \"totalSubmission\": \"984.6K\", \"totalAcceptedRaw\": 511916, \"totalSubmissionRaw\": 984615, \"acRate\": \"52.0%\"}",
+  "likes": 4287,
+  "dislikes": 274,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Create Maximum Number\", \"titleSlug\": \"create-maximum-number\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2736",
+    "9973"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 31, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 15, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 13, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 12, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumSwap(int num) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumSwap(int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumSwap(self, num: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumSwap(self, num):\n        \"\"\"\n        :type num: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} num\n * @return {number}\n */\nvar maximumSwap = function(num) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumSwap(num: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumSwap(int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumSwap(int num) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumSwap(num int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumSwap(num: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumSwap(_ num: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_swap(num: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num\n# @return {Integer}\ndef maximum_swap(num)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $num\n     * @return Integer\n     */\n    function maximumSwap($num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumSwap(int num) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumSwap(num: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_swap(num :: integer) :: integer\n  def maximum_swap(num) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_swap(Num :: integer()) -> integer().\nmaximum_swap(Num) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-swap num)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2528",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe need to maximize the value of a given integer by swapping any two digits, but we can do this only once. We aim to figure out the best two digits to swap so that the resulting number is as large as possible.\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nOne approach would be to consider all possible swaps by swapping each pair of digits and returning the largest resulting integer. \n\nWe convert the number to a string so that individual digits can be easily accessed and manipulated. This allows us to treat the number as an array of characters, making it easier to swap positions without the complexities involved in extracting digits mathematically. Once in string form, we swap every digit with each digit after it to check all possible outcomes. After each swap, we convert the modified string back to an integer and keep track of the largest value we encounter.\n\n#### Algorithm\n\n- Convert the integer `num` to a string `numStr` for easy manipulation of its digits.\n- Determine the size of `numStr` and initialize `maxNum` to `num` to track the maximum number found.\n\n- Use a nested loop to try all possible swaps of digits in `numStr`:\n  - The outer loop iterates through each digit with index `i`.\n  - The inner loop iterates through the subsequent digits with index `j` (starting from `i + 1`).\n\n  - Inside the inner loop:\n    - Swap the digits at indices `i` and `j` in `numStr`.\n    - Convert the modified `numStr` back to an integer and update `maxNum` if the new number is larger.\n    - Swap the digits back to restore the original string for the next iteration.\n\n- After exploring all possible swaps, return `maxNum`, which contains the largest number achievable through any single swap of digits.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/UwhBWNQw/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"UwhBWNQw\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of digits in the input number.\n\n- Time complexity: $O(n^2)$\n\n    The outer loop iterates through each digit (from 0 to $n-1$), and for each digit, the inner loop also iterates through the remaining digits (from $i+1$ to $n-1$). This results in $\\frac{n(n-1)}{2}$ possible swaps, leading to quadratic time complexity. Each swap involves:\n    - Performing a swap operation (constant time).\n    - Converting the modified string back to an integer takes $O(n)$ time due to the length of the string.\n    \n    Therefore, the total time complexity combines these two aspects, resulting in $O(n^2 \\cdot n) = O(n^3)$ for this specific implementation. However, since the main constraint is derived from the nested loops alone, the simplified consideration will generally focus on $O(n^2)$.\n\n- Space complexity: $O(n)$\n\n    The space complexity arises from converting the integer to a string, which requires additional space proportional to the number of digits $n$ in the number. No additional data structures that grow with input size are used, hence the overall space complexity is primarily determined by this string conversion. Thus, it is $O(n)$. \n  \n---\n\n\n### Approach 2: Greedy Two-Pass\n\n#### Intuition\n\nApproach 1 is inefficient because not all swaps are worth making. Let's consider an approach where we focus only on swaps that will give us the biggest improvement.\n\nCan we identify a pattern in the results that will help us identify the best swap? If we think through some examples, it can be observed that in each example the optimal swap involves moving the largest digit we can move forward to replace a smaller one. \n\nTo achieve this, we make two passes over the number. In the first pass, we scan from right to left to identify and store the largest digit we find and its position.\n\nIn the second pass, we move from left to right. Now that we know, for each position, the largest digit that appears after it, we check if we can make a swap. The first time we find a digit that is smaller than the largest one that comes after it, we swap them. Since we’re always looking for the largest possible swap, this guarantees that we’ll maximize the number.\n\n<details>\n  <summary>Inductive Proof for the Two-Pass Greedy</summary>\n\n\n##### Base Case:\nFor a one-digit number $N = d_0$, no swaps are possible, so the number itself is the maximum. The approach is trivially correct here.\n\n##### Inductive Hypothesis:\nAssume the two-pass method works for any number with $k$ digits, yielding the maximum possible number after making the best swap.\n\n##### Inductive Step:\nConsider a number with $k+1$ digits, represented as $d_0, d_1, \\dots, d_k$.\n\n1. First Pass (Right-to-Left):\n    As we move from $d_k$ to $d_0$, we track the largest digit found so far on the right and store its position. For any position $i$, let $M_i$ be the largest digit to the right of $d_i$.\n\n2. Second Pass (Left-to-Right):\n    We then move from $d_0$ to $d_k$, and for each $d_i$, check if $d_i < M_i$. If so, we swap $d_i$ with $M_i$, giving us the largest possible improvement. Since we make the first maximizing swap, this guarantees that the result is the maximum possible number after one swap.\n\nSince our hypothesis holds for $k$ digits, and the two-pass strategy maximizes the number for $k+1$ digits, the method works for all $n$-digit numbers by induction.\n\nThus, the two-pass greedy approach will always yield the maximum possible number in a single swap.\n\n</details>\n\n#### Algorithm\n\n- Convert the integer `num` to a string `numStr` to facilitate digit manipulation.\n- Determine the length `n` of the string representation.\n\n- Initialize an array `maxRightIndex` of size `n` to store the index of the largest digit from the current position to the end of the string.\n\n- Populate `maxRightIndex` in a single backward pass:\n  - Set `maxRightIndex[n - 1]` to `n - 1`, as the last digit is the largest in its own right.\n  - Iterate from the second last digit to the beginning of the string:\n    - If the current digit `numStr[i]` is greater than the digit at the index stored in `maxRightIndex[i + 1]`, update `maxRightIndex[i]` to `i`.\n    - Otherwise, keep `maxRightIndex[i]` as `maxRightIndex[i + 1]`.\n\n- In a second pass, check for the first opportunity to swap for maximum value:\n  - Iterate through each digit in `numStr`:\n    - If the current digit `numStr[i]` is less than the digit at the index `maxRightIndex[i]`, a beneficial swap can be made.\n      - Swap `numStr[i]` with `numStr[maxRightIndex[i]]` to maximize the number.\n      - Convert the modified string back to an integer and return it immediately.\n\n- If no beneficial swap is found throughout the iterations, return the original number `num`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/fgDJok4g/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fgDJok4g\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of digits in the input number.\n\n- Time complexity: $O(n)$\n\n    Converting the integer `num` to its string representation takes $O(n)$.\n  \n    We iterate through the digits from right to left, making one comparison per digit. This pass takes $O(n)$ time.\n\n    We iterate from left to right, checking whether the current digit is smaller than the maximum digit to its right. This also takes $O(n)$ time.\n\n    Converting the modified string back to an integer takes $O(n)$ time.\n\n    Overall, each operation in the algorithm takes linear time, so the total time complexity is $O(n)$.\n\n- Space complexity: $O(n)$\n  \n    We store the string representation of the number, which requires $O(n)$ space.\n\n    We maintain an array `maxRightIndex` of size $n$, which also takes $O(n)$ space.\n\n    The space used by simple variables like `num` and loop counters is constant, i.e., $O(1)$.\n\n    Thus, the total space complexity is $O(n)$.\n\n---\n\n### Approach 3: Suboptimal Greedy\n\n#### Intuition\n\nA natural follow-up question is: can we simplify this even more? Let's see if we can reduce our approach by using a pass to record the last occurrence of each digit in the given integer, and then use that information to find an optimal swap (if one exists).\n\nLet's walk through what this would look like using Example 1 from the problem description: \n\nWe'll do one scan from left to right, noting the positions of the digits in the number (2, 7, 3, and 6):\n- Last occurrence of 2: index 0\n- Last occurrence of 7: index 1\n- Last occurrence of 3: index 2\n- Last occurrence of 6: index 3\n\nNext, we'll use the stored values to check if there are any small values with larger values that follow:\n\n- We start with '2' and check if any larger digits appear later in the number. In the case of 2736, we compare '2' with '7', '3', and '6'.\n- Since '7' is the largest digit that appears after '2', we choose '7' as the best swap.\n\n<details>\n<summary>Inductive Proof for Suboptimal Greedy</summary>\n\n\n#### Base Case:\nFor a single-digit number $N = d_0$, no swaps are possible, so the number itself is the maximum. Therefore, the approach is trivially correct here.\n\n#### Inductive Hypothesis:\nAssume that for any $k$-digit number, the Suboptimal method will yield the maximum possible number by identifying the optimal swap or determining that no swap can improve the result.\n\n#### Inductive Step:\nNow, consider a number with $k+1$ digits represented as $d_0, d_1, \\dots, d_k$.\n\n1. Record the Last Occurrence of Each Digit:\n   We first perform a single pass over the number to store the last occurrence of each digit in an array `lastOccurrence`. This way, for each digit $d_i$, we can quickly look up whether a larger digit appears later in the number.\n\n2. Find the Optimal Swap:\n   As we scan from left to right, we check each digit $d_i$ to see if a larger digit appears later in the sequence by looking up the last occurrence of digits from 9 down to $d_i + 1$. If we find such a digit, we swap $d_i$ with the rightmost largest possible digit that improves the number. This ensures the largest possible improvement as soon as we encounter the first digit that can be swapped for a higher value.\n\n3. Optimality of the First Swap:\n   By following this process, we always select the first digit that can be maximized with a single swap. Since we’re making the swap at the leftmost possible position where an improvement can occur, we ensure that the resulting number is maximized in the most significant digit first. Consequently, any swap we make will yield the highest possible value at the earliest digit position, thereby producing the maximum number achievable by one swap.\n\n#### Conclusion:\nSince the approach works for $k$-digit numbers and we’ve shown that it holds for $k+1$ digits as well, the principle of induction confirms that this Suboptimal method will always yield the maximum number for any integer length.\n\n</details>\n\n\n#### Algorithm\n\n- Convert the input integer `num` to a string `numStr` to facilitate digit manipulation.\n- Get the length `n` of `numStr`.\n- Initialize an array `lastSeen` of size 10, filled with `-1`, to store the last occurrence index of each digit (0-9).\n\n- Record the last occurrence of each digit:\n  - For each index `i` in `numStr`, update `lastSeen[numStr[i] - '0']` to `i`, which stores the last position of each digit.\n\n- Traverse the digits in `numStr` to find the first digit that can be swapped with a larger one:\n  - For each index `i`, iterate `d` from `9` down to `numStr[i] - '0'`:\n    - If `lastSeen[d] > i`, it means there exists a larger digit `d` that can be swapped with `numStr[i]`.\n      - Perform the swap between `numStr[i]` and `numStr[lastSeen[d]]`.\n      - Immediately return the integer value of the modified string using `stoi(numStr)`.\n\n- If no swap has been performed throughout the iteration, return the original number `num` since it is already maximized.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/RmFoFW64/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RmFoFW64\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of digits in the input number.\n\n- Time complexity: $O(n)$\n\n    Converting the integer `num` to its string representation takes $O(n)$.\n    \n    We loop through the string `numStr` to fill the `lastSeen` array, which takes $O(n)$ time.\n    \n    The outer loop runs $n$ times (once for each digit), and for each digit, the inner loop runs at most 9 times (since there are at most 9 different digits larger than the current one to check). Thus, the traversal and comparison step takes $O(9n) = O(n)$ time.\n    \n    Converting the modified string back to an integer takes $O(n)$ time.\n\n    Overall, all steps are bounded by $O(n)$, so the total time complexity is $O(n)$.\n\n- Space complexity: $O(n)$\n\n    The string `numStr` requires $O(n)$ space to store the digits of the integer `num`.\n    \n    The array `lastSeen` is of fixed size 10 (for digits 0 through 9), so it takes $O(1)$ space.\n    \n    No other significant additional space is used.\n\n    Thus, the overall space complexity is dominated by the space needed to store the string, which is $O(n)$.\n  \n---\n\n\n### Approach 4: Space Optimized Greedy\n\n#### Intuition\n\nAs we move through the number, we don’t need to know the position of every digit—we only need to know the position of the largest digit we’ve seen so far.\n\nWe start by scanning the number from right to left. As we move, we keep track of the largest digit we’ve encountered. Whenever we come across a smaller digit, we consider it a candidate for swapping with the largest one we’ve seen.\n\nSo we compare each digit with the maximum digit to its right. If it’s smaller, we mark it for swapping. By the time we finish scanning the number, we’ll know the best swap to make. If we find a smaller digit and a larger one to swap it with, we perform the swap. Otherwise, we leave the number unchanged.\n\nThis way we can save space by not needing to track all positions, and it works because, as we move from right to left, we are always aware of the largest possible swap we could make.\n\nThe algorithm is visualized below:\n\n!?!../Documents/670/approach4.json:960,500!?!\n\n#### Algorithm\n\n- Convert the integer `num` to a string `numStr` for easier manipulation of individual digits.\n- Initialize variables:\n  - `n` to store the length of `numStr`.\n  - `maxDigitIndex` to track the index of the maximum digit encountered (initialized to `-1`).\n  - `swapIdx1` and `swapIdx2` to track the indices of the digits to be swapped (both initialized to `-1`).\n\n- Traverse the string `numStr` from right to left:\n  - If `maxDigitIndex` is `-1` or the current digit `numStr[i]` is greater than the digit at `maxDigitIndex`, update `maxDigitIndex` to `i` (indicating a new maximum digit has been found).\n  - If `numStr[i]` is less than the digit at `maxDigitIndex`, mark `swapIdx1` as `i` (the smaller digit to be swapped) and `swapIdx2` as `maxDigitIndex` (the larger digit to swap with).\n\n- After completing the traversal, check if a valid swap has been identified:\n  - If both `swapIdx1` and `swapIdx2` are not `-1`, perform the swap between `numStr[swapIdx1]` and `numStr[swapIdx2]`.\n\n- Convert the modified string back to an integer and return it. If no swap occurred, return the original number.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/9qirzKnf/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"9qirzKnf\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of digits in the input number.\n\n- Time complexity: $O(n)$\n\n    Converting the integer `num` to its string representation takes $O(n)$.\n\n    The loop iterates over the string once from right to left, performing constant-time operations for each character, making the loop cost $O(n)$.\n\n    Swap runs in constant time $O(1)$.\n\n    Converting the modified string back to an integer takes $O(n)$ time.\n\n    Thus, the overall time complexity is dominated by the traversal and conversions, giving us $O(n)$.\n\n- Space complexity: $O(n)$\n\n    The `numStr` variable is a string representation of the input number, which requires $O(n)$ space to store.\n\n    The other variables (`maxDigitIndex`, `swapIdx1`, `swapIdx2`) require $O(1)$ space since they are just integer indices.\n\n    Therefore, the overall space complexity is $O(n)$, mainly due to the string representation of the number.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "questionId": "476",
+  "questionFrontendId": "476",
+  "title": "Number Complement",
+  "titleSlug": "number-complement",
+  "difficulty": "Easy",
+  "content": "<p>The <strong>complement</strong> of an integer is the integer you get when you flip all the <code>0</code>&#39;s to <code>1</code>&#39;s and all the <code>1</code>&#39;s to <code>0</code>&#39;s in its binary representation.</p>\n\n<ul>\n\t<li>For example, The integer <code>5</code> is <code>&quot;101&quot;</code> in binary and its <strong>complement</strong> is <code>&quot;010&quot;</code> which is the integer <code>2</code>.</li>\n</ul>\n\n<p>Given an integer <code>num</code>, return <em>its complement</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 5\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The binary representation of 5 is 101 (no leading zero bits), and its complement is 010. So you need to output 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 1\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> The binary representation of 1 is 1 (no leading zero bits), and its complement is 0. So you need to output 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= num &lt; 2<sup>31</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Note:</strong> This question is the same as 1009: <a href=\"https://leetcode.com/problems/complement-of-base-10-integer/\" target=\"_blank\">https://leetcode.com/problems/complement-of-base-10-integer/</a></p>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"findComplement\",\n  \"params\": [\n    {\n      \"name\": \"num\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"548.7K\", \"totalSubmission\": \"779K\", \"totalAcceptedRaw\": 548686, \"totalSubmissionRaw\": 779009, \"acRate\": \"70.4%\"}",
+  "likes": 3231,
+  "dislikes": 145,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "5",
+    "1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}, {\"timesEncountered\": 2, \"slug\": \"cloudera\", \"name\": \"Cloudera\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findComplement(int num) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findComplement(int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findComplement(self, num: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findComplement(self, num):\n        \"\"\"\n        :type num: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} num\n * @return {number}\n */\nvar findComplement = function(num) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findComplement(num: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindComplement(int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findComplement(int num) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findComplement(num int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findComplement(num: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findComplement(_ num: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_complement(num: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num\n# @return {Integer}\ndef find_complement(num)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $num\n     * @return Integer\n     */\n    function findComplement($num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findComplement(int num) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findComplement(num: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_complement(num :: integer) :: integer\n  def find_complement(num) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_complement(Num :: integer()) -> integer().\nfind_complement(Num) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-complement num)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "914",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Prerequisites\n\n**XOR**\n\n[XOR](https://en.wikipedia.org/wiki/Exclusive_or) of zero and a bit results in that bit\n\n$$\n0 \\oplus x = x  \n$$\n\n> XOR of one and a bit flips that bit\n\n$$\n1 \\oplus x = 1 - x  \n$$\n\n**Right Shift and Left Shift**\n\n![fig](../Figures/476/shift2.png)\n\n<br/>\n<br/>\n\n---\n### Overview\n\n> The article is long, and the best approach is the one number 4. In the case of limited time, you could jump to it directly. \n\nThere are two standard ways to solve the problem:\n\n- To move along the number and flip bit by bit.\n\n- To construct a 1-bit bitmask that has the same length as the input number, and to get the answer as `bitmask - num` or `bitmask ^ num`.\n\n    For example, for $$\\textrm{num} = 5 = (101)_2$$ the bitmask is $$\\textrm{bitmask} = (111)_2$$, and the complement number is $$\\textrm{bitmask} \\oplus \\textrm{num} = (010)_2 = 2$$.\n\n![fig](../Figures/476/overview2.png)\n\n### Approach 1: Flip Bit by Bit\n\n**Algorithm**\n\n- Initiate a 1-bit variable that will be used to flip bits one by one. Set it to the smallest register `bit = 1`.\n\n- Initiate the marker variable that will be used to stop the loop over the bits `todo = num`.\n\n- Loop over the bits. While `todo != 0`:\n\n    - Flip the current bit: `num = num ^ bit`.\n\n    - Prepare for the next run. Shift the flip variable to the left and the `todo` variable to the right.\n\n- Return `num`.\n\n![fig](../Figures/476/flip2.png)\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/kqDR2dYV/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"kqDR2dYV\"></iframe>\n\n**Complexity**\n\n- Time Complexity: $$\\mathcal{O}(1)$$, since we're doing not more than 32 iterations here.\n\n- Space Complexity: $$\\mathcal{O}(1)$$.\n<br/>\n<br/>\n\n---\n### Approach 2: Compute Bit Length and Construct 1-bit Bitmask\n\nInstead of flipping bits one by one, let's construct 1-bit bitmask and flip all the bits at once. \n\nThere are many ways to do it, let's start with the simplest one:\n\n- Compute bit length of the input number $$l = [\\log_2 \\textrm{num}] + 1$$.\n\n- Compute 1-bits bitmask of length $$l$$: $$\\textrm{bitmask} = (1 << l) - 1$$.\n\n- Return `num ^ bitmask`.\n\n![fig](../Figures/476/bitmask3.png)\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/GW5QM7hc/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"GW5QM7hc\"></iframe>\n\n**Complexity**\n\n- Time Complexity: $$\\mathcal{O}(1)$$.\n\n- Space Complexity: $$\\mathcal{O}(1)$$.\n<br/>\n<br/>\n\n\n---\n### Approach 3: Built-in Functions to Construct 1-bit Bitmask\n\nApproach 2 could be rewritten with the help of built-in functions: `bit_length` in Python and `highestOneBit` in Java. The first one is trivial, and `Integer.highestOneBit(int x)` the method in Java returns int with the leftmost bit set in x, i.e. `Integer.highestOneBit(3) = 2`. \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/VB4hPHgJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"VB4hPHgJ\"></iframe>\n\n**Complexity**\n\n- Time Complexity: $$\\mathcal{O}(1)$$ because one deals here with integers of not more than 32 bits.\n\n- Space Complexity: $$\\mathcal{O}(1)$$.\n<br/>\n<br/>\n\n---\n### Approach 4: highestOneBit OpenJDK algorithm from Hacker's Delight\n\nThe best algorithm for this task is an implementation of `highestOneBit` in OpenJDK. [This implementation is taken from \"Hacker's Delight\" book](http://hg.openjdk.java.net/jdk8/jdk8/jdk/file/687fd7c7986d/src/share/classes/java/lang/Integer.java#l40).\n\nThe idea is to create the same 1-bit bitmask by propagating the highest 1-bit into the lower ones. \n\n!?!../Documents/476_LIS.json:1000,316!?!\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/SKqmDTRz/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"SKqmDTRz\"></iframe>\n\n**Complexity**\n\n- Time Complexity: $$\\mathcal{O}(1)$$.\n\n- Space Complexity: $$\\mathcal{O}(1)$$.\n\n<br/>\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

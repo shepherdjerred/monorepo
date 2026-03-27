@@ -1,0 +1,138 @@
+{
+  "questionId": "442",
+  "questionFrontendId": "442",
+  "title": "Find All Duplicates in an Array",
+  "titleSlug": "find-all-duplicates-in-an-array",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code> of length <code>n</code> where all the integers of <code>nums</code> are in the range <code>[1, n]</code> and each integer appears <strong>at most</strong> <strong>twice</strong>, return <em>an array of all the integers that appears <strong>twice</strong></em>.</p>\n\n<p>You must write an algorithm that runs in <code>O(n)</code> time and uses only <em>constant</em> auxiliary space, excluding the space needed to store the output</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> nums = [4,3,2,7,8,2,3,1]\n<strong>Output:</strong> [2,3]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> nums = [1,1,2]\n<strong>Output:</strong> [1]\n</pre><p><strong class=\"example\">Example 3:</strong></p>\n<pre><strong>Input:</strong> nums = [1]\n<strong>Output:</strong> []\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= n</code></li>\n\t<li>Each element in <code>nums</code> appears <strong>once</strong> or <strong>twice</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findDuplicates\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<integer>\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1M\", \"totalSubmission\": \"1.3M\", \"totalAcceptedRaw\": 1025578, \"totalSubmissionRaw\": 1334408, \"acRate\": \"76.9%\"}",
+  "likes": 11135,
+  "dislikes": 446,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find All Numbers Disappeared in an Array\", \"titleSlug\": \"find-all-numbers-disappeared-in-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Distances\", \"titleSlug\": \"sum-of-distances\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"The Two Sneaky Numbers of Digitville\", \"titleSlug\": \"the-two-sneaky-numbers-of-digitville\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,3,2,7,8,2,3,1]",
+    "[1,1,2]",
+    "[1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"clevertap\", \"name\": \"CleverTap\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"pocket-gems\", \"name\": \"Pocket Gems\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> findDuplicates(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> findDuplicates(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findDuplicates(self, nums: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findDuplicates(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number[]}\n */\nvar findDuplicates = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findDuplicates(nums: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> FindDuplicates(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* findDuplicates(int* nums, int numsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findDuplicates(nums []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findDuplicates(nums: IntArray): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findDuplicates(_ nums: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_duplicates(nums: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer[]}\ndef find_duplicates(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer[]\n     */\n    function findDuplicates($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> findDuplicates(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findDuplicates(nums: Array[Int]): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_duplicates(nums :: [integer]) :: [integer]\n  def find_duplicates(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_duplicates(Nums :: [integer()]) -> [integer()].\nfind_duplicates(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-duplicates nums)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "952",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nCheck for a second occurrence of every element in the rest of the array.\n\n#### Algorithm\n\nWhen we iterate over the elements of the input array, we can simply look for any other occurrence of the current element in the rest of the array.\n\nSince an element can only occur once _or_ twice, we don't have to worry about getting duplicates of elements that appear twice:\n+ **Case - I:** If an element occurs only once in the array, when you look for it in the rest of the array, you'll find nothing.\n+ **Case - II:** If an element occurs twice, you'll find the second occurrence of the element in the rest of the array. When you chance upon the second occurrence in a later iteration, it'd be the same as **Case - I** (since there are no more occurrences of this element in the rest of the array).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TNqNbBzQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"TNqNbBzQ\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(n^2)$$. \\\n\\\nFor each element in the array, we search for another occurrence in the rest of the array. Hence, for the $$i^{{th}}$$ element in the array, we might end up looking through all $$n - i$$ remaining elements in the worst case. So, we can end up going through about $$n^2$$ elements in the worst case. \\\n\\\n$$n-1 + n-2 + n-3 + .... + 1 + 0 \\ = \\ \\sum_{1}^{n}(n-i) \\ \\simeq \\ n^2$$\n\n* Space complexity: $O(1)$\n\n    No extra space is required, other than the space for the output list.\n\n---\n\n### Approach 2: Sort and Compare Adjacent Elements\n\n#### Intuition\n\nAfter sorting a list of elements, all elements of equivalent value get placed together. Thus, when you sort an array, equivalent elements form contiguous blocks.\n\n#### Algorithm\n\n1. Sort the array.\n2. Compare every element with its neighbors. If an element occurs more than once, it'll be equal to at least one of its neighbors.\n\nTo simplify:\n1. Compare every element with its predecessor.\n    + The first element doesn't have a predecessor, so we can skip it.\n2. Once we've found a match with a predecessor, we can skip the next element entirely!\n    + **Why?** Well, if an element matches with its predecessor, it cannot possibly match with its successor _as well_. Thus, the next iteration (i.e. comparison between the next element and the current element) can be safely skipped. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Td5X3mVa/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"Td5X3mVa\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $$\\mathcal{O}(n \\log{n}) + \\mathcal{O}(n) \\simeq \\mathcal{O}(n \\log{n})$$.\n\n  - A performant comparison-based sorting algorithm will run in $$\\mathcal{O}(n \\log{n})$$ time. Note that this can be reduced to $$\\mathcal{O}(n)$$ using a special sorting algorithm like [Radix Sort](https://en.wikipedia.org/wiki/Radix_sort).\n\n  - Traversing the array after sorting takes linear time i.e. $$\\mathcal{O}(n)$$.\n\n* Space complexity: $O( \\log n)$\n\n    Note that some extra space is used when we sort an array in place. The space complexity of the sorting algorithm depends on the programming language.\n    - In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$ for sorting an array.\n    - In C++, the sort() function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n)$. \n    \n    The space used by the output list `ans` is not counted in the space complexity.\n\n---\n\n### Approach 3: Store Seen Elements in a Set / Map\n\n#### Intuition\n\nIn [Approach 1](#approach-1-brute-force) we used two loops (one nested within the other) to look for two occurrences of an element. In almost all similar situations, you can usually substitute one of the loops with a hash table. Often, it's a worthy trade-off: **for a bit of extra memory, you can reduce the order of your runtime complexity.**\n\n#### Algorithm\n\nWe store all elements that we've seen till now in a hash set. When we visit an element, we query the set to figure out if we've seen this element before.\n\n<iframe src=\"https://leetcode.com/playground/CQuFt8ch/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"CQuFt8ch\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $O(n)$ average case. $O(n)$ worst case.\n\n  - It takes a linear amount of time to iterate through the array.\n  - Lookups in a hash set are constant time on average, however, those can degrade to linear time in the worst case. Note that an alternative is to use tree-based sets, which give logarithmic time lookups _always_.\n\n* Space complexity: Up to $O(n)$ extra space required for the set.\n\n  - If you are tight on space, you can significantly reduce your physical space requirements by using bitsets [^note-3-0] instead of sets. This data structure requires just one bit per element, so you can be done in just $$n$$ bits of data for elements that go up to $$n$$. Of course, this doesn't reduce your space complexity: bitsets still grow linearly with the range of values that the elements can take.\n\n---\n\n### Approach 4: Cycle Sort\n\n#### Intuition\n\nAs discussed in [Approach 2](#approach-2-sort-and-compare-adjacent-elements), if `nums` were sorted, we could efficiently determine the duplicate elements. Approach 2 had a worse than linear time complexity and used significant extra space due to utilizing built-in sorting functions. We need a way to sort the array in place, in constant time.\n\nThere are two main cases after sorting:\n\n**1. No Duplicates in `nums`:**\n\n| 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |\n|---|---|---|---|---|---|---|---|---|\n\nFor an array of length `n`, the array contains all of the integers in the range `1` to `n`.\n\n**2. Duplicates in `nums`:**\n\n| 1 | 2 | 2 | 3 | 4 | 6 | 6 | 8 | 9 |\n|---|---|---|---|---|---|---|---|---|\n\nFor an array of length `n`, the array contains duplicates of some of the integers in the range `1` to `n` and is therefore missing others.\n\nThe values in `nums` are in the range `1` to `n` according to the problem constraints, so we can utilize [cycle sort](https://en.wikipedia.org/wiki/Cycle_sort). Cycle sort is a sorting algorithm that can sort a given sequence in a range from `a` to `n` by putting each element at the index that corresponds to its value. `nums` is a zero-indexed array, so an element with the value `x` will be located at index `x - 1`. For example, `1` goes at index `0` in the array, `2` goes at index `1`, and `100` goes at index `99`. \n\nFor each element `x` in `nums`, we place the first occurrence at index `nums[x - 1]`. Cycle sort is often implemented to handle duplicates, but our implementation will not require this. We use a simplified version of cycle sort because it is not a problem if the duplicate of a value is not in the correct position. Duplicates will reside at indexes that do not have a corresponding value in `nums`.\n\n**Result of Cycle Sort on Input:** `nums = [9,1,2,2,3,4,6,6,8]`\n\n| 1 | 2 | 3 | 4 | 2 | 6 | 6 | 8 | 9 |\n|---|---|---|---|---|---|---|---|---|\n\nNotice that the duplicate values `2` and `6` are the only values that are not at the index that corresponds to their value.\n\nThen, to identify the duplicates, we iterate through `nums` and add values that are not equal to their index plus one to the result array. If there are no duplicates, every element will be in the correct position.\n\nFinally, we return the result array.\n\n> **Interview Tip: In-place Algorithms**\n>\n> This approach modifies the input. It changes the order of `nums`, but not the values of `nums`. In-place algorithms overwrite the input to save space, but sometimes this can cause problems.\n>\n> Here are a couple of situations where an in-place algorithm might not be suitable.\n>\n> 1. The algorithm needs to run in a multi-threaded environment, without exclusive access to the array. Other threads might need to read the array too, and might not expect it to be modified.\n>\n> 2. Even if there is only a single thread, or the algorithm has exclusive access to the array while running, the array might need to be reused later or by another thread once the lock has been released.\n>\n> In an interview, you should always check whether the interviewer minds you overwriting the input. Be ready to explain the pros and cons of doing so if asked!\n\n#### Algorithm\n\n1. Initialize a variable `n` to the length of `nums`.\n\n2. Use cycle sort to place elements at the index that corresponds to their value.\n\n    - Initialize a variable `i` to `0`.\n    - Iterate through the elements in `nums`:\n        - Set a variable `correctIdx` to `nums[i] - 1`.\n        - If the `nums[i]`does not equal `nums[correctIdx]`, swap the element at `nums[i]` with the element at `nums[correctIdx]`.\n        - Otherwise, increment `i`.\n\n3. Initialize an array `duplicates` to store the answer. \n\n4. Add duplicate numbers to the answer array.\n\n    - Iterate through sorted `nums` using a `for` loop and the iterator `i`: \n        - If `nums[i]` does not equal `i + 1`, add `nums[i]` to `duplicates`.\n\n5. Return `duplicates`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/XUhrKFZf/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XUhrKFZf\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `nums`.\n\n* Time complexity: $O(n)$\n\n    We loop through the elements in `nums`, swapping elements to sort the array. Swapping takes constant time. Sorting `nums` using cycle sort takes $O(n)$ time. \n\n    Iterating through the sorted array and finding the duplicates can take up to $O(n)$. \n\n    The total time complexity is $O(2n)$, which simplifies to $O(n)$.\n\n\n* Space complexity: $O(n)$\n\n    We modify the array `nums` and use it to determine the answer, so the space complexity is $O(n)$.\n\n    The space used by the output list `duplicates` is not counted in the space complexity.\n\n    `nums` is the input array, so the *auxiliary* space used is $O(1)$.\n\n---\n\n### Approach 5: Mark Visited Elements in the Input Array Itself\n\n#### Intuition\n\nWe can utilize a key piece of information in the problem statement:\n\n> The integers in the input array `nums` satisfy `1 ≤ nums[i] ≤ n`, where `n` is the size of the array. [^note-4-0]\n\nThis presents us with two key insights:\n\n1. All the integers present in the array are positive.\n  i.e. `arr[i] > 0` for any valid index `i`. [^note-4-1]\n2. The decrement of any integers present in the array must be an accessible index in the array. \\\n  i.e. for any integer `x` in the array, `x-1` is a valid index, and thus, `arr[x-1]` is a valid reference to an element in the array. [^note-4-2]\n\nWe can use the index as a hash key, and the sign of the element as a presence indicator. We use the absolute value when indexing `nums` because negative indexes will cause errors.\n\n> **Note:** This approach modifies the input. It changes the content of `nums`. In-place algorithms overwrite the input to save space, but sometimes this can cause problems. Always check with your interviewer before modifying the input.\n\n#### Algorithm\n\n1. Iterate over the array and for every element `x` in the array, negate the value at index `abs(x)-1`. [^note-4-3]\n    + The negation operation effectively marks the value `abs(x)` as _seen / visited_.\n\n2. Iterate over the array again, for every element `x` in the array:\n    + If the value at index `abs(x)-1` is positive, it must have been negated twice. Thus `abs(x)` must have appeared twice in the array. We add `abs(x)` to the result.\n    + In the above case, when we reach the second occurrence of `abs(x)`, we need to avoid fulfilling this condition again. So, we'll additionally negate the value at index `abs(x)-1`.\n\n#### Implementation\n\n**Multiple Pass Implementation**\n\n<iframe src=\"https://leetcode.com/playground/XagdU3gK/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"XagdU3gK\"></iframe>\n\n**One Pass Implementation**\n\nNotice that if an element `x` occurs just once in the array, the value at index `abs(x) - 1` becomes negative and remains so for all of the iterations that follow.\n\n1. Traverse through the array. When we see an element `x` for the first time, we'll negate the value at index `abs(x) - 1`.\n2. But, the next time we see an element `x`, we _don't_ need to negate it again! If the value at index `abs(x) - 1` is already negative, we know that we've seen element `x` before.\n\nSo, now we are relying on a single negation to mark the visited status of an element. This is similar to what we did in [Approach 3](#approach-3-store-seen-elements-in-a-set), except that we are re-using the array (with some smart negations) instead of a separate set.\n\n<iframe src=\"https://leetcode.com/playground/bxWdkEmt/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"bxWdkEmt\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $O(n)$ \n\n    We iterate over the array twice. Each negation operation occurs in constant time.\n\n* Space complexity: $O(n)$\n\n    We modify the array `nums` and use it to determine the answer, so the space complexity is $O(n)$.\n\n    The space used by the output list `ans` is not counted in the space complexity.\n\n    `nums` is the input array, so the *auxiliary* space used is $O(1)$.\n\n[^note-3-0]: C++ provides an excellent `std::bitset` in the [standard library](https://en.cppreference.com/w/cpp/utility/bitset).\n\n[^note-4-0]: Some readers will notice a similarity with [the pigeonhole principle](https://en.wikipedia.org/wiki/Pigeonhole_principle). While this doesn't really come into play in [Approach 4](#approach-4-mark-visited-elements-in-the-input-array-itself), we utilized it indirectly in  [Approach 3](#approach-3-store-seen-elements-in-a-set): since some elements appear twice, the number of unique elements is less than the size of the array. If every unique element gets a bucket in our hash set, some buckets are bound to have more than one element in them!\n\n[^note-4-1]: Because, `arr[i] >= 1 ` for any valid index `i` of array `arr`.\n\n[^note-4-2]: Because, all elements in the array are integers that lie in the range $$[1, n]$$ (where $$n$$ is the length of the array). Thus, their decrements are integers that lie in the range $$[0, n-1]$$ (which is precisely the set of valid indices for an array of length $$n$$).\n\n[^note-4-3]: The `abs()` function provides the absolute value.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

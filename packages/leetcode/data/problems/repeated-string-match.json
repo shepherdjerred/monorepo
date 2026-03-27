@@ -1,0 +1,133 @@
+{
+  "questionId": "686",
+  "questionFrontendId": "686",
+  "title": "Repeated String Match",
+  "titleSlug": "repeated-string-match",
+  "difficulty": "Medium",
+  "content": "<p>Given two strings <code>a</code> and <code>b</code>, return <em>the minimum number of times you should repeat string </em><code>a</code><em> so that string</em> <code>b</code> <em>is a substring of it</em>. If it is impossible for <code>b</code>​​​​​​ to be a substring of <code>a</code> after repeating it, return <code>-1</code>.</p>\n\n<p><strong>Notice:</strong> string <code>&quot;abc&quot;</code> repeated 0 times is <code>&quot;&quot;</code>, repeated 1 time is <code>&quot;abc&quot;</code> and repeated 2 times is <code>&quot;abcabc&quot;</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> a = &quot;abcd&quot;, b = &quot;cdabcdab&quot;\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We return 3 because by repeating a three times &quot;ab<strong>cdabcdab</strong>cd&quot;, b is a substring of it.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> a = &quot;a&quot;, b = &quot;aa&quot;\n<strong>Output:</strong> 2\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= a.length, b.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>a</code> and <code>b</code> consist of lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"repeatedStringMatch\",\n  \"params\": [\n    {\n      \"name\": \"a\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"b\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"254.3K\", \"totalSubmission\": \"660.4K\", \"totalAcceptedRaw\": 254286, \"totalSubmissionRaw\": 660395, \"acRate\": \"38.5%\"}",
+  "likes": 2877,
+  "dislikes": 1009,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Repeated Substring Pattern\", \"titleSlug\": \"repeated-substring-pattern\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abcd\"\n\"cdabcdab\"",
+    "\"a\"\n\"aa\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "String Matching",
+      "slug": "string-matching"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int repeatedStringMatch(string a, string b) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int repeatedStringMatch(String a, String b) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def repeatedStringMatch(self, a: str, b: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def repeatedStringMatch(self, a, b):\n        \"\"\"\n        :type a: str\n        :type b: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} a\n * @param {string} b\n * @return {number}\n */\nvar repeatedStringMatch = function(a, b) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function repeatedStringMatch(a: string, b: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int RepeatedStringMatch(string a, string b) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int repeatedStringMatch(char* a, char* b) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func repeatedStringMatch(a string, b string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun repeatedStringMatch(a: String, b: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func repeatedStringMatch(_ a: String, _ b: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn repeated_string_match(a: String, b: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} a\n# @param {String} b\n# @return {Integer}\ndef repeated_string_match(a, b)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $a\n     * @param String $b\n     * @return Integer\n     */\n    function repeatedStringMatch($a, $b) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int repeatedStringMatch(String a, String b) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def repeatedStringMatch(a: String, b: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec repeated_string_match(a :: String.t, b :: String.t) :: integer\n  def repeated_string_match(a, b) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec repeated_string_match(A :: unicode:unicode_binary(), B :: unicode:unicode_binary()) -> integer().\nrepeated_string_match(A, B) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (repeated-string-match a b)\n  (-> string? string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "256",
+    "content": "[TOC]\n\n### Approach #1: Ad-Hoc [Accepted]\n\n**Intuition**\n\nThe question can be summarized as \"What is the smallest `k` for which `B` is a substring of `A * k`?\"  We can just try every `k`.\n\n**Algorithm**\n\nImagine we wrote `S = A+A+A+...`. If `B` is to be a substring of `S`, we only need to check whether some `S[0:], S[1:], ..., S[len(A) - 1:]` starts with `B`, as `S` is long enough to contain `B`, and `S` has a period at most `len(A)`.\n\nNow, suppose `q` is the least number for which `len(B) <= len(A * q)`. We only need to check whether `B` is a substring of `A * q` or `A * (q+1)`. If we try `k < q`, then `B` has a larger length than `A * q` and therefore can't be a substring. When `k = q+1`, `A * k` is already big enough to try all positions for `B`; namely, `A[i:i+len(B)] == B` for `i = 0, 1, ..., len(A) - 1`.\n\n<iframe src=\"https://leetcode.com/playground/gTtmgvev/shared\" frameBorder=\"0\" name=\"gTtmgvev\" width=\"100%\" height=\"224\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N*(N+M))$$, where $$M, N$$ are the lengths of strings `A, B`. We create two strings `A * q`, `A * (q+1)` which have a length at most `O(M+N)`. When checking whether `B` is a substring of `A`, this check takes naively the product of their lengths.\n\n* Space complexity: As justified above, we created strings that used $$O(M+N)$$ space.\n\n---\n\n### Approach #2: Rabin-Karp (Rolling Hash) [Accepted]\n\n**Intuition**\n\nAs in *Approach #1*, we've reduced the problem to deciding whether B is a substring of some `A * k`. Using the following technique, we can decide whether `B` is a substring in $$O(len(A) * k)$$ time.\n\n**Algorithm**\n\nFor strings $$S$$, consider each $$S[i]$$ as some integer ASCII code. Then for some prime $$p$$, consider the following function modulo some prime modulus $$\\mathcal{M}$$:\n\n$$\\text{hash}(S) = \\sum_{0 \\leq i < len(S)} p^i * S[i]$$\n\nNotably, $$\\text{hash}(S[1:] + x) = \\frac{(\\text{hash}(S) - S[0])}{p} + p^{n-1} x$$. This shows we can get the hash of every substring of `A * q` in time complexity linear to its size (We will also use the fact that $$p^{-1} = p^{\\mathcal{M}-2} \\mod \\mathcal{M}$$).\n\nHowever, hashes may collide haphazardly. To be absolutely sure in theory, we should check the answer in the usual way. The expected number of checks we make is in the order of $$1 + \\frac{s}{\\mathcal{M}}$$ where $$s$$ is the number of substrings we computed hashes for (assuming the hashes are equally distributed), which is effectively 1.\n\n<iframe src=\"https://leetcode.com/playground/DKSFgXSr/shared\" frameBorder=\"0\" name=\"DKSFgXSr\" width=\"100%\" height=\"515\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(M+N)$$ (at these sizes), where $$M, N$$ are the lengths of strings `A, B`. As in *Approach #1*, we justify that `A * (q+1)` will be of length $$O(M + N)$$, and computing the rolling hashes was linear work. We will also do a linear $$O(N)$$ final check of our answer $$1 + O(M) / \\mathcal{M}$$ times. In total, this is $$O(M+N + N(1 + \\frac{M}{\\mathcal{M}}))$$ work. Since $$M \\leq 10000 < \\mathcal{M} = 10^9 + 7$$, we can consider this to be linear behavior.\n\n* Space complexity: $$O(1)$$. Only integers were stored with additional memory.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

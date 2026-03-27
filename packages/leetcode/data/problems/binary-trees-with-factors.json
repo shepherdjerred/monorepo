@@ -1,0 +1,141 @@
+{
+  "questionId": "843",
+  "questionFrontendId": "823",
+  "title": "Binary Trees With Factors",
+  "titleSlug": "binary-trees-with-factors",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of unique integers, <code>arr</code>, where each integer <code>arr[i]</code> is strictly greater than <code>1</code>.</p>\n\n<p>We make a binary tree using these integers, and each number may be used for any number of times. Each non-leaf node&#39;s value should be equal to the product of the values of its children.</p>\n\n<p>Return <em>the number of binary trees we can make</em>. The answer may be too large so return the answer <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [2,4]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We can make these trees: <code>[2], [4], [4, 2, 2]</code></pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [2,4,5,10]\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> We can make these trees: <code>[2], [4], [5], [10], [4, 2, 2], [10, 2, 5], [10, 5, 2]</code>.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length &lt;= 1000</code></li>\n\t<li><code>2 &lt;= arr[i] &lt;= 10<sup>9</sup></code></li>\n\t<li>All the values of <code>arr</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"numFactoredBinaryTrees\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"159.4K\", \"totalSubmission\": \"300.4K\", \"totalAcceptedRaw\": 159425, \"totalSubmissionRaw\": 300428, \"acRate\": \"53.1%\"}",
+  "likes": 3372,
+  "dislikes": 262,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,4]",
+    "[2,4,5,10]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numFactoredBinaryTrees(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numFactoredBinaryTrees(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numFactoredBinaryTrees(self, arr: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numFactoredBinaryTrees(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {number}\n */\nvar numFactoredBinaryTrees = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numFactoredBinaryTrees(arr: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumFactoredBinaryTrees(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numFactoredBinaryTrees(int* arr, int arrSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numFactoredBinaryTrees(arr []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numFactoredBinaryTrees(arr: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numFactoredBinaryTrees(_ arr: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_factored_binary_trees(arr: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Integer}\ndef num_factored_binary_trees(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Integer\n     */\n    function numFactoredBinaryTrees($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numFactoredBinaryTrees(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numFactoredBinaryTrees(arr: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_factored_binary_trees(arr :: [integer]) :: integer\n  def num_factored_binary_trees(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_factored_binary_trees(Arr :: [integer()]) -> integer().\nnum_factored_binary_trees(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-factored-binary-trees arr)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "453",
+    "content": "[TOC]\n\n---\n### Approach #1: Dynamic Programming [Accepted]\n\n**Intuition**\n\nFor any valid tree, the largest value `v`, in that tree, must be the root. So, let's say that `dp(v)` is the number of ways to make a tree with root node `v`.\n\nIf the root node of the tree (with value `v`) has children with values `x` and `y` (where `x * y == v` must be true), then there are `dp(x) * dp(y)` ways to make this tree.\n\nEach unique value in `A` is a valid *root* value for *at least one* tree - a tree containing just that node.\n\nTo get the total number of valid trees, we should calculate how many valid trees there are with each possible root value, and then add them all together.\n\n**Algorithm**\n\nLet `dp[i]` be the number of ways to have a root node with value `A[i]`.\n\nSince in the above example we always have `x < v` and `y < v`, we can calculate the values of `dp[i]` in increasing order using dynamic programming.\n\nFor some root value `A[i]`, let's try to find candidates for the children with values `A[j]` and `A[i] / A[j]` (so that evidently `A[j] * (A[i] / A[j]) = A[i]`).  To do this quickly, we will need `index` which looks up this value: if `A[k] = A[i] / A[j]`, then `index[A[i] / A[j]] = k`.\n\nAfter, we'll add all possible `dp[j] * dp[k]` (with `j < i, k < i`) to our answer `dp[i]`.  In our Java implementation, we carefully used `long` so avoid overflow issues.\n\n<iframe src=\"https://leetcode.com/playground/RKzbwMYk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RKzbwMYk\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N^2)$$, where $$N$$ is the length of `A`.  This comes from the two for-loops iterating `i` and `j`.\n\n* Space Complexity: $$O(N)$$, the space used by `dp` and `index`.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

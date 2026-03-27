@@ -1,0 +1,146 @@
+{
+  "questionId": "561",
+  "questionFrontendId": "561",
+  "title": "Array Partition",
+  "titleSlug": "array-partition",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer array <code>nums</code> of <code>2n</code> integers, group these integers into <code>n</code> pairs <code>(a<sub>1</sub>, b<sub>1</sub>), (a<sub>2</sub>, b<sub>2</sub>), ..., (a<sub>n</sub>, b<sub>n</sub>)</code> such that the sum of <code>min(a<sub>i</sub>, b<sub>i</sub>)</code> for all <code>i</code> is <strong>maximized</strong>. Return<em> the maximized sum</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,4,3,2]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> All possible pairings (ignoring the ordering of elements) are:\n1. (1, 4), (2, 3) -&gt; min(1, 4) + min(2, 3) = 1 + 2 = 3\n2. (1, 3), (2, 4) -&gt; min(1, 3) + min(2, 4) = 1 + 2 = 3\n3. (1, 2), (3, 4) -&gt; min(1, 2) + min(3, 4) = 1 + 3 = 4\nSo the maximum possible sum is 4.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [6,2,6,5,1,2]\n<strong>Output:</strong> 9\n<strong>Explanation:</strong> The optimal pairing is (2, 1), (2, 5), (6, 6). min(2, 1) + min(2, 5) + min(6, 6) = 1 + 2 + 6 = 9.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>nums.length == 2 * n</code></li>\n\t<li><code>-10<sup>4</sup> &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Obviously, brute force won't help here. Think of something else, take some example like 1,2,3,4.",
+    "How will you make pairs to get the result? There must be some pattern.",
+    "Did you observe that- Minimum element gets add into the result in sacrifice of maximum element.",
+    "Still won't able to find pairs? Sort the array and try to find the pattern."
+  ],
+  "metaData": "{\r\n  \"name\": \"arrayPairSum\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"664.5K\", \"totalSubmission\": \"814.5K\", \"totalAcceptedRaw\": 664513, \"totalSubmissionRaw\": 814508, \"acRate\": \"81.6%\"}",
+  "likes": 2405,
+  "dislikes": 304,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Difference Between Highest and Lowest of K Scores\", \"titleSlug\": \"minimum-difference-between-highest-and-lowest-of-k-scores\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost of Buying Candies With Discount\", \"titleSlug\": \"minimum-cost-of-buying-candies-with-discount\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"All Divisions With the Highest Score of a Binary Array\", \"titleSlug\": \"all-divisions-with-the-highest-score-of-a-binary-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,4,3,2]",
+    "[6,2,6,5,1,2]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Counting Sort",
+      "slug": "counting-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int arrayPairSum(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int arrayPairSum(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def arrayPairSum(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def arrayPairSum(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar arrayPairSum = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function arrayPairSum(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ArrayPairSum(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int arrayPairSum(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func arrayPairSum(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun arrayPairSum(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func arrayPairSum(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn array_pair_sum(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef array_pair_sum(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function arrayPairSum($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int arrayPairSum(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def arrayPairSum(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec array_pair_sum(nums :: [integer]) :: integer\n  def array_pair_sum(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec array_pair_sum(Nums :: [integer()]) -> integer().\narray_pair_sum(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (array-pair-sum nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1449",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe are given a list of $$2N$$ integers. We need to group these integers into $$N$$ pairs such that the sum of minimum elements in all pairs is the maximum possible.\n\nThe key observation here is that if we have a pair like $$(a, b)$$ such that $$a \\leq b$$, then we will add $$a$$ to the answer and $$b$$ cannot be used anymore. Therefore, in each such pair, we will add the value of the smaller element but the greater element will not contribute to the answer.\n\nSuppose $$x$$ is the smallest possible element in the given list. This means that the contribution to the answer for any pair that includes $$x$$ must be $$x$$, irrespective of the paired element. The other element will essentially be wasted. Hence to minimize our losses, we would like to pair $$x$$ with the smallest element other than $$x$$.\n\nThe number paired with $$x$$ will be the second smallest element in the given list. Hence, we will pair each element with the closest unpaired number in ascending sorted order. After sorting the given list, the first element can be paired with the second element, the third element can be paired with the fourth, and so on.\n</br>\n\n---\n\n### Approach 1: Sorting\n\n**Intuition**\n\nWe will sort the given list using the built-in sorting function. In the sorted list we will pair the first two elements then the next two elements and so on. Therefore, the first element (at index `0`) will be added to the answer `maxSum` as it is the minimum of the first two elements. Similarly, the third element in the list (at index `2`) will be added, and so on. Hence, we will only sum the elements located at the even indices.\n\n**Algorithm**\n\n1. Sort the list `nums`.\n2. Initialize the answer variable `maxSum` as `0`.\n3. Iterate over the list `nums` and add the elements at even indices to `maxSum`.\n4. Return `maxSum`.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/T8CQspVP/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"T8CQspVP\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $$N$$ is the number of pairs that will be produced (i.e., the size of list `nums` is $$2 \\cdot N$$).\n\n* Time complexity: $$O(N \\log N)$$\n\n   Sorting the list `nums` of size $$2 \\cdot N$$ will take $$O(2 \\cdot N \\log(2 \\cdot N))$$ time which is equivalent to $$O(N \\log N)$$, and iterating over the list will take an additional $$O(N)$$ time. Hence, the time complexity is $$O(N \\log N)$$.\n\n* Space complexity: $$O(N)$$\n\n  The only variable we need is `maxSum`, which takes $$O(1)$$ space. However, some space will be used for sorting the list  `nums`. The space complexity of the sorting algorithm depends on the implementation of each programming language. For instance, in Java, the Arrays.sort() for primitives is implemented as a variant of the QuickSort algorithm whose space complexity is $$O(\\log N)$$. In C++, sort() function provided by STL is a hybrid of QuickSort, Heap Sort, and Insertion Sort and has a worst-case space complexity of $$O(\\log N)$$. Python, on the other hand, uses Timsort, which has a space complexity of $$O(N)$$. Thus, the use of the built-in sort() function could add up to $$O(N)$$ to the space complexity.\n    \n\n<br/>\n\n---\n\n### Approach 2: Counting Sort\n\n**Intuition**\n\nIn this approach, we will be sorting the list `nums` using counting sort. We will store the frequency count for each element in the array `elementToCount`.\n\nAfter sorting, we will iterate over all of the elements in sorted order, and add even indexed elements to `maxSum`. After that, we will iterate over the frequency array and use a boolean variable that flips at each element and is only true when we are on an even indexed element.\n\nSince we are using an array where the element values will be used as indices, we need to ensure that we don't have any negative elements. The elements in the list `nums` can be negative with a value down to $$-10^4$$. Hence, we will add $$10^4$$ to each element so that all the elements convert to a non-negative value. Therefore, our `elementToCount` array will need to be of size $$2 * 10^4 + 1$$ to account for the full range of possible values in `nums`.\n\n**Note:**\n\n- We could limit the size of the `elementToCount` array to the range of numbers in the nums array by performing a single pass to find the minimum and maximum values in nums, but to make the solution easier to follow, we chose to use a fixed value for $$K$$ based on the given problem constraints.\n- Instead of iterating over every instance of an element in `elementToCount`. We can find the number of times that an element will be added to the final answer. Since this method doesn't improve the time/space complexity we avoided it to improve the code readability.\n\n**Algorithm**\n\n1. Iterate over each element in the list `nums` and for each `element` we will:\n    - Add the value $$K = 10^4$$ \n    - Increment the frequency corresponding to the above element in the array `elementToCount`.\n2. Initialize the answer variable `maxSum` as $$0$$. Initialize the variable `isEvenIndex` as true. This variable will be true when we are at an even position and will be false for odd positions. Since we start with index $$0$$ we have initialized it as true.\n3. Iterate through `elementToCount`, and for each element:\n    - Iterate over the instances of `element` and for each instance:\n        - If the current element is at an even index, then we will add the value of that element to the `maxSum`. Since we shifted each element by $$K$$ when creating the frequency array, the element's value is `element - K`.\n       - Decrement the frequency of `element` in `elementToCount` by $$1$$.\n       - Flip the value of `isEvenIndex`. This is because if the current position is even the next will be odd and the variable `isEvenIndex` should be false in that case and vice versa.\n4. Return `maxSum`.\n\nThe following slideshow demonstrates this algorithm. For simplicity, the example contains only positive values; hence it does not shift each value by $$10^4$$:\n\n!?!../Documents/561_Array_Partition_I.json:960,720!?! <br />\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/2o6mLUGv/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2o6mLUGv\"></iframe>\n\n**Complexity Analysis**\n\nHere, $$N$$ is the number of pairs that will be produced i.e., the size of list `nums` is $$2N$$, and $$K$$ is the range of possible values in nums, which in this problem equals $$2·10^4$$.\n\n* Time complexity: $$O(N + K)$$\n\n   First, we iterate over each of the $$2N$$ elements in `nums` in $$O(2N)$$ time. Then we iterate through the $$2K$$ elements in `elementToCount` during which we'll have another $$2N$$ frequency count operations for a total of $$O(2K + 2N)$$ time. Hence the total time complexity reduces to $$O(N + K)$$.\n   \n* Space complexity: $$O(K)$$\n    \n   The size of `elementToCount` needs to be able to accommodate the full range of values in `nums`, which can be up to $$2K$$. Hence the total space complexity reduces to $$O(K)$$.\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

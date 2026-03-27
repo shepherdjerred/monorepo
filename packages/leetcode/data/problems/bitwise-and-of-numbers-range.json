@@ -1,0 +1,130 @@
+{
+  "questionId": "201",
+  "questionFrontendId": "201",
+  "title": "Bitwise AND of Numbers Range",
+  "titleSlug": "bitwise-and-of-numbers-range",
+  "difficulty": "Medium",
+  "content": "<p>Given two integers <code>left</code> and <code>right</code> that represent the range <code>[left, right]</code>, return <em>the bitwise AND of all numbers in this range, inclusive</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> left = 5, right = 7\n<strong>Output:</strong> 4\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> left = 0, right = 0\n<strong>Output:</strong> 0\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> left = 1, right = 2147483647\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= left &lt;= right &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"rangeBitwiseAnd\",\n  \"params\": [\n    {\n      \"name\": \"left\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"right\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"508.6K\", \"totalSubmission\": \"1M\", \"totalAcceptedRaw\": 508615, \"totalSubmissionRaw\": 1042766, \"acRate\": \"48.8%\"}",
+  "likes": 4277,
+  "dislikes": 319,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Nice Subarray\", \"titleSlug\": \"longest-nice-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "5\n7",
+    "0\n0",
+    "1\n2147483647"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int rangeBitwiseAnd(int left, int right) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int rangeBitwiseAnd(int left, int right) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def rangeBitwiseAnd(self, left: int, right: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def rangeBitwiseAnd(self, left, right):\n        \"\"\"\n        :type left: int\n        :type right: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} left\n * @param {number} right\n * @return {number}\n */\nvar rangeBitwiseAnd = function(left, right) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function rangeBitwiseAnd(left: number, right: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int RangeBitwiseAnd(int left, int right) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int rangeBitwiseAnd(int left, int right) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func rangeBitwiseAnd(left int, right int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun rangeBitwiseAnd(left: Int, right: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func rangeBitwiseAnd(_ left: Int, _ right: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn range_bitwise_and(left: i32, right: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} left\n# @param {Integer} right\n# @return {Integer}\ndef range_bitwise_and(left, right)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $left\n     * @param Integer $right\n     * @return Integer\n     */\n    function rangeBitwiseAnd($left, $right) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int rangeBitwiseAnd(int left, int right) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def rangeBitwiseAnd(left: Int, right: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec range_bitwise_and(left :: integer, right :: integer) :: integer\n  def range_bitwise_and(left, right) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec range_bitwise_and(Left :: integer(), Right :: integer()) -> integer().\nrange_bitwise_and(Left, Right) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (range-bitwise-and left right)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "866",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nFirst of all, one of the most intuitive solutions that one might come up with might be to iterate all the numbers _**one by one**_ in the range and do the bit AND operation to obtain the result.\n\nThis could work for test cases with a small range. Unfortunately, it would exceed the time limit set by the online judge for test cases with a relatively large range. In this article, we will illustrate some other solutions that do not require the iteration of all numbers.\n\nFirst of all, let us look into the characteristics of the AND operation.\n\n>For a series of bits, _e.g._ `[1, 1, 0, 1, 1]`, as long as there is one bit of zero value, then the result of AND operation on this series of bits would be zero.\n\nBack to our problem, first, we could represent each number in the range in its binary form which we could view as a string of binary numbers (_e.g._ `9 = 00001001`).\nWe then align the numbers according to the position of the binary string.\n\n![pic](../Figures/201/201_prefix.png)\n\nIn the above example, one might notice that after the AND operation on all the numbers, the remaining part of bit strings is the _**common prefix**_ of all these bit strings.\n\nThe final result asked by the problem consists of this common prefix of a bit string as its left part, with the rest of the bits as zeros.\n\nMore specifically, the _common prefix_ of all these bit strings is also the common prefix between the **_starting_** and **_ending_** numbers of the specified range (_i.e._ 9 and 12 respectively in the above example).\n\n>As a result, we then can reformulate the problem as _\"given two integer numbers, we are asked to find the _**common prefix**_ of their binary strings.\"_\n\n---\n\n### Approach 1: Bit Shift\n\n**Intuition**\n\nGiven the above intuition about the problem, our task is to calculate the _common prefix_ for the bit strings of the two given numbers. One of the solutions would be to resort to the _**bit shift**_ operation.\n\n>The idea is that we shift both numbers to the right, until the numbers become equal, _i.e._ the numbers are reduced into their common prefix. Then we append zeros to the common prefix in order to obtain the desired result, by shifting the common prefix to the left.\n\n![pic](../Figures/201/201_bit_shifting.png)\n\n#### Algorithm\n\nAs stated in the intuition section, the algorithm consists of two steps: \n\n- We reduce both numbers into their common prefix, by doing right shift iteratively. During the iteration, we keep the count on the number of shift operations we perform.\n<br/>\n\n- With the common prefix, we restore it to its previous position, by left shifting.\n\n!?!../Documents/201_LIS.json:1000,296!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/eeJET2iR/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"eeJET2iR\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time Complexity: $$\\mathcal{O}(1)$$. \n\n    - Although there is a loop in the algorithm, the number of iterations is bounded by the number of bits that an integer has, which is fixed.\n    <br/>\n\n    - Therefore, the time complexity of the algorithm is constant. \n    <br/>\n\n* Space Complexity: $$\\mathcal{O}(1)$$. The consumption of the memory for our algorithm is constant, regardless the input.\n\n---\n\n### Approach 2: Brian Kernighan's Algorithm\n\n#### Intuition\n\nSpeaking of bit shifting, there is another related algorithm called [Brian Kernighan's algorithm](http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan) which is applied to turn off the rightmost bit of one in a number.\n\nThe secret sauce of the _Brian Kernighan's algorithm_ can be summarized as follows:\n\n> When we do an AND bit operation between `number` and `number - 1`, the rightmost bit of one in the original `number` would be turned off (from one to zero).\n\n![pic](../Figures/201/201_bk_example.png)\n\nBased on the above trick, we could apply it to figure out the common prefix of two-bit strings.\n\n#### Algorithm\n\n> The idea is that for a given range $$[m, n]$$ (_i.e._ $$m < n$$), we could iteratively apply the trick on the number $$n$$ to _turn off_ its rightmost bit of one until it becomes less or equal than the beginning of the range ($$m$$), which we denote as $$n'$$. Finally, we return $n$ as the final result, which contains the common prefix.\n\nBy applying Brian Kernighan's algorithm, we basically turn off the bits that lie on the right side of the _common prefix_, from the ending number $$n$$.\nWith the rest of the bits reset, we can easily obtain the desired result.\n\n![pic](../Figures/201/201_kernighan.png)\n\nIn the example (`m=9, n=12`) shown in the above figure, the common prefix would be `00001`. After applying Brian Kernighan's algorithm on the number `n`, it's trailing 3 bits would all become zeros. Finally, return `n` to obtain the common prefix.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/D2f5sVrW/shared\" frameBorder=\"0\" width=\"100%\" height=\"225\" name=\"D2f5sVrW\"></iframe>\n\n\nBy the way, one could refer to the problem called [Hamming distance](https://leetcode.com/articles/hamming-distance/) as another exercise to apply Brian Kernighan's algorithm.\n\n\n#### Complexity Analysis\n\n* Time Complexity: $$\\mathcal{O}(1)$$.\n\n    - Similar to the bit shift approach, the number of iterations in the algorithm is bounded by the number of bits in an integer number, which is constant.\n    <br/>\n\n    - Though having the same asymptotic complexity as the bit shift approach, Brian Kernighan's algorithm requires fewer iterations, since it skips all the zero bits in between.\n    \n\n* Space Complexity: $$\\mathcal{O}(1)$$, since no additional memory is consumed by the algorithm.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

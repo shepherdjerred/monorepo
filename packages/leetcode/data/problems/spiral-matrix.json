@@ -1,0 +1,141 @@
+{
+  "questionId": "54",
+  "questionFrontendId": "54",
+  "title": "Spiral Matrix",
+  "titleSlug": "spiral-matrix",
+  "difficulty": "Medium",
+  "content": "<p>Given an <code>m x n</code> <code>matrix</code>, return <em>all elements of the</em> <code>matrix</code> <em>in spiral order</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/11/13/spiral1.jpg\" style=\"width: 242px; height: 242px;\" />\n<pre>\n<strong>Input:</strong> matrix = [[1,2,3],[4,5,6],[7,8,9]]\n<strong>Output:</strong> [1,2,3,6,9,8,7,4,5]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/11/13/spiral.jpg\" style=\"width: 322px; height: 242px;\" />\n<pre>\n<strong>Input:</strong> matrix = [[1,2,3,4],[5,6,7,8],[9,10,11,12]]\n<strong>Output:</strong> [1,2,3,4,8,12,11,10,9,5,6,7]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == matrix.length</code></li>\n\t<li><code>n == matrix[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 10</code></li>\n\t<li><code>-100 &lt;= matrix[i][j] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Well for some problems, the best way really is to come up with some algorithms for simulation. Basically, you need to simulate what the problem asks us to do.",
+    "We go boundary by boundary and move inwards. That is the essential operation. First row, last column, last row, first column, and then we move inwards by 1 and repeat. That's all. That is all the simulation that we need.",
+    "Think about when you want to switch the progress on one of the indexes. If you progress on i out of [i, j], you'll shift in the same column. Similarly, by changing values for j, you'd be shifting in the same row.\r\nAlso, keep track of the end of a boundary so that you can move inwards and then keep repeating. It's always best to simulate edge cases like a single column or a single row to see if anything breaks or not."
+  ],
+  "metaData": "{\r\n  \"name\": \"spiralOrder\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"matrix\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<integer>\",\r\n    \"size\": \"size_1 * col_size_1\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"2.3M\", \"totalSubmission\": \"4.2M\", \"totalAcceptedRaw\": 2341307, \"totalSubmissionRaw\": 4150728, \"acRate\": \"56.4%\"}",
+  "likes": 17413,
+  "dislikes": 1562,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Spiral Matrix II\", \"titleSlug\": \"spiral-matrix-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Spiral Matrix III\", \"titleSlug\": \"spiral-matrix-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Spiral Matrix IV\", \"titleSlug\": \"spiral-matrix-iv\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,2,3],[4,5,6],[7,8,9]]",
+    "[[1,2,3,4],[5,6,7,8],[9,10,11,12]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 14, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"capital-one\", \"name\": \"Capital One\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"epic-systems\", \"name\": \"Epic Systems\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}], \"more_than_six_months\": [{\"timesEncountered\": 18, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 16, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 12, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 7, \"slug\": \"ebay\", \"name\": \"eBay\"}, {\"timesEncountered\": 6, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 5, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 5, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 5, \"slug\": \"josh-technology\", \"name\": \"josh technology\"}, {\"timesEncountered\": 5, \"slug\": \"epic-games\", \"name\": \"Epic Games\"}, {\"timesEncountered\": 4, \"slug\": \"infosys\", \"name\": \"Infosys\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> spiralOrder(vector<vector<int>>& matrix) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> spiralOrder(int[][] matrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def spiralOrder(self, matrix: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def spiralOrder(self, matrix):\n        \"\"\"\n        :type matrix: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} matrix\n * @return {number[]}\n */\nvar spiralOrder = function(matrix) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function spiralOrder(matrix: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> SpiralOrder(int[][] matrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* spiralOrder(int** matrix, int matrixSize, int* matrixColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func spiralOrder(matrix [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun spiralOrder(matrix: Array<IntArray>): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func spiralOrder(_ matrix: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn spiral_order(matrix: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} matrix\n# @return {Integer[]}\ndef spiral_order(matrix)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $matrix\n     * @return Integer[]\n     */\n    function spiralOrder($matrix) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> spiralOrder(List<List<int>> matrix) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def spiralOrder(matrix: Array[Array[Int]]): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec spiral_order(matrix :: [[integer]]) :: [integer]\n  def spiral_order(matrix) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec spiral_order(Matrix :: [[integer()]]) -> [integer()].\nspiral_order(Matrix) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (spiral-order matrix)\n  (-> (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1160",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThe problem statement asks us to _return all elements of the `matrix` in spiral order_, which means we will start from the top left corner and move towards right, then down, then left, and then up. Let's break this into further details:\n1. We can achieve moving in different directions by modifying row and column indices. Specifically, we have:\n\n```plain\nGiven that we are at (row, col), where row is the row index, and col is the column index.\n\nmove right: (row, col + 1)\nmove downwards: (row + 1, col)\nmove left: (row, col - 1)\nmove upwards: (row - 1, col)\n```\n2. When shall we change our direction? We need to turn when we either _reach the matrix boundaries_, or we _reach the cells in the array that we have visited before_. Matrix boundaries are fixed and provided already, but how could we know if we have visited a particular cell or not?\nIn fact, we have two different strategies and they will be introduced in the following approaches. Generally speaking, they are as follows:\n   - Approach 1. We can move the boundaries towards the center of the matrix after we have traversed a row or a column. Then when we meet a boundary, we know it's time to change the direction and update the boundary.\n   - Approach 2. While traversing the matrix, we can record each location that we have visited. Then when we meet a matrix boundary or a previously visited cell, we know it's time to change the direction.\n\n> This is a good time to stop and see if you can come up with the implementations yourselves!\n\n</br>\n\n---\n\n### Approach 1: Set Up Boundaries\n\n**Intuition**\n\nOur goal is to update boundaries as follows: when we finish traversing a row or column, we want to set up a boundary on it so that next time we get there, we know we need to change the direction. Here is a demo for the first round of updating the top, right, bottom, and left boundaries.\n\n!?!../Documents/54_spiral_matrix.json:1920,1080!?!\n\n\n</br>\n\n\n**Algorithm**\n\n1. Initialize the top, right, bottom, and left boundaries as `up`, `right`, `down`, and `left`.\n2. Initialize the output array `result`.\n3. Traverse the elements in spiral order and add each element to `result`:\n    - Traverse from `left` boundary to `right` boundary.\n    - Traverse from `up` boundary to `down` boundary.\n    - Before we traverse from right to left, we need to make sure that we are not on a row that has already been traversed. If we are not, then we can traverse from `right` to `left`.\n    - Similarly, before we traverse from top to bottom, we need to make sure that we are not on a column that has already been traversed. Then we can traverse from `down` to `up`.\n    - Remember to move the boundaries by updating `left`, `right`, `up`, and `down` accordingly.\n4. Return `result`.\n\n<iframe src=\"https://leetcode.com/playground/Lcpbah3F/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Lcpbah3F\"></iframe>\n\n**Complexity Analysis**\n\nLet $$M$$ be the number of rows and $$N$$ be the number of columns.\n\n* Time complexity: $$O(M \\cdot N)$$. This is because we visit each element once.\n\n* Space complexity: $$O(1)$$. This is because we don't use other data structures. Remember that we don't include the output array in the space complexity.\n\n\n<br/>\n\n---\n\n### Approach 2: Mark Visited Elements\n\n**Intuition**\n\nIf we mark the cells that we have visited, then when we run into a visited cell, we know we need to turn.\n\n> How do we know which direction we need to turn to? Well, we are always following this loop: right, down, left, up, right again, and so on. Therefore, when we run into a cell that we have visited, we can simply turn to the next direction in the aforementioned loop.\n\nNote that elements in the matrix are constrained to `-100 <= matrix[row][col] <= 100`, therefore we can select a number that is out of this range to mark it. In this article, `101` is selected for marking purposes.\n\n> Modifying the original data may not be a good choice sometimes. Therefore, we can also prepare another boolean matrix to store the cells we visited. However, the implementation of this approach is quite similar. You are welcome to explore this implementation as an exercise.\n\nThe last puzzle piece is when shall we stop. An interesting observation is that if we reach the visited cell, we need to turn.  However, when we meet another visited cell immediately after changing the direction, it means we reached the last element in the matrix. You'll see that an integer `changeDirection` is used to track the number of times we changed the direction consecutively.\n\n**Algorithm**\n\n- Initializations:\n    - Initialize a 2D array `directions ` to represent the four directions that we will move.\n    - Initialize `currentDirection` to 0 to signify that we are moving right at the beginning.\n    - Initialize `VISITED` to 101 to mark visited cells.\n    - Initialize `changeDirection` to 0.\n    - Initialize `row` and `col` to 0 since our initial position is `(0, 0)`.\n- We follow the current direction until we reach the matrix boundaries or a visited cell.\n    - While traversing in the current direction, remember to reset `changeDirection` to 0 at every step.\n    - Move to the next cell by updating the row and column indices.\n    - Append the element to the result and mark the location as visited.\n- Update the direction and `changeDirection`. If `changeDirection` is larger than 1, it means we are continuously changing our directions, and therefore we've visited all of the elements.\n\n<iframe src=\"https://leetcode.com/playground/WqE3yTMd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WqE3yTMd\"></iframe>\n\n**Complexity Analysis**\n\nLet $$M$$ be the number of rows and $$N$$ be the number of columns.\n\n* Time complexity: $$O(M \\cdot N)$$. This is because we visit each element once.\n\n* Space complexity: $$O(1)$$. This is because we don't use other data structures. Remember that we don't consider the output array or the input matrix when calculating the space complexity. However, if we were prohibited from mutating the input matrix, then this would be an $$O(M \\cdot N)$$ space solution.  This is because we would need to use a boolean matrix to track all of the previously seen cells.\n\n\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

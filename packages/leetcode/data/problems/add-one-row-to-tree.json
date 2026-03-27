@@ -1,0 +1,141 @@
+{
+  "questionId": "623",
+  "questionFrontendId": "623",
+  "title": "Add One Row to Tree",
+  "titleSlug": "add-one-row-to-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary tree and two integers <code>val</code> and <code>depth</code>, add a row of nodes with value <code>val</code> at the given depth <code>depth</code>.</p>\n\n<p>Note that the <code>root</code> node is at depth <code>1</code>.</p>\n\n<p>The adding rule is:</p>\n\n<ul>\n\t<li>Given the integer <code>depth</code>, for each not null tree node <code>cur</code> at the depth <code>depth - 1</code>, create two tree nodes with value <code>val</code> as <code>cur</code>&#39;s left subtree root and right subtree root.</li>\n\t<li><code>cur</code>&#39;s original left subtree should be the left subtree of the new left subtree root.</li>\n\t<li><code>cur</code>&#39;s original right subtree should be the right subtree of the new right subtree root.</li>\n\t<li>If <code>depth == 1</code> that means there is no depth <code>depth - 1</code> at all, then create a tree node with value <code>val</code> as the new root of the whole original tree, and the original tree is the new root&#39;s left subtree.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/15/addrow-tree.jpg\" style=\"width: 500px; height: 231px;\" />\n<pre>\n<strong>Input:</strong> root = [4,2,6,3,1,5], val = 1, depth = 2\n<strong>Output:</strong> [4,1,1,2,null,null,6,3,1,5]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/11/add2-tree.jpg\" style=\"width: 500px; height: 277px;\" />\n<pre>\n<strong>Input:</strong> root = [4,2,null,3,1], val = 1, depth = 3\n<strong>Output:</strong> [4,2,null,1,1,3,null,null,1]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 10<sup>4</sup>]</code>.</li>\n\t<li>The depth of the tree is in the range <code>[1, 10<sup>4</sup>]</code>.</li>\n\t<li><code>-100 &lt;= Node.val &lt;= 100</code></li>\n\t<li><code>-10<sup>5</sup> &lt;= val &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= depth &lt;= the depth of tree + 1</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"addOneRow\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"name\": \"val\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"depth\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"TreeNode\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"303.1K\", \"totalSubmission\": \"472.7K\", \"totalAcceptedRaw\": 303103, \"totalSubmissionRaw\": 472735, \"acRate\": \"64.1%\"}",
+  "likes": 3680,
+  "dislikes": 271,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[4,2,6,3,1,5]\n1\n2",
+    "[4,2,null,3,1]\n1\n3"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"gilt-groupe\", \"name\": \"Gilt Groupe\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    TreeNode* addOneRow(TreeNode* root, int val, int depth) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public TreeNode addOneRow(TreeNode root, int val, int depth) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def addOneRow(self, root: Optional[TreeNode], val: int, depth: int) -> Optional[TreeNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def addOneRow(self, root, val, depth):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type val: int\n        :type depth: int\n        :rtype: Optional[TreeNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {number} val\n * @param {number} depth\n * @return {TreeNode}\n */\nvar addOneRow = function(root, val, depth) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction addOneRow(root: TreeNode | null, val: number, depth: number): TreeNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public TreeNode AddOneRow(TreeNode root, int val, int depth) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nstruct TreeNode* addOneRow(struct TreeNode* root, int val, int depth) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc addOneRow(root *TreeNode, val int, depth int) *TreeNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun addOneRow(root: TreeNode?, `val`: Int, depth: Int): TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func addOneRow(_ root: TreeNode?, _ val: Int, _ depth: Int) -> TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn add_one_row(root: Option<Rc<RefCell<TreeNode>>>, val: i32, depth: i32) -> Option<Rc<RefCell<TreeNode>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @param {Integer} val\n# @param {Integer} depth\n# @return {TreeNode}\ndef add_one_row(root, val, depth)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @param Integer $val\n     * @param Integer $depth\n     * @return TreeNode\n     */\n    function addOneRow($root, $val, $depth) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  TreeNode? addOneRow(TreeNode? root, int val, int depth) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def addOneRow(root: TreeNode, `val`: Int, depth: Int): TreeNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec add_one_row(root :: TreeNode.t | nil, val :: integer, depth :: integer) :: TreeNode.t | nil\n  def add_one_row(root, val, depth) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec add_one_row(Root :: #tree_node{} | null, Val :: integer(), Depth :: integer()) -> #tree_node{} | null.\nadd_one_row(Root, Val, Depth) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (add-one-row root val depth)\n  (-> (or/c tree-node? #f) exact-integer? exact-integer? (or/c tree-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "170",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach #1 Using Recursion(DFS) [Accepted]\n\nIf the given depth $$d$$ happens to be equal to 1, we can directly put the whole current tree as a left child of the newly added node. Otherwise, we need to put the new node at appropriate levels. \n\nTo do so, we make use of a recursive function `insert(val,node,depth,n)`. Here, $$val$$ refers to the value of the new node to be inserted, $$depth$$ refers to the depth of the node currently considered, $$node$$ refers to the node calling the current function for its child subtrees and $$n$$ refers to the height at which the new node needs to be inserted. \n\nFor inserting the new node at appropriate level, we can start by making a call to `insert` with the root node and 1 as the current level. Inside every such call, we check if we've reached one level prior to the level where the new node needs to be inserted. \n\nFrom this level, we can store the roots of the left and right subtrees of the current node temporarily, and insert the new node as the new left and right subchild of the current node, with the temporarily stored left and right subtrees as the left and right subtrees of the newly inserted left or right subchildren appropriately.\n\nBut, if we haven't reached the destined level, we keep on continuing the recursive calling process with the left and right children of the current node respectively. At every such call, we also incrmenet the depth of the current level to reflect the depth change appropriately.\n\nThe animation below illustrates the process:\n\n!?!../Documents/623_Add_One_Row_Recursion_New.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/mqAnMFzQ/shared\" frameBorder=\"0\" name=\"mqAnMFzQ\" width=\"100%\" height=\"515\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. A total of $$n$$ nodes of the given tree will be considered.\n\n* Space complexity : $$O(n)$$. The depth of the recursion tree can go upto $$n$$ in the worst case(skewed tree).\n\n---\n### Approach #2 Using stack(DFS) [Accepted]\n\n**Algorithm**\n\nWe can do the same task as discussed in the last approach by making use of a $$stack$$ as well. But, we need to make use of a new data structure, $$Node$$ here, to keep a track of the depth of the current node along with its value. \n\nWe start by pushing the root $$Node$$ onto the $$stack$$. Then, at every step we do as follows:\n\n* Pop an element from the $$stack$$. \n\n* For every Node popped, check if its depth corresponds to one prior to the depth at which the new node needs to be inserted. \n\n* If yes, insert the new nodes appropriately as in the last approach. \n\n* If no, we push both the left and the right child Node(value+depth) of the current node onto the $$stack$$. \n\n* Continue the popping and pushing process till the $$stack$$ becomes empty.\n\nLook at the animation below for a better understanding.\n\n!?!../Documents/623_Add_One_Row_Stack_new.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/6Gut8kVG/shared\" frameBorder=\"0\" name=\"6Gut8kVG\" width=\"100%\" height=\"515\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. A total of $$n$$ nodes of the given tree will be considered.\n\n* Space complexity : $$O(n)$$. The depth of the $$stack$$ can go upto $$n$$ in the worst case(skewed tree).\n\n---\n\n### Approach #3 Using queue(BFS) [Accepted]\n\n**Algorithm**\n\nThe idea of traversal in the last approach is similar to Depth First Search. In that case, we need to traverse through all the nodes of the given tree in the order of branches. Firstly we explored one branch to as much depth as possible and then continued with the other ones. \n\nIf, instead, we go for Breadth First Search, along with keeping track of the depth of the nodes being considered at any moment during the Breadth First Search, we can stop the search process as soon as all the nodes at the depth $$d - 1$$ have been considered once. \n\nTo implement this BFS, we make use of a $$queue$$. We start off by pushing the root node of the given tree at the back of the $$queue$$ and with the depth of the current level set as 1. Then, at every step, we do the following:\n\n* Remove an element from the front of the $$queue$$ and add all its children to the back of another temporary queue, $$temp$$. \n\n* Keep on adding the elements to the back of the $$temp$$ till $$queue$$ becomes empty. (Once $$queue$$ becomes empty, it indicates that all the nodes at the current level have been considered and now $$temp$$ contains all the nodes lying at the next level).\n\n* Reinitialize $$queue$$  with its value as $$temp$$. Update the current value of the $$depth$$ to reflect the level of nodes currently being considered. \n\n* Repeat the process till we reach the depth $$d - 1$$. \n\n* On hitting this depth level($$d-1$$), add the new nodes appropriately to all the nodes in the $$queue$$ currently, as done in the previous approaches.\n\nThe following animation illustrates the process.\n\n!?!../Documents/623_Add_One_Row_queue_new.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/EC8ne3QM/shared\" frameBorder=\"0\" name=\"EC8ne3QM\" width=\"100%\" height=\"515\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. A total of $$n$$ nodes of the given tree will be considered in the worst case.\n\n* Space complexity : $$O(x)$$. The size of the $$queue$$ or $$temp$$ queue can grow upto $$x$$ only. Here, $$x$$ refers to the number of maximum number of nodes at any level in the given tree.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

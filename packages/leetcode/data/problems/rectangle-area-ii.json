@@ -1,0 +1,141 @@
+{
+  "questionId": "880",
+  "questionFrontendId": "850",
+  "title": "Rectangle Area II",
+  "titleSlug": "rectangle-area-ii",
+  "difficulty": "Hard",
+  "content": "<p>You are given a 2D array of axis-aligned <code>rectangles</code>. Each <code>rectangle[i] = [x<sub>i1</sub>, y<sub>i1</sub>, x<sub>i2</sub>, y<sub>i2</sub>]</code> denotes the <code>i<sup>th</sup></code> rectangle where <code>(x<sub>i1</sub>, y<sub>i1</sub>)</code> are the coordinates of the <strong>bottom-left corner</strong>, and <code>(x<sub>i2</sub>, y<sub>i2</sub>)</code> are the coordinates of the <strong>top-right corner</strong>.</p>\n\n<p>Calculate the <strong>total area</strong> covered by all <code>rectangles</code> in the plane. Any area covered by two or more rectangles should only be counted <strong>once</strong>.</p>\n\n<p>Return <em>the <strong>total area</strong></em>. Since the answer may be too large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://s3-lc-upload.s3.amazonaws.com/uploads/2018/06/06/rectangle_area_ii_pic.png\" style=\"width: 600px; height: 450px;\" />\n<pre>\n<strong>Input:</strong> rectangles = [[0,0,2,2],[1,0,2,3],[1,0,3,1]]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> A total area of 6 is covered by all three rectangles, as illustrated in the picture.\nFrom (1,1) to (2,2), the green and red rectangles overlap.\nFrom (1,0) to (2,3), all three rectangles overlap.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> rectangles = [[0,0,1000000000,1000000000]]\n<strong>Output:</strong> 49\n<strong>Explanation:</strong> The answer is 10<sup>18</sup> modulo (10<sup>9</sup> + 7), which is 49.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= rectangles.length &lt;= 200</code></li>\n\t<li><code>rectanges[i].length == 4</code></li>\n\t<li><code>0 &lt;= x<sub>i1</sub>, y<sub>i1</sub>, x<sub>i2</sub>, y<sub>i2</sub> &lt;= 10<sup>9</sup></code></li>\n\t<li><code>x<sub>i1 &lt;= </sub>x<sub>i2</sub></code></li>\n\t<li><code>y<sub>i1 &lt;=</sub> y<sub>i2</sub></code></li>\n\t<li>All rectangles have non zero area.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"rectangleArea\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"rectangles\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"43.8K\", \"totalSubmission\": \"78.1K\", \"totalAcceptedRaw\": 43816, \"totalSubmissionRaw\": 78143, \"acRate\": \"56.1%\"}",
+  "likes": 1043,
+  "dislikes": 66,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Separate Squares II\", \"titleSlug\": \"separate-squares-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,0,2,2],[1,0,2,3],[1,0,3,1]]",
+    "[[0,0,1000000000,1000000000]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    },
+    {
+      "name": "Sweep Line",
+      "slug": "line-sweep"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int rectangleArea(vector<vector<int>>& rectangles) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int rectangleArea(int[][] rectangles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def rectangleArea(self, rectangles: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def rectangleArea(self, rectangles):\n        \"\"\"\n        :type rectangles: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} rectangles\n * @return {number}\n */\nvar rectangleArea = function(rectangles) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function rectangleArea(rectangles: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int RectangleArea(int[][] rectangles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int rectangleArea(int** rectangles, int rectanglesSize, int* rectanglesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func rectangleArea(rectangles [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun rectangleArea(rectangles: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func rectangleArea(_ rectangles: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn rectangle_area(rectangles: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} rectangles\n# @return {Integer}\ndef rectangle_area(rectangles)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $rectangles\n     * @return Integer\n     */\n    function rectangleArea($rectangles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int rectangleArea(List<List<int>> rectangles) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def rectangleArea(rectangles: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec rectangle_area(rectangles :: [[integer]]) :: integer\n  def rectangle_area(rectangles) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec rectangle_area(Rectangles :: [[integer()]]) -> integer().\nrectangle_area(Rectangles) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (rectangle-area rectangles)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "480",
+    "content": "[TOC]\n\n## Solution\n---\n\n### Approach 1: Coordinate Compression\n\n#### Intuition\n\n<center>\n    <img src=\"../Figures/850/example.png\" alt=\"Image from problem description\" style=\"height: 200px;\"/>\n</center>\n\nSuppose instead of `rectangles = [[0,0,2,2],[1,0,2,3],[1,0,3,1]]`, we had `[[0,0,200,200],[100,0,200,300],[100,0,300,100]]`.  The answer would just be 100 times bigger.\n\nWhat about if `rectangles = [[0,0,2,2],[1,0,2,3],[1,0,30002,1]]` ?  Only the blue region would have area `30000` instead of `1`.\n\nOur idea is this: we'll take all the `x` and `y` coordinates, and re-map them to `0, 1, 2, ...` etc.  For example, if `rectangles  = [[0,0,200,200],[100,0,200,300],[100,0,300,100]]`, we could re-map it to `[[0,0,2,2],[1,0,2,3],[1,0,3,1]]`.  Then, we can solve the problem with brute force.  However, each region may actually represent some larger area, so we'll need to adjust for that at the end.\n\n#### Algorithm\n\nRe-map each `x` coordinate to `0, 1, 2, ...`.  Independently, re-map all `y` coordinates too.\n\nWe then have a problem that can be solved by brute force: for each rectangle with re-mapped coordinates `(rx1, ry1, rx2, ry2)`, we can fill the grid `grid[x][y] = True` for `rx1 <= x < rx2` and `ry1 <= y < ry2`.\n\nAfterwards, each `grid[rx][ry]` represents the area `(imapx(rx+1) - imapx(rx)) * (imapy(ry+1) - imapy(ry))`, where if `x` got remapped to `rx`, then `imapx(rx) = x` (\"inverse-map-x of remapped-x equals x\"), and similarly for `imapy`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KgCoS6sU/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KgCoS6sU\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity:  $$O(N^3)$$, where $$N$$ is the number of rectangles.\n\n* Space Complexity:  $$O(N^2)$$.\n<br />\n<br />\n\n\n---\n\n### Approach 2: Line Sweep\n\n#### Intuition\n\nImagine we pass a horizontal line from bottom to top over the shape.  We have some active intervals on this horizontal line, which gets updated twice for each rectangle.  In total, there are $$2 * N$$ events, and we can update our (up to $$N$$) active horizontal intervals for each update.\n\n#### Algorithm\n\nFor a rectangle like `rec = [1,0,3,1]`, the first update is to add `[1, 3]` to the active set at `y = 0`, and the second update is to remove `[1, 3]` at `y = 1`.  Note that adding and removing respects multiplicity - if we also added `[0, 2]` at `y = 0`, then removing `[1, 3]` at `y = 1` will still leave us with `[0, 2]` active.\n\nThis gives us a plan: create these two events for each rectangle, then process all the events in sorted order of `y`.  The issue now is deciding how to process the events `add(x1, x2)` and `remove(x1, x2)` such that we are able to `query()` the total horizontal length of our active intervals.\n\nWe can use the fact that our `remove(...)` operation will always be on an interval that was previously added.  Let's store all the `(x1, x2)` intervals in sorted order.  Then, we can `query()` in linear time using a technique similar to a classic LeetCode problem, [Merge Intervals](https://leetcode.com/problems/merge-intervals/).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/BjJWRXSc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"BjJWRXSc\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity:  $$O(N^2 \\log N)$$, where $$N$$ is the number of rectangles.\n\n* Space Complexity:  $$O(N)$$.\n<br />\n<br />\n\n\n---\n\n### Approach 3: Segment Tree\n\n#### Intuition and Algorithm\n\nAs in *Approach #3*, we want to support `add(x1, x2)`, `remove(x1, x2)`, and `query()`.  While outside the scope of a typical interview, this is the perfect setting for using a *segment tree*.  For completeness, we include the following implementation.\n\nYou can learn more about Segment Trees by visiting the articles of these problems: [Falling Squares](https://leetcode.com/problems/falling-squares/), [Number of Longest Increasing Subsequence](https://leetcode.com/problems/number-of-longest-increasing-subsequence/).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/o9SjvQcw/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"o9SjvQcw\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of rectangles.\n\n* Time Complexity: $O(N^2)$\n\n    The update operation takes $O(\\log N)$ in the average case and $O(N)$ in the worst case when the segment tree is unbalanced. `update()` is called $N$ times, so the overall time complexity is $O(N \\log N)$ in the average case and $O(N^2)$ in the worst case.\n\n* Space Complexity:  $O(N)$.\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

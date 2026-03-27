@@ -1,0 +1,149 @@
+{
+  "questionId": "239",
+  "questionFrontendId": "239",
+  "title": "Sliding Window Maximum",
+  "titleSlug": "sliding-window-maximum",
+  "difficulty": "Hard",
+  "content": "<p>You are given an array of integers&nbsp;<code>nums</code>, there is a sliding window of size <code>k</code> which is moving from the very left of the array to the very right. You can only see the <code>k</code> numbers in the window. Each time the sliding window moves right by one position.</p>\n\n<p>Return <em>the max sliding window</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,3,-1,-3,5,3,6,7], k = 3\n<strong>Output:</strong> [3,3,5,5,6,7]\n<strong>Explanation:</strong> \nWindow position                Max\n---------------               -----\n[1  3  -1] -3  5  3  6  7       <strong>3</strong>\n 1 [3  -1  -3] 5  3  6  7       <strong>3</strong>\n 1  3 [-1  -3  5] 3  6  7      <strong> 5</strong>\n 1  3  -1 [-3  5  3] 6  7       <strong>5</strong>\n 1  3  -1  -3 [5  3  6] 7       <strong>6</strong>\n 1  3  -1  -3  5 [3  6  7]      <strong>7</strong>\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1], k = 1\n<strong>Output:</strong> [1]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>4</sup> &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= nums.length</code></li>\n</ul>\n",
+  "hints": [
+    "How about using a data structure such as deque (double-ended queue)?",
+    "The queue size need not be the same as the window’s size.",
+    "Remove redundant elements and the queue should store only elements that need to be considered."
+  ],
+  "metaData": "{ \n  \"name\": \"maxSlidingWindow\",\n  \"params\": [\n    { \n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1.6M\", \"totalSubmission\": \"3.4M\", \"totalAcceptedRaw\": 1634401, \"totalSubmissionRaw\": 3364815, \"acRate\": \"48.6%\"}",
+  "likes": 20386,
+  "dislikes": 845,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Window Substring\", \"titleSlug\": \"minimum-window-substring\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Min Stack\", \"titleSlug\": \"min-stack\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Substring with At Most Two Distinct Characters\", \"titleSlug\": \"longest-substring-with-at-most-two-distinct-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Paint House II\", \"titleSlug\": \"paint-house-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Jump Game VI\", \"titleSlug\": \"jump-game-vi\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Robots Within Budget\", \"titleSlug\": \"maximum-number-of-robots-within-budget\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Tastiness of Candy Basket\", \"titleSlug\": \"maximum-tastiness-of-candy-basket\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximal Score After Applying K Operations\", \"titleSlug\": \"maximal-score-after-applying-k-operations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,-1,-3,5,3,6,7]\n3",
+    "[1]\n1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"expedia\", \"name\": \"Expedia\"}, {\"timesEncountered\": 2, \"slug\": \"aurora\", \"name\": \"Aurora\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 3, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 2, \"slug\": \"bookingcom\", \"name\": \"Booking.com\"}, {\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 7, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 6, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 5, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 4, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 4, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 4, \"slug\": \"line\", \"name\": \"LINE\"}, {\"timesEncountered\": 4, \"slug\": \"coupang\", \"name\": \"Coupang\"}, {\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 3, \"slug\": \"juspay\", \"name\": \"Juspay\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Monotonic Queue",
+      "slug": "monotonic-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> maxSlidingWindow(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] maxSlidingWindow(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxSlidingWindow(self, nums: List[int], k: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxSlidingWindow(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number[]}\n */\nvar maxSlidingWindow = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxSlidingWindow(nums: number[], k: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] MaxSlidingWindow(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* maxSlidingWindow(int* nums, int numsSize, int k, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxSlidingWindow(nums []int, k int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxSlidingWindow(nums: IntArray, k: Int): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxSlidingWindow(_ nums: [Int], _ k: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_sliding_window(nums: Vec<i32>, k: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer[]}\ndef max_sliding_window(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer[]\n     */\n    function maxSlidingWindow($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> maxSlidingWindow(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxSlidingWindow(nums: Array[Int], k: Int): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_sliding_window(nums :: [integer], k :: integer) :: [integer]\n  def max_sliding_window(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_sliding_window(Nums :: [integer()], K :: integer()) -> [integer()].\nmax_sliding_window(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-sliding-window nums k)\n  (-> (listof exact-integer?) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1984",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an array of integers `nums` and there is a sliding window of size `k` which is moving from the left of the array to the right.\n\nOur task is to return a list of integers that contains the largest element from each window.\n\n---\n\n### Approach: Monotonic Deque\n\n#### Intuition\n\nAn intuitive way to solve the problem is to iterate over all windows and then iterate over all the elements in a window to find the largest element. There are a total of `n - k + 1` (where `n` is the size of `nums`) windows and it would take $O(k)$ to find the largest element from each window. This strategy is too slow and would result in TLE.\n\nLet's make some observations and reduce the time complexity.\n\nWe may observe that in a window, the elements that come before the largest element will never be selected as the largest element of any future windows. For example, consider a window `[1, 2, 3, 4, 1]`. Because the window is sliding left to right, any window with the first three elements `1`, `2`, and `3` would also have the `4`.\n\nHowever, we cannot ignore the items that follow the largest element. If we use the above example, we cannot ignore the last element `1` since there may be a window from the fourth index (0-based indexing) until the eighth index where `1` is the largest element. The elements at indices `3` and `4` are those that will be **\"useful\"** in the following windows.\n\nTherefore, we can discard the first three elements and only take into account the elements at indices `3` and `4`.\n\nNow, let's consider the next element and call it `x`. We need to add `x` to the window to consider the next window. If `x > 1`, then we can now discard the `1` because `x` will be in any future windows that `1` is in. If `x > 4`, we can discard the `4` as well for the same reason.\n\n> In general, whenever we encounter a new element `x`, we want to discard all elements that are less than `x` before adding `x`. Let's say we currently have `[63, 15, 8, 3]` and we encounter `12`. Any future window with `8` or `3` will also contain `12`, so we can discard them. After discarding them and adding `12`, we have `[63, 15, 12]`. As you can see, we keep elements in descending order.\n\nTo perform these operations, we can use a **monotonic queue** as it supports efficient insertion, deletion, and retrieval of elements from the ends of a window. We will implement it with the **deque** data structure.\n\nA monotonic data structure is one where the elements are always sorted. In our case, we want a monotonic decreasing queue, which means that the elements in the queue are always sorted descending. When we want to add a new element `x`, we maintain the monotonic property by removing all elements less than `x` before adding `x`.\n\nWe initialize a deque of integers `dq`. It will contain the indices of the \"useful\" elements in the current window. The reason we need to store the indices instead of the elements themselves is that we need to detect when elements leave the window due to sliding too far to the right.\n\nWe also initialize an array of integers `res` to store the answer.\n\nBy maintaining the monotonic decreasing property, the largest element in the window must always be the first element in the deque, which is `nums[dq[0]]`.\n\nWe initialize the first window with the first `k` elements. Then we iterate over the indices `i` in the range `[k, n - 1]`, and for each element, we add its index to `dq` while maintaining the monotonic property. We also remove the first element in `dq` if it is too far to the left (`dq[0] = i - k`). After these operations, `dq` will correctly hold the indices of all useful elements in the current window in decreasing order. Thus, we can push `nums[dq[0]]` to the answer.\n\nHere's an animation visually showing how the approach works:\n\n!?!../Documents/239/239-slides.json:601,301!?!\n\nYou can see that the deque's size never goes above `k` at any time. This is because we are only ever taking into account the \"useful\" elements of the current window.\n\nThere can be `k` indices in the deque when all the elements of a window are sorted in descending order. If the elements are not sorted, there will be some useless elements and the size of the deque would be less than `k`.\n\nSince we consistently add the largest index to the end of the deque and remove some other indices that correspond to useless elements, we are essentially storing indices in ascending order. When taking into account a window with the last element at index `i`, all of the deque's elements are greater than `i - k`. As a result, the size of deque can never exceed `k`.\n\n#### Algorithm\n\n1. Create a deque `dq` of integers.\n2. Create a list of integers `res` to store the answer.\n3. Iterate over the first `k` elements from `i = 0` to `k - 1` and perform the following:\n    - While `dq` is not empty and the current element `nums[i]` is greater or equal to `nums[dq.peekLast()]`, continue to pop the last element.\n    - Push `i` at the end of `dq`.\n4. Push the largest element of the first window `nums[dq.peekFirst()]` to the answer.\n5. We iterate over all the remaining elements from `i = k` to `n - 1` to move to the next windows. We perform the following in this loop:\n    - Check if the element at the front of `dq` is equal to `i - k`. If it is equal to `i - k`, it cannot be included in the current window. We pop this element.\n    - While `dq` is not empty and the current element `nums[i]` is greater or equal to `nums[dq.back()]`, continue to pop the last element.\n    - Push `i` at the end of `dq`.\n    - Push the largest element of the current window `nums[dq.peekFirst()]` to the answer.\n6. Return `res`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/du3z8z6p/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"du3z8z6p\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the size of `nums`.\n\n* Time complexity: $O(n)$.\n    - At first glance, it may look like the time complexity of this algorithm should be $O(n^2)$, because there is a nested while loop inside the for loop. However, each element can only be added to the deque once, which means the deque is limited to $n$ pushes. Every iteration of the while loop uses `1` pop, which means the while loop will not iterate more than $n$ times in total, across all iterations of the for loop.\n    - An easier way to think about this is that in the worst case, every element will be pushed and popped once. This gives a time complexity of $O(2 \\cdot n) = O(n)$.\n\n* Space complexity: $O(k)$.\n    - The size of the deque can grow a maximum up to a size of $k$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "questionId": "597",
+  "questionFrontendId": "597",
+  "title": "Friend Requests I: Overall Acceptance Rate",
+  "titleSlug": "friend-requests-i-overall-acceptance-rate",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>FriendRequest</code></p>\n\n<pre>\n+----------------+---------+\n| Column Name    | Type    |\n+----------------+---------+\n| sender_id      | int     |\n| send_to_id     | int     |\n| request_date   | date    |\n+----------------+---------+\nThis table may contain duplicates (In other words, there is no primary key for this table in SQL).\nThis table contains the ID of the user who sent the request, the ID of the user who received the request, and the date of the request.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>RequestAccepted</code></p>\n\n<pre>\n+----------------+---------+\n| Column Name    | Type    |\n+----------------+---------+\n| requester_id   | int     |\n| accepter_id    | int     |\n| accept_date    | date    |\n+----------------+---------+\nThis table may contain duplicates (In other words, there is no primary key for this table in SQL).\nThis table contains the ID of the user who sent the request, the ID of the user who received the request, and the date when the request was accepted.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Find the overall acceptance rate of requests, which is the number of acceptance divided by the number of requests. Return the answer rounded to 2 decimals places.</p>\n\n<p><strong>Note that:</strong></p>\n\n<ul>\n\t<li>The accepted requests are not necessarily from the table <code>friend_request</code>. In this case, Count the total accepted requests (no matter whether they are in the original requests), and divide it by the number of requests to get the acceptance rate.</li>\n\t<li>It is possible that a sender sends multiple requests to the same receiver, and a request could be accepted more than once. In this case, the &lsquo;duplicated&rsquo; requests or acceptances are only counted once.</li>\n\t<li>If there are no requests at all, you should return 0.00 as the <code>accept_rate</code>.</li>\n</ul>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nFriendRequest table:\n+-----------+------------+--------------+\n| sender_id | send_to_id | request_date |\n+-----------+------------+--------------+\n| 1         | 2          | 2016/06/01   |\n| 1         | 3          | 2016/06/01   |\n| 1         | 4          | 2016/06/01   |\n| 2         | 3          | 2016/06/02   |\n| 3         | 4          | 2016/06/09   |\n+-----------+------------+--------------+\nRequestAccepted table:\n+--------------+-------------+-------------+\n| requester_id | accepter_id | accept_date |\n+--------------+-------------+-------------+\n| 1            | 2           | 2016/06/03  |\n| 1            | 3           | 2016/06/08  |\n| 2            | 3           | 2016/06/08  |\n| 3            | 4           | 2016/06/09  |\n| 3            | 4           | 2016/06/10  |\n+--------------+-------------+-------------+\n<strong>Output:</strong> \n+-------------+\n| accept_rate |\n+-------------+\n| 0.8         |\n+-------------+\n<strong>Explanation:</strong> \nThere are 4 unique accepted requests, and there are 5 requests in total. So the rate is 0.80.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong></p>\n\n<ul>\n\t<li>Could you find the acceptance rate for every month?</li>\n\t<li>Could you find the cumulative acceptance rate for every day?</li>\n</ul>\n",
+  "hints": [
+    "Still remember how to count the number of rows in a table?",
+    "What is the keyword to filter the duplicated records in a table?"
+  ],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists FriendRequest (sender_id int, send_to_id int, request_date date)\", \"Create table If Not Exists RequestAccepted (requester_id int, accepter_id int, accept_date date)\"], \"mssql\": [\"Create table FriendRequest (sender_id int, send_to_id int, request_date date)\", \"Create table RequestAccepted (requester_id int, accepter_id int, accept_date date)\"], \"oraclesql\": [\"Create table FriendRequest (sender_id int, send_to_id int, request_date date)\", \"Create table RequestAccepted (requester_id int, accepter_id int, accept_date date)\", \"Alter SESSION set NLS_DATE_FORMAT = 'YYYY/MM/DD'\"], \"database\": true, \"name\": \"acceptance_rate\", \"pythondata\": [\"FriendRequest = pd.DataFrame([], columns=['sender_id', 'send_to_id', 'request_date']).astype({'sender_id':'Int64', 'send_to_id':'Int64', 'request_date':'datetime64[ns]'})\", \"RequestAccepted = pd.DataFrame([], columns=['requester_id', 'accepter_id', 'accept_date']).astype({'requester_id':'Int64', 'accepter_id':'Int64', 'accept_date':'datetime64[ns]'})\"], \"postgresql\": [\"Create table If Not Exists FriendRequest (sender_id int, send_to_id int, request_date date)\", \"Create table If Not Exists RequestAccepted (requester_id int, accepter_id int, accept_date date)\"], \"database_schema\": {\"FriendRequest\": {\"sender_id\": \"INT\", \"send_to_id\": \"INT\", \"request_date\": \"DATE\"}, \"RequestAccepted\": {\"requester_id\": \"INT\", \"accepter_id\": \"INT\", \"accept_date\": \"DATE\"}}}",
+  "stats": "{\"totalAccepted\": \"86.6K\", \"totalSubmission\": \"210.7K\", \"totalAcceptedRaw\": 86583, \"totalSubmissionRaw\": 210663, \"acRate\": \"41.1%\"}",
+  "likes": 320,
+  "dislikes": 776,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"FriendRequest\":[\"sender_id\",\"send_to_id\",\"request_date\"],\"RequestAccepted\":[\"requester_id\",\"accepter_id\",\"accept_date\"]},\"rows\":{\"FriendRequest\":[[1,2,\"2016/06/01\"],[1,3,\"2016/06/01\"],[1,4,\"2016/06/01\"],[2,3,\"2016/06/02\"],[3,4,\"2016/06/09\"]],\"RequestAccepted\":[[1,2,\"2016/06/03\"],[1,3,\"2016/06/08\"],[2,3,\"2016/06/08\"],[3,4,\"2016/06/09\"],[3,4,\"2016/06/10\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef acceptance_rate(friend_request: pd.DataFrame, request_accepted: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "161",
+    "content": "[TOC]\n\n# Solution\n---\n\n### Overview \n\nGiven two tables, `FriendRequest` and `RequestAccepted`, which record the friend requests sent by users and the requests that were accepted, respectively, the goal is to calculate the acceptance rate. Specifically, the rate is the ratio of the number of unique accepted requests to the total number of unique sent requests.\n\n![fig](../Figures/597/597.png)\n\n---\n\n## pandas\n\n### Approach 1: Distinct Row Counting with Division\n\n#### Intuition\n\n**Step 1 - Distinct Identification**:\n\n```python\ndistinct_accepted = request_accepted[['requester_id', 'accepter_id']].drop_duplicates()\ndistinct_request = friend_request[['sender_id', 'send_to_id']].drop_duplicates()\n```\n\n - Before calculating the acceptance rate, we need to ensure that we're working with distinct rows, so we use `drop_duplicates` method to remove duplicate rows that contain the same combination of values.\n\n\n   \n**Step 2 - Counting Distinct Rows**:\n\n```python\naccepted_count = len(distinct_accepted)\nrequest_count = len(distinct_request)\n```\n\n - Once we have the distinct rows, the next step is to count them. Here, the length (number of rows) of the distinct DataFrames gives us the counts.\n\n\n**Step 3 - Rate Calculation via Division**:\n\n```python\nif request_count != 0:\n    accept_rate = round(accepted_count / request_count, 2)\nelse:\n    accept_rate = 0\n```\n\n - The acceptance rate is computed by dividing the number of distinct accepted requests by the number of distinct sent requests. It's crucial to check for division by zero here to avoid errors.\n  \n\n\n**Step 4 - Returning as DataFrame**:\n\n```python\nreturn pd.DataFrame({\"accept_rate\": [accept_rate]})\n```\n\n - The final step is to format the result as a DataFrame with the computed acceptance rate. This step transforms our single value into a table-like structure to be consistent with the required result format.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/n5UZ4Ems/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"n5UZ4Ems\"></iframe>\n\n<br>\n\n---\n\n## Database\n\n### Approach 1: Using `ROUND` and `IFNULL` \n\n#### Intuition\n\nCount the accepted requests and then divides it by the number of all requests.\n\nTo get the distinct number of accepted requests, we can query from the **RequestAccepted** table.\n```sql\nSELECT COUNT(*) FROM (SELECT DISTINCT requester_id, accepter_id FROM RequestAccepted) AS A;\n```\n\nWith the same technique, we can have the total number of requests from the **FriendRequest** table:\n```sql\nSELECT COUNT(*) FROM (SELECT DISTINCT sender_id, send_to_id FROM FriendRequest) AS B;\n```\n\nAt last, divide these two numbers and [`ROUND`](https://dev.mysql.com/doc/refman/5.7/en/mathematical-functions.html#function_round) it to a scale of 2 decimal places to get the required acceptance rate.\n\nWait! The divisor (total number of requests) could be '0' if the table **friend_request** is empty. So, we have to utilize  [`IFNULL`](https://dev.mysql.com/doc/refman/5.7/en/control-flow-functions.html#function_ifnull) to deal with this special case.\n\n#### Implementation\n\n```sql\nSELECT\nROUND(\n    IFNULL(\n    (SELECT COUNT(*) FROM (SELECT DISTINCT requester_id, accepter_id FROM RequestAccepted) AS A)\n    /\n    (SELECT COUNT(*) FROM (SELECT DISTINCT sender_id, send_to_id FROM FriendRequest) AS B),\n    0)\n, 2) AS accept_rate;\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

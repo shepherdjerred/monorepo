@@ -1,0 +1,143 @@
+{
+  "questionId": "713",
+  "questionFrontendId": "713",
+  "title": "Subarray Product Less Than K",
+  "titleSlug": "subarray-product-less-than-k",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of integers <code>nums</code> and an integer <code>k</code>, return <em>the number of contiguous subarrays where the product of all the elements in the subarray is strictly less than </em><code>k</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [10,5,2,6], k = 100\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> The 8 subarrays that have product less than 100 are:\n[10], [5], [2], [6], [10, 5], [5, 2], [2, 6], [5, 2, 6]\nNote that [10, 5, 2] is not included as the product of 100 is not strictly less than k.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3], k = 0\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 1000</code></li>\n\t<li><code>0 &lt;= k &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "For each j, let opt(j) be the smallest i so that nums[i] * nums[i+1] * ... * nums[j] is less than k.  opt is an increasing function."
+  ],
+  "metaData": "{\r\n  \"name\": \"numSubarrayProductLessThanK\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"k\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"599.3K\", \"totalSubmission\": \"1.1M\", \"totalAcceptedRaw\": 599346, \"totalSubmissionRaw\": 1108165, \"acRate\": \"54.1%\"}",
+  "likes": 7519,
+  "dislikes": 236,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Product Subarray\", \"titleSlug\": \"maximum-product-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Size Subarray Sum Equals k\", \"titleSlug\": \"maximum-size-subarray-sum-equals-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Subarray Sum Equals K\", \"titleSlug\": \"subarray-sum-equals-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Two Sum Less Than K\", \"titleSlug\": \"two-sum-less-than-k\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Number of Smooth Descent Periods of a Stock\", \"titleSlug\": \"number-of-smooth-descent-periods-of-a-stock\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Subarrays With Score Less Than K\", \"titleSlug\": \"count-subarrays-with-score-less-than-k\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[10,5,2,6]\n100",
+    "[1,2,3]\n0"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 21, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 5, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 5, \"slug\": \"squarepoint-capital\", \"name\": \"Squarepoint Capital\"}, {\"timesEncountered\": 5, \"slug\": \"yatra\", \"name\": \"Yatra\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"samsung\", \"name\": \"Samsung\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"tekion\", \"name\": \"Tekion\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numSubarrayProductLessThanK(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numSubarrayProductLessThanK(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numSubarrayProductLessThanK(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numSubarrayProductLessThanK(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar numSubarrayProductLessThanK = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numSubarrayProductLessThanK(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumSubarrayProductLessThanK(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numSubarrayProductLessThanK(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numSubarrayProductLessThanK(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numSubarrayProductLessThanK(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numSubarrayProductLessThanK(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_subarray_product_less_than_k(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef num_subarray_product_less_than_k(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function numSubarrayProductLessThanK($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numSubarrayProductLessThanK(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numSubarrayProductLessThanK(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_subarray_product_less_than_k(nums :: [integer], k :: integer) :: integer\n  def num_subarray_product_less_than_k(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_subarray_product_less_than_k(Nums :: [integer()], K :: integer()) -> integer().\nnum_subarray_product_less_than_k(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-subarray-product-less-than-k nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2274",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an array of integers `nums` and an integer `k`; the task is to count the number of contiguous subarrays where the product of all the elements in the subarray is strictly less than `k`. \n\n**Key Observations:**\n1. The problem requires counting valid subarrays, not returning the actual subarrays.\n2. The values in the `nums` array are positive.\n\n---\n\n### Approach 1: Using Sliding Window\n\n#### Intuition\n\nThe brute force method involves finding all the subarrays and then selecting those whose products are less than `k`. However, this approach becomes costly in terms of time complexity, reaching $O(n^2)$.\n\nFor a more efficient approach, let's use the sliding window pattern. This pattern is applicable when the problem entails achieving a goal using subarrays, and individual elements cannot be independently selected.\n\nThe concept behind the sliding window pattern is to maintain a window that continuously expands from the right by adding elements and computing their product until the condition is met. Once the condition is satisfied, we adjust the window by shrinking it from the left until the condition is met again.\n\nAs we slide the window across the array, our objective is to identify all subarrays in the `nums` array where the product of its elements remains less than `k`. For each right position, if the product of the window's elements from left to right is less than `k`, adding the element at the right generates new subarrays with products less than `k`.\n\nThe count of such subarrays is determined by the difference `right - left + 1`, which represents the number of subarrays that end at `right` and start at any element between `right` and `left`, inclusive. In essence, this count encompasses the subarray consisting solely of the current element itself, as well as all possible subarrays extending back to the left boundary of the window (`left`).\n\nConsider an example window containing elements 3, 4, and 5. If we include 6 in the window, we need to count all possible subarrays that end with 6. These subarrays can be formed by starting at any element within the current window and extending to 6. Therefore, the subarrays would be:\n\n- `[6]` (subarray consisting only of 6)\n- `[5, 6]` (subarray starting from 5 and ending at 6)\n- `[4, 5, 6]` (subarray starting from 4 and ending at 6)\n- `[3, 4, 5, 6]` (subarray starting from 3 and ending at 6)\n\nBy calculating `right - left + 1`, we enumerate all subarrays that end with the current element of the window (`nums[right]`). This ensures that we count all possible subarrays as we slide the window across the array. As we can observe, adding element 6 to the window created 4 new subarrays.\n\nThe crucial insight is that once the product becomes less than `k`, all possible subarrays formed by selecting subsets of elements within the current window (from left to right) will also have a product strictly less than `k`.\n\nHence, whenever the product is valid, we add the current window size (`right - left + 1`) to the total count of subarrays.\n\nThe following slideshow provides a clearer insight into the underlying approach:\n\n!?!../Documents/713/713_Sliding_Window.json:1020,500!?!\n\n\n#### Algorithm\n\n- Check if `k` is less than or equal to 1. In this case, no subarrays can have a product less than `k`, so return 0.\n- Initialize the variables `totalCount` to 0, to store the final count of subarrays with a product less than `k`, and `product` to 1, representing the product of elements within the window (initially empty).\n- Use two pointers, `left` and `right`, to define the sliding window. Iterate through the `nums` array using a for loop until `right` reaches the end.\n  - Inside the loop, multiply the current `product` by the element at the right pointer (`nums[right]`). This effectively includes the new element in the window.\n  - While the current `product` is greater than or equal to `k`, the window needs to shrink to exclude elements that make the product exceed or equal to `k`.\n    - Divide the `product` by the element at the left pointer (`nums[left]`).\n    - Increment `left` by 1 to move the window one position to the right, effectively excluding the leftmost element.\n  - Update the `totalCount` by adding the number of valid subarrays with the current window size, which is `right - left + 1`.\n- Return the `totalCount`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3bqwMaz3/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3bqwMaz3\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `nums`.\n\n* Time complexity: $O(n)$\n\n    The algorithm iterates through the input array `nums` using a single for loop. Inside the loop, there are nested operations for shrinking the window, but since `left` is incremented a total number of `n` times during the whole array traversal, each element in the array is visited at most twice. \n    \n    The nested loop terminates when the product becomes less than `k`, and this can only happen at most `n` times total (once for each element). Therefore, the overall time complexity is $2n$, which we describe as $O(n)$. \n\n* Space complexity: $O(1)$\n\n    The algorithm uses a constant amount of extra space for variables like `totalCount`, `product`, `left`, and `right`. These variables do not depend on the size of the input array. Therefore, the space complexity is considered constant, denoted as $O(1)$.\n\n---\n\n> **Note:** The below approach is generally not anticipated in an interview setting, as many individuals might not be familiar with logarithmic functions, having either forgotten them or not utilized them extensively. So, it's tough for them to come up with this idea on the spot. Moreover, the sliding window approach remains the optimal solution to this problem.\n\n### Approach 2: Using Binary Search\n\n#### Intuition\n\n[Logarithms](https://en.wikipedia.org/wiki/Logarithm) have the property that the sum of logarithms is exactly equal to the logarithm of the product: $\\log(a) + \\log(b) = \\log(ab)$. This property allows us to convert the product of elements in a subarray into the sum of the logarithms of those elements.\n\nThe motivation for this is that the product of some arbitrary subarray may be way too large (potentially $1000^{50000}$).\n\nInteger overflow occurs when the result of an arithmetic operation exceeds the maximum value represented by the data type. This can happen when computing the product of elements in a large subarray, as the result can quickly surpass the integer's capacity, leading to incorrect values due to overflow.\n\nTo mitigate this, we can convert the product operation into a summation of logarithms. Logarithms allow the representation of large values within a manageable range, minimizing the risk of overflow while maintaining accuracy.\n\nThe first step is to transform the problem from finding products to finding sums. This is done by taking the natural logarithm (log) of each element in the array.\n\nThen a prefix sum array (`logsPrefixSum`) is calculated, where each element is the sum of the logarithms of all elements up to that point in the original array. This will allow us to quickly determine if a subarray's sum of logarithms is less than a certain value. Because the prefix sum is a monotonically increasing array, we can use binary search to find valid subarrays.\n\nFor each element in the array, a binary search is performed to find the number of subarrays starting from that element whose sum of logarithms is less than the sum of the logarithms of the current element and `log(K)`. This is done by comparing the midpoint of the search space with the sum of the logarithms of the current element and `log(K)`. If the midpoint is too high, the search space is narrowed to the left; otherwise, it's narrowed to the right. The number of subarrays found is added to the total count.\n\nLogarithmic comparisons have an issue due to the finite precision in floating-point number representation. That is, logarithmic functions can lead to very small differences between numbers that should be equal, especially when dealing with large or small values.\n\nThe product rule is $\\log(a \\cdot b) == \\log(a) + \\log(b)$, but these expressions may not be evaluated as equivalent due to floating-point representation in the computer. It may be $\\log(a \\cdot b) > \\log(a) + \\log(b)$ or $\\log(a \\cdot b) < \\log(a) + \\log(b)$ . When we transform `x` to `log(x)`, we introduce a possible bug.\n\nTo prevent this from causing an issue, we subtract `1e-9` (which is a very small number, 0.000000001), in the comparison condition as a precautionary measure to handle potential precision issues that might arise due to the nature of logarithmic values. This helps mitigate the effect of these precision errors by providing a small buffer or tolerance in the comparison. Even though logarithmic values tend to spread out differences across a wider range, there can still be cases where very close values need to be distinguished, and small discrepancies can occur due to finite precision.\n\nIn essence, it ensures that if `logsPrefixSum[mid]` is very close to `logsPrefixSum[i] + logK`, the former will still be considered less than the latter rather than failing the condition due to slight numerical discrepancies.\n\nThis kind of adjustment is common in numerical math computations where precision matters, especially in conditional algorithms where small discrepancies could lead to incorrect results or sometimes infinite loops.\n\n#### Algorithm\n \n- Check if `k` (target product) is 0. If true, return 0 (no subarrays possible).\n- Calculate the logarithm of `k` and store it in `logK`.\n- Create a vector `logsPrefixSum` of size `nums.size() + 1` to store the prefix sum of logarithms of elements in `nums`.\n- Calculate the prefix sum by iterating over `nums` and adding the logarithm of each element to the previous prefix sum. This creates a running sum of logarithms for efficient product calculation later.\n- Initialize `totalCount` to 0, which will keep track of the total number of subarrays with a product less than `k`.\n- Iterate through `logsPrefixSum` using a loop with index `currIdx`. This loop considers each element (`nums[currIdx]`) as the starting point of a potential subarray.\n  - Inside the loop, initialize two variables, `low` and `high`, to `currIdx + 1` and `m (nums.size() + 1)`, respectively.\n  - Enter a binary search loop to find the first element in `logsPrefixSum` where the subarray product (based on logarithms) exceeds `k`.\n    - Calculate the middle index `mid` between `low` and `high`.\n    - Compare the prefix sum at `mid` with the target prefix sum (`logsPrefixSum[currIdx] + logK`). Here, a small tolerance (`-1e-9`) is used to handle floating-point precision issues.\n    - If the prefix sum at `mid` is less than the target, it means the subarray product ending at `mid` might still be less than `k`.\n      - Move `low` to `mid + 1` to search in the right half of the remaining subarray.\n    - Otherwise, the subarray product ending at `mid` or elements beyond `mid` might exceed `k`.\n      - Move `high` to `mid` to continue searching in the left half for the first exceeding element.\n  - After the binary search loop, the `low` index points to the first element in `logsPrefixSum` where the subarray product (based on logarithms) exceeds `k`. Increment `totalCount` by the number of elements between `currIdx` (inclusive) and `low` (exclusive). This represents the number of valid subarrays ending at `currIdx` with a product less than `k`.\n- Finally, return `totalCount`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Ja6nxkvo/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Ja6nxkvo\"></iframe>\n\n#### Complexity Analysis\n\nLet `n` be the length of the `nums` array.\n\n* Time complexity: $O(n \\cdot \\log(n))$\n\n    The time complexity of the overall algorithm is $O(n \\cdot \\log(n))$ due to the binary search performed in each iteration of the outer loop.\n\n* Space complexity: $O(n)$\n\n    The space complexity is $O(n)$ due to the list `logsPrefixSum`, storing logarithmic prefix sums of `nums`, whose length equals that of `nums`.\n\n---\n\n<details>\n<summary><b>Click Here for Discussion on the Tradeoffs of the Approaches</b></summary>\n\n- The sliding window approach is efficient for finding subarrays with a product less than a given value, but it relies on the fact that the integers in the array are positive. This is because when multiplying positive integers, the product will always be positive, and the product of any number of positive integers will also be positive.\n\n- On the other hand, the binary search approach is more versatile and can handle arrays containing both positive and negative integers with some modifications. This is because it operates on the logarithms of the elements rather than the elements themselves.\n\n- After transforming the elements into their logarithmic values, the algorithm compares these values to determine the subarrays with a product less than `k`. However, direct logarithmic values of negative numbers are not defined in the real number scale. Therefore, to handle negative numbers, appropriate shifting of the elements may be necessary to ensure that the logarithmic values used in the algorithm are valid and meaningful.\n\n</details>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

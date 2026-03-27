@@ -1,0 +1,143 @@
+{
+  "questionId": "199",
+  "questionFrontendId": "199",
+  "title": "Binary Tree Right Side View",
+  "titleSlug": "binary-tree-right-side-view",
+  "difficulty": "Medium",
+  "content": "<p>Given the <code>root</code> of a binary tree, imagine yourself standing on the <strong>right side</strong> of it, return <em>the values of the nodes you can see ordered from top to bottom</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">root = [1,2,3,null,5,null,4]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[1,3,4]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/11/24/tmpd5jn43fs-1.png\" style=\"width: 400px; height: 207px;\" /></p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">root = [1,2,3,4,null,null,null,5]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[1,3,4,5]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/11/24/tmpkpe40xeh-1.png\" style=\"width: 400px; height: 214px;\" /></p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">root = [1,null,3]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[1,3]</span></p>\n</div>\n\n<p><strong class=\"example\">Example 4:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">root = []</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[]</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[0, 100]</code>.</li>\n\t<li><code>-100 &lt;= Node.val &lt;= 100</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"rightSideView\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<integer>\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"2.2M\", \"totalSubmission\": \"3.1M\", \"totalAcceptedRaw\": 2189374, \"totalSubmissionRaw\": 3137474, \"acRate\": \"69.8%\"}",
+  "likes": 13410,
+  "dislikes": 1089,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Populating Next Right Pointers in Each Node\", \"titleSlug\": \"populating-next-right-pointers-in-each-node\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Boundary of Binary Tree\", \"titleSlug\": \"boundary-of-binary-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,null,5,null,4]",
+    "[1,2,3,4,null,null,null,5]",
+    "[1,null,3]",
+    "[]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 12, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"more_than_six_months\": [{\"timesEncountered\": 23, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 10, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 9, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 8, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 4, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"wix\", \"name\": \"Wix\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 2, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}]}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> rightSideView(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public List<Integer> rightSideView(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def rightSideView(self, root: Optional[TreeNode]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def rightSideView(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number[]}\n */\nvar rightSideView = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction rightSideView(root: TreeNode | null): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public IList<int> RightSideView(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* rightSideView(struct TreeNode* root, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc rightSideView(root *TreeNode) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun rightSideView(root: TreeNode?): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func rightSideView(_ root: TreeNode?) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn right_side_view(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer[]}\ndef right_side_view(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer[]\n     */\n    function rightSideView($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  List<int> rightSideView(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def rightSideView(root: TreeNode): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec right_side_view(root :: TreeNode.t | nil) :: [integer]\n  def right_side_view(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec right_side_view(Root :: #tree_node{} | null) -> [integer()].\nright_side_view(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (right-side-view root)\n  (-> (or/c tree-node? #f) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "954",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n\n<div>\n  <div class=\"video-container\">\n    <iframe src=\"https://player.vimeo.com/video/725364159?texttrack=en-x-autogenerated\" frameborder=\"0\"\n      allow=\"autoplay; fullscreen\"></iframe>\n  </div>\n</div>\n\n\n## Solution\n\n---\n\n### Overview\n\n**DFS vs. BFS**\n\nThere are two ways to traverse the tree: DFS _depth first search_ and BFS _breadth first search_. Here is a small summary \n\n![diff](../Figures/199_rewrite/traversals.png)\n\nBFS traverses level by level, and DFS first goes to the leaves.\n\n![diff](../Figures/199_rewrite/dfs_bfs2.png) \n\n> Which approach to choose, BFS or DFS? \n\n- The problem is to return a list of the last elements from all levels, so it's way more natural to implement BFS here. \n\n- Time complexity is the same $$\\mathcal{O}(N)$$ both for DFS and BFS since one has to visit all nodes.\n\n- Space complexity is $$\\mathcal{O}(H)$$ for DFS and $$\\mathcal{O}(D)$$ for BFS, where $$H$$ is a tree height, and $$D$$ is a tree diameter. They both result in $$\\mathcal{O}(N)$$ space in the worst-case scenarios: skewed tree for DFS and complete tree for BFS. \n\nBFS wins for this problem, so let's use the opportunity to check out three different BFS implementations with the queue.\n\n**BFS implementation**  \n\nAll three implementations use the queue in a standard BFS way:\n\n- Push the root into the queue. \n\n- Pop-out a node from the _left_.\n \n- Push the _left_ child into the queue, and then push the _right_ child. \n\n![diff](../Figures/199_rewrite/implem2.png)\n\n**Three BFS approaches**\n\nThe difference is how to find the end of the level, i.e. the rightmost element:\n\n- Two queues, one for the previous level and one for the current.\n\n- One queue with a sentinel to mark the end of the level.\n\n- One queue + level size measurement. \n\n<br />\n<br />\n\n\n---\n### Approach 1: BFS: Two Queues\n\nLet's use two queues: one for the current level, and one for the next. The idea is to pop the nodes one by one from the current level and push their children into the next level queue. Each time the current queue is empty, we have the right side element in our hands. \n\n![diff](../Figures/199_rewrite/levels.png)\n\n**Algorithm**\n\n- Initiate the list of the right side view `rightside`.\n\n- Initiate two queues: one for the current level, and one for the next. Add root into `nextLevel` queue.\n\n- While `nextLevel` queue is not empty:\n\n    - Initiate the current level: `currLevel = nextLevel`, and empty the next level `nextLevel`. \n    \n    - While the current level queue is not empty:\n\n        - Pop out a node from the current level queue.\n        \n        - Add first _left_ and then _right_ child node into `nextLevel` queue.\n    \n    - Now `currLevel` is empty, and the node we have in hands is the last one, and makes a part of the right side view. Add it into `rightside`.\n    \n- Return `rightside`.  \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/khYcAmgL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"khYcAmgL\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ since one has to visit each node. \n    \n* Space complexity: $$\\mathcal{O}(D)$$ to keep the queues, where $$D$$ is a tree diameter. Let's use the last level to estimate the queue size. This level could contain up to $$N/2$$ tree nodes in the case of [complete binary tree](https://leetcode.com/problems/count-complete-tree-nodes/).    \n<br />\n<br />\n\n\n---\n### Approach 2: BFS: One Queue + Sentinel\n\nAnother approach is to push all the nodes in one queue and to use a [sentinel node](https://en.wikipedia.org/wiki/Sentinel_node) to separate the levels. Typically, one could use `null` as a sentinel.\n\n![diff](../Figures/199_rewrite/sentinel.png)\n\nThe first step is to initiate the first level: `root` + `null` as a sentinel. Once it's done, continue to pop the nodes one by one from the left and push their children to the right. Stop each time the current node is `null` because it means we hit the end of the current level. Each stop is a time to update a right-side view list and to push `null` in the queue to mark the end of the next level.\n\n**Algorithm**\n\n- Initiate the list of the right side view `rightside`.\n\n- Initiate the queue by adding a root. Add `null` sentinel to mark the end of the first level. \n\n- Initiate the current node as `root`. \n\n- While the queue is not empty:\n\n    - Save the previous node `prev = curr` and pop the current node from the queue `curr = queue.poll()`. \n    \n    - While the current node is not `null`:\n\n        - Add first _left_ and then _right_ child node into the queue.\n        \n        - Update both previous and current nodes: `prev = curr`, `curr = queue.poll()`.\n    \n    - Now the current node is null, _i.e._ we reached the end of the current level. Hence the previous node is the rightmost one and makes a part of the right side view. Add it into `rightside`.\n    \n    - If the queue is not empty, push the null node as a sentinel, to mark the end of the next level.\n    \n- Return `rightside`.  \n\n**Implementation**\n\nNote, that `ArrayDeque` in Java doesn't support null elements, and hence the data structure to use here is `LinkedList`.  \n\n<iframe src=\"https://leetcode.com/playground/jhVsptCc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"jhVsptCc\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ since one has to visit each node. \n    \n* Space complexity: $$\\mathcal{O}(D)$$ to keep the queues, where $$D$$ is a tree diameter. Let's use the last level to estimate the queue size. This level could contain up to $$N/2$$ tree nodes in the case of [complete binary tree](https://leetcode.com/problems/count-complete-tree-nodes/).   \n<br />\n<br />\n\n\n---\n### Approach 3: BFS: One Queue + Level Size Measurements\n\nInstead of using the sentinel, we could write down the length of the current level.\n\n![diff](../Figures/199_rewrite/length.png)\n\n**Algorithm**\n\n- Initiate the list of the right side view `rightside`.\n\n- Initiate the queue by adding a root. \n\n- While the queue is not empty:\n\n    - Write down the length of the current level: `levelLength = queue.size()`.\n\n    - Iterate over `i` from `0` to `level_length - 1`:\n    \n        - Pop the current node from the queue: `node = queue.poll()`.\n        \n        - If `i == levelLength - 1`, then it's the last node in the current level, push it to `rightsize` list.\n\n        - Add first _left_ and then _right_ child node into the queue.\n    \n- Return `rightside`. \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/MhUAMMwC/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"MhUAMMwC\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ since one has to visit each node. \n    \n* Space complexity: $$\\mathcal{O}(D)$$ to keep the queues, where $$D$$ is a tree diameter. Let's use the last level to estimate the queue size. This level could contain up to $$N/2$$ tree nodes in the case of [complete binary tree](https://leetcode.com/problems/count-complete-tree-nodes/).   \n<br />\n<br />\n\n\n___\n### Approach 4: Recursive DFS\n\nEveryone likes recursive DFS, so let's add it here as well. The idea is simple: to traverse the tree level by level, starting each time from the rightmost child.  \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/7q2wW44a/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"7q2wW44a\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ since one has to visit each node. \n    \n* Space complexity: $$\\mathcal{O}(H)$$ to keep the recursion stack, where $$H$$ is a tree height. The worst-case situation is a skewed tree when $$H = N$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

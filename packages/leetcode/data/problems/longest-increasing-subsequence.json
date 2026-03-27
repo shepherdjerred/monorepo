@@ -1,0 +1,138 @@
+{
+  "questionId": "300",
+  "questionFrontendId": "300",
+  "title": "Longest Increasing Subsequence",
+  "titleSlug": "longest-increasing-subsequence",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code>, return <em>the length of the longest <strong>strictly increasing </strong></em><span data-keyword=\"subsequence-array\"><em><strong>subsequence</strong></em></span>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [10,9,2,5,3,7,101,18]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The longest increasing subsequence is [2,3,7,101], therefore the length is 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0,1,0,3,2,3]\n<strong>Output:</strong> 4\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [7,7,7,7,7,7,7]\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 2500</code></li>\n\t<li><code>-10<sup>4</sup> &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><b>Follow up:</b>&nbsp;Can you come up with an algorithm that runs in&nbsp;<code>O(n log(n))</code> time complexity?</p>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"lengthOfLIS\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"2.6M\", \"totalSubmission\": \"4.4M\", \"totalAcceptedRaw\": 2577230, \"totalSubmissionRaw\": 4354482, \"acRate\": \"59.2%\"}",
+  "likes": 22712,
+  "dislikes": 515,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Increasing Triplet Subsequence\", \"titleSlug\": \"increasing-triplet-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Russian Doll Envelopes\", \"titleSlug\": \"russian-doll-envelopes\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Length of Pair Chain\", \"titleSlug\": \"maximum-length-of-pair-chain\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Longest Increasing Subsequence\", \"titleSlug\": \"number-of-longest-increasing-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum ASCII Delete Sum for Two Strings\", \"titleSlug\": \"minimum-ascii-delete-sum-for-two-strings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Removals to Make Mountain Array\", \"titleSlug\": \"minimum-number-of-removals-to-make-mountain-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Longest Valid Obstacle Course at Each Position\", \"titleSlug\": \"find-the-longest-valid-obstacle-course-at-each-position\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make the Array K-Increasing\", \"titleSlug\": \"minimum-operations-to-make-the-array-k-increasing\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Longest Ideal Subsequence\", \"titleSlug\": \"longest-ideal-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Books You Can Take\", \"titleSlug\": \"maximum-number-of-books-you-can-take\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Longest Increasing Subsequence II\", \"titleSlug\": \"longest-increasing-subsequence-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Maximum Length of a Good Subsequence II\", \"titleSlug\": \"find-the-maximum-length-of-a-good-subsequence-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Maximum Length of a Good Subsequence I\", \"titleSlug\": \"find-the-maximum-length-of-a-good-subsequence-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Maximum Length of Valid Subsequence I\", \"titleSlug\": \"find-the-maximum-length-of-valid-subsequence-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Maximum Length of Valid Subsequence II\", \"titleSlug\": \"find-the-maximum-length-of-valid-subsequence-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Subsequence With Decreasing Adjacent Difference\", \"titleSlug\": \"longest-subsequence-with-decreasing-adjacent-difference\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[10,9,2,5,3,7,101,18]",
+    "[0,1,0,3,2,3]",
+    "[7,7,7,7,7,7,7]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"paypal\", \"name\": \"PayPal\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 4, \"slug\": \"square\", \"name\": \"Block\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"samsung\", \"name\": \"Samsung\"}, {\"timesEncountered\": 8, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 5, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"splunk\", \"name\": \"Splunk\"}, {\"timesEncountered\": 3, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 3, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 3, \"slug\": \"squarepoint-capital\", \"name\": \"Squarepoint Capital\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"autodesk\", \"name\": \"Autodesk\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int lengthOfLIS(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def lengthOfLIS(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def lengthOfLIS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar lengthOfLIS = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function lengthOfLIS(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LengthOfLIS(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int lengthOfLIS(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func lengthOfLIS(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun lengthOfLIS(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func lengthOfLIS(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn length_of_lis(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef length_of_lis(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function lengthOfLIS($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int lengthOfLIS(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def lengthOfLIS(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec length_of_lis(nums :: [integer]) :: integer\n  def length_of_lis(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec length_of_lis(Nums :: [integer()]) -> integer().\nlength_of_lis(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (length-of-lis nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1149",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Dynamic Programming\n\n**Realizing a Dynamic Programming Problem**\n\nThis problem has two important attributes that let us know it should be solved by dynamic programming. First, the question is asking for the maximum or minimum of something. Second, we have to make decisions that may depend on previously made decisions, which is very typical of a problem involving subsequences.\n\nAs we go through the input, each \"decision\" we must make is simple: is it worth it to consider this number? If we use a number, it may contribute towards an increasing subsequence, but it may also eliminate larger elements that came before it. For example, let's say we have `nums = [5, 6, 7, 8, 1, 2, 3]`. It isn't worth using the 1, 2, or 3, since using any of them would eliminate 5, 6, 7, and 8, which form the longest increasing subsequence. We can use dynamic programming to determine whether an element is worth using or not.\n\n**A Framework to Solve Dynamic Programming Problems**\n\nTypically, dynamic programming problems can be solved with three main components. If you're new to dynamic programming, this might be hard to understand but is extremely valuable to learn since **most dynamic programming problems can be solved this way**. \n\nFirst, we need some function or array that represents the answer to the problem from a given state. For many solutions on LeetCode, you will see this function/array named \"dp\". For this problem, let's say that we have an array `dp`. As just stated, this array needs to represent **the answer to the problem for a given state**, so let's say that `dp[i]` represents the length of the **longest increasing subsequence** that **ends with the $$i^{th}$$ element**. The \"state\" is one-dimensional since it can be represented with only one variable - the index `i`.\n\nSecond, we need a way to transition between states, such as `dp[5]` and `dp[7]`. This is called a **recurrence relation** and can sometimes be tricky to figure out. Let's say we know `dp[0]`, `dp[1]`, and `dp[2]`. How can we find `dp[3]` given this information? Well, since `dp[2]` represents the length of the longest increasing subsequence that ends with `nums[2]`, if `nums[3] > nums[2]`, then we can simply take the subsequence ending at `i = 2` and append `nums[3]` to it, increasing the length by 1. The same can be said for `nums[0]` and `nums[1]` if `nums[3]` is larger. Of course, we should try to maximize `dp[3]`, so we need to check all 3. Formally, the recurrence relation is: `dp[i] = max(dp[j] + 1) for all j where nums[j] < nums[i] and j < i`.\n\nThe third component is the simplest: we need a base case. For this problem, we can initialize every element of `dp` to `1`, since every element on its own is technically an increasing subsequence.\n\n!?!../Documents/300_LIS.json:960,540!?!\n\n\n**Algorithm**\n\n1. Initialize an array `dp` with length `nums.length` and all elements equal to 1. `dp[i]` represents the length of the longest increasing subsequence that ends with the element at index `i`.\n\n2. Iterate from `i = 1` to `i = nums.length - 1`. At each iteration, use a second for loop to iterate from `j = 0` to `j = i - 1` (all the elements before i). For each element before `i`, check if that element is smaller than `nums[i]`. If so, set `dp[i] = max(dp[i], dp[j] + 1)`.\n\n3. Return the max value from `dp`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/RUN8U5JY/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"RUN8U5JY\"></iframe>\n\n\n**Complexity Analysis**\n\nGiven $$N$$ as the length of `nums`,\n\n* Time complexity: $$O(N^2)$$\n\n    We use two nested for loops resulting in $$1 + 2 + 3 + 4 + ... + N = \\dfrac {N * (N + 1)}{2}$$ operations, resulting in a time complexity of $$O(N^2)$$. \n\n* Space complexity: $$O(N)$$\n\n    The only extra space we use relative to input size is the `dp` array, which is the same length as `nums`.\n    \n<br/>\n\n---\n\n### Approach 2: Intelligently Build a Subsequence\n\n**Intuition**\n\nAs stated in the previous approach, the difficult part of this problem is deciding if an element is worth using or not. Consider the example `nums = [8, 1, 6, 2, 3, 10]`. Let's try to build an increasing subsequence starting with an empty one: `sub = []`. \n\n- At the first element `8`, we might as well take it since it's better than nothing, so `sub = [8]`. \n\n- At the second element `1`, we can't increase the length of the subsequence since `8 >= 1`, so we have to choose only one element to keep. Well, this is an easy decision, let's take the `1` since there may be elements later on that are greater than `1` but less than `8`, now we have `sub = [1]`. \n\n- At the third element `6`, we can build on our subsequence since `6 > 1`, now `sub = [1, 6]`.\n\n- At the fourth element `2`, we can't build on our subsequence since `6 >= 2`, but can we improve on it for the future? Well, similar to the decision we made at the second element, if we replace the `6` with `2`, we will open the door to using elements that are greater than `2` but less than `6` in the future, so `sub = [1, 2]`.\n\n- At the fifth element `3`, we can build on our subsequence since `3 > 2`. Notice that this was only possible because of the swap we made in the previous step, so `sub = [1, 2, 3]`.\n\n- At the last element `10`, we can build on our subsequence since `10 > 3`, giving a final subsequence `sub = [1, 2, 3, 10]`. The length of `sub` is our answer.\n\nIt appears the best way to build an increasing subsequence is: for each element `num`, if `num` is greater than the largest element in our subsequence, then add it to the subsequence. Otherwise, perform a linear scan through the subsequence starting from the smallest element and replace the first element that is greater than or equal to `num` with `num`. This opens the door for elements that are greater than `num` but less than the element replaced to be included in the sequence. \n\nOne thing to add: this algorithm does not always generate a valid subsequence of the input, but the length of the subsequence will always equal the length of the longest increasing subsequence. For example, with the input `[3, 4, 5, 1]`, at the end we will have `sub = [1, 4, 5]`, which isn't a subsequence, but the length is still correct. The length remains correct because the length only changes when a new element is larger than any element in the subsequence. In that case, the element is appended to the subsequence instead of replacing an existing element.\n\n**Algorithm**\n\n1. Initialize an array `sub` which contains the first element of `nums`.\n\n2. Iterate through the input, starting from the second element. For each element `num`:\n    - If `num` is greater than any element in `sub`, then add `num` to `sub`.\n    - Otherwise, iterate through `sub` and find the first element that is greater than or equal to `num`. Replace that element with `num`.\n\n3. Return the length of `sub`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/EgfBujDr/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"EgfBujDr\"></iframe>\n\n\n**Complexity Analysis**\n\nGiven $$N$$ as the length of `nums`,\n\n* Time complexity: $$O(N^2)$$\n\n    This algorithm will have a runtime of $$O(N^2)$$ only in the worst case. Consider an input where the first half is `[1, 2, 3, 4, ..., 99998, 99999]`, then the second half is `[99998, 99998, 99998, ..., 99998, 99998]`. We would need to iterate $$(N / 2)^2$$ times for the second half because there are $$N / 2$$ elements equal to `99998`, and a linear scan for each one takes $$N / 2$$ iterations. This gives a time complexity of $$O(N^2)$$.\n\n    Despite having the same time complexity as the previous approach, in the best and average cases, it is much more efficient.\n\n* Space complexity: $$O(N)$$\n\n    When the input is strictly increasing, the `sub` array will be the same size as the input.\n    \n<br/>\n\n---\n\n### Approach 3: Improve With Binary Search\n\n**Intuition**\n\nIn the previous approach, when we have an element `num` that is not greater than all the elements in `sub`, we perform a linear scan to find the first element in `sub` that is greater than or equal to `num`. Since `sub` is in sorted order, we can use binary search instead to greatly improve the efficiency of our algorithm.\n\n**Algorithm**\n\n1. Initialize an array `sub` which contains the first element of `nums`.\n\n2. Iterate through the input, starting from the second element. For each element `num`:\n    - If `num` is greater than any element in `sub`, then add `num` to `sub`.\n    - Otherwise, perform a binary search in `sub` to find the smallest element that is greater than or equal to `num`. Replace that element with `num`.\n\n3. Return the length of `sub`.\n\n**Implementation**\n\nIn Python, the [bisect](https://docs.python.org/3/library/bisect.html) module provides super handy functions that does binary search for us.\n\n<iframe src=\"https://leetcode.com/playground/EKjiakeX/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"EKjiakeX\"></iframe>\n\n\n**Complexity Analysis**\n\nGiven $$N$$ as the length of `nums`,\n\n* Time complexity: $$O(N \\cdot \\log(N))$$\n\n    Binary search uses $$\\log(N)$$ time as opposed to the $$O(N)$$ time of a linear scan, which improves our time complexity from $$O(N^2)$$ to $$O(N \\cdot \\log(N))$$.\n\n* Space complexity: $$O(N)$$\n\n    When the input is strictly increasing, the `sub` array will be the same size as the input.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

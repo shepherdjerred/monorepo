@@ -1,0 +1,153 @@
+{
+  "questionId": "653",
+  "questionFrontendId": "653",
+  "title": "Two Sum IV - Input is a BST",
+  "titleSlug": "two-sum-iv-input-is-a-bst",
+  "difficulty": "Easy",
+  "content": "<p>Given the <code>root</code> of a binary search tree and an integer <code>k</code>, return <code>true</code> <em>if there exist two elements in the BST such that their sum is equal to</em> <code>k</code>, <em>or</em> <code>false</code> <em>otherwise</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/21/sum_tree_1.jpg\" style=\"width: 400px; height: 229px;\" />\n<pre>\n<strong>Input:</strong> root = [5,3,6,2,4,null,7], k = 9\n<strong>Output:</strong> true\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/21/sum_tree_2.jpg\" style=\"width: 400px; height: 229px;\" />\n<pre>\n<strong>Input:</strong> root = [5,3,6,2,4,null,7], k = 28\n<strong>Output:</strong> false\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 10<sup>4</sup>]</code>.</li>\n\t<li><code>-10<sup>4</sup> &lt;= Node.val &lt;= 10<sup>4</sup></code></li>\n\t<li><code>root</code> is guaranteed to be a <strong>valid</strong> binary search tree.</li>\n\t<li><code>-10<sup>5</sup> &lt;= k &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"findTarget\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"754.8K\", \"totalSubmission\": \"1.2M\", \"totalAcceptedRaw\": 754751, \"totalSubmissionRaw\": 1195701, \"acRate\": \"63.1%\"}",
+  "likes": 7272,
+  "dislikes": 292,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Two Sum\", \"titleSlug\": \"two-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Two Sum II - Input Array Is Sorted\", \"titleSlug\": \"two-sum-ii-input-array-is-sorted\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Two Sum III - Data structure design\", \"titleSlug\": \"two-sum-iii-data-structure-design\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Two Sum BSTs\", \"titleSlug\": \"two-sum-bsts\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,3,6,2,4,null,7]\n9",
+    "[5,3,6,2,4,null,7]\n28"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 2, \"slug\": \"samsung\", \"name\": \"Samsung\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Search Tree",
+      "slug": "binary-search-tree"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    bool findTarget(TreeNode* root, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public boolean findTarget(TreeNode root, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def findTarget(self, root: Optional[TreeNode], k: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def findTarget(self, root, k):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type k: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {number} k\n * @return {boolean}\n */\nvar findTarget = function(root, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction findTarget(root: TreeNode | null, k: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public bool FindTarget(TreeNode root, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nbool findTarget(struct TreeNode* root, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc findTarget(root *TreeNode, k int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun findTarget(root: TreeNode?, k: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func findTarget(_ root: TreeNode?, _ k: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn find_target(root: Option<Rc<RefCell<TreeNode>>>, k: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @param {Integer} k\n# @return {Boolean}\ndef find_target(root, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @param Integer $k\n     * @return Boolean\n     */\n    function findTarget($root, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  bool findTarget(TreeNode? root, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def findTarget(root: TreeNode, k: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec find_target(root :: TreeNode.t | nil, k :: integer) :: boolean\n  def find_target(root, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec find_target(Root :: #tree_node{} | null, K :: integer()) -> boolean().\nfind_target(Root, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (find-target root k)\n  (-> (or/c tree-node? #f) exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "226",
+    "content": "[TOC]\n\n\n## Solution\n\n---\n### Approach #1 Using HashSet[Accepted]\n\nThe simplest solution will be to traverse over the whole tree and consider every possible pair of nodes to determine if they can form the required sum $$k$$. But, we can improve the process if we look at a little catch here.\n\nIf the sum of two elements $$x + y$$ equals $$k$$, and we already know that $$x$$ exists in the given tree, we only need to check if an element $$y$$ exists in the given tree, such that $$y = k - x$$. Based on this simple catch, we can traverse the tree in both the directions(left child and right child) at every step. We keep a track of the elements which have been found so far during the tree traversal, by putting them into a $$set$$. \n\nFor every current node with a value of $$p$$, we check if $$k-p$$ already exists in the array. If so, we can conclude that the sum $$k$$ can be formed by using the two elements from the given tree. Otherwise, we put this value $$p$$ into the $$set$$.\n\nIf even after the whole tree's traversal, no such element $$p$$ can be found, the sum $$k$$ can't be formed by using any two elements.\n\n<iframe src=\"https://leetcode.com/playground/NwhifNbv/shared\" frameBorder=\"0\" name=\"NwhifNbv\" width=\"100%\" height=\"309\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. The entire tree is traversed only once in the worst case. Here, $$n$$ refers to the number of nodes in the given tree.\n\n* Space complexity : $$O(n)$$. The size of the $$set$$ can grow upto $$n$$ in the worst case.\n\n---\n### Approach #2 Using BFS and HashSet [Accepted]\n\n**Algorithm**\n\nIn this approach, the idea of using the $$set$$ is the same as in the last approach. But, we can carry on the traversal in a Breadth First Search manner, which is a very common traversal method used in Trees. The way BFS is used can be summarized as given below. We start by putting the root node into a $$queue$$. We also maintain a $$set$$ similar to the last approach. Then, at every step, we do as follows:\n\n1. Remove an element, $$p$$,  from the front of the $$queue$$. \n\n2. Check if the element $$k-p$$ already exists in the $$set$$. If so, return True.\n\n3. Otherwise, add this element, $$p$$ to the $$set$$. Further, add the right and the left child nodes of the current node to the back of the $$queue$$.\n\n4. Continue steps 1. to 3. till the $$queue$$ becomes empty. \n\n5. Return false if the $$queue$$ becomes empty.\n\nBy following this process, we traverse the tree on a level by level basis. \n\n<iframe src=\"https://leetcode.com/playground/7SgfKz2F/shared\" frameBorder=\"0\" name=\"7SgfKz2F\" width=\"100%\" height=\"377\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. We need to traverse over the whole tree once in the worst case.  Here, $$n$$ refers to the number of nodes in the given tree.\n\n* Space complexity : $$O(n)$$. The size of the $$set$$ can grow at most upto $$n$$. \n\n---\n### Approach #3 Using BST [Accepted]\n\n**Algorithm**\n\nIn this approach, we make use of the fact that the given tree is a Binary  Search Tree. Now, we know that the inorder traversal of a BST gives the nodes in ascending order. Thus, we do the inorder traversal of the given tree and put the results in a $$list$$ which contains the nodes sorted in ascending order.\n\nOnce this is done, we make use of two pointers $$l$$ and $$r$$ pointing to the beginning and the end of the sorted $$list$$. Then, we do as follows:\n\n1. Check if the sum of the elements pointed by $$l$$ and $$r$$ is equal to the required sum $$k$$. If so, return a True immediately.\n\n2. Otherwise, if the sum of the current two elements is lesser than the required sum $$k$$, update $$l$$ to point to the next element. This is done, because, we need to increase the sum of the current elements, which can only be done by increasing the smaller number.\n\n3. Otherwise, if the sum of the current two elements is larger than the required sum $$k$$, update $$r$$ to point to the previous element. This is done, because, we need to decrease the sum of the current elements, which can only be done by reducing the larger number. \n\n4. Continue steps 1. to 3. till the left pointer $$l$$ crosses the right pointer $$r$$.\n\n5. If the two pointers cross each other, return a False value.\n\nNote that we need not increase the larger number or reduce the smaller number in any case. This happens because, in case, a number larger than the current $$list[r]$$ is needed to form the required sum $$k$$, the right pointer could not have been reduced in the first place. The similar argument holds true for not reducing the smaller number as well.\n\n\n<iframe src=\"https://leetcode.com/playground/chZDDTAy/shared\" frameBorder=\"0\" name=\"chZDDTAy\" width=\"100%\" height=\"462\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. We need to traverse over the whole tree once to do the inorder traversal.  Here, $$n$$ refers to the number of nodes in the given tree.\n\n* Space complexity : $$O(n)$$. The sorted $$list$$ will contain $$n$$ elements.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

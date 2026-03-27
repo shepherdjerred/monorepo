@@ -1,0 +1,129 @@
+{
+  "questionId": "461",
+  "questionFrontendId": "461",
+  "title": "Hamming Distance",
+  "titleSlug": "hamming-distance",
+  "difficulty": "Easy",
+  "content": "<p>The <a href=\"https://en.wikipedia.org/wiki/Hamming_distance\" target=\"_blank\">Hamming distance</a> between two integers is the number of positions at which the corresponding bits are different.</p>\n\n<p>Given two integers <code>x</code> and <code>y</code>, return <em>the <strong>Hamming distance</strong> between them</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> x = 1, y = 4\n<strong>Output:</strong> 2\n<strong>Explanation:</strong>\n1   (0 0 0 1)\n4   (0 1 0 0)\n       &uarr;   &uarr;\nThe above arrows point to positions where the corresponding bits are different.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> x = 3, y = 1\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;=&nbsp;x, y &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Note:</strong> This question is the same as <a href=\"https://leetcode.com/problems/minimum-bit-flips-to-convert-number/description/\" target=\"_blank\"> 2220: Minimum Bit Flips to Convert Number.</a></p>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"hammingDistance\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"x\",\r\n      \"type\": \"integer\"\r\n    },\r\n    {\r\n      \"name\": \"y\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"685.7K\", \"totalSubmission\": \"894.2K\", \"totalAcceptedRaw\": 685683, \"totalSubmissionRaw\": 894170, \"acRate\": \"76.7%\"}",
+  "likes": 4032,
+  "dislikes": 231,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of 1 Bits\", \"titleSlug\": \"number-of-1-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Total Hamming Distance\", \"titleSlug\": \"total-hamming-distance\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "1\n4",
+    "3\n1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int hammingDistance(int x, int y) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int hammingDistance(int x, int y) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def hammingDistance(self, x: int, y: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def hammingDistance(self, x, y):\n        \"\"\"\n        :type x: int\n        :type y: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} x\n * @param {number} y\n * @return {number}\n */\nvar hammingDistance = function(x, y) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function hammingDistance(x: number, y: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int HammingDistance(int x, int y) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int hammingDistance(int x, int y) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func hammingDistance(x int, y int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun hammingDistance(x: Int, y: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func hammingDistance(_ x: Int, _ y: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn hamming_distance(x: i32, y: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} x\n# @param {Integer} y\n# @return {Integer}\ndef hamming_distance(x, y)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $x\n     * @param Integer $y\n     * @return Integer\n     */\n    function hammingDistance($x, $y) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int hammingDistance(int x, int y) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def hammingDistance(x: Int, y: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec hamming_distance(x :: integer, y :: integer) :: integer\n  def hamming_distance(x, y) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec hamming_distance(X :: integer(), Y :: integer()) -> integer().\nhamming_distance(X, Y) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (hamming-distance x y)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "849",
+    "content": "[TOC]\n\n## Solution\n\n---\n#### Intuition\n\n[Hamming distance](https://en.wikipedia.org/wiki/Hamming_distance) is an interesting metric that is widely applied in several domains, _e.g._ in coding theory for error detection, in information theory for quantifying the difference between strings.\n\n>The Hamming distance between two **integer** numbers is the number of positions at which the corresponding bits are different.\n\nGiven the above definition, it might remind one of the bit operation called [XOR](https://en.wikipedia.org/wiki/Bitwise_operation#XOR) which outputs `1` _if and only if_ the input bits are different. \n\n![pic](../Figures/461/461_XOR.png)\n\n>As a result, in order to measure the hamming distance between `x` and `y`, we can first do `x XOR y` operation, then we simply count the number of bit `1` in the result of XOR operation.\n\nWe now convert the original problem into a bit-counting problem. There are several ways to count the bits though, as we will discuss in the following sections.\n\n### Approach 1: Built-in BitCounting Functions\n\n**Intuition**\n\nFirst of all, let us talk of the elephant in the room. As one can imagine, we have various built-in functions that could count the bit `1` for us, in all (or at least most of) programming languages. So if this is the task that one is asked in a project, then one should probably just go for it, rather than reinventing the wheel. We given two examples in the following.\n\nNow, since this is a LeetCode problem, some of you would argue that using the built-in function is like _\"implementing a LinkedList with LinkedList\"_, which we fully second as well. So no worry, we will see later some fun hand-crafted algorithms for bit counting.\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/VodiqY97/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"VodiqY97\"></iframe>\n\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(1)$$\n\n    - There are two operations in the algorithm. First, we do the XOR operation which takes a constant time.\n\n    - Then, we call the built-in bitCount function. In the worst scenario, the function would take $$\\mathcal{O}(k)$$ time where $$k$$ is the number of bits for an integer number. Since the Integer type is of fixed size in both Python and Java, the overall time complexity of the algorithm becomes constant, regardless the input numbers.\n\n- Space Complexity: $$\\mathcal{O}(1)$$, a temporary memory of constant size is consumed, to hold the result of XOR operation.\n    - We assume that the built-in function also takes a constant space.\n<br/>\n<br/>\n\n---\n### Approach 2: Bit Shift\n\n**Intuition**\n\nIn order to count the number of bit `1`, we could _shift_ each of the bit to either the leftmost or the rightmost position and then check if the bit is one or not. \n\nMore precisely, we should do the [logical shift](https://en.wikipedia.org/wiki/Bitwise_operation#Logical_shift) where zeros are shifted in to replace the discarded bits.\n\n![pic](../Figures/461/461_shift.png)\n\nHere we adopt the right shift operation, where each bit would has its turn to be shifted to the rightmost position. Once shifted, we then check if the rightmost bit is one, which we can use either the `modulo` operation (_i.e._ `i % 2`) or the bit AND operation (_i.e._ `i & 1`). Both operations would _**mask out**_ the rest of the bits other than the rightmost bit.\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/NipkuPME/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"NipkuPME\"></iframe>\n\n\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(1)$$, since the Integer is of fixed size in Python and Java, the algorithm takes a constant time. For an Integer of 32 bit, the algorithm would take _at most_ 32 iterations.\n\n- Space Complexity: $$\\mathcal{O}(1)$$, a constant size of memory is used, regardless the input.\n<br/>\n<br/>\n\n---\n### Approach 3: Brian Kernighan's Algorithm\n\n**Intuition**\n\nIn the above approach, one might wonder that _\"rather than shifting the bits one by one, is there a faster way to count the bits of one ?\"_. And the answer is yes.\n\n>If we is asked to count the bits of one, as humans, rather than mechanically examining each bit, we could _**skip**_ the bits of zero in between the bits of one, _e.g._ `10001000`.\n\nIn the above example, after encountering the first bit of one at the rightmost position, it would be more efficient if we just jump at the next bit of one, skipping all the zeros in between.\n\nThis is the basic idea of the [Brian Kernighan's bit counting algorithm](http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan), which applies some smart bit and arithmetic operations to _**clear**_ the rightmost bit of one. Here is the secret recipe.\n\n>When we do AND bit operation between `number` and `number-1`, the rightmost bit of one in the original `number` would be cleared.\n\n![pic](../Figures/461/461_brian.png)\n\nBased on the above idea, we then can count the bits of one for the input of `10001000` in 2 iterations, rather than 8.\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/harXi46x/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"harXi46x\"></iframe>\n\nNote, according to the online book of [Bit Twiddling Hacks](http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan), the algorithm was published as an exercise in 1988, in the book of _the C Programming Language 2nd Ed_. (by **Brian W. Kernighan** and Dennis M. Ritchie), though on April 19, 2006 Donald Knuth pointed out that this method _\"was first published by Peter Wegner in CACM 3 (1960), 322. (Also discovered independently by Derrick Lehmer and published in 1964 in a book edited by Beckenbach.)\"_.\nBy the way, one can find many other tricks about bit operations in the aforementioned book.\n\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(1)$$.\n\n    - Similar as the approach of bit shift, since the size (_i.e._ bit number) of integer number is fixed, we have a constant time complexity.\n\n    - However, this algorithm would require less iterations than the bit shift approach, as we have discussed in the intuition.\n\n- Space Complexity: $$\\mathcal{O}(1)$$, a constant size of memory is used, regardless the input.\n<br/>\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

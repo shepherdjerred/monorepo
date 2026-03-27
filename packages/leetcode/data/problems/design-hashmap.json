@@ -1,0 +1,144 @@
+{
+  "questionId": "817",
+  "questionFrontendId": "706",
+  "title": "Design HashMap",
+  "titleSlug": "design-hashmap",
+  "difficulty": "Easy",
+  "content": "<p>Design a HashMap without using any built-in hash table libraries.</p>\n\n<p>Implement the <code>MyHashMap</code> class:</p>\n\n<ul>\n\t<li><code>MyHashMap()</code> initializes the object with an empty map.</li>\n\t<li><code>void put(int key, int value)</code> inserts a <code>(key, value)</code> pair into the HashMap. If the <code>key</code> already exists in the map, update the corresponding <code>value</code>.</li>\n\t<li><code>int get(int key)</code> returns the <code>value</code> to which the specified <code>key</code> is mapped, or <code>-1</code> if this map contains no mapping for the <code>key</code>.</li>\n\t<li><code>void remove(key)</code> removes the <code>key</code> and its corresponding <code>value</code> if the map contains the mapping for the <code>key</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;MyHashMap&quot;, &quot;put&quot;, &quot;put&quot;, &quot;get&quot;, &quot;get&quot;, &quot;put&quot;, &quot;get&quot;, &quot;remove&quot;, &quot;get&quot;]\n[[], [1, 1], [2, 2], [1], [3], [2, 1], [2], [2], [2]]\n<strong>Output</strong>\n[null, null, null, 1, -1, null, 1, null, -1]\n\n<strong>Explanation</strong>\nMyHashMap myHashMap = new MyHashMap();\nmyHashMap.put(1, 1); // The map is now [[1,1]]\nmyHashMap.put(2, 2); // The map is now [[1,1], [2,2]]\nmyHashMap.get(1);    // return 1, The map is now [[1,1], [2,2]]\nmyHashMap.get(3);    // return -1 (i.e., not found), The map is now [[1,1], [2,2]]\nmyHashMap.put(2, 1); // The map is now [[1,1], [2,1]] (i.e., update the existing value)\nmyHashMap.get(2);    // return 1, The map is now [[1,1], [2,1]]\nmyHashMap.remove(2); // remove the mapping for 2, The map is now [[1,1]]\nmyHashMap.get(2);    // return -1 (i.e., not found), The map is now [[1,1]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= key, value &lt;= 10<sup>6</sup></code></li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>put</code>, <code>get</code>, and <code>remove</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"MyHashMap\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"key\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"value\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"void\"\n      },\n      \"name\": \"put\"\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"key\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"integer\"\n      },\n      \"name\": \"get\"\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"key\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"void\"\n      },\n      \"name\": \"remove\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"758.7K\", \"totalSubmission\": \"1.1M\", \"totalAcceptedRaw\": 758664, \"totalSubmissionRaw\": 1141476, \"acRate\": \"66.5%\"}",
+  "likes": 5420,
+  "dislikes": 501,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Design HashSet\", \"titleSlug\": \"design-hashset\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Design Skiplist\", \"titleSlug\": \"design-skiplist\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"MyHashMap\",\"put\",\"put\",\"get\",\"get\",\"put\",\"get\",\"remove\",\"get\"]\n[[],[1,1],[2,2],[1],[3],[2,1],[2],[2],[2]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 10, \"slug\": \"tripactions\", \"name\": \"TripActions\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 4, \"slug\": \"couchbase\", \"name\": \"Couchbase\"}, {\"timesEncountered\": 3, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 2, \"slug\": \"palo-alto-networks\", \"name\": \"Palo Alto Networks\"}, {\"timesEncountered\": 2, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Hash Function",
+      "slug": "hash-function"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class MyHashMap {\npublic:\n    MyHashMap() {\n        \n    }\n    \n    void put(int key, int value) {\n        \n    }\n    \n    int get(int key) {\n        \n    }\n    \n    void remove(int key) {\n        \n    }\n};\n\n/**\n * Your MyHashMap object will be instantiated and called as such:\n * MyHashMap* obj = new MyHashMap();\n * obj->put(key,value);\n * int param_2 = obj->get(key);\n * obj->remove(key);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class MyHashMap {\n\n    public MyHashMap() {\n        \n    }\n    \n    public void put(int key, int value) {\n        \n    }\n    \n    public int get(int key) {\n        \n    }\n    \n    public void remove(int key) {\n        \n    }\n}\n\n/**\n * Your MyHashMap object will be instantiated and called as such:\n * MyHashMap obj = new MyHashMap();\n * obj.put(key,value);\n * int param_2 = obj.get(key);\n * obj.remove(key);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class MyHashMap:\n\n    def __init__(self):\n        \n\n    def put(self, key: int, value: int) -> None:\n        \n\n    def get(self, key: int) -> int:\n        \n\n    def remove(self, key: int) -> None:\n        \n\n\n# Your MyHashMap object will be instantiated and called as such:\n# obj = MyHashMap()\n# obj.put(key,value)\n# param_2 = obj.get(key)\n# obj.remove(key)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class MyHashMap(object):\n\n    def __init__(self):\n        \n\n    def put(self, key, value):\n        \"\"\"\n        :type key: int\n        :type value: int\n        :rtype: None\n        \"\"\"\n        \n\n    def get(self, key):\n        \"\"\"\n        :type key: int\n        :rtype: int\n        \"\"\"\n        \n\n    def remove(self, key):\n        \"\"\"\n        :type key: int\n        :rtype: None\n        \"\"\"\n        \n\n\n# Your MyHashMap object will be instantiated and called as such:\n# obj = MyHashMap()\n# obj.put(key,value)\n# param_2 = obj.get(key)\n# obj.remove(key)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar MyHashMap = function() {\n    \n};\n\n/** \n * @param {number} key \n * @param {number} value\n * @return {void}\n */\nMyHashMap.prototype.put = function(key, value) {\n    \n};\n\n/** \n * @param {number} key\n * @return {number}\n */\nMyHashMap.prototype.get = function(key) {\n    \n};\n\n/** \n * @param {number} key\n * @return {void}\n */\nMyHashMap.prototype.remove = function(key) {\n    \n};\n\n/** \n * Your MyHashMap object will be instantiated and called as such:\n * var obj = new MyHashMap()\n * obj.put(key,value)\n * var param_2 = obj.get(key)\n * obj.remove(key)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class MyHashMap {\n    constructor() {\n        \n    }\n\n    put(key: number, value: number): void {\n        \n    }\n\n    get(key: number): number {\n        \n    }\n\n    remove(key: number): void {\n        \n    }\n}\n\n/**\n * Your MyHashMap object will be instantiated and called as such:\n * var obj = new MyHashMap()\n * obj.put(key,value)\n * var param_2 = obj.get(key)\n * obj.remove(key)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class MyHashMap {\n\n    public MyHashMap() {\n        \n    }\n    \n    public void Put(int key, int value) {\n        \n    }\n    \n    public int Get(int key) {\n        \n    }\n    \n    public void Remove(int key) {\n        \n    }\n}\n\n/**\n * Your MyHashMap object will be instantiated and called as such:\n * MyHashMap obj = new MyHashMap();\n * obj.Put(key,value);\n * int param_2 = obj.Get(key);\n * obj.Remove(key);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} MyHashMap;\n\n\nMyHashMap* myHashMapCreate() {\n    \n}\n\nvoid myHashMapPut(MyHashMap* obj, int key, int value) {\n    \n}\n\nint myHashMapGet(MyHashMap* obj, int key) {\n    \n}\n\nvoid myHashMapRemove(MyHashMap* obj, int key) {\n    \n}\n\nvoid myHashMapFree(MyHashMap* obj) {\n    \n}\n\n/**\n * Your MyHashMap struct will be instantiated and called as such:\n * MyHashMap* obj = myHashMapCreate();\n * myHashMapPut(obj, key, value);\n \n * int param_2 = myHashMapGet(obj, key);\n \n * myHashMapRemove(obj, key);\n \n * myHashMapFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type MyHashMap struct {\n    \n}\n\n\nfunc Constructor() MyHashMap {\n    \n}\n\n\nfunc (this *MyHashMap) Put(key int, value int)  {\n    \n}\n\n\nfunc (this *MyHashMap) Get(key int) int {\n    \n}\n\n\nfunc (this *MyHashMap) Remove(key int)  {\n    \n}\n\n\n/**\n * Your MyHashMap object will be instantiated and called as such:\n * obj := Constructor();\n * obj.Put(key,value);\n * param_2 := obj.Get(key);\n * obj.Remove(key);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class MyHashMap() {\n\n    fun put(key: Int, value: Int) {\n        \n    }\n\n    fun get(key: Int): Int {\n        \n    }\n\n    fun remove(key: Int) {\n        \n    }\n\n}\n\n/**\n * Your MyHashMap object will be instantiated and called as such:\n * var obj = MyHashMap()\n * obj.put(key,value)\n * var param_2 = obj.get(key)\n * obj.remove(key)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass MyHashMap {\n\n    init() {\n        \n    }\n    \n    func put(_ key: Int, _ value: Int) {\n        \n    }\n    \n    func get(_ key: Int) -> Int {\n        \n    }\n    \n    func remove(_ key: Int) {\n        \n    }\n}\n\n/**\n * Your MyHashMap object will be instantiated and called as such:\n * let obj = MyHashMap()\n * obj.put(key, value)\n * let ret_2: Int = obj.get(key)\n * obj.remove(key)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct MyHashMap {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl MyHashMap {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn put(&self, key: i32, value: i32) {\n        \n    }\n    \n    fn get(&self, key: i32) -> i32 {\n        \n    }\n    \n    fn remove(&self, key: i32) {\n        \n    }\n}\n\n/**\n * Your MyHashMap object will be instantiated and called as such:\n * let obj = MyHashMap::new();\n * obj.put(key, value);\n * let ret_2: i32 = obj.get(key);\n * obj.remove(key);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class MyHashMap\n    def initialize()\n        \n    end\n\n\n=begin\n    :type key: Integer\n    :type value: Integer\n    :rtype: Void\n=end\n    def put(key, value)\n        \n    end\n\n\n=begin\n    :type key: Integer\n    :rtype: Integer\n=end\n    def get(key)\n        \n    end\n\n\n=begin\n    :type key: Integer\n    :rtype: Void\n=end\n    def remove(key)\n        \n    end\n\n\nend\n\n# Your MyHashMap object will be instantiated and called as such:\n# obj = MyHashMap.new()\n# obj.put(key, value)\n# param_2 = obj.get(key)\n# obj.remove(key)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class MyHashMap {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $key\n     * @param Integer $value\n     * @return NULL\n     */\n    function put($key, $value) {\n        \n    }\n  \n    /**\n     * @param Integer $key\n     * @return Integer\n     */\n    function get($key) {\n        \n    }\n  \n    /**\n     * @param Integer $key\n     * @return NULL\n     */\n    function remove($key) {\n        \n    }\n}\n\n/**\n * Your MyHashMap object will be instantiated and called as such:\n * $obj = MyHashMap();\n * $obj->put($key, $value);\n * $ret_2 = $obj->get($key);\n * $obj->remove($key);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class MyHashMap {\n\n  MyHashMap() {\n    \n  }\n  \n  void put(int key, int value) {\n    \n  }\n  \n  int get(int key) {\n    \n  }\n  \n  void remove(int key) {\n    \n  }\n}\n\n/**\n * Your MyHashMap object will be instantiated and called as such:\n * MyHashMap obj = MyHashMap();\n * obj.put(key,value);\n * int param2 = obj.get(key);\n * obj.remove(key);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class MyHashMap() {\n\n    def put(key: Int, value: Int): Unit = {\n        \n    }\n\n    def get(key: Int): Int = {\n        \n    }\n\n    def remove(key: Int): Unit = {\n        \n    }\n\n}\n\n/**\n * Your MyHashMap object will be instantiated and called as such:\n * val obj = new MyHashMap()\n * obj.put(key,value)\n * val param_2 = obj.get(key)\n * obj.remove(key)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule MyHashMap do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec put(key :: integer, value :: integer) :: any\n  def put(key, value) do\n    \n  end\n\n  @spec get(key :: integer) :: integer\n  def get(key) do\n    \n  end\n\n  @spec remove(key :: integer) :: any\n  def remove(key) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# MyHashMap.init_()\n# MyHashMap.put(key, value)\n# param_2 = MyHashMap.get(key)\n# MyHashMap.remove(key)\n\n# MyHashMap.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec my_hash_map_init_() -> any().\nmy_hash_map_init_() ->\n  .\n\n-spec my_hash_map_put(Key :: integer(), Value :: integer()) -> any().\nmy_hash_map_put(Key, Value) ->\n  .\n\n-spec my_hash_map_get(Key :: integer()) -> integer().\nmy_hash_map_get(Key) ->\n  .\n\n-spec my_hash_map_remove(Key :: integer()) -> any().\nmy_hash_map_remove(Key) ->\n  .\n\n\n%% Your functions will be called as such:\n%% my_hash_map_init_(),\n%% my_hash_map_put(Key, Value),\n%% Param_2 = my_hash_map_get(Key),\n%% my_hash_map_remove(Key),\n\n%% my_hash_map_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define my-hash-map%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; put : exact-integer? exact-integer? -> void?\n    (define/public (put key value)\n      )\n    ; get : exact-integer? -> exact-integer?\n    (define/public (get key)\n      )\n    ; remove : exact-integer? -> void?\n    (define/public (remove key)\n      )))\n\n;; Your my-hash-map% object will be instantiated and called as such:\n;; (define obj (new my-hash-map%))\n;; (send obj put key value)\n;; (define param_2 (send obj get key))\n;; (send obj remove key)"
+    }
+  ],
+  "solution": {
+    "id": "842",
+    "content": "[TOC]\n\n## Solution\n\n---\n#### Intuition\n\nHashmap is a common data structure that is implemented in various forms in different programming languages, _e.g._ `dict` in Python and `HashMap` in Java. The most distinguish characteristic about hashmap is that it provides a fast access to a **value** that is associated with a given **key**.\n\n>There are two main issues that we should tackle, in order to design an _efficient_ hashmap data structure: _1). hash function design_ and _2). collision handling_. \n\n- **1). hash function design**: the purpose of hash function is to map a key value to an address in the storage space, similarly to the system that we assign a postcode to each mail address.\nAs one can image, for a good hash function, it should map different keys **_evenly_** across the storage space, so that we don't end up with the case that the majority of the keys are _concentrated_ in a few spaces.\n\n- **2). collision handling**: essentially the hash function reduces the vast key space into a limited address space. As a result, there could be the case where two different keys are mapped to the same address, which is what we call _'collision'_. \nSince the collision is inevitable, it is important that we have a strategy to handle the collision. \n\nDepending on how we deal with each of the above two issues, we could have various implementation of hashmap data structure. \n<br/>\n<br/>\n\n---\n### Approach 1: Modulo + Array\n\n**Intuition**\n\nAs one of the most intuitive implementations, we could adopt the `modulo` operator as the hash function, since the key value is of integer type. In addition, in order to minimize the potential collisions, it is advisable to use a prime number as the base of modulo, _e.g._ `2069`.\n\nWe organize the storage space as an **array** where each element is indexed with the output value of the hash function.\n\nIn case of _collision_, where two different keys are mapped to the same address, we use a **bucket** to hold all the values. The bucket is a container that hold all the values that are assigned by the hash function. We could use either a `LinkedList` or an `Array` to implement the bucket data structure. \n\n**Algorithm**\n\nFor each of the methods in hashmap data structure, namely `get()`, `put()` and `remove()`, it all boils down to the method to locate the value that is stored in hashmap, given the key.\n\nThis localization process can be done in two steps:\n\n- For a given `key` value, first we apply the hash function to generate a hash key, which corresponds to the address in our main storage. With this hash key, we would find the _bucket_ where the value should be stored. \n\n- Now that we found the bucket, we simply iterate through the bucket to check if the desired `<key, value>` pair does exist. \n\n\n![pic](../Figures/706/706_hashmap.png)\n\n<iframe src=\"https://leetcode.com/playground/PnmP4QK6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PnmP4QK6\"></iframe>\n\nNote that in the above implementations, we use `Array` to implement the _bucket_ in Python, while we use `LinkedList` in Java.\n\n**Complexity Analysis**\n\n- Time Complexity: for each of the methods, the time complexity is $$\\mathcal{O}(\\frac{N}{K})$$ where $$N$$ is the number of all possible keys and $$K$$ is the number of predefined buckets in the hashmap, which is `2069` in our case.\n\n    - In the ideal case, the keys are evenly distributed in all buckets. As a result, *on average*, we could consider the size of the bucket is $$\\frac{N}{K}$$.\n\n    - Since in the worst case we need to iterate through a bucket to find the desire value, the time complexity of each method is $$\\mathcal{O}(\\frac{N}{K})$$.\n\n- Space Complexity: $$\\mathcal{O}(K+M)$$ where $$K$$ is the number of predefined buckets in the hashmap and $$M$$ is the number of unique keys that have been inserted into the hashmap.\n<br/>\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

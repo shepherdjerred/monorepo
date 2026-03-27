@@ -1,0 +1,142 @@
+{
+  "questionId": "490",
+  "questionFrontendId": "490",
+  "title": "The Maze",
+  "titleSlug": "the-maze",
+  "difficulty": "Medium",
+  "content": "<p>There is a ball in a <code>maze</code> with empty spaces (represented as <code>0</code>) and walls (represented as <code>1</code>). The ball can go through the empty spaces by rolling <strong>up, down, left or right</strong>, but it won&#39;t stop rolling until hitting a wall. When the ball stops, it could choose the next direction.</p>\n\n<p>Given the <code>m x n</code> <code>maze</code>, the ball&#39;s <code>start</code> position and the <code>destination</code>, where <code>start = [start<sub>row</sub>, start<sub>col</sub>]</code> and <code>destination = [destination<sub>row</sub>, destination<sub>col</sub>]</code>, return <code>true</code> if the ball can stop at the destination, otherwise return <code>false</code>.</p>\n\n<p>You may assume that <strong>the borders of the maze are all walls</strong> (see examples).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/31/maze1-1-grid.jpg\" style=\"width: 573px; height: 573px;\" />\n<pre>\n<strong>Input:</strong> maze = [[0,0,1,0,0],[0,0,0,0,0],[0,0,0,1,0],[1,1,0,1,1],[0,0,0,0,0]], start = [0,4], destination = [4,4]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> One possible way is : left -&gt; down -&gt; left -&gt; down -&gt; right -&gt; down -&gt; right.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/31/maze1-2-grid.jpg\" style=\"width: 573px; height: 573px;\" />\n<pre>\n<strong>Input:</strong> maze = [[0,0,1,0,0],[0,0,0,0,0],[0,0,0,1,0],[1,1,0,1,1],[0,0,0,0,0]], start = [0,4], destination = [3,2]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> There is no way for the ball to stop at the destination. Notice that you can pass through the destination but you cannot stop there.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> maze = [[0,0,0,0,0],[1,1,0,0,1],[0,0,0,0,0],[0,1,0,0,1],[0,1,0,0,0]], start = [4,3], destination = [0,1]\n<strong>Output:</strong> false\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == maze.length</code></li>\n\t<li><code>n == maze[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 100</code></li>\n\t<li><code>maze[i][j]</code> is <code>0</code> or <code>1</code>.</li>\n\t<li><code>start.length == 2</code></li>\n\t<li><code>destination.length == 2</code></li>\n\t<li><code>0 &lt;= start<sub>row</sub>, destination<sub>row</sub> &lt; m</code></li>\n\t<li><code>0 &lt;= start<sub>col</sub>, destination<sub>col</sub> &lt; n</code></li>\n\t<li>Both the ball and the destination exist in an empty space, and they will not be in the same position initially.</li>\n\t<li>The maze contains <strong>at least 2 empty spaces</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"hasPath\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"maze\",\r\n      \"type\": \"integer[][]\"\r\n    },\r\n    {\r\n      \"name\": \"start\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"destination\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"208.8K\", \"totalSubmission\": \"346K\", \"totalAcceptedRaw\": 208828, \"totalSubmissionRaw\": 346012, \"acRate\": \"60.4%\"}",
+  "likes": 1928,
+  "dislikes": 199,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"The Maze III\", \"titleSlug\": \"the-maze-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"The Maze II\", \"titleSlug\": \"the-maze-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,0,1,0,0],[0,0,0,0,0],[0,0,0,1,0],[1,1,0,1,1],[0,0,0,0,0]]\n[0,4]\n[4,4]",
+    "[[0,0,1,0,0],[0,0,0,0,0],[0,0,0,1,0],[1,1,0,1,1],[0,0,0,0,0]]\n[0,4]\n[3,2]",
+    "[[0,0,0,0,0],[1,1,0,0,1],[0,0,0,0,0],[0,1,0,0,1],[0,1,0,0,0]]\n[4,3]\n[0,1]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}], \"more_than_six_months\": [{\"timesEncountered\": 19, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 18, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 2, \"slug\": \"square\", \"name\": \"Block\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool hasPath(vector<vector<int>>& maze, vector<int>& start, vector<int>& destination) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean hasPath(int[][] maze, int[] start, int[] destination) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def hasPath(self, maze: List[List[int]], start: List[int], destination: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def hasPath(self, maze, start, destination):\n        \"\"\"\n        :type maze: List[List[int]]\n        :type start: List[int]\n        :type destination: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} maze\n * @param {number[]} start\n * @param {number[]} destination\n * @return {boolean}\n */\nvar hasPath = function(maze, start, destination) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function hasPath(maze: number[][], start: number[], destination: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool HasPath(int[][] maze, int[] start, int[] destination) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool hasPath(int** maze, int mazeSize, int* mazeColSize, int* start, int startSize, int* destination, int destinationSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func hasPath(maze [][]int, start []int, destination []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun hasPath(maze: Array<IntArray>, start: IntArray, destination: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func hasPath(_ maze: [[Int]], _ start: [Int], _ destination: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn has_path(maze: Vec<Vec<i32>>, start: Vec<i32>, destination: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} maze\n# @param {Integer[]} start\n# @param {Integer[]} destination\n# @return {Boolean}\ndef has_path(maze, start, destination)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $maze\n     * @param Integer[] $start\n     * @param Integer[] $destination\n     * @return Boolean\n     */\n    function hasPath($maze, $start, $destination) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool hasPath(List<List<int>> maze, List<int> start, List<int> destination) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def hasPath(maze: Array[Array[Int]], start: Array[Int], destination: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec has_path(maze :: [[integer]], start :: [integer], destination :: [integer]) :: boolean\n  def has_path(maze, start, destination) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec has_path(Maze :: [[integer()]], Start :: [integer()], Destination :: [integer()]) -> boolean().\nhas_path(Maze, Start, Destination) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (has-path maze start destination)\n  (-> (listof (listof exact-integer?)) (listof exact-integer?) (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1957",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a 2D `maze`. Each cell of `maze` represents an empty space or wall denoted by `0` and `1` respectively.\n\nOur task is to determine whether the ball can travel from the `start` cell to the `destination` cell by rolling up, down, left, or right through the empty spaces.\n\nIt should be noted that the ball will continue to roll in the same direction until it hits a wall. We can only change the direction of the ball once it hits a wall and comes to a halt.\n\n---\n\n### Approach 1: Depth First Search\n\n#### Intuition\n\nThe problem gives a 2D `maze` in which we can move in any of the four directions (left, top, right, and bottom) until we hit a wall. This 2D maze, in addition to permitting movement in any of the four directions, prompts us to consider describing the problem as a graph.\n\nThe 2D `maze` can be modelled as a directed graph. Each empty cell corresponds to a node in such a graph. We add four directed edges from an empty cell in all four directions (left, top, right, and bottom) to the cells to which the ball will roll if rolled in these four ways from the present cell.\n\nHere's how the directed edges will look for the two highlighted cells `(3, 1)` and `(4, 4)` in the following maze where the yellow cells represent walls:\n\n![img](../Figures/490/490-1.png)\n\n> The problem is now reduced to finding whether a path exists in this graph from the `start` cell to the `destination` cell.\n\nWe can use a graph traversal algorithm like depth-first search or breadth-first search to check if a path exists from the source node to the destination node. In this approach, we will solve the problem using DFS.\n\nIn DFS, we use a recursive function to explore nodes as far as possible along each branch. Upon reaching the end of a branch, we backtrack to the previous node and continue exploring the next branches.\n\nOnce we encounter an unvisited node, we will take one of its neighbor nodes (if exists) as the next node on this branch. Recursively call the function to take the next node as the 'starting node' and solve the subproblem.\n\nIf you are new to Depth First Search, please see our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/619/depth-first-search-in-graph/3882/) for more information on it!\n\nWe begin a DFS traversal from the `start` cell, treating it as a node. We determine which cells the ball will roll into until it strikes a wall in each of the four directions, and then we run the DFS recursively from these cells. We continue traversing in this fashion recursively until we reach the `destination` cell or there are no more unvisited cells.\n\nTo figure out which cell the ball will roll out of, we can keep travelling in that direction using a `while` loop until we reach a cell with a wall. The ball will roll to the preceding cell.\n\n#### Algorithm\n\n1. Create two variables, `m` and `n`, to store the number of rows and columns respectively in the given `maze`.\n2. Create a 2D array called `visit` to keep track of visited cells.\n3. We use the `dfs` function to perform the traversal. For each call, pass `m`, `n`, `maze`, `curr`, `destination` and `visit` as the parameters where `curr` corresponds to the current cell. The `dfs` function returns a boolean indicating whether a path exists between the `curr` and `destination` cells. We begin the DFS traversal from `start` and proceed as follows:\n    - If the `curr` cell is already visited, we return `false` because we have already traversed this cell and could not reach `destination`.\n    - If the `curr` cell is the same as `destination`, we return `true`.\n    - Otherwise, mark `curr` as visited.\n    - We create two arrays `dirX` and `dirY` of size `4` to help us iterate over the four directions.\n    - We use a loop to go through all four directions. We create two variables `r = curr[0]` and `c = curr[1]` to move along a specific direction. We use a `while` loop and keep updating `r += dirX[i]` and `c = dirY[i]` as long as we don't go out of bounds or hit a wall. Once the `while` loop breaks, it means `r` and `c` form a cell that has a wall. Reverting the last move, i.e., `r - dirX[i]` and `r - dirY[i]` would give the cell to which the ball rolls. We recursively call `dfs` from cell `(r - dirX[i], c - dirY[i])`. If any DFS call returns `true`, we return `true` from the main call as we got a path to reach the `destination` cell.\n4. There is no way to reach the `destination` cell, return `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/6w4yoAT7/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6w4yoAT7\"></iframe>\n\n#### Complexity Analysis\n\nHere, $m$ and $n$ are the number of rows and columns in `maze`.\n\n* Time complexity: $O(m \\cdot n)$\n\n    - Initializing the `visit` array takes $O(m \\cdot n)$ time.\n    - The function `dfs` visits each node at most once, resulting in $O(m \\cdot n)$ calls. While each call involves rolling in four directions using while loops, the total rolling work across all calls is $O(m \\cdot n)$ because each cell can only be traversed a constant number of times when considering all rolling operations together.\n\n* Space complexity: $O(m \\cdot n)$\n\n    - The `visit` array takes $O(m \\cdot n)$ space.\n    - The recursion stack used by `dfs` can have no more than $O(m \\cdot n)$ elements in the worst-case scenario. It would take up $O(m \\cdot n)$ space in that case. \n\n---\n\n### Approach 2: Breadth First Search\n\n#### Intuition\n\nAs our task is to check if there exists a path from the `start` cell to the `destination` cell, we can use a breadth-first search (BFS) algorithm as well.\n\nWe can use a graph traversal algorithm like breadth-first search (BFS) to traverse over the islands. BFS is an algorithm for traversing or searching a graph. It traverses in a level-wise manner, i.e., all the nodes at the present level (say `l`) are explored before moving on to the nodes at the next level (`l + 1`), where a level's number is the distance from a starting node. BFS is implemented with a queue.\n\nIf you are not familiar with BFS traversal, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/).\n\nSimilar to a DFS traversal, we begin a BFS from the `start` cell, treating it as a node. We push `start` into the BFS queue. We determine which cells the ball will roll into until it strikes a wall in each of the four directions, and then push these cells into the BFS queue. We continue traversing in this fashion until we reach the `destination` cell or there are no more cells that can be visited.\n\n#### Algorithm\n\n1. Create two variables, `m` and `n`, to store the number of rows and columns respectively in the given `maze`.\n2. Create a 2D array called `visit` to keep track of visited cells.\n3. Create two arrays `dirX` and `dirY` of size `4` to help us iterate over the four directions.\n4. Initialize a queue `q` of pair of integers.\n5. We start the BFS traversal from the `start` cell by pushing it in the queue and marking it as visited.\n6. While the queue is not empty, we perform the following:\n    - We dequeue the first cell `curr` from the queue. If `curr == destination`, return `true`.\n    - We use a loop to go through all four directions. We create two variables `r = curr[0]` and `c = curr[1]` to move along a specific direction. We use a `while` loop and keep updating `r += dirX[i]` and `c = dirY[i]` as long as we don't go out of bounds or hit a wall. Once the `while` loop breaks, it means `r` and `c` form a cell that has a wall. Reverting the last move, i.e., `r - dirX[i]` and `r - dirY[i]` would give the cell to which the ball rolls. Push the cell with coordinates `(r - dirX[i], c - dirY[i])` into the queue if it's not already visited.\n7. There is no way to reach the `destination` cell, return `false`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/WtREtaJm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WtREtaJm\"></iframe>\n\n#### Complexity Analysis\n\nHere, $m$ and $n$ are the number of rows and columns in `maze`.\n\n* Time complexity: $O(m \\cdot n)$\n\n    - Initializing the `visit` array takes $O(m \\cdot n)$ time.\n    - Each queue operation in the BFS algorithm takes $O(1)$ time, and a single node can be pushed once, leading to $O(m \\cdot n)$ operations for $m \\cdot n$ nodes. While each dequeue involves rolling in four directions using while loops, the total rolling work across all BFS iterations is $O(m \\cdot n)$ because each cell can only be traversed a constant number of times when considering all rolling operations together.\n\n* Space complexity: $O(m \\cdot n)$\n\n    - The `visit` array takes $O(m \\cdot n)$ space.\n    - The BFS queue takes $O(m \\cdot n)$ space in the worst-case because each node is added once.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

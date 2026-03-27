@@ -1,0 +1,134 @@
+{
+  "questionId": "260",
+  "questionFrontendId": "260",
+  "title": "Single Number III",
+  "titleSlug": "single-number-iii",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code>, in which exactly two elements appear only once and all the other elements appear exactly twice. Find the two elements that appear only once. You can return the answer in <strong>any order</strong>.</p>\n\n<p>You must write an&nbsp;algorithm that runs in linear runtime complexity and uses&nbsp;only constant extra space.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,1,3,2,5]\n<strong>Output:</strong> [3,5]\n<strong>Explanation: </strong> [5, 3] is also a valid answer.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [-1,0]\n<strong>Output:</strong> [-1,0]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0,1]\n<strong>Output:</strong> [1,0]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= nums.length &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>-2<sup>31</sup> &lt;= nums[i] &lt;= 2<sup>31</sup> - 1</code></li>\n\t<li>Each integer in <code>nums</code> will appear twice, only two integers will appear once.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"singleNumber\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer[]\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"592.2K\", \"totalSubmission\": \"841.7K\", \"totalAcceptedRaw\": 592223, \"totalSubmissionRaw\": 841693, \"acRate\": \"70.4%\"}",
+  "likes": 6804,
+  "dislikes": 276,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Single Number\", \"titleSlug\": \"single-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Single Number II\", \"titleSlug\": \"single-number-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find The Original Array of Prefix Xor\", \"titleSlug\": \"find-the-original-array-of-prefix-xor\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the XOR of Numbers Which Appear Twice\", \"titleSlug\": \"find-the-xor-of-numbers-which-appear-twice\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,1,3,2,5]",
+    "[-1,0]",
+    "[0,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"siemens\", \"name\": \"Siemens\"}, {\"timesEncountered\": 2, \"slug\": \"zomato\", \"name\": \"Zomato\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> singleNumber(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] singleNumber(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def singleNumber(self, nums: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def singleNumber(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number[]}\n */\nvar singleNumber = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function singleNumber(nums: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] SingleNumber(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* singleNumber(int* nums, int numsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func singleNumber(nums []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun singleNumber(nums: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func singleNumber(_ nums: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn single_number(nums: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer[]}\ndef single_number(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer[]\n     */\n    function singleNumber($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> singleNumber(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def singleNumber(nums: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec single_number(nums :: [integer]) :: [integer]\n  def single_number(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec single_number(Nums :: [integer()]) -> [integer()].\nsingle_number(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (single-number nums)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "764",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nThe problem could be solved in $$\\mathcal{O}(N)$$ time and $$\\mathcal{O}(N)$$ space by using a hashmap. \n\nSolving the problem in a constant space is a bit tricky but could be done with the help of two bitmasks. \n\n![fig](../Figures/260/two2.png)\n<br /> \n<br />\n\n\n---\n### Approach 1: Hashmap\n\nBuild a hashmap: element -> its frequency. Return only the elements with the frequency equal to 1.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/kRoVhaS9/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"kRoVhaS9\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(N)$$ to iterate over the input array. \n\n* Space complexity : $$\\mathcal{O}(N)$$ to keep the hashmap of $$N$$ elements.\n<br /> \n<br />\n\n\n---\n### Approach 2: Two bitmasks \n\n**Prerequisites**\n\nThis article will use two bitwise tricks, discussed in detail last week :\n\n- If one builds an array bitmask with the help of the XOR operator, following `bitmask ^= x` strategy, the bitmask would keep only the bits that appear odd number of times. That was discussed in detail in the article [Single Number II](https://leetcode.com/articles/single-number-ii/).\n\n![fig](../Figures/260/xor3.png)\n\n- `x & (-x)` is a way to isolate the rightmost 1-bit, i.e. to keep the rightmost 1-bit and to set all the other bits to zero. Please refer to the article [Power of Two](https://leetcode.com/articles/power-of-two/) for a detailed explanation. \n\n![fig](../Figures/260/isolate3.png)\n\n**Intuition**\n\n> An interview tip. Imagine, you have a problem identifying an array element (or elements), which appears exactly a given number of times. Probably, the key is to build first an array bitmask using the XOR operator. Examples: [In-Place Swap](leetcode.com/articles/single-number-ii/356460/Single-Number-II/324042), [Single Number](https://leetcode.com/articles/single-number/), [Single Number II](leetcode.com/articles/single-number-ii/356460/Single-Number-II/324042).\n  \nSo let's create an array bitmask: `bitmask ^= x`. This bitmask will _not_ keep any number that appears twice because the XOR of two equal bits results in a zero bit `a^a = 0`.\n\nInstead, the bitmask would keep only the difference between two numbers (let's call them x and y) which appear just once. The difference here it's the bits that are different for x and y. \n\n![fig](../Figures/260/diff_new.png)\n\n> Could we extract x and y directly from this bitmask? No. However, we could use this bitmask as a marker to separate x and y.\n\nLet's do `bitmask & (-bitmask)` to isolate the rightmost 1-bit, which is different between x and y. Let's say this is 1-bit for x and 0-bit for y. \n\n![fig](../Figures/260/isolate2_new.png)\n\nNow let's use XOR as before, but for the new bitmask `x_bitmask`, which will contain only the numbers which have 1-bit in the position of `bitmask & (-bitmask)`. This way, this new bitmask will contain only number x `x_bitmask = x`, because of two reasons:\n\n- y has 0-bit in the position `bitmask & (-bitmask)` and hence will not enter this new bitmask. \n\n- All numbers but x will not be visible in this new bitmask because they appear two times. \n\n![fig](../Figures/260/x_bitmask2.png)\n\nVoila, x is identified. Now to identify y is simple: `y = bitmask^x`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/3kgq8Dzb/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"3kgq8Dzb\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(N)$$ to iterate over the input array. \n\n* Space complexity : $$\\mathcal{O}(1)$$, it's a constant space solution.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

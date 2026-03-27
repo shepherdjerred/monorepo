@@ -1,0 +1,150 @@
+{
+  "questionId": "451",
+  "questionFrontendId": "451",
+  "title": "Sort Characters By Frequency",
+  "titleSlug": "sort-characters-by-frequency",
+  "difficulty": "Medium",
+  "content": "<p>Given a string <code>s</code>, sort it in <strong>decreasing order</strong> based on the <strong>frequency</strong> of the characters. The <strong>frequency</strong> of a character is the number of times it appears in the string.</p>\n\n<p>Return <em>the sorted string</em>. If there are multiple answers, return <em>any of them</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;tree&quot;\n<strong>Output:</strong> &quot;eert&quot;\n<strong>Explanation:</strong> &#39;e&#39; appears twice while &#39;r&#39; and &#39;t&#39; both appear once.\nSo &#39;e&#39; must appear before both &#39;r&#39; and &#39;t&#39;. Therefore &quot;eetr&quot; is also a valid answer.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;cccaaa&quot;\n<strong>Output:</strong> &quot;aaaccc&quot;\n<strong>Explanation:</strong> Both &#39;c&#39; and &#39;a&#39; appear three times, so both &quot;cccaaa&quot; and &quot;aaaccc&quot; are valid answers.\nNote that &quot;cacaca&quot; is incorrect, as the same characters must be together.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;Aabb&quot;\n<strong>Output:</strong> &quot;bbAa&quot;\n<strong>Explanation:</strong> &quot;bbaA&quot; is also a valid answer, but &quot;Aabb&quot; is incorrect.\nNote that &#39;A&#39; and &#39;a&#39; are treated as two different characters.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 5 * 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists of uppercase and lowercase English letters and digits.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"frequencySort\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1.1M\", \"totalSubmission\": \"1.5M\", \"totalAcceptedRaw\": 1094561, \"totalSubmissionRaw\": 1455572, \"acRate\": \"75.2%\"}",
+  "likes": 9221,
+  "dislikes": 334,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Top K Frequent Elements\", \"titleSlug\": \"top-k-frequent-elements\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"First Unique Character in a String\", \"titleSlug\": \"first-unique-character-in-a-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sort Array by Increasing Frequency\", \"titleSlug\": \"sort-array-by-increasing-frequency\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Percentage of Letter in String\", \"titleSlug\": \"percentage-of-letter-in-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Pairs in Array\", \"titleSlug\": \"maximum-number-of-pairs-in-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Node With Highest Edge Score\", \"titleSlug\": \"node-with-highest-edge-score\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Most Frequent Even Element\", \"titleSlug\": \"most-frequent-even-element\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count Pairs Of Similar Strings\", \"titleSlug\": \"count-pairs-of-similar-strings\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"tree\"",
+    "\"cccaaa\"",
+    "\"Aabb\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 3, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"target\", \"name\": \"Target\"}, {\"timesEncountered\": 2, \"slug\": \"wipro\", \"name\": \"Wipro\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Bucket Sort",
+      "slug": "bucket-sort"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string frequencySort(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String frequencySort(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def frequencySort(self, s: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def frequencySort(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {string}\n */\nvar frequencySort = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function frequencySort(s: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string FrequencySort(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* frequencySort(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func frequencySort(s string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun frequencySort(s: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func frequencySort(_ s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn frequency_sort(s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {String}\ndef frequency_sort(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return String\n     */\n    function frequencySort($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String frequencySort(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def frequencySort(s: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec frequency_sort(s :: String.t) :: String.t\n  def frequency_sort(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec frequency_sort(S :: unicode:unicode_binary()) -> unicode:unicode_binary().\nfrequency_sort(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (frequency-sort s)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "884",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Remember, Strings are Immutable!\n\nThe input type for this question is a `String`. When dealing with `String`s, we need to be careful to not inadvertently convert what should have been an $$O(n)$$ algorithm into an $$O(n^2)$$ one.\n\n`String`s in most programming languages are **immutable**. This means that once a `String` is created, we cannot modify it. We can only create a new `String`. Consider the following Java code.\n\n```java\nString a = \"Hello \";\na += \"Leetcode\";\n```\n\nThis code creates a `String` called `a` with the value `\"Hello \"`. It then sets `a` to be a *new* `String`, made with the letters from the old `a` and the additional letters `\"Leetcode\"`. It then assigns this new `String` to the variable `a`, throwing away the reference to the old one. It does NOT actually \"modify\" `a`.\n\nFor the most part, we don't run into problems with `String`s being treated like this. But consider this code for *reversing* a `String`.\n\n```java\nString s = \"Hello There\";\nString reversedString = \"\";\nfor (int i = s.length() - 1; i >= 0; i--) {\n    reversedString += s.charAt(i);\n}\nSystem.out.println(reversedString);\n```\n\nEach time a character is added to `reverseString`, a *new String* is created. Creating a new `String` has a cost of $$n$$, where $$n$$ is the length of the `String`. The result? Simply reversing a `String` has a cost of $$O(n^2)$$ using the above algorithm.\n\nThe solution is to use a `StringBuilder`. A `StringBuilder` collects up the characters that will be converted into a `String` so that only one `String` needs to be created—once all the characters are ready to go. Recall that inserting an item at the end of an `Array` has a cost of $$O(1)$$, and so the total cost of inserting the $$n$$ characters into the `StringBuilder` is $$O(n)$$, and it is also $$O(n)$$ to then convert that `StringBuilder` into a `String`, giving a total of $$O(n)$$.\n\n```java\nString s = \"Hello There\";\nStringBuilder sb = new StringBuilder();\nfor (int i = s.length() - 1; i >= 0; i--) {\n    sb.append(s.charAt(i));\n}\nString reversedString = sb.toString();\nSystem.out.println(reversedString);\n```\n\nIf you're unsure what to do for your particular programming language, it shouldn't be too difficult to find using a web search. The algorithms provided in the solutions here all do string building efficiently.\n\n</br>\n\n---\n\n### Approach 1: Arrays and Sorting\n\n**Intuition**\n\nIn order to sort the characters by frequency, we firstly need to know how many of each there are. One way to do this is to sort the characters by their numbers so that identical characters are side-by-side (all characters in a programming language are identified by a unique number). Then, knowing how many times each appears will be a lot easier.\n\nBecause `String`s are **immutable** though, we cannot sort the `String` directly. Therefore, we'll need to start by converting it *from a* `String` *to an Array of* characters.\n\n![Converting the string \"welcometoleetcode\" to a list.](../Figures/451/to_list.png)\n\nNow that we have an `Array`, we can sort it, which will make all identical characters side-by-side.\n\n![The Array of characters sorted.](../Figures/451/sort_array.png)\n\nThere are a few different ways we can go from here. One easy-to-understand way is to create a *new* `Array` of `String`s. Each `String` in the list will consist of one of the unique characters from the sorted characters `Array`.\n\n![The characters grouped into strings of the same character.](../Figures/451/group_strings.png)\n\n*Remember:* do this process using `StringBuilder`s, not naïve `String` appending! (See the first section of this article if you're confused).\n\nThe next step is to sort this `Array` of `String`s by length. To do this, we'll need to implement a suitable **Comparator**. Recall that there is *no requirement* for characters of the same frequency to appear in a specific order. \n\n![The strings sorted by length.](../Figures/451/length_sort.png)\n\nFinally, we can convert this `Array` of `String`s into a single `String`. In Java, this can be done by passing the `Array` into a `StringBuilder` and then calling `.toString(...)` on it.\n\n![String building the strings into a single string.](../Figures/451/stringify.png)\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/mZjB8qio/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"mZjB8qio\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of the input `String`.\n\n- Time Complexity : $$O(n \\, \\log \\, n)$$.\n    \n    The first part of the algorithm, converting the `String` to a `List` of characters, has a cost of $$O(n)$$, because we are adding $$n$$ characters to the end of a `List`.\n\n    The second part of the algorithm, sorting the `List` of characters, has a cost of $$O(n \\, \\log \\, n)$$.\n\n    The third part of the algorithm, grouping the characters into `String`s of similar characters, has a cost of $$O(n)$$ because each character is being inserted once into a `StringBuilder` and once converted into a `String`.\n\n    Finally, the fourth part of the algorithm, sorting the `String`s by length, has a worst case cost of $$O(n \\log n)$$, which occurs when *all* the characters in the input `String` are unique.\n\n    Because we drop constants and insignificant terms, we get $$2 \\cdot O(n \\, \\log \\, n) + 2 \\cdot O(n) = O(n \\, \\log \\, n)$$.\n\n    Be careful with your own implementation—if you didn't do the string building process in a sensible way, then your solution could potentially be $$O(n^2)$$.\n\n- Space Complexity : $$O(n)$$.\n    \n    It is impossible to do better with the space complexity, because `String`s are immutable. The `List` of characters, `List` of `String`s, and the final output `String`, are all of length $$n$$, so we have a space complexity of $$O(n)$$.\n\n</br>\n\n---\n\n### Approach 2: HashMap and Sort\n\n**Intuition**\n\nAnother approach is to use a `HashMap` to count how many times each character occurs in the `String`; the keys are characters and the values are frequencies.\n\n![The HashMap created with the string.](../Figures/451/hashmap.png)\n\nNext, extract a copy of the *keys* from the `HashMap` and *sort* them by frequency using a `Comparator` that looks at the `HashMap` values to make its decisions.\n\n![The HashMap created with the string.](../Figures/451/hashmap_sorted.png)\n\nFinally, initialise a new `StringBuilder` and then iterate over the list of sorted characters (sorted by frequency). Look up the values in the `HashMap` to know how many of each character to append to the `StringBuilder`.\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/ezrwGyB5/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"ezrwGyB5\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of the input `String` and $$k$$ be the number of unique characters in the `String`. \n\nWe know that $$k ≤ n$$, because there can't be more unique characters than there are characters in the `String`. We also know that $$k$$ is somewhat bounded by the fact that there's only a finite number of characters in Unicode (or ASCII, which I suspect is all we need to worry about for this question). \n\nThere are two ways of approaching the complexity analysis for this question.\n\n1. We can disregard $$k$$, and consider that *in the worst case, `k = n`*.\n2. We can consider $$k$$, recognising that the number of unique characters is not infinite. This is more accurate for real world purposes.\n\nI've provided analysis for both ways of approaching it. I choose not to bring it up for the previous approach, because it made no difference there. \n\n- Time Complexity : $$O(n \\, \\log \\, n)$$ OR $$O(n + k \\, \\log \\, k)$$.\n\n    Putting the characterss into the `HashMap` has a cost of $$O(n)$$, because each of the $$n$$ characterss must be put in, and putting each in is an $$O(1)$$ operation.\n\n    Sorting the `HashMap` keys has a cost of $$O(k \\, \\log \\, k)$$, because there are $$k$$ keys, and this is the standard cost for sorting. If only using $$n$$, then it's $$O(n \\, \\log \\, n)$$. For the previous question, the sort was carried out on $$n$$ items, not $$k$$, so was possibly a *lot* worse.\n\n    Traversing over the sorted keys and building the `String` has a cost of $$O(n)$$, as $$n$$ characters must be inserted.\n\n    Therefore, if we're only considering $$n$$, then the final cost is $$O(n \\, \\log \\, n)$$.\n\n    Considering $$k$$ as well gives us $$O(n + k \\, \\log \\, k)$$, because we don't know which is largest out of $$n$$ and $$k \\, \\log \\, k$$. We do, however, know that in total this is less than or equal to $$O(n \\, \\log \\, n)$$.\n\n- Space Complexity : $$O(n)$$.\n\n    The `HashMap` uses $$O(k)$$ space.\n\n    However, the `StringBuilder` at the end dominates the space complexity, pushing it up to $$O(n)$$, as every character from the input `String` must go into it. Like was said above, it's impossible to do better with the space complexity here.\n\nWhat's interesting here is that if we only consider $$n$$, the time complexity is the same as the previous approach. But by considering $$k$$, we can see that the difference is potentially substantial.\n\n</br>\n\n---\n\n### Approach 3: Multiset and Bucket Sort\n\n**Intuition**\n\nWhile the second approach is probably adequate for an interview, there is actually a way of solving this problem with a time complexity of $$O(n)$$.\n\nFirstly, observe that because all of the characters came out of a `String` of length $$n$$, the maximum frequency for any one character is $$n$$. This means that once we've determined all the letter frequencies using a `HashMap`, we can sort them in $$O(n)$$ time using **Bucket Sort**. Recall that for our previous approaches, we used comparison-based sorts, which have a cost of $$O(n \\, \\log \\, n)$$.\n\nThis was the `HashMap` from earlier.\n\n![The HashMap created with the string.](../Figures/451/hashmap.png)\n\nRecall that **Bucket Sort** is the sorting algorithm where items are placed at `Array` indexes based on their values (the indexes are called \"buckets\"). For this problem, we'll need to have a `List` of characters at each index. For example, here is how our `String` from before goes into the buckets.\n\n![The HashMap bucket sorted](../Figures/451/hashmap_bucket_sorted.png)\n\nWhile we could simply make our bucket `Array` length $$n$$, we're best to just look for the maximum value (frequency) in the `HashMap`. That way, we only use as much space as we need, and won't need to iterate over heaps of empty buckets during the next phase.\n\nFinally, we need to iterate over the buckets, starting with the largest and ending with the smallest, building up the string in much the same way as we did before. \n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/Kx7anxW5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Kx7anxW5\"></iframe>\n\n**Complexity Analysis**\n\nLet $$n$$ be the length of the input `String`. The $$k$$ (number of unique characters in the input `String` that we considered for the last approach makes no difference this time).\n\n- Time Complexity : $$O(n)$$.\n    \n    Like before, the `HashMap` building has a cost of $$O(n)$$.\n\n    The bucket sorting is $$O(n)$$, because inserting items has a cost of $$O(k)$$ (each entry from the `HashMap`), and building the buckets initially has a worst case of $$O(n)$$ (which occurs when $$k = 1$$). Because $$k ≤ n$$, we're left with $$O(n)$$.\n\n    So in total, we have $$O(n)$$.\n\n    It'd be impossible to do better than this, because we need to look at each of the $$n$$ characters in the input `String` at least once.\n\n- Space Complexity : $$O(n)$$.\n    \n    Same as above. The bucket `Array` also uses $$O(n)$$ space, because its length is at most $$n$$, and there are $$k$$ items across *all* the buckets.\n\n</br>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

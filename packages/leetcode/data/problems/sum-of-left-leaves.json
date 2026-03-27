@@ -1,0 +1,141 @@
+{
+  "questionId": "404",
+  "questionFrontendId": "404",
+  "title": "Sum of Left Leaves",
+  "titleSlug": "sum-of-left-leaves",
+  "difficulty": "Easy",
+  "content": "<p>Given the <code>root</code> of a binary tree, return <em>the sum of all left leaves.</em></p>\n\n<p>A <strong>leaf</strong> is a node with no children. A <strong>left leaf</strong> is a leaf that is the left child of another node.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/08/leftsum-tree.jpg\" style=\"width: 277px; height: 302px;\" />\n<pre>\n<strong>Input:</strong> root = [3,9,20,null,null,15,7]\n<strong>Output:</strong> 24\n<strong>Explanation:</strong> There are two left leaves in the binary tree, with values 9 and 15 respectively.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [1]\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[1, 1000]</code>.</li>\n\t<li><code>-1000 &lt;= Node.val &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"sumOfLeftLeaves\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"786.3K\", \"totalSubmission\": \"1.3M\", \"totalAcceptedRaw\": 786345, \"totalSubmissionRaw\": 1258094, \"acRate\": \"62.5%\"}",
+  "likes": 5793,
+  "dislikes": 326,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[3,9,20,null,null,15,7]",
+    "[1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"grammarly\", \"name\": \"Grammarly\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}]}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int sumOfLeftLeaves(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public int sumOfLeftLeaves(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def sumOfLeftLeaves(self, root: Optional[TreeNode]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def sumOfLeftLeaves(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number}\n */\nvar sumOfLeftLeaves = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction sumOfLeftLeaves(root: TreeNode | null): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public int SumOfLeftLeaves(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nint sumOfLeftLeaves(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc sumOfLeftLeaves(root *TreeNode) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun sumOfLeftLeaves(root: TreeNode?): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func sumOfLeftLeaves(_ root: TreeNode?) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn sum_of_left_leaves(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer}\ndef sum_of_left_leaves(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer\n     */\n    function sumOfLeftLeaves($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  int sumOfLeftLeaves(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def sumOfLeftLeaves(root: TreeNode): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec sum_of_left_leaves(root :: TreeNode.t | nil) :: integer\n  def sum_of_left_leaves(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec sum_of_left_leaves(Root :: #tree_node{} | null) -> integer().\nsum_of_left_leaves(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (sum-of-left-leaves root)\n  (-> (or/c tree-node? #f) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "936",
+    "content": "[TOC]\n\n## Solution\n\n---\n\nRecall that a binary tree is made up of *linked tree nodes*, where each node has a reference to its *left child* and to its *right child*. We access the child nodes by using `root.left` and `root.right`. Tree traversal algorithms are used to explore all nodes in the tree. If you're completely confused now, we recommend checking out our [Binary Tree Explore Card](https://leetcode.com/explore/learn/card/data-structure-tree/) and then coming back to this question.\n\n<br/>\n\n---\n\n### Approach 1: Iterative Tree Traversal (Pre-order)\n\n**Intuition**\n\nHere is an example of a binary tree. The left-leaf nodes are highlighted. Our task is to find all of these left-leaf nodes, add together their values, and return the final sum we get.\n\n![An example of a binary tree. The left leaf nodes are highlighted, and their values added.](../Figures/404/intro_example.png)\n\nTo get each left-leaf node's value, we need to \"visit\" each one. Note that because it is a *sum* we need, the order we visit the left-leaf nodes in doesn't matter. As such, we can pick any algorithm that visits all nodes of the tree. The simplest such algorithm is an **iterative pre-order traversal** (if you're not sure what this is, check out the [Binary Tree Explore Card](https://leetcode.com/explore/learn/card/data-structure-tree/134/traverse-a-tree/992/#pre-order-traversal)).\n\nWhen we visit each node, we'll need to know whether or not it *is* a left-leaf node: this is the main challenge in this problem. Remember that once we're on a node, there is no link back up to its parent. This means that given a node, it is impossible to check whether or not it is a *left* node unless we have an existing reference to its parent. There are a couple of strategies for handling this problem:\n\n1. While we're at a node, we can check if its *left-child* is a leaf node (instead of trying to check if the node itself is a left child).\n2. When we're ready to visit the children of a node, we can pass some extra information down telling the left child that it is a left child.\n\nThe second strategy works well for the recursive implementation (Approach 2), but the first strategy is the best for the iterative, so is what we'll go with here.\n\nAnyway, to do an iterative pre-order traversal, we start by putting the `root` onto a `stack`. Then, while the `stack` is non-empty, we take a node off the top, check if the node's *left child is a leaf node* and then add that child's value to a `total` if it is. Finally, we put the node's left child and right child onto the `stack` so that they can be visited too. Here is the algorithm in pseudocode.\n\n```text\ndefine function sum_of_left_leaves(root):\n    \n    stack = a new stack\n    push root to stack\n    total = 0\n\n    while the stack is non-empty:\n        node = pop a node of stack\n        if node.left exists and node.left is a leaf:\n            total = total + node.left.value\n        if node.right exists:\n            push node.right to stack\n        if node.left exists:\n            push node.left to stack\n\n    return total\n```\n\nNote that it doesn't matter whether we put the left or right child on the stack first. We just chose to put right and then left so that left is the next off, thus matching the standard pre-order traversal code template.\n\nHere is an animation of this approach in action!\n\n!?!../Documents/404_iterative.json:960,600!?!\n\nA pre-order traversal is a type of depth-first tree traversal. This is because it uses a *stack* to keep track of unvisited nodes. Alternatively, we could have used a breadth-first tree traversal; using a *queue* to keep track of unvisited nodes instead of a stack. This works because while the nodes are visited in a different order, this doesn't matter, as discussed above. In fact, we could have used any data structure that allowed us to put an unvisited node in and take a node out to visit.\n\n**Algorithm**\n\nThis code uses a *stack* to keep track of the unvisited nodes. You could, however, replace it with a *queue* and the algorithm would still work (but would process the nodes in a different order). In Java, we use a `Deque` like a stack, instead of using `Stack` (`Stack` is deprecated).\n\n<iframe src=\"https://leetcode.com/playground/GUwJMznC/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GUwJMznC\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of nodes in the tree.\n\n- Time complexity : $$O(N)$$.\n\n    Each node is put onto the stack *once*, by its parent node. We know each node only has one parent because this is a tree. Therefore, each node is only taken off, and processed, once. Processing a node is an $$O(1)$$ operation. Therefore, we get a total time complexity of $$N \\cdot O(1) = O(N)$$. \n\n- Space complexity : $$O(N)$$.\n\n    Remember that in complexity analysis, we're always looking at the worst case. The worst-case tree is one where we have a long \"strand\" of left nodes, with each having a single right node. On one of these trees, the algorithm will work its way down the left nodes first, having at most one of them on the stack at a time. However, every right node that it encounters will be placed on the stack. With half of the nodes being these right nodes, the space used is proportional to the number of nodes in the tree, giving us a space complexity of $$O(N)$$. \n\nFor the problem we've been given here on LeetCode, we haven't been told whether or not the input tree is *balanced* (most non-leaf nodes having 2 children, thus minimizing the maximum depth). Therefore, we have to assume it is *not*. **However**, in an interview, you *might* be asked what the time and space complexity are if the input *was* guaranteed to be a balanced tree. If it is, balanced, then the time complexity remains the same (we still have to visit all $$N$$ nodes), but the space complexity becomes $$O(D)$$, where $$D$$ is the maximum depth. This is equivalent to $$O(\\log \\, N)$$.\n\n<br/>\n\n---\n\n### Approach 2: Recursive Tree Traversal (Pre-order)\n\n**Intuition**\n\nAnother way of traversing a tree is to use recursion to visit each node. If you're not familiar with recursion on trees, check out the [Binary Trees Explore Card](https://leetcode.com/explore/learn/card/data-structure-tree/17/solve-problems-recursively/534/).\n\nRecall that recursive tree algorithms work by treating each node of the tree as the root of a *subtree*. The answer (i.e. the sum of left leaf node values) is then found for each *subtree* by finding the answers for the left and right subtrees and combining (adding) them together.\n\n![Combining results for each subtree.](../Figures/404/tree_dp.png)\n\nTo implement a recursive function, we need to identify the base cases and recursive cases.\n\nThe **base case** is that this subtree is a leaf node (i.e. the subtree only contains a single node; its root node). The value we return for it depends on whether this subtree was to the left or the right of its parent. If it was to the left, we return its value. If it was to the right, we return zero.\n\nThe **recursive** case is that this subtree contains a left and/or right subtree (i.e. the subtree has more than just the root node in it). We call the recursive function on the left and right subtrees, add their results together and return the added result.\n\nLike before though, we still have the problem of knowing whether or not the current subtree was to the left of its parent. With recursion though, there is a far more elegant solution than before: we can simply have an additional boolean parameter on our recursive function, specifying whether or not the subtree is a left one! Note that the *top* subtree is neither a left node, nor a right node, but we pass in false for it, as the purpose of the parameter is to specify whether or not it *is a left subtree*.\n\n```text\ndefine function sum_of_left_leaves(root):\n    return process_subtree(root, false)\n\ndefine function process_subtree(subtree, is_left):\n    if subtree is a leaf node:\n        if is_left is true:\n            return subtree.value\n        else:\n            return 0\n    else:\n        total = 0\n        if subtree.left exists:\n            total = total + process_subtree(subtree.left, true)\n        if subtree.right exists:\n            total = total + process_subtree(subtree.right, false)\n        return total\n```\n\nNotice too that we don't need a global variable to keep track of the total; by returning the total for each subtree, the final total returned will be the total for the root node, which is the answer.\n\nHere is an animation showing how it works.\n\n!?!../Documents/404_recursive.json:960,600!?!\n\n**Algorithm**\n\nHere is the algorithm, as we described it above.\n\n<iframe src=\"https://leetcode.com/playground/6oySyGPh/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6oySyGPh\"></iframe>\n\n\nWe can simplify the code a bit by defining an additional base case: if the subtree is empty (null), then `0` should be returned. This means we no longer need to do null-checks in three separate places. This is a pattern you will see a lot for recursive tree algorithms.\n\n<iframe src=\"https://leetcode.com/playground/UGTPiwF4/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"UGTPiwF4\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of nodes.\n\n- Time complexity : $$O(N)$$.\n\n    The code within the recursive function is all $$O(1)$$. The function is called exactly once for each of the $$N$$ nodes. Therefore, the total time complexity of the algorithm is $$O(N)$$.\n\n- Space complexity : $$O(N)$$.\n\n    In the worst case, the tree consists of nodes that form a single deep strand. In this case, the runtime-stack will have $$N$$ calls to `processSubtree(...)` on it at the same time, giving a worst-case space complexity of $$O(N)$$.\n\n<br/>\n\n---\n\n### Approach 3: Morris Tree Traversal (Pre-order)\n\n**Intuition**\n\n*Note that this approach is quite advanced. Feel free to skip it if you're just starting out!*\n\nAll of the algorithms we've looked at so far had a time complexity of $$O(N)$$, and a space complexity of $$O(N)$$. \n\nWe know it is impossible to reduce the time complexity any further, as we need to visit each node to access all the nodes. \n\nThe space complexity might initially seem impossible to reduce, as when a node has two children, we need to explore one immediately, and keep track of the other for exploration afterward (often, we explore the left subtree first, and keep track of the right subtree for later). Going down the tree, we can end up with many of these child nodes awaiting exploration. However, there is a tree traversal algorithm that requires $$O(N)$$ time and only $$O(1)$$ space: Morris Tree Traversal. \n\nThis traversal algorithm works by *temporarily* modifying the input tree so that before we explore a left subtree, we find the subtree root's in-order predecessor (which will never have a right child), and make its right link point back up to the root. Then we explore the left subtree. When we're done exploring the left subtree, the link back up to the root will then allow us to explore the right subtree. When we follow the link back up, we also remove it so that the input tree is restored. In this way, we can no longer need an auxiliary data structure to keep track of the right subtrees.\n\nGiven that this algorithm modifies the input tree, will we still be able to identify which nodes are left-leaves? As it turns out we still can. Whenever we reach a node for the first time, we know we haven't yet looked at its left subtree, and so have not modified it. Therefore, we can simply check if the left child is a leaf node, in the same way we did before.\n\nFor more information on this algorithm, check out [Approach 2 in the Preorder Traversal Solution Article](https://leetcode.com/problems/binary-tree-preorder-traversal/solution/). \n\n**Algorithm**\n\nThese solutions are based on [C code](https://leetcode.com/problems/sum-of-left-leaves/discuss/124147/C-solution-with-Morris-Traversal) written by [@kamanelf](https://leetcode.com/kamanelf/) and the template from the [Preorder Traversal Solution Article](https://leetcode.com/problems/binary-tree-preorder-traversal/solution/).\n\n<iframe src=\"https://leetcode.com/playground/n9dKo2YE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"n9dKo2YE\"></iframe>\n\n**Complexity Analysis**\n\n- Time complexity : $$O(N)$$.\n\n    Each node is visited at least once; with some nodes visited twice to remove the added links and move back up to the subtree root. However, no node is visited more than twice, so our time complexity is $$O(N)$$.\n\n- Space complexity : $$O(1)$$.\n\n    We are only using constant extra space.\n\nNote that while the input is modified, it is restored after the algorithm has finished running. The downside of this is that it is not thread-safe. Any other thread that needs to access the tree will have to wait until this algorithm has finished running. For applications that must support concurrent access, this is almost certainly not worth it given the availability of thread-safe alternatives.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

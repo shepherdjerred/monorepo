@@ -1,0 +1,135 @@
+{
+  "questionId": "355",
+  "questionFrontendId": "355",
+  "title": "Design Twitter",
+  "titleSlug": "design-twitter",
+  "difficulty": "Medium",
+  "content": "<p>Design a simplified version of Twitter where users can post tweets, follow/unfollow another user, and is able to see the <code>10</code> most recent tweets in the user&#39;s news feed.</p>\n\n<p>Implement the <code>Twitter</code> class:</p>\n\n<ul>\n\t<li><code>Twitter()</code> Initializes your twitter object.</li>\n\t<li><code>void postTweet(int userId, int tweetId)</code> Composes a new tweet with ID <code>tweetId</code> by the user <code>userId</code>. Each call to this function will be made with a unique <code>tweetId</code>.</li>\n\t<li><code>List&lt;Integer&gt; getNewsFeed(int userId)</code> Retrieves the <code>10</code> most recent tweet IDs in the user&#39;s news feed. Each item in the news feed must be posted by users who the user followed or by the user themself. Tweets must be <strong>ordered from most recent to least recent</strong>.</li>\n\t<li><code>void follow(int followerId, int followeeId)</code> The user with ID <code>followerId</code> started following the user with ID <code>followeeId</code>.</li>\n\t<li><code>void unfollow(int followerId, int followeeId)</code> The user with ID <code>followerId</code> started unfollowing the user with ID <code>followeeId</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;Twitter&quot;, &quot;postTweet&quot;, &quot;getNewsFeed&quot;, &quot;follow&quot;, &quot;postTweet&quot;, &quot;getNewsFeed&quot;, &quot;unfollow&quot;, &quot;getNewsFeed&quot;]\n[[], [1, 5], [1], [1, 2], [2, 6], [1], [1, 2], [1]]\n<strong>Output</strong>\n[null, null, [5], null, null, [6, 5], null, [5]]\n\n<strong>Explanation</strong>\nTwitter twitter = new Twitter();\ntwitter.postTweet(1, 5); // User 1 posts a new tweet (id = 5).\ntwitter.getNewsFeed(1);  // User 1&#39;s news feed should return a list with 1 tweet id -&gt; [5]. return [5]\ntwitter.follow(1, 2);    // User 1 follows user 2.\ntwitter.postTweet(2, 6); // User 2 posts a new tweet (id = 6).\ntwitter.getNewsFeed(1);  // User 1&#39;s news feed should return a list with 2 tweet ids -&gt; [6, 5]. Tweet id 6 should precede tweet id 5 because it is posted after tweet id 5.\ntwitter.unfollow(1, 2);  // User 1 unfollows user 2.\ntwitter.getNewsFeed(1);  // User 1&#39;s news feed should return a list with 1 tweet id -&gt; [5], since user 1 is no longer following user 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= userId, followerId, followeeId &lt;= 500</code></li>\n\t<li><code>0 &lt;= tweetId &lt;= 10<sup>4</sup></code></li>\n\t<li>All the tweets have <strong>unique</strong> IDs.</li>\n\t<li>At most <code>3 * 10<sup>4</sup></code> calls will be made to <code>postTweet</code>, <code>getNewsFeed</code>, <code>follow</code>, and <code>unfollow</code>.</li>\n\t<li>A user cannot follow himself.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"Twitter\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"userId\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"tweetId\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"void\"\n      },\n      \"name\": \"postTweet\"\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"userId\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"list<integer>\"\n      },\n      \"name\": \"getNewsFeed\"\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"followerId\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"followeeId\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"void\"\n      },\n      \"name\": \"follow\"\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"followerId\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"followeeId\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"void\"\n      },\n      \"name\": \"unfollow\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"334K\", \"totalSubmission\": \"752.6K\", \"totalAcceptedRaw\": 334041, \"totalSubmissionRaw\": 752618, \"acRate\": \"44.4%\"}",
+  "likes": 4674,
+  "dislikes": 660,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Design a File Sharing System\", \"titleSlug\": \"design-a-file-sharing-system\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"Twitter\",\"postTweet\",\"getNewsFeed\",\"follow\",\"postTweet\",\"getNewsFeed\",\"unfollow\",\"getNewsFeed\"]\n[[],[1,5],[1],[1,2],[2,6],[1],[1,2],[1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"swiggy\", \"name\": \"Swiggy\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"meesho\", \"name\": \"Meesho\"}, {\"timesEncountered\": 3, \"slug\": \"twitter\", \"name\": \"X\"}, {\"timesEncountered\": 3, \"slug\": \"coupang\", \"name\": \"Coupang\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"paypal\", \"name\": \"PayPal\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Twitter {\npublic:\n    Twitter() {\n        \n    }\n    \n    void postTweet(int userId, int tweetId) {\n        \n    }\n    \n    vector<int> getNewsFeed(int userId) {\n        \n    }\n    \n    void follow(int followerId, int followeeId) {\n        \n    }\n    \n    void unfollow(int followerId, int followeeId) {\n        \n    }\n};\n\n/**\n * Your Twitter object will be instantiated and called as such:\n * Twitter* obj = new Twitter();\n * obj->postTweet(userId,tweetId);\n * vector<int> param_2 = obj->getNewsFeed(userId);\n * obj->follow(followerId,followeeId);\n * obj->unfollow(followerId,followeeId);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Twitter {\n\n    public Twitter() {\n        \n    }\n    \n    public void postTweet(int userId, int tweetId) {\n        \n    }\n    \n    public List<Integer> getNewsFeed(int userId) {\n        \n    }\n    \n    public void follow(int followerId, int followeeId) {\n        \n    }\n    \n    public void unfollow(int followerId, int followeeId) {\n        \n    }\n}\n\n/**\n * Your Twitter object will be instantiated and called as such:\n * Twitter obj = new Twitter();\n * obj.postTweet(userId,tweetId);\n * List<Integer> param_2 = obj.getNewsFeed(userId);\n * obj.follow(followerId,followeeId);\n * obj.unfollow(followerId,followeeId);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Twitter:\n\n    def __init__(self):\n        \n\n    def postTweet(self, userId: int, tweetId: int) -> None:\n        \n\n    def getNewsFeed(self, userId: int) -> List[int]:\n        \n\n    def follow(self, followerId: int, followeeId: int) -> None:\n        \n\n    def unfollow(self, followerId: int, followeeId: int) -> None:\n        \n\n\n# Your Twitter object will be instantiated and called as such:\n# obj = Twitter()\n# obj.postTweet(userId,tweetId)\n# param_2 = obj.getNewsFeed(userId)\n# obj.follow(followerId,followeeId)\n# obj.unfollow(followerId,followeeId)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Twitter(object):\n\n    def __init__(self):\n        \n\n    def postTweet(self, userId, tweetId):\n        \"\"\"\n        :type userId: int\n        :type tweetId: int\n        :rtype: None\n        \"\"\"\n        \n\n    def getNewsFeed(self, userId):\n        \"\"\"\n        :type userId: int\n        :rtype: List[int]\n        \"\"\"\n        \n\n    def follow(self, followerId, followeeId):\n        \"\"\"\n        :type followerId: int\n        :type followeeId: int\n        :rtype: None\n        \"\"\"\n        \n\n    def unfollow(self, followerId, followeeId):\n        \"\"\"\n        :type followerId: int\n        :type followeeId: int\n        :rtype: None\n        \"\"\"\n        \n\n\n# Your Twitter object will be instantiated and called as such:\n# obj = Twitter()\n# obj.postTweet(userId,tweetId)\n# param_2 = obj.getNewsFeed(userId)\n# obj.follow(followerId,followeeId)\n# obj.unfollow(followerId,followeeId)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar Twitter = function() {\n    \n};\n\n/** \n * @param {number} userId \n * @param {number} tweetId\n * @return {void}\n */\nTwitter.prototype.postTweet = function(userId, tweetId) {\n    \n};\n\n/** \n * @param {number} userId\n * @return {number[]}\n */\nTwitter.prototype.getNewsFeed = function(userId) {\n    \n};\n\n/** \n * @param {number} followerId \n * @param {number} followeeId\n * @return {void}\n */\nTwitter.prototype.follow = function(followerId, followeeId) {\n    \n};\n\n/** \n * @param {number} followerId \n * @param {number} followeeId\n * @return {void}\n */\nTwitter.prototype.unfollow = function(followerId, followeeId) {\n    \n};\n\n/** \n * Your Twitter object will be instantiated and called as such:\n * var obj = new Twitter()\n * obj.postTweet(userId,tweetId)\n * var param_2 = obj.getNewsFeed(userId)\n * obj.follow(followerId,followeeId)\n * obj.unfollow(followerId,followeeId)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Twitter {\n    constructor() {\n        \n    }\n\n    postTweet(userId: number, tweetId: number): void {\n        \n    }\n\n    getNewsFeed(userId: number): number[] {\n        \n    }\n\n    follow(followerId: number, followeeId: number): void {\n        \n    }\n\n    unfollow(followerId: number, followeeId: number): void {\n        \n    }\n}\n\n/**\n * Your Twitter object will be instantiated and called as such:\n * var obj = new Twitter()\n * obj.postTweet(userId,tweetId)\n * var param_2 = obj.getNewsFeed(userId)\n * obj.follow(followerId,followeeId)\n * obj.unfollow(followerId,followeeId)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Twitter {\n\n    public Twitter() {\n        \n    }\n    \n    public void PostTweet(int userId, int tweetId) {\n        \n    }\n    \n    public IList<int> GetNewsFeed(int userId) {\n        \n    }\n    \n    public void Follow(int followerId, int followeeId) {\n        \n    }\n    \n    public void Unfollow(int followerId, int followeeId) {\n        \n    }\n}\n\n/**\n * Your Twitter object will be instantiated and called as such:\n * Twitter obj = new Twitter();\n * obj.PostTweet(userId,tweetId);\n * IList<int> param_2 = obj.GetNewsFeed(userId);\n * obj.Follow(followerId,followeeId);\n * obj.Unfollow(followerId,followeeId);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Twitter;\n\n\nTwitter* twitterCreate() {\n    \n}\n\nvoid twitterPostTweet(Twitter* obj, int userId, int tweetId) {\n    \n}\n\nint* twitterGetNewsFeed(Twitter* obj, int userId, int* retSize) {\n    \n}\n\nvoid twitterFollow(Twitter* obj, int followerId, int followeeId) {\n    \n}\n\nvoid twitterUnfollow(Twitter* obj, int followerId, int followeeId) {\n    \n}\n\nvoid twitterFree(Twitter* obj) {\n    \n}\n\n/**\n * Your Twitter struct will be instantiated and called as such:\n * Twitter* obj = twitterCreate();\n * twitterPostTweet(obj, userId, tweetId);\n \n * int* param_2 = twitterGetNewsFeed(obj, userId, retSize);\n \n * twitterFollow(obj, followerId, followeeId);\n \n * twitterUnfollow(obj, followerId, followeeId);\n \n * twitterFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Twitter struct {\n    \n}\n\n\nfunc Constructor() Twitter {\n    \n}\n\n\nfunc (this *Twitter) PostTweet(userId int, tweetId int)  {\n    \n}\n\n\nfunc (this *Twitter) GetNewsFeed(userId int) []int {\n    \n}\n\n\nfunc (this *Twitter) Follow(followerId int, followeeId int)  {\n    \n}\n\n\nfunc (this *Twitter) Unfollow(followerId int, followeeId int)  {\n    \n}\n\n\n/**\n * Your Twitter object will be instantiated and called as such:\n * obj := Constructor();\n * obj.PostTweet(userId,tweetId);\n * param_2 := obj.GetNewsFeed(userId);\n * obj.Follow(followerId,followeeId);\n * obj.Unfollow(followerId,followeeId);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Twitter() {\n\n    fun postTweet(userId: Int, tweetId: Int) {\n        \n    }\n\n    fun getNewsFeed(userId: Int): List<Int> {\n        \n    }\n\n    fun follow(followerId: Int, followeeId: Int) {\n        \n    }\n\n    fun unfollow(followerId: Int, followeeId: Int) {\n        \n    }\n\n}\n\n/**\n * Your Twitter object will be instantiated and called as such:\n * var obj = Twitter()\n * obj.postTweet(userId,tweetId)\n * var param_2 = obj.getNewsFeed(userId)\n * obj.follow(followerId,followeeId)\n * obj.unfollow(followerId,followeeId)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Twitter {\n\n    init() {\n        \n    }\n    \n    func postTweet(_ userId: Int, _ tweetId: Int) {\n        \n    }\n    \n    func getNewsFeed(_ userId: Int) -> [Int] {\n        \n    }\n    \n    func follow(_ followerId: Int, _ followeeId: Int) {\n        \n    }\n    \n    func unfollow(_ followerId: Int, _ followeeId: Int) {\n        \n    }\n}\n\n/**\n * Your Twitter object will be instantiated and called as such:\n * let obj = Twitter()\n * obj.postTweet(userId, tweetId)\n * let ret_2: [Int] = obj.getNewsFeed(userId)\n * obj.follow(followerId, followeeId)\n * obj.unfollow(followerId, followeeId)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Twitter {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Twitter {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn post_tweet(&self, user_id: i32, tweet_id: i32) {\n        \n    }\n    \n    fn get_news_feed(&self, user_id: i32) -> Vec<i32> {\n        \n    }\n    \n    fn follow(&self, follower_id: i32, followee_id: i32) {\n        \n    }\n    \n    fn unfollow(&self, follower_id: i32, followee_id: i32) {\n        \n    }\n}\n\n/**\n * Your Twitter object will be instantiated and called as such:\n * let obj = Twitter::new();\n * obj.post_tweet(userId, tweetId);\n * let ret_2: Vec<i32> = obj.get_news_feed(userId);\n * obj.follow(followerId, followeeId);\n * obj.unfollow(followerId, followeeId);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Twitter\n    def initialize()\n        \n    end\n\n\n=begin\n    :type user_id: Integer\n    :type tweet_id: Integer\n    :rtype: Void\n=end\n    def post_tweet(user_id, tweet_id)\n        \n    end\n\n\n=begin\n    :type user_id: Integer\n    :rtype: Integer[]\n=end\n    def get_news_feed(user_id)\n        \n    end\n\n\n=begin\n    :type follower_id: Integer\n    :type followee_id: Integer\n    :rtype: Void\n=end\n    def follow(follower_id, followee_id)\n        \n    end\n\n\n=begin\n    :type follower_id: Integer\n    :type followee_id: Integer\n    :rtype: Void\n=end\n    def unfollow(follower_id, followee_id)\n        \n    end\n\n\nend\n\n# Your Twitter object will be instantiated and called as such:\n# obj = Twitter.new()\n# obj.post_tweet(user_id, tweet_id)\n# param_2 = obj.get_news_feed(user_id)\n# obj.follow(follower_id, followee_id)\n# obj.unfollow(follower_id, followee_id)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Twitter {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $userId\n     * @param Integer $tweetId\n     * @return NULL\n     */\n    function postTweet($userId, $tweetId) {\n        \n    }\n  \n    /**\n     * @param Integer $userId\n     * @return Integer[]\n     */\n    function getNewsFeed($userId) {\n        \n    }\n  \n    /**\n     * @param Integer $followerId\n     * @param Integer $followeeId\n     * @return NULL\n     */\n    function follow($followerId, $followeeId) {\n        \n    }\n  \n    /**\n     * @param Integer $followerId\n     * @param Integer $followeeId\n     * @return NULL\n     */\n    function unfollow($followerId, $followeeId) {\n        \n    }\n}\n\n/**\n * Your Twitter object will be instantiated and called as such:\n * $obj = Twitter();\n * $obj->postTweet($userId, $tweetId);\n * $ret_2 = $obj->getNewsFeed($userId);\n * $obj->follow($followerId, $followeeId);\n * $obj->unfollow($followerId, $followeeId);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Twitter {\n\n  Twitter() {\n    \n  }\n  \n  void postTweet(int userId, int tweetId) {\n    \n  }\n  \n  List<int> getNewsFeed(int userId) {\n    \n  }\n  \n  void follow(int followerId, int followeeId) {\n    \n  }\n  \n  void unfollow(int followerId, int followeeId) {\n    \n  }\n}\n\n/**\n * Your Twitter object will be instantiated and called as such:\n * Twitter obj = Twitter();\n * obj.postTweet(userId,tweetId);\n * List<int> param2 = obj.getNewsFeed(userId);\n * obj.follow(followerId,followeeId);\n * obj.unfollow(followerId,followeeId);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Twitter() {\n\n    def postTweet(userId: Int, tweetId: Int): Unit = {\n        \n    }\n\n    def getNewsFeed(userId: Int): List[Int] = {\n        \n    }\n\n    def follow(followerId: Int, followeeId: Int): Unit = {\n        \n    }\n\n    def unfollow(followerId: Int, followeeId: Int): Unit = {\n        \n    }\n\n}\n\n/**\n * Your Twitter object will be instantiated and called as such:\n * val obj = new Twitter()\n * obj.postTweet(userId,tweetId)\n * val param_2 = obj.getNewsFeed(userId)\n * obj.follow(followerId,followeeId)\n * obj.unfollow(followerId,followeeId)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Twitter do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec post_tweet(user_id :: integer, tweet_id :: integer) :: any\n  def post_tweet(user_id, tweet_id) do\n    \n  end\n\n  @spec get_news_feed(user_id :: integer) :: [integer]\n  def get_news_feed(user_id) do\n    \n  end\n\n  @spec follow(follower_id :: integer, followee_id :: integer) :: any\n  def follow(follower_id, followee_id) do\n    \n  end\n\n  @spec unfollow(follower_id :: integer, followee_id :: integer) :: any\n  def unfollow(follower_id, followee_id) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Twitter.init_()\n# Twitter.post_tweet(user_id, tweet_id)\n# param_2 = Twitter.get_news_feed(user_id)\n# Twitter.follow(follower_id, followee_id)\n# Twitter.unfollow(follower_id, followee_id)\n\n# Twitter.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec twitter_init_() -> any().\ntwitter_init_() ->\n  .\n\n-spec twitter_post_tweet(UserId :: integer(), TweetId :: integer()) -> any().\ntwitter_post_tweet(UserId, TweetId) ->\n  .\n\n-spec twitter_get_news_feed(UserId :: integer()) -> [integer()].\ntwitter_get_news_feed(UserId) ->\n  .\n\n-spec twitter_follow(FollowerId :: integer(), FolloweeId :: integer()) -> any().\ntwitter_follow(FollowerId, FolloweeId) ->\n  .\n\n-spec twitter_unfollow(FollowerId :: integer(), FolloweeId :: integer()) -> any().\ntwitter_unfollow(FollowerId, FolloweeId) ->\n  .\n\n\n%% Your functions will be called as such:\n%% twitter_init_(),\n%% twitter_post_tweet(UserId, TweetId),\n%% Param_2 = twitter_get_news_feed(UserId),\n%% twitter_follow(FollowerId, FolloweeId),\n%% twitter_unfollow(FollowerId, FolloweeId),\n\n%% twitter_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define twitter%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; post-tweet : exact-integer? exact-integer? -> void?\n    (define/public (post-tweet user-id tweet-id)\n      )\n    ; get-news-feed : exact-integer? -> (listof exact-integer?)\n    (define/public (get-news-feed user-id)\n      )\n    ; follow : exact-integer? exact-integer? -> void?\n    (define/public (follow follower-id followee-id)\n      )\n    ; unfollow : exact-integer? exact-integer? -> void?\n    (define/public (unfollow follower-id followee-id)\n      )))\n\n;; Your twitter% object will be instantiated and called as such:\n;; (define obj (new twitter%))\n;; (send obj post-tweet user-id tweet-id)\n;; (define param_2 (send obj get-news-feed user-id))\n;; (send obj follow follower-id followee-id)\n;; (send obj unfollow follower-id followee-id)"
+    }
+  ],
+  "solution": null
+}

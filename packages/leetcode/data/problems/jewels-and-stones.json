@@ -1,0 +1,135 @@
+{
+  "questionId": "782",
+  "questionFrontendId": "771",
+  "title": "Jewels and Stones",
+  "titleSlug": "jewels-and-stones",
+  "difficulty": "Easy",
+  "content": "<p>You&#39;re given strings <code>jewels</code> representing the types of stones that are jewels, and <code>stones</code> representing the stones you have. Each character in <code>stones</code> is a type of stone you have. You want to know how many of the stones you have are also jewels.</p>\n\n<p>Letters are case sensitive, so <code>&quot;a&quot;</code> is considered a different type of stone from <code>&quot;A&quot;</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> jewels = \"aA\", stones = \"aAAbbbb\"\n<strong>Output:</strong> 3\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> jewels = \"z\", stones = \"ZZ\"\n<strong>Output:</strong> 0\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;=&nbsp;jewels.length, stones.length &lt;= 50</code></li>\n\t<li><code>jewels</code> and <code>stones</code> consist of only English letters.</li>\n\t<li>All the characters of&nbsp;<code>jewels</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [
+    "For each stone, check if it is a jewel."
+  ],
+  "metaData": "{\n  \"name\": \"numJewelsInStones\",\n  \"params\": [\n    {\n      \"name\": \"jewels\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"stones\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1.4M\", \"totalSubmission\": \"1.5M\", \"totalAcceptedRaw\": 1362752, \"totalSubmissionRaw\": 1522258, \"acRate\": \"89.5%\"}",
+  "likes": 5459,
+  "dislikes": 633,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"aA\"\n\"aAAbbbb\"",
+    "\"z\"\n\"ZZ\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numJewelsInStones(string jewels, string stones) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numJewelsInStones(String jewels, String stones) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numJewelsInStones(self, jewels: str, stones: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numJewelsInStones(self, jewels, stones):\n        \"\"\"\n        :type jewels: str\n        :type stones: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} jewels\n * @param {string} stones\n * @return {number}\n */\nvar numJewelsInStones = function(jewels, stones) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numJewelsInStones(jewels: string, stones: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumJewelsInStones(string jewels, string stones) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numJewelsInStones(char* jewels, char* stones) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numJewelsInStones(jewels string, stones string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numJewelsInStones(jewels: String, stones: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numJewelsInStones(_ jewels: String, _ stones: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_jewels_in_stones(jewels: String, stones: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} jewels\n# @param {String} stones\n# @return {Integer}\ndef num_jewels_in_stones(jewels, stones)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $jewels\n     * @param String $stones\n     * @return Integer\n     */\n    function numJewelsInStones($jewels, $stones) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numJewelsInStones(String jewels, String stones) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numJewelsInStones(jewels: String, stones: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_jewels_in_stones(jewels :: String.t, stones :: String.t) :: integer\n  def num_jewels_in_stones(jewels, stones) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_jewels_in_stones(Jewels :: unicode:unicode_binary(), Stones :: unicode:unicode_binary()) -> integer().\nnum_jewels_in_stones(Jewels, Stones) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-jewels-in-stones jewels stones)\n  (-> string? string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "404",
+    "content": "[TOC]\n\n---\n### Approach #1: Brute Force [Accepted]\n\n**Intuition and Algorithm**\n\nFor each stone, check whether it matches any of the jewels.  We can check with a linear scan.\n\n<iframe src=\"https://leetcode.com/playground/7RiyS8Sr/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"7RiyS8Sr\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(J\\text{.length} * S\\text{.length}))$$.\n\n* Space Complexity: $$O(1)$$ additional space complexity in Python.  In Java, this can be $$O(J\\text{.length} + S\\text{.length}))$$ because of the creation of new arrays.\n\n---\n### Approach #2: Hash Set [Accepted]\n\n**Intuition and Algorithm**\n\nFor each stone, check whether it matches any of the jewels.  We can check efficiently with a *Hash Set*.\n\n<iframe src=\"https://leetcode.com/playground/UidHi4mv/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"UidHi4mv\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(J\\text{.length} + S\\text{.length})$$.  The $$O(J\\text{.length})$$ part comes from creating `J`.  The $$O(S\\text{.length})$$ part comes from searching `S`.\n\n* Space Complexity: $$O(J\\text{.length})$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

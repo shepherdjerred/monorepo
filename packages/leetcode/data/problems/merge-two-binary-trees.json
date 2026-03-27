@@ -1,0 +1,141 @@
+{
+  "questionId": "617",
+  "questionFrontendId": "617",
+  "title": "Merge Two Binary Trees",
+  "titleSlug": "merge-two-binary-trees",
+  "difficulty": "Easy",
+  "content": "<p>You are given two binary trees <code>root1</code> and <code>root2</code>.</p>\n\n<p>Imagine that when you put one of them to cover the other, some nodes of the two trees are overlapped while the others are not. You need to merge the two trees into a new binary tree. The merge rule is that if two nodes overlap, then sum node values up as the new value of the merged node. Otherwise, the NOT null node will be used as the node of the new tree.</p>\n\n<p>Return <em>the merged tree</em>.</p>\n\n<p><strong>Note:</strong> The merging process must start from the root nodes of both trees.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/02/05/merge.jpg\" style=\"width: 600px; height: 163px;\" />\n<pre>\n<strong>Input:</strong> root1 = [1,3,2,5], root2 = [2,1,3,null,4,null,7]\n<strong>Output:</strong> [3,4,5,5,4,null,7]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> root1 = [1], root2 = [1,2]\n<strong>Output:</strong> [2,2]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in both trees is in the range <code>[0, 2000]</code>.</li>\n\t<li><code>-10<sup>4</sup> &lt;= Node.val &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"mergeTrees\",\n  \"params\": [\n    {\n      \"name\": \"root1\",\n      \"type\": \"TreeNode\",\n      \"dealloc\": false\n    },\n    {\n      \"name\": \"root2\",\n      \"type\": \"TreeNode\",\n      \"dealloc\": false\n    }\n  ],\n  \"return\": {\n    \"type\": \"TreeNode\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"894K\", \"totalSubmission\": \"1.1M\", \"totalAcceptedRaw\": 894000, \"totalSubmissionRaw\": 1131350, \"acRate\": \"79.0%\"}",
+  "likes": 9069,
+  "dislikes": 322,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,3,2,5]\n[2,1,3,null,4,null,7]",
+    "[1]\n[1,2]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"mongodb\", \"name\": \"MongoDB\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"josh-technology\", \"name\": \"josh technology\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    TreeNode* mergeTrees(TreeNode* root1, TreeNode* root2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public TreeNode mergeTrees(TreeNode root1, TreeNode root2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def mergeTrees(self, root1: Optional[TreeNode], root2: Optional[TreeNode]) -> Optional[TreeNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def mergeTrees(self, root1, root2):\n        \"\"\"\n        :type root1: Optional[TreeNode]\n        :type root2: Optional[TreeNode]\n        :rtype: Optional[TreeNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root1\n * @param {TreeNode} root2\n * @return {TreeNode}\n */\nvar mergeTrees = function(root1, root2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction mergeTrees(root1: TreeNode | null, root2: TreeNode | null): TreeNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public TreeNode MergeTrees(TreeNode root1, TreeNode root2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nstruct TreeNode* mergeTrees(struct TreeNode* root1, struct TreeNode* root2) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc mergeTrees(root1 *TreeNode, root2 *TreeNode) *TreeNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun mergeTrees(root1: TreeNode?, root2: TreeNode?): TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func mergeTrees(_ root1: TreeNode?, _ root2: TreeNode?) -> TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn merge_trees(root1: Option<Rc<RefCell<TreeNode>>>, root2: Option<Rc<RefCell<TreeNode>>>) -> Option<Rc<RefCell<TreeNode>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root1\n# @param {TreeNode} root2\n# @return {TreeNode}\ndef merge_trees(root1, root2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root1\n     * @param TreeNode $root2\n     * @return TreeNode\n     */\n    function mergeTrees($root1, $root2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  TreeNode? mergeTrees(TreeNode? root1, TreeNode? root2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def mergeTrees(root1: TreeNode, root2: TreeNode): TreeNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec merge_trees(root1 :: TreeNode.t | nil, root2 :: TreeNode.t | nil) :: TreeNode.t | nil\n  def merge_trees(root1, root2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec merge_trees(Root1 :: #tree_node{} | null, Root2 :: #tree_node{} | null) -> #tree_node{} | null.\nmerge_trees(Root1, Root2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (merge-trees root1 root2)\n  (-> (or/c tree-node? #f) (or/c tree-node? #f) (or/c tree-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "163",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach #1 Using Recursion [Accepted]\n\nWe can traverse both the given trees in a preorder fashion. At every step, we check if the current node exists(isn't null) for both the trees. If so, we add the values in the current nodes of both the trees and update the value in the current node of the first tree to reflect this sum obtained. At every step, we also call the original function `mergeTrees()` with the left children and then with the right children of the current nodes of the two trees. If at any step, one of these children happens to be null, we return the child of the other tree(representing the corresponding child subtree) to be added as a child subtree to the calling parent node in the first tree. At the end, the first tree will represent the required resultant merged binary tree.\n\nThe following animation illustrates the process.\n\n!?!../Documents/617_Merge_Trees_Recursion.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/d9nZDPEJ/shared\" frameBorder=\"0\" name=\"d9nZDPEJ\" width=\"100%\" height=\"428\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(m)$$. A total of $$m$$ nodes need to be traversed. Here, $$m$$ represents the minimum number of nodes from the two given trees.\n\n* Space complexity : $$O(m)$$. The depth of the recursion tree can go upto $$m$$ in the case of a skewed tree. In average case, depth will be $$O(logm)$$.\n\n---\n### Approach #2 Iterative Method [Accepted]\n\n**Algorithm**\n\nIn the current approach, we again traverse the two trees, but this time we make use of a $$stack$$ to do so instead of making use of recursion. Each entry in the $$stack$$ stores data in the form $$[node_{tree1}, node_{tree2}]$$. Here, $$node_{tree1}$$ and $$node_{tree2}$$ are the nodes of the first tree and the second tree respectively.\n\nWe start off by pushing the root nodes of both the trees onto the $$stack$$. Then, at every step, we remove a node pair from the top of the stack. For every node pair removed, we add the values corresponding to the two nodes and update the value of the corresponding node in the first tree. Then, if the left child of the first tree exists, we push the left child(pair) of both the trees onto the stack. If the left child of the first tree doesn't exist, we append the left child(subtree) of the second tree to the current node of the first tree. We do the same for the right child pair as well. \n\nIf, at any step, both the current nodes are null, we continue with popping the next nodes from the $$stack$$.\n\nThe following animation depicts the process.\n\n!?!../Documents/617_Merge_Trees_Stack.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/v2TK7i2x/shared\" frameBorder=\"0\" name=\"v2TK7i2x\" width=\"100%\" height=\"515\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. We traverse over a total of $$n$$ nodes. Here, $$n$$ refers to the smaller of the number of nodes in the two trees.\n\n* Space complexity : $$O(n)$$. The depth of stack can grow upto $$n$$ in case of a skewed tree.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

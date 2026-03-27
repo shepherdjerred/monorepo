@@ -1,0 +1,134 @@
+{
+  "questionId": "191",
+  "questionFrontendId": "191",
+  "title": "Number of 1 Bits",
+  "titleSlug": "number-of-1-bits",
+  "difficulty": "Easy",
+  "content": "<p>Given a positive integer <code>n</code>, write a function that returns the number of <span data-keyword=\"set-bit\">set bits</span> in its binary representation (also known as the <a href=\"http://en.wikipedia.org/wiki/Hamming_weight\" target=\"_blank\">Hamming weight</a>).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 11</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The input binary string <strong>1011</strong> has a total of three set bits.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 128</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The input binary string <strong>10000000</strong> has a total of one set bit.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 2147483645</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">30</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The input binary string <strong>1111111111111111111111111111101</strong> has a total of thirty set bits.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<strong>Follow up:</strong> If this function is called many times, how would you optimize it?",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"hammingWeight\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"2.1M\", \"totalSubmission\": \"2.7M\", \"totalAcceptedRaw\": 2092357, \"totalSubmissionRaw\": 2733172, \"acRate\": \"76.6%\"}",
+  "likes": 7172,
+  "dislikes": 1372,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Reverse Bits\", \"titleSlug\": \"reverse-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Power of Two\", \"titleSlug\": \"power-of-two\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Counting Bits\", \"titleSlug\": \"counting-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Binary Watch\", \"titleSlug\": \"binary-watch\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Hamming Distance\", \"titleSlug\": \"hamming-distance\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Binary Number with Alternating Bits\", \"titleSlug\": \"binary-number-with-alternating-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Prime Number of Set Bits in Binary Representation\", \"titleSlug\": \"prime-number-of-set-bits-in-binary-representation\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Convert Date to Binary\", \"titleSlug\": \"convert-date-to-binary\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "11",
+    "128",
+    "2147483645"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"box\", \"name\": \"Box\"}, {\"timesEncountered\": 8, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 3, \"slug\": \"verkada\", \"name\": \"Verkada\"}, {\"timesEncountered\": 2, \"slug\": \"qualcomm\", \"name\": \"Qualcomm\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int hammingWeight(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int hammingWeight(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def hammingWeight(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def hammingWeight(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar hammingWeight = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function hammingWeight(n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int HammingWeight(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int hammingWeight(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func hammingWeight(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun hammingWeight(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func hammingWeight(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn hamming_weight(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef hamming_weight(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function hammingWeight($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int hammingWeight(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def hammingWeight(n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec hamming_weight(n :: integer) :: integer\n  def hamming_weight(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec hamming_weight(N :: integer()) -> integer().\nhamming_weight(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (hamming-weight n)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "44",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Loop and Flip\n\n**Algorithm**\n\nThe solution is straight-forward. We check each of the $$32$$ bits of the number. If the bit is $$1$$, we add one to the number of $$1$$-bits.\n\nWe can check the $$i^{th}$$ bit of a number using a *bit mask*. We start with a mask $$m=1$$, because the binary representation of $$1$$ is,\n\n$$\n0000\\ 0000\\ 0000\\ 0000\\ 0000\\ 0000\\ 0000\\ 0001\n$$\nClearly, a logical AND between any number and the mask $$1$$ gives us the least significant bit of this number. To check the next bit, we shift the mask to the left by one.\n\n$$\n0000\\ 0000\\ 0000\\ 0000\\ 0000\\ 0000\\ 0000\\ 0010\n$$\n\nAnd so on.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/ZdywTFuA/shared\" frameBorder=\"0\" name=\"ZdywTFuA\" width=\"100%\" height=\"241\"></iframe>\n\n**Complexity Analysis**\n\nThe run time depends on the number of bits in $$n$$. Because $$n$$ in this piece of code is a 32-bit integer, the time complexity is $$O(1)$$.\n\nThe space complexity is $$O(1)$$, since no additional space is allocated.\n\n---\n### Approach 2: Bit Manipulation\n\n**Algorithm**\n\nWe can make the previous algorithm simpler and a little faster. Instead of checking every bit of the number, we repeatedly flip the least-significant $$1$$-bit of the number to $$0$$, and add $$1$$ to the sum. As soon as the number becomes $$0$$, we know that it does not have any more $$1$$-bits, and we return the sum.\n\nThe key idea here is to realize that for any number $$n$$, doing a bit-wise AND of $$n$$ and $$n - 1$$ flips the least-significant $$1$$-bit in $$n$$ to $$0$$. Why? Consider the binary representations of $$n$$ and $$n - 1$$.\n\n![Number of 1 Bits](https://leetcode.com/media/original_images/191_Number_Of_Bits.png){:width=\"400px\"}\n\n\n*Figure 1. AND-ing $$n$$ and $$n-1$$ flips the least-significant $$1$$-bit to 0.*\n\n\nIn the binary representation, the least significant $$1$$-bit in $$n$$ always corresponds to a $$0$$-bit in $$n - 1$$. Therefore, anding the two numbers $$n$$ and $$n - 1$$ always flips the least significant $$1$$-bit in $$n$$ to $$0$$, and keeps all other bits the same.\n\nUsing this trick, the code becomes very simple.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/EGLwLfLR/shared\" frameBorder=\"0\" name=\"EGLwLfLR\" width=\"100%\" height=\"190\"></iframe>\n\n**Complexity Analysis**\n\nThe run time depends on the number of $$1$$-bits in $$n$$. In the worst case, all bits in $$n$$ are $$1$$-bits. In case of a 32-bit integer, the run time is $$O(1)$$.\n\nThe space complexity is $$O(1)$$, since no additional space is allocated.\n\n<br>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

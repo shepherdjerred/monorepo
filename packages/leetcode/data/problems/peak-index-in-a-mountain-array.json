@@ -1,0 +1,134 @@
+{
+  "questionId": "882",
+  "questionFrontendId": "852",
+  "title": "Peak Index in a Mountain Array",
+  "titleSlug": "peak-index-in-a-mountain-array",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <strong>mountain</strong> array <code>arr</code> of length <code>n</code> where the values increase to a <strong>peak element</strong> and then decrease.</p>\n\n<p>Return the index of the peak element.</p>\n\n<p>Your task is to solve it in <code>O(log(n))</code> time complexity.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">arr = [0,1,0]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">arr = [0,2,1,0]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">arr = [0,10,5,2]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= arr.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= arr[i] &lt;= 10<sup>6</sup></code></li>\n\t<li><code>arr</code> is <strong>guaranteed</strong> to be a mountain array.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"peakIndexInMountainArray\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1.2M\", \"totalSubmission\": \"1.8M\", \"totalAcceptedRaw\": 1181116, \"totalSubmissionRaw\": 1765868, \"acRate\": \"66.9%\"}",
+  "likes": 8498,
+  "dislikes": 1952,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find Peak Element\", \"titleSlug\": \"find-peak-element\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find in Mountain Array\", \"titleSlug\": \"find-in-mountain-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Removals to Make Mountain Array\", \"titleSlug\": \"minimum-number-of-removals-to-make-mountain-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[0,1,0]",
+    "[0,2,1,0]",
+    "[0,10,5,2]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int peakIndexInMountainArray(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int peakIndexInMountainArray(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def peakIndexInMountainArray(self, arr: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def peakIndexInMountainArray(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {number}\n */\nvar peakIndexInMountainArray = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function peakIndexInMountainArray(arr: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int PeakIndexInMountainArray(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int peakIndexInMountainArray(int* arr, int arrSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func peakIndexInMountainArray(arr []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun peakIndexInMountainArray(arr: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func peakIndexInMountainArray(_ arr: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn peak_index_in_mountain_array(arr: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Integer}\ndef peak_index_in_mountain_array(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Integer\n     */\n    function peakIndexInMountainArray($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int peakIndexInMountainArray(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def peakIndexInMountainArray(arr: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec peak_index_in_mountain_array(arr :: [integer]) :: integer\n  def peak_index_in_mountain_array(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec peak_index_in_mountain_array(Arr :: [integer()]) -> integer().\npeak_index_in_mountain_array(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (peak-index-in-mountain-array arr)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1907",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nGiven a mountain array `arr`, our task is to return the index `i` such that `arr[0] < arr[1] < ... < arr[i - 1] < arr[i] > arr[i + 1] > ... > arr[arr.length - 1]`. In simpler terms, all elements to the left are sorted ascending and all elements to the right are sorted descending.\n\n---\n\n### Approach 1: Linear Scan\n\n#### Intuition\n\nWe are guaranteed to have an array of the form `arr[0] < arr[1] < ... < arr[i - 1] < arr[i] > arr[i + 1] > ... > arr[arr.length - 1]`. As our task is to find the index `i` (called the peak index of the mountain array), we can iterate over the array starting from the first element.\n\nWe can create a pointer `i` and set it to `0` to point to the first element. We compare the current element at index `i` with the next element at index `i + 1`. If `arr[i] < arr[i + 1]`, it means we haven't got the peak of the mountain yet. As a result, we increment `i` by `1` in this case to move to the next element. Otherwise, the first time we see `arr[i] > arr[i + 1]`, we return `i`.\n\n#### Algorithm\n\n1. Create an integer variable `i` and initialize it to `0`.\n2. Using a while loop check if the current element pointed by `i` is smaller than the next element at index `i + 1`. If `arr[i] < arr[i + 1]`, increment `i` by `1`. Otherwise, if `arr[i] > arr[i + 1]`, we return `i`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/mPBmvUp6/shared\" frameBorder=\"0\" width=\"100%\" height=\"225\" name=\"mPBmvUp6\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the length of `arr`.\n\n* Time complexity: $O(n)$.\n    - We are doing a linear scan and comparing adjacent elements until we get the peak of the mountain over the `arr` array. In the worst-case situation, the peak of the mountain could correspond to the second last element of `arr`, in which case we would take $O(n)$ time.\n\n* Space complexity: $O(1)$.\n    - We are not using any extra space other than an integer `i`, which takes up constant space.\n\n---\n\n### Approach 2: Binary Search\n\n#### Intuition\n\nIn a mountain array with peak index `i`, any element at `index` with `index` less than `i` would obey `arr[index] < arr[index + 1]`. Furthermore, any `index` greater than or equal to `i` would follow the rule `arr[index] > arr[index + 1]` (and not obey `arr[index] < arr[index + 1]`).\n\nA scenario like this where our task is to search for an element `i` from a given range `(l, r)` where all values smaller than `i` satisfy a certain condition and all values greater than or equal to `i` do not satisfy it (or vice-versa) can be solved optimally with a binary search algorithm. In binary search, we repeatedly divide the solution space where the answer could be in half until the range contains just one element.\n\nFollowing the above discussion, we use binary search to solve this problem. We create an integer `l` and initialize it to the starting index `0`. We also create another integer variable `r` and set it to the last index of `arr`, i.e., `arr.length - 1`.\n\nWe get the middle of the range `mid = (l + r) / 2` and compare `arr[mid]` with the next element. If `arr[mid] < arr[mid + 1]`, we move to the upper half of the range by setting `l = mid + 1` as our peak index is definitely greater than `mid`. Otherwise, if `arr[mid] > arr[mid + 1]`, we move to the lower half of the range by setting `r = mid` as the peak index is either `mid` or some index smaller than `mid`.\n\nThe answer would be within the range `(l, r)` at any point. All the indices smaller than `l` are indices smaller than the peak index and all indices greater than `r` are indices greater than the peak index. We continue the search as long as `l < r`.\n\nWhen `l == r`, `l` (or `r`) denotes the required peak index.\n\nHere is a visual representation of an example to illustrate how it works:\n\n![img](../Figures/852/852-1.png)\n\n#### Algorithm\n\n1. Create two integer variables `l` and `r` to store the solution space of the problem. We initialize `l` with `0` and `r` to `arr.length - 1`.\n2. While `l < r`:\n    - Get the index of the middle element using `mid = (l + r) / 2`.\n    - If `arr[mid] < arr[mid + 1]`, it indicates peak index is greater than `mid`. As a result, we move to upper half of the range by setting `l = mid + 1`.\n    - Else, if `arr[mid] >= arr[mid + 1]`, it indicates that the peak index is either `mid` or some index smaller than `mid`. As a result, we move to the lower half of the range by setting `r = mid`.\n3. Return `l` (or `r` as both are equal now).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/SvZVBTbd/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"SvZVBTbd\"></iframe>\n\n#### Complexity Analysis\n\nHere $n$ is the length of `arr`.\n\n* Time complexity: $O(\\log n)$.\n    - We perform $O(\\log n)$ iterations using the binary search algorithm as the problem set is divided into half in each iteration.\n\n* Space complexity: $O(1)$.\n    - Except for a few variables `l`, `r`, and `mid` which take constant space each, we do not consume any other space.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

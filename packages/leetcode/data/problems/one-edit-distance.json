@@ -1,0 +1,133 @@
+{
+  "questionId": "161",
+  "questionFrontendId": "161",
+  "title": "One Edit Distance",
+  "titleSlug": "one-edit-distance",
+  "difficulty": "Medium",
+  "content": "<p>Given two strings <code>s</code> and <code>t</code>, return <code>true</code> if they are both one edit distance apart, otherwise return <code>false</code>.</p>\n\n<p>A string <code>s</code> is said to be one distance apart from a string <code>t</code> if you can:</p>\n\n<ul>\n\t<li>Insert <strong>exactly one</strong> character into <code>s</code> to get <code>t</code>.</li>\n\t<li>Delete <strong>exactly one</strong> character from <code>s</code> to get <code>t</code>.</li>\n\t<li>Replace <strong>exactly one</strong> character of <code>s</code> with <strong>a different character</strong> to get <code>t</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;ab&quot;, t = &quot;acb&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> We can insert &#39;c&#39; into s&nbsp;to get&nbsp;t.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;&quot;, t = &quot;&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> We cannot get t from s by only one step.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= s.length, t.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>s</code> and <code>t</code> consist of lowercase letters, uppercase letters, and digits.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"isOneEditDistance\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    },\r\n    {\r\n      \"name\": \"t\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"236.1K\", \"totalSubmission\": \"683.1K\", \"totalAcceptedRaw\": 236050, \"totalSubmissionRaw\": 683130, \"acRate\": \"34.6%\"}",
+  "likes": 1447,
+  "dislikes": 194,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Edit Distance\", \"titleSlug\": \"edit-distance\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"ab\"\n\"acb\"",
+    "\"\"\n\"\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 2, \"slug\": \"stripe\", \"name\": \"Stripe\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isOneEditDistance(string s, string t) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isOneEditDistance(String s, String t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isOneEditDistance(self, s: str, t: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isOneEditDistance(self, s, t):\n        \"\"\"\n        :type s: str\n        :type t: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string} t\n * @return {boolean}\n */\nvar isOneEditDistance = function(s, t) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isOneEditDistance(s: string, t: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsOneEditDistance(string s, string t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isOneEditDistance(char* s, char* t) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isOneEditDistance(s string, t string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isOneEditDistance(s: String, t: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isOneEditDistance(_ s: String, _ t: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_one_edit_distance(s: String, t: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String} t\n# @return {Boolean}\ndef is_one_edit_distance(s, t)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String $t\n     * @return Boolean\n     */\n    function isOneEditDistance($s, $t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isOneEditDistance(String s, String t) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isOneEditDistance(s: String, t: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_one_edit_distance(s :: String.t, t :: String.t) :: boolean\n  def is_one_edit_distance(s, t) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_one_edit_distance(S :: unicode:unicode_binary(), T :: unicode:unicode_binary()) -> boolean().\nis_one_edit_distance(S, T) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-one-edit-distance s t)\n  (-> string? string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "693",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: One pass algorithm\n\n**Intuition**\n\nFirst of all, let's ensure that the string lengths are not too far from each other. If the length difference is 2 or more characters, then `s` and `t` couldn't be one edit away strings.\n\n![compute](../Figures/161/one_away.png)\n\nFor the next let's assume that `s` is always shorter or the same length as `t`. If not, one could always call `isOneEditDistance(t, s)` to inverse the string order.\n\nNow it's time to pass along the strings and to look for the first different character.\n\nIf there are no differences between the first `len(s)` characters, only two situations are possible :\n\n- The strings are equal.\n\n- The strings are one edit away distance.\n\n![compute](../Figures/161/161_pic2.png)\n\nNow what if there _is_ a different character so that `s[i] != t[i]`? \n\n- If the strings are of the same length, _all_ next characters should be equal to keep one edit away distance. To verify it, one has to compare the substrings of `s` and `t` both starting from the `i + 1`th character. \n\n- If `t` is one character longer than `s`, the additional character `t[i]` should be the only difference between both strings. To verify it, one has to compare a substring of `s` starting from the `i`th character and a substring of `t` starting from the `i + 1`th character.\n\n![compute](../Figures/161/161_pic3.png)\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/DHG76dAT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DHG76dAT\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ in the worst case when string lengths are close enough `abs(ns - nt) <= 1`, where `N` is a number of characters in the longest string. $$\\mathcal{O}(1)$$ in the best case when `abs(ns - nt) > 1`.\n \n* Space complexity: $$\\mathcal{O}(N)$$ because strings are immutable in Python and Java and create substring costs $$\\mathcal{O}(N)$$ space. \n\n**Problem generalization: Edit distance**\n\n[Given two words word1 and word2, find the minimum number of operations required to convert word1 to word2.](https://leetcode.com/articles/edit-distance/)",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

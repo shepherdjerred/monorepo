@@ -1,0 +1,133 @@
+{
+  "questionId": "403",
+  "questionFrontendId": "403",
+  "title": "Frog Jump",
+  "titleSlug": "frog-jump",
+  "difficulty": "Hard",
+  "content": "<p>A frog is crossing a river. The river is divided into some number of units, and at each unit, there may or may not exist a stone. The frog can jump on a stone, but it must not jump into the water.</p>\n\n<p>Given a list of <code>stones</code>&nbsp;positions (in units) in sorted <strong>ascending order</strong>, determine if the frog can cross the river by landing on the last stone. Initially, the frog is on the first stone and assumes the first jump must be <code>1</code> unit.</p>\n\n<p>If the frog&#39;s last jump was <code>k</code> units, its next jump must be either <code>k - 1</code>, <code>k</code>, or <code>k + 1</code> units. The frog can only jump in the forward direction.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> stones = [0,1,3,5,6,8,12,17]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The frog can jump to the last stone by jumping 1 unit to the 2nd stone, then 2 units to the 3rd stone, then 2 units to the 4th stone, then 3 units to the 6th stone, 4 units to the 7th stone, and 5 units to the 8th stone.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> stones = [0,1,2,3,4,8,9,11]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> There is no way to jump to the last stone as the gap between the 5th and 6th stone is too large.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= stones.length &lt;= 2000</code></li>\n\t<li><code>0 &lt;= stones[i] &lt;= 2<sup>31</sup> - 1</code></li>\n\t<li><code>stones[0] == 0</code></li>\n\t<li><code>stones</code>&nbsp;is sorted in a strictly increasing order.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"canCross\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"stones\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"335.4K\", \"totalSubmission\": \"710.8K\", \"totalAcceptedRaw\": 335438, \"totalSubmissionRaw\": 710836, \"acRate\": \"47.2%\"}",
+  "likes": 5986,
+  "dislikes": 277,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Sideway Jumps\", \"titleSlug\": \"minimum-sideway-jumps\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Solving Questions With Brainpower\", \"titleSlug\": \"solving-questions-with-brainpower\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Jumps to Reach the Last Index\", \"titleSlug\": \"maximum-number-of-jumps-to-reach-the-last-index\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[0,1,3,5,6,8,12,17]",
+    "[0,1,2,3,4,8,9,11]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 3, \"slug\": \"squarepoint-capital\", \"name\": \"Squarepoint Capital\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 2, \"slug\": \"sprinklr\", \"name\": \"Sprinklr\"}, {\"timesEncountered\": 2, \"slug\": \"otterai\", \"name\": \"Otter.ai\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool canCross(vector<int>& stones) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean canCross(int[] stones) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def canCross(self, stones: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def canCross(self, stones):\n        \"\"\"\n        :type stones: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} stones\n * @return {boolean}\n */\nvar canCross = function(stones) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function canCross(stones: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CanCross(int[] stones) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool canCross(int* stones, int stonesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func canCross(stones []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun canCross(stones: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func canCross(_ stones: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn can_cross(stones: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} stones\n# @return {Boolean}\ndef can_cross(stones)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $stones\n     * @return Boolean\n     */\n    function canCross($stones) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool canCross(List<int> stones) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def canCross(stones: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec can_cross(stones :: [integer]) :: boolean\n  def can_cross(stones) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec can_cross(Stones :: [integer()]) -> boolean().\ncan_cross(Stones) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (can-cross stones)\n  (-> (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1963",
+    "content": "[TOC]\n\n## Solution\n\n### Overview\n\nThere is a river that has $N$ stones on it; each stone has a coordinate number that represents its position. A frog at position `0` must cross the river by reaching the last stone. The frog will always jump in the forward direction, and if the last jump was of `k` steps, then the next jump should be one of `{k - 1, k, k + 1}` steps. We need to tell if the frog will be able to cross the river or not; we can assume the first jump of the frog will be of  `1` step. One key thing to note here is that the frog can only land on stones, so if the frog jumps from the `x` to `x + kth` position and if there is no stone at `x + k`, then the frog cannot jump.\n\n**Note**: In this article, position refers to the location on the river (essentially a point on a straight line), and index refers to the indices in the `stone` array.\n\nWe should take note of two characteristics of this problem at this time. First, as we iterate over the stones, we must decide how far to jump. This choice will depend on our previous choice of jumps. In other words, each decision we make is affected by the previous decisions we have made. Second, the problem is asking to find any way to reach the river's end; it doesn't ask for the sequence of steps. These two characteristics suggest that we could solve this problem using dynamic programming. We will discuss two approaches using dynamic programming.\n\n---\n### Approach 1: Top-Down Dynamic Programming\n\n**Intuition**\n\nLet's start with the position `0`; as we know, the first jump has to be one step. Thus the frog will reach position `1`; if there is no stone at `1` (no entry in the array `stone` with value `1`), we can return `false` from here. Now, at each position, the frog will have three choices; for instance, at position `1`, it can choose to jump `{0, 1, 2}` steps to the next position. One way to solve the problem is to iterate over every choice the frog has and then return if it's possible to reach the end of the river by any one of the ways.\n\nIn this approach, we will iterate over every possibility and find if any leads the frog to the last stone. For this recursive approach, what are the parameters that we need to track? We need to track two things:\n\n- The index of stone that the frog is currently on; this is the index of a stone in the array `stone`, remember that the frog can only land on stones.\n- The size of the previous jump that the frog took.\n\nUsing the last jump step, we can find the three possible jump steps that the frog can take this time, and using the current index, we can find out the following index of the stone that the frog will step on. This recursive approach will have repeated subproblems; this can be observed in the figure below. Notice the green nodes are repeated subproblems signifying that we have already solved these subproblems before.\n\n![fig](../Figures/403/403A.png)\n\nTo avoid recalculating results for previously seen subproblems, we will memoize the result for each subproblem. So the next time we need to calculate the result for the same set of parameters `{index, prevJump}`, we can look up the result in constant time instead of recalculating the result. This would be much more efficient than our previous recursive approach, where we had three choices for each of the $N$ positions. Thus the possible number of operations could be as large as $3^N$, which is huge considering $N$ can be up to $2000$. For memoization, we will use an integer array or map `dp`, which will initially have all the entries as `-1`, representing that the answer for these states has not been calculated yet. Then as we proceed, we will store `1` or `0`, denoting `true` or `false` if the frog can cross the river for these states or not respectively.\n\nWe need a way to find out if there is a stone at a particular position or not. This is because when we will find out the next position of the frog, we will check if there is any stone there or not, and then only we will mark the frog's index as the index of stone at that position. This can be done by creating a map `mark` from the position of stones to their indices.\n\n**Algorithm**\n\n1. Create a map `mark` between the stone position to its `index `.\n2. Start with `index` as `0` and `prevJump` as `0`. Our first jump would always be of the `1` step, as the possible jumps are `{-1, 0, 1}`. And we will only consider positive steps jumps to make sure the frog always jumps in the forward direction.\n3. If `index = N - 1`, it implies that the frog has reached the end stone, and hence we can return `1`.\n4. Iterate over the three possibilities `{prevJump - 1, prevJump, prevJump + 1}` as `nextJump`, and do the following:\n\n   i. The position of the frog currently is `stones[index]`, after the jump it would be `stones[index] + nextJump`.\n\n   ii.  Check if `nextJump` is greater than `0` because the frog cannot jump in the backward direction, and staying at the same index won't change the outcome.\n\n   iii. Check if, at this next position, there is a stone or not. If the entry in `mark` is non-zero, it implies that the stone is there.\n\n   iv. If all these conditions satisfy, then make the recursive call with `prevJump = nextJump` and `index = mark[stones[index] + nextJump]`.\n\n5. Find the logical OR from all three possibilities and store it in the variable `ans`, initialized to `false`. Also, store this answer in the array `dp` so that the next time we come across the same states we don't have to go into recursion.\n\n6. Return `ans`.\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/feUQGL3p/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"feUQGL3p\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the number of stones in the river.\n\n* Time complexity: $O(N^2)$\n\n  Each state is defined by the values `index` and `prevJump`. Hence, there will be $N^2$ possible states because both index and jump can take up to $N$ values; this is because if there are $N$ stones, the frog can only jump on them in the forward direction, so if the frog chooses the maximum jump in every case and there is a stone on those jumps position as well then the value of `prevJump` will be `{0, 1, 2, 3, 4, 5, 6.....}` and since the jumps could not be more than the number of stones the value of `prevStone` would also be not more than $N$. We must visit these states to solve the original problem. Each recursive call requires $O(1)$ time, as we have a loop with three iterations. Thus, the total time complexity equals $O(N^2)$.\n\n* Space complexity: $O(N^2)$\n\n  The size of the `dp` array is $N^2$; also, the size of the map `mark` is $N$ (although the keys are the values of stones' position, the number of entries would be equal to the number of stones). There would be some stack space, too; the maximum number of active stack calls would be $O(N)$ one for each stone. Hence, the total space complexity would be $O(N^2)$.\n  <br/>\n\n---\n\n### Approach 2: Bottom-up Dynamic Programming\n\n**Intuition**\n\nIn the previous approach, the recursive calls incurred stack space. We can avoid this by applying the same approach iteratively, which is often faster than the top-down approach. We will follow a similar approach to the previous one but in the reverse manner.\n\nIf we know that we can reach some position `x` and with the last jump as `prevJump`, then we can say that we can reach `{x + prevJump - 1, x + prevJump, x + prevJump + 1}` positions with updated last jump as `{prevJump - 1, prevJump, prevJump + 1}` respectively.\n\nThis is the primary observation we need to implement bottom-up dynamic programming. We start with `index` and `prevJump` as `0`; hence we mark `dp[0][0]` as `true`. Then we iterate over every possible value of the index as `index` and the previous jump as `prevJump`; if the value of `dp[index][prevJump]` is true, then we will try the three possible next jumps and mark their states `true` if the stones exist at those positions.\n\nIn the end, we will check if it's possible to reach the index `N - 1` with any value of the previous jump; if any of the values is true, we will return `true`, or `false` otherwise.\n\n**Algorithm**\n\n1. Create a map `mark` between the stone position to its `index `.\n2. Initialize `dp[0][0]` to `true`.\n3. Iterate over the indices from `0` to `N - 1`, and over the previous jump `prevJump` from `0` to `N - 1`, do the following for each pair:\n\n   i. If the value of `dp[currIndex][prevJump]` is `true`, then check the three following possible positions of the frog, considering the previous jump as `prevJump`.\n   ii. If the stones exist, mark the value at the corresponding indices in `dp` to `true`.\n4.  In the end, check if any value with index as $N - 1$ is `true`; if yes, return `true`; otherwise `, false`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/iScYm6J6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"iScYm6J6\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the number of stones in the river.\n\n* Time complexity: $O(N^2)$\n\n  Each state is defined by the values `index` and `prevJump`. Hence, there will be $N^2$ possible states because both index and jump can take up to $N$ values, and we must visit these states to solve the original problem. Thus, the total time complexity equals $O(N^2)$.\n\n* Space complexity: $O(N^2)$\n\n  The size of the `dp` array is $N^2$; also, the size of the map `mark` is $N$ (although the keys are the values of the stone's position but the number of entries would be equal to the number of stones). Hence, the total space complexity would be $O(N^2)$.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

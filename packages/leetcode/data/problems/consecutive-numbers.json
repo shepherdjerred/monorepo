@@ -1,0 +1,58 @@
+{
+  "questionId": "180",
+  "questionFrontendId": "180",
+  "title": "Consecutive Numbers",
+  "titleSlug": "consecutive-numbers",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Logs</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| id          | int     |\n| num         | varchar |\n+-------------+---------+\nIn SQL, id is the primary key for this table.\nid is an autoincrement column starting from 1.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Find all numbers that appear at least three times consecutively.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nLogs table:\n+----+-----+\n| id | num |\n+----+-----+\n| 1  | 1   |\n| 2  | 1   |\n| 3  | 1   |\n| 4  | 2   |\n| 5  | 1   |\n| 6  | 2   |\n| 7  | 2   |\n+----+-----+\n<strong>Output:</strong> \n+-----------------+\n| ConsecutiveNums |\n+-----------------+\n| 1               |\n+-----------------+\n<strong>Explanation:</strong> 1 is the only number that appears consecutively for at least three times.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Logs (id int, num int)\"], \"mssql\": [\"Create table Logs (id int, num int)\"], \"oraclesql\": [\"Create table Logs (id int, num int)\"], \"database\": true, \"name\": \"consecutive_numbers\", \"pythondata\": [\"Logs = pd.DataFrame([], columns=['id', 'num']).astype({'id':'Int64', 'num':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Logs (id int, num int)\"], \"database_schema\": {\"Logs\": {\"id\": \"INT\", \"num\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"749K\", \"totalSubmission\": \"1.6M\", \"totalAcceptedRaw\": 748974, \"totalSubmissionRaw\": 1558859, \"acRate\": \"48.0%\"}",
+  "likes": 2721,
+  "dislikes": 363,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Logs\":[\"id\",\"num\"]},\"rows\":{\"Logs\":[[1,1],[2,1],[3,1],[4,2],[5,1],[6,2],[7,2]]}}"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"meesho\", \"name\": \"Meesho\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"turing\", \"name\": \"Turing\"}, {\"timesEncountered\": 2, \"slug\": \"delhivery\", \"name\": \"Delhivery\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef consecutive_numbers(logs: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "216",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach: Using `DISTINCT` and `WHERE` clause [Accepted]\n\n**Algorithm**\n\nConsecutive appearing means the Id of the Num are next to each others. Since this problem asks for numbers appearing at least three times consecutively, we can use 3 aliases for this table **Logs**, and then check whether 3 consecutive numbers are all the same.\n\n```sql\nSELECT *\nFROM\n    Logs l1,\n    Logs l2,\n    Logs l3\nWHERE\n    l1.Id = l2.Id - 1\n    AND l2.Id = l3.Id - 1\n    AND l1.Num = l2.Num\n    AND l2.Num = l3.Num\n;\n```\n| Id | Num | Id | Num | Id | Num |\n|----|-----|----|-----|----|-----|\n| 1  | 1   | 2  | 1   | 3  | 1   |\n>Note: The first two columns are from l1, then the next two are from l2, and the last two are from l3.\n\nThen we can select any *Num* column from the above table to get the target data. However, we need to add a keyword `DISTINCT` because it will display a duplicated number if one number appears more than 3 times consecutively.\n\n**MySQL**\n\n```sql\nSELECT DISTINCT\n    l1.Num AS ConsecutiveNums\nFROM\n    Logs l1,\n    Logs l2,\n    Logs l3\nWHERE\n    l1.Id = l2.Id - 1\n    AND l2.Id = l3.Id - 1\n    AND l1.Num = l2.Num\n    AND l2.Num = l3.Num\n;\n```",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

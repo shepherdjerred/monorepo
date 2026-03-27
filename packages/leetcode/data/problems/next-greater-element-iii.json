@@ -1,0 +1,137 @@
+{
+  "questionId": "556",
+  "questionFrontendId": "556",
+  "title": "Next Greater Element III",
+  "titleSlug": "next-greater-element-iii",
+  "difficulty": "Medium",
+  "content": "<p>Given a positive integer <code>n</code>, find <em>the smallest integer which has exactly the same digits existing in the integer</em> <code>n</code> <em>and is greater in value than</em> <code>n</code>. If no such positive integer exists, return <code>-1</code>.</p>\n\n<p><strong>Note</strong> that the returned integer should fit in <strong>32-bit integer</strong>, if there is a valid answer but it does not fit in <strong>32-bit integer</strong>, return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> n = 12\n<strong>Output:</strong> 21\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> n = 21\n<strong>Output:</strong> -1\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"nextGreaterElement\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"207.7K\", \"totalSubmission\": \"589.6K\", \"totalAcceptedRaw\": 207726, \"totalSubmissionRaw\": 589601, \"acRate\": \"35.2%\"}",
+  "likes": 3937,
+  "dislikes": 495,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Next Greater Element I\", \"titleSlug\": \"next-greater-element-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Next Greater Element II\", \"titleSlug\": \"next-greater-element-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Next Palindrome Using Same Digits\", \"titleSlug\": \"next-palindrome-using-same-digits\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "12",
+    "21"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"doordash\", \"name\": \"DoorDash\"}], \"more_than_six_months\": [{\"timesEncountered\": 19, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 9, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 3, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int nextGreaterElement(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int nextGreaterElement(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def nextGreaterElement(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def nextGreaterElement(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar nextGreaterElement = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function nextGreaterElement(n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NextGreaterElement(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int nextGreaterElement(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func nextGreaterElement(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun nextGreaterElement(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func nextGreaterElement(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn next_greater_element(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef next_greater_element(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function nextGreaterElement($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int nextGreaterElement(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def nextGreaterElement(n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec next_greater_element(n :: integer) :: integer\n  def next_greater_element(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec next_greater_element(N :: integer()) -> integer().\nnext_greater_element(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (next-greater-element n)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "106",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach #1 Brute Force\n\nTo solve the given problem, we treat the given number as a string, $$s$$. In this approach, we find out every possible permutation of list formed by the elements of the string $$s$$ formed. We form a list of strings, $$list$$, containing all the permutations possible. Then, we sort the given $$list$$ to find out the permutation which is just larger than the given one. But this one will be a very naive approach, since it requires us to find out every possible permutation which will take really long time.\n\n<!---iframe src=\"https://leetcode.com/playground/UBNhHzjo/shared\" frameBorder=\"0\" name=\"UBNhHzjo\" width=\"100%\" height=\"515\"></iframe>--->\n\n<iframe src=\"https://leetcode.com/playground/gK2XV52c/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"gK2XV52c\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n!)$$. A total of $$n!$$ permutations are possible for a number consisting of $$n$$ digits.\n\n* Space complexity : $$O(n!)$$. A total of $$n!$$ permutations are possible for a number consisting of $$n$$ digits, with each permutation consisting of $$n$$ digits.\n\n\n---\n### Approach #2 Linear Solution\n\n**Algorithm**\n\nIn this case as well, we consider the given number $$n$$ as a character array $$a$$.\nFirst, we observe that for any given sequence that is in descending order, no next larger permutation is possible.\n For example, no next permutation is possible for the following array:\n ```\n [9, 5, 4, 3, 1]\n ```\n\nWe need to find the first pair of two successive numbers $$a[i]$$ and $$a[i-1]$$, from the right, which satisfy\n $$a[i] > a[i-1]$$. Now, no rearrangements to the right of $$a[i-1]$$ can create a larger permutation since that subarray consists of numbers in descending order.\n Thus, we need to rearrange the numbers to the right of $$a[i-1]$$ including itself.\n\nNow, what kind of rearrangement will produce the next larger number? We want to create the permutation just larger than the current one. Therefore, we need to replace the number $$a[i-1]$$ with the number which is just larger than itself among the numbers lying to its right section, say $$a[j]$$.\n\n![Next Greater Element ](https://leetcode.com/media/original_images/31_nums_graph.png)\n\n\nWe swap the numbers $$a[i-1]$$ and $$a[j]$$. We now have the correct number at index $$i-1$$. But still the current permutation isn't the permutation\n    that we are looking for. We need the smallest permutation that can be formed by using the numbers only to the right of $$a[i-1]$$. Therefore, we need to place those\n     numbers in ascending order to get their smallest permutation.\n\nBut, recall that while scanning the numbers from the right, we simply kept decrementing the index\n      until we found the pair $$a[i]$$ and $$a[i-1]$$ where,  $$a[i] > a[i-1]$$. Thus, all numbers to the right of $$a[i-1]$$ were already sorted in descending order.\n      Furthermore, swapping $$a[i-1]$$ and $$a[j]$$ didn't change that order.\n      Therefore, we simply need to reverse the numbers following $$a[i-1]$$ to get the next smallest lexicographic permutation.\n\nThe following animation will make things clearer:\n\n<!--![Next Permutation](https://leetcode.com/media/original_images/31_Next_Permutation.gif)-->\n!?!../Documents/556_Next_Greater_Element_III.json!?!\n\n<!--iframe src=\"https://leetcode.com/playground/uSrWDrPW/shared\" frameBorder=\"0\" name=\"uSrWDrPW\" width=\"100%\" height=\"515\"></iframe>-->\n\n<iframe src=\"https://leetcode.com/playground/KGMkdwjK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KGMkdwjK\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. In worst case, only two scans of the whole array are needed. Here, $$n$$ refers to the number of digits in the given number.\n\n* Space complexity : $$O(n)$$. An array $$a$$ of size $$n$$ is used, where $$n$$ is the number of digits in the given number.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "questionId": "595",
+  "questionFrontendId": "595",
+  "title": "Big Countries",
+  "titleSlug": "big-countries",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>World</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| name        | varchar |\n| continent   | varchar |\n| area        | int     |\n| population  | int     |\n| gdp         | bigint  |\n+-------------+---------+\nname is the primary key (column with unique values) for this table.\nEach row of this table gives information about the name of a country, the continent to which it belongs, its area, the population, and its GDP value.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>A country is <strong>big</strong> if:</p>\n\n<ul>\n\t<li>it has an area of at least&nbsp;three million (i.e., <code>3000000 km<sup>2</sup></code>), or</li>\n\t<li>it has a population of at least&nbsp;twenty-five million (i.e., <code>25000000</code>).</li>\n</ul>\n\n<p>Write a solution to find the name, population, and area of the <strong>big countries</strong>.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nWorld table:\n+-------------+-----------+---------+------------+--------------+\n| name        | continent | area    | population | gdp          |\n+-------------+-----------+---------+------------+--------------+\n| Afghanistan | Asia      | 652230  | 25500100   | 20343000000  |\n| Albania     | Europe    | 28748   | 2831741    | 12960000000  |\n| Algeria     | Africa    | 2381741 | 37100000   | 188681000000 |\n| Andorra     | Europe    | 468     | 78115      | 3712000000   |\n| Angola      | Africa    | 1246700 | 20609294   | 100990000000 |\n+-------------+-----------+---------+------------+--------------+\n<strong>Output:</strong> \n+-------------+------------+---------+\n| name        | population | area    |\n+-------------+------------+---------+\n| Afghanistan | 25500100   | 652230  |\n| Algeria     | 37100000   | 2381741 |\n+-------------+------------+---------+\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists World (name varchar(255), continent varchar(255), area int, population int, gdp bigint)\"], \"mssql\": [\"Create table World (name varchar(255), continent varchar(255), area int, population int, gdp bigint)\"], \"oraclesql\": [\"Create table World (name varchar(255), continent varchar(255), area int, population int, gdp int)\"], \"database\": true, \"name\": \"big_countries\", \"pythondata\": [\"World = pd.DataFrame([], columns=['name', 'continent', 'area', 'population', 'gdp']).astype({'name':'object', 'continent':'object', 'area':'Int64', 'population':'Int64', 'gdp':'Int64'})\"], \"manual\": false, \"postgresql\": [\"Create table If Not Exists World (name varchar(255), continent varchar(255), area int, population int, gdp bigint)\"], \"database_schema\": {\"World\": {\"name\": \"VARCHAR(255)\", \"continent\": \"VARCHAR(255)\", \"area\": \"INT\", \"population\": \"INT\", \"gdp\": \"BIGINT\"}}}",
+  "stats": "{\"totalAccepted\": \"2.3M\", \"totalSubmission\": \"3.3M\", \"totalAcceptedRaw\": 2292105, \"totalSubmissionRaw\": 3349901, \"acRate\": \"68.4%\"}",
+  "likes": 3362,
+  "dislikes": 1379,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"World\": [\"name\", \"continent\",\t\"area\",\t\"population\", \"gdp\"]}, \"rows\": {\"World\": [[\"Afghanistan\", \"Asia\", 652230, 25500100, 20343000000], [\"Albania\", \"Europe\", 28748, 2831741, 12960000000], [\"Algeria\", \"Africa\", 2381741, 37100000, 188681000000], [\"Andorra\", \"Europe\", 468, 78115,\t3712000000], [\"Angola\", \"Africa\", 1246700, 20609294, 100990000000]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}]}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef big_countries(world: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "200",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Approach: Filtering rows\n\n#### Intuition\n\n<table>\n  <tr>\n    <th>name</th>\n    <th>continent</th>\n    <th>area</th>\n    <th>population</th>\n    <th>gdp</th>\n  </tr>\n  <tr>\n    <td>Afghanistan</td>\n    <td>Asia</td>\n    <td>652230</td>\n    <td>25500100</td>\n    <td>20343000000</td>\n  </tr>\n  <tr>\n    <td>Albania</td>\n    <td>Europe</td>\n    <td>28748</td>\n    <td>2831741</td>\n    <td>12960000000</td>\n  </tr>\n  <tr>\n    <td>Algeria</td>\n    <td>Africa</td>\n    <td>2381741</td>\n    <td>37100000</td>\n    <td>188681000000</td>\n  </tr>\n  <tr>\n    <td>Andorra</td>\n    <td>Europe</td>\n    <td>468</td>\n    <td>78115</td>\n    <td>3712000000</td>\n  </tr>\n  <tr>\n    <td>Angola</td>\n    <td>Africa</td>\n    <td>1246700</td>\n    <td>20609294</td>\n    <td>100990000000</td>\n  </tr>\n</table>\n\n<br>\nTo determine whether a country is considered `big`, there are two conditions to verify, as stated in the description:\n\n- The country must have an area of at least three million square kilometers, denoted as `area >= 3,000,000`.\n\n- The population of the country should be a minimum of twenty-five million, expressed as `population >= 25,000,000`.\n\n#### Algorithm\n\nFirst, we apply row filtering to identify the countries that satisfy the conditions.\n\n\n```python\n    df = world[(world['area'] >= 3000000) | (world['population'] >= 25000000)]\n```\n\nThis step filters out the rows representing countries that do not meet the conditions, leaving the remaining table as follows.\n\n<table>\n  <tr>\n    <th>name</th>\n    <th>continent</th>\n    <th>area</th>\n    <th>population</th>\n    <th>gdp</th>\n  </tr>\n  <tr>\n    <td>Afghanistan</td>\n    <td>Asia</td>\n    <td>652230</td>\n    <td>25500100</td>\n    <td>20343000000</td>\n  </tr>\n  <tr>\n    <td>Algeria</td>\n    <td>Africa</td>\n    <td>2381741</td>\n    <td>37100000</td>\n    <td>188681000000</td>\n  </tr>\n</table>\n\n\n<br>\n\nNoting that the table has five columns, we need to return three columns according to the requirements of the problem. Thus the next step is returning the three required columns with the relative order as: `name`, `population`, and `area`.\n\n```python\n    df = df[['name', 'population', 'area']]\n```\n\n<table>\n  <tr>\n    <th>name</th>\n    <th>population</th>\n    <th>area</th>\n  </tr>\n  <tr>\n    <td>Afghanistan</td>\n    <td>25500100</td>\n    <td>652230</td>\n  </tr>\n  <tr>\n    <td>Algeria</td>\n    <td>37100000</td>\n    <td>2381741</td> \n  </tr>\n</table>\n \n<br>\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3C3wJk4h/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"3C3wJk4h\"></iframe>\n\n<br>\n\n---\n\n## Database\n\n<!-- h3 for approaches -->\n### Approach: Filtering rows using `WHERE`\n\n<!-- h4 for sections -->\n#### Algorithm\n\nTo determine whether a country is considered `big`, there are two conditions to verify, as stated in the description:\n\n- The country must have an area of at least three million square kilometers, denoted as `area >= 3,000,000`.\n\n- The population of the country should be a minimum of twenty-five million, expressed as `population >= 25,000,000`.\n\n\n```sql\nSELECT \n    * \nFROM \n    world \nWHERE \n    area >= 3000000 \n    OR population >= 25000000\n```\n\n<br>\n\nNoting that we need to return three columns according to the requirements of the problem. Thus the next step is selecting the three required columns with the relative order as: `name`, `population`, and `area`. The complete answer is as follows.\n\n```sql\nSELECT\n    name, population, area\nFROM\n    world\nWHERE\n    area >= 3000000 OR population >= 25000000\n;\n```",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

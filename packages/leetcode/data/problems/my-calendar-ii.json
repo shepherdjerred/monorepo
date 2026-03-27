@@ -1,0 +1,150 @@
+{
+  "questionId": "731",
+  "questionFrontendId": "731",
+  "title": "My Calendar II",
+  "titleSlug": "my-calendar-ii",
+  "difficulty": "Medium",
+  "content": "<p>You are implementing a program to use as your calendar. We can add a new event if adding the event will not cause a <strong>triple booking</strong>.</p>\n\n<p>A <strong>triple booking</strong> happens when three events have some non-empty intersection (i.e., some moment is common to all the three events.).</p>\n\n<p>The event can be represented as a pair of integers <code>startTime</code> and <code>endTime</code> that represents a booking on the half-open interval <code>[startTime, endTime)</code>, the range of real numbers <code>x</code> such that <code>startTime &lt;= x &lt; endTime</code>.</p>\n\n<p>Implement the <code>MyCalendarTwo</code> class:</p>\n\n<ul>\n\t<li><code>MyCalendarTwo()</code> Initializes the calendar object.</li>\n\t<li><code>boolean book(int startTime, int endTime)</code> Returns <code>true</code> if the event can be added to the calendar successfully without causing a <strong>triple booking</strong>. Otherwise, return <code>false</code> and do not add the event to the calendar.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;MyCalendarTwo&quot;, &quot;book&quot;, &quot;book&quot;, &quot;book&quot;, &quot;book&quot;, &quot;book&quot;, &quot;book&quot;]\n[[], [10, 20], [50, 60], [10, 40], [5, 15], [5, 10], [25, 55]]\n<strong>Output</strong>\n[null, true, true, true, false, true, true]\n\n<strong>Explanation</strong>\nMyCalendarTwo myCalendarTwo = new MyCalendarTwo();\nmyCalendarTwo.book(10, 20); // return True, The event can be booked. \nmyCalendarTwo.book(50, 60); // return True, The event can be booked. \nmyCalendarTwo.book(10, 40); // return True, The event can be double booked. \nmyCalendarTwo.book(5, 15);  // return False, The event cannot be booked, because it would result in a triple booking.\nmyCalendarTwo.book(5, 10); // return True, The event can be booked, as it does not use time 10 which is already double booked.\nmyCalendarTwo.book(25, 55); // return True, The event can be booked, as the time in [25, 40) will be double booked with the third event, the time [40, 50) will be single booked, and the time [50, 55) will be double booked with the second event.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= start &lt; end &lt;= 10<sup>9</sup></code></li>\n\t<li>At most <code>1000</code> calls will be made to <code>book</code>.</li>\n</ul>\n",
+  "hints": [
+    "Store two sorted lists of intervals: one list will be all times that are at least single booked, and another list will be all times that are definitely double booked.  If none of the double bookings conflict, then the booking will succeed, and you should update your single and double bookings accordingly."
+  ],
+  "metaData": "{\n  \"classname\": \"MyCalendarTwo\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"name\": \"book\",\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"startTime\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"endTime\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    }\n  ],\n  \"systemdesign\": true,\n  \"params\": [\n    {\n      \"name\": \"starts\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"ends\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<boolean>\",\n    \"dealloc\": true\n  }\n}",
+  "stats": "{\"totalAccepted\": \"213.3K\", \"totalSubmission\": \"338.6K\", \"totalAcceptedRaw\": 213259, \"totalSubmissionRaw\": 338574, \"acRate\": \"63.0%\"}",
+  "likes": 2276,
+  "dislikes": 189,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"My Calendar I\", \"titleSlug\": \"my-calendar-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"My Calendar III\", \"titleSlug\": \"my-calendar-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"MyCalendarTwo\",\"book\",\"book\",\"book\",\"book\",\"book\",\"book\"]\n[[],[10,20],[50,60],[10,40],[5,15],[5,10],[25,55]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class MyCalendarTwo {\npublic:\n    MyCalendarTwo() {\n        \n    }\n    \n    bool book(int startTime, int endTime) {\n        \n    }\n};\n\n/**\n * Your MyCalendarTwo object will be instantiated and called as such:\n * MyCalendarTwo* obj = new MyCalendarTwo();\n * bool param_1 = obj->book(startTime,endTime);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class MyCalendarTwo {\n\n    public MyCalendarTwo() {\n        \n    }\n    \n    public boolean book(int startTime, int endTime) {\n        \n    }\n}\n\n/**\n * Your MyCalendarTwo object will be instantiated and called as such:\n * MyCalendarTwo obj = new MyCalendarTwo();\n * boolean param_1 = obj.book(startTime,endTime);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class MyCalendarTwo:\n\n    def __init__(self):\n        \n\n    def book(self, startTime: int, endTime: int) -> bool:\n        \n\n\n# Your MyCalendarTwo object will be instantiated and called as such:\n# obj = MyCalendarTwo()\n# param_1 = obj.book(startTime,endTime)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class MyCalendarTwo(object):\n\n    def __init__(self):\n        \n\n    def book(self, startTime, endTime):\n        \"\"\"\n        :type startTime: int\n        :type endTime: int\n        :rtype: bool\n        \"\"\"\n        \n\n\n# Your MyCalendarTwo object will be instantiated and called as such:\n# obj = MyCalendarTwo()\n# param_1 = obj.book(startTime,endTime)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar MyCalendarTwo = function() {\n    \n};\n\n/** \n * @param {number} startTime \n * @param {number} endTime\n * @return {boolean}\n */\nMyCalendarTwo.prototype.book = function(startTime, endTime) {\n    \n};\n\n/** \n * Your MyCalendarTwo object will be instantiated and called as such:\n * var obj = new MyCalendarTwo()\n * var param_1 = obj.book(startTime,endTime)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class MyCalendarTwo {\n    constructor() {\n        \n    }\n\n    book(startTime: number, endTime: number): boolean {\n        \n    }\n}\n\n/**\n * Your MyCalendarTwo object will be instantiated and called as such:\n * var obj = new MyCalendarTwo()\n * var param_1 = obj.book(startTime,endTime)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class MyCalendarTwo {\n\n    public MyCalendarTwo() {\n        \n    }\n    \n    public bool Book(int startTime, int endTime) {\n        \n    }\n}\n\n/**\n * Your MyCalendarTwo object will be instantiated and called as such:\n * MyCalendarTwo obj = new MyCalendarTwo();\n * bool param_1 = obj.Book(startTime,endTime);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} MyCalendarTwo;\n\n\nMyCalendarTwo* myCalendarTwoCreate() {\n    \n}\n\nbool myCalendarTwoBook(MyCalendarTwo* obj, int startTime, int endTime) {\n    \n}\n\nvoid myCalendarTwoFree(MyCalendarTwo* obj) {\n    \n}\n\n/**\n * Your MyCalendarTwo struct will be instantiated and called as such:\n * MyCalendarTwo* obj = myCalendarTwoCreate();\n * bool param_1 = myCalendarTwoBook(obj, startTime, endTime);\n \n * myCalendarTwoFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type MyCalendarTwo struct {\n    \n}\n\n\nfunc Constructor() MyCalendarTwo {\n    \n}\n\n\nfunc (this *MyCalendarTwo) Book(startTime int, endTime int) bool {\n    \n}\n\n\n/**\n * Your MyCalendarTwo object will be instantiated and called as such:\n * obj := Constructor();\n * param_1 := obj.Book(startTime,endTime);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class MyCalendarTwo() {\n\n    fun book(startTime: Int, endTime: Int): Boolean {\n        \n    }\n\n}\n\n/**\n * Your MyCalendarTwo object will be instantiated and called as such:\n * var obj = MyCalendarTwo()\n * var param_1 = obj.book(startTime,endTime)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass MyCalendarTwo {\n\n    init() {\n        \n    }\n    \n    func book(_ startTime: Int, _ endTime: Int) -> Bool {\n        \n    }\n}\n\n/**\n * Your MyCalendarTwo object will be instantiated and called as such:\n * let obj = MyCalendarTwo()\n * let ret_1: Bool = obj.book(startTime, endTime)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct MyCalendarTwo {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl MyCalendarTwo {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn book(&self, start_time: i32, end_time: i32) -> bool {\n        \n    }\n}\n\n/**\n * Your MyCalendarTwo object will be instantiated and called as such:\n * let obj = MyCalendarTwo::new();\n * let ret_1: bool = obj.book(startTime, endTime);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class MyCalendarTwo\n    def initialize()\n        \n    end\n\n\n=begin\n    :type start_time: Integer\n    :type end_time: Integer\n    :rtype: Boolean\n=end\n    def book(start_time, end_time)\n        \n    end\n\n\nend\n\n# Your MyCalendarTwo object will be instantiated and called as such:\n# obj = MyCalendarTwo.new()\n# param_1 = obj.book(start_time, end_time)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class MyCalendarTwo {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $startTime\n     * @param Integer $endTime\n     * @return Boolean\n     */\n    function book($startTime, $endTime) {\n        \n    }\n}\n\n/**\n * Your MyCalendarTwo object will be instantiated and called as such:\n * $obj = MyCalendarTwo();\n * $ret_1 = $obj->book($startTime, $endTime);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class MyCalendarTwo {\n\n  MyCalendarTwo() {\n    \n  }\n  \n  bool book(int startTime, int endTime) {\n    \n  }\n}\n\n/**\n * Your MyCalendarTwo object will be instantiated and called as such:\n * MyCalendarTwo obj = MyCalendarTwo();\n * bool param1 = obj.book(startTime,endTime);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class MyCalendarTwo() {\n\n    def book(startTime: Int, endTime: Int): Boolean = {\n        \n    }\n\n}\n\n/**\n * Your MyCalendarTwo object will be instantiated and called as such:\n * val obj = new MyCalendarTwo()\n * val param_1 = obj.book(startTime,endTime)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule MyCalendarTwo do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec book(start_time :: integer, end_time :: integer) :: boolean\n  def book(start_time, end_time) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# MyCalendarTwo.init_()\n# param_1 = MyCalendarTwo.book(start_time, end_time)\n\n# MyCalendarTwo.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec my_calendar_two_init_() -> any().\nmy_calendar_two_init_() ->\n  .\n\n-spec my_calendar_two_book(StartTime :: integer(), EndTime :: integer()) -> boolean().\nmy_calendar_two_book(StartTime, EndTime) ->\n  .\n\n\n%% Your functions will be called as such:\n%% my_calendar_two_init_(),\n%% Param_1 = my_calendar_two_book(StartTime, EndTime),\n\n%% my_calendar_two_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define my-calendar-two%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; book : exact-integer? exact-integer? -> boolean?\n    (define/public (book start-time end-time)\n      )))\n\n;; Your my-calendar-two% object will be instantiated and called as such:\n;; (define obj (new my-calendar-two%))\n;; (define param_1 (send obj book start-time end-time))"
+    }
+  ],
+  "solution": {
+    "id": "2449",
+    "content": "## Solution\n\n---\n\n### Approach 1: Using Overlapped Intervals\n\n#### Intuition\n\nWe are given a set of bookings in the form `[start, end)`, where `start` is included, but `end` is excluded, meaning the booking spans from `start` to `end - 1`. The function `book(start, end)` returns `true` if the booking can be added without causing a triple booking, and `false` otherwise. A triple booking occurs when three bookings overlap, such as `[[1, 5], [2, 4], [3, 4]]`, which all intersect between `[3, 4]`. The booking is only added if the function returns `true`.\n\nThe key problem is preventing a new booking from overlapping with two existing overlapping bookings, which would create a triple booking. For example, in the list `[[3, 10], [4, 8], [10, 15], [20, 25]]`, no triple booking occurs despite overlaps. However, adding `[5, 7]` would overlap with both `[[3, 10], [4, 8]]`, leading to a triple booking.\n\nTo handle this, we track double-overlapping bookings. When `book(start, end)` is called, we check if the new booking overlaps with any double-overlapped bookings. If it does, we return `false`; otherwise, we return `true`, add the booking, and update the double-overlapped list if necessary.\n\nChecking for overlap between two bookings `(start1, end1)` and `(start2, end2)` is done by verifying if `max(start1, start2) < min(end1, end2)`. This condition excludes endpoint overlaps, as the intervals are half-open. If they overlap, the overlap interval is `(max(start1, start2), min(end1, end2))`, also half-open. This can also be observed in the below figure:\n\n![fig](../Figures/731/731_overlapped_intervals.png)\n\n\n#### Algorithm\n\n1. Class `MyCalendarTwo` will have two data members, `bookings` which is the list of all bookings we will get, and `overlapBookings` a list of double overlapping bookings in the previous list. Initialize both as an empty list.\n2. Define the function `doesOverlap(start1, end1, start2, end2)` which will return `true` if bookings `(start1, end1)` and `(start2, end2)` have an overlap.\n3. Define the function `getOverlapped(start1, end1, start2, end2)` which will return the overlapping part of the bookings `(start1, end1)` and `(start2, end2)`.\n4. Implement the function `book(start, end)` as follows:\n\n    - Check if the bookings `(start, end)` overlap with any booking in the list `overlapBookings`, if yes we can return `false` from here.\n    - Iterate over the list `bookings` and check if `(start, end)` overlaps with any booking in it. If yes, add the overlapped part in the list `overlapBookings`.\n    - Add the booking `(start, end)` to the list `booking`.\n    - If we reach here, we can return `true` as no triple booking happened.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/EgFDqNK4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"EgFDqNK4\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the size of the list of `bookings`.\n\n- Time complexity: $O(N)$\n\n  The time complexity for the `book(start, end)` function is $O(N)$ because we iterate through the `bookings` list to check for overlaps and possibly add a new booking. Additionally, we check the `overlapBookings` list, which tracks overlaps. Since the size of `overlapBookings` is always smaller than or equal to the size of `bookings`, the overall time complexity remains $O(N)$.\n\n- Space complexity: $O(N)$\n\n  We maintain two lists: `bookings` for all the bookings and `overlapBookings` for the overlapping intervals. The size of `overlapBookings` can never exceed the size of `bookings`, so the total space complexity is $O(N)$.\n---\n\n### Approach 2: Line Sweep\n\n#### Intuition\n\nThe previous approach works well for the given problem, where we need to avoid triple bookings. However, if the requirements change such as checking for four overlapping bookings, the method becomes less flexible. We'd need to introduce additional lists, for example, to track triple bookings, making the solution harder to maintain and extend.\n\nTo address this, we can use a more flexible and standard solution: the **Line Sweep** algorithm. This approach is common for interval-related problems and can easily handle changes, such as checking for four or more overlapping bookings.\n\nThe Line Sweep algorithm works by marking when bookings start and end. For each booking `(start, end)`, we mark the `start` point by increasing its count by `1` (indicating a booking begins), and we mark the `end` point by decreasing its count by `1` (indicating a booking ends). These marks are stored in a map, which keeps track of the number of bookings starting or ending at each point.\n\nOnce all bookings are processed, we compute the prefix sum over the map. The prefix sum at any point tells us how many active bookings overlap at that moment. If the sum at any point exceeds `2`, it means we have a triple booking. At this point, the function should return `false` to prevent adding a new booking. If no triple booking is found, the function returns `true`, and the booking is allowed.\n\nThis approach is easily extendible. If we wanted to check for four or more bookings instead of three, we would simply adjust the threshold from `2` to `3` when calculating the prefix sum. This flexibility makes the Line Sweep method a more robust solution for variations of the problem.\n\n![fig](../Figures/731/731_line_sweep.png)\n\n#### Algorithm\n\n1. Class `MyCalendarTwo` will have two data members, `maxOverlappedBooking` which is the maximum number of concurrent bookings possible at a time, and `bookingCount` which is a map from integer to integer with the time point as the key and number of bookings as the value.\n2. Initialize `maxOverlappedBooking` as `2`, as we need to check for triple booking.\n3. Define the function `book(start, end)` as:\n\n    - Increase the number of bookings for the time `start` and decrease the number of bookings for `end` by `1` in the map `bookingCount`.\n    - Iterate over each key-value pair in the map in ascending order of keys to find the prefix sum. Add the value in the map to the count `overlappedBooking`.\n    - If `overlappedBooking` is more than two, it implies that this is triple booking. Hence, we should return false. Also, we need to revert the changes in the map as this booking shouldn't be added.\n    - If we reach here, it implies no triple booking and hence returns `true`.\n\n> Note: In the provided CPP solution, numbers are erased from a map after insertion if they are deemed unnecessary. However, instead of using `iterator erase(iterator first, iterator last)`, which operates in $O(1)$ time, we opt for `size_type erase(const Key& key)`, resulting in $O(log n)$ complexity. A micro optimization would be to obtain iterator positions from the insertion, allowing for direct erasure in constant time. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/MGcDSKpz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"MGcDSKpz\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the size of the list of `bookings`.\n\n- Time complexity: $O(N)$\n\n  The time complexity for the `book(start, end)` function is $O(N)$. This is because, we iterate over the bookings entries in the map and find the prefix sum. The number of entries would be $O(N)$ and for each of these we can have $3$ operations with $O(\\log N)$ complexity. Because once we find out the triple booking, we return from there and hence no more iteration is required. Hence the time complexity for the function `book(start, end)` becomes $O(N)$.\n\n- Space complexity: $O(N)$\n\n  The space complexity is $O(N)$ because we store the start and end points of each booking in the map. Each booking requires two entries in the map, so for $N$ bookings, we store $2N$ entries. Therefore, the space complexity is proportional to $N$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

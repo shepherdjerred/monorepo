@@ -1,0 +1,133 @@
+{
+  "questionId": "541",
+  "questionFrontendId": "541",
+  "title": "Reverse String II",
+  "titleSlug": "reverse-string-ii",
+  "difficulty": "Easy",
+  "content": "<p>Given a string <code>s</code> and an integer <code>k</code>, reverse the first <code>k</code> characters for every <code>2k</code> characters counting from the start of the string.</p>\n\n<p>If there are fewer than <code>k</code> characters left, reverse all of them. If there are less than <code>2k</code> but greater than or equal to <code>k</code> characters, then reverse the first <code>k</code> characters and leave the other as original.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> s = \"abcdefg\", k = 2\n<strong>Output:</strong> \"bacdfeg\"\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> s = \"abcd\", k = 2\n<strong>Output:</strong> \"bacd\"\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>s</code> consists of only lowercase English letters.</li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"reverseStr\",\r\n  \"params\": [\r\n      {\r\n        \"name\": \"s\",\r\n        \"type\": \"string\"\r\n      },\r\n      \r\n    {\r\n      \"name\": \"k\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"379.3K\", \"totalSubmission\": \"708.6K\", \"totalAcceptedRaw\": 379340, \"totalSubmissionRaw\": 708643, \"acRate\": \"53.5%\"}",
+  "likes": 2356,
+  "dislikes": 4442,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Reverse String\", \"titleSlug\": \"reverse-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Reverse Words in a String III\", \"titleSlug\": \"reverse-words-in-a-string-iii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Faulty Keyboard\", \"titleSlug\": \"faulty-keyboard\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abcdefg\"\n2",
+    "\"abcd\"\n2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 8, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}]}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string reverseStr(string s, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String reverseStr(String s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def reverseStr(self, s: str, k: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def reverseStr(self, s, k):\n        \"\"\"\n        :type s: str\n        :type k: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} k\n * @return {string}\n */\nvar reverseStr = function(s, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function reverseStr(s: string, k: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string ReverseStr(string s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* reverseStr(char* s, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func reverseStr(s string, k int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun reverseStr(s: String, k: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func reverseStr(_ s: String, _ k: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn reverse_str(s: String, k: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} k\n# @return {String}\ndef reverse_str(s, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $k\n     * @return String\n     */\n    function reverseStr($s, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String reverseStr(String s, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def reverseStr(s: String, k: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec reverse_str(s :: String.t, k :: integer) :: String.t\n  def reverse_str(s, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec reverse_str(S :: unicode:unicode_binary(), K :: integer()) -> unicode:unicode_binary().\nreverse_str(S, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (reverse-str s k)\n  (-> string? exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "321",
+    "content": "[TOC]\n\n---\n### Approach #1: Direct [Accepted]\n\n**Intuition and Algorithm**\n\nWe will reverse each block of `2k` characters directly.\n\nEach block starts at a multiple of `2k`: for example, `0, 2k, 4k, 6k, ...`. One thing to be careful about is we may not reverse each block if there aren't enough characters.\n\nTo reverse a block of characters from `i` to `j`, we can swap characters in positions `i++` and `j--`.\n\n<iframe src=\"https://leetcode.com/playground/ke3DMSV2/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"ke3DMSV2\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$, where $$N$$ is the size of `s`. We build a helper array, plus reverse about half the characters in `s`.\n\n* Space Complexity: $$O(N)$$, the size of `a`.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

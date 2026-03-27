@@ -1,0 +1,133 @@
+{
+  "questionId": "453",
+  "questionFrontendId": "453",
+  "title": "Minimum Moves to Equal Array Elements",
+  "titleSlug": "minimum-moves-to-equal-array-elements",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code> of size <code>n</code>, return <em>the minimum number of moves required to make all array elements equal</em>.</p>\n\n<p>In one move, you can increment <code>n - 1</code> elements of the array by <code>1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> Only three moves are needed (remember each move increments two elements):\n[1,2,3]  =&gt;  [2,3,3]  =&gt;  [3,4,3]  =&gt;  [4,4,4]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,1,1]\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums.length</code></li>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li>The answer is guaranteed to fit in a <strong>32-bit</strong> integer.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"minMoves\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"217.7K\", \"totalSubmission\": \"371.5K\", \"totalAcceptedRaw\": 217738, \"totalSubmissionRaw\": 371529, \"acRate\": \"58.6%\"}",
+  "likes": 2818,
+  "dislikes": 1914,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Moves to Equal Array Elements II\", \"titleSlug\": \"minimum-moves-to-equal-array-elements-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Running Time of N Computers\", \"titleSlug\": \"maximum-running-time-of-n-computers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Pour Water Between Buckets to Make Water Levels Equal\", \"titleSlug\": \"pour-water-between-buckets-to-make-water-levels-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Divide Players Into Teams of Equal Skill\", \"titleSlug\": \"divide-players-into-teams-of-equal-skill\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Minimum Operations to Make All Elements Divisible by Three\", \"titleSlug\": \"find-minimum-operations-to-make-all-elements-divisible-by-three\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3]",
+    "[1,1,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"indeed\", \"name\": \"Indeed\"}, {\"timesEncountered\": 2, \"slug\": \"coursera\", \"name\": \"Coursera\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minMoves(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minMoves(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minMoves(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minMoves(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar minMoves = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minMoves(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinMoves(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minMoves(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minMoves(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minMoves(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minMoves(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_moves(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef min_moves(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function minMoves($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minMoves(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minMoves(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_moves(nums :: [integer]) :: integer\n  def min_moves(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_moves(Nums :: [integer()]) -> integer().\nmin_moves(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-moves nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "77",
+    "content": "[TOC]\n\n\n## Solution\n\n---\n\n### Approach 1: Brute Force [Time Limit Exceeded]\n\nFirstly, we know that in order to make all the elements equal to each other with minimum moves, we need to do the increments in all but the maximum element of the array.\n Thus, in the brute force approach, we scan the complete array to find the maximum and the minimum element. After this, we add 1 to all the elements except the maximum element, and\nincrement the count for the number of moves done. Again, we repeat the same process, and this continues until the maximum and the minimum element become equal to each other.\n\n<iframe src=\"https://leetcode.com/playground/zDzVEUkJ/shared\" frameBorder=\"0\" name=\"zDzVEUkJ\" width=\"100%\" height=\"479\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n^2 k)$, where $n$ is the length of the array and $k$ is the difference between maximum element and minimum element.\n* Space complexity : $O(1)$. No extra space required.\n\n---\n\n### Approach 2: Better Brute Force[Time Limit Exceeded]\n\n#### Algorithm\n\nIn the previous approach, we added 1 to every element in a single step. But, we can modify this approach to some extent. In order to make the minimum element equal to the maximum element, we need to add 1 atleast $k$ times,\nafter which, the maximum element could change. Thus, instead of incrementing in steps of 1,we increment in bursts, where each burst will be of size $k=max-min$.\nThus, we scan the complete array to find the maximum and minimum element. Then, we increment every element by $k$ units and add $k$ to the count of moves. Again we\nrepeat the same process, until the maximum and minimum element become equal.\n\n<iframe src=\"https://leetcode.com/playground/FG9JKTT6/shared\" frameBorder=\"0\" name=\"FG9JKTT6\" width=\"100%\" height=\"496\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n^2)$. In every iteration two elements are equalized.\n* Space complexity : $O(1)$. No extra space required.\n\n---\n\n### Approach 3: Using Sorting [Accepted]\n\n#### Algorithm\n\nThe problem gets simplified if we sort the given array in order to obtain a sorted array $a$. Now, similar to Approach 2,we use the difference $diff=max-min$ to update the elements of the array, but we need not traverse the whole array to find the maximum and minimum element every time,\nsince if the array is sorted, we can make use of this property to find the maximum and minimum element after updation in $O(1)$ time. Further, we need not actually update all the elements of the array.\nTo understand how this works, we'll go in a stepwise manner.\n\nFirstly, assume that we are updating the elements of the sorted array after every step of calculating the difference $diff$. We'll see how to find the maximum and minimum element without\ntraversing the array. In the first step, the last element is the largest element. Therefore, $diff=a[n-1]-a[0]$. We add $diff$ to all the elements except the last one i.e. $a[n-1]$.\nNow, the updated element at index 0 ,$a'[0]$ will be $a[0]+diff=a[n-1]$. Thus, the smallest element $a'[0]$ is now equal to the previous largest element $a[n-1]$. Since, the\n elements of the array are sorted, the elements upto index $n-2$ satisfy the property $a[j]>=a[j-1]$. Thus, after updation, the element $a'[n-2]$ will become the largest element, which is obvious due to the sorted array property. Also, $a[0]$\n is still the smallest element.\n\n Thus, for the second updation, we consider the difference $diff$ as $diff=a[n-2]-a[0]$. After updation, $a''[0]$ will become equal to $a'[n-2]$ similar to the first iteration.\n Further, since $a'[0]$ and $a'[n-1]$ were equal. After the second updation, we get $a''[0]=a''[n-1]=a'[n-2]$. Thus, now the largest element will be $a[n-3]$.\n Thus, we can continue in this fashion, and keep on incrementing the number of moves with the difference found at every step.\n\n Now, let's come to step 2. In the first step, we assumed that we are updating the elements of the array $a$ at every step, but we need not do this. This is because, even after updating\n the elements the difference which we consider to add to the number of moves required remains the same because both the elements $max$ and $min$ required to find the $diff$ get updated by the\n same amount everytime.\n\n Thus, we can simply sort the given array once and use $moves=\\sum_{i=1}^{n-1} (a[i]-a[0])$.\n\n<iframe src=\"https://leetcode.com/playground/RaVVUTFL/shared\" frameBorder=\"0\" name=\"RaVVUTFL\" width=\"100%\" height=\"224\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O\\big(nlog(n)\\big)$. Sorting will take $O\\big(nlog(n)\\big)$ time.\n\n* Space complexity : $O(1)$. No extra space required.\n\n---\n\n### Approach 4: Using DP [Accepted]\n\n#### Algorithm\n\nThe given problem can be simplified if we sort the given array once. If we consider a sorted array $a$, instead of trying to work on the complete problem of\nequalizing every element of the array, we can break the problem for array of size $n$ into problems of solving arrays of smaller sizes. Assuming, the elements upto\nindex $i-1$ have been equalized, we can simply consider the element at index $i$ and add the difference $diff=a[i]-a[i-1]$ to the total number of moves for the array upto index $i$ to be equalized i.e. $moves=moves+diff$.\n But when we try to proceed with this step, as per a valid move, the elements following $a[i]$ will also be incremented by the amount $diff$ i.e. $a[j]=a[j]+diff$, for $j>i$.\n But while implementing this approach, we need not increment all such $a[j]$'s. Instead, we'll add the number of $moves$ done so far to the current element i.e. $a[i]$ and update it to $a'[i]=a[i]+moves$.\n\n  In short, we sort the given array, and keep on updating the $moves$ required so far in order to equalize the elements upto the current index without actually changing the elements of the\n  array except the current element. After the complete array has been scanned $moves$ gives the required solution.\n  \n  The following animation will make the process more clear for this example:\n  \n  ```\n  [13 18 3 10 35 68 50 20 50]\n  ```\n  \n  <!-- ![Minimum_Moves_dp](../Figures/453_Minimum_Moves.gif)-->\n  !?!../Documents/453_Minimum_Moves.json:1000,563!?!\n\n\n<iframe src=\"https://leetcode.com/playground/ZeTzTVy6/shared\" frameBorder=\"0\" name=\"ZeTzTVy6\" width=\"100%\" height=\"258\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O\\big(nlog(n)\\big)$. Sorting will take $O\\big(nlog(n)\\big)$ time.\n\n* Space complexity : $O(1)$. Only single extra variable is used.\n\n---\n\n### Approach 5: Using Math[Accepted]\n\n#### Algorithm\n\nThis approach is based on the idea that adding 1 to all the elements except one is equivalent to decrementing 1 from a single element, since we are interested in the relative levels of the\n elements which need to be equalized. Thus, the problem is simplified to find the number of decrement operations required to equalize all the elements of the given array.\n For finding this, it is obvious that we'll reduce all the elements of the array to the minimum element. But, in order to find the solution, we need not actually decrement the elements. We can find the\n number of moves required as $moves=\\sum_{i=0}^{n-1} a[i] - min(a)*n$, where $n$ is the length of the array.\n\n<iframe src=\"https://leetcode.com/playground/n9x34Fi5/shared\" frameBorder=\"0\" name=\"n9x34Fi5\" width=\"100%\" height=\"241\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n)$. We traverse the complete array once.\n\n* Space complexity : $O(1)$. No extra space required.\n\n---\n\n### Approach 6: Modified Approach Using Maths[Accepted]\n\n#### Algorithm\n\nThere could be a problem with the above approach. The value $\\sum_{i=0}^{n-1} a[i]$ could be very large and hence could lead to integer overflow if the $a[i]$'s are\nvery large. To avoid this problem, we can calculate the required number of $moves$ on the fly. $\\sum_{i=0}^{n-1} (a[i]-min(a))$.\n\n<iframe src=\"https://leetcode.com/playground/9udsqVkr/shared\" frameBorder=\"0\" name=\"9udsqVkr\" width=\"100%\" height=\"258\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $O(n)$. One pass for finding minimum and one pass for calculating moves.\n\n* Space complexity : $O(1)$. No extra space required.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

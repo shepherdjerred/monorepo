@@ -1,0 +1,143 @@
+{
+  "questionId": "768",
+  "questionFrontendId": "763",
+  "title": "Partition Labels",
+  "titleSlug": "partition-labels",
+  "difficulty": "Medium",
+  "content": "<p>You are given a string <code>s</code>. We want to partition the string into as many parts as possible so that each letter appears in at most one part. For example, the string <code>&quot;ababcc&quot;</code> can be partitioned into <code>[&quot;abab&quot;, &quot;cc&quot;]</code>, but partitions such as <code>[&quot;aba&quot;, &quot;bcc&quot;]</code> or <code>[&quot;ab&quot;, &quot;ab&quot;, &quot;cc&quot;]</code> are invalid.</p>\n\n<p>Note that the partition is done so that after concatenating all the parts in order, the resultant string should be <code>s</code>.</p>\n\n<p>Return <em>a list of integers representing the size of these parts</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;ababcbacadefegdehijhklij&quot;\n<strong>Output:</strong> [9,7,8]\n<strong>Explanation:</strong>\nThe partition is &quot;ababcbaca&quot;, &quot;defegde&quot;, &quot;hijhklij&quot;.\nThis is a partition so that each letter appears in at most one part.\nA partition like &quot;ababcbacadefegde&quot;, &quot;hijhklij&quot; is incorrect, because it splits s into less parts.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;eccbbbbdec&quot;\n<strong>Output:</strong> [10]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 500</code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Try to greedily choose the smallest partition that includes the first letter.  If you have something like \"abaccbdeffed\", then you might need to add b.  You can use an map like \"last['b'] = 5\" to help you expand the width of your partition."
+  ],
+  "metaData": "{\n  \"name\": \"partitionLabels\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"788.5K\", \"totalSubmission\": \"963.6K\", \"totalAcceptedRaw\": 788534, \"totalSubmissionRaw\": 963626, \"acRate\": \"81.8%\"}",
+  "likes": 11229,
+  "dislikes": 444,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Merge Intervals\", \"titleSlug\": \"merge-intervals\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Optimal Partition of String\", \"titleSlug\": \"optimal-partition-of-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"ababcbacadefegdehijhklij\"",
+    "\"eccbbbbdec\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"inmobi\", \"name\": \"InMobi\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> partitionLabels(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> partitionLabels(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def partitionLabels(self, s: str) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def partitionLabels(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number[]}\n */\nvar partitionLabels = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function partitionLabels(s: string): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> PartitionLabels(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* partitionLabels(char* s, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func partitionLabels(s string) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun partitionLabels(s: String): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func partitionLabels(_ s: String) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn partition_labels(s: String) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer[]}\ndef partition_labels(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer[]\n     */\n    function partitionLabels($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> partitionLabels(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def partitionLabels(s: String): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec partition_labels(s :: String.t) :: [integer]\n  def partition_labels(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec partition_labels(S :: unicode:unicode_binary()) -> [integer()].\npartition_labels(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (partition-labels s)\n  (-> string? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2722",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a string `s` consisting of lowercase letters, and our task is to partition it into the maximum number of contiguous groups while ensuring that each letter appears in only one group. This means that if a letter appears more than once in the string, all of its occurrences must be contained within the same partition. Our goal is to return a list of integers representing the sizes of these partitions rather than the partitions themselves.  \n\nFor example, in the string `\"abcd\"`, since no letter repeats, we can split it into the maximum number of groups: `[\"a\", \"b\", \"c\", \"d\"]`, resulting in `[1,1,1,1]`. However, if we take `\"aabbacc\"`, the letter `'a'` appears multiple times, so we need to form a partition that includes all its occurrences, leading to `[\"aabba\", \"cc\"]` with a response of `[5,2]`. Similarly, in `\"abab\"`, we might be tempted to split at `\"aba\"` and `\"b\"`, but since `'b'` appears in both parts, we must instead merge them into a single group, resulting in `[\"abab\"]` with `[4]` as the output.  \n\nA more natural example like `\"bobhaspepper\"` helps visualize this rule. Here, we get partitions like `[\"bob\", \"h\", \"a\", \"s\", \"peppe\", \"r\"]` because each repeated letter is contained within its respective segment. The key challenge in solving this problem is correctly identifying the last occurrence of each letter to determine partition boundaries. If we attempt to split too early, we might create an invalid partition where a character appears in multiple groups, which is not allowed.  \n\n---\n\n### Approach 1: Two Pointers\n\n#### Intuition\n\nAt first glance, the problem seems tricky because we need to break the string into contiguous partitions while ensuring that each character appears in at most one partition. The key challenge is figuring out where to split the string.  \n\nTo get a better sense of the problem, let's take an example: `s = \"abacbc\"`\n\nIf we try to make a partition at the first occurrence of a character, it might not work. For example, if we cut right after `'a'`, we'd get `\"a\"` and `\"bacbc\"`, but that wouldn't be valid because `'a'` appears again later in the string. This tells us that a partition must extend until the last occurrence of all characters within it.  \n\nSo, the first thing we should do is find out where each character appears for the last time. This helps us determine the boundaries of a partition dynamically while iterating through the string.\n\nWe start by scanning the string to record the last occurrence of each character in an index array. This helps us determine how far we must extend a partition to fully include any character we encounter.  \n\nNow, we use two pointers:\n- One pointer (`partitionEnd`) keeps track of the farthest point we need to reach for the current partition.  \n- The other pointer (`partitionStart`) marks where the current partition begins.  \n\nAs we iterate through the string, we keep extending `partitionEnd` to the maximum last occurrence of any character encountered. Once we reach `partitionEnd`, we finalize the partition and store its size. Then, we update `partitionStart` for the next partition.  \n\nOnce we reach the end of this boundary, we record the partition size and move on to the next segment. By the end, we obtain the possible valid partitions, ensuring that no character appears in more than one.\n\n![Two_Pointers](../Figures/763/greedy_approach_1.png)\n\n#### Algorithm\n\n- Create an array `lastOccurrence` of size `26` to store the last index of each character in `s`.\n- Iterate through `s` and update `lastOccurrence` to record the last position of each character.\n  \n- Initialize `partitionStart` and `partitionEnd` to `0` to track the start and end of the current partition, respectively.\n- Create a list `partitionSizes` to store the sizes of partitions.\n\n- Iterate through `s`:\n  - Update `partitionEnd` to the maximum of its current value and the last occurrence of the current character.\n  - If the current index `i` reaches `partitionEnd`, it means the partition is complete:\n    - Compute the partition size `(i - partitionStart + 1)` and add it to `partitionSizes`.\n    - Update `partitionStart` to `i + 1` for the next partition.\n\n- Return `partitionSizes` containing the sizes of all partitions.\n\n#### Implementation\n\n> Note: We are using an array of size 26 instead of a hash map to track the last occurrence of each character, since there can be at most 26 distinct letters in the string `s`. \n\n<iframe src=\"https://leetcode.com/playground/MN685Ka5/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"MN685Ka5\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input string `s` and $k$ be the number of unique characters in `s`.\n\n- Time complexity: $O(n)$\n\n    The algorithm iterates through the string twice. The first loop takes $O(n)$ time to store the index of the last occurrence of each character in the `lastOccurrence` array. The second loop, also running in $O(n)$ time, determines the partitions by tracking the end of each partition using the `lastOccurrence` array. Since both loops are linear and independent, the overall time complexity is $O(n)$.\n\n- Space complexity: $O(k)$\n\n    The algorithm uses a fixed-size array, `lastOccurrence`, of size 26 to store the last occurrence of each lowercase English letter. In the general case, the space required is proportional to the number of distinct letters in `s`. Thus, for an arbitrary alphabet (a set of distinct values) of size $k$, the space complexity of the algorithm is $O(k)$.\n    \n    The `partitionSizes` array, which stores the lengths of the partitions, is part of the output and is not included in the space complexity analysis, since it is required by the problem statement.\n\n---\n\n### Approach 2: Merge Intervals\n\n#### Intuition\n\nInstead of directly deciding partitions while scanning the string, another intuitive approach is to think in terms of character intervals. Each character appears within a specific range in the string, and our goal is to merge overlapping intervals to determine the correct partitions. This question becomes closely related to [56. Merge Intervals](https://leetcode.com/problems/merge-intervals/description/)\n\nTo begin, we first identify where the occurrences of each character in the string start and end. The first occurrence of a character marks the beginning of its interval, and the last occurrence marks its end. If we can determine these intervals for all characters, we essentially get a set of segments that show where each letter is confined within the string.  \n\nOnce we have these intervals, we need to merge overlapping ones. If two intervals overlap, it means that the characters in those intervals must be part of the same partition since they share a dependency. The merging process ensures that we are not splitting a character across multiple partitions.  \n\nAs we iterate through the string, we keep track of the current partition’s boundaries. If we reach an index that extends beyond the current partition’s range, we update the boundary. When we reach the end of the partition, we record its size and start a new partition.  \n\nThis method allows us to process the string in two sweeps: the first one to determine character intervals and the second to merge them while forming partitions. In terms of complexity, there is not much difference from the above approach. Although it does have a little overhead in terms of space complexity, it can be more intuitive for those who already know the concept of merging intervals.\n\n#### Algorithm\n\n- Initialize an empty array, `partitionSizes` to store partition lengths.\n- Create two arrays, `lastOccurrence` and `firstOccurrence` to track character positions.\n- Initialize `partitionStart` and `partitionEnd` to `0` to track partition boundaries.\n\n- Iterate through `s` to record the last occurrence of each character.\n\n- Iterate through `s` again:\n  - Store the first occurrence of the current character `s[i]` if not already set.\n    - If a new partition starts at current index, i.e. `i > partitionEnd`, store the last partition size and update partition boundaries.\n  - Update `partitionEnd` to the maximum of its current value and and the last occurrence of `s[i]` to ensure that all occurrences of `s[i]` are in the same (current) partition.\n\n- Add the final partition size if it exists.\n\n- Return `partitionSizes` containing partition lengths.\n\n#### Implementation\n\n> Note: We are using an array of size 26 instead of a hash map to track the last occurrence of each character, since there can be at most 26 distinct letters in the string `s`. \n\n<iframe src=\"https://leetcode.com/playground/XDkcMY5o/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XDkcMY5o\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the input string `s` and $k$ be the number of unique characters in `s`.\n\n- Time complexity: $O(n)$\n\n    The algorithm iterates through the string twice. The first loop runs in $O(n)$ time to store the last occurrence index of each character. The second loop also runs in $O(n)$ time to determine the partitions by checking the first and last occurrences of each character. Since both loops are linear and independent of each other, the overall time complexity is $O(n)$.\n\n    The built-in functions used, such as `min` and `max`, operate in constant time $O(1)$, and the operations on the array are amortized $O(1)$. Thus, they do not significantly impact the overall time complexity.\n\n- Space complexity: $O(k)$\n\n    The algorithm uses two fixed-size arrays, `firstOccurrence` and `lastOccurrence`, of size 26 to store each character's interval boundaries. In the general case, the space required is proportional to the number of distinct letters in `s`. Thus, for an arbitrary alphabet (a set of distinct values) of size $k$, the space complexity of the algorithm is $O(k)$.\n    \n    The `partitionSizes` array, which stores the lengths of the partitions, is part of the output and is not included in the space complexity analysis since it is required by the problem statement.\n    \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

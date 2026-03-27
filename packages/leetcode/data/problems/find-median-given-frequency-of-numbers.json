@@ -1,0 +1,53 @@
+{
+  "questionId": "571",
+  "questionFrontendId": "571",
+  "title": "Find Median Given Frequency of Numbers",
+  "titleSlug": "find-median-given-frequency-of-numbers",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Numbers</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| num         | int  |\n| frequency   | int  |\n+-------------+------+\nnum is the primary key (column with unique values) for this table.\nEach row of this table shows the frequency of a number in the database.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>The <a href=\"https://en.wikipedia.org/wiki/Median\" target=\"_blank\"><strong>median</strong></a> is the value separating the higher half from the lower half of a data sample.</p>\n\n<p>Write a solution to report the <strong>median</strong> of all the numbers in the database after decompressing the <code>Numbers</code> table. Round the median to <strong>one decimal point</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nNumbers table:\n+-----+-----------+\n| num | frequency |\n+-----+-----------+\n| 0   | 7         |\n| 1   | 1         |\n| 2   | 3         |\n| 3   | 1         |\n+-----+-----------+\n<strong>Output:</strong> \n+--------+\n| median |\n+--------+\n| 0.0    |\n+--------+\n<strong>Explanation:</strong> \nIf we decompress the Numbers table, we will get [0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 3], so the median is (0 + 0) / 2 = 0.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Numbers (num int, frequency int)\"], \"mssql\": [\"Create table Numbers (num int, frequency int)\"], \"oraclesql\": [\"Create table Numbers (num int, frequency int)\"], \"database\": true, \"name\": \"median_frequency\", \"pythondata\": [\"Numbers = pd.DataFrame([], columns=['num', 'frequency']).astype({'num':'Int64', 'frequency':'Int64'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Numbers (num int, frequency int)\"], \"database_schema\": {\"Numbers\": {\"num\": \"INT\", \"frequency\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"35.9K\", \"totalSubmission\": \"84.9K\", \"totalAcceptedRaw\": 35869, \"totalSubmissionRaw\": 84919, \"acRate\": \"42.2%\"}",
+  "likes": 319,
+  "dislikes": 79,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Median Employee Salary\", \"titleSlug\": \"median-employee-salary\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Numbers\": [\"num\", \"frequency\"]}, \"rows\": {\"Numbers\": [[0, 7], [1, 1], [2, 3], [3, 1]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef median_frequency(numbers: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,145 @@
+{
+  "questionId": "630",
+  "questionFrontendId": "630",
+  "title": "Course Schedule III",
+  "titleSlug": "course-schedule-iii",
+  "difficulty": "Hard",
+  "content": "<p>There are <code>n</code> different online courses numbered from <code>1</code> to <code>n</code>. You are given an array <code>courses</code> where <code>courses[i] = [duration<sub>i</sub>, lastDay<sub>i</sub>]</code> indicate that the <code>i<sup>th</sup></code> course should be taken <b>continuously</b> for <code>duration<sub>i</sub></code> days and must be finished before or on <code>lastDay<sub>i</sub></code>.</p>\n\n<p>You will start on the <code>1<sup>st</sup></code> day and you cannot take two or more courses simultaneously.</p>\n\n<p>Return <em>the maximum number of courses that you can take</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> courses = [[100,200],[200,1300],[1000,1250],[2000,3200]]\n<strong>Output:</strong> 3\nExplanation: \nThere are totally 4 courses, but you can take 3 courses at most:\nFirst, take the 1<sup>st</sup> course, it costs 100 days so you will finish it on the 100<sup>th</sup> day, and ready to take the next course on the 101<sup>st</sup> day.\nSecond, take the 3<sup>rd</sup> course, it costs 1000 days so you will finish it on the 1100<sup>th</sup> day, and ready to take the next course on the 1101<sup>st</sup> day. \nThird, take the 2<sup>nd</sup> course, it costs 200 days so you will finish it on the 1300<sup>th</sup> day. \nThe 4<sup>th</sup> course cannot be taken now, since you will finish it on the 3300<sup>th</sup> day, which exceeds the closed date.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> courses = [[1,2]]\n<strong>Output:</strong> 1\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> courses = [[3,2],[4,3]]\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= courses.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= duration<sub>i</sub>, lastDay<sub>i</sub> &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "During iteration, say I want to add the current course, currentTotalTime being total time of all courses taken till now, but adding the current course might exceed my deadline or it doesn’t.</br></br>\r\n\r\n1. If it doesn’t, then I have added one new course. Increment the currentTotalTime with duration of current course.",
+    "2. If it exceeds deadline, I can swap current course with current courses that has biggest duration.</br>\r\n* No harm done and I might have just reduced the currentTotalTime, right? </br>\r\n* What preprocessing do I need to do on my course processing order so that this swap is always legal?"
+  ],
+  "metaData": "{\r\n  \"name\": \"scheduleCourse\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"courses\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"139.2K\", \"totalSubmission\": \"335.2K\", \"totalAcceptedRaw\": 139157, \"totalSubmissionRaw\": 335234, \"acRate\": \"41.5%\"}",
+  "likes": 4003,
+  "dislikes": 103,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Course Schedule\", \"titleSlug\": \"course-schedule\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Course Schedule II\", \"titleSlug\": \"course-schedule-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Parallel Courses III\", \"titleSlug\": \"parallel-courses-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[100,200],[200,1300],[1000,1250],[2000,3200]]",
+    "[[1,2]]",
+    "[[3,2],[4,3]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"works-applications\", \"name\": \"Works Applications\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int scheduleCourse(vector<vector<int>>& courses) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int scheduleCourse(int[][] courses) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def scheduleCourse(self, courses: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def scheduleCourse(self, courses):\n        \"\"\"\n        :type courses: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} courses\n * @return {number}\n */\nvar scheduleCourse = function(courses) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function scheduleCourse(courses: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ScheduleCourse(int[][] courses) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int scheduleCourse(int** courses, int coursesSize, int* coursesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func scheduleCourse(courses [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun scheduleCourse(courses: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func scheduleCourse(_ courses: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn schedule_course(courses: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} courses\n# @return {Integer}\ndef schedule_course(courses)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $courses\n     * @return Integer\n     */\n    function scheduleCourse($courses) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int scheduleCourse(List<List<int>> courses) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def scheduleCourse(courses: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec schedule_course(courses :: [[integer]]) :: integer\n  def schedule_course(courses) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec schedule_course(Courses :: [[integer()]]) -> integer().\nschedule_course(Courses) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (schedule-course courses)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "184",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach 1: Brute Force\n\n**Algorithm**\n\nThe most naive solution will be to consider every possible permutation of the given courses and to try to take as much courses as possible by  taking the courses in a serial order in every permutation. We can find out the maximum number of courses that can be taken from out of values obtained from these permutations.\n\n**Complexity Analysis**\n\n* Time complexity : $$O\\big((n+1)!\\big)$$. A total of $$n!$$ permutations are possible for the $$courses$$ array of length $$n$$. For every permutation, we scan over the $$n$$ elements of the permutation to find the number of courses that can be taken in each case.\n\n* Space complexity : $$O(n)$$. Each permutation needs $$n$$ space.\n<br />\n<br />\n\n---\n### Approach 2: Recursion with Memoization\n\n**Algorithm**\n\nBefore we move on to the better approaches, let's discuss one basic idea to solve the given problem. Suppose, we are considering only two courses $$(a,x)$$ and $$(b,y)$$. Let's assume $$y>x$$. Now, we'll look at the various relative values which $$a$$ and $$b$$ can take, and which course should be taken first in each of these cases. In all the cases, we assume that the course's duration is always lesser than its end day i.e. $$a<x$$ and $$b<y$$.\n\n1. $$(a+b) &le; x$$: In this case, we can take the courses in any order. Both the courses can be taken irrespective of the order in which the courses are taken.\n\n![Courses](../Figures/630/630_Course_Schedule_III_1.PNG)\n\n\n2. $$(a+b)>x$$, $$(a+b) &leq; y$$: In this case, as is evident from the figure, both the courses can be taken only by taking course $$a$$ before $$b$$.\n\n![Courses](../Figures/630/630_Course_Schedule_III_2.PNG)\n\n\n3. $$(a+b)>x$$, $$(a+b) &leq; y$$: In this case also, both the courses can be taken only by taking course $$a$$ before $$b$$.\n\n![Courses](../Figures/630/630_Course_Schedule_III_3.PNG)\n\n\n4. $$(a+b)>y$$: In this case, irrespective of the order in which we take the courses, only one course can be taken.\n\n![Courses](../Figures/630/630_Course_Schedule_III_4.PNG)\n\n\nFrom the above example, we can conclude that it is always profitable to take the course with a smaller end day prior to a course with a larger end day. This is because, the course with a smaller duration, if can be taken, can surely be taken only if it is taken prior to a course with a larger end day. \n\nBased on this idea, firstly, we sort the given $$courses$$ array based on their end days. Then, we try to take the courses in a serial order from this sorted $$courses$$ array. \n\nIn order to solve the given problem, we make use of a recursive function `schedule(courses, i, time)` which returns the maximum number of courses that can be taken starting from the $$i^{th}$$ course(starting from 0), given the time aleady consumed by the other courses is $$time$$, i.e. the current time is $$time$$, given a $$courses$$ array as the schedule.\n\nNow, in each function call to `schedule(courses, i, time)`, we try to include the current course in the taken courses. But, this can be done only if $$time + duration_i < end\\_day_i$$. Here, $$duration_i$$ refers to the duration of the $$i^{th}$$ course and $$end\\_day_i$$ refers to the end day of the $$i^{th}$$ course. \n\nIf the course can be taken, we increment the number of courses taken and obtain the number of courses that can be taken by passing the updated time and courses' index. i.e. we make the function call `schedule(courses, i + 1, time + duration_i)`. Let's say, we store the number of courses that can be taken by taking the current course in $$taken$$ variable.\n\nFurther, for every current course, we also leave the current course, and find the number of courses that can be taken thereof. Now, we need not update the time, but we need to update the courses' index. Thus, we make the function call, `schedule(courses, i + 1, time)`. Let's say, we store the count obtained in $$not\\_taken$$ variable. \n\nWhile returning the number of courses at the end of each function call, we return the maximum value out of $$taken$$ and $$not\\_taken$$.\n\nThus, the function call `schedule(courses, 0, 0)` gives the required result.\n\n\nIn order to remove this redundancy, we make use of a memoization array $$memo$$, such that $$memo[i][j]$$ is used to store the result of the function call `schedule(courses, i, time)`. Thus, whenever the same function call is made again, we can return the result directly from the $$memo$$ array. This helps to prune the search space to a great extent.\n\n<iframe src=\"https://leetcode.com/playground/3RzNCwEG/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"3RzNCwEG\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n*d)$$. $$memo$$ array of size $$n$$x$$d$$ is filled once. Here, $$n$$ refers to the number of courses in the given $$courses$$ array and $$d$$ refers to the maximum value of the end day from all the end days in the $$courses$$ array.\n\n* Space complexity : $$O(n*d)$$. $$memo$$ array of size $$n$$x$$d$$ is used.\n<br />\n<br />\n\n---\n### Approach 3: Iterative Solution\n\nFor the current approach, the idea goes as follows. As discussed in the previous approaches, we need to sort the given $$courses$$ array based on the end days. Thus, we consider the courses in the ascending order of their end days. We keep a track of the current time in a $$time$$ variable. Along with this, we also keep a track of the number of courses taken till now in $$count$$ variable.\n\nFor each course being considered currently(let's say $$i^{th}$$ course), we try to take this course. But, to be able to do so, the current course should end before its corresponding end day i.e. $$time + duration_i &leq; end\\_day_i$$. Here, $$duration_i$$ refers to the duration of the $$i^{th}$$ course and $$end\\_day_i$$ refers to the end day of the $$i^{th}$$ course. \n\nIf this course can be taken, we update the current time to $$time + duration_i$$ and also increment the current $$count$$ value to indicate that one more course has been taken. \n\nBut, if we aren't able to take the current course i.e. $$time + duration_i > end\\_day_i$$, we can try to take this course by removing some other course from amongst the courses that have already been taken. But, the current course can fit in by removing some other course, only if the duration of the course($$j^{th}$$) being removed $$duration_j$$ is larger than the current course's duration, $$duration_i$$ i.e. $$duration_j > duration_i$$. \n\nWe are sure of the fact that by removing the $$j^{th}$$ course, we can fit in the current course, because, $$course_j$$ was already fitting in the duration available till now. Since, $$duration_i < duration_j$$, the current course can surely take its place. Thus, we look for a course from amongst the taken courses having a duration larger than the current course.\n\nBut why are we doing this replacement? The answer to this question is as follows. By replacing the $$j^{th}$$ course, with the $$i^{th}$$ course of a relatively smaller duration, we can increase the time available for upcoming courses to be taken. An extra $$duration_j - duration_i$$ time can be made available by doing so. \n\nNow, for this saving in time to be maximum, the course taken for the replacement should be the one with the maximum duration. Thus, from amongst the courses that have been taken till now, we find the course having the maximum duration which should be more than the duration of the current course(which can't be taken). \n\nLet's say, this course be called as $$max\\_i$$. Thus, now, a saving of $$duration_{max\\_i} - duration_i$$ can be achived, which could help later in fitting in more courses to be taken.\n\nIf such a course, $$max\\_i$$, is found, we remove this course from the taken courses and consider the current course as taekn. We also mark this course with $$\\text{-1}$$ to indicate that this course has not been taken and should not be considered in the future again for replacement. \n\nBut, if such a course isn't found, we can't take the current course at any cost. Thus, we mark the current course with $$\\text{-1}$$ to indicate that the current course has not been taken.\n\nAt the end, the value of $$count$$ gives the required result.\n\nThe following animation illustrates the process.\n\n!?!../Documents/630_Course_Schedule_III.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/PT2AikoK/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"PT2AikoK\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^2)$$.  We iterate over the $$count$$ array of size $$n$$ once. For every element currently considered, we could scan backwards till the first element, giving $$O(n^2)$$ complexity. Sorting the $$count$$ array takes $$O\\big(n \\log n\\big)$$ time for $$count$$ array.\n\n* Space complexity : $$O(1)$$. Constant extra space is used.\n<br />\n<br />\n\n---\n### Approach 4: Optimized Iterative\n\nIn the last approach, we've seen that, in the case of current course which can't be taken direclty, i.e. for $$time + duration_i > end\\_day_i$$, we need to traverse back in the $$courses$$ array till the beginning to find a course with the maximum duration which is larger than the current course's duration. This backward traversal also goes through the courses which aren't  taken and thus, can't be replaced, and have been marked as $$\\text{-1}$$. \n\nWe can bring in some optimization here. For this, we should search among only those courses which have been taken(and not the ones which haven't been taken). \n\nTo do so, as we iterate over the $$courses$$ array, we also keep on updating it, such that the first $$count$$ number of elements in this array now correspond to only those $$count$$ number of courses which have been taken till now. \n\nThus, whenever we update the $$count$$ to indicate that one more course has been taken, we also update the $$courses[count]$$ entry to \nreflect the current course that has just been taken. \n\nWhenever, we find a course for which $$time + duration_i > end\\_day_i$$, we find a $$max_i$$ course from only amongst these first $$count$$ number of courses in the $$courses$$ array, which indicate the courses that have been taken till now. \n\nAlso, instead of marking this $$max_i^{th}$$ course with a $$\\text{-1}$$, we can simply replace this course with the current course. Thus, the first $$count$$ courses still reflect the courses that have been taken till now.\n\n<iframe src=\"https://leetcode.com/playground/amMrWUg3/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"amMrWUg3\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n*count)$$. We iterate over a total of $$n$$ elements of the $$courses$$ array. For every element, we can traverse backwards upto at most $$count$$(final value) number of elements.\n\n* Space complexity : $$O(1)$$. Constant extra space is used.\n<br />\n<br />\n\n---\n### Approach 5: Extra List\n\n**Algorithm**\n\nIn the last approach, we updated the $$course$$ array itself so that the first $$count$$ elements indicate the $$count$$ number of courses that have been taken till now. If it is required to retain the $$courses$$ array as such, we can do the same job by maintaining a separate list $$valid\\_list$$ which is the list of those courses that have been taken till now. \n\nThus, to find the $$max_i$$ course, we need to search in this list only. Further, when replacing this $$max_i^{th}$$ course with the current course, we can replace this $$max_i$$ course in the list with current course directly. The rest of the method remains the same as the last approach.\n\n<iframe src=\"https://leetcode.com/playground/KQC89mfJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"KQC89mfJ\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n*m)$$. We iterate over a total of $$n$$ elements of the $$courses$$ array. For every element, we can traverse over at most $$m$$ number of elements. Here, $$m$$ refers to the final length of the $$valid\\_list$$.\n\n* Space complexity : $$O(n)$$. The $$valid\\_list$$ can contain at most $$n$$ courses.\n<br />\n<br />\n\n---\n### Approach 6: Priority Queue\n\n**Algorithm**\n\nThis approach is inspired by [@stomach_ache](http://leetcode.com/stomach_ache)\n\nIn the last few approaches, we've seen that we needed to traverse over the courses which have been taken to find the course(with the maximum duration) which can be replaced by the current course(if it can't be taken directly). These traversals can be saved, if we make use of a Priority Queue, $$queue$$(which is implemented as a Max-Heap) which contains the durations of all the courses that have been taken till now. \n\nThe iteration over the sorted $$courses$$ remains the same as in the last approaches. Whenver the current course($$i^{th}$$ course) can be taken($$time + duration_i &leq; end\\_day_i$$), it is added to the $$queue$$ and the value of the current time is updated to $$time + duration_i$$. \n\nIf the current course can't be taken directly, as in the previous appraoches, we need to find a course whose duration $$duration_j$$ is maximum from amongst the courses taken till now. Now, since we are maintaing a Max-Heap, $$queue$$, we can obtain this duration directly from this $$queue$$. If the duration $$duration_j > duration_i$$, we can replace the $$j^{th}$$ course, with the current one. \n\nThus, we remove the $$duration_j$$ from the $$queue$$ and add the current course's duration $$duration_i$$ to the $$queue$$. We also need to make proper adjustments to the $$time$$ to account for this replacement done.\n\nAt the end, the number of elements in the $$queue$$ represent the number of courses that have been taken till now.\n\n<iframe src=\"https://leetcode.com/playground/KS4QqfKK/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"KS4QqfKK\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O\\big(n \\log n\\big)$$. At most $$n$$ elements are added to the $$queue$$. Adding each element is followed by heapification, which takes $$O\\big(\\log n\\big)$$ time.\n\n* Space complexity : $$O(n)$$. The $$queue$$ containing the durations of the  courses taken can have at most $$n$$ elements",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "questionId": "520",
+  "questionFrontendId": "520",
+  "title": "Detect Capital",
+  "titleSlug": "detect-capital",
+  "difficulty": "Easy",
+  "content": "<p>We define the usage of capitals in a word to be right when one of the following cases holds:</p>\n\n<ul>\n\t<li>All letters in this word are capitals, like <code>&quot;USA&quot;</code>.</li>\n\t<li>All letters in this word are not capitals, like <code>&quot;leetcode&quot;</code>.</li>\n\t<li>Only the first letter in this word is capital, like <code>&quot;Google&quot;</code>.</li>\n</ul>\n\n<p>Given a string <code>word</code>, return <code>true</code> if the usage of capitals in it is right.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> word = \"USA\"\n<strong>Output:</strong> true\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> word = \"FlaG\"\n<strong>Output:</strong> false\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= word.length &lt;= 100</code></li>\n\t<li><code>word</code> consists of lowercase and uppercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"detectCapitalUse\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"word\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"549.8K\", \"totalSubmission\": \"972.2K\", \"totalAcceptedRaw\": 549751, \"totalSubmissionRaw\": 972220, \"acRate\": \"56.5%\"}",
+  "likes": 3585,
+  "dislikes": 473,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Capitalize the Title\", \"titleSlug\": \"capitalize-the-title\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Special Characters II\", \"titleSlug\": \"count-the-number-of-special-characters-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Special Characters I\", \"titleSlug\": \"count-the-number-of-special-characters-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"USA\"",
+    "\"FlaG\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool detectCapitalUse(string word) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean detectCapitalUse(String word) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def detectCapitalUse(self, word: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def detectCapitalUse(self, word):\n        \"\"\"\n        :type word: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} word\n * @return {boolean}\n */\nvar detectCapitalUse = function(word) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function detectCapitalUse(word: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool DetectCapitalUse(string word) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool detectCapitalUse(char* word) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func detectCapitalUse(word string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun detectCapitalUse(word: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func detectCapitalUse(_ word: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn detect_capital_use(word: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} word\n# @return {Boolean}\ndef detect_capital_use(word)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $word\n     * @return Boolean\n     */\n    function detectCapitalUse($word) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool detectCapitalUse(String word) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def detectCapitalUse(word: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec detect_capital_use(word :: String.t) :: boolean\n  def detect_capital_use(word) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec detect_capital_use(Word :: unicode:unicode_binary()) -> boolean().\ndetect_capital_use(Word) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (detect-capital-use word)\n  (-> string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "975",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nIt's a fairly easy problem because it does not require you to use any special trick, and all you need to do is to implement the solution step by step. \n\nHowever, it would take some time if you want to make your code easily readable, beautiful, and short. Below two approaches are introduced, they are *\"Character by Character\"* method and *\"Regex\"* method.\n\n---\n\n### Approach 1: Character by Character\n\n**Intuition**\n\nRecall (part of) the description of the problem:\n\n>We define the usage of capitals in a word to be right when one of the following cases holds:\n>\n> 1. All letters in this word are capitals, like \"USA\".\n> 2. All letters in this word are not capitals, like \"leetcode\".\n> 3. Only the first letter in this word is capital, like \"Google\".\n\nThe problem gives us three patterns, and ask if the given `word` matches any of them. It would be easy to think of checking the cases one by one. In each case, we can just use the most simple method to check if `word` matches the pattern -- **check the char one by one**.\n\n**Algorithm**\n\nWe need three bool variables to store if the pattern matches or not. We set the variables to be true at the beginning, and when the pattern doesn't match, we turn the variables into false. You can also do it otherwise, but the code would be a little longer.\n\nThe code is a little long... **Don't be afraid!** It's fairly easy to understand, and we will shorten it later.\n\n<iframe src=\"https://leetcode.com/playground/Sn67Z7XR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Sn67Z7XR\"></iframe>\n\nThere are a few points you should notice from the code above:\n\n 1. We use the built-in function `isUpperCase` (in `Java`) and `isupper` (in `Python`) to check whether a char is upper case. You can also use the [ASCII](https://en.wikipedia.org/wiki/ASCII) to do that. Just use something like `word.charAt(i) >= 'A' && word.charAt(i) <= 'Z'`.\n\n 2. We use `break` after we find matching failed because there is no need to check whether the further char is valid.\n\n 3. You can combine the three `match` variables into one by reusing it after each case, but I prefer to separate it into three for better readability.\n\nOK! Now we have solved this problem. The time complexity is $$O(n)$$ (where $$n$$ is word length) because we need to check each char at most three times. This time complexity is great, and there is no too much we can do to improve it. \n\nHowever, we can make the code looks better and shorter, without reducing the readability.\n\n**Improvement**\n\nWhere to start? The biggest problem of the code above is that there are too many cases. What if we can combine them? Notice that the biggest difference between case 2 and case 3 is the condition of the first char. \n\nBy combining case 2 and case 3, we get a new pattern: No matter what first char is, the rest should be lowercase. \n\n<iframe src=\"https://leetcode.com/playground/Jd9wzGgS/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Jd9wzGgS\"></iframe>\n\nStill, there are a few points you should notice from the code above:\n\n 1. We check the length of the word firstly because we need to use the first two char to check if the word matches case1. Fortunately, a word with 1 length would always match either case2 or case3.\n\n 2. You can count the number of uppercase/lowercase letters in the word instead of checking it one by one and return immediately. That can also work.\n\n 3. Some programming languages have built-in methods to check if the word matches certain case, such as `istitle()` in `Python` and `word.toUpperCase().equals(word)` in `Java`. Those methods are doing the same things as our code above. It would be great if you can know both these APIs and how they implemented.\n\n**Complexity Analysis**\n\n* Time complexity: $$O(n)$$, where n is the length of the word. We only need to check each char at most constant times.\n\n\n* Space complexity : $$O(1)$$. We only need constant spaces to store our variables.\n\n<br />\n\n---\n\n### Approach 2: Regex\n\n**Intuition**\n\nHey, if we want to do pattern matching, why don't we use [Regular Expression](https://en.wikipedia.org/wiki/Regular_expression) (Regex)? Regex is a great way to match a given pattern to a string.\n\n**Algorithm**\n\nThe pattern of case 1 in regex is $$ [A-Z]* $$, where $$ [A-Z] $$ matches one char from 'A' to 'Z',  $$ * $$ represents repeat the pattern before it at least 0 times. Therefore, this pattern represents \"All capital\".\n\nThe pattern of case 2 in regex is $$ [a-z]* $$, where similarly, $$ [a-z] $$ matches one char from 'a' to 'z'. Therefore, this pattern represents \"All not capital\".\n\nSimilarly, the pattern of case 3 in regex is $$ [A-Z][a-z]* $$.\n\nTake these three pattern together, we have $$ [A-Z]*|[a-z]*|[A-Z][a-z]* $$, where \"|\" represents \"or\".\n\nStill, we can combine case 2 and case 3, and we get $$ .[a-z]* $$, where \".\" can matches any char.\n\nTherefore, the final pattern is $$ [A-Z]*|.[a-z]* $$.\n\n<iframe src=\"https://leetcode.com/playground/PNF2FrED/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"PNF2FrED\"></iframe>\n\nHowever, it is worth pointing out that the speed of regex is highly dependent on its pattern and its implementation, and the time complexity can vary from $$O(1)$$ to $$O(2^n)$$. If you want to control the speed yourself, using Approach 1 would be better.\n\n**Complexity Analysis**\n\n* Time complexity: Basically $$O(n)$$, but depends on implementation.\n\n* Space complexity : $$O(1)$$. We only need constant spaces to store our pattern.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

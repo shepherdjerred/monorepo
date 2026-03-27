@@ -1,0 +1,141 @@
+{
+  "questionId": "735",
+  "questionFrontendId": "735",
+  "title": "Asteroid Collision",
+  "titleSlug": "asteroid-collision",
+  "difficulty": "Medium",
+  "content": "<p>We are given an array <code>asteroids</code> of integers representing asteroids in a row. The indices of the asteroid in the array represent their relative position in space.</p>\n\n<p>For each asteroid, the absolute value represents its size, and the sign represents its direction (positive meaning right, negative meaning left). Each asteroid moves at the same speed.</p>\n\n<p>Find out the state of the asteroids after all collisions. If two asteroids meet, the smaller one will explode. If both are the same size, both will explode. Two asteroids moving in the same direction will never meet.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> asteroids = [5,10,-5]\n<strong>Output:</strong> [5,10]\n<strong>Explanation:</strong> The 10 and -5 collide resulting in 10. The 5 and 10 never collide.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> asteroids = [8,-8]\n<strong>Output:</strong> []\n<strong>Explanation:</strong> The 8 and -8 collide exploding each other.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> asteroids = [10,2,-5]\n<strong>Output:</strong> [10]\n<strong>Explanation:</strong> The 2 and -5 collide resulting in -5. The 10 and -5 collide resulting in 10.\n</pre>\n\n<p><strong class=\"example\">Example 4:</strong></p>\n\n<pre>\n<strong>Input:</strong> asteroids = [3,5,-6,2,-1,4]​​​​​​​\n<strong>Output:</strong> [-6,2,4]\n<strong>Explanation:</strong> The asteroid -6 makes the asteroid 3 and 5 explode, and then continues going left. On the other side, the asteroid 2 makes the asteroid -1 explode and then continues going right, without reaching asteroid 4.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= asteroids.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>-1000 &lt;= asteroids[i] &lt;= 1000</code></li>\n\t<li><code>asteroids[i] != 0</code></li>\n</ul>\n",
+  "hints": [
+    "Say a row of asteroids is stable.  What happens when a new asteroid is added on the right?"
+  ],
+  "metaData": "{\r\n  \"name\": \"asteroidCollision\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"asteroids\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer[]\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"996.5K\", \"totalSubmission\": \"2.1M\", \"totalAcceptedRaw\": 996511, \"totalSubmissionRaw\": 2101119, \"acRate\": \"47.4%\"}",
+  "likes": 9344,
+  "dislikes": 1302,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Can Place Flowers\", \"titleSlug\": \"can-place-flowers\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Destroying Asteroids\", \"titleSlug\": \"destroying-asteroids\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Collisions on a Road\", \"titleSlug\": \"count-collisions-on-a-road\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Robot Collisions\", \"titleSlug\": \"robot-collisions\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,10,-5]",
+    "[8,-8]",
+    "[10,2,-5]",
+    "[3,5,-6,2,-1,4]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 2, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 9, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 9, \"slug\": \"qualtrics\", \"name\": \"Qualtrics\"}, {\"timesEncountered\": 6, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 6, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 5, \"slug\": \"dream11\", \"name\": \"Dream11\"}, {\"timesEncountered\": 5, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 4, \"slug\": \"sofi\", \"name\": \"SoFi\"}, {\"timesEncountered\": 4, \"slug\": \"uber\", \"name\": \"Uber\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> asteroidCollision(vector<int>& asteroids) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] asteroidCollision(int[] asteroids) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def asteroidCollision(self, asteroids: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def asteroidCollision(self, asteroids):\n        \"\"\"\n        :type asteroids: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} asteroids\n * @return {number[]}\n */\nvar asteroidCollision = function(asteroids) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function asteroidCollision(asteroids: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] AsteroidCollision(int[] asteroids) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* asteroidCollision(int* asteroids, int asteroidsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func asteroidCollision(asteroids []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun asteroidCollision(asteroids: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func asteroidCollision(_ asteroids: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn asteroid_collision(asteroids: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} asteroids\n# @return {Integer[]}\ndef asteroid_collision(asteroids)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $asteroids\n     * @return Integer[]\n     */\n    function asteroidCollision($asteroids) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> asteroidCollision(List<int> asteroids) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def asteroidCollision(asteroids: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec asteroid_collision(asteroids :: [integer]) :: [integer]\n  def asteroid_collision(asteroids) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec asteroid_collision(Asteroids :: [integer()]) -> [integer()].\nasteroid_collision(Asteroids) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (asteroid-collision asteroids)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1952",
+    "content": "[TOC]\n\n## Solution\n\n### Approach: Stack\n\n**Intuition**\n\nWe have $N$ asteroids, each represented by an integer. The absolute value represents the size, and the sign (positive or negative) of the integer represents the direction the asteroid is moving; all stones are moving at the same speed. These asteroids can collide, and if they do, the smaller one explodes and vanishes. If both asteroids are of the same size, then both will explode. We need to return the final state of asteroids after all collisions.\n\nThe first important thing to find out is when two asteroids will collide. Two stones moving in the same direction can never collide. Hence it's tempting to assume that whenever two asteroids are moving in opposite directions, they will collide. However, consider the below image; the red stone is moving in the left direction, and the blue stone is moving in the right direction. It is clear from the picture these two asteroids will never collide.\n\n![fig](../Figures/735/735A.png)\n\nOn the other hand, if the red stone is moving towards the right and the blue stone is moving towards the left, they will collide, as shown below. Therefore, the only case when the asteroids will collide is when the asteroid on the left-hand side is moving towards the right, and the asteroid on the right side is moving towards the left.\n\n![fig](../Figures/735/735B.png)\n\nNow, if we iterate over asteroids from left to right, then each asteroid moving left will collide with asteroids that came before it that are moving right. If the current stone is smaller than the one we saw earlier, it will explode, and the collision chain will stop there. On the other hand, if it's bigger, it will keep moving toward the left and might collide further with other asteroids we saw earlier that are moving toward the right. Hence, the observation here is that each stone might keep colliding with asteroids on its left until it collides with a bigger asteroid and explodes. This requirement could be fulfilled by the stack data structure; if we keep asteroids in the stack, then for each asteroid, the collision chain can be executed by checking the top of the stack and popping if an asteroid should be destroyed.\n\nThe below slideshow demonstrates how directions and size are used to detect all collisions.\n\n!?!../Documents/735_Asteroid_Collision.json:960,720!?!\n\n**Algorithm**\n\n1. Iterate over the asteroids from left to right; for each `asteroid` do the following:\n\n   i. Initialize a boolean `flag` to `true`. We will use this flag later to determine if we should store this asteroid in the stack or if it will explode.\n\n   ii. If there is an asteroid in the stack and the asteroid on the top of the stack can collide with this asteroid, then we have some options here.\n\n        a. If the `asteroid` is bigger than the asteroid on the top, then this asteroid on the top will explode, and we will pop it from the stack.\n        b. If the `asteroid` has the same size as the asteroid on the top, then both will explode. Hence we will pop it from the stack; also, we will mark `flag` as `false` because this `asteroid` will also explode, and hence we won't save it into the stack.\n        c. If the `asteroid` is smaller than the asteroid on the top, then the asteroid on the top will not explode, so we will not pop it. But the `asteroid` will explode and thus we will mark `flag` as `false`.\n\n   iii. If `flag` is `true`, add the `asteroid` to the stack.\n\n2. Add the asteroids from the stack into the list `remainingAsteroids` in the reverse order.\n3. Return `remainingAsteroids`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/MACn3aoi/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"MACn3aoi\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the number of asteroids in the list.\n\n* Time complexity: $O(N)$.\n\n  We iterate over each asteroid in the list, and for each asteroid, we might iterate over the asteroids we have in the stack and keep popping until they explode. The important point is that each asteroid can be added and removed from the stack only once. Therefore, each asteroid can be processed only twice, first when we iterate over it and then again while popping it from the stack. Therefore, the total time complexity is equal to $O(N)$.\n\n* Space complexity: $O(N)$.\n\n  The only space required is for the stack; the maximum number of asteroids that could be there in the stack is $N$ when there is no asteroid collision. The final list that we return, `remainingAsteroids`, is used to store the output, which is generally not considered part of space complexity. Hence, the total space complexity equals $O(N)$.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

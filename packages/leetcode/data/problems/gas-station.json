@@ -1,0 +1,133 @@
+{
+  "questionId": "134",
+  "questionFrontendId": "134",
+  "title": "Gas Station",
+  "titleSlug": "gas-station",
+  "difficulty": "Medium",
+  "content": "<p>There are <code>n</code> gas stations along a circular route, where the amount of gas at the <code>i<sup>th</sup></code> station is <code>gas[i]</code>.</p>\n\n<p>You have a car with an unlimited gas tank and it costs <code>cost[i]</code> of gas to travel from the <code>i<sup>th</sup></code> station to its next <code>(i + 1)<sup>th</sup></code> station. You begin the journey with an empty tank at one of the gas stations.</p>\n\n<p>Given two integer arrays <code>gas</code> and <code>cost</code>, return <em>the starting gas station&#39;s index if you can travel around the circuit once in the clockwise direction, otherwise return</em> <code>-1</code>. If there exists a solution, it is <strong>guaranteed</strong> to be <strong>unique</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> gas = [1,2,3,4,5], cost = [3,4,5,1,2]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong>\nStart at station 3 (index 3) and fill up with 4 unit of gas. Your tank = 0 + 4 = 4\nTravel to station 4. Your tank = 4 - 1 + 5 = 8\nTravel to station 0. Your tank = 8 - 2 + 1 = 7\nTravel to station 1. Your tank = 7 - 3 + 2 = 6\nTravel to station 2. Your tank = 6 - 4 + 3 = 5\nTravel to station 3. The cost is 5. Your gas is just enough to travel back to station 3.\nTherefore, return 3 as the starting index.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> gas = [2,3,4], cost = [3,4,3]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong>\nYou can&#39;t start at station 0 or 1, as there is not enough gas to travel to the next station.\nLet&#39;s start at station 2 and fill up with 4 unit of gas. Your tank = 0 + 4 = 4\nTravel to station 0. Your tank = 4 - 3 + 2 = 3\nTravel to station 1. Your tank = 3 - 3 + 3 = 3\nYou cannot travel back to station 2, as it requires 4 unit of gas but you only have 3.\nTherefore, you can&#39;t travel around the circuit once no matter where you start.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == gas.length == cost.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= gas[i], cost[i] &lt;= 10<sup>4</sup></code></li>\n\t<li>The input is generated such that the answer is unique.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"canCompleteCircuit\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"gas\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"cost\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.3M\", \"totalSubmission\": \"2.8M\", \"totalAcceptedRaw\": 1323469, \"totalSubmissionRaw\": 2774072, \"acRate\": \"47.7%\"}",
+  "likes": 13471,
+  "dislikes": 1387,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximize the Topmost Element After K Moves\", \"titleSlug\": \"maximize-the-topmost-element-after-k-moves\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5]\n[3,4,5,1,2]",
+    "[2,3,4]\n[3,4,3]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"six_months\": [{\"timesEncountered\": 7, \"slug\": \"cme-group\", \"name\": \"CME Group\"}, {\"timesEncountered\": 4, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 4, \"slug\": \"accolite\", \"name\": \"Accolite\"}, {\"timesEncountered\": 3, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 6, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 6, \"slug\": \"bitgo\", \"name\": \"BitGo\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 3, \"slug\": \"juspay\", \"name\": \"Juspay\"}, {\"timesEncountered\": 3, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 3, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 3, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 3, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int canCompleteCircuit(vector<int>& gas, vector<int>& cost) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int canCompleteCircuit(int[] gas, int[] cost) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def canCompleteCircuit(self, gas: List[int], cost: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def canCompleteCircuit(self, gas, cost):\n        \"\"\"\n        :type gas: List[int]\n        :type cost: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} gas\n * @param {number[]} cost\n * @return {number}\n */\nvar canCompleteCircuit = function(gas, cost) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function canCompleteCircuit(gas: number[], cost: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CanCompleteCircuit(int[] gas, int[] cost) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int canCompleteCircuit(int* gas, int gasSize, int* cost, int costSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func canCompleteCircuit(gas []int, cost []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun canCompleteCircuit(gas: IntArray, cost: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func canCompleteCircuit(_ gas: [Int], _ cost: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn can_complete_circuit(gas: Vec<i32>, cost: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} gas\n# @param {Integer[]} cost\n# @return {Integer}\ndef can_complete_circuit(gas, cost)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $gas\n     * @param Integer[] $cost\n     * @return Integer\n     */\n    function canCompleteCircuit($gas, $cost) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int canCompleteCircuit(List<int> gas, List<int> cost) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def canCompleteCircuit(gas: Array[Int], cost: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec can_complete_circuit(gas :: [integer], cost :: [integer]) :: integer\n  def can_complete_circuit(gas, cost) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec can_complete_circuit(Gas :: [integer()], Cost :: [integer()]) -> integer().\ncan_complete_circuit(Gas, Cost) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (can-complete-circuit gas cost)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1951",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nThe gas stations in the problem are characterized by two attributes, namely, `gas[i]` and `cost[i]`, each corresponding to the amount of gas gained and consumed, respectively, when reaching the next station `i + 1`. This means that the net change in the amount of gas in our tank when moving from station `i` to `i + 1` is given by `gas[i]` - `cost[i]`.\n\nThe illustration below depicts an example scenario where we move from station 0 to station 1, our tank gains 1 (unit of) gas and consumes 3 gas, resulting in a net loss of 2 gas.\n\n![img](../Figures/134/1.png)\n\nSimilarly, when moving from station 3 to station 4, our tank gains 4 gas and consumes 1 gas, which leads to a net gain of 3 gas.\n\n![img](../Figures/134/2.png)\n\nTo represent the gas gain and consumption at each station using a single array, we can define `gain[i] = gas[i] - cost[i]`. The value of `gain[i]` represents the **net change** in the amount of gas in our tank when moving from station `i` to `i + 1`. At each station `i`, the amount of gas in the tank is changed by `gain[i]`. If, at any point, the gas in our tank drops below zero, we cannot reach the next station nor finish the circular route.\n\n![img](../Figures/134/3.png)\n\n \n\n---\n\n### Approach: One Pass\n\n#### Intuition   \n\nUpon adopting the given idea, we start our journey from `i = 0` and verify if station 0 is a valid starting station by accumulating gas `gain[i]` at each station along the way. \n\nWe begin with station `0` and gain 1 gas upon reaching station `1`, a promising start.\n\n![img](../Figures/134/n1.png)\n\nHowever, we need to address a question. Even though it requires 0 net gas to reach station `2` from station `1`, which implies that one can reach station `2` with 0 initial gas, should we consider station `1` as a valid starting station? The answer is no.\n\n![img](../Figures/134/n2.png)\n\nThe problem's hint states that there can be **at most one valid station**. We can refer to the following figure. If we complete a circular route starting from station 1, we can also start from station 0 to finish the journey because the car, starting from station 1, will have no less gas at every other station than the car that started from station 0.\n\nHaving two valid starting stations contradicts the statement given in the problem. Therefore, we only need to consider if station 0 is valid because station 1 is guaranteed not to be valid.\n\n![img](../Figures/134/n3.png)\n\nWe continue the journey until encountering a station that reduces our gas below 0. As shown in the picture below, we only have 3 gas and cannot cross this gap that costs 4 gas. It seems like our trip ends here.\n\n![img](../Figures/134/n4.png)\n\nAn intuitive idea is to skip this \"valley\" and try completing the circular route starting from the next gas station with a non-negative net gain of gas.\n\n![img](../Figures/134/n5.png)\n\nConsequently, we treat the previous part as a single segment, which we failed to pass through with 0 initial gas. Let's temporarily leave it behind and start over from the next station with 0 initial gas. \n\n![img](../Figures/134/n6.png)\n\nDuring the following journey, we keep track of the current accumulated gas at each station. If we have a negative gas value after passing gas station `i`, we treat the stations that have been passed as a separate segment and start over from the next station `i + 1`. This means that we will test if station `i + 1` is a valid starting station `answer`.\n\nBy visualizing this process, we can see that it involves dividing our journey into segments, each of which ends in a \"valley\" station where the accumulated gas becomes negative. These segments cannot be crossed with 0 initial gas, and any station within them is not a valid starting station.\n> To pass these segments, we must hold enough extra gas before entering them.\n\n![img](../Figures/134/n7.png)\n\nWhen we complete the entire trip, there may still be some gas stations that do not belong to any segment. Since we visit the gas stations in a circular manner, these ending stations are actually the starting part of the first segment (segment 1, as shown below).\n\nWe have verified that none of the segments is crossable. However, with the addition of these stations by the end of the journey, the situation with segment 1 may change, and we have to try again.\n\n![img](../Figures/134/n8.png)\n\nFortunately, we do not need another iteration to calculate the gas gained in segment 1. We can simply calculate `total_gain`, which is the sum of `gain`. Note that `total_gain` also represents the sum of gained gas from each segment:\n\n$$\\text{total\\_gain} = \\text{gain}_1 + \\text{gain}_2 + \\text{gain}_3 + ...$$\n\nIf $\\text{total\\_gain} \\ge 0$ holds, there is: \n\n$$\\text{gain}_1 + \\text{gain}_2 + \\text{gain}_3 + ... \\ge 0 \\\\$$\n\n$$\\text{gain}_1 \\ge -(\\text{gain}_2 + \\text{gain}_3 + ... )$$\n\nThis implies that the gas gained in the segment 1 is enough to support us passing through each remaining segment and return to the starting point of segment 1.\n\n![img](../Figures/134/n9.png)\n\nOtherwise, $\\text{total\\_gain} \\lt 0$ indicates that the gas gained after traversing segment 1 isn't enough to support us passing through the remaining segments, and there is no valid station.\n\n> Note: We don't need to create a separate `gain` array; instead, we can calculate the gas gained for each station as we iterate through them. This way, we avoid the need for additional space of size $O(n)$.\n\n\n<br>\n\n#### Algorithm\n\n1) Initialize `curr_gain`, `total_gain` and `answer` to 0.\n\n2) Traverse through `gas` and `cost`. For each index `i`, increment `total_gain` and `curr_gain` by  `gas[i] - cost[i]`.\n\n3) If `curr_gain` is smaller than 0, we will test if station `i + 1` is a valid starting station by setting `answer` as `i + 1`, resetting `curr_gain` to 0, and repeating step 2.\n\n4) When the iteration is complete, if `total_gain` is smaller than 0, return `-1`. Otherwise, return `answer`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/QVD5XPPc/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"QVD5XPPc\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array `gas`.\n\n* Time complexity: $O(n)$\n\n    - The algorithm traverses through `gas` and `cost` once. Updating `total_gain`, `curr_gain` and `answer` takes $O(1)$ time at each step.\n    \n\n* Space complexity: $O(1)$\n\n    - We only need to keep track of some parameters `total_gain`, `curr_gain`, and `answer`, which take $O(1)$ space.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

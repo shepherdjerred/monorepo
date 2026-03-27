@@ -1,0 +1,137 @@
+{
+  "questionId": "78",
+  "questionFrontendId": "78",
+  "title": "Subsets",
+  "titleSlug": "subsets",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code> of <strong>unique</strong> elements, return <em>all possible</em> <span data-keyword=\"subset\"><em>subsets</em></span> <em>(the power set)</em>.</p>\n\n<p>The solution set <strong>must not</strong> contain duplicate subsets. Return the solution in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3]\n<strong>Output:</strong> [[],[1],[2],[1,2],[3],[1,3],[2,3],[1,2,3]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0]\n<strong>Output:</strong> [[],[0]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10</code></li>\n\t<li><code>-10 &lt;= nums[i] &lt;= 10</code></li>\n\t<li>All the numbers of&nbsp;<code>nums</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"subsets\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<list<integer>>\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"3M\", \"totalSubmission\": \"3.6M\", \"totalAcceptedRaw\": 2986580, \"totalSubmissionRaw\": 3634662, \"acRate\": \"82.2%\"}",
+  "likes": 19177,
+  "dislikes": 341,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Subsets II\", \"titleSlug\": \"subsets-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Generalized Abbreviation\", \"titleSlug\": \"generalized-abbreviation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Letter Case Permutation\", \"titleSlug\": \"letter-case-permutation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Array Given Subset Sums\", \"titleSlug\": \"find-array-given-subset-sums\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Number of Maximum Bitwise-OR Subsets\", \"titleSlug\": \"count-number-of-maximum-bitwise-or-subsets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3]",
+    "[0]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 12, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 5, \"slug\": \"wix\", \"name\": \"Wix\"}, {\"timesEncountered\": 4, \"slug\": \"coupang\", \"name\": \"Coupang\"}, {\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 3, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> subsets(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> subsets(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def subsets(self, nums: List[int]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def subsets(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number[][]}\n */\nvar subsets = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function subsets(nums: number[]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> Subsets(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** subsets(int* nums, int numsSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func subsets(nums []int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun subsets(nums: IntArray): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func subsets(_ nums: [Int]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn subsets(nums: Vec<i32>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer[][]}\ndef subsets(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer[][]\n     */\n    function subsets($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> subsets(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def subsets(nums: Array[Int]): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec subsets(nums :: [integer]) :: [[integer]]\n  def subsets(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec subsets(Nums :: [integer()]) -> [[integer()]].\nsubsets(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (subsets nums)\n  (-> (listof exact-integer?) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "847",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/816366561\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Overview: Solution Pattern\n\nLet us first review the problems of Permutations / Combinations / Subsets, since they are quite similar to each other and there are some common strategies to solve them.\n\nFirst, their solution space is often quite large:\n\n- [Permutations](https://en.wikipedia.org/wiki/Permutation#k-permutations_of_n): $$N!$$. \n\n- [Combinations](https://en.wikipedia.org/wiki/Combination#Number_of_k-combinations): $$C_N^k = \\frac{N!}{(N - k)! k!}$$\n\n- Subsets: $$2^N$$, since each element could be absent or present. \n\nGiven their exponential solution space, it is tricky to ensure that the generated solutions are _**complete**_ and _**non-redundant**_. It is essential to have a clear and easy-to-reason strategy.\n\nThere are generally three strategies to do it:\n\n- Iterative\n\n- Recursion/Backtracking\n\n- Lexicographic generation based on the mapping between binary bitmasks and the corresponding permutations / combinations / subsets.\n\nAs one would see later, the third method could be a good candidate for the interview because it simplifies the problem to the generation of binary numbers, therefore it is easy to implement and verify that no solution is missing.\n\nBesides, as a bonus, it generates lexicographically sorted output for the sorted inputs.\n\n\n---\n### Approach 1: Cascading\n\n#### Intuition\n\nLet's start from an empty subset in the output list. At each step, one takes a new integer into consideration and generates new subsets from the existing ones. \n\n![diff](../Figures/78/recursion.png)\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/GfSoguWr/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"GfSoguWr\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $$\\mathcal{O}(N \\times 2^N)$$ to generate all subsets and then copy them into the output list. \n    \n* Space complexity: $$\\mathcal{O}(N \\times 2^N)$$. This is exactly the number of solutions for subsets multiplied by the number $$N$$ of elements to keep for each subset.  \n    - For a given number, it could be present or absent (_i.e._ binary choice) in a subset solution. As a result, for $$N$$ numbers, we would have in total $$2^N$$ choices (solutions). \n<br />\n<br />\n\n\n---\n### Approach 2: Backtracking\n\n#### Algorithm\n\n>Power set is all possible combinations of all possible _lengths_, from 0 to n.\n\nGiven the definition, the problem can also be interpreted as finding the _power set_ from a sequence.\n\nSo, this time let us loop over the length of combination, rather than the candidate numbers, and generate all combinations for a given length with the help of _backtracking_ technique.\n\n![diff](../Figures/78/combinations.png)\n\n>[Backtracking](https://leetcode.com/explore/learn/card/recursion-ii/472/backtracking/2654/) is an algorithm for finding all solutions by exploring all potential candidates. If the solution candidate turns out to be _not_ a solution (or at least not the _last_ one), the backtracking algorithm discards it by making some changes on the previous step, *i.e.* _backtracks_ and then tries again.\n\n![diff](../Figures/78/backtracking.png)\n\n#### Algorithm\n\nWe define a backtrack function named `backtrack(first, curr)` that takes the index of the first element to add and a current combination as arguments.\n\n- If the current combination is done, we add the combination to the final output.\n\n- Otherwise, we iterate over the indexes `i` from `first` to the length of the entire sequence `n`.\n\n    - Add integer `nums[i]` into the current combination `curr`.\n\n    - Proceed to add more integers into the combination: `backtrack(i + 1, curr)`.\n\n    - Backtrack by removing `nums[i]` from `curr`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/X6GCLJ3t/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"X6GCLJ3t\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $$\\mathcal{O}(N \\times 2^N)$$ to generate all subsets and then copy them into the output list.\n \n* Space complexity: $$\\mathcal{O}(N)$$. We are using $$O(N)$$ space to maintain `curr`, and are modifying `curr` in-place with backtracking. Note that for space complexity analysis, we do not count space that is *only* used for the purpose of returning output, so the `output` array is ignored.\n\n\n---\n### Approach 3: Lexicographic (Binary Sorted) Subsets\n\n#### Intuition\n\nThe idea of this solution is originated from [Donald E. Knuth](https://www-cs-faculty.stanford.edu/~knuth/taocp.html).\n\n>The idea is that we map each subset to a bitmask of length n,\nwhere `1` on the i*th* position in bitmask means the presence of `nums[i]`\nin the subset, and `0` means its absence. \n\n![diff](../Figures/78/bitmask4.png)\n\nFor instance, the bitmask `0..00` (all zeros) corresponds to an empty subset, \nand the bitmask `1..11` (all ones) corresponds to the entire input array `nums`. \n\nHence to solve the initial problem, we just need to generate n bitmasks\nfrom `0..00` to `1..11`. \n\nIt might seem simple at first glance to generate binary numbers, but \nthe real problem here is how to deal with \n[zero left padding](https://en.wikipedia.org/wiki/Padding_(cryptography)#Zero_padding),\nbecause one has to generate bitmasks of fixed length, _i.e._ `001` and not just `1`.\nFor that one could use standard bit manipulation trick:\n\n<iframe src=\"https://leetcode.com/playground/PtHUHaeY/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"PtHUHaeY\"></iframe>\n\nor keep it simple stupid and shift iteration limits:\n\n<iframe src=\"https://leetcode.com/playground/4XWEGcWd/shared\" frameBorder=\"0\" width=\"100%\" height=\"123\" name=\"4XWEGcWd\"></iframe>\n\n#### Algorithm\n\n- Generate all possible binary bitmasks of length n.\n\n- Map a subset to each bitmask: \n`1` on the i*th* position in bitmask means the presence of `nums[i]`\nin the subset, and `0` means its absence. \n\n- Return output list.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DwHHy2yt/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"DwHHy2yt\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $$\\mathcal{O}(N \\times 2^N)$$ to generate all subsets \nand then copy them into output list.\n    \n* Space complexity: $$\\mathcal{O}(N)$$ to store the bitset\nof length $$N$$. Note that for space complexity analysis, we do not count space that is *only* used for the purpose of returning output, so the `output` array is ignored.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "questionId": "367",
+  "questionFrontendId": "367",
+  "title": "Valid Perfect Square",
+  "titleSlug": "valid-perfect-square",
+  "difficulty": "Easy",
+  "content": "<p>Given a positive integer num, return <code>true</code> <em>if</em> <code>num</code> <em>is a perfect square or</em> <code>false</code> <em>otherwise</em>.</p>\n\n<p>A <strong>perfect square</strong> is an integer that is the square of an integer. In other words, it is the product of some integer with itself.</p>\n\n<p>You must not use any built-in library function, such as <code>sqrt</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 16\n<strong>Output:</strong> true\n<strong>Explanation:</strong> We return true because 4 * 4 = 16 and 4 is an integer.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 14\n<strong>Output:</strong> false\n<strong>Explanation:</strong> We return false because 3.742 * 3.742 = 14 and 3.742 is not an integer.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= num &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"isPerfectSquare\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"num\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"909.9K\", \"totalSubmission\": \"2M\", \"totalAcceptedRaw\": 909926, \"totalSubmissionRaw\": 2031938, \"acRate\": \"44.8%\"}",
+  "likes": 4672,
+  "dislikes": 338,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Sqrt(x)\", \"titleSlug\": \"sqrtx\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Square Numbers\", \"titleSlug\": \"sum-of-square-numbers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "16",
+    "14"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 8, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 6, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"sap\", \"name\": \"SAP\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isPerfectSquare(int num) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isPerfectSquare(int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isPerfectSquare(self, num: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isPerfectSquare(self, num):\n        \"\"\"\n        :type num: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} num\n * @return {boolean}\n */\nvar isPerfectSquare = function(num) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isPerfectSquare(num: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsPerfectSquare(int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isPerfectSquare(int num) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isPerfectSquare(num int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isPerfectSquare(num: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isPerfectSquare(_ num: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_perfect_square(num: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num\n# @return {Boolean}\ndef is_perfect_square(num)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $num\n     * @return Boolean\n     */\n    function isPerfectSquare($num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isPerfectSquare(int num) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isPerfectSquare(num: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_perfect_square(num :: integer) :: boolean\n  def is_perfect_square(num) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_perfect_square(Num :: integer()) -> boolean().\nis_perfect_square(Num) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-perfect-square num)\n  (-> exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "792",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nSquare root-related problems usually could be solved in logarithmic time. There are three standard logarithmic time approaches, listed here from the worst to the best:\n\n- Recursion. The slowest one. \n\n- Binary Search. The simplest one.\n\n- Newton's Method. The fastest one, and therefore widely used in dynamical simulations. \n\nThe last two algorithms are interesting ones, let's discuss them in detail. \n\nThese solutions have the same starting point. If one knows an [integer square](https://en.wikipedia.org/wiki/Integer_square_root) $$x$$ of num, the answer is straightforward: num is a perfect square if $$x * x == \\textrm{num}$$. Hence the problem is to compute this integer\nsquare.\n\n<br /> \n<br />\n\n\n---\n### Approach 1: Binary Search \n\nFor $$\\textrm{num} > 2$$ the square root $$a$$ is always less than $$\\textrm{num} / 2$$ and greater than 1: $$1 < x < \\textrm{num} / 2$$. Since $$x$$ is an integer, the problem goes down to the search in the sorted set of integer numbers. Binary search is a standard way to proceed in such a situation. \n\n**Algorithm**\n\n- If `num < 2`, return `True`.\n\n- Set the left boundary to `2`, and the right boundary to `num / 2`.\n\n- While `left <= right`:\n\n    - Take `x = (left + right) / 2` as a guess. Compute `guess_squared = x * x` and compare it with `num`:\n    \n        - If `guess_squared == num`, then the perfect square is right here, return `True`.\n        \n        - If `guess_squared > num`, move the right boundary `right = x - 1`.\n        \n        - Otherwise, move the left boundary `left = x + 1`.\n        \n- If we're here, the number is not a perfect square. Return `False`.\n\n**Implementation**\n\n![fig](../Figures/367/binary.png) \n\n<iframe src=\"https://leetcode.com/playground/gZkb4uCF/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"gZkb4uCF\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(\\log N)$$. \n\n    Let's compute time complexity with the help of [master theorem](https://en.wikipedia.org/wiki/Master_theorem_(analysis_of_algorithms)) $$T(N) = aT\\left(\\frac{N}{b}\\right) + \\Theta(N^d)$$. The equation represents dividing the problem up into $$a$$ subproblems of size $$\\frac{N}{b}$$ in $$\\Theta(N^d)$$ time. Here at step there is only one subproblem `a = 1`, its size is a half of the initial problem `b = 2`, and all this happens in a constant time `d = 0`. That means that $$\\log_b{a} = d$$ and hence we're dealing with [case 2](https://en.wikipedia.org/wiki/Master_theorem_(analysis_of_algorithms)#Case_2_example) that results in $$\\mathcal{O}(n^{\\log_b{a}} \\log^{d + 1} N)$$ = $$\\mathcal{O}(\\log N)$$ time complexity.\n\n* Space complexity : $$\\mathcal{O}(1)$$.\n<br /> \n<br />\n\n\n---\n### Approach 2: Newton's Method\n\n**Newton's Algorithm: How to Figure out the Formula**\n\nLet's do a very rough derivation of Newton's sequence which could be done in two minutes during the interview. Please note that it's more a way to memorize than a strict mathematical proof. \n\nThe problem is to find the root of \n\n$$f(x) = x^2 - \\textrm{num} = 0$$\n\nThe idea of Newton's algorithm is to start from a seed (= initial guess) and then compute a root as a sequence of improved guesses.  \n\n![fig](../Figures/367/parabola4.png) \n\nFor example, there is a guess $$x_k$$. To compute next guess $$x_{k + 1}$$, let's approximate $$f(x_k)$$ by its tangent line, that would result in\n\n$$x_{k + 1} = x_k - \\frac{f(x_k)}{f'(x_k)}$$\n\nNow use $$f(x_k) = x_k^2 - \\textrm{num}$$ and $$f'(x_k) = 2x_k$$, and voila the result \n\n$$x_{k + 1} = \\frac{1}{2}\\left(x_k + \\frac{\\textrm{num}}{x_k}\\right)$$\n\n**Choose a seed**\n\nHow to choose a seed? Since the function $$f(x) = x^2 - \\textrm{num}$$ is monotonous, the smaller seed the better, so let's take $$\\textrm{num}/2$$.\n\n**Algorithm**\n\n- Take num / 2 as a seed.\n\n- While x * x > num, compute the next guess using Newton's method: $$x = \\frac{1}{2}\\left(x + \\frac{\\textrm{num}}{x}\\right)$$.\n\n- Return x * x == num\n\n**Implementation**\n\n![fig](../Figures/367/newton2.png) \n\n<iframe src=\"https://leetcode.com/playground/ULSavLZb/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"ULSavLZb\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(\\log N)$$ because [guess sequence converges quadratically](https://en.wikipedia.org/wiki/Newton%27s_method#Proof_of_quadratic_convergence_for_Newton's_iterative_method). \n\n* Space complexity : $$\\mathcal{O}(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

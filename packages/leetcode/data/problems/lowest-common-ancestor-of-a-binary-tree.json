@@ -1,0 +1,118 @@
+{
+  "questionId": "236",
+  "questionFrontendId": "236",
+  "title": "Lowest Common Ancestor of a Binary Tree",
+  "titleSlug": "lowest-common-ancestor-of-a-binary-tree",
+  "difficulty": "Medium",
+  "content": "<p>Given a binary tree, find the lowest common ancestor (LCA) of two given nodes in the tree.</p>\n\n<p>According to the <a href=\"https://en.wikipedia.org/wiki/Lowest_common_ancestor\" target=\"_blank\">definition of LCA on Wikipedia</a>: &ldquo;The lowest common ancestor is defined between two nodes <code>p</code> and <code>q</code> as the lowest node in <code>T</code> that has both <code>p</code> and <code>q</code> as descendants (where we allow <b>a node to be a descendant of itself</b>).&rdquo;</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2018/12/14/binarytree.png\" style=\"width: 200px; height: 190px;\" />\n<pre>\n<strong>Input:</strong> root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 1\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The LCA of nodes 5 and 1 is 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2018/12/14/binarytree.png\" style=\"width: 200px; height: 190px;\" />\n<pre>\n<strong>Input:</strong> root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 4\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The LCA of nodes 5 and 4 is 5, since a node can be a descendant of itself according to the LCA definition.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> root = [1,2], p = 1, q = 2\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[2, 10<sup>5</sup>]</code>.</li>\n\t<li><code>-10<sup>9</sup> &lt;= Node.val &lt;= 10<sup>9</sup></code></li>\n\t<li>All <code>Node.val</code> are <strong>unique</strong>.</li>\n\t<li><code>p != q</code></li>\n\t<li><code>p</code> and <code>q</code> will exist in the tree.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"lowestCommonAncestor\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    },\n    {\n      \"name\": \"p\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"q\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"TreeNode\"\n  },\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"2.5M\", \"totalSubmission\": \"3.7M\", \"totalAcceptedRaw\": 2546580, \"totalSubmissionRaw\": 3692700, \"acRate\": \"69.0%\"}",
+  "likes": 18630,
+  "dislikes": 488,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Lowest Common Ancestor of a Binary Search Tree\", \"titleSlug\": \"lowest-common-ancestor-of-a-binary-search-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Smallest Common Region\", \"titleSlug\": \"smallest-common-region\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Players With Zero or One Losses\", \"titleSlug\": \"find-players-with-zero-or-one-losses\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Lowest Common Ancestor of a Binary Tree II\", \"titleSlug\": \"lowest-common-ancestor-of-a-binary-tree-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Lowest Common Ancestor of a Binary Tree III\", \"titleSlug\": \"lowest-common-ancestor-of-a-binary-tree-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Lowest Common Ancestor of a Binary Tree IV\", \"titleSlug\": \"lowest-common-ancestor-of-a-binary-tree-iv\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Step-By-Step Directions From a Binary Tree Node to Another\", \"titleSlug\": \"step-by-step-directions-from-a-binary-tree-node-to-another\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Cycle Length Queries in a Tree\", \"titleSlug\": \"cycle-length-queries-in-a-tree\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,5,1,6,2,0,8,null,null,7,4]\n5\n1",
+    "[3,5,1,6,2,0,8,null,null,7,4]\n5\n4",
+    "[1,2]\n1\n2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 18, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 8, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"sap\", \"name\": \"SAP\"}], \"six_months\": [{\"timesEncountered\": 7, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 9, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 8, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 5, \"slug\": \"newsbreak\", \"name\": \"NewsBreak\"}, {\"timesEncountered\": 4, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"wix\", \"name\": \"Wix\"}, {\"timesEncountered\": 2, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 2, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}]}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}\n * };\n */\nclass Solution {\npublic:\n    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode(int x) { val = x; }\n * }\n */\nclass Solution {\n    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, x):\n#         self.val = x\n#         self.left = None\n#         self.right = None\n\nclass Solution:\n    def lowestCommonAncestor(self, root: 'TreeNode', p: 'TreeNode', q: 'TreeNode') -> 'TreeNode':\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, x):\n#         self.val = x\n#         self.left = None\n#         self.right = None\n\nclass Solution(object):\n    def lowestCommonAncestor(self, root, p, q):\n        \"\"\"\n        :type root: TreeNode\n        :type p: TreeNode\n        :type q: TreeNode\n        :rtype: TreeNode\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val) {\n *     this.val = val;\n *     this.left = this.right = null;\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {TreeNode} p\n * @param {TreeNode} q\n * @return {TreeNode}\n */\nvar lowestCommonAncestor = function(root, p, q) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction lowestCommonAncestor(root: TreeNode | null, p: TreeNode | null, q: TreeNode | null): TreeNode | null {\n\t\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int x) { val = x; }\n * }\n */\npublic class Solution {\n    public TreeNode LowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nstruct TreeNode* lowestCommonAncestor(struct TreeNode* root, struct TreeNode* p, struct TreeNode* q) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc lowestCommonAncestor(root, p, q *TreeNode) *TreeNode {\n  \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int = 0) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\n\nclass Solution {\n    fun lowestCommonAncestor(root: TreeNode?, p: TreeNode?, q: TreeNode?): TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init(_ val: Int) {\n *         self.val = val\n *         self.left = nil\n *         self.right = nil\n *     }\n * }\n */\n\nclass Solution {\n    func lowestCommonAncestor(_ root: TreeNode?, _ p: TreeNode?, _ q: TreeNode?) -> TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn lowest_common_ancestor(root: Option<Rc<RefCell<TreeNode>>>, p: Option<Rc<RefCell<TreeNode>>>, q: Option<Rc<RefCell<TreeNode>>>) -> Option<Rc<RefCell<TreeNode>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val)\n#         @val = val\n#         @left, @right = nil, nil\n#     end\n# end\n\n# @param {TreeNode} root\n# @param {TreeNode} p\n# @param {TreeNode} q\n# @return {TreeNode}\ndef lowest_common_ancestor(root, p, q)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($value) { $this->val = $value; }\n * }\n */\n\nclass Solution {\n    /**\n     * @param TreeNode $root\n     * @param TreeNode $p\n     * @param TreeNode $q\n     * @return TreeNode\n     */\n    function lowestCommonAncestor($root, $p, $q) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(var _value: Int) {\n *   var value: Int = _value\n *   var left: TreeNode = null\n *   var right: TreeNode = null\n * }\n */\n\nobject Solution {\n    def lowestCommonAncestor(root: TreeNode, p: TreeNode, q: TreeNode): TreeNode = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "615",
+    "content": "[TOC]\n\n## Solution\n\nFirst the given nodes `p` and `q` are to be searched in a binary tree and then their lowest common ancestor is to be found. We can resort to a normal tree traversal to search for the two nodes. Once we reach the desired nodes `p` and `q`, we can backtrack and find the lowest common ancestor.\n\n<center>\n<img src=\"../Figures/236/236_LCA_Binary_1.png\" width=\"600\"/>\n</center>\n\n### Approach 1: Recursive Approach\n\n**Intuition**\n\nThe approach is pretty intuitive. Traverse the tree in a depth first manner. The moment you encounter either of the nodes `p` or `q`, return some boolean flag. The flag helps to determine if we found the required nodes in any of the paths. The least common ancestor would then be the node for which both the subtree recursions return a `True` flag. It can also be the node which itself is one of `p` or `q` and for which one of the subtree recursions returns a `True` flag.\n\nLet us look at the formal algorithm based on this idea.\n\n**Algorithm**\n\n1. Start traversing the tree from the root node.\n2. If the current node itself is one of `p` or `q`, we would mark a variable `mid` as `True` and continue the search for the other node in the left and right branches.\n3. If either of the left or the right branch returns `True`, this means one of the two nodes was found below.\n4. If at any point in the traversal, any two of the three flags `left`, `right` or `mid` become `True`, this means we have found the lowest common ancestor for the nodes `p` and `q`.\n\nLet us look at a sample tree and we search for the lowest common ancestor of two nodes `9` and `11` in the tree.\n\n<center>\n\n!?!../Documents/236_LCA_Binary_Tree_1.json:770,460!?!\n\n</center>\n\nFollowing is the sequence of nodes that are followed in the recursion:\n\n<pre>\n1 --> 2 --> 4 --> 8\nBACKTRACK 8 --> 4\n4 --> 9 (ONE NODE FOUND, return True)\nBACKTRACK 9 --> 4 --> 2\n2 --> 5 --> 10\nBACKTRACK 10 --> 5\n5 --> 11 (ANOTHER NODE FOUND, return True)\nBACKTRACK 11 --> 5 --> 2\n\n2 is the node where we have left = True and right = True and hence it is the lowest common ancestor.\n</pre>\n\n\n<iframe src=\"https://leetcode.com/playground/VsKFFfBb/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VsKFFfBb\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$, where $$N$$ is the number of nodes in the binary tree. In the worst case we might be visiting all the nodes of the binary tree.\n\n* Space Complexity: $$O(N)$$. This is because the maximum amount of space utilized by the recursion stack would be $$N$$ since the height of a skewed binary tree could be $$N$$.\n<br/>\n<br/>\n\n---\n\n### Approach 2: Iterative using parent pointers\n\n**Intuition**\n\nIf we have parent pointers for each node we can traverse back from `p` and `q` to get their ancestors. The first common node we get during this traversal would be the LCA node. We can save the parent pointers in a dictionary as we traverse the tree.\n\n**Algorithm**\n\n1. Start from the root node and traverse the tree.\n2. Until we find `p` and `q` both, keep storing the parent pointers in a dictionary.\n3. Once we have found both `p` and `q`, we get all the ancestors for `p` using the parent dictionary and add to a set called `ancestors`.\n4. Similarly, we traverse through ancestors for node `q`. If the ancestor is present in the ancestors set for `p`, this means this is the first ancestor common between `p` and `q` (while traversing upwards) and hence this is the LCA node.\n\n<iframe src=\"https://leetcode.com/playground/TuGLPnNq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TuGLPnNq\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity : $$O(N)$$, where $$N$$ is the number of nodes in the binary tree. In the worst case we might be visiting all the nodes of the binary tree.\n\n* Space Complexity : $$O(N)$$. In the worst case space utilized by the stack, the parent pointer dictionary and the ancestor set, would be $$N$$ each, since the height of a skewed binary tree could be $$N$$.\n<br>\n<br>\n\n---\n\n### Approach 3: Iterative without parent pointers\n\n**Intuition**\n\nIn the previous approach, we come across the LCA during the backtracking process. We can get rid of the backtracking process itself. In this approach we always have a pointer to the probable LCA and the moment we find both the nodes we return the pointer as the answer.\n\n**Algorithm**\n\n1. Start with root node.\n2. Put the `(root, root_state)` on to the stack. `root_state` defines whether one of the children or both children of `root` are left for traversal.\n3. While the stack is not empty, peek into the top element of the stack represented as `(parent_node, parent_state)`.\n4. Before traversing any of the child nodes of `parent_node` we check if the `parent_node` itself is one of `p` or `q`.\n5. First time we find either of `p` or `q`, set a boolean flag called `one_node_found` to `True`. Also start keeping track of the lowest common ancestors by keeping a note of the top index of the stack in the variable `LCA_index`. Since all the current elements of the stack are ancestors of the node we just found.\n6. The second time `parent_node == p or parent_node == q` it means we have found both the nodes and we can return the `LCA node`.\n7. Whenever we visit a child of a `parent_node` we push the `(parent_node, updated_parent_state)` onto the stack. We update the state of the parent since a child/branch has been visited/processed and accordingly the state changes.\n8. A node finally gets popped off from the stack when the state becomes `BOTH_DONE` implying both left and right subtrees have been pushed onto the stack and processed. If `one_node_found` is `True` then we need to check if the top node being popped could be one of the ancestors of the found node. In that case we need to reduce `LCA_index` by one. Since one of the ancestors was popped off.\n\n> Whenever both `p` and `q` are found, `LCA_index` would be pointing to an index in the stack which would contain all the common ancestors between `p` and `q`. And the `LCA_index` element has the `lowest` ancestor common between p and q.\n\n<center>\n\n!?!../Documents/236_LCA_Binary_Tree_2.json:770,460!?!\n\n</center>\n\nThe animation above shows how a stack is used to traverse the binary tree and keep track of the common ancestors between nodes `p` and `q`.\n\n<iframe src=\"https://leetcode.com/playground/As5nFXhd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"As5nFXhd\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity : $$O(N)$$, where $$N$$ is the number of nodes in the binary tree. In the worst case we might be visiting all the nodes of the binary tree. The advantage of this approach is that we can prune backtracking. We simply return once both the nodes are found.\n\n* Space Complexity : $$O(N)$$. In the worst case the space utilized by stack would be $$N$$ since the height of a skewed binary tree could be $$N$$.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

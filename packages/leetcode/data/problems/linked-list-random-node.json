@@ -1,0 +1,140 @@
+{
+  "questionId": "382",
+  "questionFrontendId": "382",
+  "title": "Linked List Random Node",
+  "titleSlug": "linked-list-random-node",
+  "difficulty": "Medium",
+  "content": "<p>Given a singly linked list, return a random node&#39;s value from the linked list. Each node must have the <strong>same probability</strong> of being chosen.</p>\n\n<p>Implement the <code>Solution</code> class:</p>\n\n<ul>\n\t<li><code>Solution(ListNode head)</code> Initializes the object with the head of the singly-linked list <code>head</code>.</li>\n\t<li><code>int getRandom()</code> Chooses a node randomly from the list and returns its value. All the nodes of the list should be equally likely to be chosen.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/16/getrand-linked-list.jpg\" style=\"width: 302px; height: 62px;\" />\n<pre>\n<strong>Input</strong>\n[&quot;Solution&quot;, &quot;getRandom&quot;, &quot;getRandom&quot;, &quot;getRandom&quot;, &quot;getRandom&quot;, &quot;getRandom&quot;]\n[[[1, 2, 3]], [], [], [], [], []]\n<strong>Output</strong>\n[null, 1, 3, 2, 2, 3]\n\n<strong>Explanation</strong>\nSolution solution = new Solution([1, 2, 3]);\nsolution.getRandom(); // return 1\nsolution.getRandom(); // return 3\nsolution.getRandom(); // return 2\nsolution.getRandom(); // return 2\nsolution.getRandom(); // return 3\n// getRandom() should return either 1, 2, or 3 randomly. Each element should have equal probability of returning.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the linked list will be in the range <code>[1, 10<sup>4</sup>]</code>.</li>\n\t<li><code>-10<sup>4</sup> &lt;= Node.val &lt;= 10<sup>4</sup></code></li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>getRandom</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong></p>\n\n<ul>\n\t<li>What if the linked list is extremely large and its length is unknown to you?</li>\n\t<li>Could you solve this efficiently without using extra space?</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"Solution\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"ListNode\",\n        \"name\": \"head\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [],\n      \"name\": \"getRandom\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"287.7K\", \"totalSubmission\": \"444.4K\", \"totalAcceptedRaw\": 287660, \"totalSubmissionRaw\": 444421, \"acRate\": \"64.7%\"}",
+  "likes": 3217,
+  "dislikes": 723,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Random Pick Index\", \"titleSlug\": \"random-pick-index\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"Solution\",\"getRandom\",\"getRandom\",\"getRandom\",\"getRandom\",\"getRandom\"]\n[[[1,2,3]],[],[],[],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Reservoir Sampling",
+      "slug": "reservoir-sampling"
+    },
+    {
+      "name": "Randomized",
+      "slug": "randomized"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    Solution(ListNode* head) {\n        \n    }\n    \n    int getRandom() {\n        \n    }\n};\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution* obj = new Solution(head);\n * int param_1 = obj->getRandom();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n\n    public Solution(ListNode head) {\n        \n    }\n    \n    public int getRandom() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = new Solution(head);\n * int param_1 = obj.getRandom();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n\n    def __init__(self, head: Optional[ListNode]):\n        \n\n    def getRandom(self) -> int:\n        \n\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution(head)\n# param_1 = obj.getRandom()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n\n    def __init__(self, head):\n        \"\"\"\n        :type head: Optional[ListNode]\n        \"\"\"\n        \n\n    def getRandom(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution(head)\n# param_1 = obj.getRandom()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} head\n */\nvar Solution = function(head) {\n    \n};\n\n/**\n * @return {number}\n */\nSolution.prototype.getRandom = function() {\n    \n};\n\n/** \n * Your Solution object will be instantiated and called as such:\n * var obj = new Solution(head)\n * var param_1 = obj.getRandom()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nclass Solution {\n    constructor(head: ListNode | null) {\n        \n    }\n\n    getRandom(): number {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * var obj = new Solution(head)\n * var param_1 = obj.getRandom()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n\n    public Solution(ListNode head) {\n        \n    }\n    \n    public int GetRandom() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = new Solution(head);\n * int param_1 = obj.GetRandom();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\n\n\n\ntypedef struct {\n    \n} Solution;\n\n\nSolution* solutionCreate(struct ListNode* head) {\n    \n}\n\nint solutionGetRandom(Solution* obj) {\n    \n}\n\nvoid solutionFree(Solution* obj) {\n    \n}\n\n/**\n * Your Solution struct will be instantiated and called as such:\n * Solution* obj = solutionCreate(head);\n * int param_1 = solutionGetRandom(obj);\n \n * solutionFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\ntype Solution struct {\n    \n}\n\n\nfunc Constructor(head *ListNode) Solution {\n    \n}\n\n\nfunc (this *Solution) GetRandom() int {\n    \n}\n\n\n/**\n * Your Solution object will be instantiated and called as such:\n * obj := Constructor(head);\n * param_1 := obj.GetRandom();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution(head: ListNode?) {\n\n    fun getRandom(): Int {\n        \n    }\n\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * var obj = Solution(head)\n * var param_1 = obj.getRandom()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\n\nclass Solution {\n\n    init(_ head: ListNode?) {\n        \n    }\n    \n    func getRandom() -> Int {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * let obj = Solution(head)\n * let ret_1: Int = obj.getRandom()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nstruct Solution {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Solution {\n\n    fn new(head: Option<Box<ListNode>>) -> Self {\n        \n    }\n    \n    fn get_random(&self) -> i32 {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * let obj = Solution::new(head);\n * let ret_1: i32 = obj.get_random();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\nclass Solution\n\n=begin\n    :type head: ListNode\n=end\n    def initialize(head)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def get_random()\n        \n    end\n\n\nend\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution.new(head)\n# param_1 = obj.get_random()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n    /**\n     * @param ListNode $head\n     */\n    function __construct($head) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function getRandom() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * $obj = Solution($head);\n * $ret_1 = $obj->getRandom();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *   int val;\n *   ListNode? next;\n *   ListNode([this.val = 0, this.next]);\n * }\n */\nclass Solution {\n\n  Solution(ListNode? head) {\n    \n  }\n  \n  int getRandom() {\n    \n  }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = Solution(head);\n * int param1 = obj.getRandom();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nclass Solution(_head: ListNode) {\n\n    def getRandom(): Int = {\n        \n    }\n\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * val obj = new Solution(head)\n * val param_1 = obj.getRandom()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for singly-linked list.\n#\n# defmodule ListNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           next: ListNode.t() | nil\n#         }\n#   defstruct val: 0, next: nil\n# end\n\ndefmodule Solution do\n  @spec init_(head :: ListNode.t | nil) :: any\n  def init_(head) do\n    \n  end\n\n  @spec get_random() :: integer\n  def get_random() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Solution.init_(head)\n# param_1 = Solution.get_random()\n\n# Solution.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for singly-linked list.\n%%\n%% -record(list_node, {val = 0 :: integer(),\n%%                     next = null :: 'null' | #list_node{}}).\n\n-spec solution_init_(Head :: #list_node{} | null) -> any().\nsolution_init_(Head) ->\n  .\n\n-spec solution_get_random() -> integer().\nsolution_get_random() ->\n  .\n\n\n%% Your functions will be called as such:\n%% solution_init_(Head),\n%% Param_1 = solution_get_random(),\n\n%% solution_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n(define solution%\n  (class object%\n    (super-new)\n    \n    ; head : (or/c list-node? #f)\n    (init-field\n      head)\n    \n    ; get-random : -> exact-integer?\n    (define/public (get-random)\n      )))\n\n;; Your solution% object will be instantiated and called as such:\n;; (define obj (new solution% [head head]))\n;; (define param_1 (send obj get-random))"
+    }
+  ],
+  "solution": {
+    "id": "1053",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nThe solution for this problem could be as simple as it sounds, _i.e._ sampling from a linked list.\nHowever, with the constraint raised by the follow-up question, it becomes more interesting.\n\nAs a spoiler alert, in this article we will present an algorithm called [Reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling) which is a family of randomized algorithms for sampling from a population of **_unknown size_**.\n\n---\n### Approach 1: Fixed-Range Sampling\n\n**Intuition**\n\nFirst of all, let us talk about the elephant in the room.\nYes, the problem could be as simple as choosing a random sample from a list, which in our case happens to be a **_linked list_**.\n\nIf we are given an array or a linked list with a **known size**, then it would be a no brainer to solve the problem.\n\n>One of the most intuitive ideas would be that we **convert** the linked list into an array. With the array, we would know its size and moreover we could have an instant access to its elements.\n\n**Algorithm**\n\nWe are asked to implement two interfaces in the object, namely the `init(head)` and `getRandom()` functions.\n\nThe `init(head)` function would be invoked once when we construct the object.\nWithin which, intuitively we could convert the given linked list into an array for later reuse.\n\nConcerning the `getRandom()` function, with the linked list converted into an array, we could simply sample from this array.\n\n<iframe src=\"https://leetcode.com/playground/gVRCBDte/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"gVRCBDte\"></iframe>\n\n\nThe above solution is simple, which happens to be fast as well.\nBut it comes with two **_caveats_**:\n\n- It requires some space to keep the pool of elements for sampling, which does not meet the constraint asked in the follow-up question, _i.e._ a solution of constant space.\n\n- It cannot cope with the scenario that we have a list with **_ever-growing elements_**, _i.e._ we don't have unlimited memory to hold all the elements.\nFor example, we have a stream of numbers, and we would like to pick a random number at any given moment.\nWith the above naive solution, we would have to keep all the numbers in the memory, which is not scalable.\n\nWe will address the above caveats in the next approach.\n\n\n**Complexity Analysis**\n\n- Time Complexity:\n\n    - For the `init(head)` function, its time complexity is $$\\mathcal{O}(N)$$ where $$N$$ is the number of elements in the linked list.\n\n    - For the `getRandom()` function, its time complexity is $$\\mathcal{O}(1)$$.\n    The reason is two-fold: it takes a constant time to generate a random number and the access to any element in the array is of constant time as well.\n\n\n- Space Complexity: $$\\mathcal{O}(N)$$\n\n    - The overall solution requires $$\\mathcal{O}(N)$$ space complexity, since we make a copy of elements from the input list.\n\n\n---\n### Approach 2: Reservoir Sampling\n\n**Intuition**\n\nIn order to do random sampling over a population of **_unknown size_** with **_constant space_**, the answer is [reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling).\nAs one will see later, it is an elegant algorithm that can address the two caveats of the previous approach.\n\n>The reservoir sampling algorithm is intended to sample `k` elements from an population of unknown size.\nIn our case, the `k` happens to be one.\n\nFurthermore, the reservoir sampling is a **_family_** of algorithms which includes several variants over the time.\nHere we present a simple albeit slow one, also known as _**Algorithm R**_ by [Alan Waterman](https://en.wikipedia.org/wiki/Reservoir_sampling#cite_note-vitter-1).\n\n```python\n# S has items to sample, R will contain the result\ndef ReservoirSample(S[1..n], R[1..k])\n  # fill the reservoir array\n  for i := 1 to k\n      R[i] := S[i]\n\n  # replace elements with gradually decreasing probability\n  for i := k+1 to n\n    # randomInteger(a, b) generates a uniform integer\n    #   from the inclusive range {a, ..., b} *)\n    j := randomInteger(1, i)\n    if j <= k\n        R[j] := S[i]\n```\n\n![reservoir sampling](../Figures/382/382_reservoir_sampling.png)\n\nWe summarize the main idea of the algorithm as follows:\n\n- Initially, we fill up an array of reservoir `R[]` with the heading elements from the pool of samples `S[]`.\nAt the end of the algorithm, the reservoir will contain the final elements we sample from the pool.\n\n- We then iterate through the rest of elements in the pool.\nFor each element, we need to _decide_ if we want to include it in the reservoir or not.\nIf so, we will replace an existing element in reservoir with the current element.\n\nOne important question that one might have is that how we can ensure that each element has an **equal probability** to be chosen.\n\n>Given the above algorithm, it is guaranteed that at any moment, for each element scanned so far, it has an equal chance to be selected into the reservoir.\n\nHere we provide a simple proof.\n\n- Suppose that we have an element at the index of `i` (and `i > k`), when we reach the element, the chance that it will be selected into the reservoir would be $$\\frac{k}{i}$$, as we can see from the algorithm.\n\n- Later on, there is a chance that any chosen element in the reservoir might be **replaced** with the subsequent element.\nMore specifically, when we reach the element `j` (`j > i`), there would be a chance of $$\\frac{1}{j}$$ for any specific element in the reservoir to be replaced.\nBecause for any specific position in the reservoir, there is $$\\frac{1}{j}$$ chance that it might be chosen by the random number generator.\nOn the other hand, there would be $$\\frac{j-1}{j}$$ probability for any specific element in the reservoir to stay in the reservoir at that particular moment of sampling.\n\n- To sum up, in order for any element in the pool to be chosen in the final reservoir, a series of __independent events__ need to occur, namely:\n    - Firstly, the element needs to be chosen in the reservoir when we reach the element.\n    - Secondly, in the following sampling, the element should remain in the reservoir, _i.e._ not to be replaced.\n\n- Therefore, for a sequence of length `n`, the chance that any element ends up in the final reservoir could be represented in the following formula:\n\n$$\n    \\frac{k}{i} \\cdot \\frac{i}{i+1} \\cdot \\frac{i+1}{i+2} ... \\frac{n-1}{n} = \\frac{k}{n}\n$$\n\n\n**Algorithm**\n\nGiven the intuition above, we can now put it into implementation as follows:\n\n- In the `init()` function, we simply keep the head of the linked list, rather than converting it into array.\n\n- In the `getRandom()` function, we then do a reservoir sampling starting from the head of the linked list.\nMore specifically, we scan the element one by one and decide whether we should put it into the reservoir (which in our case case happens to be of size one).\n\n<iframe src=\"https://leetcode.com/playground/GbVmJakj/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GbVmJakj\"></iframe>\n\n\n**Complexity Analysis**\n\n- Time Complexity:\n\n    - For the `init(head)` function, its time complexity is $$\\mathcal{O}(1)$$.\n\n    - For the `getRandom()` function, its time complexity is $$\\mathcal{O}(N)$$ where $$N$$ is the number of elements in the input list.\n\n- Space Complexity: $$\\mathcal{O}(1)$$\n\n    - The overall solution requires $$\\mathcal{O}(1)$$ space complexity, since the variables we used in the algorithm are of constant size, regardless the input.\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

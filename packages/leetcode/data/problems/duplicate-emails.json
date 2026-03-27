@@ -1,0 +1,58 @@
+{
+  "questionId": "182",
+  "questionFrontendId": "182",
+  "title": "Duplicate Emails",
+  "titleSlug": "duplicate-emails",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Person</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| id          | int     |\n| email       | varchar |\n+-------------+---------+\nid is the primary key (column with unique values) for this table.\nEach row of this table contains an email. The emails will not contain uppercase letters.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report all the duplicate emails. Note that it&#39;s guaranteed that the email&nbsp;field is not NULL.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nPerson table:\n+----+---------+\n| id | email   |\n+----+---------+\n| 1  | a@b.com |\n| 2  | c@d.com |\n| 3  | a@b.com |\n+----+---------+\n<strong>Output:</strong> \n+---------+\n| Email   |\n+---------+\n| a@b.com |\n+---------+\n<strong>Explanation:</strong> a@b.com is repeated two times.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Person (id int, email varchar(255))\"], \"mssql\": [\"Create table Person (id int, email varchar(255))\"], \"oraclesql\": [\"Create table Person (id int, email varchar(255))\"], \"database\": true, \"name\": \"duplicate_emails\", \"pythondata\": [\"Person = pd.DataFrame([], columns=['id', 'email']).astype({'id':'Int64', 'email':'object'})\"], \"postgresql\": [\"Create table If Not Exists Person (id int, email varchar(255))\"], \"database_schema\": {\"Person\": {\"id\": \"INT\", \"email\": \"VARCHAR(255)\"}}}",
+  "stats": "{\"totalAccepted\": \"1.1M\", \"totalSubmission\": \"1.5M\", \"totalAcceptedRaw\": 1129158, \"totalSubmissionRaw\": 1535155, \"acRate\": \"73.6%\"}",
+  "likes": 2451,
+  "dislikes": 88,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Person\": [\"id\", \"email\"]}, \"rows\": {\"Person\": [[1, \"a@b.com\"], [2, \"c@d.com\"], [3, \"a@b.com\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"epam-systems\", \"name\": \"EPAM Systems\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef duplicate_emails(person: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "214",
+    "content": "[TOC]\n\n# Solution\n---\n\n## pandas\n### Approach 1: Frequency-based Filtering for Duplicates\n\n![fig](../Figures/182/182-1.png)\n\n#### Intuition\n\n**Step 1 - Group and Count:** \n```python\nemail_counts = person.groupby('email').size().reset_index(name='num')\n```\n- Using the `groupby` function of pandas, we cluster the rows of the DataFrame based on the values in the 'Email' column. This ensures that rows with identical email addresses are categorized into the same group. Subsequently, for each of these email groups, we count how many times that particular email appears. This process gives us a clear picture of the frequency of each unique email in our DataFrame.\n\n**Step 2 - Filter duplicates:** \n```python\nduplicated_emails_df = email_counts[email_counts['num'] > 1][['email']]\n```\n- With the frequencies of each email address in hand, our objective becomes simple: identify those emails that appear more than once. Hence, we filter our counted DataFrame to retain only those rows where the email count (which we named 'num') exceeds 1. This effectively gives us a list of duplicated emails.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/gvZL2CGM/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"gvZL2CGM\"></iframe>\n\n---\n\n### Approach 2: Group-Filter-Deduplicate\n\n#### Intuition\n\n**Input DataFrame:**\n<table border=\"1\">\n    <thead>\n        <tr>\n            <th>id</th>\n            <th>email</th>\n        </tr>\n    </thead>\n    <tbody>\n        <tr>\n            <td>1</td>\n            <td>a@b.com</td>\n        </tr>\n        <tr>\n            <td>2</td>\n            <td>c@d.com</td>\n        </tr>\n        <tr>\n            <td>3</td>\n            <td>a@b.com</td>\n        </tr>\n    </tbody>\n</table>\n<br>\n\n**Step 1 -  Grouping by Email Addresses**: \n```python\ngrouped_emails = person.groupby('email')\n```\n - In many datasets, data can have repetitions. The first intuitive step to identifying which elements are repeated is to group or cluster them. In the context of our problem, emails are the elements in question. We use the `groupby` method on the 'email' column. This method aggregates data by unique email addresses. Think of it as putting the same emails into individual buckets.\n\n <table border=\"1\">\n    <thead>\n        <tr>\n            <th>id</th>\n            <th>email</th>\n        </tr>\n    </thead>\n    <tbody>\n        <tr>\n            <td>1</td>\n            <td>a@b.com</td>\n        </tr>\n        <tr>\n            <td>3</td>\n            <td>a@b.com</td>\n        </tr>\n        <tr>\n            <td colspan=\"2\"></td>\n        </tr>\n        <tr>\n            <td>2</td>\n            <td>c@d.com</td>\n        </tr>\n    </tbody>\n</table>\n<br>\n\n*(For illustrative purposes, the groups are separated with an empty row in the table)*\n\n\n**Step 2 -   Identifying the Repeated Emails**: \n```python\nfiltered_emails = grouped_emails.filter(lambda x: len(x) > 1)\n```\n- Once the emails are grouped, the next step is to figure out which groups (or buckets) have more than one email, i.e. duplicates. The `filter` function in combination with the lambda function `lambda x: len(x) > 1` helps in achieving this. The `filter` function will iterate over each group, and our lambda function will check the length (or count) of emails in each group. If the count is greater than one, the group satisfies our condition.\n\n<table border=\"1\">\n    <thead>\n        <tr>\n            <th>id</th>\n            <th>email</th>\n        </tr>\n    </thead>\n    <tbody>\n        <tr>\n            <td>1</td>\n            <td>a@b.com</td>\n        </tr>\n        <tr>\n            <td>3</td>\n            <td>a@b.com</td>\n        </tr>\n    </tbody>\n</table>\n<br>\n\n**Step 3 -  Extracting Unique Repeated Emails**: \n```python\nduplicated_emails_df = filtered_emails[['email']].drop_duplicates()\n```\n - Given that our filtered emails might still contain repetitions, we need to further refine our dataset. The `drop_duplicates()` method combined with indexing by the 'email' column ensures that each repeated email appears only once in the resulting DataFrame.\n\n <table border=\"1\">\n    <thead>\n        <tr>\n            <th>id</th>\n            <th>email</th>\n        </tr>\n    </thead>\n    <tbody>\n        <tr>\n            <td>1</td>\n            <td>a@b.com</td>\n        </tr>\n    </tbody>\n</table>\n<br>\n\n\n**Step 4 - Return DataFrame**: \n```python\nreturn duplicated_emails_df\n```\n - The final step is to return the DataFrame that contains the duplicated emails.\n\n <table border=\"1\">\n    <thead>\n        <tr>\n            <th>id</th>\n            <th>email</th>\n        </tr>\n    </thead>\n    <tbody>\n        <tr>\n            <td>1</td>\n            <td>a@b.com</td>\n        </tr>\n    </tbody>\n</table>\n<br>\n\nThese steps together encapsulate the process of identifying and extracting duplicated emails from the DataFrame.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Rr7QNGFU/shared\" frameBorder=\"0\" width=\"100%\" height=\"157\" name=\"Rr7QNGFU\"></iframe>\n\n---\n\n## Database\n\n### Approach 1: Using `GROUP BY` and Subquery\n\n#### Intuition\n\nDuplicated emails existed more than one time. To count the times each email exists, we can use the following code.\n\n```sql\nselect Email, count(Email) as num\nfrom Person\ngroup by Email;\n```\n\n```\n| Email   | num |\n|---------|-----|\n| a@b.com | 2   |\n| c@d.com | 1   |\n```\n\nTaking this as a temporary table, we can get a solution as below.\n\n```sql\nselect Email from\n(\n  select Email, count(Email) as num\n  from Person\n  group by Email\n) as statistic\nwhere num > 1\n;\n```\n\n#### Implementation\n\n```sql\nselect Email from\n(\n  select Email, count(Email) as num\n  from Person\n  group by Email\n) as statistic\nwhere num > 1\n;\n```\n\n---\n\n### Approach 2: Using `GROUP BY` and `HAVING` condition \n\n#### Intuition\n\nA more common used way to add a condition to a `GROUP BY` is to use the `HAVING` clause, which is much simpler and more efficient.\n\nSo we can rewrite the above solution to this one.\n\n#### Implementation\n\n```sql\nselect Email\nfrom Person\ngroup by Email\nhaving count(Email) > 1;\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

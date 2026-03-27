@@ -1,0 +1,145 @@
+{
+  "questionId": "912",
+  "questionFrontendId": "528",
+  "title": "Random Pick with Weight",
+  "titleSlug": "random-pick-with-weight",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> array of positive integers <code>w</code> where <code>w[i]</code> describes the <strong>weight</strong> of the <code>i<sup>th</sup></code> index.</p>\n\n<p>You need to implement the function <code>pickIndex()</code>, which <strong>randomly</strong> picks an index in the range <code>[0, w.length - 1]</code> (<strong>inclusive</strong>) and returns it. The <strong>probability</strong> of picking an index <code>i</code> is <code>w[i] / sum(w)</code>.</p>\n\n<ul>\n\t<li>For example, if <code>w = [1, 3]</code>, the probability of picking index <code>0</code> is <code>1 / (1 + 3) = 0.25</code> (i.e., <code>25%</code>), and the probability of picking index <code>1</code> is <code>3 / (1 + 3) = 0.75</code> (i.e., <code>75%</code>).</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;Solution&quot;,&quot;pickIndex&quot;]\n[[[1]],[]]\n<strong>Output</strong>\n[null,0]\n\n<strong>Explanation</strong>\nSolution solution = new Solution([1]);\nsolution.pickIndex(); // return 0. The only option is to return 0 since there is only one element in w.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;Solution&quot;,&quot;pickIndex&quot;,&quot;pickIndex&quot;,&quot;pickIndex&quot;,&quot;pickIndex&quot;,&quot;pickIndex&quot;]\n[[[1,3]],[],[],[],[],[]]\n<strong>Output</strong>\n[null,1,1,1,1,0]\n\n<strong>Explanation</strong>\nSolution solution = new Solution([1, 3]);\nsolution.pickIndex(); // return 1. It is returning the second element (index = 1) that has a probability of 3/4.\nsolution.pickIndex(); // return 1\nsolution.pickIndex(); // return 1\nsolution.pickIndex(); // return 1\nsolution.pickIndex(); // return 0. It is returning the first element (index = 0) that has a probability of 1/4.\n\nSince this is a randomization problem, multiple answers are allowed.\nAll of the following outputs can be considered correct:\n[null,1,1,1,1,0]\n[null,1,1,1,1,1]\n[null,1,1,1,0,0]\n[null,1,1,1,0,1]\n[null,1,0,1,0,0]\n......\nand so on.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= w.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= w[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>pickIndex</code> will be called at most <code>10<sup>4</sup></code> times.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n    \"classname\": \"Solution\",\n    \"maxbytesperline\": 200000,\n    \"constructor\": {\n        \"params\": [\n            {\n                \"name\": \"w\",\n                \"type\": \"integer[]\"\n            },\n            {\n                \"name\": \"wSize\",\n                \"type\": \"integer\",\n                \"lang\": \"c\",\n                \"value\": \"size_1\"\n            }\n        ]\n    },\n    \"methods\": [\n        {\n            \"name\" : \"pickIndex\",\n            \"params\": [\n            ],\n            \"return\": {\n                \"type\": \"integer\"\n            }\n        }\n    ],\n    \"systemdesign\": true,\n    \"params\": [\n        {\n            \"name\": \"inputs\",\n            \"type\": \"integer[]\"\n        },\n        {\n            \"name\": \"inputs\",\n            \"type\": \"integer[]\"\n        }\n    ],\n    \"return\": {\n        \"type\": \"list<String>\",\n        \"dealloc\": true\n    }\n}",
+  "stats": "{\"totalAccepted\": \"691.9K\", \"totalSubmission\": \"1.4M\", \"totalAcceptedRaw\": 691874, \"totalSubmissionRaw\": 1412683, \"acRate\": \"49.0%\"}",
+  "likes": 2280,
+  "dislikes": 1058,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Random Pick Index\", \"titleSlug\": \"random-pick-index\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Random Pick with Blacklist\", \"titleSlug\": \"random-pick-with-blacklist\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Random Point in Non-overlapping Rectangles\", \"titleSlug\": \"random-point-in-non-overlapping-rectangles\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"Solution\",\"pickIndex\"]\n[[[1]],[]]",
+    "[\"Solution\",\"pickIndex\",\"pickIndex\",\"pickIndex\",\"pickIndex\",\"pickIndex\"]\n[[[1,3]],[],[],[],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"two-sigma\", \"name\": \"Two Sigma\"}, {\"timesEncountered\": 2, \"slug\": \"waymo\", \"name\": \"Waymo\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"nuro\", \"name\": \"Nuro\"}, {\"timesEncountered\": 3, \"slug\": \"coinbase\", \"name\": \"Coinbase\"}], \"more_than_six_months\": [{\"timesEncountered\": 19, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 7, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 6, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 6, \"slug\": \"liftoff\", \"name\": \"Liftoff\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 4, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"revolut\", \"name\": \"Revolut\"}, {\"timesEncountered\": 3, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    },
+    {
+      "name": "Randomized",
+      "slug": "randomized"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    Solution(vector<int>& w) {\n        \n    }\n    \n    int pickIndex() {\n        \n    }\n};\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution* obj = new Solution(w);\n * int param_1 = obj->pickIndex();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n\n    public Solution(int[] w) {\n        \n    }\n    \n    public int pickIndex() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = new Solution(w);\n * int param_1 = obj.pickIndex();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n\n    def __init__(self, w: List[int]):\n        \n\n    def pickIndex(self) -> int:\n        \n\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution(w)\n# param_1 = obj.pickIndex()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n\n    def __init__(self, w):\n        \"\"\"\n        :type w: List[int]\n        \"\"\"\n        \n\n    def pickIndex(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution(w)\n# param_1 = obj.pickIndex()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} w\n */\nvar Solution = function(w) {\n    \n};\n\n/**\n * @return {number}\n */\nSolution.prototype.pickIndex = function() {\n    \n};\n\n/** \n * Your Solution object will be instantiated and called as such:\n * var obj = new Solution(w)\n * var param_1 = obj.pickIndex()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Solution {\n    constructor(w: number[]) {\n        \n    }\n\n    pickIndex(): number {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * var obj = new Solution(w)\n * var param_1 = obj.pickIndex()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n\n    public Solution(int[] w) {\n        \n    }\n    \n    public int PickIndex() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = new Solution(w);\n * int param_1 = obj.PickIndex();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Solution;\n\n\nSolution* solutionCreate(int* w, int wSize) {\n    \n}\n\nint solutionPickIndex(Solution* obj) {\n    \n}\n\nvoid solutionFree(Solution* obj) {\n    \n}\n\n/**\n * Your Solution struct will be instantiated and called as such:\n * Solution* obj = solutionCreate(w, wSize);\n * int param_1 = solutionPickIndex(obj);\n \n * solutionFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Solution struct {\n    \n}\n\n\nfunc Constructor(w []int) Solution {\n    \n}\n\n\nfunc (this *Solution) PickIndex() int {\n    \n}\n\n\n/**\n * Your Solution object will be instantiated and called as such:\n * obj := Constructor(w);\n * param_1 := obj.PickIndex();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution(w: IntArray) {\n\n    fun pickIndex(): Int {\n        \n    }\n\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * var obj = Solution(w)\n * var param_1 = obj.pickIndex()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Solution {\n\n    init(_ w: [Int]) {\n        \n    }\n    \n    func pickIndex() -> Int {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * let obj = Solution(w)\n * let ret_1: Int = obj.pickIndex()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Solution {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Solution {\n\n    fn new(w: Vec<i32>) -> Self {\n        \n    }\n    \n    fn pick_index(&self) -> i32 {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * let obj = Solution::new(w);\n * let ret_1: i32 = obj.pick_index();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Solution\n\n=begin\n    :type w: Integer[]\n=end\n    def initialize(w)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def pick_index()\n        \n    end\n\n\nend\n\n# Your Solution object will be instantiated and called as such:\n# obj = Solution.new(w)\n# param_1 = obj.pick_index()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n    /**\n     * @param Integer[] $w\n     */\n    function __construct($w) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function pickIndex() {\n        \n    }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * $obj = Solution($w);\n * $ret_1 = $obj->pickIndex();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n\n  Solution(List<int> w) {\n    \n  }\n  \n  int pickIndex() {\n    \n  }\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * Solution obj = Solution(w);\n * int param1 = obj.pickIndex();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Solution(_w: Array[Int]) {\n\n    def pickIndex(): Int = {\n        \n    }\n\n}\n\n/**\n * Your Solution object will be instantiated and called as such:\n * val obj = new Solution(w)\n * val param_1 = obj.pickIndex()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec init_(w :: [integer]) :: any\n  def init_(w) do\n    \n  end\n\n  @spec pick_index() :: integer\n  def pick_index() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Solution.init_(w)\n# param_1 = Solution.pick_index()\n\n# Solution.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec solution_init_(W :: [integer()]) -> any().\nsolution_init_(W) ->\n  .\n\n-spec solution_pick_index() -> integer().\nsolution_pick_index() ->\n  .\n\n\n%% Your functions will be called as such:\n%% solution_init_(W),\n%% Param_1 = solution_pick_index(),\n\n%% solution_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define solution%\n  (class object%\n    (super-new)\n    \n    ; w : (listof exact-integer?)\n    (init-field\n      w)\n    \n    ; pick-index : -> exact-integer?\n    (define/public (pick-index)\n      )))\n\n;; Your solution% object will be instantiated and called as such:\n;; (define obj (new solution% [w w]))\n;; (define param_1 (send obj pick-index))"
+    }
+  ],
+  "solution": {
+    "id": "946",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThis is actually a very practical problem which appears often in the scenario where we need to do **sampling** over a set of data.\n\nNowadays, people talk a lot about machine learning algorithms.\nAs many would reckon, one of the basic operations involved in training a machine learning algorithm (_e.g._ Decision Tree) is to sample a batch of data and feed them into the model, rather than taking the entire data set.\nThere are several rationales behind doing sampling over data, which we will not cover in detail, since it is not the focus of this article.\n\nIf one is interested, one can refer to our Explore card of [Machine Learning 101](https://leetcode.com/explore/learn/card/machine-learning-101/) which gives an overview on the fundamental concepts of machine learning, as well as the Explore card of [Decision Tree](https://leetcode.com/explore/learn/card/decision-tree/) which explains in detail on how to construct a decision tree algorithm.\n\nNow, given the above background, hopefully one is convinced that this is an interesting problem, and it is definitely worth solving.\n\n#### Intuition\n\nGiven a list of positive values, we are asked to _randomly_ pick up a value based on the weight of each value.\nTo put it simple, the task is to do **_sampling with weight_**.\n\nLet us look at a simple example. Given an input list of values `[1, 9]`, when we pick up a number out of it, the chance is that 9 times out of 10 we should pick the number `9` as the answer.\n\n>In other words, the **_probability_** that a number got picked is proportional to the value of the number, with regards to the total sum of all numbers.\n\nTo understand the problem better, let us imagine that there is a line in the space, we then project each number into the line according to its value, _i.e._ a large number would occupy a broader range on the line compared to a small number. For example, the range for the number `9` should be exactly nine times as the range for the number `1`.\n\n![throw a ball](../Figures/528/528_throw_ball.png)\n\nNow, let us throw a ball _**randomly**_ onto the line, then it is safe to say there is a good chance that the ball will fall into the range occupied by the number `9`. In fact, if we repeat this experiment for a large number of times, then _statistically_ speaking, 9 out of 10 times the ball will fall into the range for the number `9`.\n\nVoila. That is the intuition behind this problem.\n\n#### Simulation\n\n>So to solve the problem, we can simply **_simulate_** the aforementioned experiment with a computer program.\n\nFirst of all, let us construct the line in the experiment by **chaining up** all values together.\n\nLet us denote a list of numbers as $[w_1, w_2, w_3, ..., w_n]$.\nStarting from the beginning of the line, we then can represent the **offsets** for each range $K$ as $(\\sum_{1}^{K}{w_i}, \\sum_{1}^{K+1}{w_i})$, as shown in the following graph:\n\n![prefix sum formula](../Figures/528/528_prefix_sum_formula.png)\n\nAs many of you might recognize now, the offsets of the ranges are actually the [prefix sums](https://en.wikipedia.org/wiki/Prefix_sum) from a sequence of numbers. For each number in a sequence, its corresponding prefix sum, also known as **cumulative sum**, is the sum of all previous numbers in the sequence plus the number itself.\n\nAs an observation from the definition of prefix sums, one can see that the list of prefix sums would be _strictly_ monotonically increasing, if all numbers are positive.\n\nTo throw a ball on the line is to find an _offset_ to place the ball.\nLet us call this offset **_target_**.\n\n>Once we randomly generate the target offset, the task is now boiled down to finding the range that this target falls into.\n\nLet us rephrase the problem now, given a list of offsets (_i.e._ prefix sums) and a target offset, our task is to fit the target offset into the list so that the ascending order is maintained.\n\n<br/>\n<br/>\n\n---\n\n### Approach 1: Prefix Sums with Linear Search\n\n#### Intuition\n\nIf one comes across this problem during an interview, one can consider the problem almost resolved, once one reduces the original problem down to the problem of inserting an element into a sorted list.\n\nConcerning the above problem, arguably the most intuitive solution would be **_linear search_**. Many of you might have already thought one step ahead, by noticing that the input list is _sorted_, which is a sign to apply a more advanced search algorithm called **_binary search_**.\n\nLet us do one thing at one time. In this approach, we will first focus on the linear search algorithm so that we could work out other implementation details. In the next approach, we will then improve upon this approach with a binary search algorithm.\n\nSo far, there is one little detail that we haven't discussed, which is how to _randomly_ generate a target offset for the ball. By \"randomly\", we should ensure that each point on the line has an equal opportunity to be the target offset for the ball.\n\nIn most of the programming languages, we have some `random()` function that generates a random value between 0 and 1. We can **_scale up_** this randomly-generated value to the entire range of the line, by multiplying it with the size of the range. At the end, we could use this _scaled_ random value as our target offset.  \n\nAs an alternative solution, sometimes one might find a `randomInteger(range)` function that could generate a random integer from a given range.\nOne could then directly use the output of this function as our target offset.\n\nHere, we adopt the `random()` function, since it could also work for the case where the weights are float values.\n\n\n#### Algorithm\n\nWe now should have all the elements at hand for the implementation.\n\n- First of all, before picking an index, we should first set up the playground, by generating a list of prefix sums from a given list of numbers.\nThe best place to do so would be in the constructor of the class, so that we don't have to generate it again and again at the invocation of `pickIndex()` function.\n\n    - In the constructor, we should also keep the total sum of the input numbers, so that later we could use this total sum to scale up the random number.\n\n- For the `pickIndex()` function, here are the steps that we should perform.\n\n    - Firstly, we generate a random number between 0 and 1. We then scale up this number, which will serve as our `target` offset.\n\n    - We then scan through the prefix sums that we generated before by _linear search_, to find the first prefix sum that is larger than our `target` offset.\n\n    - And the index of this prefix sum would be exactly the _right_ place that the target should fall into. We return the index as the result of `pickIndex()` function.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7WP5PEHN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7WP5PEHN\"></iframe>\n\n\n\n#### Complexity Analysis\n\nLet $N$ be the length of the input list.\n\n- Time Complexity\n\n    - For the constructor function, the time complexity would be $\\mathcal{O}(N)$, which is due to the construction of the prefix sums.\n<br/>\n\n    - For the `pickIndex()` function, its time complexity would be $\\mathcal{O}(N)$ as well, since we did a linear search on the prefix sums.\n<br/>\n\n- Space Complexity\n\n    - For the constructor function, the space complexity would be $\\mathcal{O}(N)$, which is again due to the construction of the prefix sums.\n<br/>\n\n    - For the `pickIndex()` function, its space complexity would be $\\mathcal{O}(1)$, since it uses constant memory. Note, here we consider the prefix sums that it operates on, as the input of the function.\n<br/>\n\n\n---\n\n### Approach 2: Prefix Sums with Binary Search\n\n#### Intuition\n\nAs we promised before, we could improve the above approach by replacing the linear search with the **binary search**, which then can reduce the time complexity of the `pickIndex()` function from $\\mathcal{O}(N)$ to $\\mathcal{O}(\\log{N})$.\n\nAs a reminder, the condition to apply binary search on a list is that the list should be _sorted_, either in ascending or descending order.\nFor the list of prefix sums that we search on, this condition is guaranteed, as we discussed before.\n\n\n#### Algorithm\n\nWe could base our implementation largely on the previous approach.\nIn fact, the only place we need to modify is the `pickIndex()` function, where we replace the linear search with the binary search.\n\nAs a reminder, there exist built-in functions of binary search in almost all programming languages.\nIf one comes across this problem during the interview, it might be acceptable to use any of the built-in functions.\n\nOn the other hand, the interviewers might insist on implementing a binary search by hand. It would be good to prepare for this request as well.\n\nThere are several code patterns to implement a binary search algorithm, which we cover in the Explore card of [Binary Search algorithm](https://leetcode.com/explore/learn/card/binary-search/).\nOne can refer to the card for more details.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7LyQ3Rc8/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7LyQ3Rc8\"></iframe>\n\n\n\n#### Complexity Analysis\n\nLet $N$ be the length of the input list.\n\n- Time Complexity\n\n    - For the constructor function, the time complexity would be $\\mathcal{O}(N)$, which is due to the construction of the prefix sums.\n<br/>\n\n    - For the `pickIndex()` function, this time its time complexity would be $\\mathcal{O}(\\log{N})$, since we did a binary search on the prefix sums.\n<br/>\n\n- Space Complexity\n\n    - For the constructor function, the space complexity remains $\\mathcal{O}(N)$, which is again due to the construction of the prefix sums.\n<br/>\n\n    - For the `pickIndex()` function, its space complexity would be $\\mathcal{O}(1)$, since it uses constant memory. Note, here we consider the prefix sums that it operates on, as the input of the function.\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

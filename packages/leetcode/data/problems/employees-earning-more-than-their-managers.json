@@ -1,0 +1,58 @@
+{
+  "questionId": "181",
+  "questionFrontendId": "181",
+  "title": "Employees Earning More Than Their Managers",
+  "titleSlug": "employees-earning-more-than-their-managers",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Employee</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| id          | int     |\n| name        | varchar |\n| salary      | int     |\n| managerId   | int     |\n+-------------+---------+\nid is the primary key (column with unique values) for this table.\nEach row of this table indicates the ID of an employee, their name, salary, and the ID of their manager.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution&nbsp;to find the employees who earn more than their managers.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nEmployee table:\n+----+-------+--------+-----------+\n| id | name  | salary | managerId |\n+----+-------+--------+-----------+\n| 1  | Joe   | 70000  | 3         |\n| 2  | Henry | 80000  | 4         |\n| 3  | Sam   | 60000  | Null      |\n| 4  | Max   | 90000  | Null      |\n+----+-------+--------+-----------+\n<strong>Output:</strong> \n+----------+\n| Employee |\n+----------+\n| Joe      |\n+----------+\n<strong>Explanation:</strong> Joe is the only employee who earns more than his manager.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Employee (id int, name varchar(255), salary int, managerId int)\"], \"mssql\": [\"Create table Employee (id int, name varchar(255), salary int, managerId int)\"], \"oraclesql\": [\"Create table Employee (id int, name varchar(255), salary int, managerId int)\"], \"database\": true, \"name\": \"find_employees\", \"pythondata\": [\"Employee = pd.DataFrame([], columns=['id', 'name', 'salary', 'managerId']).astype({'id':'Int64', 'name':'object', 'salary':'Int64', 'managerId':'Int64'})\\n\"], \"postgresql\": [\"Create table If Not Exists Employee (id int, name varchar(255), salary int, managerId int)\"], \"database_schema\": {\"Employee\": {\"id\": \"INT\", \"name\": \"VARCHAR(255)\", \"salary\": \"INT\", \"managerId\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"1.1M\", \"totalSubmission\": \"1.5M\", \"totalAcceptedRaw\": 1126910, \"totalSubmissionRaw\": 1543280, \"acRate\": \"73.0%\"}",
+  "likes": 3139,
+  "dislikes": 301,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Employee\": [\"id\", \"name\", \"salary\", \"managerId\"]}, \"rows\": {\"Employee\": [[1, \"Joe\", 70000, 3], [2, \"Henry\", 80000, 4], [3, \"Sam\", 60000, null], [4, \"Max\", 90000, null]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 11, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"wix\", \"name\": \"Wix\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 2, \"slug\": \"cognizant\", \"name\": \"Cognizant\"}]}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_employees(employee: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "215",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n<!-- h3 for approaches -->\n### Approach 1: Self-Merge with an Inner Join\n\n<!-- h4 for sections -->\n#### Algorithm\nWe first merge the `employee` table with itself to obtain the salary information of managers for each employee. Note that we set `how=inner` because we only need the rows where there is a match between the `managerId` and `id` columns. An inner join will return only the employees whose manager is not NULL.\n\n```python\ndf = employee.merge(employee, left_on = 'managerId', right_on = 'id',\n            suffixes = ['_e', '_m'], how = 'inner')\n```\n\n> Since there will be two columns with the same name after the merge operation, we need to assign suffixes to both tables. By default, the suffixes are `_x` and `_y`. In this problem, the left and right tables can be treated as information for employees and managers, respectively. Therefore, we use `_e` and `_m` for better understanding.\n\n| id_e | name_e | salary_e | managerId_e | id_m | name_m | salary_m | managerId_m |\n| ---- | ------ | -------- | ----------- | ---- | ------ | -------- | ----------- |\n| 1    | Joe    | 70000    | 3           | 3    | Sam    | 60000    | null        |\n| 2    | Henry  | 80000    | 4           | 4    | Max    | 90000    | null        |\n\n<br>\n\n\nNext, because we have the employee salary `salary_e` and their manager's salary `salary_m`, we can use `loc` to select rows of interest. In addition, we only select one column, which is the name of the employee `name_e`.\n\n\n```python\ndf = df.loc[df['salary_e'] > df['salary_m'] , ['name_e']]\n```\n\n| name_e |\n| ------ |\n| Joe    |\n\nFinally, we rename the column to `Employee` and return the result.\n```python\nreturn df.rename(columns = {'name_e':'Employee'})\n```\n\n<!-- h4 for sections -->\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3gCqJf6m/shared\" frameBorder=\"0\" width=\"100%\" height=\"191\" name=\"3gCqJf6m\"></iframe>\n\n---\n\n## Database\n\n<!-- h3 for approaches -->\n### Approach 1: Using `WHERE` clause\n\n\n<!-- h4 for sections -->\n#### Algorithm\n\nAs this table has the employee's manager information, we probably need to select information from it twice.\n\n```sql\nSELECT *\nFROM Employee AS a, Employee AS b\n;\n```\n>Note: The keyword 'AS' is optional.\n\n| Id | Name  | Salary | ManagerId | Id | Name  | Salary | ManagerId |\n|----|-------|--------|-----------|----|-------|--------|-----------|\n| 1  | Joe   | 70000  | 3         | 1  | Joe   | 70000  | 3         |\n| 2  | Henry | 80000  | 4         | 1  | Joe   | 70000  | 3         |\n| 3  | Sam   | 60000  |           | 1  | Joe   | 70000  | 3         |\n| 4  | Max   | 90000  |           | 1  | Joe   | 70000  | 3         |\n| 1  | Joe   | 70000  | 3         | 2  | Henry | 80000  | 4         |\n| 2  | Henry | 80000  | 4         | 2  | Henry | 80000  | 4         |\n| 3  | Sam   | 60000  |           | 2  | Henry | 80000  | 4         |\n| 4  | Max   | 90000  |           | 2  | Henry | 80000  | 4         |\n| 1  | Joe   | 70000  | 3         | 3  | Sam   | 60000  |           |\n| 2  | Henry | 80000  | 4         | 3  | Sam   | 60000  |           |\n| 3  | Sam   | 60000  |           | 3  | Sam   | 60000  |           |\n| 4  | Max   | 90000  |           | 3  | Sam   | 60000  |           |\n| 1  | Joe   | 70000  | 3         | 4  | Max   | 90000  |           |\n| 2  | Henry | 80000  | 4         | 4  | Max   | 90000  |           |\n| 3  | Sam   | 60000  |           | 4  | Max   | 90000  |           |\n| 4  | Max   | 90000  |           | 4  | Max   | 90000  |           |\n> The first 3 columns are from a and the last 3 ones are from b.\n\nSelect from two tables will get the [Cartesian product](https://en.wikipedia.org/wiki/Cartesian_product) of these two tables. In this case, the output will be 4*4 = 16 records. However, what we interest is the employee's salary higher than his/her manager. So we should add two conditions in a `WHERE` clause like below.\n\n\n```sql\nSELECT\n    *\nFROM\n    Employee AS a,\n    Employee AS b\nWHERE\n    a.ManagerId = b.Id\n        AND a.Salary > b.Salary\n;\n```\n\n| Id | Name | Salary | ManagerId | Id | Name | Salary | ManagerId |\n|----|------|--------|-----------|----|------|--------|-----------|\n| 1  | Joe  | 70000  | 3         | 3  | Sam  | 60000  |           |\n\nAs we only need to output the employee's name, so we modify the above code a little to get a solution.\n\n<!-- h4 for sections -->\n#### Implementation\n\n```sql\nSELECT\n    a.Name AS 'Employee'\nFROM\n    Employee AS a,\n    Employee AS b\nWHERE\n    a.ManagerId = b.Id\n        AND a.Salary > b.Salary\n;\n```\n\n<br>\n\n\n### Approach 2: Using `JOIN` clause\n\n#### Algorithm\n\nActually, `JOIN` is a more common and efficient way to link tables together, and we can use `ON` to specify some conditions.\n\n#### Implementation\n\n```sql\nSELECT\n     a.NAME AS Employee\nFROM Employee AS a JOIN Employee AS b\n     ON a.ManagerId = b.Id\n     AND a.Salary > b.Salary\n;\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "questionId": "407",
+  "questionFrontendId": "407",
+  "title": "Trapping Rain Water II",
+  "titleSlug": "trapping-rain-water-ii",
+  "difficulty": "Hard",
+  "content": "<p>Given an <code>m x n</code> integer matrix <code>heightMap</code> representing the height of each unit cell in a 2D elevation map, return <em>the volume of water it can trap after raining</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/08/trap1-3d.jpg\" style=\"width: 361px; height: 321px;\" />\n<pre>\n<strong>Input:</strong> heightMap = [[1,4,3,1,3,2],[3,2,1,3,2,4],[2,3,3,2,3,1]]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> After the rain, water is trapped between the blocks.\nWe have two small ponds 1 and 3 units trapped.\nThe total volume of water trapped is 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/04/08/trap2-3d.jpg\" style=\"width: 401px; height: 321px;\" />\n<pre>\n<strong>Input:</strong> heightMap = [[3,3,3,3,3],[3,2,2,2,3],[3,2,1,2,3],[3,2,2,2,3],[3,3,3,3,3]]\n<strong>Output:</strong> 10\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == heightMap.length</code></li>\n\t<li><code>n == heightMap[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 200</code></li>\n\t<li><code>0 &lt;= heightMap[i][j] &lt;= 2 * 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"trapRainWater\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"heightMap\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"265.3K\", \"totalSubmission\": \"414.3K\", \"totalAcceptedRaw\": 265325, \"totalSubmissionRaw\": 414324, \"acRate\": \"64.0%\"}",
+  "likes": 5000,
+  "dislikes": 172,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Trapping Rain Water\", \"titleSlug\": \"trapping-rain-water\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Points From Grid Queries\", \"titleSlug\": \"maximum-number-of-points-from-grid-queries\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,4,3,1,3,2],[3,2,1,3,2,4],[2,3,3,2,3,1]]",
+    "[[3,3,3,3,3],[3,2,2,2,3],[3,2,1,2,3],[3,2,2,2,3],[3,3,3,3,3]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"medianet\", \"name\": \"Media.net\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"otterai\", \"name\": \"Otter.ai\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}, {\"timesEncountered\": 2, \"slug\": \"samsung\", \"name\": \"Samsung\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int trapRainWater(vector<vector<int>>& heightMap) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int trapRainWater(int[][] heightMap) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def trapRainWater(self, heightMap: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def trapRainWater(self, heightMap):\n        \"\"\"\n        :type heightMap: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} heightMap\n * @return {number}\n */\nvar trapRainWater = function(heightMap) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function trapRainWater(heightMap: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int TrapRainWater(int[][] heightMap) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int trapRainWater(int** heightMap, int heightMapSize, int* heightMapColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func trapRainWater(heightMap [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun trapRainWater(heightMap: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func trapRainWater(_ heightMap: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn trap_rain_water(height_map: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} height_map\n# @return {Integer}\ndef trap_rain_water(height_map)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $heightMap\n     * @return Integer\n     */\n    function trapRainWater($heightMap) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int trapRainWater(List<List<int>> heightMap) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def trapRainWater(heightMap: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec trap_rain_water(height_map :: [[integer]]) :: integer\n  def trap_rain_water(height_map) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec trap_rain_water(HeightMap :: [[integer()]]) -> integer().\ntrap_rain_water(HeightMap) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (trap-rain-water heightMap)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2651",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a grid, `heightMap`, where each element represents the height of the corresponding cell in the 3D representation of the map. Our task is to calculate the total amount of water trapped on the map after it rains.\n\nWe can assume that it rains an infinite amount of water, but the water stays inside any area of the map only if there is a boundary that traps it. Specifically, the water remains on top of a cell as long as its combined height (the height of the cell plus the water above it) is less than or equal to the height of all its neighbors. If any neighbor is lower, the water will flow out to that lower cell. \n\n---\n\n### Approach: BFS + Priority Queue \n\n#### Intuition\n\nBuilding on the earlier observation, the total height of any cell (its original height plus any trapped water) must not exceed the smallest total height of its neighbors. Specifically, it cannot exceed the smallest total height of its neighboring cells. This constraint propagates outward from the grid’s edges, which act as the ultimate boundary since no water can be trapped beyond them.\n\nIn simpler terms, the cells around a region of the grid act as a boundary, and the smallest height of this boundary determines how much water can be stored in that region. To solve the problem, we begin by treating the edges of the grid as the initial boundary since water cannot spill beyond them. From there, we move inward, processing cells in a manner that respects the relationship between a cell’s height and the boundary:\n\n1. **Trapping Water**: When we process a cell, if its height is lower than the current boundary height, water can be trapped above it. The amount of water trapped is equal to the difference between the boundary height and the cell’s height. We then add this trapped water to our running total. To ensure the boundary remains valid, the cell is added to the boundary with its effective height adjusted to match the current boundary height. This adjustment prevents water from \"spilling\" through this cell and invalidating the boundary.\n\n2. **Updating the Boundary**: If the cell's height is greater than or equal to the boundary height, no water can be trapped above it. However, the cell still becomes part of the boundary because it might help trap water in adjacent, higher regions as we continue processing.\n\nTo efficiently manage the boundary and dynamically update the smallest height, we use a min-heap (priority queue). The heap lets us quickly find the lowest boundary height and ensure the traversal always processes the most constrained regions first.\n\n> For a more comprehensive understanding of heaps and priority queues, check out the [Heap Explore Card 🔗](https://leetcode.com/explore/learn/card/heap/). This resource provides an in-depth look at heap-based algorithms, explaining their key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n!?!../Documents/407/407_approach1_fix.json:960,540!?!\n\n#### Algorithm\n\n-   Define a struct `Cell` that stores the height and the coordinates of a cell in the map.\n-   Define two direction arrays, that will help us explore the neighbors of each cell: `dRow = [0, 0, -1, 1], dCol = [-1, 1, 0, 0]`.\n-   Initialize `numOfRows` and `numOfCols` to the number of rows and columns of the original grid, respectively.\n-   Create a `numOfRows x numOfCols` boolean grid, called `visited`, with all its values initialized to `false`.\n-   Initialize a priority queue (min-heap) of `Cells`, called `boundary`.\n-   Push the cells of the first and last row and column of the grid into the `boundary` and mark them as visited.\n-   Initialize `totalWaterVolume` to `0`.\n-   While the `boundary` is not empty:\n    -   Pop the top cell out of the `boundary`, as `[minBoundaryHeight, [currentRow, currentCol]]` - this is the cell with the minimum height in the unexplored part of the boundary.\n    -   Update `minBoundaryHeight` to `height`.\n    -   Loop through all neighbors of the current cell, with `direction` from `0` to `3`:\n        -   Initialize `neighborRow` to `currentRow + dRow[direction]` and `neighborCol` to `currentCol + dCol[direction]`.\n        -   If the cell `(neighborRow, neighborCol)` is valid, i.e. it is not out of the bounds of the grid and not visited:\n            -   If the height of the cell, `neighborHeight` is lower than `minBoundaryHeight`, add the difference `minBoundaryHeight - neighborHeight` to the `totalWaterVolume`.\n            -   Push the neighboring cell into the `boundary` with its height set to the maximum of its value and `minBoundayHeight`, as the lowest height of the boundary cannot fall below its current value.\n            -   Mark the neighboring cell as visited.\n-   Return `totalWaterVolume`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/dt4uER9y/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dt4uER9y\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the number of rows and $n$ the number of columns of the input grid.\n\n-   Time complexity: $O(m \\cdot n \\times \\log{m \\cdot n})$\n\n    Each cell is pushed in the `boundary` exactly once, so the while loops runs $O(mn)$ times. On each iteration, an element is popped from the priority queue and four other elements (the neighboring cells) are potentially pushed into it. Since the push and pop operations of the priority queue have a time complexity of $O(k)$, where $k$ represents the size of the priority queue, the overall time complexity of the algorithm becomes $O(m \\cdot n \\times \\log{m \\cdot n})$.\n\n-   Space complexity: $O(m \\times n)$\n\n    We create a `visited` grid of size $m \\times n$ to keep track of the cells already explored. The priority queue, `boundary` can also grow up to $O(m \\times n)$ in size, so the algorithm requires $O(m \\times n)$ extra space.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

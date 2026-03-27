@@ -1,0 +1,144 @@
+{
+  "questionId": "282",
+  "questionFrontendId": "282",
+  "title": "Expression Add Operators",
+  "titleSlug": "expression-add-operators",
+  "difficulty": "Hard",
+  "content": "<p>Given a string <code>num</code> that contains only digits and an integer <code>target</code>, return <em><strong>all possibilities</strong> to insert the binary operators </em><code>&#39;+&#39;</code><em>, </em><code>&#39;-&#39;</code><em>, and/or </em><code>&#39;*&#39;</code><em> between the digits of </em><code>num</code><em> so that the resultant expression evaluates to the </em><code>target</code><em> value</em>.</p>\n\n<p>Note that operands in the returned expressions <strong>should not</strong> contain leading zeros.</p>\n\n<p><strong>Note</strong> that a number can contain multiple digits.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = &quot;123&quot;, target = 6\n<strong>Output:</strong> [&quot;1*2*3&quot;,&quot;1+2+3&quot;]\n<strong>Explanation:</strong> Both &quot;1*2*3&quot; and &quot;1+2+3&quot; evaluate to 6.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = &quot;232&quot;, target = 8\n<strong>Output:</strong> [&quot;2*3+2&quot;,&quot;2+3*2&quot;]\n<strong>Explanation:</strong> Both &quot;2*3+2&quot; and &quot;2+3*2&quot; evaluate to 8.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = &quot;3456237490&quot;, target = 9191\n<strong>Output:</strong> []\n<strong>Explanation:</strong> There are no expressions that can be created from &quot;3456237490&quot; to evaluate to 9191.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= num.length &lt;= 10</code></li>\n\t<li><code>num</code> consists of only digits.</li>\n\t<li><code>-2<sup>31</sup> &lt;= target &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n",
+  "hints": [
+    "Note that a number can contain multiple digits.",
+    "Since the question asks us to find <b>all</b> of the valid expressions, we need a way to iterate over all of them. (<b>Hint:</b> Recursion!)",
+    "We can keep track of the expression string and evaluate it at the very end. But that would take a lot of time. Can we keep track of the expression's value as well so as to avoid the evaluation at the very end of recursion?",
+    "Think carefully about the multiply operator. It has a higher precedence than the addition and subtraction operators. \r\n\r\n<br> 1 + 2 = 3  <br>\r\n1 + 2 - 4 --> 3 - 4 --> -1 <br>\r\n1 + 2 - 4 * 12 --> -1 * 12 --> -12 (WRONG!) <br>\r\n1 + 2 - 4 * 12 --> -1 - (-4) + (-4 * 12) --> 3 + (-48) --> -45 (CORRECT!)",
+    "We simply need to keep track of the last operand in our expression and reverse it's effect on the expression's value while considering the multiply operator."
+  ],
+  "metaData": "{\r\n    \"name\":\"addOperators\",\r\n    \"params\":[\r\n        {\r\n            \"name\":\"num\",\r\n            \"type\":\"string\"\r\n        },\r\n        {\r\n            \"name\":\"target\",\r\n            \"type\":\"integer\"\r\n        }\r\n    ],\r\n    \"return\":{\r\n        \"type\":\"list<string>\"\r\n    }\r\n}",
+  "stats": "{\"totalAccepted\": \"312.4K\", \"totalSubmission\": \"728K\", \"totalAcceptedRaw\": 312413, \"totalSubmissionRaw\": 728019, \"acRate\": \"42.9%\"}",
+  "likes": 3770,
+  "dislikes": 727,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Evaluate Reverse Polish Notation\", \"titleSlug\": \"evaluate-reverse-polish-notation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Basic Calculator\", \"titleSlug\": \"basic-calculator\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Basic Calculator II\", \"titleSlug\": \"basic-calculator-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Different Ways to Add Parentheses\", \"titleSlug\": \"different-ways-to-add-parentheses\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Target Sum\", \"titleSlug\": \"target-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"123\"\n6",
+    "\"232\"\n8",
+    "\"3456237490\"\n9191"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}]}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> addOperators(string num, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> addOperators(String num, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def addOperators(self, num: str, target: int) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def addOperators(self, num, target):\n        \"\"\"\n        :type num: str\n        :type target: int\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} num\n * @param {number} target\n * @return {string[]}\n */\nvar addOperators = function(num, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function addOperators(num: string, target: number): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> AddOperators(string num, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** addOperators(char* num, int target, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func addOperators(num string, target int) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun addOperators(num: String, target: Int): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func addOperators(_ num: String, _ target: Int) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn add_operators(num: String, target: i32) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} num\n# @param {Integer} target\n# @return {String[]}\ndef add_operators(num, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $num\n     * @param Integer $target\n     * @return String[]\n     */\n    function addOperators($num, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> addOperators(String num, int target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def addOperators(num: String, target: Int): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec add_operators(num :: String.t, target :: integer) :: [String.t]\n  def add_operators(num, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec add_operators(Num :: unicode:unicode_binary(), Target :: integer()) -> [unicode:unicode_binary()].\nadd_operators(Num, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (add-operators num target)\n  (-> string? exact-integer? (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "548",
+    "content": "[TOC]\n\n## Solution\n---\n\n### Approach 1: Backtracking\n\n**Intuition**\n\nLet us first look at what the question asks us to do before getting at the approach to solve it. So, we are given a string of numbers and 3 different operators:\n\n* `+` Addition,\n* `-` Subtraction or\n* `*` Multiplication\n\nWe have to find all possible combinations of binary operators between the digits so that the overall value of the resulting expression becomes equal to a given target value. Let us look at a few possibilities of what it means exactly to *place the operators between digits* so that the question becomes clearer.\n\nLet's say we are given the following set of digits `\"123456789\"` and the target value given to us is `45`. Let us see some of the possible resulting expressions that we can get by placing the operators in different locations.\n\n<pre>\n1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 = 45\n1 + 2 - 3 + 4 - 5 + 6 - 7 + 8 - 9 = -3\n1 + 2 * 3 - 4 + 5 + 6 - 7 * 8 - 9 = -51\n1 + 2 + 3 + 4 + 5 - 6 * 7 + 8 * 9 = 45\n</pre>\n\nThese are just 4 of the many resulting expressions that are possible by using the given string of digits and the three operators.\n\nBy looking at the above examples we can't really figure out any specific pattern among the resulting expressions that tells us which of them will give us the resulting target.\n\nSince the question explicitly states that we are given binary operators, this means that each of the operator would require two operands.\n\n> We can consider each of our digits as an operand.\n\nThis means that between every pair of digits we can have any of the three operators i.e. $$+$$, $$-$$ or $$\\times$$.\n\nIf you've looked at the question's statement and the examples that are given in the question, you would realize that there is an example where the digits are `\"105\"` and the target value is `5`. For this particular example, there are two expressions given to us and they are `1*0+5` and `10-5`.\n\nThe second expression is something that you need to look out for before getting to solve this question because this complicates things a bit.\n\nIt would have been an easier question to solve if we just had to consider those expressions that simply had *digits as operands*.\n\nBut, in this question, we can have all sorts of digits getting together and forming a bigger number that becomes a part of the expression. Let us look at some example expressions for the digits `\"123456\"` and target `30`.\n\n<pre>\n1 * 23 - 4 + 5 + 6 = 30\n12 - 3 * 4 + 5 * 6 = 30\n1 - 23 - 4 + 56 = 30\n</pre>\n\nSo this means that although the number of operators are defined for us i.e. 3 different binary operators, but the number of operands are **not really well defined for us**.\n\nThis is a big portion of the original problem that we need to address in our solution.\n\nSince we are asked to find out all of the valid expressions whose value equals the given target and we don't really know what specific operator between two operands would eventually give us a valid expression,\n\n> We try out all of the options.\n\nThis means once we have defined what the operands are for our given expression, we would have three possible choices of operators between each consecutive pair of operands.\n\nFrom an implementation perspective, what would an operand imply with respect to our original string?\n\n> An operand would be an integer formed from a substring of our original string.\n\nLet's look at two different array partitions for the given string `\"123456789\"`\n\n<center>\n<img src=\"../Figures/282/282_Expression_Add_Operators_Diag_1.png\" height=\"300\"></center>\n\nSince we are required to return all of the valid expressions that evaluate to a given target value, we have to try all possible partitions of the given array thereby considering all of the possible operands that can be formed from the digits.\n\nThere is a very simple way of incorporating this into our algorithm. Right now, at every point in the algorithm, we have three different choices corresponding to the three different operators.\n\n>The way we incorporate these partitions is by considering a 4th operator as well which simply moves one step forward and extends the current operand by one digit. Essentially, going from 12 --> 123 is a NO OP operand in our implementation. (12 * 10) + 3.\n\nNow we have 4 different recursion paths in our algorithm and we have to try out all of them to see which ones lead to a potential solution.\n\nThis `try out everything` hints at a backtracking solution and that is exactly what we are going to look at here.\n\n**Algorithm**\n\nLet's quickly look at the steps involved in our backtracking algorithm before looking at the pseudo-code.\n\n1. As discussed above, we have multiple choices of what operators to use and what the operands can be and hence, we have to look at all the possibilities to find ***all*** valid expressions.\n2. Our recursive call will have an `index` which represents the current digit we're looking at in the original `nums` string and also the expression string built till now.\n3. At every step, we have exactly 4 different recursive calls. The `NO OP` call simply extends the `current_operand` by the current digit and moves ahead. Rest of the recursive calls correspond to `+`, `-`, and `*`.\n4. We keep on building our expression like this and eventually, the entire `nums` string would be processed. At that time we check if the expression we built till now is a valid expression or not and we record it if it is a valid one.\n\n<pre>\n1. procedure recurse(digits, index, expression):\n2.     if we have reached the end of the string:\n3.         if the expression evaluates to the target:\n4.             Valid Expression found!\n5.     else:\n6.         try out operator 'NO OP' and recurse\n7.         try out operator * and recurse\n8.         try out operator + and recurse\n9.         try out operator - and recurse\n</pre>\n\nThe algorithm now looks pretty straightforward. However, the implementation is something that needs more thought and there are some things that we need to address before actually looking at the implementation.\n\nWhen we are done building an expression out of all of the digits in our original string i.e. the base case, then we check if the expression is a valid expression or not. Right ?\n\n> How do we actually check if an expression is a valid one or not if all we have is a string representing the expression and not the integer value for the same?\n\nWell, one way to go about this is to write a custom `eval` function that takes in a string and returns the value of that expression. If you do that (Python people can use the inbuilt function `eval` for this), you will get a TLE i.e. time limit exceeded error.\n\n<br/>\n\n**Can't we keep track of the expression's value on the fly?**\n\nWell yes. That's the idea we will go with. Instead of just keeping track of what the expression string is, we will also keep track of it's value along the way so that when the recursion hits the base case, we can check in $$O(1)$$ time if the expression's value equals the target value or not.\n\nThe implementation would have been straightforward had it just been `+` and `-` operators involved. This is because both these operators have an equal precedence. That means that we can continue to evaluate the expression on the fly without any problems. Have a look at the following example.\n\n<center>\n<img src=\"../Figures/282/282_Expression_Add_Operators_Diag_2.png\" width=\"550\"></center>\n\nSo far so good. Now let us add the `*` operator as well and see how building the expression on the fly like this breaks.\n\n<center>\n<img src=\"../Figures/282/282_Expression_Add_Operators_Diag_3.png\" width=\"550\"></center>\n\nWhat we mean by building the expression on the fly is that we keep track of the expression's value till now and we simply consider that value as one of the two operands for our operators. As we can see from the two examples above, this would have worked had it just been `+` and `-` operators.\n\nBut, this approach is bound to fail because the `*` operator takes precedence over `+` and `-`. The `*` operator would require the ***actual*** previous operand in our expression rather than the current value of the expression. i.e. In the above example, the `*` operator needed `2` rather than `12` to get us the correct value of `18`.\n\n<br/>\n\n**How to handle this?**\n\nThe idea on how to handle this problem springs from the discussion above. We simply need to keep track of the last operand in our expression and how it modified the expression's value overall so that when we consider the `*` operator, we can **reverse** the effects of the previous operand and consider it for multiplication. Let's take a look at the example that was breaking before.\n\n<center>\n<img src=\"../Figures/282/282_Expression_Add_Operators_Diag_4.png\" width=\"550\"></center>\n\nNow we can look at the actual implementation of this algorithm.\n\n<iframe src=\"https://leetcode.com/playground/X7CmRa6U/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"X7CmRa6U\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:\n    * At every step along the way, we consider exactly 4 different choices or 4 different recursive paths. The base case is when the value of `index` reaches $$N$$ i.e. the length of the `nums` array. Hence, our complexity would be $$O(4^N)$$.\n    * For the base case we use a `StringBuilder::toString` operation in Java and `.join()` operation in Python and that takes $$O(N)$$ time. Here $$N$$ represents the length of our expression. In the worst case, each digit would be an operand and we would have $$N$$ digits and $$N - 1$$ operators. So $$O(N)$$. This is for one expression. In the worst case, we can have $$O(4^N)$$ valid expressions.\n    * Overall time complexity = $$O(N \\times 4^N)$$.\n\n* Space Complexity:\n    * For both Python and Java implementations we have a list data structure that we update on the fly and only for valid expressions do we create a new string and add to our `answers` array. So, the space occupied by the intermediate list would be $$O(N)$$ since in the worst case the expression would be built out of all the digits as operands.\n    * Additionally, the space used up by the recursion stack would also be $$O(N)$$ since the size of recursion stack is determined by the value of `index` and it goes from $$0$$ all the way to $$N$$.\n    * We don't consider the space occupied by the `answers` array since that is a part of the question's requirement and we can't reduce that in any way\n\n**EDIT:**\nThe previous implementation of the algorithm, although correct, lead me to write an incorrect complexity analysis section. I've re-written the algorithm from scratch and corrected the complexity analysis as well. Sorry for the inconvenience to all the readers. The core idea of the algorithm is still the same. That hasn't changed.\n\nSpecial thanks to [@ufarooqi](https://leetcode.com/ufarooqi/), [@vortexwolf](https://leetcode.com/vortexwolf) for providing correct complexity analysis in the discussion forum leading to corrections in the article. Pardon me if I've missed out on any other names :)\n\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

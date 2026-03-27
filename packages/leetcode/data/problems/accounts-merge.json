@@ -1,0 +1,155 @@
+{
+  "questionId": "721",
+  "questionFrontendId": "721",
+  "title": "Accounts Merge",
+  "titleSlug": "accounts-merge",
+  "difficulty": "Medium",
+  "content": "<p>Given a list of <code>accounts</code> where each element <code>accounts[i]</code> is a list of strings, where the first element <code>accounts[i][0]</code> is a name, and the rest of the elements are <strong>emails</strong> representing emails of the account.</p>\n\n<p>Now, we would like to merge these accounts. Two accounts definitely belong to the same person if there is some common email to both accounts. Note that even if two accounts have the same name, they may belong to different people as people could have the same name. A person can have any number of accounts initially, but all of their accounts definitely have the same name.</p>\n\n<p>After merging the accounts, return the accounts in the following format: the first element of each account is the name, and the rest of the elements are emails <strong>in sorted order</strong>. The accounts themselves can be returned in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> accounts = [[&quot;John&quot;,&quot;johnsmith@mail.com&quot;,&quot;john_newyork@mail.com&quot;],[&quot;John&quot;,&quot;johnsmith@mail.com&quot;,&quot;john00@mail.com&quot;],[&quot;Mary&quot;,&quot;mary@mail.com&quot;],[&quot;John&quot;,&quot;johnnybravo@mail.com&quot;]]\n<strong>Output:</strong> [[&quot;John&quot;,&quot;john00@mail.com&quot;,&quot;john_newyork@mail.com&quot;,&quot;johnsmith@mail.com&quot;],[&quot;Mary&quot;,&quot;mary@mail.com&quot;],[&quot;John&quot;,&quot;johnnybravo@mail.com&quot;]]\n<strong>Explanation:</strong>\nThe first and second John&#39;s are the same person as they have the common email &quot;johnsmith@mail.com&quot;.\nThe third John and Mary are different people as none of their email addresses are used by other accounts.\nWe could return these lists in any order, for example the answer [[&#39;Mary&#39;, &#39;mary@mail.com&#39;], [&#39;John&#39;, &#39;johnnybravo@mail.com&#39;], \n[&#39;John&#39;, &#39;john00@mail.com&#39;, &#39;john_newyork@mail.com&#39;, &#39;johnsmith@mail.com&#39;]] would still be accepted.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> accounts = [[&quot;Gabe&quot;,&quot;Gabe0@m.co&quot;,&quot;Gabe3@m.co&quot;,&quot;Gabe1@m.co&quot;],[&quot;Kevin&quot;,&quot;Kevin3@m.co&quot;,&quot;Kevin5@m.co&quot;,&quot;Kevin0@m.co&quot;],[&quot;Ethan&quot;,&quot;Ethan5@m.co&quot;,&quot;Ethan4@m.co&quot;,&quot;Ethan0@m.co&quot;],[&quot;Hanzo&quot;,&quot;Hanzo3@m.co&quot;,&quot;Hanzo1@m.co&quot;,&quot;Hanzo0@m.co&quot;],[&quot;Fern&quot;,&quot;Fern5@m.co&quot;,&quot;Fern1@m.co&quot;,&quot;Fern0@m.co&quot;]]\n<strong>Output:</strong> [[&quot;Ethan&quot;,&quot;Ethan0@m.co&quot;,&quot;Ethan4@m.co&quot;,&quot;Ethan5@m.co&quot;],[&quot;Gabe&quot;,&quot;Gabe0@m.co&quot;,&quot;Gabe1@m.co&quot;,&quot;Gabe3@m.co&quot;],[&quot;Hanzo&quot;,&quot;Hanzo0@m.co&quot;,&quot;Hanzo1@m.co&quot;,&quot;Hanzo3@m.co&quot;],[&quot;Kevin&quot;,&quot;Kevin0@m.co&quot;,&quot;Kevin3@m.co&quot;,&quot;Kevin5@m.co&quot;],[&quot;Fern&quot;,&quot;Fern0@m.co&quot;,&quot;Fern1@m.co&quot;,&quot;Fern5@m.co&quot;]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= accounts.length &lt;= 1000</code></li>\n\t<li><code>2 &lt;= accounts[i].length &lt;= 10</code></li>\n\t<li><code>1 &lt;= accounts[i][j].length &lt;= 30</code></li>\n\t<li><code>accounts[i][0]</code> consists of English letters.</li>\n\t<li><code>accounts[i][j] (for j &gt; 0)</code> is a valid email.</li>\n</ul>\n",
+  "hints": [
+    "For every pair of emails in the same account, draw an edge between those emails.  The problem is about enumerating the connected components of this graph."
+  ],
+  "metaData": "{\r\n  \"name\": \"accountsMerge\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"accounts\",\r\n      \"type\": \"list<list<string>>\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<list<string>>\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"615K\", \"totalSubmission\": \"1M\", \"totalAcceptedRaw\": 614956, \"totalSubmissionRaw\": 1007149, \"acRate\": \"61.1%\"}",
+  "likes": 7683,
+  "dislikes": 1309,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Redundant Connection\", \"titleSlug\": \"redundant-connection\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sentence Similarity\", \"titleSlug\": \"sentence-similarity\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sentence Similarity II\", \"titleSlug\": \"sentence-similarity-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[\"John\",\"johnsmith@mail.com\",\"john_newyork@mail.com\"],[\"John\",\"johnsmith@mail.com\",\"john00@mail.com\"],[\"Mary\",\"mary@mail.com\"],[\"John\",\"johnnybravo@mail.com\"]]",
+    "[[\"Gabe\",\"Gabe0@m.co\",\"Gabe3@m.co\",\"Gabe1@m.co\"],[\"Kevin\",\"Kevin3@m.co\",\"Kevin5@m.co\",\"Kevin0@m.co\"],[\"Ethan\",\"Ethan5@m.co\",\"Ethan4@m.co\",\"Ethan0@m.co\"],[\"Hanzo\",\"Hanzo3@m.co\",\"Hanzo1@m.co\",\"Hanzo0@m.co\"],[\"Fern\",\"Fern5@m.co\",\"Fern1@m.co\",\"Fern0@m.co\"]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"palantir-technologies\", \"name\": \"Palantir Technologies\"}, {\"timesEncountered\": 3, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"anduril\", \"name\": \"Anduril\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"rippling\", \"name\": \"Rippling\"}, {\"timesEncountered\": 2, \"slug\": \"grab\", \"name\": \"Grab\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<string>> accountsMerge(vector<vector<string>>& accounts) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<String>> accountsMerge(List<List<String>> accounts) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def accountsMerge(self, accounts: List[List[str]]) -> List[List[str]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def accountsMerge(self, accounts):\n        \"\"\"\n        :type accounts: List[List[str]]\n        :rtype: List[List[str]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[][]} accounts\n * @return {string[][]}\n */\nvar accountsMerge = function(accounts) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function accountsMerge(accounts: string[][]): string[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<string>> AccountsMerge(IList<IList<string>> accounts) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nchar*** accountsMerge(char*** accounts, int accountsSize, int* accountsColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func accountsMerge(accounts [][]string) [][]string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun accountsMerge(accounts: List<List<String>>): List<List<String>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func accountsMerge(_ accounts: [[String]]) -> [[String]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn accounts_merge(accounts: Vec<Vec<String>>) -> Vec<Vec<String>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[][]} accounts\n# @return {String[][]}\ndef accounts_merge(accounts)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[][] $accounts\n     * @return String[][]\n     */\n    function accountsMerge($accounts) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<String>> accountsMerge(List<List<String>> accounts) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def accountsMerge(accounts: List[List[String]]): List[List[String]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec accounts_merge(accounts :: [[String.t]]) :: [[String.t]]\n  def accounts_merge(accounts) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec accounts_merge(Accounts :: [[unicode:unicode_binary()]]) -> [[unicode:unicode_binary()]].\naccounts_merge(Accounts) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (accounts-merge accounts)\n  (-> (listof (listof string?)) (listof (listof string?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1207",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe are given a list of accounts where each account consists of a list containing the name of the person the account belongs to and some emails that belong to the person. One person is allowed to have multiple accounts, but each email can only belong to one person. Therefore, we can say two accounts must belong to the same person if the accounts have an email in common. Note that we cannot just use the user's name to determine which email addresses belong to the same user since different users may have the same name.\n\nOur goal is, for each person, we want to identify all of the emails that belong to that person. Therefore, every time we find two accounts with an email in common, we will merge the two accounts into one.  \n\nWhenever we must work with a set of elements (emails) that are connected (belong to the same user), we should always consider visualizing our input as a graph. In this problem, converting the input into a graph will facilitate the process of \"merging\" two accounts.\n\nEmails can be represented as nodes, and an edge between nodes will signify that they belong to the same person. Since all of the emails in an account belong to the same person, we can connect all of the emails with edges. Thus, each account can be represented by a connected component. What if two accounts have an email in common? Then we can add an edge between the two connected components, effectively merging them into one connected component.  \n</br>\n\n---\n\n### Approach 1: Depth First Search (DFS)\n\n**Intuition**\n\nHere, we will represent emails as nodes, and an edge will signify that two emails are connected and hence belong to the same person. This means that any two emails that are connected by a path of edges must also belong to the same person. Initially, we are given $$N$$ accounts, where each account's emails make up a connected component.  \n\nOur first step should be to ensure that for each account, all of its nodes are connected. Suppose an account has $$K$$ emails, and we want to connect these emails. Since all emails in an account are connected, we can add an edge between every pair of emails. This will create a complete subgraph and require adding $$K \\choose 2$$ edges. However, do we really need that many edges to keep track of which emails belong to the same account? No, as long as two emails are connected by a path of edges, we know they belong to the same account. So instead of creating a complete subgraph for each account, we can create an acyclic graph using only $$K - 1$$ edges. Recall that $$K - 1$$ is the minimum number of edges required to connect $$K$$ nodes. In this approach, we will connect emails in an account in a [star](https://en.wikipedia.org/wiki/Star_(graph_theory)) manner with the first email as the internal node of the star and all other emails as the leaves (as shown below).\n\n![fig](../Figures/721/721A.png)\n\nThe beauty of connecting the emails in each account in this manner is that after connecting an email to a second account, that email will have one edge going to an email in the first account and one edge going to an email in the second account.  Thereby automatically merging the two accounts. The below slideshow depicts the merging process for four accounts that belong to two different people.\n\n!?!../Documents/721_Accounts_Merge_A.json:960,720!?! <br>\n\nAfter iterating over each account and connecting the emails as described above, we will have a one or more connected components. Each connected component will represent one person, and the nodes in the connected component are the person's emails. Now our task is to explore each connected component to find all the emails that belong to each person. Since a depth-first search is guaranteed to explore every node in a connected component, we will perform a DFS on each connected component (person) to find all of the connected emails.\n\nTo do so, we will iterate over all of the nodes and consider starting a DFS. If the node has already been visited, in an earlier DFS, we will not start a DFS.  Otherwise, perform a DFS traversal over the connected component and store all the visited emails together, as they all belong to one person. Each time we visit an email during a DFS, we will mark it as visited to ensure that we do not search the same connected component more than once. To read more about how DFS can be leveraged to find components you can refer to the first approach [here](https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/solution/).\n\n\n**Algorithm**\n\n1. Create an adjacency list: For each account add an edge between the first email (`accountFirstEmail`) and each of the other emails in the account.\n2. Traverse over the accounts; for each account, check if the first email in the account (`accountFirstEmail`) was already visited.  If so, then do not start a new DFS. Otherwise, perform DFS with this email as the source node.\n3. During each DFS, store the traversed emails in an array `mergedAccount`, also mark all these emails as visited.\n4. After the DFS traversal is over, sort the emails and add the account name (`accountName`) at the start of the vector `mergedAccount`.\n5. Store the vector `mergedAccount` in the answer list `mergedAccounts`.\n\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/EAjKzRH9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"EAjKzRH9\"></iframe>\n\n\n**Complexity Analysis**\n\nHere $$N$$ is the number of accounts and $$K$$ is the maximum length of an account.\n\n* Time complexity: $$O(NK \\log{NK})$$\n\n    In the worst case, all the emails will end up belonging to a single person. The total number of emails will be $$N*K$$, and we need to sort these emails. DFS traversal will take $$NK$$ operations as no email will be traversed more than once.\n\n* Space complexity: $$O(NK)$$\n\n  Building the adjacency list will take $$O(NK)$$ space. In the end, `visited` will contain all of the emails hence it will use $$O(NK)$$ space. Also, the call stack for DFS will use $$O(NK)$$ space in the worst case.\n\n  The space complexity of the sorting algorithm depends on the implementation of each programming language. For instance, in Java, Collections.sort() dumps the specified list into an array this will take $$O(NK)$$ space then Arrays.sort() for primitives is implemented as a variant of quicksort algorithm whose space complexity is $$O(\\log NK)$$. In C++ `sort()` function provided by STL is a hybrid of Quick Sort, Heap Sort, and Insertion Sort with the worst-case space complexity of $O(\\log NK)$. \n\n<br/>\n\n---\n\n### Approach 2: Disjoint Set Union (DSU)\n\n**Intuition**\n\nAs in the previous approach, the first step is to find which accounts have an email in common and merge them to form a larger connected component. Any problem that involves merging connected components (accounts) is a natural fit for the Disjoint Set Union (DSU) data structure. If you would like to learn more about the DSU data structure (also known as Union-Find), a tutorial is provided in the [Graph Explore Card](https://leetcode.com/explore/featured/card/graph/618/disjoint-set/3881/). Since most implementations of DSU use an array to record the root (representative) of each component, we will use integers to represent each component for ease of operability. Therefore, we will give each account a unique ID, and we will map all the emails in the account to the account's ID. We will use a map, `emailGroup`, to store this information. \n\nWe chose the account index to be the identifier for all the emails of an account. We will assign the account index as the group when we get the email for the first time and when we get an email that we have already traversed, we will merge the current account and the group that we have previously stored in `emailGroup` using union operation.\n\nAfter traversing over all the accounts, we will find the representative of all the emails which will inform us about their group. Emails with the same representative belong to the same person/group and hence will be stored together. Also, we can retrieve the account name for our final answer using `accountList` as we have `group` which is the index in the original accounts list.\n\n!?!../Documents/721_Accounts_Merge_B.json:960,720!?! <br>\n\n**Algorithm**\n\n1. Traverse over each account, and for each account, traverse over all of its emails.  If we see an email for the first time, then set the group of the email as the index of the current account in `emailGroup` .\n2. Otherwise, if the email has already been seen in another account, then we will union the current group (`i`) and the group the current email belongs to (`emailGroup[email]`).\n3. After traversing over every account and merging the accounts that share a common email, we will now traverse over every email once more. Each email will be added to a map (`components`) where the key is the email's representative, and the value is a list of emails with that representative.\n4. Traverse over `components`, here the keys are the group indices and the value is the list of emails belonging to this group (person). Since the emails must be \"in sorted order\" we will sort the list of emails for each group. Lastly, we can get the account name using the `accountList[group][0]`. In accordance with the instructions, we will insert this name at the beginning of the email list.\n5. Store the list created in step 4 in our final result (`mergedAccount`). \n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/cCnGvzFV/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"cCnGvzFV\"></iframe>\n\n\n**Complexity Analysis**\n\nHere $$N$$ is the number of accounts and $$K$$ is the maximum length of an account.\n\n* Time complexity: $$O(NK \\log {NK})$$\n\n   While merging we consider the size of each connected component and we always choose the representative of the larger component to be the new representative of the smaller component, also we have included the path compression so the time complexity for find/union operation is $$\\alpha({N})$$ (Here, $$\\alpha({N})$$ is the inverse Ackermann function that grows so slowly, that it doesn't exceed $$4$$ for all reasonable $$N$$ (approximately $$ N < 10^{600}$$).\n\n  We find the representative of all the emails, hence it will take $$O(NK\\alpha({N}))$$ time. We are also sorting the components and the worst case will be when all emails end up belonging to the same component this will cost $$O(NK(\\log {NK}))$$.\n\n  Hence the total time complexity is $$O(NK \\cdot \\log {NK} + NK \\cdot \\alpha({N}))$$.\n\n* Space complexity: $$O(NK)$$\n\n  List `representative`, `size` store information corresponding to each group so will take $$O(N)$$ space. All emails get stored in `emailGroup` and `component` hence space used is $$O(NK)$$.\n\n  The space complexity of the sorting algorithm depends on the implementation of each programming language. For instance, in Java, Collections.sort() dumps the specified list into an array this will take $$O(NK)$$ space then Arrays.sort() for primitives is implemented as a variant of quicksort algorithm whose space complexity is $$O(\\log NK)$$. In C++ `sort()` function provided by STL is a hybrid of Quick Sort, Heap Sort, and Insertion Sort with the worst-case space complexity of $O(\\log NK)$. \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

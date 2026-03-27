@@ -1,0 +1,129 @@
+{
+  "questionId": "482",
+  "questionFrontendId": "482",
+  "title": "License Key Formatting",
+  "titleSlug": "license-key-formatting",
+  "difficulty": "Easy",
+  "content": "<p>You are given a license key represented as a string <code>s</code> that consists of only alphanumeric characters and dashes. The string is separated into <code>n + 1</code> groups by <code>n</code> dashes. You are also given an integer <code>k</code>.</p>\n\n<p>We want to reformat the string <code>s</code> such that each group contains exactly <code>k</code> characters, except for the first group, which could be shorter than <code>k</code> but still must contain at least one character. Furthermore, there must be a dash inserted between two groups, and you should convert all lowercase letters to uppercase.</p>\n\n<p>Return <em>the reformatted license key</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;5F3Z-2e-9-w&quot;, k = 4\n<strong>Output:</strong> &quot;5F3Z-2E9W&quot;\n<strong>Explanation:</strong> The string s has been split into two parts, each part has 4 characters.\nNote that the two extra dashes are not needed and can be removed.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;2-5g-3-J&quot;, k = 2\n<strong>Output:</strong> &quot;2-5G-3J&quot;\n<strong>Explanation:</strong> The string s has been split into three parts, each part has 2 characters except the first part as it could be shorter as mentioned above.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists of English letters, digits, and dashes <code>&#39;-&#39;</code>.</li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"licenseKeyFormatting\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"356.8K\", \"totalSubmission\": \"779.1K\", \"totalAcceptedRaw\": 356804, \"totalSubmissionRaw\": 779097, \"acRate\": \"45.8%\"}",
+  "likes": 1204,
+  "dislikes": 1468,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"5F3Z-2e-9-w\"\n4",
+    "\"2-5g-3-J\"\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string licenseKeyFormatting(string s, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String licenseKeyFormatting(String s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def licenseKeyFormatting(self, s: str, k: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def licenseKeyFormatting(self, s, k):\n        \"\"\"\n        :type s: str\n        :type k: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} k\n * @return {string}\n */\nvar licenseKeyFormatting = function(s, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function licenseKeyFormatting(s: string, k: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string LicenseKeyFormatting(string s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* licenseKeyFormatting(char* s, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func licenseKeyFormatting(s string, k int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun licenseKeyFormatting(s: String, k: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func licenseKeyFormatting(_ s: String, _ k: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn license_key_formatting(s: String, k: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} k\n# @return {String}\ndef license_key_formatting(s, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $k\n     * @return String\n     */\n    function licenseKeyFormatting($s, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String licenseKeyFormatting(String s, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def licenseKeyFormatting(s: String, k: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec license_key_formatting(s :: String.t, k :: integer) :: String.t\n  def license_key_formatting(s, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec license_key_formatting(S :: unicode:unicode_binary(), K :: integer()) -> unicode:unicode_binary().\nlicense_key_formatting(S, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (license-key-formatting s k)\n  (-> string? exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1596",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n\n### Overview\n\nThe problem states that we need to split the entire string into groups such that each group other than the first group has `k` number of upper-case characters.\n\nBe sure to communicate thoroughly with your interviewer to make sure you're covering all cases. In this problem, the constraints are thorough because there is no interviewer to communicate with. However, in an interview, there is a potential to ask a few follow-up questions from the interviewer, like:\n1) Can we have more numbers of groups in the output string as compared to the input string?\n2) Can `k` be greater than the size of the input string?\n\n---\n### Approach 1: Right to Left Traversal\n\n#### Intuition\n\nWe need to form some groups in the string where each group has exactly the `k` characters in it except the first group (which can have `k` or fewer characters) and each group will be separated by a `-`.\n\nThus, the problem's main essence is finding how many alphanumeric characters will come in the first group!\nWe can think of forming groups of size `k` from the end of the given string, and when the last group is left (which will be first in reality) it will automatically have `k` or fewer characters in it.\n\n![Representation1](../Figures/482/approach1.png)\n\n\n\nUsing the above thought process, let's understand how to address this problem.\n\nWe can start traversing the string from the end so that we can form all the groups other than the first group in the size of `k` alphanumeric characters. While traversing from the end, we need to make sure that groups are formed in such a way that each group satisfies our problem's conditions. When we reach the start of the input string our output string will automatically be forming the group of size `k` alphanumeric characters leaving the first group with either equal to the size of `k` or lesser than the size of `k`. There's one scenario here where if all our groups including the first group are of size `k`, then `dash` gets inserted at the end of the string. Thus we need to make sure for such cases we should remove the last element from our answer string. However, our output string needs to be reversed since we were traversing the input string from the end.\n\n#### Algorithm\n\n1. Initialize:\n    - `count` to `0`, which is used to count the number of characters in the current group.\n    - `n` to input string length.\n    - `ans` to an empty string, which is used to store the final result.  \n\n2. Now, iterate on the input string in reverse order:\n    - We will skip `'-'` characters from the input string. \n    - If the current character is not `'-'`, we include the current character in `ans` string and increment the current group size by incrementing `count` by `1`.\n    - If `count` reaches `k`, it means we formed a group of size `k`, thus we can append a `'-'` in `ans` now, and reset `count` to start counting a new group.\n\n3. After we finish traversing on the input string, we should check if the last character inserted wasn't a dash. If we find a dash we need to remove it from `ans` string. \n\n4. Now that we formed all groups in reverse order, thus we need to reverse the `ans` string and then return it.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/f6VatTcm/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"f6VatTcm\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the size of the input array.\n\n* Time Complexity: $O(N)$\n  - We traverse on each input string's character once in reverse order which takes $O(N)$ time.\n  - At the end, we reverse the `ans` thus iterating on it once, which also takes $O(N)$ time.\n  - Thus, overall we take $O(N)$ time.\n\n* Space Complexity: $O(1)$\n  - We are not using any extra space other than the output string.\n<br />\n\n---\n\n### Approach 2: Left to Right Traversal\n\n\n#### Intuition\n\nTo solve the problem, let's look at the inputs carefully,\n> We will be given an alphanumeric string which will have numbers, characters and dash.\n\n\n\nThe problem states that we need to form equal groups of size `k` upper case characters other than the first group. For doing so, we need to first find the total number of alphanumeric characters in the input string.             \nAnd then the size of the first group will be decided on the basis of 2 factors:         \n1. Total count of alphanumeric characters in the string              \n2. Value of `k`\n\n\nIf we observe carefully, we just need to find how many characters will be left behind at last when we form groups from the end of the string, thus the size of the first group will be given by `total count of alphanumeric characters in string % value of k`.\n\nIn this approach, we will first populate the first group and then fill the characters in the remaining groups, whereas in the first approach we fill the first group in the end.\n\n![Representation2](../Figures/482/approach2.png)\n\n\nWe can also have two cases where the size of `k` is equal to, or greater than the total count of alphanumeric characters of the input string. During such cases, our output string will only consist of 1 group.\n\n#### Algorithm\n\nBy analysing the above observations, we can derive the following algorithm,\n1. Initialize:\n    - `totalChars` to `0`, which is used to count the number of characters in the input string excluding dash.\n    - `count` to `0`, which is used to count the number of characters in the current group.\n    - `sizeOfFirstGroup` to be populated which will store the result of `(totalChars % k)`.\n    - `ans` to an empty string, which is used to store the final result  \n\n\n2. Now, iterate on the input string:\n    - We will skip `'-'` characters from the input string to get the total count of characters in the input string.\n    - Fill the first group by only copying `sizeOfFirstGroup` characters in the `ans` string and then break the loop.\n    - Return the `ans` string if we reach the end of the loop.\n    - Append the `ans` string with `-` in order to form the first group.\n    - Continue iterating from the previous `i` till the end of the input string.\n    - If the current character is not `'-'`, we include the current character in `ans` string and increment the current group size by incrementing `count` by `1`.\n    - If `count` reaches `k`, it means we formed a group of size `k`, thus we can append a `'-'` in `ans` now, and reset `count` to start counting a new group.\n\n3. After we finish traversing on the input string, we return `ans` string.\n\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/MoHJwKqj/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"MoHJwKqj\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the size of the input array.\n\n* Time Complexity: $O(N)$\n  - We traverse on each input string's character once to get the count of `totalChars` which takes $O(N)$ time.\n  - We traverse input string for the second time in order to correctly populate `ans` string in groups which again takes $O(N)$ time.\n  - Thus, overall we take $O(N)$ time.\n\n* Space Complexity: $O(1)$\n  - We are not using any extra space other than the output string.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

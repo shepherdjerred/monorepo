@@ -1,0 +1,130 @@
+{
+  "questionId": "6",
+  "questionFrontendId": "6",
+  "title": "Zigzag Conversion",
+  "titleSlug": "zigzag-conversion",
+  "difficulty": "Medium",
+  "content": "<p>The string <code>&quot;PAYPALISHIRING&quot;</code> is written in a zigzag pattern on a given number of rows like this: (you may want to display this pattern in a fixed font for better legibility)</p>\n\n<pre>\nP   A   H   N\nA P L S I I G\nY   I   R\n</pre>\n\n<p>And then read line by line: <code>&quot;PAHNAPLSIIGYIR&quot;</code></p>\n\n<p>Write the code that will take a string and make this conversion given a number of rows:</p>\n\n<pre>\nstring convert(string s, int numRows);\n</pre>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;PAYPALISHIRING&quot;, numRows = 3\n<strong>Output:</strong> &quot;PAHNAPLSIIGYIR&quot;\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;PAYPALISHIRING&quot;, numRows = 4\n<strong>Output:</strong> &quot;PINALSIGYAHRPI&quot;\n<strong>Explanation:</strong>\nP     I    N\nA   L S  I G\nY A   H R\nP     I\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;A&quot;, numRows = 1\n<strong>Output:</strong> &quot;A&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 1000</code></li>\n\t<li><code>s</code> consists of English letters (lower-case and upper-case), <code>&#39;,&#39;</code> and <code>&#39;.&#39;</code>.</li>\n\t<li><code>1 &lt;= numRows &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"convert\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    },\r\n    {\r\n      \"name\": \"numRows\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"2.2M\", \"totalSubmission\": \"4M\", \"totalAcceptedRaw\": 2151707, \"totalSubmissionRaw\": 4001462, \"acRate\": \"53.8%\"}",
+  "likes": 9332,
+  "dislikes": 15901,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"PAYPALISHIRING\"\n3",
+    "\"PAYPALISHIRING\"\n4",
+    "\"A\"\n1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"six_months\": [{\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"more_than_six_months\": [{\"timesEncountered\": 29, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 26, \"slug\": \"zopsmart\", \"name\": \"Zopsmart\"}, {\"timesEncountered\": 10, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 9, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 5, \"slug\": \"microstrategy\", \"name\": \"Microstrategy\"}, {\"timesEncountered\": 4, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 3, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"mitsogo\", \"name\": \"Mitsogo\"}, {\"timesEncountered\": 2, \"slug\": \"intuit\", \"name\": \"Intuit\"}]}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string convert(string s, int numRows) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String convert(String s, int numRows) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def convert(self, s: str, numRows: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def convert(self, s, numRows):\n        \"\"\"\n        :type s: str\n        :type numRows: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} numRows\n * @return {string}\n */\nvar convert = function(s, numRows) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function convert(s: string, numRows: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string Convert(string s, int numRows) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* convert(char* s, int numRows) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func convert(s string, numRows int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun convert(s: String, numRows: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func convert(_ s: String, _ numRows: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn convert(s: String, num_rows: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} num_rows\n# @return {String}\ndef convert(s, num_rows)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $numRows\n     * @return String\n     */\n    function convert($s, $numRows) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String convert(String s, int numRows) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def convert(s: String, numRows: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec convert(s :: String.t, num_rows :: integer) :: String.t\n  def convert(s, num_rows) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec convert(S :: unicode:unicode_binary(), NumRows :: integer()) -> unicode:unicode_binary().\nconvert(S, NumRows) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (convert s numRows)\n  (-> string? exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1627",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n <div>\n    <div class=\"video-container\">\n      <iframe src=\"https://player.vimeo.com/video/888871641?texttrack=en-x-autogenerated\" frameborder=\"0\"\n        allow=\"autoplay; fullscreen\"></iframe>\n    </div>\n</div>\n\n\n\n## Solution\n\n--- \n\n### Overview\n\nThe main focus of this problem is not to check any data structure or algorithm knowledge but to check the thought process and problem-solving ability of the candidate when given a tricky situation.\n\nWe need to print the given input string line-by-line after writing it in a zig-zag pattern.    \n\n![question](../Figures/6/Slide1.jpg)\n\n<br />\n\nIf we have an appropriately sized empty matrix, then we can simulate the zig-zag motion and fill the matrix cells. Then, read the rows line-by-line (leaving spaces) to get the final result.\n\nYou might be aware of a popular question [Spiral Matrix](https://leetcode.com/problems/spiral-matrix/), where we need to print matrix elements in spiral order.       \nIn that problem, we can simulate spiral movement. In this problem, we need to simulate the zig-zag movement.\n\nYou can get an idea about matrix filling from this animation:\n\n![animation](../Figures/6/filling.gif)\n\n<br />\n\n---\n\n### Approach 1: Simulate Zig-Zag Movement\n\n#### Intuition\n\n**Our first task is to determine the size of the matrix,** as this will allow us to create a 2d array where we can simulate writing the input string in a zig-zag pattern.   \n\nThe number of rows of the matrix will be equal to $\\text{ numRows }$. We need to calculate the number of columns we need.     \nLet's consider a part circled in red (one column, and a diagonal) as one **section**.       \n\n![sections](../Figures/6/Slide2.jpg)\n\nEach section will have at most $\\text{ numRows - 1 }$ columns in it (the last section might have fewer columns), as can be seen in the above example.      \n\n\nIn each section, we will have $\\text{2 * numRow - 2}$ characters, ($\\text{numRow}$ characters in one column and $\\text{numRow - 2}$ in the diagonal).      \nThus, for a string of $\\text{n} $ characters, we will require at most $\\text{ceil(n / (2 * numRows - 2))}$ sections, and as each section will have $\\text{numRows - 1}$ columns. We can say we need $\\text{ceil(n / (2 * numRows - 2)) * (numRows - 1)}$ columns.\n\nSo, our matrix will be of dimension, $\\text{numRows} \\times \\text{numCols}$, where $\\text{numCols = ceil(n / (2 * numRows - 2)) * (numRows - 1)}$.\n\n<br />\n\n**Our second and more tricky task is to traverse the matrix in a zig-zag order**.\n\nLet's keep two variables $\\text{currRow}$ and $\\text{currCol}$ to represent the current cell of the matrix.         \nWe start from the top, traverse down through an entire column, then traverse diagonally up, i.e. we traverse one section and then repeat the same process again for the next section until the string is finished.\n\n![movement](../Figures/6/Slide3.jpg)\n\n- While moving from top to bottom in a column,  $\\text{currCol}$ will remain the same but $\\text{currRow}$ will go from $0$ to $\\text{numRows}$.\n- While moving diagonally up, we move one cell up and one cell right, thus increment $\\text{currCol}$ by $1$ and decrease $\\text{currRow}$ by $1$ till it reaches the top ($\\text{currRow} = 0$)\n\nWe repeat this movement until we traverse all $\\text{n}$ characters of the input string.\n\n<br />\n\nNow we have filled the matrix, thus **our final task is just to read the matrix line-by-line** (ignoring empty cells).    \n\n\n#### Algorithm\n\n1. Initialize variables:\n    - `answer`, an empty string to store the final result.\n    - `n`, length of the input string.\n    - `numCols`, to store the number of columns in our matrix.\n    - `matrix`, a character matrix to store the input string.\n    - `currRow`, `currCol`, to represent cells in our matrix.\n\n2.  Iterate on each section of the matrix and fill it with characters from the input string.\n    - We iterate down in the column, so we increment `currRow` by `1` and keep `currCol` the same. Then, we iterate diagonally up, so we increment `currCol` by `1` and decrease `currRow` by `1`, as discussed previously.\n    - While traversing we will fill each `matrix` cell with a character from the input string if there are characters left in it.\n\n3. We iterate on the `matrix` row-wise, and append characters (except spaces) in `answer` string.   \n\n4. Return `answer` string.\n\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/DYHv4G6q/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DYHv4G6q\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $ n $ is the length of the input string, and $ numRows $ is the number of rows of the zig-zag pattern.\n\n* Time complexity: $O(numRows \\cdot n)$.          \n  - We initialize an empty 2-dimensional matrix of size $ numRows \\times numCols $, where $ O(numCols) = O(n) $. So it takes  $ O(numRows \\cdot n) $ time.\n  - Then we iterate on the input string, which takes $ O(n) $ time, and again traverse on the matrix to generate the final string, which takes $ O(numRows \\cdot n) $ time.\n  - Thus, overall we take $ O(2 (numRows \\cdot n) + n) = O(numRows \\cdot n) $ time.\n\n* Space complexity: $O(numRows \\cdot n)$.\n  - We use an additional 2-dimensional array of size $ numRows \\times numCols $, where $ O(numCols) = O(n) $\n\n<br />\n\n---\n\n\n### Approach 2: String Traversal\n\n#### Intuition\n\nThe previous approach will be accepted, the interviewer doesn't expect us to give this solution but we are listing it as there is still room for some optimization, it can get hard to visualize so we will take it one step at a time so keep the pace with us.\n\nWe were storing the string in a zig-zag pattern using some additional space. Look at each row of the completed matrix. If we notice carefully there is a pattern between the distances between characters in each row. If we analyze the jump pattern and traverse the input string using that pattern we can avoid the use of additional space.             \n\n![question](../Figures/6/Slide4.jpg)\n\nIn the above image, you can see, (each color denotes one row of our previously traversed matrix when mapping it in input string) in jumps denoted by pink arrows, first, we jump 6 steps then 2, then 6, and then again 2.                       \nSimilarly, there is a pattern for all colors. Let's start analyzing this pattern using the same filled matrix.                            \n\nNotice in the below image, in the first and last rows we can jump straight to the same position in the next section, i.e. we jump (number of characters) positions in each section.         \n\n![question](../Figures/6/Slide5.jpg)\n\nBut in the rest of the rows, we must traverse to the next corresponding element of the same section before jumping to the next section.\n\n![question](../Figures/6/Slide6.jpg)\n\n\n\n**The hard part will be to calculate how to jump to the next character.**                \n1. If we have to jump to the next section then it's simple: we only jump $ \\text{charsInSection} $ characters.                      \nSo, $ \\text{currIndex += charsInSection} $. \n\n2. If we have to jump to the next character in the same section, then we will have to calculate how many characters are between these two positions and increment $ \\text{currIndex} $ by that value.     \nIf the total characters in a section are $ \\text{charsInSection} $  and we are in the $ \\text{i}^{th} $ row, then the number of characters above the current row will be $ \\text{2} * \\text{i} $, and the number of characters left will be $ \\text{charsInBetween = charsInSection - 2} * \\text{i} $.             \nSo,  $ \\text{secondIndex = currIndex + charsInBetween} $. \n\n![question](../Figures/6/Slide7.jpg)\n\nThus, we can iterate over the input string in line-by-line order after writing it in a zig-zag pattern directly.\n\n\n#### Algorithm\n\n1. Initialize variables:\n    - `answer`, an empty string to store the final result.\n    - `n`, length of the input string.\n    - `charsInSection`, to store the number of characters in each section we defined.\n\n2. Iterate on each row from `numRows`:\n    - `index` will start at the first character in the current row, i.e. `index` is equal to `currRow`.\n    - We will traverse in the current row and append all characters to the `answer` string.\n    First, we append the first character of the current section. If the current row is not the first or last row then we append the second character of the current section. Then update the index to jump to the next section in the current row and repeat this process again.   \n\n3. Return `answer`.             \n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/ZHLFUGZL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZHLFUGZL\"></iframe>\n\n\n#### Complexity Analysis\n\nHere, $n$ is the length of the input string.\n\n* Time complexity: $O(n)$.          \n  - We iterate over each index of the input only once and perform constant work at each index.\n\n* Space complexity: $O(1)$.\n  - We have not used any additional space other than for building the output, which is not counted.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

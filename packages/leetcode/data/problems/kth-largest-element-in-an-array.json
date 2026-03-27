@@ -1,0 +1,145 @@
+{
+  "questionId": "215",
+  "questionFrontendId": "215",
+  "title": "Kth Largest Element in an Array",
+  "titleSlug": "kth-largest-element-in-an-array",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code> and an integer <code>k</code>, return <em>the</em> <code>k<sup>th</sup></code> <em>largest element in the array</em>.</p>\n\n<p>Note that it is the <code>k<sup>th</sup></code> largest element in the sorted order, not the <code>k<sup>th</sup></code> distinct element.</p>\n\n<p>Can you solve it without sorting?</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> nums = [3,2,1,5,6,4], k = 2\n<strong>Output:</strong> 5\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> nums = [3,2,3,1,2,4,5,5,6], k = 4\n<strong>Output:</strong> 4\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>4</sup> &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"findKthLargest\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"3.6M\", \"totalSubmission\": \"5.2M\", \"totalAcceptedRaw\": 3552032, \"totalSubmissionRaw\": 5160499, \"acRate\": \"68.8%\"}",
+  "likes": 18747,
+  "dislikes": 972,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Wiggle Sort II\", \"titleSlug\": \"wiggle-sort-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Top K Frequent Elements\", \"titleSlug\": \"top-k-frequent-elements\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Third Maximum Number\", \"titleSlug\": \"third-maximum-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Kth Largest Element in a Stream\", \"titleSlug\": \"kth-largest-element-in-a-stream\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"K Closest Points to Origin\", \"titleSlug\": \"k-closest-points-to-origin\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Kth Largest Integer in the Array\", \"titleSlug\": \"find-the-kth-largest-integer-in-the-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Subsequence of Length K With the Largest Sum\", \"titleSlug\": \"find-subsequence-of-length-k-with-the-largest-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"K Highest Ranked Items Within a Price Range\", \"titleSlug\": \"k-highest-ranked-items-within-a-price-range\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,2,1,5,6,4]\n2",
+    "[3,2,3,1,2,4,5,5,6]\n4"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 18, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 18, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"six_months\": [{\"timesEncountered\": 8, \"slug\": \"cerner\", \"name\": \"Cerner\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 8, \"slug\": \"spotify\", \"name\": \"Spotify\"}, {\"timesEncountered\": 6, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 4, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 4, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}, {\"timesEncountered\": 4, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 4, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 4, \"slug\": \"avito\", \"name\": \"Avito\"}, {\"timesEncountered\": 3, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 3, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Quickselect",
+      "slug": "quickselect"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findKthLargest(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findKthLargest(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findKthLargest(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findKthLargest(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar findKthLargest = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findKthLargest(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindKthLargest(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findKthLargest(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findKthLargest(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findKthLargest(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findKthLargest(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_kth_largest(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef find_kth_largest(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function findKthLargest($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findKthLargest(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findKthLargest(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_kth_largest(nums :: [integer], k :: integer) :: integer\n  def find_kth_largest(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_kth_largest(Nums :: [integer()], K :: integer()) -> integer().\nfind_kth_largest(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-kth-largest nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1949",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n <div>\n    <div class=\"video-container\">\n      <iframe src=\"https://player.vimeo.com/video/873445788?texttrack=en-x-autogenerated\" frameborder=\"0\"\n        allow=\"autoplay; fullscreen\"></iframe>\n    </div>\n</div>\n\n\n## Solution\n\n---\n \n### Approach 1: Sort\n\n**Intuition**\n\nSort the array in descending order and then return the $$k^{th}$$ element. Note that this is the \"trivial\" approach and if asked this question in an interview, you would be expected to come up with a better solution than this.\n\n**Implementation**\n\n> Note: `k` is 1-indexed, not 0-indexed. As such, we need to return the element at index `k - 1` after sorting, not index `k`.\n\n<iframe src=\"https://leetcode.com/playground/9pWPiouv/shared\" frameBorder=\"0\" width=\"100%\" height=\"191\" name=\"9pWPiouv\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums`,\n\n* Time complexity: $$O(n \\cdot \\log n)$$\n\n    Sorting `nums` requires $$O(n \\cdot \\log n)$$ time.\n\n* Space Complexity: $$O(\\log n)$$ or $$O(n)$$\n\n    The space complexity of the sorting algorithm depends on the implementation of each programming language:\n    * In Java, Arrays.sort() for primitives is implemented using a variant of the Quick Sort algorithm, which has a space complexity of $$O(\\log n)$$\n    * In C++, the sort() function provided by STL uses a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $$O(\\log n)$$\n    * In Python, the sort() function is implemented using the Timsort algorithm, which has a worst-case space complexity of $$O(n)$$\n    \n<br/>\n\n---\n\n### Approach 2: Min-Heap\n\n**Intuition**\n\nA heap is a very powerful data structure that allows us to efficiently find the maximum or minimum value in a dynamic dataset.\n\nIf you are not familiar with heaps, we recommend checking out the [Heap Explore Card](https://leetcode.com/explore/learn/card/heap/).\n\nThe problem is asking for the $$k^{th}$$ largest element. Let's push all the elements onto a min-heap, but pop from the heap when the size exceeds `k`. When we pop, the smallest element is removed. By limiting the heap's size to `k`, after handling all elements, the heap will contain exactly the $$k$$ largest elements from the array.\n\n<img src=\"../Figures/215/1.png\" width=\"960\"> <br>\n\nIt is impossible for one of the green elements to be popped because that would imply there are at least $$k$$ elements in the array greater than it. This is because we only pop when the heap's size exceeds `k`, and popping removes the smallest element.\n\nAfter we handle all the elements, we can just check the top of the heap. Because the heap is holding the $$k$$ largest elements and the top of the heap is the smallest element, the top of the heap would be the $$k^{th}$$ largest element, which is what the problem is asking for.\n\n**Algorithm**\n\n1. Initialize a min-heap `heap`.\n2. Iterate over the input. For each `num`:\n    - Push `num` onto the heap.\n    - If the size of `heap` exceeds `k`, pop from `heap`.\n3. Return the top of the `heap`.\n\n**Implementation**\n\n> Note: C++ [std::priority_queue](https://en.cppreference.com/w/cpp/container/priority_queue) implements a max-heap. To achieve min-heap functionality, we will multiply the values by `-1` before pushing them onto the heap.\n\n<iframe src=\"https://leetcode.com/playground/ciYTgpsT/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"ciYTgpsT\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums`,\n\n* Time complexity: $$O(n \\cdot \\log k)$$\n\n    Operations on a heap cost logarithmic time relative to its size. Because our heap is limited to a size of `k`, operations cost at most $$O(\\log k)$$. We iterate over `nums`, performing one or two heap operations at each iteration.\n\n    We iterate $$n$$ times, performing up to $$\\log k$$ work at each iteration, giving us a time complexity of $$O(n \\cdot \\log k)$$.\n\n    Because $$k \\leq n$$, this is an improvement on the previous approach.\n\n* Space complexity: $$O(k)$$\n\n    The heap uses $$O(k)$$ space.\n    \n<br/>\n\n---\n\n### Approach 3: Quickselect\n\n**Intuition**\n\n> This is a more advanced/esoteric algorithm. Do not feel discouraged if you are unable to derive it yourself. It is highly unlikely that you would be expected to come up with this solution in an interview without any help from the interviewer.\n\n[Quickselect](https://en.wikipedia.org/wiki/Quickselect), also known as **Hoare's selection algorithm**, is an algorithm for finding the $$k^{th}$$ smallest element in an unordered list. It is significant because it has an **average** runtime of $$O(n)$$.\n\nQuickselect uses the same idea as Quicksort. First, we choose a pivot index. The most common way to choose the pivot is randomly. We partition `nums` into 3 sections: elements equal to the pivot, elements greater than the pivot, and elements less than the pivot.\n\nNext, we count the elements in each section. Let's denote the sections as follows:\n\n- `left` is the section with elements less than the pivot\n- `mid` is the section with elements equal to the pivot\n- `right` is the section with elements greater than the pivot\n\nQuickselect is normally used to find the $$k^{th}$$ **smallest** element, but we want the $$k^{th}$$ **largest**. To account for this, we will swap what `left` and `right` represent - `left` will be the section with elements greater than the pivot, and `right` will be the section with elements less than the pivot.\n\nIf the number of elements in `left` is greater than or equal to `k`, the answer must be in `left` - any other element would be less than the $$k^{th}$$ largest element. We restart the process in `left`.\n\n<img src=\"../Figures/215/2.png\" width=\"960\"> <br>\n\nIf the number of elements in `left` and `mid` is less than `k`, the answer must be in `right` - any element in `left` or `mid` would not be large enough to be the $$k^{th}$$ largest element. We restart the process in `right`.\n\n<img src=\"../Figures/215/3.png\" width=\"960\"> <br>\n\nThere's one extra step if the answer is in `right`. When we go to search in `right`, we are effectively \"deleting\" the elements in `left` and `mid` (since they will never be considered again). Because the elements in `left` and `mid` are greater than the answer, deleting them means we must shift `k`. Let's say we're looking for the $$8^{th}$$ greatest element, but then we delete the 4 greatest elements. In the remaining data, we would be looking for the $$4^{th}$$ greatest element, not the $$8^{th}$$. Therefore, we need to subtract the length of `left` and `mid` from `k` when we search for `right`.\n\nWe don't need to modify `k` when we search in `left` because when we search in `left`, we delete elements smaller than the answer, which doesn't affect `k`.\n\n<img src=\"../Figures/215/4.png\" width=\"960\"> <br>\n\nIf the answer is in neither `left` or `right`, it must be in `mid`. Since `mid` only has elements equal to the pivot, the pivot must be the answer.\n\nThe easiest way to implement this repetitive process is by using recursion.\n\n**Algorithm**\n\n> Note: the implementation we use here is not a standard Quickselect implementation. We will be using slightly more space (still the same complexity), but in exchange, we will be writing significantly less code.\n\n1. Define a `quickSelect` function that takes arguments `nums` and `k`. This function will return the $$k^{th}$$ greatest element in `nums` (the `nums` and `k` given to it as input, not the original `nums` and `k`).\n    - Select a random element as the `pivot`.\n    - Create `left`, `mid`, and `right` as described above.\n    - If `k <= left.length`, return `quickSelect(left, k)`.\n    - If `left.length + mid.length < k`, return `quickSelect(right, k - left.length - mid.length)`.\n    - Otherwise, return `pivot`.\n\n2. Call `quickSelect` with the original `nums` and `k`, and return the answer.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/TEKsbsnb/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TEKsbsnb\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums`,\n\n* Time complexity: $$O(n)$$ on average, $$O(n^2)$$ in the worst case\n\n    Each call we make to `quickSelect` will cost $$O(n)$$ since we need to iterate over `nums` to create `left`, `mid`, and `right`. The number of times we call `quickSelect` is dependent on how the pivots are chosen. The worst pivots to choose are the extreme (greatest/smallest) ones because they reduce our search space by the least amount. Because we are randomly generating pivots, we may end up calling `quickSelect` $$O(n)$$ times, leading to a time complexity of $$O(n^2)$$.\n\n    However, the algorithm mathematically [almost surely](https://en.wikipedia.org/wiki/Almost_surely) has a linear runtime. For any decent size of `nums`, the probability of the pivots being chosen in a way that we need to call `quickSelect` $$O(n)$$ times is so low that we can ignore it.\n\n    On average, the size of `nums` will decrease by a factor of ~2 on each call. You may think: that means we call `quickSelect` $$O(\\log n)$$ times, wouldn't that give us a time complexity of $$O(n \\cdot \\log n)$$? Well, each successive call to `quickSelect` would also be on a `nums` that is a factor of ~2 smaller. This recurrence can be analyzed using the [master theorem](https://en.wikipedia.org/wiki/Master_theorem_(analysis_of_algorithms)) with `a = 1, b = 2, k = 1`:\n\n    $$\\Large{T(n) = T(\\frac{n}{2}) + O(n)} = O(n)$$\n\n* Space complexity: $$O(n)$$\n\n    We need $$O(n)$$ space to create `left`, `mid`, and `right`. Other implementations of Quickselect can avoid creating these three in memory, but in the worst-case scenario, those implementations would still require $$O(n)$$ space for the recursion call stack.\n    \n<br/>\n\n**Bonus**\n\nWhen we randomly choose pivots, Quickselect has a worst-case scenario time complexity of $$O(n^2)$$.\n\nBy using the [median of medians](https://en.wikipedia.org/wiki/Median_of_medians) algorithm, we can improve to a worst-case scenario time complexity of $$O(n)$$.\n\nThis approach is way out of scope for an interview, and practically it isn't even worth implementing because there is a large constant factor. As stated above, the random pivot approach will yield a linear runtime with mathematical certainty, so in all practical scenarios, it is sufficient.\n\nThe median of medians approach should only be appreciated for its theoretical beauty. Those who are interested can read more using the link above.\n\n---\n\n### Approach 4: Counting Sort\n\n**Intuition**\n\n[Counting sort](https://en.wikipedia.org/wiki/Counting_sort) is a non-comparison sorting algorithm. It can be used to sort an array of positive integers.\n\nIn this approach, we will sort the input using a slightly modified counting sort, and then return the $$k^{th}$$ element from the end (just like in the first approach).\n\nHere is how we will sort the array:\n\n1. First, find the `maxValue` in the array. Create an array `count` with size `maxValue + 1`.\n2. Iterate over the array and find the frequency of each element. For each element `num`, increment `count[num]`.\n3. Now we know the frequency of each element. Each index of `count` represents a number. Create a new array `sortedArr` and iterate over `count`. For each index `num`, add `count[num]` copies of `num` to `sortedArr`. Because we iterate over the indices in sorted order, we will also add elements to `sortedArr` in sorted order.\n\nThe following animation demonstrates this process:\n\n!?!../Documents/215.json:960,540!?!\n\n<br>\n\nThere is one problem: as we are associating indices with numbers, this algorithm will not work if negative numbers are in the input. The constraints state that negative numbers can be in the input, so we need to account for this.\n\nLet's also find `minValue`, the minimum value in the array. Instead of `count` having a size of `maxValue + 1`, we will make it have a size of `maxValue - minValue + 1` (if `minValue < 0`, then this will appropriately increase the size of `count`).\n\nNow, we can just apply an offset of `minValue` when mapping numbers to indices and vice-versa. When we populate `count`, given a `num` we will increment `count[num - minValue]`. `count[num]` will represent the frequency of `num + minValue`.\n\n**One more small optimization**\n\nSince we don't actually need to sort the array but only need to return the $$k^{th}$$ largest value, we will iterate over the indices of `count` in reverse order (get the larger numbers first). At each number, we will decrement `k` (or a variable we initialize as `remain = k` to avoid modifying the input) by the frequency. If `remain <= 0`, we can return the current number. With this optimization, we don't need to create `sortedArr`, saving us $$O(n)$$ space.\n\n**Algorithm**\n\n1. Find the `maxValue` and `minValue` of `nums`.\n2. Create `count`, an array of size `maxValue - minValue + 1`.\n3. Iterate over `nums`. For each `num`, increment `count[num - minValue]`.\n4. Set `remain = k` and iterate over the indices of `count` backward. For each index `num`:\n    - Subtract the frequency of `num` from `remain`: `remain -= count[num]`.\n    - If `remain <= 0`, return the number that the current index represents: `num + minValue`.\n5. The code should never reach this point. Return any value.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/M7TCZizm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"M7TCZizm\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums` and $$m$$ as `maxValue - minValue`,\n\n* Time complexity: $$O(n + m)$$\n\n    We first find `maxValue` and `minValue`, which costs $$O(n)$$.\n\n    Next, we initialize `count`, which costs $$O(m)$$.\n\n    Next, we populate `count`, which costs $$O(n)$$.\n\n    Finally, we iterate over the indices of `count`, which costs up to $$O(m)$$.\n\n* Space complexity: $$O(m)$$\n\n    We create an array `count` with size $$O(m)$$.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

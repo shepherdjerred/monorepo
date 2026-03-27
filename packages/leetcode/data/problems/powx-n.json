@@ -1,0 +1,134 @@
+{
+  "questionId": "50",
+  "questionFrontendId": "50",
+  "title": "Pow(x, n)",
+  "titleSlug": "powx-n",
+  "difficulty": "Medium",
+  "content": "<p>Implement <a href=\"http://www.cplusplus.com/reference/valarray/pow/\" target=\"_blank\">pow(x, n)</a>, which calculates <code>x</code> raised to the power <code>n</code> (i.e., <code>x<sup>n</sup></code>).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> x = 2.00000, n = 10\n<strong>Output:</strong> 1024.00000\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> x = 2.10000, n = 3\n<strong>Output:</strong> 9.26100\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> x = 2.00000, n = -2\n<strong>Output:</strong> 0.25000\n<strong>Explanation:</strong> 2<sup>-2</sup> = 1/2<sup>2</sup> = 1/4 = 0.25\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>-100.0 &lt; x &lt; 100.0</code></li>\n\t<li><code>-2<sup>31</sup> &lt;= n &lt;= 2<sup>31</sup>-1</code></li>\n\t<li><code>n</code> is an integer.</li>\n\t<li>Either <code>x</code> is not zero or <code>n &gt; 0</code>.</li>\n\t<li><code>-10<sup>4</sup> &lt;= x<sup>n</sup> &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"myPow\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"x\",\r\n      \"type\": \"double\"\r\n    },\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"double\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"2.7M\", \"totalSubmission\": \"6.9M\", \"totalAcceptedRaw\": 2661928, \"totalSubmissionRaw\": 6926912, \"acRate\": \"38.4%\"}",
+  "likes": 11664,
+  "dislikes": 10540,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Sqrt(x)\", \"titleSlug\": \"sqrtx\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Super Pow\", \"titleSlug\": \"super-pow\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Collisions of Monkeys on a Polygon\", \"titleSlug\": \"count-collisions-of-monkeys-on-a-polygon\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2.00000\n10",
+    "2.10000\n3",
+    "2.00000\n-2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 12, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 4, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 4, \"slug\": \"ebay\", \"name\": \"eBay\"}, {\"timesEncountered\": 3, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 3, \"slug\": \"qualcomm\", \"name\": \"Qualcomm\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"epam-systems\", \"name\": \"EPAM Systems\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"wix\", \"name\": \"Wix\"}]}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    double myPow(double x, int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public double myPow(double x, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def myPow(self, x: float, n: int) -> float:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def myPow(self, x, n):\n        \"\"\"\n        :type x: float\n        :type n: int\n        :rtype: float\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} x\n * @param {number} n\n * @return {number}\n */\nvar myPow = function(x, n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function myPow(x: number, n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public double MyPow(double x, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "double myPow(double x, int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func myPow(x float64, n int) float64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun myPow(x: Double, n: Int): Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func myPow(_ x: Double, _ n: Int) -> Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn my_pow(x: f64, n: i32) -> f64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Float} x\n# @param {Integer} n\n# @return {Float}\ndef my_pow(x, n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Float $x\n     * @param Integer $n\n     * @return Float\n     */\n    function myPow($x, $n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  double myPow(double x, int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def myPow(x: Double, n: Int): Double = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec my_pow(x :: float, n :: integer) :: float\n  def my_pow(x, n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec my_pow(X :: float(), N :: integer()) -> float().\nmy_pow(X, N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (my-pow x n)\n  (-> flonum? exact-integer? flonum?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1922",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Binary Exponentiation (Recursive)\n\n#### Intuition  \n\nWe know $x^n$ means we multiply $x$ with itself $n$-times. The most naïve way to solve this problem is to simply multiply $x$ $n$-times. This method of multiplying will lead to a linear time complexity and is not efficient, but we will discuss a bit about it as it will be a stepping stone to our optimized approach.  \n\n**Brute-force approach:**\n\nThe current problem can be broken into smaller similar subproblems, $x^n = x \\cdot x^{n - 1}$. Thus, this will be our recurrence relation.  \n\nWe can write a recursive function here that calculates the result of the smaller similar sub-problem and using that calculates the result for the current problem, `pow(x, n) = x * pow(x, n - 1)`. And we know if $n = 0$ then $x^n$ will always be $1$, this will be our base case to stop the recursive calls.\n\nAlso, we need to handle the case if $n$ is negative. In that case, the answer will be the reciprocal of the result if $n$ were positive.\n$x^n = \\frac{1}{x^{-n}}$, where $n < 0$.\n\n```\nfunc pow(x, n):\n    if n == 0: return 1\n    if n < 0: return 1 / pow(x, -n)\n    return x * pow(x, n - 1)\n```\n\nNow we have an idea of all cases.\n\n<br />\n\n**Optimized approach:**\n\n> Binary exponentiation, also known as exponentiation by squaring, is a technique for efficiently computing the power of a number. By repeatedly squaring $x$ and halving $n$, we can quickly compute $x^n$ using a logarithmic number of multiplications.\n\nThe basic idea here is to use the fact that $x^{n}$ can be expressed as:  \n- $(x^{2})^{n/2}$ if $n$ is even\n- $x*(x^{2})^{(n-1)/2}$ if $n$ is odd  (we separate out one $x$, then $n - 1$ will become even)\n\n<br />\n\nThis method might not seem intuitive, so let's try to understand it with the help of some examples.    \nSay, we need to find $2^{100}$.\n\nUsing the previously discussed recursive approach we will have to multiply $2$ in $100$ steps.  \n\n> $2^{100} = 2 * 2^{99}$    \n> \n> $2 * 2^{99} = 2 * 2 * 2^{98}$    \n>     \n> $2 * 2 * 2^{98} = 2 * 2 * 2 * 2^{97}$    \n> .    \n> .  \n> \n> $(100 \\space \\text{steps})$  \n> .  \n> .  \n> $2^{100} = 2 * 2 * ... * (100 \\space \\text{multiplications}) * ... * 2^{0}$  \n>    \n> $ 2^{100} = 1267650600228229401496703205376$\n\n\nBut using binary exponentiation, it will be reduced to about only $10$ steps.  \n\n\n> $2^{100} = (2 * 2)^{50}$    \n>    \n> $4 ^ {50} = (4 * 4)^{25}$    \n>    \n> $16 ^ {25} = 16 * (16)^{24}$    \n>    \n> $16 ^ {25} = 16 * (16 * 16)^{12}$    \n>    \n> $16 * 256^{12} = 16 * (256 * 256)^{6}$    \n>    \n> $16 * 65536^{6} = 16 * (65536 * 65536)^{3}$    \n>    \n> $16 * 4294967296^{3} = 16 * 4294967296 * (4294967296)^{2}$    \n>    \n> $16 * 4294967296^{3} = 16 * 4294967296 * (4294967296 * 4294967296)^{1}$    \n>     \n> $ 2^{100} = 1267650600228229401496703205376$  \n\nInstead of reducing the exponent $n$ by $1$ at each recursive call like in the brute-force method, we will reduce it by half here.  \nThus, instead of linear steps, it will take us logarithmic steps to perform all the multiplications.\n\n![img1](../Figures/50/Slide1.PNG)\n\nThus, now our recursive function will be:\n\n```\nfunc binaryExp(x, n):\n    if n == 0: return 1.0\n    if n < 0: return 1.0 / binaryExp(x, -n)\n   \n    // Binary exponentiation steps.\n    if n is odd: return x * binaryExp(x * x, (n - 1) / 2)\n    otherwise: return binaryExp(x * x, n / 2)\n```\n\n\n#### Algorithm\n\n1. Create a method `binaryExp`, which takes `x` and `n` as parameters.\n    - If `n` is `0`, we return `1`.\n    - If `n` is negative, we calculate the result if `n` is positive and return the reciprocal of it, thus we return `1 / binaryExp(x, -n)` (also, `-n` can exceed the integer range thus to handle it `n` should be a 64-bit integer variable).\n    - Otherwise, using binary exponentiation we reduce the exponent `n` to half and calculate and return the result after solving the new sub-problem recursively as discussed previously.\n2. Call `binaryExp(x, n)` method and return the result.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/P7ErAUWJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"P7ErAUWJ\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $$O(\\log n)$$  \n    - At each recursive call we reduce `n` by half, so we will make only $\\log n$ number of calls for the `binaryExp` function, and the multiplication of two numbers is considered as a constant time operation.\n    - Thus, it will take overall $O(\\log n)$ time.\n\n> **Note:** The standard multiplication algorithm for multiplying two numbers of $d$-digits each might take $O(d^2)$ time, but most modern programming languages achieve a much lower time complexity i.e. $O(d (\\log d) (\\log \\log d))$ by utilizing a divide-and-conquer strategy and leveraging fast fourier transforms. You can read more about the computational complexities of standard mathematical operations [here](https://en.wikipedia.org/wiki/Computational_complexity_of_mathematical_operations#:~:text=Arithmetic%20functions%5B,operations%20on%20integers.).\n\n\n* Space complexity: $$O(\\log n)$$\n    - The recursive stack can use at most $O(\\log n)$ space at any time.\n\n---\n\n<br />\n\n\n\n### Approach 2: Binary Exponentiation (Iterative)\n\n#### Intuition  \n\nWe can also convert the same recursive approach to an iterative one using some loops.\n\nWe will use a while loop which will continue until $n$ reaches $0$.  \nIf $n$ is odd then we will multiply $x$ once with the `result`, so that we can reduce $n$ by $1$ to make it even.  \nNow, $n$ will be even, thus, we now square the $x$ and reduce $n$ by half, i.e. $x^n \\rarr (x^2)^{n/2}$.\n\nAlso, remember if $n < 0$, then we need to find $1 / x^{(-n)} $, thus we, multiply $1 / x$ with each other not $x$.\n\n\n\n#### Algorithm\n\n1. Create a method `binaryExp`, which takes `x` and `n` as parameters.\n    - If `n` is `0`, we return `1`.\n    - If `n` is negative, we change `n` as `-n`, and `x` as `1 / x`. (also, `-n` can exceed the integer range thus to handle it `n` should be a 64-bit integer variable).\n    - Initialize a variable `result` as `1` to store the result of all the multiplications we will perform.\n    - In a while loop until `n` becomes `0`:\n        - If `n` is odd, we multiply one `x` with `result` and reduce `n` by `1`.\n        - Then, we square `x` and reduce `n` by half.\n    - At the end, we return `result`.\n2. Call `binaryExp(x, n)` method and return the result.\n\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KqHxgwXE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KqHxgwXE\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $$O(\\log n)$$  \n    - At each iteration, we reduce `n` by half, thus it means we will make only $\\log n$ number of iterations using a while loop.\n    - Thus, it will take overall $O(\\log n)$ time.\n\n* Space complexity: $$O(1)$$\n    - We don't use any additional space.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

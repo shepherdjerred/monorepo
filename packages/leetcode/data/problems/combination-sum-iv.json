@@ -1,0 +1,133 @@
+{
+  "questionId": "377",
+  "questionFrontendId": "377",
+  "title": "Combination Sum IV",
+  "titleSlug": "combination-sum-iv",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of <strong>distinct</strong> integers <code>nums</code> and a target integer <code>target</code>, return <em>the number of possible combinations that add up to</em>&nbsp;<code>target</code>.</p>\n\n<p>The test cases are generated so that the answer can fit in a <strong>32-bit</strong> integer.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3], target = 4\n<strong>Output:</strong> 7\n<strong>Explanation:</strong>\nThe possible combination ways are:\n(1, 1, 1, 1)\n(1, 1, 2)\n(1, 2, 1)\n(1, 3)\n(2, 1, 1)\n(2, 2)\n(3, 1)\nNote that different sequences are counted as different combinations.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [9], target = 3\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 200</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 1000</code></li>\n\t<li>All the elements of <code>nums</code> are <strong>unique</strong>.</li>\n\t<li><code>1 &lt;= target &lt;= 1000</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> What if negative numbers are allowed in the given array? How does it change the problem? What limitation we need to add to the question to allow negative numbers?</p>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"combinationSum4\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"target\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"599.7K\", \"totalSubmission\": \"1.1M\", \"totalAcceptedRaw\": 599653, \"totalSubmissionRaw\": 1089449, \"acRate\": \"55.0%\"}",
+  "likes": 7768,
+  "dislikes": 701,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Combination Sum\", \"titleSlug\": \"combination-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Ways to Express an Integer as Sum of Powers\", \"titleSlug\": \"ways-to-express-an-integer-as-sum-of-powers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3]\n4",
+    "[9]\n3"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int combinationSum4(vector<int>& nums, int target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int combinationSum4(int[] nums, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def combinationSum4(self, nums: List[int], target: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def combinationSum4(self, nums, target):\n        \"\"\"\n        :type nums: List[int]\n        :type target: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} target\n * @return {number}\n */\nvar combinationSum4 = function(nums, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function combinationSum4(nums: number[], target: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CombinationSum4(int[] nums, int target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int combinationSum4(int* nums, int numsSize, int target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func combinationSum4(nums []int, target int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun combinationSum4(nums: IntArray, target: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func combinationSum4(_ nums: [Int], _ target: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn combination_sum4(nums: Vec<i32>, target: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} target\n# @return {Integer}\ndef combination_sum4(nums, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $target\n     * @return Integer\n     */\n    function combinationSum4($nums, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int combinationSum4(List<int> nums, int target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def combinationSum4(nums: Array[Int], target: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec combination_sum4(nums :: [integer], target :: integer) :: integer\n  def combination_sum4(nums, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec combination_sum4(Nums :: [integer()], Target :: integer()) -> integer().\ncombination_sum4(Nums, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (combination-sum4 nums target)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1093",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nAt the first glance, the problem seems to be yet another _combination-sum_ problem, as we have seen several examples before, _e.g._ [Combination Sum](https://leetcode.com/problems/combination-sum/), [Combination Sum II](https://leetcode.com/problems/combination-sum-ii/), and [Combination Sum III](https://leetcode.com/problems/combination-sum-iii/).\n\nHowever, the nature of this problem is very different from the previous combination-sum problems.\nThe essential algorithm to solve the previous combination-sum problems is called [_Backtracking_](https://leetcode.com/explore/learn/card/recursion-ii/472/backtracking/).\nWhile for this problem, we should apply the [_Dynamic Programming_](https://en.wikipedia.org/wiki/Dynamic_programming) algorithm, as one will discover later.\n\n>As a matter of fact, this problem can be considered as a variant of another problem called [Coin Changes II](https://leetcode.com/problems/coin-change-2/).\n\nThe prolem shares so many similarities with the [Coin Changes II](https://leetcode.com/problems/coin-change-2/) problem, to an extent that by _switching the order of loops_ in one of the solutions of [Coin Changes II](https://leetcode.com/problems/coin-change-2/),\none could solve this problem.\n\nIn this article, we will present two approaches of Dynamic Programming, namely **Top-Down** and **Bottom-Up**.\n\n\n---\n### Approach 1: Top-Down Dynamic Programming\n\n**Intuition**\n\nLet us start with an example. Given the input array of `nums = [1, 2, 3]` and the `target = 4`, we are asked to come up with a set of _combinations_ so that the sum of each combination is equal to the target value.\n\nLet us clarify a bit on the reference of _combination_ here, which is more of a **_permutation_**, to be more precise, where the order of elements does matter.\nFor instance, we could have two combinations such as `[1, 3]` and `[3, 1]`, which are valid and different for this problem.\nWhile, for the problem of [Coin Changes II](https://leetcode.com/problems/coin-change-2/), these two combinations would be considered to be the same.\n\n>So to summarize a bit, the order of elements in the combination does matter for this problem.\n\nSince the **order** is important, let us build the solution **recursively** and in the **backward** manner.\nWe elaborate the idea with an example in the following:\n\nGiven the `target=4` and the candidates array `nums=[1, 2, 3]`, each candidate number potentially can be the **last** number in the final combination.\nHere are a few steps on how we can work out a _subset_ of valid combinations.\n\n- 1). Suppose we place the number `1` as the last number in the combinations.\nNow, the remainder would be `4-1=3`. We just **_reduce_** the problem into a smaller scale, where we should now find all the combinations that sum up to `3` rather than `4`.\n\n- 2). Suppose that we know the combinations that sum up to `3`, which are `[1, 1, 1]`, `[1, 2]` and `[2, 1]`.\n\n- 3). Now by appending the _last_ number that we chose before (_i.e._ `1`) to each of the above _sub-combinations_, we can now obtain all the __valid__ and final combinations that __end with__ the chosen number (_i.e._ `[1, 1, 1, 1]`, `[1, 2, 1]`, and `[2, 1, 1]`).\n\n>Now if we apply the above steps to each of the candidate numbers in the input array _recursively_, we could then obtain all subsets of _combinations_ that end with each of the candidate numbers.\n\nWe illustrate the unfolding of the above process in the following graph.\n\n![combinations unfolding](../Figures/377/377_combinations_123.png)\n\nIn the above graph, we construct the combination in a backward manner, where we start from the last number in the combination.\n\nNote that, we can also assume that each time we add a number to the intermediate combination, it would be placed as the **_first_** number rather than the last one.\nWith this assumption, the process we described above would still hold.\n\n**Mathematics**\n\nIf one follows the above intuition, one can come up with a __backtracking__ algorithm to build all possible combinations.\n\nHowever, in this problem, we are not asked to build the combinations, but rather the total number of combinations, which is actually a simpler problem that can be solved with **Dynamic Programming** as we mentioned at the beginning.\n\n>If one is familar with the dynamic programming problems, one would know that it is imperative to model the problem with some **mathematical representations** (preferably formulas), which will help one to implement the solution.\n\nFor this problem, we could summarize the process in the intuition section with the following formula:\n\n$$\n    \\text{combs}(\\text{target}) = \\bigcup {\\text{combs}(\\text{target} - \\text{nums}[\\text{i}])} \\quad \\space \\text{if}  \\space \\text{target} \\ge \\text{nums[i]}\n$$\n\n, where the function $$\\text{combs(target)}$$ gives the combinations that sum up to the `target` value.\n\nWith the above formula, we could obtain all valid combinations.\nBut as we know, the desired result of this problem is the number of combinations, rather than the combinations themselves.\n\n>Although the desired results are different, the above process of constructing valid combinations still hold.\nMore importantly, the relationship among the break-down steps remains the same.\nTo obtain the number of combinations, we could simply reformulate the above formula as follows:\n\n$$\n    \\text{combs}(\\text{target}) = \\sum_{i=0}^{n}{\\text{combs}(\\text{target} - \\text{nums}[\\text{i}])} \\quad \\space \\text{if}  \\space \\text{target} \\ge \\text{nums[i]}\n$$\n\n, where the function $$\\text{combs(target)}$$ gives the _**number**_ of combinations that sum up to the `target` value.\n\nIntuitively, we could interpret the formula as that the total number of combinations would be the **sum** of all subsets of combinations, where each subset of combinations ends with a _specific_ number.\n\nWe could also prove that the combinations built with the above process are **_complete_** and **_non-redundant_**.\n\n- By complete, our solution will cover all valid combinations. If there is ever a combination that ends with a specific number, it would then be included in our solution.\n\n- By non-redundant, each of the combinations constructed at the end would be _unique_.\nFor combinations in different subsets, they would definitely be different since they end with different numbers.\nWhile for combinations in the same subsets, they could be further _attributed_ to smaller subsets, according to their postfixes.\nHence, they are unique as well.\n\nWith the properties of _completeness_ and _non-redundancy_, we prove that our solution is __correct__.\n\n\n**Algorithm**\n\nGiven the above formulas of dynamic programming, in terms of implementation, there are two general strategies, namely **top-down** and **bottom-up**.\nIn this approach, we will start with the _top-down_ strategy, which arguably is more intuitive.\nThen in the next approach, we will cover the _bottom-up_ strategy.\n\n>As the name suggests, with _top-down_ strategy, we start from the original input, and then we _recursively_ reduce the input into a smaller scale until we reach the levels that we can no longer break down.\n\nDue to the _recursive_ nature of the formula, we could translate the formula directly into a recursive function.\n\nHere accordingly we define a recursive function called `combs(remain)` which returns the number of combinations where each combination sums up to the `remain` value.\n\nHere are some sample implementations.\n\n<iframe src=\"https://leetcode.com/playground/QcXSyzFQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QcXSyzFQ\"></iframe>\n\nAs one might notice in the above implementation, together with the *recursive* function, we applied a critical optimization measure which is called [_memoization_](https://en.wikipedia.org/wiki/Memoization).\n\nWithout the memoization, we would end up with much redundant calculation, where we evaluate the function over and over for the same input value.\n\nIn addition, as a minor optimization, one could also sort the candidate numbers beforehands.\nLater, one could have an early stopping in the loop, rather than going through the entire input list each time.\n\n**Complexity Analysis**\n\nLet $$T$$ be the target value, and $$N$$ be the number of elements in the input array.\n\n- Time Complexity: $$\\mathcal{O}(T \\cdot N)$$\n\n    - Thanks to the memoization technique, for each invocation of `combs(remain)`, it would be evaluated only once, for each unique input value.\n    In the worst case, we could have $$T$$ different input values.\n\n    - For each invocation of `combs(remain)`, in the worst case it takes $$\\mathcal{O}(N)$$ time for the non-recursive part.\n\n    - To sum up, the overall time complexity of the algorithm is $$T \\cdot \\mathcal{O}(N) = \\mathcal{O}(T \\cdot N) $$.\n\n\n- Space Complexity: $$\\mathcal{O}(T)$$\n\n    - Due to the recursive function, the algorithm will incur additional memory consumption in the function call stack.\n    In the worst case, the recursive function can pile up to $$T$$ times.\n    As a result, we would need $$\\mathcal{O}(T)$$ space for the recursive function.\n\n    - In addition, since we applied the memoization technique where we keep the intermediate results in the cache, we would need addtionally $$\\mathcal{O}(T)$$ space.\n\n    - To sum up, the overall space complexity of the algorithm is $$\\mathcal{O}(T) + \\mathcal{O}(T) = \\mathcal{O}(T)$$.\n\n\n---\n### Approach 2: Bottom-Up Dynamic Programming\n\n**Intuition**\n\n>Another well-known form of dynamic programming algorithm is _bottom-up_, as opposed to _top-down_, where one often sees the application of one dimentional or multi-dimentional array (_i.e._ `dp[]`).\n\nAs a reminder, here is the formula we derived before:\n\n$$\n    \\text{combs}(\\text{target}) = \\sum_{i=0}^{n}{\\text{combs}(\\text{target} - \\text{nums}[\\text{i}])} \\quad \\space \\text{if}  \\space \\text{target} \\ge \\text{nums[i]}\n$$\n\n, where the function $$\\text{combs(target)}$$ gives the _**number**_ of combinations that sum up to the `target` value.\n\nAccordingly, we can define an array named `dp[i]` where each element corresponds to the result of function `combs(i)`, _i.e._ the number of combinations that sum up to the value of `i`.\n\nIn the previous approach, to obtain the value of `combs(target)`, we start off from the desired `target` value, and recursively reduce it down to the base case (_i.e._ `target=0`).\n\nIn this approach though, we start from the base case (_i.e._ `dp[0]`) and then _iteratively_ calcalate all the intermediate results until we reach the target value (_i.e._ `dp[target]`).\n\nHere we demonstrate how to calculate the `dp[i]` array values in _bottom-up_ manner, with the same example we used before.\n\nGiven the input of `nums=[1, 2, 3]` and `target=4`, here is what the `dp[i]` array looks like at the beginning.\n\n![DP array init](../Figures/377/377_dp_init.png)\n\n- As one can see, initially all the values are set to be zero, except the first element (`dp[0]`) which is set to be one.\nAlthough literally it indicates that there is one combination that sum up to zero, which does not make sense, the value is set artificially to facilitate the calculation later as one will see.\n\n- We then move from low index to high index to work out each value in the `dp[i]` array.\nWith the value of `dp[0]` known, we can now deduct the value for `dp[1]` which can be broken down into one single case where we place the number `1` as the last number in the combination and the remainder sum become zero.\nAs a result, `dp[1] = dp[0] = 1` according to the formula.\nWe set the value of `dp[0]` to one, which can be interpreted that there exists **one** combination if the target value can be reduced down to zero.\n\n![DP array step 1](../Figures/377/377_dp_step_1.png)\n\n- We now move on the index of `2` in the `dp[i]` array.\nThis time, it can be broke down into two cases, which depends on the values of `dp[1]` and `dp[0]` respectively.\n    - For case 1, we can place the number `1` as the last number in the combination. The case is now reduced down to `dp[1]`.\n    - For case 2, we can place the number `2` as the last number in the combination. The case is now reduced down to `dp[0]`.\n    - To sum up the above two cases, the value of `dp[2]` can be expressed as `dp[2] = dp[1] + dp[0]`, as one can see in the following graph:\n\n![DP array step 2](../Figures/377/377_dp_step_2.png)\n\n- We can repeat the above process to work out all the rest values in the `dp[i]` array.\nIn the following graph, we show the final values, as well as the dependencies during the calculation.\n\n![DP array final](../Figures/377/377_dp_final.png)\n\nThe approach is called bottom-up, since we start from the base case and move towards the final case where the input is the target value.\nAt each step, the calculation of the current value only depends on the previously calculated intermediate values.\n\n**Algorithm**\n\nBased on the above intuition, here are some sample implementations.\n\nOne can see the ressemblance between the top-down and bottom-up approaches.\nIn certain perspective, the bottom-up approach is equivalent to the unfolding of the top-down approach with memoization.\n\n<iframe src=\"https://leetcode.com/playground/3Sdoav5x/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"3Sdoav5x\"></iframe>\n\n\n\n**Complexity Analysis**\n\n\nLet $$T$$ be the target value, and $$N$$ be the number of elements in the input array.\n\n- Time Complexity: $$\\mathcal{O}(T \\cdot N)$$\n\n    - We have a nested loop, with the number of iterations as $$T$$ and $$N$$ respectively.\n\n    - Hence, the overall time complexity of the algorithm is $$\\mathcal{O}(T \\cdot N) $$.\n\n\n- Space Complexity: $$\\mathcal{O}(T)$$\n\n    - We allocate an array `dp[i]` to hold all the intermediate values, which amounts to $$\\mathcal{O}(T)$$ space.\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

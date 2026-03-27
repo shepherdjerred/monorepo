@@ -1,0 +1,150 @@
+{
+  "questionId": "803",
+  "questionFrontendId": "787",
+  "title": "Cheapest Flights Within K Stops",
+  "titleSlug": "cheapest-flights-within-k-stops",
+  "difficulty": "Medium",
+  "content": "<p>There are <code>n</code> cities connected by some number of flights. You are given an array <code>flights</code> where <code>flights[i] = [from<sub>i</sub>, to<sub>i</sub>, price<sub>i</sub>]</code> indicates that there is a flight from city <code>from<sub>i</sub></code> to city <code>to<sub>i</sub></code> with cost <code>price<sub>i</sub></code>.</p>\n\n<p>You are also given three integers <code>src</code>, <code>dst</code>, and <code>k</code>, return <em><strong>the cheapest price</strong> from </em><code>src</code><em> to </em><code>dst</code><em> with at most </em><code>k</code><em> stops. </em>If there is no such route, return<em> </em><code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/03/18/cheapest-flights-within-k-stops-3drawio.png\" style=\"width: 332px; height: 392px;\" />\n<pre>\n<strong>Input:</strong> n = 4, flights = [[0,1,100],[1,2,100],[2,0,100],[1,3,600],[2,3,200]], src = 0, dst = 3, k = 1\n<strong>Output:</strong> 700\n<strong>Explanation:</strong>\nThe graph is shown above.\nThe optimal path with at most 1 stop from city 0 to 3 is marked in red and has cost 100 + 600 = 700.\nNote that the path through cities [0,1,2,3] is cheaper but is invalid because it uses 2 stops.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/03/18/cheapest-flights-within-k-stops-1drawio.png\" style=\"width: 332px; height: 242px;\" />\n<pre>\n<strong>Input:</strong> n = 3, flights = [[0,1,100],[1,2,100],[0,2,500]], src = 0, dst = 2, k = 1\n<strong>Output:</strong> 200\n<strong>Explanation:</strong>\nThe graph is shown above.\nThe optimal path with at most 1 stop from city 0 to 2 is marked in red and has cost 100 + 100 = 200.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/03/18/cheapest-flights-within-k-stops-2drawio.png\" style=\"width: 332px; height: 242px;\" />\n<pre>\n<strong>Input:</strong> n = 3, flights = [[0,1,100],[1,2,100],[0,2,500]], src = 0, dst = 2, k = 0\n<strong>Output:</strong> 500\n<strong>Explanation:</strong>\nThe graph is shown above.\nThe optimal path with no stops from city 0 to 2 is marked in red and has cost 500.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 100</code></li>\n\t<li><code>0 &lt;= flights.length &lt;= (n * (n - 1) / 2)</code></li>\n\t<li><code>flights[i].length == 3</code></li>\n\t<li><code>0 &lt;= from<sub>i</sub>, to<sub>i</sub> &lt; n</code></li>\n\t<li><code>from<sub>i</sub> != to<sub>i</sub></code></li>\n\t<li><code>1 &lt;= price<sub>i</sub> &lt;= 10<sup>4</sup></code></li>\n\t<li>There will not be any multiple flights between two cities.</li>\n\t<li><code>0 &lt;= src, dst, k &lt; n</code></li>\n\t<li><code>src != dst</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"findCheapestPrice\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"flights\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"name\": \"src\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"dst\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"894.2K\", \"totalSubmission\": \"2.2M\", \"totalAcceptedRaw\": 894179, \"totalSubmissionRaw\": 2154119, \"acRate\": \"41.5%\"}",
+  "likes": 11205,
+  "dislikes": 470,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Vacation Days\", \"titleSlug\": \"maximum-vacation-days\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost to Reach City With Discounts\", \"titleSlug\": \"minimum-cost-to-reach-city-with-discounts\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "4\n[[0,1,100],[1,2,100],[2,0,100],[1,3,600],[2,3,200]]\n0\n3\n1",
+    "3\n[[0,1,100],[1,2,100],[0,2,500]]\n0\n2\n1",
+    "3\n[[0,1,100],[1,2,100],[0,2,500]]\n0\n2\n0"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"six_months\": [{\"timesEncountered\": 10, \"slug\": \"htc\", \"name\": \"HTC\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"makemytrip\", \"name\": \"MakeMyTrip\"}, {\"timesEncountered\": 5, \"slug\": \"stripe\", \"name\": \"Stripe\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}]}",
+  "topicTags": [
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Shortest Path",
+      "slug": "shortest-path"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findCheapestPrice(int n, vector<vector<int>>& flights, int src, int dst, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findCheapestPrice(int n, int[][] flights, int src, int dst, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findCheapestPrice(self, n: int, flights: List[List[int]], src: int, dst: int, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findCheapestPrice(self, n, flights, src, dst, k):\n        \"\"\"\n        :type n: int\n        :type flights: List[List[int]]\n        :type src: int\n        :type dst: int\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} flights\n * @param {number} src\n * @param {number} dst\n * @param {number} k\n * @return {number}\n */\nvar findCheapestPrice = function(n, flights, src, dst, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findCheapestPrice(n: number, flights: number[][], src: number, dst: number, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindCheapestPrice(int n, int[][] flights, int src, int dst, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findCheapestPrice(int n, int** flights, int flightsSize, int* flightsColSize, int src, int dst, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findCheapestPrice(n int, flights [][]int, src int, dst int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findCheapestPrice(n: Int, flights: Array<IntArray>, src: Int, dst: Int, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findCheapestPrice(_ n: Int, _ flights: [[Int]], _ src: Int, _ dst: Int, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_cheapest_price(n: i32, flights: Vec<Vec<i32>>, src: i32, dst: i32, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} flights\n# @param {Integer} src\n# @param {Integer} dst\n# @param {Integer} k\n# @return {Integer}\ndef find_cheapest_price(n, flights, src, dst, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $flights\n     * @param Integer $src\n     * @param Integer $dst\n     * @param Integer $k\n     * @return Integer\n     */\n    function findCheapestPrice($n, $flights, $src, $dst, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findCheapestPrice(int n, List<List<int>> flights, int src, int dst, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findCheapestPrice(n: Int, flights: Array[Array[Int]], src: Int, dst: Int, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_cheapest_price(n :: integer, flights :: [[integer]], src :: integer, dst :: integer, k :: integer) :: integer\n  def find_cheapest_price(n, flights, src, dst, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_cheapest_price(N :: integer(), Flights :: [[integer()]], Src :: integer(), Dst :: integer(), K :: integer()) -> integer().\nfind_cheapest_price(N, Flights, Src, Dst, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-cheapest-price n flights src dst k)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer? exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1614",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe can treat this as a graph problem where:\n* Cities can be thought of as nodes in a graph.\n* The connections between each of the cities can be treated as the edges, and finally,\n* The cost of going from one city to another would be the weight of the edges in the graph.\n\nThe problem is to find the shortest path from a source to a destination with a constraint of `k` stops. This is a very good problem to practice various graph algorithms.\n\n---\n\n### Approach 1: Breadth First Search\n\n#### Intuition\n\nA breadth-first search is a good algorithm to use if we want to find the shortest path in an unweighted graph. The property of BFS is that the first time a node is reached during the traversal, it is reached at the minimum distance from the source. The same cannot be said for a weighted graph. For a weighted graph, a path having more edges does not necessarily mean the path is more expensive. Thus, we cannot employ a normal breadth-first search for weighted graphs.\n\nA breadth-first search has no way of knowing if a particular discovery of a node would give us the cheapest path to that node. The only possible way for BFS (or DFS) to find the shortest path in a weighted graph is to search the entire graph and keep recording the minimum distance from the source to the destination node.\n\nHowever, our problem limits the number of stops to `k`. As a result, we need not search the paths with lengths greater than `k + 1`. A breadth-first search can be used for this problem because the number of levels to be explored by the algorithm is bounded by `k`.\n\nIn this approach, we will perform a level-wise iteration over the nodes. We will explore all the nodes at the present level (say `l`) before moving on to the nodes at the next level (`l + 1`). This level would correspond to the number of stops that would be limited by `k`. When we move from a level of `l` to `l + 1`, we will increase the stops by `1`. We are allowed a maximum of `k` stops, which means we could go up to a maximum level of `k + 1` from the `src` node, trying to reach `dst` at the minimum price. \n\nWe can maintain an array `dist` which stores the minimum price to reach each node. When we want to move to a `node`, we will only consider edges where the total price after traversing the edge is less than the currently calculated `dist[node]`. This optimization helps us avoid TLE.\n\nIf you are not familiar with BFS traversal, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/learn/card/queue-stack/231/practical-application-queue/1376/).\n\n> In this article, we will use the terms price and distance interchangeably. You can imagine the prices as miles between airports, and we want the shortest distance.\n\n<br>\n\n#### Algorithm\n\n1. Create an adjacency list where `adj[X]` contains all the neighbors of node `X` and the corresponding price it takes to move to a neighbor.\n2. Intialize `dist` array, storing the minimum price to reach a node from the `src` node. Intialize it with large values.\n3. Initialize a queue storing `{node, distance}` pairs. Initially, the queue should have only `{src, 0}`.\n4. Create a variable called `stops` and set its value to `0`.\n5. Perform BFS until the queue is empty or `stops > k`:\n    - Iterate over all the nodes at a particular level. This will be done by starting a nested loop and visiting all the nodes currently present in the queue.\n    - At each pair `{node, distance}`, iterate over all the neighbors of `node`. For each neighbour, check if `dist[neighbor]` is less than `distance` + the price of the edge. If it is, then update `dist[neighbor]` and push `{neighbor, dist[neighbor]}` onto the queue.\n    - After iterating over all the nodes in the current level, increase `stops` by one. We've visited all the nodes at a particular level and are ready to visit the next level of nodes.\n6. Once we reach a condition where either the queue is empty or `stops == k`, we have our answer as `dist[dst]`. If `dist[dst]` hasn't changed from the initial large value, then we never reached it, so return `-1`.\n\nBelow is a visual example of how the algorithm works. The left side arrays represents the previous level and the right side arrays represent the current level.\n\n!?!../Documents/787_cheapest_flights_slideshow.json:960,540!?!\n\n<br>\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/mMU7PBtF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"mMU7PBtF\"></iframe>\n\n#### Complexity Analysis\n\nLet $E$ be the number of flights and $N$ be the number of cities.\n\n* Time complexity: $O(N + E \\cdot K)$\n\n    - Depending on improvements in the shortest distance for each node, we may process each edge multiple times. However, the maximum number of times an edge can be processed is limited by $K$ because that is the number of levels we will investigate in this algorithm. In the worst case, this takes $O(E \\cdot K)$ time. We also need $O(E)$ to initialize the adjacency list and $O(N)$ to initialize the `dist` array.\n\n* Space complexity: $O(N + E \\cdot K)$\n\n    - We are processing at most $E \\cdot K$ edges, so the queue takes up $O(E \\cdot K)$ space in the worst case. We also need $O(E)$ space for the adjacency list and $O(N)$ space for the `dist` array.\n\n---\n\n### Approach 2: Bellman Ford\n\n#### Intuition\n\nIf you are new to Bellman Ford, please see our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/622/single-source-shortest-path-algorithm/3864/) for more information on it!\n\nBellman Ford's algorithm is used to find the shortest paths from the source node to all other vertices in a weighted graph. It depends on the idea that the shortest path contains at most `N - 1` edges (where `N` is the number of nodes in the graph) because the shortest path cannot have a cycle.\n\nThis algorithm takes as input a directed weighted graph and a starting node. It produces all the shortest paths from the starting node to all other vertices. It initially sets the distance from the starting node to all other vertices to infinity. The distance of the starting node is set to `0`. The algorithm loops through each edge `N - 1` times. If it finds an edge through which the distance of a node is smaller than the previously stored value, it uses this edge and stores the new value. This is called **relaxing** an edge.\n\nIt first calculates the shortest distances with at-most one edge in the path from the source. Then, it calculates the shortest paths with at-most `2` edges, and so on. After the `i-th` iteration over the edges, the shortest paths with at most `i` edges are calculated. There can be a maximum `N – 1` edges in any simple path (not a negative cycle), and that is why the algorithm iterates `N – 1` times over the edges.\n\nSince we are limited to `k` stops, we can modify this algorithm to restrict the maximum number of edges that can be in a path to `k + 1`.\n\n#### Algorithm\n\n1) Intialize the `dist` array, storing the minimum price to reach a node from the `src` node. Intialize it with large values.\n2) Set the distance to the source as `0`.\n3) Run an outer loop `k + 1` times.\n4) In each iteration, make a copy of `dist` named `temp` and loop over all the edges in the graph trying to relax each one of them.\n    - At each edge `{x, y}`, if the cost of reaching `x` (which is `dist[x]`) plus the cost of the edge is less than `dist[y]`, then we can relax this edge by updating `temp[y]`.\n    - We need to use another array `temp` so that the distances from the previous iteration stored in `dist` don't change.\n5) After finishing an iteration, copy the `temp` array to the `dist` array.\n6) Our answer should be in `dist[dst]` at the end of the outer loop. If `dist[dst]` hasn't changed from the initial large value, then we never reached it, so return `-1`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TMcFuA6M/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"TMcFuA6M\"></iframe>\n\n#### Complexity Analysis\n\nLet $E$ be the number of flights and $N$ be number of cities.\n\n* Time complexity: $O((N + E) \\cdot K)$\n\n    - We are iterating over all the edges $K + 1$ times which takes $O(E \\cdot K)$. At the start and end of each iteration, we also swap distance arrays, which take $O(N \\cdot K)$ time for all the iterations. This gives us a time complexity of $O(E \\cdot K + N \\cdot K) = O((N + E) \\cdot K)$\n\n* Space complexity: $O(N)$\n\n    - We are using `dist` and `temp` arrays, which each require $O(N)$ space.\n\n---\n\n### Approach 3: Dijkstra\n\n#### Intuition\n\nIf you are new to Dijkstra's algorithm, please see our [Leetcode Explore Card](https://leetcode.com/explore/featured/card/graph/622/single-source-shortest-path-algorithm/3862/) for more information on it!\n\nDijkstra's algorithm is used to find the shortest paths from a source node to all the other nodes in a weighted graph where the edge weights are positive numbers. It makes use of a priority queue (heap) to decide which edges to use.\n\nDijkstra's works by greedily choosing which node to investigate next. A priority queue is used to select the node that currently has the lowest price. In the previous two approaches, we used an array `dist` that made sure we only traversed an edge to node `x` if we could make an improvement on `dist[x]`. In this approach, we will instead use an array `stops` which tracks the minimum number of stops needed to reach each node instead of the minimum price. Then, we will only traverse an edge to a node `x` if `x` has not already been visited with fewer stops. Because we are greedily choosing the node with the lowest total price, the first time we reach `dst`, we will have the answer.\n\nAs per the problem, we also need to restrict the number of stops to `k` i.e., we can take at most `k + 1` steps from the source node, so we will store the current number of stops along with each node since we aren't iterating level by level anymore.\n\n#### Algorithm\n\n1. Create an adjacency list where `adj[X]` contains all the neighbors of node `X` and the corresponding price it takes to move to a neighbor.\n2. Intialize the `stops` array, storing the steps required to reach a node from the `src` node. We would intialize it with large values to indicate we've not reached any nodes yet.\n3. Initialize a min-heap that stores a triplet `{dist_from_src_node, node, number_of_stops_from_src_node}`. Insert `{0, src, 0}` as the first triplet into the queue.\n4. Perform Dijkstra's until the heap is empty:\n    - Pop `{dist, node, steps}` from the heap\n    - If `steps > stops[node]`, then we already visited this node with fewer steps earlier, so ignore the current triplet and move on.\n    - If `steps > k + 1`, then we have taken too many stops, so ignore the current triplet and move on.\n    - Otherwise, check if we are at `dst`. If we are, then return `dist` as the answer.\n    - If not, iterate over the neighbors of `node` and for each neighbor, push `{dist + price, neighbor, steps + 1}` onto the heap.\n5. If we reach the end of the loop without returning the answer, it means we cannot reach the destination. Our answer would be `-1` in this case.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Ag6kDvsc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Ag6kDvsc\"></iframe>\n\n#### Complexity Analysis\n\nLet $E$ be the number of flights and $N$ be number of cities in the given problem.\n\n* Time complexity: $O(E \\cdot K \\cdot (E + log({E \\cdot K})))$\n\n    - Let's assume any node `A` is popped out of the queue in an iteration. If the `steps` taken to visit `A` are more than `stops[node]`, we do not iterate over the neighbors of `A`. However, we will iterate over neighbors of `A` if the `steps` are less than `stops[A]`, which can be true $K$ times. `A` can be popped the first time with `K` steps, followed by `K-1` steps, and so on until `1` step. The same argument would be valid for any other node like `A`. As a result, each edge can only be processed $K$ times, resulting in $O(E \\cdot K)$ elements being processed.\n    - It will take the priority queue $O(E \\cdot K \\cdot (E + log({E \\cdot K})))$ time to push or pop $O(E \\cdot K)$ elements.\n\n* Space complexity: $O(N + E \\cdot K)$\n\n    - We are using the `adj` array, which requires $O(E)$ memory. The `stop` array would require $O(N)$ memory. As previously stated, the priority queue can only have $O(E \\cdot K)$ elements.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

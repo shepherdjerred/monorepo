@@ -1,0 +1,121 @@
+{
+  "questionId": "443",
+  "questionFrontendId": "443",
+  "title": "String Compression",
+  "titleSlug": "string-compression",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of characters <code>chars</code>, compress it using the following algorithm:</p>\n\n<p>Begin with an empty string <code>s</code>. For each group of <strong>consecutive repeating characters</strong> in <code>chars</code>:</p>\n\n<ul>\n\t<li>If the group&#39;s length is <code>1</code>, append the character to <code>s</code>.</li>\n\t<li>Otherwise, append the character followed by the group&#39;s length.</li>\n</ul>\n\n<p>The compressed string <code>s</code> <strong>should not be returned separately</strong>, but instead, be stored <strong>in the input character array <code>chars</code></strong>. Note that group lengths that are <code>10</code> or longer will be split into multiple characters in <code>chars</code>.</p>\n\n<p>After you are done <strong>modifying the input array,</strong> return <em>the new length of the array</em>.</p>\n\n<p>You must write an algorithm that uses only constant extra space.</p>\n\n<p><strong>Note: </strong>The characters in the array beyond the returned length do not matter and should be ignored.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> chars = [&quot;a&quot;,&quot;a&quot;,&quot;b&quot;,&quot;b&quot;,&quot;c&quot;,&quot;c&quot;,&quot;c&quot;]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> The groups are &quot;aa&quot;, &quot;bb&quot;, and &quot;ccc&quot;. This compresses to &quot;a2b2c3&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> chars = [&quot;a&quot;]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The only group is &quot;a&quot;, which remains uncompressed since it&#39;s a single character.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> chars = [&quot;a&quot;,&quot;b&quot;,&quot;b&quot;,&quot;b&quot;,&quot;b&quot;,&quot;b&quot;,&quot;b&quot;,&quot;b&quot;,&quot;b&quot;,&quot;b&quot;,&quot;b&quot;,&quot;b&quot;,&quot;b&quot;]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The groups are &quot;a&quot; and &quot;bbbbbbbbbbbb&quot;. This compresses to &quot;ab12&quot;.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= chars.length &lt;= 2000</code></li>\n\t<li><code>chars[i]</code> is a lowercase English letter, uppercase English letter, digit, or symbol.</li>\n</ul>\n",
+  "hints": [
+    "How do you know if you are at the end of a consecutive group of characters?"
+  ],
+  "metaData": "{\r\n  \"name\": \"compress\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"chars\",\r\n      \"type\": \"character[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  },\r\n  \"output\": {\r\n    \"paramindex\": 0,\r\n    \"size\": \"ret\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.1M\", \"totalSubmission\": \"1.8M\", \"totalAcceptedRaw\": 1051937, \"totalSubmissionRaw\": 1760776, \"acRate\": \"59.7%\"}",
+  "likes": 6195,
+  "dislikes": 8872,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count and Say\", \"titleSlug\": \"count-and-say\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Encode and Decode Strings\", \"titleSlug\": \"encode-and-decode-strings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Design Compressed String Iterator\", \"titleSlug\": \"design-compressed-string-iterator\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Decompress Run-Length Encoded List\", \"titleSlug\": \"decompress-run-length-encoded-list\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"String Compression III\", \"titleSlug\": \"string-compression-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Better Compression of String\", \"titleSlug\": \"better-compression-of-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"a\",\"a\",\"b\",\"b\",\"c\",\"c\",\"c\"]",
+    "[\"a\"]",
+    "[\"a\",\"b\",\"b\",\"b\",\"b\",\"b\",\"b\",\"b\",\"b\",\"b\",\"b\",\"b\",\"b\"]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 4, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"palantir-technologies\", \"name\": \"Palantir Technologies\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"crowdstrike\", \"name\": \"CrowdStrike\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"palo-alto-networks\", \"name\": \"Palo Alto Networks\"}, {\"timesEncountered\": 2, \"slug\": \"mongodb\", \"name\": \"MongoDB\"}], \"more_than_six_months\": [{\"timesEncountered\": 17, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 11, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 7, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 5, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 5, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 5, \"slug\": \"affirm\", \"name\": \"Affirm\"}, {\"timesEncountered\": 5, \"slug\": \"lg-electronics\", \"name\": \"LG Electronics\"}, {\"timesEncountered\": 4, \"slug\": \"ripple\", \"name\": \"Ripple\"}, {\"timesEncountered\": 3, \"slug\": \"epam-systems\", \"name\": \"EPAM Systems\"}, {\"timesEncountered\": 3, \"slug\": \"zoho\", \"name\": \"Zoho\"}]}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int compress(vector<char>& chars) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int compress(char[] chars) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def compress(self, chars: List[str]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def compress(self, chars):\n        \"\"\"\n        :type chars: List[str]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {character[]} chars\n * @return {number}\n */\nvar compress = function(chars) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function compress(chars: string[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int Compress(char[] chars) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int compress(char* chars, int charsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func compress(chars []byte) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun compress(chars: CharArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func compress(_ chars: inout [Character]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn compress(chars: &mut Vec<char>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Character[]} chars\n# @return {Integer}\ndef compress(chars)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $chars\n     * @return Integer\n     */\n    function compress(&$chars) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int compress(List<String> chars) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def compress(chars: Array[Char]): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "1698",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n#### Intuition\n\nFirst, we make the following observation. Consider a group `t` of consecutive repeating characters. The length of compressed `t` is less than or equal to the length of `t`. For example, `d` tranforms into `d`, `cc` into `c2`, `aaaa` into `a4`, `bbbbbbbbbbbb` into `b12`.\n\nThis observation allows processing groups in the array `chars` from left to right.\n\n!?!../Documents/443/slideshow.json:960,540!?!\n\nIn the slideshow above, we compress the array `chars = [\"c\",\"c\",\"b\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\"]`. First, we process the group `cc`, then `b`, and finally `aaaaaaaaaa`.\n\nUnprocessed characters are in white cells.\n\nProcessed characters that we may overwrite in the future are in blue cells.\n\nCharacters that belong to the answer and will not change are in green cells.\n\nWhen processing a group, we first find its size `groupLength` and paint its cells blue. Then we append the character of the group to the answer. If `groupLength` is greater than $1$, we also append the string representation of `groupLength` to the answer. Because the problem wants us to form the answer in place, instead of \"appending\" to the answer we will overwrite the corresponding blue cells by repainting them green.\n\nWhite cells will eventually become blue and blue ones may become green. Since the compressed group takes up fewer cells than the uncompressed, the white cell cannot immediately become green.\n\n#### Algorithm\n\n1. Declare the variables `i` – the first index of the current group, and `res` – the length of the answer (of the compressed string). Initialize `i = 0`, `res = 0`.\n2. While `i` is less than the length of `chars`:\n\t* Find the length of the current group of consecutive repeating characters `groupLength`.\n\t* Add `chars[i]` to the answer (`chars[res++] = chars[i]`).\n\t* If `groupLength > 1`, add the string representation of `groupLength` to the answer and increase `res` accordingly.\n\t* Increase `i` by `groupLength` and proceed to the next group.\n3. Return `res`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/6To4QHZq/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"6To4QHZq\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n$ be the length of `chars`.\n\n* Time complexity: $O(n)$.\n\n\tAll cells are initially white. We will repaint each white cell blue, and we may repaint some blue cells green. Thus each cell will be repainted at most twice. Since there are $n$ cells, the total number of repaintings is $O(n)$.\n\n* Space complexity: $O(1)$.\n\n\tWe store only a few integer variables and the string representation of `groupLength` which takes up $O(1)$ space.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

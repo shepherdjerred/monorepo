@@ -1,0 +1,145 @@
+{
+  "questionId": "611",
+  "questionFrontendId": "611",
+  "title": "Valid Triangle Number",
+  "titleSlug": "valid-triangle-number",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code>, return <em>the number of triplets chosen from the array that can make triangles if we take them as side lengths of a triangle</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,2,3,4]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> Valid combinations are: \n2,3,4 (using the first 2)\n2,3,4 (using the second 2)\n2,2,3\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [4,2,3,4]\n<strong>Output:</strong> 4\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 1000</code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"triangleNumber\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"363.4K\", \"totalSubmission\": \"640.1K\", \"totalAcceptedRaw\": 363431, \"totalSubmissionRaw\": 640068, \"acRate\": \"56.8%\"}",
+  "likes": 4434,
+  "dislikes": 258,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"3Sum Smaller\", \"titleSlug\": \"3sum-smaller\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Polygon With the Largest Perimeter\", \"titleSlug\": \"find-polygon-with-the-largest-perimeter\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,2,3,4]",
+    "[4,2,3,4]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"at-t\", \"name\": \"AT&T\"}, {\"timesEncountered\": 4, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"expedia\", \"name\": \"Expedia\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int triangleNumber(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int triangleNumber(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def triangleNumber(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def triangleNumber(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar triangleNumber = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function triangleNumber(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int TriangleNumber(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int triangleNumber(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func triangleNumber(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun triangleNumber(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func triangleNumber(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn triangle_number(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef triangle_number(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function triangleNumber($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int triangleNumber(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def triangleNumber(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec triangle_number(nums :: [integer]) :: integer\n  def triangle_number(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec triangle_number(Nums :: [integer()]) -> integer().\ntriangle_number(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (triangle-number nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "165",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach 1: Brute Force\n\nThe condition for the triplets $$(a, b, c)$$ representing the lengths of the sides of a triangle, to form a valid triangle, is that the sum of any two sides should always be greater than the third side alone. i.e. $$a + b > c$$, $$b + c > a$$, $$a + c > b$$. \n\nThe simplest method to check this is to consider every possible triplet in the given $$nums$$ array and checking if the triplet satisfies the three inequalities mentioned above. Thus, we can keep a track of the $$count$$ of the number of triplets satisfying these inequalities. When all the triplets have been considered, the $$count$$ gives the required result.\n\n> **Caution:** The brute force approach is included here because it is an intuitive way to approach this problem. However, when there are $$10^3$$ numbers, the if statement will be checked approximately $$10^9$$ times. Thus, this approach will result in TLE. In the following approaches we will discuss ways to optimize our solution. \n\n<iframe src=\"https://leetcode.com/playground/K5p9fUjs/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"K5p9fUjs\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^3)$$. Three nested loops are there to check every triplet.\n\n* Space complexity : $$O(1)$$. Constant space is used.\n<br>\n<br>\n\n---\n### Approach 2: Using Binary Search\n\n**Algorithm**\n\nIf we sort the given $$nums$$ array once, we can solve the given problem in a better way. This is because, if we consider a triplet $$(a, b, c)$$ such that $$a &leq; b &leq; c$$, we need not check all the three inequalities for checking the validity of the triangle formed by them. But, only one condition $$a + b > c$$ would suffice. This happens because $$c &geq; b$$ and $$c &geq; a$$. Thus, adding any number to $$c$$ will always produce a sum which is greater than either $$a$$ or $$b$$ considered alone. Thus, the inequalities $$c + a > b$$ and $$c + b > a$$ are satisfied implicitly by virtue of the  property $$a < b < c$$.\n\nFrom this, we get the idea that we can sort the given $$nums$$ array. Then, for every pair $$(nums[i], nums[j])$$ considered starting from the beginning of the array, such that $$j > i$$(leading to $$nums[j] &geq; nums[i]$$), we can find out the count of elements $$nums[k]$$($$k > j$$), which satisfy the inequality $$nums[k] > nums[i] + nums[j]$$. We can do so for every pair $$(i, j)$$ considered and get the required result.\n\nWe can also observe that, since we've sorted the $$nums$$ array, as we traverse towards the right for choosing the index $$k$$(for number $$nums[k]$$), the value of $$nums[k]$$ could increase or remain the same(doesn't decrease relative to the previous value). Thus, there will exist a right limit on the value of index $$k$$, such that the elements satisfy $$nums[k] > nums[i] + nums[j]$$. Any elements beyond this value of $$k$$ won't satisfy this inequality as well, which is obvious.\n\nThus, if we are able to find this right limit value of $$k$$(indicating the element just greater than $$nums[i] + nums[j]$$), we can conclude that all the elements in $$nums$$ array in the range $$(j+1, k-1)$$(both included) satisfy the required inequality. Thus, the $$count$$ of elements satisfying the inequality will be given by $$(k-1) - (j+1) + 1 = k - j - 1$$.\n\nSince the $$nums$$ array has been sorted now, we can make use of Binary Search to find this right limit of $$k$$. The following animation shows how Binary Search can be used to find the right limit for a simple example.\n\n!?!../Documents/Valid_Triangle_Binary.json:1000,563!?!\n\nAnother point to be observed is that once we find a right limit index $$k_{(i,j)}$$ for a particular pair $$(i, j)$$ chosen, when we choose a higher value of $$j$$ for the same value of $$i$$, we need not start searching for the right limit $$k_{(i,j+1)}$$ from the index $$j+2$$. Instead, we can start off from the index $$k_{(i,j)}$$ directly where we left off for the last $$j$$ chosen. \n\nThis holds correct because when we choose a higher value of $$j$$(higher or equal $$nums[j]$$ than the previous one), all the $$nums[k]$$, such that $$k < k_{(i,j)}$$ will obviously satisfy $$nums[i] + nums[j] > nums[k]$$ for the new value of $$j$$ chosen.\n\nBy taking advantage of this observation, we can limit the range of Binary Search for $$k$$ to shorter values for increasing values of $$j$$ considered while choosing the pairs $$(i, j)$$.\n\n<iframe src=\"https://leetcode.com/playground/jSUCbmrc/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"jSUCbmrc\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^2 \\log n)$$. In worst case inner loop will take $$n\\log n$$ (binary search applied $$n$$ times).\n\n* Space complexity : $$O(\\log n)$$. Sorting takes $$O(\\log n)$$ space.\n<br>\n<br>\n\n---\n### Approach 3: Linear Scan\n\n**Algorithm**\n\nAs discussed in the last approach, once we sort the given $$nums$$ array, we need to find the right limit of the index $$k$$ for a pair of indices $$(i, j)$$ chosen to find the $$count$$ of elements satisfying $$nums[i] + nums[j] > nums[k]$$ for the triplet $$(nums[i], nums[j], nums[k])$$ to form a valid triangle. \n\nWe can find this right limit by simply traversing the index $$k$$'s values starting from the index $$k=j+1$$ for a pair $$(i, j)$$ chosen and stopping at the first value of $$k$$ not satisfying the above inequality. Again, the $$count$$ of elements $$nums[k]$$ satisfying $$nums[i] + nums[j] > nums[k]$$ for the pair of indices $$(i, j)$$ chosen is given by $$k - j - 1$$ as discussed in the last approach.\n\nFurther, as discussed in the last approach, when we choose a higher value of index $$j$$ for a particular $$i$$ chosen, we need not start from the index $$j + 1$$. Instead, we can start off directly from the value of $$k$$ where we left for the last index $$j$$. This helps to save redundant computations.\n\nThe following animation depicts the process:\n\n!?!../Documents/Valid_Triangle_Linear.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/HT9jpv3e/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"HT9jpv3e\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n^2)$$. Loop of $$k$$ and $$j$$ will be executed $$O(n^2)$$ times in total, because, we do not reinitialize the value of $$k$$ for a new value of $$j$$ chosen(for the same $$i$$). Thus the complexity will be $$O(n \\log n + n^2)=O(n^2)$$.\n\n* Space complexity : $$O(\\log n)$$. Sorting takes $$O(\\log n)$$ space.\n<br>\n<br>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

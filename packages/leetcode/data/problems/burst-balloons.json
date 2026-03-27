@@ -1,0 +1,133 @@
+{
+  "questionId": "312",
+  "questionFrontendId": "312",
+  "title": "Burst Balloons",
+  "titleSlug": "burst-balloons",
+  "difficulty": "Hard",
+  "content": "<p>You are given <code>n</code> balloons, indexed from <code>0</code> to <code>n - 1</code>. Each balloon is painted with a number on it represented by an array <code>nums</code>. You are asked to burst all the balloons.</p>\n\n<p>If you burst the <code>i<sup>th</sup></code> balloon, you will get <code>nums[i - 1] * nums[i] * nums[i + 1]</code> coins. If <code>i - 1</code> or <code>i + 1</code> goes out of bounds of the array, then treat it as if there is a balloon with a <code>1</code> painted on it.</p>\n\n<p>Return <em>the maximum coins you can collect by bursting the balloons wisely</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,1,5,8]\n<strong>Output:</strong> 167\n<strong>Explanation:</strong>\nnums = [3,1,5,8] --&gt; [3,5,8] --&gt; [3,8] --&gt; [8] --&gt; []\ncoins =  3*1*5    +   3*5*8   +  1*3*8  + 1*8*1 = 167</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,5]\n<strong>Output:</strong> 10\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 300</code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"maxCoins\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"435.1K\", \"totalSubmission\": \"689.1K\", \"totalAcceptedRaw\": 435099, \"totalSubmissionRaw\": 689134, \"acRate\": \"63.1%\"}",
+  "likes": 9764,
+  "dislikes": 287,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Cost to Merge Stones\", \"titleSlug\": \"minimum-cost-to-merge-stones\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,1,5,8]",
+    "[1,5]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"paytm\", \"name\": \"Paytm\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"samsung\", \"name\": \"Samsung\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 2, \"slug\": \"uipath\", \"name\": \"UiPath\"}, {\"timesEncountered\": 2, \"slug\": \"directi\", \"name\": \"Directi\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxCoins(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxCoins(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxCoins(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxCoins(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar maxCoins = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxCoins(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxCoins(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxCoins(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxCoins(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxCoins(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxCoins(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_coins(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef max_coins(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function maxCoins($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxCoins(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxCoins(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_coins(nums :: [integer]) :: integer\n  def max_coins(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_coins(Nums :: [integer()]) -> integer().\nmax_coins(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-coins nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1158",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThis is an interesting problem. Whenever we burst a balloon, we gain a certain number of coins equal to the product of the points of the burst balloon and its neighbors. Our goal is to maximize the total coins gained. A visual example of the balloon bursting process is given below.\n\n![Overview](../Documents/312/312_overview.drawio.svg)\n\nTwo hints can be observed from the diagram above and the problem description. First, the problem asks us to **maximize** some value (the number of coins we can collect).  Second, each decision that we make at depends on previously made decisions, in this case the balloons that we have to choose from depends on which ballons we already popped.  Both of these attributes are characteristic of dynamic programming (DP) problems.  As such, we will approach this problem using dynamic programming. We will start with a naive DP approach that is intuitive but suboptimal.  The approach is good starting point that needs some optimizations, which may require you to think outside the box.\n\nBelow, we will discuss three approaches: _Dynamic Programming (Naive)_, _Dynamic Programming (Top-Down)_, and _Dynamic Programming (Bottom-Up)_.\n\nThe first approach (naive DP) receives _Time Limit Exceed_ and will be optimized in approaches 2 and 3. The purpose of including this approach is to show the thought process from scratch to the optimized solutions. Approaches 2 and 3 have the same ideas but differ in implementation details. We will explain the intuition behind them heavily in Approach 2.\n\nTherefore, the recommended reading order is **Approach 1 then Approach 2 then Approach 3**.\n\n</br>\n\n---\n\n### Approach 1: Dynamic Programming (Naive)\n\n> This approach is _Time Limit Exceed_ and will be optimized in approaches 2 and 3.\n> It is still recommended to read since the ideas of approaches 2 and 3 are evolved from here.\n\n**Intuition**\n\n>In this part, we will explain how to think of this approach step by step.\n>\n>If you are purely interested in the algorithm, you can jump to the algorithm part in Approach 2.\n\nWhenever the problem involves different intermediate states and only one final state, it may hint that **_Dynamic Programming_** is a viable approach.\n\nAlso, DP is our old friend in hard-level problems. If you do not have any idea, you can always give DP a try.\n\nOften, the Top-Down DP approach is more intuitive to implement than the Bottom-Up DP approach. Let's try Top-Down DP first.\n\n>**Tip: Top-Down DP vs. Bottom-Up DP**\n>\n>Top-Down DP, also known as Memoization DP, uses recursive function and memoization.\n>\n>Bottom-Up DP, also known as Tabulation DP, uses iteration and DP array.\n>\n>For details, check out [Stack Overflow: What is the difference between bottom-up and top-down?](https://stackoverflow.com/questions/6164629/what-is-the-difference-between-bottom-up-and-top-down).\n\nGenerally, a basic template of a Top-Down DP follows the below pseudo-code. Don't worry if you do not get the idea from this template alone, we will dive into details right after this, just follow along for now.\n\n```js\nfunction dp(dp_state, memo_dict) {\n    // check if we have seen this dp_state\n    if dp_state in memo_dict\n        return memo_dict[dp_state]\n\n    // base case (a case that we know the answer for already) such as dp_state is empty\n    if dp_state is the base cases\n        return things like 0 or null\n    \n    calculate dp(dp_state) from dp(other_state)\n    \n    save dp_state and the result into memo_dict\n}\nfunction answerToProblem(input) {\n    return dp(start_state, empty_memo_dict)\n}\n```\n\n>**Tip: Decorators for Memoization**\n>\n>In some languages such as `Python`, there are some decorators for memoization, such as `lru_cache`.\n>\n>Such decorators automatically maintain the memo_dict for us and check if each dp_state has been seen.\n\nOkay, let's fill in the template. There are four key items that we need to fill in:\n\n1. What is `dp_state`?\n2. What does `dp` function return?\n3. What is the base case?\n4. How to calculate `dp(dp_state)` from `dp(other_state)`?\n\nBack to the problem. Since we are bursting balloons in `nums` and `nums` keeps changing, it might be a good idea to use `nums` to define our `dp_state`. `dp(nums, memo_dict)` will return the maximum coins obtainable if we burst all balloons in `nums`.\n\nThe base case should be a subproblem for which we already know the answer.  For example: When `nums` is empty, we cannot burst any more balloons, so return 0.\n\n```js\n// memo_dict is ignored for readability\n// return maximum coins obtainable by optimally bursting all balloons in `nums`.\nfunction dp(nums) {\n    // base case\n    if nums is empty\n        return 0\n    calculate dp(nums) from dp(other_state)\n}\n```\n\nHow do we calculate `dp(nums)` from `dp(other_state)`?\n\nWhen given `nums`, we can burst any balloon in `nums`. We can try all possibilities and return the maximum.\n\n```js\n// memo_dict is ignored for readability\n// return maximum coins obtainable by optimally bursting all balloons in `nums`.\nfunction dp(nums) {\n    // base case is ignored\n    max_coins = 0\n    for i in 1...nums.length-2:\n        // burst nums[i]\n        gain = nums[i - 1] * nums[i] * nums[i + 1]\n        // burst the remaining balloons\n        remaining = dp(nums without nums[i])\n        max_coins = max(max_coins, gain + remaining)\n    return max_coins\n}\n```\n\nThe above template will work for the most part of `nums`. However, `nums[i - 1]` and `nums[i + 1]` may be out of bounds for edge cases (leftmost and rightmost).\n\nTo handle these edge cases, we have two solutions:\n\n1. Add fake balloons (each with the value of 1) to the beginning and the end of the original `nums`.\n2. Use a customary `getOrDefault(nums, i, default)` to replace `nums[i]`.\n\nBoth options work, but here we will implement the first one, and just let `nums = [1] + nums + [1]`.\n\n![Add One](../Documents/312/312_add_one.drawio.svg)\n\n>**Tip: Sentinel Node**\n>\n>The fake balloons solution is a bit similar to Sentinel Node we use in linked lists. Both are fake and used to handle edge cases.\n>\n>To learn more about Sentinel Nodes, check out [Wikipedia: Sentinel node](https://en.wikipedia.org/wiki/Sentinel_node).\n\nTo sum up, our pseudo-code right now is:\n\n```js\n// return maximum coins obtainable if we burst all balloons in `nums`.\nfunction dp(nums, memo_dict) {\n    // check if have we seen this dp_state\n    if dp_state in memo_dict\n        return memo_dict[dp_state]\n\n    // base case\n    if nums is empty\n        return 0\n    \n    max_coins = 0\n    for i in 1 ... nums.length - 2:\n        // burst nums[i]\n        gain = nums[i - 1] * nums[i] * nums[i + 1]\n        // burst the remaining balloons\n        remaining = dp(nums without nums[i])\n        max_coins = max(max_coins, gain + remaining)\n    \n    save dp_state and the result into memo_dict\n    return max_coins\n}\n\nfunction maxCoin(nums) {\n    nums = [1] + nums + [1] // add fake balloons\n    return dp(nums, empty_memo_dict)\n}\n```\n\nHopefully, at this point, the above variation of the basic template is not difficult to follow.\n\nLet's take a moment to analyze the complexity of our solution so far.\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of balloons given.\n* Time complexity: $$O(N2^N)$$\n  * There are $$O(2^N)$$ states. For each state, determining the maximum coins requires iterating over all balloons. Thus the total time complexity is $$O(2^N) \\times O(N) = O(N2^N)$$.\n  \n  * From the problem description, we know that `1 <= N <= 500`. Therefore, in the worst case, time_complexity $$ = 2^{500} \\times 500 \\approx 1.6 \\times 10^{154}$$, which is unacceptable. Generally, a number around or less then $$10^8$$ is feasible.\n\n* Space complexity: $$O(N2^N)$$\n  * There are $$O(2^N)$$ states, and we need $$O(N)$$ to store each state. In total, this algorithm requires $$O(2^N) \\times O(N) = O(N2^N)$$ space.\n\nHow can we improve our time complexity? Let's go to **Approach 2**.\n\n> This approach is _Time Limit Exceed_ and will be optimized in Approach 2 and 3.\n\n</br>\n\n---\n\n### Approach 2: Dynamic Programming (Top-Down)\n\n**Intuition**\n\nWe are going to improve our naive DP approach.\n\n> If you haven't read the Approach 1 (the naive DP approach), it is recommended to read it first.\n>\n> If you are purely interested in the algorithm, you can jump to the algorithm section below.\n\nLet's dig deeper into the time complexity, which can be divided into two parts: `number_of_states` and `time_spent_on_each_state`.\n\nTherefore, generally, there are two approaches to decrease the time complexity.\n\n1. Decrease `number_of_states`.\n2. Decrease `time_spent_on_each_state`.\n\nHere, our `number_of_states` is $$O(2^N)$$, which is far larger than `time_spent_on_each_state`. As such, we may benefit more by considering how to reduce `number_of_states`. For this problem, a good target to reduce `number_of_states` to is $$O(N^2)$$.  This would reduce the total operations to $$N^2 \\times N = N^3 \\approx 1.25 * 10^8$$ which as mentioned before is close to the upper limit of operations that can be executed in a reasonable amount of time.\n\nWhat can we do to decrease `number_of_states`?\n\nAs you may remember, we can use `left` and `right` pointers to represent a subarray in the original array.\n\nIf we can use `dp(left, right)` to replace `dp(nums)`, then the problem is solved.\n\nBut our DP states are not continuous and are not always a subarray of `nums`. For example, we can burst many balloons in the middle.\n\n![Not Continuous](../Documents/312/312_not_continuous.drawio.svg)\n\nIs that really true? Do we have a workaround?\n\nTake a deeper look at what happens when we burst the first balloon.\n\n![First Burst](../Documents/312/312_first_burst.drawio.svg)\n\nIs there any continuous array? Yes! The burst balloon divides the original array into two **subarrays**.\n\nWe can recursively call the left subarray and the right subarray, and add the results together.\n\n```js\n// memo_dict is ignored for readability\n// return the maximum coins obtainable if we burst all balloons \n// in nums[left] ... nums[right], inclusively.\nfunction dp(left, right) {\n    // base case is ignored\n    max_coins = 0\n    for i in 1 ... nums.length - 2:\n        // burst nums[i]\n        gain = nums[i - 1] * nums[i] * nums[i + 1]\n        // burst remaining\n        remaining = dp(left, i - 1) + dp(i + 1, right)\n        max_coins = max(result, gain + remaining)\n    return max_coins\n}\n```\n\n>**Tip: Divide and Conquer**\n>\n>Here we divide the original array into two subarrays and then conquer them respectively. It is a perfect example of the Divide and Conquer algorithm.\n>\n>For details, check out [Wikipedia: Divide and Conquer](https://en.wikipedia.org/wiki/Divide-and-conquer_algorithm)\n\n>**Tip: Inclusive or Not**\n>\n>Should `dp(left, right)` represent the maximum coins obtainable after bursting `[left, right]`, `[left, right)`, ..., or `(left, right)`?\n>\n>In other words, should we include the edge case?\n>\n>The answer is that all of them work. However, `[left, right]` may be easier to visualize, and `[left, right)` maybe easier to implement. Here, we choose `[left, right]`.\n\nWait! You may say, this code yields the wrong answer!\n\nOh. What happened?\n\nNote in this line\n\n```js\nremaining = dp(left, i - 1) + dp(i + 1, right)\n```\n\nInside the left part `dp(left, i - 1)`, when we burst the rightmost balloon (i.e., `i - 1`th), what will we gain?\n\n`nums[i - 2] * nums[i - 1] * nums[i]`? No, `nums[i]` has been burst, so `nums[i]` should be replaced by **some balloon** in the right part.\n\nBut exactly which one? Well...it seems it depends on the **order** of bursting balloons in the left part and in the right part.\n\n![Not Independent](../Documents/312/312_not_independent.drawio.svg)\n\nIn other words, `dp(left, i - 1)` and `dp(i + 1, right)` are not independent, and cannot be calculated separately.\n\nBad news. Our divide and conquer plan fails. Is there any way to fix this?\n\nWhat if...`nums[i]` has not burst? If we keep `nums[i]` alive **all the time**, then `nums[i - 2] * nums[i - 1] * nums[i]` always refers to the correct balloons, and the left part and right part are independent.\n\nHow to keep `nums[i]` alive **all the time**? Easy, just mark `nums[i]` as the **last** burst balloon among `[left, right]`.\n\n![Keep i](../Documents/312/312_keep_i.drawio.svg)\n\n>**Tip: Thinking Backwards**\n>\n>Instead of thinking of which one to burst **first**, we think of which one to burst **last**.\n>\n>Alternatively, you can reverse the whole process: instead of bursting the balloon, we add balloons to the empty array. This approach will result in the same code.\n\n##### Special Cases\n\nNow our time complexity is $$O(N^3)$$. Are there any other rooms to optimize? Note that if the array has some special properties, we may be able to calculate the result very fast.\n\nFor example, if all the numbers are the same, the answer is straight forward.\n\nLet `N` be the length of `nums`, and `a` be the element in `nums`. The coins we gain, no matter which one is burst, are always `a * a * a`, since all balloons are the same, except the last two balloons. For the last two balloons, one yields `a * a * 1`, and the other yields `1 * a * 1`.\n\nTherefore, we have `N-2` `a * a * a`, one `a * a * 1`, and one `1 * a * 1`. Adding together, we have `(N - 2) * a * a * a + a * a + a`.\n\nWe can improve the performance sightly by handling those special cases one by one. However, please notice that this optimization does not improve the time complexity and can not speed up too much if the input is highly randomized.\n\n>**Tip: Matrix-Chain Multiplication**\n>\n>In fact, this problem is a variant of a classical DP problem, Matrix-Chain Multiplication, where we need to find the most efficient way to multiply a given sequence of matrices. The main idea is the same as above: DP, Divide and Conquer, and Thinking Backwards.\n>\n>For details of Matrix-Chain Multiplication, check out [Wikipedia: Matrix Chain Multiplication](https://en.wikipedia.org/wiki/Matrix_chain_multiplication).\n\n**Algorithm**\n\n1. Handle the special cases (all numbers are the same) if you want.\n2. Add one balloon at the start of `nums` and one at the end to handle edge cases.\n3. Define a function `dp` to return the maximum coins obtainable, if we burst all balloons on the interval `[left, right]`, inclusively.\n\n     The base case is that the interval is empty, which yields 0 coin.\n     \n     For general cases, we iterate over every index `i` in `[left, right]`, and mark the balloon at that index as the **last** one burst.\n     \n     First, We burst all balloons expect the `i`th one. What we gain is:\n    \n     ```python\n     dp(left, i - 1) + dp(i + 1, right)\n     ```\n\t\n     Then, we burst the `i`th one:\n     \n     ```python\n     nums[left - 1] * nums[i] * nums[right + 1]\n     ```\n\t\n     Just return the maximum sum of those two among all possible `i`s.\n     \n4. Finally, return `dp(1, len(dp) - 2)`.\n\n     Do not return `dp(0, len(dp) - 1)` since the first and the last balloons were added by us and we cannot burst them.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/NtutcY9u/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"NtutcY9u\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of balloons given.\n\n* Time complexity: $$O(N^3)$$. There are $$O(N^2)$$ states. For each state, determining the maximum coins requires iterating over all balloons in the range `[left, right]`.  Thus the total time complexity is $$O(N^2) \\times O(N) = O(N^3)$$.\n\n* Space complexity: $$O(N^2)$$. We need $$O(N^2)$$ to store all states, $$O(N)$$ for stacks to perform recursion, and $$O(N)$$ to store `[1] + nums + [1]`. In total, this algorithm requires $$O(N^2) + O(N) + O(N) = O(N^2)$$ space.\n\n</br>\n\n---\n\n### Approach 3: Dynamic Programming (Bottom-Up)\n\n**Intuition**\n\nThe intuition is the same as Approach 1. Here, we use DP array and iteration to re-implement Approach 1.\n\nWhen iterating, we need to carefully arrange the order of iteration, such that `dp[left][i - 1]` and `dp[i + 1][right]` are iterated **before** `dp[left][right]`, where `left <= i <= right`.\n\nThis is important because in order to calculate `dp[left][right]`, we will use the results of `dp[left][i - 1]` and `dp[i + 1][right]`, where `left <= i <= right`.\n\nBut how arrange the order of iteration? Let's take a look at the DP table.\n\nSuppose we have added fake balloons to the beginning and the end of `nums`, and `n` is the length of the **new** `nums` array.\n\nWe only need the top-right triangle since we only need `dp[left][right]` where `left` will always be less than or equal to `right`.\n\n![DP Table](../Documents/312/312_dp_table.drawio.svg)\n\n(Here `left` is for rows and `right` is for columns, or you can use a transposed one. Either way works.)\n\nAlso, we cannot have `dp[0][j]` and `dp[i][n-1]`, where `0 <= i < n` and `0 <= j < n`, since we cannot burst the fake balloons that we added.\n\n![DP Table Inner](../Documents/312/312_dp_table_inner.drawio.svg)\n\nOkay, now let's consider `dp[left][right]`. `dp[left][i - 1]` and `dp[i + 1][right]` should be iterated before `dp[left][right]`, where `left <= i <= right`. Where are they?\n\n![DP Table Cell](../Documents/312/312_dp_table_cell.drawio.svg)\n\nNotice that `dp[left][right]` depends on the cells directly below it and the cells to its left. If we always iterate from the lowest or the leftmost cell, then we can ensure that `dp[left][i - 1]` and `dp[i + 1][right]` are calculated before `dp[left][right]`.\n\nThere are many ways to do that. One possible iteration path is given below.\n\n![DP Table Iterate](../Documents/312/312_dp_table_iterate.drawio.svg)\n\n**Algorithm**\n\n1. Handle the special cases (all numbers are the same) if you want.\n\n2. Add one balloon at the start of `nums` and one at the end to handle edge cases.\n\n3. Define an array `dp`, where `dp[left][right]` represents the maximum coins obtainable, if we burst all balloons on the interval `[left, right]`, inclusively.\n\n4. Iterate over the `dp` array such that `dp[left][i - 1]` and `dp[i + 1][right]` are visited before `dp[left][right]` is visited.\n  For `dp[left][right]`:\n\n    We iterate over every index `i` in the range `[left, right]`, and mark it as the **last** burst balloon.\n\n    First, we burst all balloons except the `i`th balloon. What we gain is:\n\n    ```python\n    dp[left][i - 1] + dp[i + 1][right]\n    ```\n\n    Then, we burst the `i`th balloon and gain:\n\n    ```python\n    nums[left - 1] * nums[i] * nums[right + 1]\n    ```\n\n    Let `dp[left][right]` be the maximum sum of these two values among all possible `i`s.\n\n5. Finally, return `dp[1][len(nums) - 2]`.\n\n   Note: Do not return `dp[0][len(nums) - 1]` because the first and the last balloons were added by us and we cannot be popped.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/85jpjNFG/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"85jpjNFG\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the number of balloons given.\n\n* Time complexity: $$O(N^3)$$. There are $$O(N^2)$$ states. For each state, determining the maximum coins requires iterating over all balloons in the range `[left, right]`, giving $$O(N^2) \\times O(N) = O(N^3)$$.\n\n* Space complexity: $$O(N^2)$$. We need $$O(N^2)$$ to store `dp`, and $$O(N)$$ to store `[1] + nums + [1]` (if fake balloons are added). In total, we need $$O(N^2) + O(N) + O(N) = O(N^2)$$ space.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

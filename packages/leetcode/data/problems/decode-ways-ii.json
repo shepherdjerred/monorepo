@@ -1,0 +1,134 @@
+{
+  "questionId": "639",
+  "questionFrontendId": "639",
+  "title": "Decode Ways II",
+  "titleSlug": "decode-ways-ii",
+  "difficulty": "Hard",
+  "content": "<p>A message containing letters from <code>A-Z</code> can be <strong>encoded</strong> into numbers using the following mapping:</p>\n\n<pre>\n&#39;A&#39; -&gt; &quot;1&quot;\n&#39;B&#39; -&gt; &quot;2&quot;\n...\n&#39;Z&#39; -&gt; &quot;26&quot;\n</pre>\n\n<p>To <strong>decode</strong> an encoded message, all the digits must be grouped then mapped back into letters using the reverse of the mapping above (there may be multiple ways). For example, <code>&quot;11106&quot;</code> can be mapped into:</p>\n\n<ul>\n\t<li><code>&quot;AAJF&quot;</code> with the grouping <code>(1 1 10 6)</code></li>\n\t<li><code>&quot;KJF&quot;</code> with the grouping <code>(11 10 6)</code></li>\n</ul>\n\n<p>Note that the grouping <code>(1 11 06)</code> is invalid because <code>&quot;06&quot;</code> cannot be mapped into <code>&#39;F&#39;</code> since <code>&quot;6&quot;</code> is different from <code>&quot;06&quot;</code>.</p>\n\n<p><strong>In addition</strong> to the mapping above, an encoded message may contain the <code>&#39;*&#39;</code> character, which can represent any digit from <code>&#39;1&#39;</code> to <code>&#39;9&#39;</code> (<code>&#39;0&#39;</code> is excluded). For example, the encoded message <code>&quot;1*&quot;</code> may represent any of the encoded messages <code>&quot;11&quot;</code>, <code>&quot;12&quot;</code>, <code>&quot;13&quot;</code>, <code>&quot;14&quot;</code>, <code>&quot;15&quot;</code>, <code>&quot;16&quot;</code>, <code>&quot;17&quot;</code>, <code>&quot;18&quot;</code>, or <code>&quot;19&quot;</code>. Decoding <code>&quot;1*&quot;</code> is equivalent to decoding <strong>any</strong> of the encoded messages it can represent.</p>\n\n<p>Given a string <code>s</code> consisting of digits and <code>&#39;*&#39;</code> characters, return <em>the <strong>number</strong> of ways to <strong>decode</strong> it</em>.</p>\n\n<p>Since the answer may be very large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;*&quot;\n<strong>Output:</strong> 9\n<strong>Explanation:</strong> The encoded message can represent any of the encoded messages &quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;, &quot;5&quot;, &quot;6&quot;, &quot;7&quot;, &quot;8&quot;, or &quot;9&quot;.\nEach of these can be decoded to the strings &quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quot;D&quot;, &quot;E&quot;, &quot;F&quot;, &quot;G&quot;, &quot;H&quot;, and &quot;I&quot; respectively.\nHence, there are a total of 9 ways to decode &quot;*&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;1*&quot;\n<strong>Output:</strong> 18\n<strong>Explanation:</strong> The encoded message can represent any of the encoded messages &quot;11&quot;, &quot;12&quot;, &quot;13&quot;, &quot;14&quot;, &quot;15&quot;, &quot;16&quot;, &quot;17&quot;, &quot;18&quot;, or &quot;19&quot;.\nEach of these encoded messages have 2 ways to be decoded (e.g. &quot;11&quot; can be decoded to &quot;AA&quot; or &quot;K&quot;).\nHence, there are a total of 9 * 2 = 18 ways to decode &quot;1*&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;2*&quot;\n<strong>Output:</strong> 15\n<strong>Explanation:</strong> The encoded message can represent any of the encoded messages &quot;21&quot;, &quot;22&quot;, &quot;23&quot;, &quot;24&quot;, &quot;25&quot;, &quot;26&quot;, &quot;27&quot;, &quot;28&quot;, or &quot;29&quot;.\n&quot;21&quot;, &quot;22&quot;, &quot;23&quot;, &quot;24&quot;, &quot;25&quot;, and &quot;26&quot; have 2 ways of being decoded, but &quot;27&quot;, &quot;28&quot;, and &quot;29&quot; only have 1 way.\nHence, there are a total of (6 * 2) + (3 * 1) = 12 + 3 = 15 ways to decode &quot;2*&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s[i]</code> is a digit or <code>&#39;*&#39;</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"numDecodings\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"88.6K\", \"totalSubmission\": \"278.4K\", \"totalAcceptedRaw\": 88561, \"totalSubmissionRaw\": 278420, \"acRate\": \"31.8%\"}",
+  "likes": 1657,
+  "dislikes": 825,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Decode Ways\", \"titleSlug\": \"decode-ways\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Ways to Separate Numbers\", \"titleSlug\": \"number-of-ways-to-separate-numbers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of Ways to Divide a Long Corridor\", \"titleSlug\": \"number-of-ways-to-divide-a-long-corridor\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"*\"",
+    "\"1*\"",
+    "\"2*\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numDecodings(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numDecodings(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numDecodings(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numDecodings(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar numDecodings = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numDecodings(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumDecodings(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numDecodings(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numDecodings(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numDecodings(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numDecodings(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_decodings(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef num_decodings(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function numDecodings($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numDecodings(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numDecodings(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_decodings(s :: String.t) :: integer\n  def num_decodings(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_decodings(S :: unicode:unicode_binary()) -> integer().\nnum_decodings(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-decodings s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "198",
+    "content": "[TOC]\n\n\n## Solution\n\n---\n### Approach 1: Recursion with Memoization\n\n**Algorithm**\n\nIn order to find the solution to the given problem, we need to consider every case possible(for the arrangement of the input digits/characters)\n and what value needs to be considered for each case. Let's look at each of the possibilites one by one.\n \nFirstly, let's assume, we have a function `ways(s,i)` which returns the number of ways to decode the input string $$s$$, if only the characters up to the \n$$i^{th}$$ index in this string are considered. We start off by calling the function `ways(s, s.length()-1)` i.e. by considering the full length of this string $$s$$.\n\nWe started by using the last index of the string $$s$$. Suppose, currently, we called the function as `ways(s,i)`. Let's look at how we proceed. At every step, we need \nto look at the current character at the last index ($$i$$) and we need to determine the number of ways of decoding that using this $$i^{th}$$ character could \nadd to the total value. There are the following possiblities for the $$i^{th}$$ character.\n\nThe $$i^{th}$$ character could be  a `*`. In this case, firstly, we can see that this `*` could be decoded into any of the digits from `1-9`. Thus, for every decoding possible \nup to the index $$i-1$$, this `*` could be replaced by any of these digits(`1-9`). Thus, the total number of decodings is 9 times the number of decodings possible \nfor the same string up to the index $$i-1$$. Thus, this `*` initially adds a factor of `9*ways(s,i-1)` to the total value. \n\n![Decode_Ways](../Figures/639/639_Decode_Ways2.png)\n\n\nApart from this, this `*` at the $$i^{th}$$ index could also contribute further to the total number of ways depending upon the character/digit at its preceding\n index. If the preceding character happens to be a `1`, by combining this `1` with the current `*`, we could obtain any of the digits from `11-19` which could be decoded\n into any of the characters from `K-S`. We need to note that these decodings are in addition to the ones already obtained above by considering only a single current \n `*`(`1-9` decoding to `A-J`). Thus, this `1*` pair could be replaced by any of the numbers from `11-19` irrespective of the decodings done for the previous \n indices(before $$i-1$$). Thus, this `1*` pair leads to 9 times the number of decodings possible with the string $$s$$ up to the index $$i-2$$. Thus, this adds\n a factor of `9 * ways(s, i - 2)` to the total number of decodings. \n \n Similarly, a `2*` pair obtained by a `2` at the index $$i-1$$ could be considered of the numbers from `21-26`(decoding into `U-Z`), adding a total of 6 times the \n number of decodings possible up to the index $$i-2$$. \n \n \n ![Decode_Ways](../Figures/639/639_Decode_Ways3.PNG)\n\n\nOn the same basis, if the character at the index $$i-1$$ happens to be another `*`, this `**` pairing could be considered as \n any of the numbers from `11-19`(9) and `21-26`(6). Thus, the total number of decodings will be 15(9+6) times  the number of decodings possible up to the index $$i-2$$.\n \n Now, if the $$i^{th}$$ character could be a digit from `1-9` as well. In this case, the number of decodings that considering this single digit can \n contribute to the total number is equal to the number of decodings that can be contributed by the digits up to the index $$i-1$$. But, if the $$i^{th}$$ character is  \n a `0`, this `0` alone can't contribute anything to the total number of decodings(but it can only contribute if the digit preceding it is a `1` or `2`. We'll consider this case below).\n \n Apart from the value obtained(just above) for the digit at the $$i^{th}$$ index being anyone from `0-9`, this digit could also pair with the digit at the \n preceding index, contributing a value dependent on the previous digit. If the previous digit happens to be a `1`, this `1` can combine with any of the current \ndigits forming a valid number in the range `10-19`. Thus, in this case, we can consider a pair formed by the current and the preceding digit, and, the number of \ndecodings possible by considering the decoded character to be a one formed using this pair, is equal to the total number of decodings possible by using the digits \nup to the index $$i-2$$ only. \n\nBut, if the previous digit is a `2`, a valid number for decoding could only be a one from the range `20-26`. Thus, if the current digit is lesser than 7, again\nthis pairing could add decodings with count equal to the ones possible by using the digits up to the $$(i-2)^{th}$$ index only.\n\nFurther, if the previous digit happens to be a `*`, the additional number of decodings depend on the current digit again i.e. If the current digit is greater than \n`6`, this `*` could lead to pairings only in the range `17-19`(`*` can't be replaced by `2` leading to `27-29`). Thus, additional decodings with count equal to the\ndecodings possible up to the index $$i-2$$. \n\nOn the other hand, if the current digit is lesser than 7, this `*` could be replaced by either a `1` or a `2` leading to the \ndecodings `10-16` and `20-26` respectively. Thus, the total number of decodings possible by considering this pair is equal to twice the number of decodings possible up to the \nindex $$i-2$$(since `*` can now be replaced by two values).\n\nThis way, by considering every possible case, we can obtain the required number of decodings by making use of the recursive function `ways` as and where necessary.\n\nBy making use of memoization, we can reduce the time complexity owing to duplicate function calls.\n\n<iframe src=\"https://leetcode.com/playground/kKGPifS6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"kKGPifS6\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. Size of recursion tree can go up to $$n$$, since $$memo$$ array is filled exactly once. Here, $$n$$ refers to the length of the input \nstring.\n\n* Space complexity : $$O(n)$$. The depth of recursion tree can go up to $$n$$.\n<br />\n<br />\n\n---\n\n### Approach 2: Dynamic Programming\n\n**Algorithm**\n\nFrom the solutions discussed above, we can observe that the number of decodings possible up to any index, $$i$$, is dependent only on the characters up to the \nindex $$i$$ and not on any of the characters following it. This leads us to the idea that this problem can be solved by making use of Dynamic Programming.\n\nWe can also easily observe from the recursive solution that, the number of decodings possible up to the index $$i$$ can be determined easily if we know \nthe number of decodings possible up to the index $$i-1$$ and $$i-2$$. Thus, we fill in the $$dp$$ array in a forward manner. $$dp[i]$$ is used to store the \nnumber of decodings possible by considering the characters in the given string $$s$$ up to the $$(i-1)^{th}$$ index only(including it).\n\nThe equations for filling this $$dp$$ at any step again depend on the current character and the just preceding character. These equations are similar \nto the ones used in the recursive solution.\n\nThe following animation illustrates the process of filling the $$dp$$ for a simple example.\n\n\n!?!../Documents/639_Decode_Ways_II.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/54Dnrv9F/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"54Dnrv9F\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. $$dp$$ array of size $$n+1$$ is filled once only. Here, $$n$$ refers to the length of the input string.\n\n* Space complexity : $$O(n)$$. $$dp$$ array of size $$n+1$$ is used.\n<br />\n<br />\n\n---\n\n### Approach 3: Constant Space Dynamic Programming\n\n**Algorithm**\n\nIn the last approach, we can observe that only the last two values $$dp[i-2]$$ and $$dp[i-1]$$ are used to fill the entry at $$dp[i-1]$$. We can save some \nspace in the last approach, if instead of maintaining a whole $$dp$$ array of length $$n$$, we keep a track of only the required last two values. The rest of the \nprocess remains the same as in the last approach.\n\n<iframe src=\"https://leetcode.com/playground/hwsVsuZK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"hwsVsuZK\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$. Single loop up to $$n$$ is required to find the required result. Here, $$n$$ refers to the length of the input string $$s$$.\n\n* Space complexity : $$O(1)$$. Constant space is used.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

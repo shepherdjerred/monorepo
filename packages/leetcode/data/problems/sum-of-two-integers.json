@@ -1,0 +1,133 @@
+{
+  "questionId": "371",
+  "questionFrontendId": "371",
+  "title": "Sum of Two Integers",
+  "titleSlug": "sum-of-two-integers",
+  "difficulty": "Medium",
+  "content": "<p>Given two integers <code>a</code> and <code>b</code>, return <em>the sum of the two integers without using the operators</em> <code>+</code> <em>and</em> <code>-</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> a = 1, b = 2\n<strong>Output:</strong> 3\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> a = 2, b = 3\n<strong>Output:</strong> 5\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>-1000 &lt;= a, b &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"getSum\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"a\",\r\n      \"type\": \"integer\"\r\n    },\r\n    {\r\n      \"name\": \"b\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"690.1K\", \"totalSubmission\": \"1.2M\", \"totalAcceptedRaw\": 690114, \"totalSubmissionRaw\": 1249396, \"acRate\": \"55.2%\"}",
+  "likes": 4676,
+  "dislikes": 5868,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Add Two Numbers\", \"titleSlug\": \"add-two-numbers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "1\n2",
+    "2\n3"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"swiggy\", \"name\": \"Swiggy\"}, {\"timesEncountered\": 2, \"slug\": \"hulu\", \"name\": \"Hulu\"}]}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int getSum(int a, int b) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int getSum(int a, int b) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def getSum(self, a: int, b: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def getSum(self, a, b):\n        \"\"\"\n        :type a: int\n        :type b: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} a\n * @param {number} b\n * @return {number}\n */\nvar getSum = function(a, b) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function getSum(a: number, b: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int GetSum(int a, int b) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int getSum(int a, int b) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func getSum(a int, b int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun getSum(a: Int, b: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func getSum(_ a: Int, _ b: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn get_sum(a: i32, b: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} a\n# @param {Integer} b\n# @return {Integer}\ndef get_sum(a, b)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $a\n     * @param Integer $b\n     * @return Integer\n     */\n    function getSum($a, $b) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int getSum(int a, int b) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def getSum(a: Int, b: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec get_sum(a :: integer, b :: integer) :: integer\n  def get_sum(a, b) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec get_sum(A :: integer(), B :: integer()) -> integer().\nget_sum(A, B) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (get-sum a b)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "962",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nApproach 1 is a detailed explanation of bit manipulation basics. Approach 2 is a language-specific discussion of a possible follow-up and mainly written for fun.  \n\n### Approach 1: Bit Manipulation: Easy and Language-Independent\n\nThat's an extremely popular Facebook problem designed to check your knowledge of [bitwise operators](https://wiki.python.org/moin/BitwiseOperators):\n\n$$\nx \\oplus y \\qquad \\textrm{that means} \\qquad \\textrm{bitwise XOR}  \n$$\n\n$$\nx \\& y \\qquad \\textrm{that means} \\qquad \\textrm{bitwise AND} \n$$\n\n$$\n\\sim x \\qquad \\textrm{that means} \\qquad \\textrm{bitwise NOT} \n$$\n\n**Reduce the Number of Use Cases**\n\nFirst of all, there are too many use cases here: both $$a$$ and $$b$$ could be positive or negative, `abs(a)` could be greater or less than `abs(b)`. In total, that results in $$2 \\times 2 \\times 2 = 8$$ use cases.\n\nLet's start by reducing the problem down to two simple cases:\n\n- Sum of two positive integers: $$x + y$$, where $$x > y$$.\n\n- Difference of two positive integers: $$x - y$$, where $$x > y$$.\n\n<iframe src=\"https://leetcode.com/playground/7nZSrKpm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7nZSrKpm\"></iframe>\n\n**Interview Tip for Bit Manipulation Problems: Use XOR** \n\nHow to start? There is an interview tip for bit manipulation problems: if you don't know how to start, start by computing XOR for your input data. Strangely, that helps out for quite a lot of problems, [Single Number II](https://leetcode.com/articles/single-number-ii/), [Single Number III](https://leetcode.com/articles/single-number-iii/), [Maximum XOR of Two Numbers in an Array](https://leetcode.com/articles/maximum-xor-of-two-numbers-in-an-array/), [Repeated DNA Sequences](https://leetcode.com/articles/repeated-dna-sequences/), [Maximum Product of Word Lengths](https://leetcode.com/articles/maximum-product-of-word-lengths/), etc.\n\n> What is XOR?\n\nXOR of zero and a bit results in that bit.\n\n$$ \n0 \\oplus x = x\n$$\n\nXOR of two equal bits (even if they are zeros) results in a zero.\n\n$$ \nx \\oplus x = 0\n$$\n\n**Sum of Two Positive Integers**\n\nNow let's use this tip for the first use case: the sum of two positive integers. Here XOR is a key as well because it's a sum of two integers in the binary form without taking carry into account. In other words, XOR is a sum of bits of x and y where at least one of the bits is not set.\n\n![fig](../Figures/371/answer_sum2_fixed.png) \n\nThe next step is to find the carry. It contains the common set bits of x and y, shifted one bit to the left. _I.e._ it's logical AND of two input numbers, shifted one bit to the left: $$\\text{carry} = (x \\& y) << 1$$. \n\n![fig](../Figures/371/carry_fixed.png)\n\nThe problem is reduced to finding the sum of the answers without the carry. Technically, it's the same problem: to sum two numbers, and hence one could solve it in a loop with the condition statement \"while carry is not equal to zero\". \n\n![fig](../Figures/371/sum_fixed.png)\n\n**Difference of Two Positive Integers**\n\nAs for addition, XOR is a difference of two integers without taking borrow into account.\n\n![fig](../Figures/371/answer_sub2_fixed.png)\n\nThe next step is to find the borrow. It contains common set bits of $$y$$ and unset bits of $$x$$, _i.e._ $$\\text{borrow} = ((\\sim x) \\& y) << 1$$.  \n\n![fig](../Figures/371/borrow2_fixed.png)\n\nThe problem is reduced down to the subtraction of the borrow from the answer without borrow. As for the sum, it could be solved recursively or in a loop with the condition statement \"while borrow is not equal to zero\". \n\n![fig](../Figures/371/sub2_fixed.png)\n\n**Algorithm**\n\n- Simplify the problem down to two cases: sum or subtraction of two positive integers: $$x \\pm y$$, where $$x > y$$. Save down the sign of the result.\n\n- If one has to compute the sum:\n\n    - While carry is nonzero: `y != 0`:\n    \n        - Current answer without carry is XOR of x and y: `answer = x^y`.\n        \n        - Current carry is left-shifted AND of x and y: `carry = (x & y) << 1`.\n        \n        - Job is done, prepare the next loop: `x = answer`, `y = carry`.\n        \n    - Return `x * sign`.\n    \n- If one has to compute the difference:\n\n    - While borrow is nonzero: `y != 0`:\n    \n        - Current answer without borrow is XOR of x and y: `answer = x^y`.\n        \n        - Current borrow is left-shifted AND of NOT x and y: `borrow = ((~x) & y) << 1`.\n        \n        - Job is done, prepare the next loop: `x = answer`, `y = borrow`.\n        \n    - Return `x * sign`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/UZxD3g9f/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UZxD3g9f\"></iframe>\n\nThis solution could be written a bit shorter in Python:\n\n<iframe src=\"https://leetcode.com/playground/DxwGb4rg/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"DxwGb4rg\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(1)$$ because each integer contains $$32$$ bits.\n\n* Space complexity: $$\\mathcal{O}(1)$$ because we don't use any additional data structures.\n\n<br />\n<br />\n\n\n---\n### Approach 2: Bit Manipulation: Short Language-Specific Solution\n\nApproach 1 is easy to attack during the follow-up:\n\n> Please don't use multiplication to manage negative numbers and make a clean bitwise solution.\n\nLet's be honest, it's a trap. Once you start to manage negative numbers using bit manipulation, your solution becomes _language-specific_. \n\n**Different languages represent negative numbers differently.** \n\n**Java**\n\nFor example, a Java integer is a number of 32 bits. 31 bits are used for the value. The first bit is used for the sign: if it's equal to 1, the number is negative, if it's equal to 0, the number is positive. \n\nAnd now the fun starts. Does it mean that \n\n$$1 = (\\underbrace{0}_\\text{positive}\\underbrace{00000..0}_\\text{30 times}1)_2$$ \n\nand \n\n$$ -1 = (\\underbrace{1}_\\text{negative}\\underbrace{00000..0}_\\text{30 times}1)_2$$? \n\nNo!\n\nFor the representation of a negative number Java uses the so-called \"two's complement\":\n\n$$ -1 = (\\underbrace{1}_\\text{negative}\\underbrace{11111..1}_\\text{30 times}1)_2$$\n\nThe idea is simple:\n\n$$\n(- 1 + 1) \\& \\underbrace{(111111..1)_2}_\\text{32 1-bits} = 0\n$$\n\n$$\n(- x + x) \\& \\underbrace{(111111..1)_2}_\\text{32 1-bits} = 0 \n$$\n\nThe main goal of \"two's complement\" is to decrease the complexity of bit manipulations. How does Java compute \"two's complement\" and manage 32-bits limit? Here is how:\n\n- After each operation we have an invisible `& mask`, where `mask = 0xFFFFFFFF`, _i.e._ bitmask of 32 1-bits.\n\n- The overflow, _i.e._ the situation of `x > 0x7FFFFFFF` (a bitmask of 31 1-bits), is managed  as `x --> ~(x ^ 0xFFFFFFFF)`.\n\nAt this point, we could come back to approach 1 and, surprisingly, all management of negative numbers, signs, and subtractions Java already does for us. That simplifies the solution to the computation of a sum of two positive integers. That's how the magic of \"two's complement\" works! \n\n<iframe src=\"https://leetcode.com/playground/ngpNMWYw/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"ngpNMWYw\"></iframe>\n\n**Python**\n\nNow let's go back to real life. Python has no 32-bit limit, and hence its representation of negative integers is entirely different. \n\nThere is no Java magic by default, and if you need a magic - just do it:\n\n- After each operation we have an invisible `& mask`, where `mask = 0xFFFFFFFF`, _i.e._ bitmask of 32 1-bits.\n\n- The overflow, _i.e._ the situation of `x > 0x7FFFFFFF` (a bitmask of 31 1-bits), is managed  as `x --> ~(x ^ 0xFFFFFFFF)`.\n\n<iframe src=\"https://leetcode.com/playground/QJsaaKZv/shared\" frameBorder=\"0\" width=\"100%\" height=\"208\" name=\"QJsaaKZv\"></iframe>\n\n**Implementation**\n \nEach language has its beauty.\n\n<iframe src=\"https://leetcode.com/playground/fsJTJs9n/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"fsJTJs9n\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(1)$$. \n\n* Space complexity: $$\\mathcal{O}(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

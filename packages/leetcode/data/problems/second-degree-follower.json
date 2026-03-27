@@ -1,0 +1,53 @@
+{
+  "questionId": "614",
+  "questionFrontendId": "614",
+  "title": "Second Degree Follower",
+  "titleSlug": "second-degree-follower",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Follow</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| followee    | varchar |\n| follower    | varchar |\n+-------------+---------+\n(followee, follower) is the primary key (combination of columns with unique values) for this table.\nEach row of this table indicates that the user follower follows the user followee on a social network.\nThere will not be a user following themself.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>A <strong>second-degree follower</strong> is a user who:</p>\n\n<ul>\n\t<li>follows at least one user, and</li>\n\t<li>is followed by at least one user.</li>\n</ul>\n\n<p>Write a solution&nbsp;to report the <strong>second-degree users</strong> and the number of their followers.</p>\n\n<p>Return the result table <strong>ordered</strong> by <code>follower</code> <strong>in alphabetical order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nFollow table:\n+----------+----------+\n| followee | follower |\n+----------+----------+\n| Alice    | Bob      |\n| Bob      | Cena     |\n| Bob      | Donald   |\n| Donald   | Edward   |\n+----------+----------+\n<strong>Output:</strong> \n+----------+-----+\n| follower | num |\n+----------+-----+\n| Bob      | 2   |\n| Donald   | 1   |\n+----------+-----+\n<strong>Explanation:</strong> \nUser Bob has 2 followers. Bob is a second-degree follower because he follows Alice, so we include him in the result table.\nUser Donald has 1 follower. Donald is a second-degree follower because he follows Bob, so we include him in the result table.\nUser Alice has 1 follower. Alice is not a second-degree follower because she does not follow anyone, so we don not include her in the result table.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Follow (followee varchar(255), follower varchar(255))\"], \"mssql\": [\"Create table Follow (followee varchar(255), follower varchar(255))\"], \"oraclesql\": [\"Create table Follow (followee varchar(255), follower varchar(255))\"], \"database\": true, \"name\": \"second_degree_follower\", \"pythondata\": [\"Follow = pd.DataFrame([], columns=['followee', 'follower']).astype({'followee':'object', 'follower':'object'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Follow (followee varchar(255), follower varchar(255))\"], \"database_schema\": {\"Follow\": {\"followee\": \"VARCHAR(255)\", \"follower\": \"VARCHAR(255)\"}}}",
+  "stats": "{\"totalAccepted\": \"63.4K\", \"totalSubmission\": \"155.5K\", \"totalAcceptedRaw\": 63393, \"totalSubmissionRaw\": 155492, \"acRate\": \"40.8%\"}",
+  "likes": 169,
+  "dislikes": 745,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Follow\":[\"followee\",\"follower\"]},\"rows\":{\"Follow\":[[\"Alice\", \"Bob\"], [\"Bob\", \"Cena\"], [\"Bob\", \"Donald\"], [\"Donald\", \"Edward\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef second_degree_follower(follow: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

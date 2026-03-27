@@ -1,0 +1,61 @@
+{
+  "questionId": "577",
+  "questionFrontendId": "577",
+  "title": "Employee Bonus",
+  "titleSlug": "employee-bonus",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Employee</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| empId       | int     |\n| name        | varchar |\n| supervisor  | int     |\n| salary      | int     |\n+-------------+---------+\nempId is the column with unique values for this table.\nEach row of this table indicates the name and the ID of an employee in addition to their salary and the id of their manager.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Bonus</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| empId       | int  |\n| bonus       | int  |\n+-------------+------+\nempId is the column of unique values for this table.\nempId is a foreign key (reference column) to empId from the Employee table.\nEach row of this table contains the id of an employee and their respective bonus.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the name and bonus amount of each employee who satisfies either of the following:</p>\n\n<ul>\n\t<li>The employee has a bonus <strong>less than</strong> <code>1000</code>.</li>\n\t<li>The employee did not get any bonus.</li>\n</ul>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nEmployee table:\n+-------+--------+------------+--------+\n| empId | name   | supervisor | salary |\n+-------+--------+------------+--------+\n| 3     | Brad   | null       | 4000   |\n| 1     | John   | 3          | 1000   |\n| 2     | Dan    | 3          | 2000   |\n| 4     | Thomas | 3          | 4000   |\n+-------+--------+------------+--------+\nBonus table:\n+-------+-------+\n| empId | bonus |\n+-------+-------+\n| 2     | 500   |\n| 4     | 2000  |\n+-------+-------+\n<strong>Output:</strong> \n+------+-------+\n| name | bonus |\n+------+-------+\n| Brad | null  |\n| John | null  |\n| Dan  | 500   |\n+------+-------+\n</pre>\n",
+  "hints": [
+    "If the EmpId in table Employee has no match in table Bonus, we consider that the corresponding bonus is null and null is smaller than 1000.",
+    "Inner join is the default join, we can solve the mismatching problem by using outer join."
+  ],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Employee (empId int, name varchar(255), supervisor int, salary int)\", \"Create table If Not Exists Bonus (empId int, bonus int)\"], \"mssql\": [\"Create table Employee (empId int, name varchar(255), supervisor int, salary int)\", \"Create table Bonus (empId int, bonus int)\"], \"oraclesql\": [\"Create table Employee (empId int, name varchar(255), supervisor int, salary int)\", \"Create table Bonus (empId int, bonus int)\"], \"database\": true, \"name\": \"employee_bonus\", \"manual\": false, \"pythondata\": [\"Employee = pd.DataFrame([], columns=['empId', 'name', 'supervisor', 'salary']).astype({'empId':'Int64', 'name':'object', 'supervisor':'Int64', 'salary':'Int64'})\", \"Bonus = pd.DataFrame([], columns=['empId', 'bonus']).astype({'empId':'Int64', 'bonus':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Employee (empId int, name varchar(255), supervisor int, salary int)\\n\", \"Create table If Not Exists Bonus (empId int, bonus int)\"], \"database_schema\": {\"Employee\": {\"empId\": \"INT\", \"name\": \"VARCHAR(255)\", \"supervisor\": \"INT\", \"salary\": \"INT\"}, \"Bonus\": {\"empId\": \"INT\", \"bonus\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"1M\", \"totalSubmission\": \"1.4M\", \"totalAcceptedRaw\": 1044561, \"totalSubmissionRaw\": 1351803, \"acRate\": \"77.3%\"}",
+  "likes": 1582,
+  "dislikes": 302,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Combine Two Tables\", \"titleSlug\": \"combine-two-tables\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Employee\":[\"empId\",\"name\",\"supervisor\",\"salary\"],\"Bonus\":[\"empId\",\"bonus\"]},\"rows\":{\"Employee\":[[3,\"Brad\",null,4000],[1,\"John\",3,1000],[2,\"Dan\",3,2000],[4,\"Thomas\",3,4000]],\"Bonus\":[[2,500],[4,2000]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"netsuite\", \"name\": \"Netsuite\"}]}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef employee_bonus(employee: pd.DataFrame, bonus: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "182",
+    "content": "[TOC]\n\n# Solution\n\n---\n\n\n\n\n## pandas\n\n### Approach 1: Filter and Retrieve \n\n##### Algorithm\n\n1. Define the `employee_bonus` function that takes two DataFrames, `employee` and `bonus`, as input parameters and specifies that it returns a DataFrame.\n\n2. Use the Pandas merge function to combine the `employee` and `bonus` DataFrames on the `empId` column using a left join. This combines employee data with their respective bonuses.\n\n3. Apply a filter to the merged DataFrame to include only rows where the bonus is less than 1000 or where the bonus is missing (NaN). Use boolean indexing for filtering.\n\n4. Choose the `name` and `bonus` columns from the filtered DataFrame to extract the relevant information.\n\n5. Return the filtered DataFrame as the output of the function.\n\n##### Code\n\n```python\nimport pandas as pd\n\ndef employee_bonus(employee: pd.DataFrame, bonus: pd.DataFrame) -> pd.DataFrame:\n    # Merge Employee and Bonus tables using a left join\n    result_df = pd.merge(employee, bonus, on='empId', how='left')\n\n    # Filter rows where bonus is less than 1000 or missing\n    result_df = result_df[(result_df['bonus'] < 1000) | result_df['bonus'].isnull()]\n\n    # Select \"name\" and \"bonus\" columns\n    result_df = result_df[['name', 'bonus']]\n\n    return result_df\n\n\n\n```\n\n<br>\n\n## Database\n\n\n### Approach 1: Using `OUTER JOIN` and `WHERE` clause\n\n\n#### Algorithm\n\n1. Initialize Query: Start an SQL query.\n\n2. Since foreign key **Bonus.empId** refers to **Employee.empId** and some employees do not have bonus records, we can use `OUTER JOIN` to link these two tables as the first step.\n\n\n```sql\nSELECT\n    Employee.name, Bonus.bonus\nFROM\n    Employee\n        LEFT OUTER JOIN\n    Bonus ON Employee.empid = Bonus.empid\n;\n```\n>Note: \"LEFT OUTER JOIN\" could be written as \"LEFT JOIN\".\n\nThe output to run this code with the sample data is as below.\n\n```\n| name   | bonus |\n|--------|-------|\n| Dan    | 500   |\n| Thomas | 2000  |\n| Brad   |       |\n| John   |       |\n```\nThe bonus value for `Brad` and `John` is empty, which is actually `NULL` in the database. \"Conceptually, NULL means “a missing unknown value” and it is treated somewhat differently from other values.\" Check the [Working with NULL Values](https://dev.mysql.com/doc/refman/5.7/en/working-with-null.html) in MySQL manual for more details. In addition, we have to use `IS NULL` or `IS NOT NULL` to compare a value with `NULL`.\n\n3. At last, we can add a `WHERE` clause with the proper conditions to filter these records.\n\n#### Implementation\n\n```mysql []\nSELECT\n    Employee.name, Bonus.bonus\nFROM\n    Employee\n        LEFT JOIN\n    Bonus ON Employee.empid = Bonus.empid\nWHERE\n    bonus < 1000 OR bonus IS NULL\n;\n```\n\n\n<br>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "questionId": "138",
+  "questionFrontendId": "138",
+  "title": "Copy List with Random Pointer",
+  "titleSlug": "copy-list-with-random-pointer",
+  "difficulty": "Medium",
+  "content": "<p>A linked list of length <code>n</code> is given such that each node contains an additional random pointer, which could point to any node in the list, or <code>null</code>.</p>\n\n<p>Construct a <a href=\"https://en.wikipedia.org/wiki/Object_copying#Deep_copy\" target=\"_blank\"><strong>deep copy</strong></a> of the list. The deep copy should consist of exactly <code>n</code> <strong>brand new</strong> nodes, where each new node has its value set to the value of its corresponding original node. Both the <code>next</code> and <code>random</code> pointer of the new nodes should point to new nodes in the copied list such that the pointers in the original list and copied list represent the same list state. <strong>None of the pointers in the new list should point to nodes in the original list</strong>.</p>\n\n<p>For example, if there are two nodes <code>X</code> and <code>Y</code> in the original list, where <code>X.random --&gt; Y</code>, then for the corresponding two nodes <code>x</code> and <code>y</code> in the copied list, <code>x.random --&gt; y</code>.</p>\n\n<p>Return <em>the head of the copied linked list</em>.</p>\n\n<p>The linked list is represented in the input/output as a list of <code>n</code> nodes. Each node is represented as a pair of <code>[val, random_index]</code> where:</p>\n\n<ul>\n\t<li><code>val</code>: an integer representing <code>Node.val</code></li>\n\t<li><code>random_index</code>: the index of the node (range from <code>0</code> to <code>n-1</code>) that the <code>random</code> pointer points to, or <code>null</code> if it does not point to any node.</li>\n</ul>\n\n<p>Your code will <strong>only</strong> be given the <code>head</code> of the original linked list.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/12/18/e1.png\" style=\"width: 700px; height: 142px;\" />\n<pre>\n<strong>Input:</strong> head = [[7,null],[13,0],[11,4],[10,2],[1,0]]\n<strong>Output:</strong> [[7,null],[13,0],[11,4],[10,2],[1,0]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/12/18/e2.png\" style=\"width: 700px; height: 114px;\" />\n<pre>\n<strong>Input:</strong> head = [[1,1],[2,1]]\n<strong>Output:</strong> [[1,1],[2,1]]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/12/18/e3.png\" style=\"width: 700px; height: 122px;\" /></strong></p>\n\n<pre>\n<strong>Input:</strong> head = [[3,null],[3,0],[3,null]]\n<strong>Output:</strong> [[3,null],[3,0],[3,null]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= n &lt;= 1000</code></li>\n\t<li><code>-10<sup>4</sup> &lt;= Node.val &lt;= 10<sup>4</sup></code></li>\n\t<li><code>Node.random</code> is <code>null</code> or is pointing to some node in the linked list.</li>\n</ul>\n",
+  "hints": [
+    "Just iterate the linked list and create copies of the nodes on the go. Since a node can be referenced from multiple nodes due to the random pointers, ensure you are not making multiple copies of the same node.",
+    "You may want to use extra space to keep old_node ---> new_node mapping to prevent creating multiple copies of the same node.",
+    "We can avoid using extra space for old_node ---> new_node mapping by tweaking the original linked list. Simply interweave the nodes of the old and copied list. For example:\r\nOld List: A --> B --> C --> D\r\nInterWeaved List: A --> A' --> B --> B' --> C --> C' --> D --> D'",
+    "The interweaving is done using next</b> pointers and we can make use of interweaved structure to get the correct reference nodes for random</b> pointers."
+  ],
+  "metaData": "{\n  \"name\": \"copyRandomList\",\n  \"params\": [\n    {\n      \"name\": \"head\",\n      \"type\": \"ListNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"ListNode\"\n  },\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"csharp\",\n    \"javascript\",\n    \"python3\",\n    \"golang\",\n    \"swift\",\n    \"kotlin\",\n    \"ruby\",\n    \"c\",\n    \"scala\",\n    \"php\",\n    \"typescript\"\n  ],\n  \"manual\": true,\n\"typescriptCustomType\" : \"class _Node {\\n    val: number\\n    next: _Node | null\\n    random: _Node | null\\n\\n    constructor(val?: number, next?: _Node, random?: _Node) {\\n        this.val = (val===undefined ? 0 : val)\\n        this.next = (next===undefined ? null : next)\\n        this.random = (random===undefined ? null : random)\\n    }\\n}\\n\"\n\n}",
+  "stats": "{\"totalAccepted\": \"1.9M\", \"totalSubmission\": \"3M\", \"totalAcceptedRaw\": 1873273, \"totalSubmissionRaw\": 2993032, \"acRate\": \"62.6%\"}",
+  "likes": 15524,
+  "dislikes": 1679,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Clone Graph\", \"titleSlug\": \"clone-graph\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Clone Binary Tree With Random Pointer\", \"titleSlug\": \"clone-binary-tree-with-random-pointer\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Clone N-ary Tree\", \"titleSlug\": \"clone-n-ary-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[7,null],[13,0],[11,4],[10,2],[1,0]]",
+    "[[1,1],[2,1]]",
+    "[[3,null],[3,0],[3,null]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"intel\", \"name\": \"Intel\"}, {\"timesEncountered\": 5, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 5, \"slug\": \"docusign\", \"name\": \"Docusign\"}, {\"timesEncountered\": 4, \"slug\": \"arista-networks\", \"name\": \"Arista Networks\"}, {\"timesEncountered\": 3, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 3, \"slug\": \"mobileye\", \"name\": \"Mobileye\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/*\n// Definition for a Node.\nclass Node {\npublic:\n    int val;\n    Node* next;\n    Node* random;\n    \n    Node(int _val) {\n        val = _val;\n        next = NULL;\n        random = NULL;\n    }\n};\n*/\n\nclass Solution {\npublic:\n    Node* copyRandomList(Node* head) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/*\n// Definition for a Node.\nclass Node {\n    int val;\n    Node next;\n    Node random;\n\n    public Node(int val) {\n        this.val = val;\n        this.next = null;\n        this.random = null;\n    }\n}\n*/\n\nclass Solution {\n    public Node copyRandomList(Node head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "\"\"\"\n# Definition for a Node.\nclass Node:\n    def __init__(self, x: int, next: 'Node' = None, random: 'Node' = None):\n        self.val = int(x)\n        self.next = next\n        self.random = random\n\"\"\"\n\nclass Solution:\n    def copyRandomList(self, head: 'Optional[Node]') -> 'Optional[Node]':\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "\"\"\"\n# Definition for a Node.\nclass Node:\n    def __init__(self, x, next=None, random=None):\n        self.val = int(x)\n        self.next = next\n        self.random = random\n\"\"\"\n\nclass Solution(object):\n    def copyRandomList(self, head):\n        \"\"\"\n        :type head: Node\n        :rtype: Node\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * // Definition for a _Node.\n * function _Node(val, next, random) {\n *    this.val = val;\n *    this.next = next;\n *    this.random = random;\n * };\n */\n\n/**\n * @param {_Node} head\n * @return {_Node}\n */\nvar copyRandomList = function(head) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for _Node.\n * class _Node {\n *     val: number\n *     next: _Node | null\n *     random: _Node | null\n * \n *     constructor(val?: number, next?: _Node, random?: _Node) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *         this.random = (random===undefined ? null : random)\n *     }\n * }\n */\n\n\nfunction copyRandomList(head: _Node | null): _Node | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/*\n// Definition for a Node.\npublic class Node {\n    public int val;\n    public Node next;\n    public Node random;\n    \n    public Node(int _val) {\n        val = _val;\n        next = null;\n        random = null;\n    }\n}\n*/\n\npublic class Solution {\n    public Node CopyRandomList(Node head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a Node.\n * struct Node {\n *     int val;\n *     struct Node *next;\n *     struct Node *random;\n * };\n */\n\nstruct Node* copyRandomList(struct Node* head) {\n\t\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a Node.\n * type Node struct {\n *     Val int\n *     Next *Node\n *     Random *Node\n * }\n */\n\nfunc copyRandomList(head *Node) *Node {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = Node(5)\n * var v = ti.`val`\n * Definition for a Node.\n * class Node(var `val`: Int) {\n *     var next: Node? = null\n *     var random: Node? = null\n * }\n */\n\nclass Solution {\n    fun copyRandomList(node: Node?): Node? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a Node.\n * public class Node {\n *     public var val: Int\n *     public var next: Node?\n *     public var random: Node?\n *     public init(_ val: Int) {\n *         self.val = val\n *         self.next = nil\n *    \t   self.random = nil\n *     }\n * }\n */\n\nclass Solution {\n    func copyRandomList(_ head: Node?) -> Node? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for Node.\n# class Node\n#     attr_accessor :val, :next, :random\n#     def initialize(val = 0)\n#         @val = val\n#\t\t  @next = nil\n#\t\t  @random = nil\n#     end\n# end\n\n# @param {Node} node\n# @return {Node}\ndef copyRandomList(head)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a Node.\n * class Node {\n *     public $val = null;\n *     public $next = null;\n *     public $random = null;\n *     function __construct($val = 0) {\n *         $this->val = $val;\n *         $this->next = null;\n *         $this->random = null;\n *     }\n * }\n */\n\nclass Solution {\n    /**\n     * @param Node $head\n     * @return Node\n     */\n    function copyRandomList($head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a Node.\n * class Node(var _value: Int) {\n *   var value: Int = _value\n *   var next: Node = null\n *   var random: Node = null\n * }\n */\n\nobject Solution {\n    def copyRandomList(head: Node): Node = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "556",
+    "content": "[TOC]\n\n## Solution\n---\n\nLets first look at how the linked list looks like\n<center>\n<img src=\"../Figures/138/138_Copy_List_Random_1.png\" width=\"500\"/>\n</center>\n\nIn the above diagram, for a given node the `next` pointer points to the next node in the linked list. The `next` pointer is something standard for a linked list and this is what ***links*** the nodes together. What is interesting about the diagram and this problem is the `random` pointer which, as the name suggests can point to any node in the linked list or can be a null.\n\n### Approach 1: Recursive\n\n**Intuition**\n\nThe basic idea behind the recursive solution is to consider the linked list like a graph. Every node of the Linked List has 2 pointers (edges in a graph). Since, random pointers add the randomness to the structure we might visit the same node again leading to cycles.\n\n<center>\n<img src=\"../Figures/138/138_Copy_List_Random_2.png\" width=\"500\"/>\n</center>\n\nIn the diagram above we can see the random pointer points back to the previously seen node hence leading to a cycle. We need to take care of these cycles in the implementation.\n\nAll we do in this approach is to just traverse the graph and clone it. Cloning essentially means creating a new node for every unseen node you encounter. The traversal part will happen recursively in a depth first manner. Note that we have to keep track of nodes already processed because, as pointed out earlier, we can have cycles because of the random pointers.\n\n**Algorithm**\n\n1. Start traversing the graph from `head` node.\n\n    Lets see the linked structure as a graph. Below is the graph representation of the above linked list example.\n    <center>\n    <img src=\"../Figures/138/138_Copy_List_Random_7.png\" width=\"500\"/>\n    </center>\n\n    In the above example `head` is where we begin our graph traversal.\n\n2. If we already have a cloned copy of the current node in the visited dictionary, we use the cloned node reference.  \n3. If we don't have a cloned copy in the visited dictionary, we create a new node and add it to the visited dictionary.\n`visited_dictionary[current_node] = cloned_node_for_current_node.`\n4. We then make two recursive calls, one using the `random` pointer and the other using `next` pointer. The diagram from step 1, shows `random` and `next` pointers in red and blue color respectively. Essentially we are making recursive calls for the children of the current node. In this implementation, the children are the nodes pointed by the `random` and the `next` pointers.\n<pre>\ncloned_node_for_current_node.next = copyRandomList(current_node.next);\ncloned_node_for_current_node.random = copyRandomList(current_node.random);\n</pre>\n\n<br>\n\n<iframe src=\"https://leetcode.com/playground/BmPe7Ypw/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"BmPe7Ypw\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$ where N is the number of nodes in the linked list.\n* Space Complexity: $$O(N)$$. If we look closely, we have the recursion stack and we also have the space complexity to keep track of nodes already cloned i.e. using the visited dictionary. But asymptotically, the complexity is $$O(N)$$.\n\n---\n\n### Approach 2: Iterative with $$O(N)$$ Space\n\n**Intuition**\n\nThe iterative solution to this problem does not model it as a graph, instead simply treats it as a LinkedList.\nWhen we are iterating over the list, we can create new nodes via the random pointer or the next pointer whichever points to a node that doesn't exist in our old --> new dictionary.\n\n**Algorithm**\n\n1. Traverse the linked list starting at `head` of the linked list.\n    <center>\n    <img src=\"../Figures/138/138_Copy_List_Random_3.png\" width=\"600\"/>\n    </center>\n\n    In the above diagram we create a new cloned `head` node. The cloned node is shown using dashed lines. In the implementation we would even store the reference of this newly created node in a visited dictionary.\n\n2. Random Pointer\n    * If the `random` pointer of the current node $$i$$ points to the a node $$j$$ and a clone of $$j$$ already exists in the visited dictionary, we will simply use the cloned node reference from the visited dictionary.\n    * If the `random` pointer of the current node $$i$$ points to the a node $$j$$ which has not been created yet, we create a new node corresponding to $$j$$ and add it to the visited dictionary.\n\n    <center>\n    <img src=\"../Figures/138/138_Copy_List_Random_4.png\" width=\"600\"/>\n    </center>\n\n    In the above diagram the `random` pointer of node $$A$$ points to a node $$C$$. Node $$C$$ which was not visited yet as we can see from the previous diagram. Hence we create a new cloned $$C'$$ node corresponding to node $$C$$ and add it to visited dictionary.\n\n3. Next Pointer\n    * If the `next` pointer of the current node $$i$$ points to the a node $$j$$ and a clone of $$j$$ already exists in the visited dictionary, we will simply use the cloned node reference from the visited dictionary.\n    * If the `next` pointer of the current node $$i$$ points to the a node $$j$$ which has not been created yet, we create a new node corresponding to $$j$$ and add it to the visited dictionary.\n\n    <center>\n    <img src=\"../Figures/138/138_Copy_List_Random_5.png\" width=\"600\"/>\n    </center>\n\n    In the above diagram the `next` pointer of node $$A$$ points to a node $$B$$. Node $$B$$ which was not visited yet as we can see from the previous diagram. Hence we create a new cloned $$B'$$ node corresponding to node $$B$$ and add it to visited dictionary.\n\n4. We repeat steps 2 and 3 until we reach the end of the linked list.\n\n    <center>\n    <img src=\"../Figures/138/138_Copy_List_Random_6.png\" width=\"600\"/>\n    </center>\n\n    In the above diagram, the `random` pointer of node $$B$$ points to an already visited node $$A$$. Hence in step 2, we don't create a new copy for the clone. Instead we point `random` pointer of cloned node $$B'$$ to already existing cloned node $$A'$$.\n\n    Also, the `next` pointer of node $$B$$ points to an already visited node $$C$$. Hence in step 3, we don't create a new copy for the clone. Instead we point `next` pointer of cloned node $$B'$$ to already existing cloned node $$C'$$.\n\n<iframe src=\"https://leetcode.com/playground/XnCjj5jG/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XnCjj5jG\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity : $$O(N)$$ because we make one pass over the original linked list.\n* Space Complexity : $$O(N)$$ as we have a dictionary containing mapping from old list nodes to new list nodes. Since there are $$N$$ nodes, we have $$O(N)$$ space complexity.\n\n---\n\n### Approach 3: Iterative with $$O(1)$$ Space\n\n**Intuition**\n\nInstead of a separate dictionary to keep the old node --> new node mapping, we can tweak the original linked list and keep every cloned node next to its original node. This interleaving of old and new nodes allows us to solve this problem without any extra space. Lets look at how the algorithm works.\n\n**Algorithm**\n\n1. Traverse the original list and clone the nodes as you go and place the cloned copy next to its original node. This new linked list is essentially a interweaving of original and cloned nodes.\n\n    <center>\n    <img src=\"../Figures/138/138_Copy_List_Random_8_1.png\" width=\"800\"/>\n    </center>\n    <center>\n    <img src=\"../Figures/138/138_Copy_List_Random_8_2.png\" width=\"800\"/>\n    </center>\n\n    As you can see we just use the value of original node to create the cloned copy. The `next` pointer is used to create the weaving. Note that this operation ends up modifying the original linked list.\n    <pre>\n    cloned_node.next = original_node.next\n    original_node.next = cloned_node\n    </pre>\n\n2. Iterate the list having both the new and old nodes intertwined with each other and use the original nodes' random pointers to assign references to random pointers for cloned nodes. For eg. If `B` has a random pointer to `A`, this means `B'` has a random pointer to `A'`.\n\n    <center>\n    <img src=\"../Figures/138/138_Copy_List_Random_9_1.png\" width=\"800\"/>\n    </center>\n\n3. Now that the `random` pointers are assigned to the correct node, the `next` pointers need to be correctly assigned to unweave the current linked list and get back the original list and the cloned list.\n\n    <center>\n    <img src=\"../Figures/138/138_Copy_List_Random_10.png\" width=\"800\"/>\n    </center>\n\n\n<iframe src=\"https://leetcode.com/playground/GdjQMsSx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GdjQMsSx\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity : $$O(N)$$\n* Space Complexity : $$O(1)$$",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

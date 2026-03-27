@@ -1,0 +1,137 @@
+{
+  "questionId": "159",
+  "questionFrontendId": "159",
+  "title": "Longest Substring with At Most Two Distinct Characters",
+  "titleSlug": "longest-substring-with-at-most-two-distinct-characters",
+  "difficulty": "Medium",
+  "content": "<p>Given a string <code>s</code>, return <em>the length of the longest </em><span data-keyword=\"substring-nonempty\"><em>substring</em></span><em> that contains at most <strong>two distinct characters</strong></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;eceba&quot;\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The substring is &quot;ece&quot; which its length is 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;ccaabbb&quot;\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The substring is &quot;aabbb&quot; which its length is 5.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists of English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"lengthOfLongestSubstringTwoDistinct\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"301.3K\", \"totalSubmission\": \"528.6K\", \"totalAcceptedRaw\": 301333, \"totalSubmissionRaw\": 528615, \"acRate\": \"57.0%\"}",
+  "likes": 2271,
+  "dislikes": 40,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Longest Substring Without Repeating Characters\", \"titleSlug\": \"longest-substring-without-repeating-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sliding Window Maximum\", \"titleSlug\": \"sliding-window-maximum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Longest Substring with At Most K Distinct Characters\", \"titleSlug\": \"longest-substring-with-at-most-k-distinct-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Subarrays with K Different Integers\", \"titleSlug\": \"subarrays-with-k-different-integers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"eceba\"",
+    "\"ccaabbb\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int lengthOfLongestSubstringTwoDistinct(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int lengthOfLongestSubstringTwoDistinct(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def lengthOfLongestSubstringTwoDistinct(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def lengthOfLongestSubstringTwoDistinct(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar lengthOfLongestSubstringTwoDistinct = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function lengthOfLongestSubstringTwoDistinct(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LengthOfLongestSubstringTwoDistinct(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int lengthOfLongestSubstringTwoDistinct(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func lengthOfLongestSubstringTwoDistinct(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun lengthOfLongestSubstringTwoDistinct(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func lengthOfLongestSubstringTwoDistinct(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn length_of_longest_substring_two_distinct(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef length_of_longest_substring_two_distinct(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function lengthOfLongestSubstringTwoDistinct($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int lengthOfLongestSubstringTwoDistinct(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def lengthOfLongestSubstringTwoDistinct(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec length_of_longest_substring_two_distinct(s :: String.t) :: integer\n  def length_of_longest_substring_two_distinct(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec length_of_longest_substring_two_distinct(S :: unicode:unicode_binary()) -> integer().\nlength_of_longest_substring_two_distinct(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (length-of-longest-substring-two-distinct s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "694",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n  <div class=\"video-container\">\n    <iframe src=\"https://player.vimeo.com/video/482204478\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n  </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Approach 1: Sliding Window\n\n**Intuition**\n\nTo solve the problem in one pass let's use here _sliding window_ approach with two set pointers `left` and `right` serving as the window boundaries.\n\nThe idea is to set both pointers in the position `0` and then move `right` pointer to the right while the window contains not more than two distinct characters. If at some point we've got `3` distinct characters, let's move `left` pointer to keep not more than `2` distinct characters in the window.\n\n![compute](../Figures/159/sliding.png)\n\nBasically, that's the algorithm: to move the sliding window along the string, to keep not more than `2` distinct characters in the window, and to update the max substring length at each step.\n\n> There is just one more question to reply - how to move the left pointer to keep only `2` distinct characters in the string?\n\nLet's use for this purpose a hashmap containing all characters in the sliding window as keys and their rightmost positions as values. At each moment, this hashmap could contain not more than `3` elements.\n\n![compute](../Figures/159/move_left.png)\n\nFor example, using this hashmap one knows that the rightmost position of character `e` in `\"eeeeeeeet\"` window is `8` and so one has to move `left` pointer in the position `8 + 1 = 9` to exclude the character `e` from the sliding window.\n\nDo we have here the best possible time complexity? Yes, we do - it's the only one who passes along the string with `N` characters and the time complexity is $$\\mathcal{O}(N)$$.\n\n**Algorithm**\n\nNow one could write down the algortihm.\n\n- Return `N` if the string length `N` is smaller than `3`.\n- Set both set pointers at the beginning of the string `left = 0` and `right = 0` and init max substring length `max_len = 2`.\n- While `right` pointer is less than `N`:\n    * If the hashmap contains less than `3` distinct characters, add the current character `s[right]` in the hashmap and move `right` pointer to the right.\n    * If the hashmap contains `3` distinct characters, remove the leftmost character from the hashmap and move the `left` pointer so that the sliding window contains `2` distinct characters only.\n    * Update `max_len`.\n\n**Implementation**\n\n!?!../Documents/159_LIS.json:1000,492!?!\n\n<iframe src=\"https://leetcode.com/playground/eUYyRTw7/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"eUYyRTw7\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(N)$$ where `N` is the number of characters in the input string.\n\n* Space complexity: $$\\mathcal{O}(1)$$ since additional space is used only for a hashmap with at most `3` elements.\n\n**Problem generalization**\n\nThe same sliding window approach could be used to solve the generalized problem :\n\n[Longest Substring with At Most K Distinct Characters](https://leetcode.com/problems/longest-substring-with-at-most-k-distinct-characters/)",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

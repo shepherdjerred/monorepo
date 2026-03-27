@@ -1,0 +1,137 @@
+{
+  "questionId": "409",
+  "questionFrontendId": "409",
+  "title": "Longest Palindrome",
+  "titleSlug": "longest-palindrome",
+  "difficulty": "Easy",
+  "content": "<p>Given a string <code>s</code> which consists of lowercase or uppercase letters, return the length of the <strong>longest <span data-keyword=\"palindrome-string\">palindrome</span></strong>&nbsp;that can be built with those letters.</p>\n\n<p>Letters are <strong>case sensitive</strong>, for example, <code>&quot;Aa&quot;</code> is not considered a palindrome.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abccccdd&quot;\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> One longest palindrome that can be built is &quot;dccaccd&quot;, whose length is 7.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;a&quot;\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The longest palindrome that can be built is &quot;a&quot;, whose length is 1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 2000</code></li>\n\t<li><code>s</code> consists of lowercase <strong>and/or</strong> uppercase English&nbsp;letters only.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{ \r\n  \"name\": \"longestPalindrome\",\r\n  \"params\": [\r\n    { \r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1M\", \"totalSubmission\": \"1.9M\", \"totalAcceptedRaw\": 1041846, \"totalSubmissionRaw\": 1863952, \"acRate\": \"55.9%\"}",
+  "likes": 6371,
+  "dislikes": 448,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Palindrome Permutation\", \"titleSlug\": \"palindrome-permutation\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Longest Palindrome by Concatenating Two Letter Words\", \"titleSlug\": \"longest-palindrome-by-concatenating-two-letter-words\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Largest Palindromic Number\", \"titleSlug\": \"largest-palindromic-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abccccdd\"",
+    "\"a\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 9, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"hp\", \"name\": \"HP\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int longestPalindrome(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int longestPalindrome(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestPalindrome(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestPalindrome(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar longestPalindrome = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestPalindrome(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LongestPalindrome(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int longestPalindrome(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestPalindrome(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestPalindrome(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestPalindrome(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_palindrome(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef longest_palindrome(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function longestPalindrome($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int longestPalindrome(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestPalindrome(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_palindrome(s :: String.t) :: integer\n  def longest_palindrome(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_palindrome(S :: unicode:unicode_binary()) -> integer().\nlongest_palindrome(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-palindrome s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2330",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe need to find the length of the longest palindrome using the letters from a given string `s`. \n\nTo determine when a letter from the given string is eligible to be a part of the longest palindrome, let's examine our example palindromes:\n1. \"acbbca\": in a palindrome of even length, each character must appear an even number of times.\n2. \"madam\": in a palindrome of odd length, a single additional character may be counted for the center character. \n\n---\n\n### Approach 1: Greedy Way (Hash Table)\n\n#### Intuition\n\nTo determine the longest possible length of the palindrome, we need to find out how many times each character appears in `s`. A good way to count the frequency of each character is by using a hash table, where each character is a key and its frequency is the value.\n\nHash tables are a data structure that allows for the efficient storage and retrieval of key-value pairs. For more information about hash tables, refer to the [HashMap Explore Card](https://leetcode.com/explore/learn/card/hash-table/184/comparison-with-other-data-structures/).\n\nConsider the example string `s` = `cabcacdd`.\n\nIf we count the frequencies of each character in a hash table, we get the following table:\n\n| Character | Frequency |\n| :------: | :-------:  |\n| a   | 2  |\n| b   | 1  |\n| c   | 3  |\n| d   | 2  |\n\nTo form the longest palindrome, we take the maximum number of even occurrences of each character. In this case, we can count all occurrences of `a` and `d`, and 2 occurrences of `c`. \n\nWith one occurrence each of `b` and `c` remaining, we can further increase the length of the palindrome by adding a center character. \n\n#### Algorithm\n\n- Initialize a map `frequencyMap` to store the frequency of each character.\n- Count the frequency of each character in `s`.\n- Initialize variables:\n  - `res` to store the length of the longest palindrome.\n  - `hasOddFrequency` flag to check whether a character with odd frequency exists.\n- Loop through the frequencies `freq` of each character:\n  - If `freq` is even, add it to `res`.\n  - If the `freq` is odd, add `freq-1` to `res` and set `hasOddFrequency` to `true`.\n- If `hasOddFrequency` is `true`, return `res+1`, otherwise, return `res`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DeaL9XJB/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DeaL9XJB\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the given string `s`.\n\n- Time complexity: $O(n)$\n\n    The algorithm goes through the characters of `s` twice: once to count their frequencies and once to construct the palindrome. Since hash table operations like inserting and updating take constant time ($O(1)$), the time complexity of the algorithm is $O(2 \\cdot n)$, which simplifies to $O(n)$.\n\n- Space complexity: $O(1)$\n\n    The algorithm uses a hash table to store the frequency of characters. Given that there can be at most $52$ unique characters in `s`, the space complexity is $O(52)$, which can be simplified to $O(1)$ space.\n\n---\n\n### Approach 2: Greedy Way (Optimized)\n\n#### Intuition.\n\nNotice that every character with an odd frequency has one unused occurrence in our longest palindrome, except for one character that can be used as the center. Like our previous approach, we will use a hash table to count the number of occurrences of each letter and a variable,`oddFreqCharsCount`, to track the number of letters with an odd number of occurrences. For example, in a string where the letter `a` appears 3 times, the letter `b` appears 7 times, and all other characters appear an even number of times, the count of `oddFreqCharsCount` is 2. Whenever we increase the frequency of a character in our hash table, we check if the new frequency is odd. If it is, we increment `oddFreqCharsCount`. If it isn't, we decrease `oddFreqCharsCount` to remove it from the count of characters with an odd frequency.\n\nThe following slideshow demonstrates the optimized greedy approach:\n\n!?!../Documents/409/map_slideshow.json:1182,902!?!\n\nA non-zero value of `oddFreqCharsCount` indicates that at least one letter is left unmatched. We can use this letter to form the center of a odd length palindrome, thereby increasing the length of the palindrome by one. \n\nNow the length of the longest palindrome can be determined by subtracting the count of characters with odd frequencies from the total length of the given string, and adding one unpaired character for the center if one exists.\n\n> The hash table used to store the frequencies of each character can be replaced with an integer array, where each index corresponds to a character's ASCII value. For our purposes, we can create an array of size 52: the first 26 indices represent the characters 'A' to 'Z', and the next 26 represent 'a' to 'z'. This approach is slightly more space-efficient than using a hash table, as hash tables need to store both the characters and the frequencies and often involve additional overhead from internal data structures used to handle hash collisions.\n\n#### Algorithm\n\n- Initialize a hash table `frequencyMap` to store the frequency of each character.\n- Initialize a variable `oddFreqCharsCount` to store the number of characters with odd frequency of occurrence.\n- Count the frequency of each character `c` in `s`.\n  - If after addition, the frequency of `c` becomes odd, increment `oddFreqCharsCount`.\n  - Else, decrement `oddFreqCharsCount`.\n- If the `oddFreqCharsCount` is greater than zero, return the length of the string minus `oddFreqCharsCount`, plus one.\n- Else, return the length of `s`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/nrb9y96V/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nrb9y96V\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the given string `s`.\n\n* Time complexity: $O(n)$\n\n    The algorithm loops over the entire string `s` only once. Since hash table operations like inserting and updating take constant time ($O(1)$), the time complexity of the algorithm is $O(2 \\cdot n)$, which simplifies to $O(n)$.\n\n* Space complexity: $O(1)$\n\n    The only data structure used in our algorithm is a hash table, which stores the frequencies of at most $52$ unique characters. Thus, the space complexity of the algorithm is $O(52)$, which can be simplified to $O(1)$.\n\n---\n\n### Approach 3: Greedy Way (Hash Set)\n\n#### Intuition\n\nWe can also create the longest palindrome by simulating the matching process and counting the number of characters that we can match.\n\nLet's loop over the string `s` and track all the characters encountered at each step. For each character, we check if it matches any previously seen character. If it does, we add these two characters to our palindrome and remove the matched character from our tracking collection. If there are unmatched characters remaining at the end, we can use any one as the middle character.\n\nWe can use a hash set to track and count our letter pairings as we loop through the string.\n\nHash sets are an efficient way to store and repeatedly query elements. A hash set is a data structure that stores unique elements, providing efficient insertions, deletions, and lookups. It is implemented using a hash table, which ensures that operations average $O(1)$ time complexity. For more detailed information on hash sets and their applications, check out LeetCode's [Hash Set Explore Card](https://leetcode.com/explore/learn/card/hash-table/183/combination-with-other-algorithms/).\n\nAs we loop through the string `s`, we store each character in a hash set. If we encounter a character that matches a letter already in the set, we know we can pair it.  We remove that letter from the set and count these two letters as part of our palindrome.\n\nThe following slideshow illustrates the process of matching characters in the set:\n\n!?!../Documents/409/set_slideshow.json:1102,802!?!\n\nAt the end of this process, if the hash set isn't empty, it means we have some unmatched characters. We can use one of these unmatched characters to increase the length of the palindrome by one, making it the longest possible palindrome from the given string.\n\n#### Algorithm\n\n- Initialize a set `characterSet` to store a running collection of characters.\n- Initialize a variable `res` to store our required answer.\n- Loop over each character `c` of the string `s`:\n  - If `characterSet` already contains `c`, remove `c` from the set and add 2 to `res`.\n  - Else, add `c` to `characterSet`.\n- If `characterSet` is not empty, increment `res`.\n- Return `res`, which holds the length of the longest palindrome.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ifUEC382/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ifUEC382\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the given string `s`.\n\n- Time complexity: $O(n)$\n\n    The algorithm loops over the entire string only once, which takes $O(n)$ time. All insert, query and delete operations on the set takes constant time, so the time complexity of the algorithm remains $O(n)$.\n\n- Space complexity: $O(1)$\n\n    The maximum number of unique characters in the string is 52 (considering both uppercase and lowercase English letters). Since 52 is a constant number, the space complexity of the set is $O(52)$, which simplifies to $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

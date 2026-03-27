@@ -1,0 +1,131 @@
+{
+  "questionId": "485",
+  "questionFrontendId": "485",
+  "title": "Max Consecutive Ones",
+  "titleSlug": "max-consecutive-ones",
+  "difficulty": "Easy",
+  "content": "<p>Given a binary array <code>nums</code>, return <em>the maximum number of consecutive </em><code>1</code><em>&#39;s in the array</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,1,0,1,1,1]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The first two digits or the last three digits are consecutive 1s. The maximum number of consecutive 1s is 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,0,1,1,0,1]\n<strong>Output:</strong> 2\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>nums[i]</code> is either <code>0</code> or <code>1</code>.</li>\n</ul>\n",
+  "hints": [
+    "You need to think about two things as far as any window is concerned. One is the starting point for the window. How do you detect that a new window of 1s has started? The next part is detecting the ending point for this window.\r\n\r\nHow do you detect the ending point for an existing window? If you figure these two things out, you will be able to detect the windows of consecutive ones. All that remains afterward is to find the longest such window and return the size."
+  ],
+  "metaData": "{\r\n  \"name\": \"findMaxConsecutiveOnes\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}\r\n",
+  "stats": "{\"totalAccepted\": \"2.2M\", \"totalSubmission\": \"3.4M\", \"totalAcceptedRaw\": 2207820, \"totalSubmissionRaw\": 3405262, \"acRate\": \"64.8%\"}",
+  "likes": 6851,
+  "dislikes": 496,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Max Consecutive Ones II\", \"titleSlug\": \"max-consecutive-ones-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Max Consecutive Ones III\", \"titleSlug\": \"max-consecutive-ones-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Consecutive Characters\", \"titleSlug\": \"consecutive-characters\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Longer Contiguous Segments of Ones than Zeros\", \"titleSlug\": \"longer-contiguous-segments-of-ones-than-zeros\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Length of the Longest Alphabetical Continuous Substring\", \"titleSlug\": \"length-of-the-longest-alphabetical-continuous-substring\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Enemy Forts That Can Be Captured\", \"titleSlug\": \"maximum-enemy-forts-that-can-be-captured\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,1,0,1,1,1]",
+    "[1,0,1,1,0,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 2, \"slug\": \"deloitte\", \"name\": \"Deloitte\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"cognizant\", \"name\": \"Cognizant\"}, {\"timesEncountered\": 2, \"slug\": \"careem\", \"name\": \"Careem\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findMaxConsecutiveOnes(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findMaxConsecutiveOnes(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findMaxConsecutiveOnes(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findMaxConsecutiveOnes(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar findMaxConsecutiveOnes = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findMaxConsecutiveOnes(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindMaxConsecutiveOnes(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findMaxConsecutiveOnes(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findMaxConsecutiveOnes(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findMaxConsecutiveOnes(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findMaxConsecutiveOnes(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_max_consecutive_ones(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef find_max_consecutive_ones(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function findMaxConsecutiveOnes($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findMaxConsecutiveOnes(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findMaxConsecutiveOnes(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_max_consecutive_ones(nums :: [integer]) :: integer\n  def find_max_consecutive_ones(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_max_consecutive_ones(Nums :: [integer()]) -> integer().\nfind_max_consecutive_ones(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-max-consecutive-ones nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "800",
+    "content": "[TOC]\n\n## Solution\n\nThe constraints for this problem make it easy  \nto understand that it can be done in one iteration.\n\n> The length of input array is a positive integer and will not exceed 10,000\n\nHow else do you expect to find the number of 1's in an array without making at least one pass through the array. So let's look at the solution.\n\n### Approach: One pass\n\n**Intuition**\n\nThe intuition is pretty simple. We keep a count of the number of 1's encountered. And reset the count whenever we encounter anything other than 1 (which is 0 for this problem). Thus, maintaining count of 1's between zeros or rather maintaining counts of contiguous 1's. It's the same as keeping a track of the number of hours of sleep you had, without waking up in between.\n\n**Algorithm**\n\n1. Maintain a counter for the number of `1`'s.\n\n2. Increment the counter by 1, whenever you encounter a `1`.\n\n3. Whenever you encounter a `0`\n\n    a. Use the current count of `1`'s to find the maximum contiguous `1`'s till now.\n\n    b. Afterwards, reset the counter for `1`'s to 0.\n\n4. Return the maximum in the end.\n\n  <center>\n  <img src=\"../Figures/485/485_Max_Consecutive_Ones_1.png\" width=\"500\"/>\n  </center>\n  <br>\n\n  In the above diagram we found out that the maximum number of consecutive `1`'s is 3. There were two breaks in the count we encountered while iterating the array. Every time the break i.e. `0` was encountered we had to reset the count of `1` to zero.\n\n  >Note - The maximum count is only calculated when we encounter a break i.e. 0, since thats where a subarray of 1's ends.\n\n<iframe src=\"https://leetcode.com/playground/LTSJ7NKJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"LTSJ7NKJ\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity: $$O(N)$$, where $$N$$ is the number of elements in the array.\n\n* Space Complexity: $$O(1)$$. We do not use any extra space.\n\n### Follow up:\n\nYou can also try something fancy one liner [solution](https://leetcode.com/articles/duplicate-zeros/) as shared by [Stefan Pochmann](https://leetcode.com/stefanpochmann/).\n\n```python\ndef findMaxConsecutiveOnes(self, nums):\n  return max(map(len, ''.join(map(str, nums)).split('0')))\n```\n\nNote, how he converts the list into a string, using `map` and `join` functions. Then, splits the resultant string on `0`. The maximum of the lengths of these list of strings of `1`'s is the answer we are looking for.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

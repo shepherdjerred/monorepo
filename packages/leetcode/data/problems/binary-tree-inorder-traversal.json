@@ -1,0 +1,143 @@
+{
+  "questionId": "94",
+  "questionFrontendId": "94",
+  "title": "Binary Tree Inorder Traversal",
+  "titleSlug": "binary-tree-inorder-traversal",
+  "difficulty": "Easy",
+  "content": "<p>Given the <code>root</code> of a binary tree, return <em>the inorder traversal of its nodes&#39; values</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">root = [1,null,2,3]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[1,3,2]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/08/29/screenshot-2024-08-29-202743.png\" style=\"width: 200px; height: 264px;\" /></p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">root = [1,2,3,4,5,null,8,null,null,6,7,9]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[4,2,6,5,7,1,3,9,8]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/08/29/tree_2.png\" style=\"width: 350px; height: 286px;\" /></p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">root = []</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[]</span></p>\n</div>\n\n<p><strong class=\"example\">Example 4:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">root = [1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[1]</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the tree is in the range <code>[0, 100]</code>.</li>\n\t<li><code>-100 &lt;= Node.val &lt;= 100</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<strong>Follow up:</strong> Recursive solution is trivial, could you do it iteratively?",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"inorderTraversal\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<integer>\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"3.6M\", \"totalSubmission\": \"4.6M\", \"totalAcceptedRaw\": 3639968, \"totalSubmissionRaw\": 4557909, \"acRate\": \"79.9%\"}",
+  "likes": 14883,
+  "dislikes": 901,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Validate Binary Search Tree\", \"titleSlug\": \"validate-binary-search-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Binary Tree Preorder Traversal\", \"titleSlug\": \"binary-tree-preorder-traversal\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Binary Tree Postorder Traversal\", \"titleSlug\": \"binary-tree-postorder-traversal\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Binary Search Tree Iterator\", \"titleSlug\": \"binary-search-tree-iterator\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Kth Smallest Element in a BST\", \"titleSlug\": \"kth-smallest-element-in-a-bst\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Closest Binary Search Tree Value II\", \"titleSlug\": \"closest-binary-search-tree-value-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Inorder Successor in BST\", \"titleSlug\": \"inorder-successor-in-bst\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Convert Binary Search Tree to Sorted Doubly Linked List\", \"titleSlug\": \"convert-binary-search-tree-to-sorted-doubly-linked-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Distance Between BST Nodes\", \"titleSlug\": \"minimum-distance-between-bst-nodes\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,null,2,3]",
+    "[1,2,3,4,5,null,8,null,null,6,7,9]",
+    "[]",
+    "[1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> inorderTraversal(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public List<Integer> inorderTraversal(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def inorderTraversal(self, root: Optional[TreeNode]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def inorderTraversal(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number[]}\n */\nvar inorderTraversal = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction inorderTraversal(root: TreeNode | null): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public IList<int> InorderTraversal(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* inorderTraversal(struct TreeNode* root, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc inorderTraversal(root *TreeNode) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun inorderTraversal(root: TreeNode?): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func inorderTraversal(_ root: TreeNode?) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn inorder_traversal(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer[]}\ndef inorder_traversal(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer[]\n     */\n    function inorderTraversal($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  List<int> inorderTraversal(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def inorderTraversal(root: TreeNode): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec inorder_traversal(root :: TreeNode.t | nil) :: [integer]\n  def inorder_traversal(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec inorder_traversal(Root :: #tree_node{} | null) -> [integer()].\ninorder_traversal(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (inorder-traversal root)\n  (-> (or/c tree-node? #f) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "231",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Approach 1: Recursive Approach\n\nThe first method to solve this problem is using recursion. This is the classical method and is straightforward. We can define a helper function to implement recursion.\n\n<iframe src=\"https://leetcode.com/playground/E5pBkUup/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"E5pBkUup\"></iframe>\n\n**Complexity Analysis**\n\nTime complexity: $$O(n)$$\n\n  - The time complexity is $$O(n)$$ because the recursive function is $$T(n) = 2 \\cdot T(n/2)+1$$.\n\nSpace complexity: $$O(n)$$\n\n  - The worst case space required is $$O(n)$$, and in the average case it's $$O(\\log n)$$ where $$n$$ is number of nodes.\n  \n<br />\n\n---\n\n### Approach 2: Iterating method using Stack\n\nThe strategy is very similiar to the first method, the different is using stack.\n\nHere is an illustration:\n\n!?!../Documents/94_Binary.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/9k44r9CB/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"9k44r9CB\"></iframe>\n\n**Complexity Analysis**\n\nTime complexity: $$O(n)$$\n\nSpace complexity: $$O(n)$$\n\n<br />\n\n---\n\n### Approach 3: Morris Traversal\n\n\nIn this method, we have to use a new data structure - Threaded Binary Tree, and the strategy is as follows:\n\n\n>Step 1: Initialize current as root\n>\n>Step 2: While current is not NULL,\n>\n>     If current does not have left child\n>\n>         a. Add current’s value\n>\n>         b. Go to the right, i.e., current = current.right\n>\n>     Else\n>\n>         a. In current's left subtree, make current the right child of the rightmost node\n>\n>         b. Go to this left child, i.e., current = current.left\n\n\nFor example:\n```\n\n          1\n        /   \\\n       2     3\n      / \\   /\n     4   5 6\n\n```\nFirst, 1 is the root, so initialize 1 as current, 1 has left child which is 2, the current's left subtree is\n\n```\n         2\n        / \\\n       4   5\n```\n So in this subtree, the rightmost node is 5, then make the current(1) as the right child of 5. Set current = current.left (current = 2).\nThe tree now looks like:\n```\n         2\n        / \\\n       4   5\n            \\\n             1\n              \\\n               3\n              /\n             6\n```\nFor current 2, which has left child 4, we can continue with the same process as we did above\n```\n        4\n         \\\n          2\n           \\\n            5\n             \\\n              1\n               \\\n                3\n               /\n              6\n```\n then add 4 because it has no left child, then add 2, 5, 1, 3 one by one, for node 3 which has left child 6, do the same as above.\nFinally, the inorder traversal is [4,2,5,1,6,3].\n\nFor more details, please check\n[Threaded binary tree](https://en.wikipedia.org/wiki/Threaded_binary_tree) and\n[Explanation of Morris Method](https://stackoverflow.com/questions/5502916/explain-morris-inorder-tree-traversal-without-using-stacks-or-recursion)\n\n\n<iframe src=\"https://leetcode.com/playground/fVkds6Bx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fVkds6Bx\"></iframe>\n\n**Complexity Analysis**\n\nTime complexity: $$O(n)$$\n\n  - To prove that the time complexity is $$O(n)$$, the biggest problem lies in finding the time complexity of finding the predecessor nodes of all the nodes in the binary tree. Intuitively, the complexity is $$O(n \\log n)$$, because to find the predecessor node for a single node related to the height of the tree. But in fact, finding the predecessor nodes for all nodes only needs $$O(n)$$ time. Because a binary Tree with $$n$$ nodes has $$n-1$$ edges, the whole processing for each edges up to 2 times, one is to locate a node, and the other is to find the predecessor node. So the complexity is $$O(n)$$.\n\nSpace complexity: $$O(1)$$\n\n  - Extra space is only allocated for the ArrayList of size $$n$$, however the output does not count towards the space complexity.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

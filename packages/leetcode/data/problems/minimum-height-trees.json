@@ -1,0 +1,143 @@
+{
+  "questionId": "310",
+  "questionFrontendId": "310",
+  "title": "Minimum Height Trees",
+  "titleSlug": "minimum-height-trees",
+  "difficulty": "Medium",
+  "content": "<p>A tree is an undirected graph in which any two vertices are connected by&nbsp;<i>exactly</i>&nbsp;one path. In other words, any connected graph without simple cycles is a tree.</p>\n\n<p>Given a tree of <code>n</code> nodes&nbsp;labelled from <code>0</code> to <code>n - 1</code>, and an array of&nbsp;<code>n - 1</code>&nbsp;<code>edges</code> where <code>edges[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> indicates that there is an undirected edge between the two nodes&nbsp;<code>a<sub>i</sub></code> and&nbsp;<code>b<sub>i</sub></code> in the tree,&nbsp;you can choose any node of the tree as the root. When you select a node <code>x</code> as the root, the result tree has height <code>h</code>. Among all possible rooted trees, those with minimum height (i.e. <code>min(h)</code>)&nbsp; are called <strong>minimum height trees</strong> (MHTs).</p>\n\n<p>Return <em>a list of all <strong>MHTs&#39;</strong> root labels</em>.&nbsp;You can return the answer in <strong>any order</strong>.</p>\n\n<p>The <strong>height</strong> of a rooted tree is the number of edges on the longest downward path between the root and a leaf.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/01/e1.jpg\" style=\"width: 800px; height: 213px;\" />\n<pre>\n<strong>Input:</strong> n = 4, edges = [[1,0],[1,2],[1,3]]\n<strong>Output:</strong> [1]\n<strong>Explanation:</strong> As shown, the height of the tree is 1 when the root is the node with label 1 which is the only MHT.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2020/09/01/e2.jpg\" style=\"width: 800px; height: 321px;\" />\n<pre>\n<strong>Input:</strong> n = 6, edges = [[3,0],[3,1],[3,2],[3,4],[5,4]]\n<strong>Output:</strong> [3,4]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>edges.length == n - 1</code></li>\n\t<li><code>0 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt; n</code></li>\n\t<li><code>a<sub>i</sub> != b<sub>i</sub></code></li>\n\t<li>All the pairs <code>(a<sub>i</sub>, b<sub>i</sub>)</code> are distinct.</li>\n\t<li>The given input is <strong>guaranteed</strong> to be a tree and there will be <strong>no repeated</strong> edges.</li>\n</ul>\n",
+  "hints": [
+    "How many MHTs can a graph have at most?"
+  ],
+  "metaData": "{\r\n  \"name\": \"findMinHeightTrees\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    },\r\n    {\r\n      \"name\": \"edges\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<integer>\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"480K\", \"totalSubmission\": \"1.1M\", \"totalAcceptedRaw\": 480020, \"totalSubmissionRaw\": 1130705, \"acRate\": \"42.5%\"}",
+  "likes": 8917,
+  "dislikes": 416,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Course Schedule\", \"titleSlug\": \"course-schedule\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Course Schedule II\", \"titleSlug\": \"course-schedule-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Collect Coins in a Tree\", \"titleSlug\": \"collect-coins-in-a-tree\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Pairs of Connectable Servers in a Weighted Tree Network\", \"titleSlug\": \"count-pairs-of-connectable-servers-in-a-weighted-tree-network\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Minimum Diameter After Merging Two Trees\", \"titleSlug\": \"find-minimum-diameter-after-merging-two-trees\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "4\n[[1,0],[1,2],[1,3]]",
+    "6\n[[3,0],[3,1],[3,2],[3,4],[5,4]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"stackline\", \"name\": \"Stackline\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"splunk\", \"name\": \"Splunk\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> findMinHeightTrees(int n, vector<vector<int>>& edges) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> findMinHeightTrees(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findMinHeightTrees(self, n: int, edges: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findMinHeightTrees(self, n, edges):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @return {number[]}\n */\nvar findMinHeightTrees = function(n, edges) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findMinHeightTrees(n: number, edges: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> FindMinHeightTrees(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* findMinHeightTrees(int n, int** edges, int edgesSize, int* edgesColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findMinHeightTrees(n int, edges [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findMinHeightTrees(n: Int, edges: Array<IntArray>): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findMinHeightTrees(_ n: Int, _ edges: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_min_height_trees(n: i32, edges: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @return {Integer[]}\ndef find_min_height_trees(n, edges)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @return Integer[]\n     */\n    function findMinHeightTrees($n, $edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> findMinHeightTrees(int n, List<List<int>> edges) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findMinHeightTrees(n: Int, edges: Array[Array[Int]]): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_min_height_trees(n :: integer, edges :: [[integer]]) :: [integer]\n  def find_min_height_trees(n, edges) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_min_height_trees(N :: integer(), Edges :: [[integer()]]) -> [integer()].\nfind_min_height_trees(N, Edges) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-min-height-trees n edges)\n  (-> exact-integer? (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1029",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nAs the hints suggest, this problem is related to the [graph](https://en.wikipedia.org/wiki/Graph_(abstract_data_type)) data structure.\nMoreover, it is closely related to the problems of [Course Schedule](https://leetcode.com/problems/course-schedule/) and [Course Schedule II](https://leetcode.com/problems/course-schedule-ii/).\nThis relationship is not evident, yet it is the key to solve the problem, as one will see later.\n\nFirst of all, as a **_straight-forward_** way to solve the problem, we can simply follow the requirements of the problem, as follows:\n\n- Starting from each node in the graph, we treat it as a **_root_** to build a tree. Furthermore, we would like to know the distance between this root node and the rest of the nodes. The maximum of the distance would be the **_height_** of this tree.\n\n- Then according to the definition of **Minimum Height Tree** (MHT), we simply filter out the roots that have the minimal height among all the trees.\n\nThe first step we describe above is actually the problem of [Maximum Depth of N-ary Tree](https://leetcode.com/problems/maximum-depth-of-n-ary-tree/), which is to find the maximum distance from the root to the leaf nodes.\nFor this, we can either apply the [Depth-First Search](https://leetcode.com/explore/learn/card/queue-stack/232/practical-application-stack/) (**DFS**) or [Breadth-First Search](https://leetcode.com/explore/learn/card/queue-stack/231/practical-application-queue/) (**BFS**) algorithms.\n\nWithout a rigid proof, we can see that the above straight-forward solution is _correct_, and it would work for most of the test cases.\n\nHowever, this solution is not efficient, whose time complexity would be $$\\mathcal{O}(N^2)$$ where $$N$$ is the number of nodes in the tree.\nAs one can imagine, it will result in **_Time Limit Exceeded_** exception in the online judge.\n\nAs a spoiler alert, in this article, we will present a **_[topological sorting](https://en.wikipedia.org/wiki/Topological_sorting)_** alike algorithm with time complexity of $$\\mathcal{O}(N)$$, which is also the algorithm to solve the well-known course schedule problems. \n\n\n---\n### Approach 1: Topological Sorting\n\n**Intuition**\n\nFirst of all, let us clarify some concepts.\n\n>The **_distance_** between two nodes is the number of edges that connect the two nodes.\n\nNote, normally there could be multiple paths to connect nodes in a graph.\nIn our case though, since the input graph can form a tree from any node, as specified in the problem, there could only be **_one path_** between any two nodes.\nIn addition, there would be no cycle in the graph.\nAs a result, there would be no ambiguity in the above definition of _distance_.\n\n>The **_height_** of a tree can be defined as the _maximum distance_ between the root and all its leaf nodes.\n\nWith the above definitions, we can rephrase the problem as finding out the nodes that are _overall_ close to all other nodes, especially the leaf nodes.\n\n>If we view the graph as an _area of circle_, and the leaf nodes as the _peripheral_ of the circle, then what we are looking for are actually the **_[centroids](https://en.wikipedia.org/wiki/Centroid)_** of the circle, _i.e._ nodes that is close to all the peripheral nodes (leaf nodes).\n\n![example of graph](../Figures/310/310_example.png)\n\nFor instance, in the above graph, it is clear that the node with the value `1` is the _centroid_ of the graph.\nIf we pick the node `1` as the root to form a tree, we would obtain a tree with the _minimum height_, compared to other trees that are formed with any other nodes.\n\nBefore we proceed, here we make one assertion which is essential to the algorithm. \n\n>For the tree-alike graph, the number of centroids is no more than 2.\n\nIf the nodes form a chain, it is intuitive to see that the above statement holds, which can be broken into the following two cases:\n\n- If the number of nodes is even, then there would be two centroids.\n- If the number of nodes is odd, then there would be only one centroid.\n\n![example of centroids](../Figures/310/310_1_2_centroids.png)\n\nFor the rest of cases, we could prove by **_contradiction_**. \nSuppose that we have 3 centroids in the graph, if we remove all the non-centroid nodes in the graph, then the 3 centroids nodes must form a _triangle_ shape, as follows:\n\n![triangle](../Figures/310/310_triangle.png)\n\nBecause these centroids are equally important to each other, and they should equally close to each other as well.\nIf any of the edges that is missing from the triangle, then the 3 centroids would be reduced down to a single centroid.\n\nHowever, the triangle shape forms a _cycle_ which is **_contradicted_** to the condition that there is no cycle in our tree-alike graph.\nSimilarly, for any of the cases that have more than 2 centroids, they must form a cycle among the centroids, which is contradicted to our condition.\n\nTherefore, there cannot be more than 2 centroids in a tree-alike graph.\n\n\n**Algorithm**\n\n>Given the above intuition, the problem is now reduced down to looking for all the _**centroid**_ nodes in a tree-alike graph, which in addition are no more than two.\n\nThe idea is that we _trim_ out the leaf nodes layer by layer, until we reach the _core_ of the graph, which are the centroids nodes.\n\n![trim](../Figures/310/310_trim.png)\n\nOnce we trim out the first layer of the leaf nodes (nodes that have only one connection), some of the non-leaf nodes would become leaf nodes.\n\nThe trimming process continues until there are only two nodes left in the graph, which are the _centroids_ that we are looking for.\n\nThe above algorithm resembles the _topological sorting_ algorithm which generates the order of objects based on their dependencies.\nFor instance, in the scenario of course scheduling, the courses that have the least dependency would appear first in the order.\n\nIn our case, we trim out the leaf nodes first, which are the **farther** away from the centroids.\nAt each step, the nodes we trim out are closer to the centroids than the nodes in the previous step.\nAt the end, the trimming process terminates at the __centroids__ nodes.\n\n**Implementation**\n\nGiven the above algorithm, we could implement it via the _Breadth First Search_ (BFS) strategy, to trim the leaf nodes layer by layer (_i.e._ level by level).\n\n- Initially, we would build a graph with the _[adjacency list](https://en.wikipedia.org/wiki/Adjacency_list)_ from the input.\n\n- We then create a queue which would be used to hold the leaf nodes.\n\n- At the beginning, we put all the current leaf nodes into the queue.\n\n- We then run a loop until there is only two nodes left in the graph.\n\n- At each iteration, we remove the current leaf nodes from the queue. While removing the nodes, we also remove the edges that are linked to the nodes. As a consequence, some of the non-leaf nodes would become leaf nodes. And these are the nodes that would be trimmed out in the next iteration.\n\n- The iteration terminates when there are no more than two nodes left in the graph, which are the desired _centroids_ nodes.\n\nHere are some sample implementations that are inspired from the post of [dietpepsi](https://leetcode.com/problems/minimum-height-trees/discuss/76055/Share-some-thoughts) in the discussion forum.\n\n\n<iframe src=\"https://leetcode.com/playground/hoMGGKRK/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"hoMGGKRK\"></iframe>\n\n\n\n**Complexity Analysis**\n\nLet $$|V|$$ be the number of nodes in the graph, then the number of edges would be $$|V| - 1$$ as specified in the problem.\n\n- Time Complexity: $$\\mathcal{O}(|V|)$$\n\n    - First, it takes $$|V|-1$$ iterations for us to construct a graph, given the edges.\n\n    - With the constructed graph, we retrieve the initial leaf nodes, which takes $$|V|$$ steps.\n\n    - During the BFS trimming process, we will trim out _almost_ all the nodes ($$|V|$$) and edges ($$|V|-1$$) from the edges.\n    Therefore, it would take us around $$|V| + |V| - 1$$ operations to reach the centroids.\n\n    - To sum up, the overall time complexity of the algorithm is $$\\mathcal{O}(|V|)$$.\n\n\n- Space Complexity: $$\\mathcal{O}(|V|)$$\n\n    - We construct the graph with adjacency list, which has $$|V|$$ nodes and $$|V|-1$$ edges.\n    Therefore, we would need $$|V| + |V|-1$$ space for the representation of the graph.\n\n    - In addition, we use a queue to keep track of the leaf nodes.\n    In the worst case, the nodes form a star shape, with one centroid and the rest of the nodes as leaf nodes.\n    In this case, we would need $$|V|-1$$ space for the queue.\n\n    - To sum up, the overall space complexity of the algorithm is also $$\\mathcal{O}(|V|)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

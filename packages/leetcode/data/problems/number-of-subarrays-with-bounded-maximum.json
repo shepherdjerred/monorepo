@@ -1,0 +1,133 @@
+{
+  "questionId": "811",
+  "questionFrontendId": "795",
+  "title": "Number of Subarrays with Bounded Maximum",
+  "titleSlug": "number-of-subarrays-with-bounded-maximum",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code> and two integers <code>left</code> and <code>right</code>, return <em>the number of contiguous non-empty <strong>subarrays</strong> such that the value of the maximum array element in that subarray is in the range </em><code>[left, right]</code>.</p>\n\n<p>The test cases are generated so that the answer will fit in a <strong>32-bit</strong> integer.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,1,4,3], left = 2, right = 3\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> There are three subarrays that meet the requirements: [2], [2, 1], [3].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,9,2,5,6], left = 2, right = 8\n<strong>Output:</strong> 7\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>0 &lt;= left &lt;= right &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"numSubarrayBoundedMax\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"name\": \"left\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"right\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"89.5K\", \"totalSubmission\": \"163.3K\", \"totalAcceptedRaw\": 89537, \"totalSubmissionRaw\": 163327, \"acRate\": \"54.8%\"}",
+  "likes": 2453,
+  "dislikes": 135,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Subarrays With Median K\", \"titleSlug\": \"count-subarrays-with-median-k\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Number of Subarrays Where Boundary Elements Are Maximum\", \"titleSlug\": \"find-the-number-of-subarrays-where-boundary-elements-are-maximum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,1,4,3]\n2\n3",
+    "[2,9,2,5,6]\n2\n8"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numSubarrayBoundedMax(vector<int>& nums, int left, int right) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numSubarrayBoundedMax(int[] nums, int left, int right) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numSubarrayBoundedMax(self, nums: List[int], left: int, right: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numSubarrayBoundedMax(self, nums, left, right):\n        \"\"\"\n        :type nums: List[int]\n        :type left: int\n        :type right: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} left\n * @param {number} right\n * @return {number}\n */\nvar numSubarrayBoundedMax = function(nums, left, right) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numSubarrayBoundedMax(nums: number[], left: number, right: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumSubarrayBoundedMax(int[] nums, int left, int right) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numSubarrayBoundedMax(int* nums, int numsSize, int left, int right) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numSubarrayBoundedMax(nums []int, left int, right int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numSubarrayBoundedMax(nums: IntArray, left: Int, right: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numSubarrayBoundedMax(_ nums: [Int], _ left: Int, _ right: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_subarray_bounded_max(nums: Vec<i32>, left: i32, right: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} left\n# @param {Integer} right\n# @return {Integer}\ndef num_subarray_bounded_max(nums, left, right)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $left\n     * @param Integer $right\n     * @return Integer\n     */\n    function numSubarrayBoundedMax($nums, $left, $right) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numSubarrayBoundedMax(List<int> nums, int left, int right) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numSubarrayBoundedMax(nums: Array[Int], left: Int, right: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_subarray_bounded_max(nums :: [integer], left :: integer, right :: integer) :: integer\n  def num_subarray_bounded_max(nums, left, right) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_subarray_bounded_max(Nums :: [integer()], Left :: integer(), Right :: integer()) -> integer().\nnum_subarray_bounded_max(Nums, Left, Right) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-subarray-bounded-max nums left right)\n  (-> (listof exact-integer?) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "424",
+    "content": "[TOC]\n\n---\n### Approach #1: Counting [Accepted]\n\n**Intuition**\n\nWe can make the following logical steps to arrive at the solution:\n\nAs we only care about whether each element is less than, between, or greater than the interval `[L, R]`, let's pretend each element is either `0` if it is less than `L`; `1` if it is between `L` and `R`; or `2` if it is greater than `R`.\n\nThen, we want the number of subarrays with no `2` and at least one `1`.  The `2`s split the array into groups of arrays with only `0`s and `1`s.  For example, if our array is `[0, 0, 1, 2, 2, 1, 0, 2, 0]`, then the answer is just the answer for `[0, 0, 1]` plus the answer for `[1, 0]` plus the answer for `[0]`.\n\nFor each such group (arrays of only `0`s or `1`s), to count the number of subarrays that have at least one `1`, let's count all the subarrays in the group, minus the subarrays that only have zeroes.  \n\nFor example, `[0, 0, 1]` has 6 subarrays, 3 of which are zero-only, which adds 3 to the answer; `[1, 0]` has 3 subarrays, 1 of which is zero-only, which adds 2 to the answer; and `[0]` has 1 subarray, 1 of which is zero-only, which adds 0 to the answer.  The final answer to the previous original example of `A = [0, 0, 1, 2, 2, 1, 0, 2, 0]` is `3 + 2 + 0 = 5`.\n\n**Algorithm**\n\nSay `count(B)` is the number of subarrays that have all elements less than or equal to `B`.  From the above reasoning, the answer is `count(R) - count(L-1)`.\n\nHow do we compute `count(B)`?  We remember `cur`, the number of contiguous, previous elements less than or equal to `B`.  When we see a new element less than or equal to `B`, the number of valid subarrays ending at this position is `cur + 1`.  When we see a new element greater than `B`, the number of valid subarrays ending at this position is 0.\n\n<iframe src=\"https://leetcode.com/playground/oEyyUUE9/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"oEyyUUE9\"></iframe>\n\n**Complexity Analysis**\n\n* Time Complexity:  $$O(N)$$, where $$N$$ is the length of `A`.\n\n* Space Complexity: $$O(1)$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

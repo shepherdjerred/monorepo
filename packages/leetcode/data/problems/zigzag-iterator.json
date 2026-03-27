@@ -1,0 +1,122 @@
+{
+  "questionId": "281",
+  "questionFrontendId": "281",
+  "title": "Zigzag Iterator",
+  "titleSlug": "zigzag-iterator",
+  "difficulty": "Medium",
+  "content": "<p>Given two vectors of integers <code>v1</code> and <code>v2</code>, implement an iterator to return their elements alternately.</p>\n\n<p>Implement the <code>ZigzagIterator</code> class:</p>\n\n<ul>\n\t<li><code>ZigzagIterator(List&lt;int&gt; v1, List&lt;int&gt; v2)</code> initializes the object with the two vectors <code>v1</code> and <code>v2</code>.</li>\n\t<li><code>boolean hasNext()</code> returns <code>true</code> if the iterator still has elements, and <code>false</code> otherwise.</li>\n\t<li><code>int next()</code> returns the current element of the iterator and moves the iterator to the next element.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> v1 = [1,2], v2 = [3,4,5,6]\n<strong>Output:</strong> [1,3,2,4,5,6]\n<strong>Explanation:</strong> By calling next repeatedly until hasNext returns false, the order of elements returned by next should be: [1,3,2,4,5,6].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> v1 = [1], v2 = []\n<strong>Output:</strong> [1]\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> v1 = [], v2 = [1]\n<strong>Output:</strong> [1]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= v1.length, v2.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= v1.length + v2.length &lt;= 2000</code></li>\n\t<li><code>-2<sup>31</sup> &lt;= v1[i], v2[i] &lt;= 2<sup>31</sup> - 1</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> What if you are given <code>k</code> vectors? How well can your code be extended to such cases?</p>\n\n<p><strong>Clarification for the follow-up question:</strong></p>\n\n<p>The &quot;Zigzag&quot; order is not clearly defined and is ambiguous for <code>k &gt; 2</code> cases. If &quot;Zigzag&quot; does not look right to you, replace &quot;Zigzag&quot; with &quot;Cyclic&quot;.</p>\n\n<p><strong>Follow-up Example:</strong></p>\n\n<pre>\n<strong>Input:</strong> v1 = [1,2,3], v2 = [4,5,6,7], v3 = [8,9]\n<strong>Output:</strong> [1,4,8,2,5,9,3,6,7]\n</pre>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"ZigzagIterator\",\n  \"params\": [\n    {\n      \"name\": \"v1\",\n      \"type\": \"list<integer>\"\n    },\n    {\n      \"name\": \"v2\",\n      \"type\": \"list<integer>\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\",\n    \"dealloc\": true\n  },\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"111.7K\", \"totalSubmission\": \"167.8K\", \"totalAcceptedRaw\": 111655, \"totalSubmissionRaw\": 167839, \"acRate\": \"66.5%\"}",
+  "likes": 710,
+  "dislikes": 43,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Binary Search Tree Iterator\", \"titleSlug\": \"binary-search-tree-iterator\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Flatten 2D Vector\", \"titleSlug\": \"flatten-2d-vector\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Peeking Iterator\", \"titleSlug\": \"peeking-iterator\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Flatten Nested List Iterator\", \"titleSlug\": \"flatten-nested-list-iterator\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Merge Strings Alternately\", \"titleSlug\": \"merge-strings-alternately\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2]\n[3,4,5,6]",
+    "[1]\n[]",
+    "[]\n[1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 17, \"slug\": \"coinbase\", \"name\": \"Coinbase\"}, {\"timesEncountered\": 5, \"slug\": \"c3-ai\", \"name\": \"C3.ai\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Iterator",
+      "slug": "iterator"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class ZigzagIterator {\npublic:\n    ZigzagIterator(vector<int>& v1, vector<int>& v2) {\n        \n    }\n\n    int next() {\n        \n    }\n\n    bool hasNext() {\n        \n    }\n};\n\n/**\n * Your ZigzagIterator object will be instantiated and called as such:\n * ZigzagIterator i(v1, v2);\n * while (i.hasNext()) cout << i.next();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "public class ZigzagIterator {\n\n    public ZigzagIterator(List<Integer> v1, List<Integer> v2) {\n        \n    }\n\n    public int next() {\n        \n    }\n\n    public boolean hasNext() {\n        \n    }\n}\n\n/**\n * Your ZigzagIterator object will be instantiated and called as such:\n * ZigzagIterator i = new ZigzagIterator(v1, v2);\n * while (i.hasNext()) v[f()] = i.next();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class ZigzagIterator:\n    def __init__(self, v1: List[int], v2: List[int]):\n        \n\n    def next(self) -> int:\n        \n\n    def hasNext(self) -> bool:\n        \n\n# Your ZigzagIterator object will be instantiated and called as such:\n# i, v = ZigzagIterator(v1, v2), []\n# while i.hasNext(): v.append(i.next())"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class ZigzagIterator(object):\n\n    def __init__(self, v1, v2):\n        \"\"\"\n        Initialize your data structure here.\n        :type v1: List[int]\n        :type v2: List[int]\n        \"\"\"\n        \n\n    def next(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def hasNext(self):\n        \"\"\"\n        :rtype: bool\n        \"\"\"\n        \n\n# Your ZigzagIterator object will be instantiated and called as such:\n# i, v = ZigzagIterator(v1, v2), []\n# while i.hasNext(): v.append(i.next())"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @constructor\n * @param {Integer[]} v1\n * @param {Integer[]} v1\n */\nvar ZigzagIterator = function ZigzagIterator(v1, v2) {\n    \n};\n\n\n/**\n * @this ZigzagIterator\n * @returns {boolean}\n */\nZigzagIterator.prototype.hasNext = function hasNext() {\n    \n};\n\n/**\n * @this ZigzagIterator\n * @returns {integer}\n */\nZigzagIterator.prototype.next = function next() {\n    \n};\n\n/**\n * Your ZigzagIterator will be called like this:\n * var i = new ZigzagIterator(v1, v2), a = [];\n * while (i.hasNext()) a.push(i.next());\n*/"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class ZigzagIterator {\n    constructor(v1: number[], v2: number[]) {\n\t\t\n    }\n\n    next(): number {\n\t\t\n    }\n\n    hasNext(): boolean {\n\t\t\n    }\n}\n\n/**\n * Your ZigzagIterator will be instantiated and called as such:\n * var i = new ZigzagIterator(v1, v2), a = [];\n * while (i.hasNext()) a.push(i.next());\n*/"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class ZigzagIterator {\n\n    public ZigzagIterator(IList<int> v1, IList<int> v2) {\n        \n    }\n\n    public bool HasNext() {\n        \n    }\n\n    public int Next() {\n        \n    }\n}\n\n/**\n * Your ZigzagIterator will be called like this:\n * ZigzagIterator i = new ZigzagIterator(v1, v2);\n * while (i.HasNext()) v[f()] = i.Next();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "struct ZigzagIterator {\n    \n};\n\nstruct ZigzagIterator *zigzagIteratorCreate(int* v1, int v1Size, int* v2, int v2Size) {\n    \n}\n\nbool zigzagIteratorHasNext(struct ZigzagIterator *iter) {\n    \n}\n\nint zigzagIteratorNext(struct ZigzagIterator *iter) {\n    \n}\n\n/** Deallocates memory previously allocated for the iterator */\nvoid zigzagIteratorFree(struct ZigzagIterator *iter) {\n    \n}\n\n/**\n * Your ZigzagIterator will be called like this:\n * struct ZigzagIterator *i = zigzagIteratorCreate(v1, v1Size, v2, v2Size);\n * while (zigzagIteratorHasNext(i)) printf(\"%d\\n\", zigzagIteratorNext(i));\n * zigzagIteratorFree(i);\n */"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type ZigzagIterator struct {\n    \n}\n\nfunc Constructor(v1, v2 []int) *ZigzagIterator {\n    \n}\n\nfunc (this *ZigzagIterator) next() int {\n    \n}\n\nfunc (this *ZigzagIterator) hasNext() bool {\n\t\n}\n\n/**\n * Your ZigzagIterator object will be instantiated and called as such:\n * obj := Constructor(param_1, param_2);\n * for obj.hasNext() {\n *\t ans = append(ans, obj.next())\n * }\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class ZigzagIterator {\n    constructor(v1: IntArray, v2: IntArray) {\n        \n    }\n    \n    fun next(): Int {\n        \n    }\n    \n    fun hasNext(): Boolean {\n        \n    }\n}\n\n// Your ZigzagIterator object will be instantiated and called as such:\n// var i = ZigzagIterator(v1, v2)\n// var ret = ArrayList<Int>()\n// while(i.hasNext()){\n//\t\tret.add(i.next())\n// }"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class ZigzagIterator {\n    init(_ v1: [Int], _ v2: [Int]) {\n        \n    }\n    \n    func next() -> Int {\n        \n    }\n    \n    func hasNext() -> Bool {\n        \n    }\n}\n\n// Your ZigzagIterator object will be instantiated and called as such:\n// var i = ZigzagIterator(v1, v2)\n// var ret = [Int]()\n// while i.hasNext() {\n// \t\tret.append(i.next())\n// }"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct ZigzagIterator {\n    \n}\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl ZigzagIterator {\n    /** initialize your data structure here. */\n    \n    fn new(v1: Vec<i32>, v2: Vec<i32>) -> Self {\n        \n    }\n    \n    fn next(&self) -> i32 {\n        \n    }\n    \n    fn has_next(&self) -> bool {\n        \n    }\n}\n\n/**\n * Your ZigzagIterator object will be instantiated and called as such:\n * let obj = ZigzagIterator::new(v1, v2);\n * let ret_1: i32 = obj.next();\n * let ret_2: bool = obj.has_next();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class ZigzagIterator\n    # @param {Integer[]} v1\n    # @param {Integer[]} v2\n    def initialize(v1, v2)\n        \n    end\n\n    # @return {Boolean}\n    def has_next\n        \n    end\n\n    # @return {Integer}\n    def next\n        \n    end\nend\n\n# Your ZigzagIterator will be called like this:\n# i, v = ZigzagIterator.new(v1, v2), []\n# while i.has_next()\n#    v << i.next\n# end"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class ZigzagIterator {\n    /**\n     * Initialize your data structure here.\n     * @param Integer[] $v1\n     * @param Integer[] $v2\n     */\n    function __construct($v1, $v2) {\n        \n    }\n    \n    /**\n     * @return Integer\n     */\n    function next() {\n        \n    }\n    \n    /**\n     * @return Boolean\n     */\n    function hasNext() {\n        \n    }\n}\n\n/**\n * Your ZigzagIterator object will be instantiated and called as such:\n * $obj = ZigzagIterator($v1, $v2);\n * while ($obj->hasNext()) {\n *   array_push($ans, $obj->next())\n * }\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class ZigzagIterator(_v1: Array[Int], _v2: Array[Int]) {\n    /** initialize your data structure here. */\n    \n    def next(): Int = {\n        \n    }\n    \n    def hasNext(): Boolean = {\n        \n    }\n}\n\n/**\n * Your ZigzagIterator object will be instantiated and called as such:\n * var obj = new ZigzagIterator(v1, v2)\n * while (obj.hasNext()) {\n *     ans += obj.next()\n * }\n */"
+    }
+  ],
+  "solution": {
+    "id": "1038",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nWe are asked to design a _**Zigzag Iterator**_ for two vectors, so that we could output the elements in an alternative way.\n\n>The **_follow-up_** question is that what if we are given `k` vectors, instead of two?\n\nSince this is a design problem, it would be more interesting to tackle the problem while taking into account the follow-up question all at once.\n\nIn this article, we will present two approaches which can be easily extended to `k` vectors.\n\n\n---\n### Approach 1: Two-Pointers\n\n**Intuition**\n\nWe are asked to iterate the elements, while alternating the vectors.\nOne can imagine this as iterating over a two-dimension matrix, where each row represents an input vector.\n\n>The idea is that we can employ _**two pointers**_ for iteration: one pointed to the vector (denoted as `p_vec`), and the other pointed to the element within the vector (denoted as `p_elem`). \n\n![two pointers](../Figures/281/281_two_pointers.png)\n\nAs we can see from the above graph, the vector pointer (`p_vec`) will move in the _zigzag_ way (more precisely **_cyclic_** way), _i.e._ once it reaches the last vector, it will start all over from the first vector.\n\nThe element pointer (`p_elem`) increments, only when the vector pointer finishes a _cycle_.\n\nWe give the priority to the vector pointer, _i.e._ we move the vector pointer _first_, then the element pointer.\n\n**Algorithm**\n\nWith the above-mentioned two pointers, one should have all the elements needed to implement the function of `next()`.\n\nTo implement the function of `hasNext()`, we can keep **_account_** of the number of elements we output so far.\nOnce it reaches the total number of elements in the input, we would know that there is no more element to output.\n\nHere are some sample implementations based on the above ideas.\n\n<iframe src=\"https://leetcode.com/playground/bu4NRBqo/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bu4NRBqo\"></iframe>\n\n\n\n**Complexity Analysis**\n\nLet $$K$$ be the number of input vectors, although it is always two in the setting of the problem.\nThis variable becomes relevant, once the input becomes $$K$$ vectors.\n\n- Time Complexity:\n\n    - For the `next()` function, at most it will take us $$K$$ iterations to find a valid element output. Hence, its time complexity is $$\\mathcal{O}(K)$$.\n\n    - For the `hasNext()` function, its time complexity is $$\\mathcal{O}(1)$$.\n\n\n- Space Complexity:\n\n    - For the `next()` function, we keep the references to all the input vectors in the variable `self.vectors`.\n    As a result, we would need $$\\mathcal{O}(K)$$ space for $$K$$ vectors.\n    In addition, we used some constant-space variables such as the pointers to the vector and the element.\n    Hence, the overall space complexity for this function is $$\\mathcal{O}(K)$$.\n\n    - *Note:* we did not copy the input vectors, but simply keep references to them.\n\n\n---\n### Approach 2: Queue of Pointers\n\n**Intuition**\n\nThe above approach is not the most efficient when the input vectors are not of equal size.\nFor instance, for the input vectors of `[1], [2, 3, 4, 5]`, we would waste some computing cycles to alternate the vector pointer, once we consume all the elements from the shorter vector.\nThe problem exacerbates when the number of input vectors grows.\n\n>One idea to alleviate the above problem is to keep a **_queue_** of pointers to the input vectors as shown in the following graph.\n\n![queue of pointers](../Figures/281/281_queue.png)\n\nThe queue functions in the following ways:\n\n- Initially, each input vector will have a corresponding pointer in the queue.\n\n- At each invocation of `next()` function, we _**pop**_ out a pointer from the queue. With the pointer to the chosen vector, we further output an element from the vector.\n\n    - If the vector still has some elements left, we _**append**_ another pointer pointed to the vector at the end of the queue.\n    In this way, we _alternate_ the order of vectors.\n\n    - If all the elements in the chosen vector are already outputted, we will NOT append another pointer. As a result, the vector would be out of the scope of the iteration. Later we won't waste any effort to iterate over the vectors that are exhausted.\n\n- As to the `hasNext()` function, as long as there are still some pointers left in the queue, we would still have more elements to output.\n\n**Algorithm**\n\nOne could use the `Iterator` object (in Java or C++) as the pointer to the vector.\nSome of you might argue that we might be building a _iterator_ with a built-in iterator. \nThis has certain truth in it.\n\n>However, the key point here is that we could simply use some _index_ and _integer_ to implement the role of _pointer_ in the above idea.\n\nThere are several advantages of using the _queue_ of pointers, as one will see from the implementations later:\n\n- First of all, we would achieve a constant time complexity for the `next()` function.\n\n- The logics of implementation is much simplified and thus easy to read.\n\n<iframe src=\"https://leetcode.com/playground/YwsYqB5W/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"YwsYqB5W\"></iframe>\n\n\n\n**Complexity Analysis**\n\nLet $$K$$ be the number of input vectors, although it is always two in the setting of the problem.\nThis variable becomes relevant, once the input becomes $$K$$ vectors.\n\n- Time Complexity: $$\\mathcal{O}(1)$$\n\n    - For both the `next()` function and the `hasNext()` function, we have a constant time complexity, as we discussed before.\n\n- Space Complexity: $$\\mathcal{O}(K)$$\n\n    - We use a queue to keep track of the _pointers_ to the input vectors in the variable `self.vectors`.\n    As a result, we would need $$\\mathcal{O}(K)$$ space for $$K$$ vectors.\n\n    - Although the size of queue will reduce over time once we exhaust some shorter vectors, the space complexity for both functions is still $$\\mathcal{O}(K)$$.\n\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

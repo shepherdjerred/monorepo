@@ -1,0 +1,134 @@
+{
+  "questionId": "87",
+  "questionFrontendId": "87",
+  "title": "Scramble String",
+  "titleSlug": "scramble-string",
+  "difficulty": "Hard",
+  "content": "<p>We can scramble a string s to get a string t using the following algorithm:</p>\n\n<ol>\n\t<li>If the length of the string is 1, stop.</li>\n\t<li>If the length of the string is &gt; 1, do the following:\n\t<ul>\n\t\t<li>Split the string into two non-empty substrings at a random index, i.e., if the string is <code>s</code>, divide it to <code>x</code> and <code>y</code> where <code>s = x + y</code>.</li>\n\t\t<li><strong>Randomly</strong>&nbsp;decide to swap the two substrings or to keep them in the same order. i.e., after this step, <code>s</code> may become <code>s = x + y</code> or <code>s = y + x</code>.</li>\n\t\t<li>Apply step 1 recursively on each of the two substrings <code>x</code> and <code>y</code>.</li>\n\t</ul>\n\t</li>\n</ol>\n\n<p>Given two strings <code>s1</code> and <code>s2</code> of <strong>the same length</strong>, return <code>true</code> if <code>s2</code> is a scrambled string of <code>s1</code>, otherwise, return <code>false</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s1 = &quot;great&quot;, s2 = &quot;rgeat&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> One possible scenario applied on s1 is:\n&quot;great&quot; --&gt; &quot;gr/eat&quot; // divide at random index.\n&quot;gr/eat&quot; --&gt; &quot;gr/eat&quot; // random decision is not to swap the two substrings and keep them in order.\n&quot;gr/eat&quot; --&gt; &quot;g/r / e/at&quot; // apply the same algorithm recursively on both substrings. divide at random index each of them.\n&quot;g/r / e/at&quot; --&gt; &quot;r/g / e/at&quot; // random decision was to swap the first substring and to keep the second substring in the same order.\n&quot;r/g / e/at&quot; --&gt; &quot;r/g / e/ a/t&quot; // again apply the algorithm recursively, divide &quot;at&quot; to &quot;a/t&quot;.\n&quot;r/g / e/ a/t&quot; --&gt; &quot;r/g / e/ a/t&quot; // random decision is to keep both substrings in the same order.\nThe algorithm stops now, and the result string is &quot;rgeat&quot; which is s2.\nAs one possible scenario led s1 to be scrambled to s2, we return true.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s1 = &quot;abcde&quot;, s2 = &quot;caebd&quot;\n<strong>Output:</strong> false\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s1 = &quot;a&quot;, s2 = &quot;a&quot;\n<strong>Output:</strong> true\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>s1.length == s2.length</code></li>\n\t<li><code>1 &lt;= s1.length &lt;= 30</code></li>\n\t<li><code>s1</code> and <code>s2</code> consist of lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{ \r\n  \"name\": \"isScramble\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s1\",\r\n      \"type\": \"string\"\r\n    },\r\n    {\r\n      \"name\": \"s2\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"310.2K\", \"totalSubmission\": \"702.6K\", \"totalAcceptedRaw\": 310236, \"totalSubmissionRaw\": 702584, \"acRate\": \"44.2%\"}",
+  "likes": 3629,
+  "dislikes": 1313,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"great\"\n\"rgeat\"",
+    "\"abcde\"\n\"caebd\"",
+    "\"a\"\n\"a\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 18, \"slug\": \"darwinbox\", \"name\": \"Darwinbox\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"rubrik\", \"name\": \"Rubrik\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isScramble(string s1, string s2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isScramble(String s1, String s2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isScramble(self, s1: str, s2: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isScramble(self, s1, s2):\n        \"\"\"\n        :type s1: str\n        :type s2: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s1\n * @param {string} s2\n * @return {boolean}\n */\nvar isScramble = function(s1, s2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isScramble(s1: string, s2: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsScramble(string s1, string s2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isScramble(char* s1, char* s2) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isScramble(s1 string, s2 string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isScramble(s1: String, s2: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isScramble(_ s1: String, _ s2: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_scramble(s1: String, s2: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s1\n# @param {String} s2\n# @return {Boolean}\ndef is_scramble(s1, s2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s1\n     * @param String $s2\n     * @return Boolean\n     */\n    function isScramble($s1, $s2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isScramble(String s1, String s2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isScramble(s1: String, s2: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_scramble(s1 :: String.t, s2 :: String.t) :: boolean\n  def is_scramble(s1, s2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_scramble(S1 :: unicode:unicode_binary(), S2 :: unicode:unicode_binary()) -> boolean().\nis_scramble(S1, S2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-scramble s1 s2)\n  (-> string? string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1790",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Dynamic Programming\n\n#### Intuition\n\nWe have a recursive definition of scrambling a string `s`. First, we divide `s` into `x` and `y`. Then we either keep `s` as `x + y` or swap them and get `y + x`. After that, we scramble `x` and `y` independently. Let `x'` denote the scrambled `x` and `y'` denote the scrambled `y`. `s` will eventually become `x' + y'` or `y' + x'`.\n\n![split](../Figures/87/diagram2.drawio.png)\n\nHow do we check whether a given string `t` is a scrambled string of `s`? First, we choose an index and cut `s` into `x` and `y` (`s = x + y`). Then, we see if we can cut `t` into `x'` and `y'` (`t = x' + y'` if we do not swap or `t = y' + x'` if we do). Since verifying that `x'` is a scrambled `x` and `y'` is scrambled `y` are smaller subproblems, we will solve the problem using dynamic programming.\n\nWe have two strings `s1` and `s2`.\n\nFor each given dp state, we need 3 variables: `length`, `i`, and `j`.\n\nEach state will focus on two substrings. The first one will be a substring of `s1`, starting at index `i` with length equal to `length` - let's call this substring `s`. The second one will be a substring of `s2`, starting at index `j` with `length` - let's call this substring `t`.\n\nLet `dp[length][i][j]` be a boolean representing whether `t` is a scrambled version of `s`.\n\nThe base case, as defined by the problem is when `length = 1`. Here we do not have to split strings into smaller ones, so we can easily compare the corresponding characters: `dp[1][i][j]` is `true` when `s1[i]` equals `s2[j]`, and `false` otherwise.\n\nNow we need to write down the transitions of `dp`. We will use the following image as an example during the explanations.\n\n![split](../Figures/87/diagram.drawio.png)\n\nAt each state, we need to perform a split on `s1`. We will consider all possible splits. If we are currently considering a substring with a length of `length`, then we could perform a split at any index `newLength`, where `0 < newLength < length`. (Here, `newLength` represents the length of the left string after the split). A split gives us two new strings:\n\n- A substring of `s1` starting at index `i` and ending with index `i + newLength - 1`. This string has a length of `newLength` (Blue in the picture)\n\n- A substring of `s1` starting at index `i + newLength` and ending at index `i + length - 1`. This string has a length of `length - newLength`. (Yellow in the picture)\n\nFor each split, we have two cases:\n\n* Do not swap the blue and yellow parts. The corresponding substrings of `s2` must be scrambled versions of the substrings we just created by splitting `s1`. This means both `dp[newLength][i][j]` (representing the blue parts) and `dp[length - newLength][i + newLength][j + newLength]` (representing the yellow parts) must be true.\n* Swap the blue and yellow parts. As you can see in the image, this misaligns the blue and yellow parts between `s1` and `s2`, but we still need the parts to match (we still need the blue part of `s1` to be a scrambled version of the blue part of `s2`, same with the yellow part). What are the new starting indices? For blue, it's `s1` starting with `i` and `s2` starting with `j + length - newLength`. For yellow, it's `s1` starting with `i + newLength` and `s2` starting with `j`. Thus, we need both `dp[newLength][i][j+length-newLength]` and `dp[length-newLength][i+newLength][j]` to be `true`.\n\nNow we can formally write down the transitions. For `length > 1`, `dp[length][i][j]` is `true` if and only if for at least one `newLength` where `0 < newLength < length`:\n\n`(dp[newLength][i][j] && dp[length-newLength][i+newLength][j+newLength]) || (dp[newLength][i][j+length-newLength] && dp[length-newLength][i+newLength][j])` is `true`.\n\nLet `n` denote the length of the input strings. The answer to the problem is `dp[n][0][0]`, as starting at index `0` with length `n` is considering the entire input string.\n\n#### Algorithm\n\n1. Iterate `i` from `0` to `n-1`.\n\t* Iterate `j` from `0` to `n-1`.\n\t\t* Set `dp[1][i][j]` to the boolean value of `s1[i] == s2[j]`. (The base case of the DP).\n2. Iterate `length` from `2` to `n`.\n\t* Iterate `i` from `0` to `n + 1 - length`.\n\t\t* Iterate `j` from `0` to `n + 1 - length`.\n\t\t\t* Iterate `newLength` from `1` to `length - 1`.\n\t\t\t\t* If `dp[newLength][i][j] && dp[length-newLength][i+newLength][j+newLength]) || (dp[newLength][i][j+l-newLength] && dp[l-newLength][i+newLength][j]` is `true`, set `dp[length][i][j]` to `true`.\n3. Return `dp[n][0][0]`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/XJvjmW6h/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XJvjmW6h\"></iframe>\n\n\n#### Complexity Analysis\n\n* Time complexity: $O(n^4)$.\n\nWe have four nested for loops (for `length`, `i`, `j`, `newLength`), each doing $O(n)$ iterations.\n\n* Space complexity: $O(n^3)$.\n\nWe store the matrix `dp[n+1][n][n]` for dynamic programming.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

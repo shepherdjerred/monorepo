@@ -1,0 +1,141 @@
+{
+  "questionId": "325",
+  "questionFrontendId": "325",
+  "title": "Maximum Size Subarray Sum Equals k",
+  "titleSlug": "maximum-size-subarray-sum-equals-k",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code> and an integer <code>k</code>, return <em>the maximum length of a </em><span data-keyword=\"subarray\"><em>subarray</em></span><em> that sums to</em> <code>k</code>. If there is not one, return <code>0</code> instead.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,-1,5,-2,3], k = 3\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The subarray [1, -1, 5, -2] sums to 3 and is the longest.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [-2,-1,2,1], k = 1\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The subarray [-1, 2] sums to 1 and is the longest.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 2 * 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>4</sup> &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n\t<li><code>-10<sup>9</sup>&nbsp;&lt;= k &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Compute the prefix sum array where psum[i] is the sum of all the elements from <i>0</i> to <i>i</i>.",
+    "At each index <i>i</i>, the sum of the prefix is psum[i], so we are searching for the index x where psum[x] = psum[i] - k.\r\nThe subarray [x + 1, i] will be of sum k.",
+    "Use a hashmap to get the index x efficiently or to determine that it does not exist."
+  ],
+  "metaData": "{\r\n  \"name\": \"maxSubArrayLen\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    },\r\n    {\r\n      \"name\": \"k\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"220.5K\", \"totalSubmission\": \"433.8K\", \"totalAcceptedRaw\": 220462, \"totalSubmissionRaw\": 433810, \"acRate\": \"50.8%\"}",
+  "likes": 2127,
+  "dislikes": 66,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Minimum Size Subarray Sum\", \"titleSlug\": \"minimum-size-subarray-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Range Sum Query - Immutable\", \"titleSlug\": \"range-sum-query-immutable\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Contiguous Array\", \"titleSlug\": \"contiguous-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Subarray Product Less Than K\", \"titleSlug\": \"subarray-product-less-than-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Beauty of an Array After Applying Operation\", \"titleSlug\": \"maximum-beauty-of-an-array-after-applying-operation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Shortest Subarray With OR at Least K II\", \"titleSlug\": \"shortest-subarray-with-or-at-least-k-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,-1,5,-2,3]\n3",
+    "[-2,-1,2,1]\n1"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"palantir-technologies\", \"name\": \"Palantir Technologies\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxSubArrayLen(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxSubArrayLen(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxSubArrayLen(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxSubArrayLen(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar maxSubArrayLen = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxSubArrayLen(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxSubArrayLen(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxSubArrayLen(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxSubArrayLen(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxSubArrayLen(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxSubArrayLen(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_sub_array_len(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef max_sub_array_len(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function maxSubArrayLen($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxSubArrayLen(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxSubArrayLen(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_sub_array_len(nums :: [integer], k :: integer) :: integer\n  def max_sub_array_len(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_sub_array_len(Nums :: [integer()], K :: integer()) -> integer().\nmax_sub_array_len(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-sub-array-len nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1164",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Prefix Sum + Hash Map\n\n**Intuition**\n\nHow many possible subarrays are there in an array of size `n`? There is 1 subarray with length `n`, 2 subarrays with length `n - 1`, 3 subarrays with length `n - 2` and so on. This means there are $$n + (n - 1) + (n - 2) + ... + 2 + 1 = \\frac{n(n + 1)}{2}$$ possible subarrays. This question has bounds of $$n <= 2 * 10^5$$, which means naively checking every possible subarray could mean looking at over 20 billion subarrays. This is far too slow and we need a better solution.\n\nFortunately, we don't care about the vast majority of the subarrays - only the ones that have a sum equal to `k`, so we can do much better than the naive solution. The fact that a subarray needs to be contiguous helps us a lot - it allows us to make use of an idea called **prefix sum**. For those who are unfamiliar with the term prefix sum, a prefix sum is simply the running total of an array. For example, for `nums = [1, 2, 2, 3]`, the prefix sum would be `prefix = [1, 3, 5, 8]`. For an index `i`, `prefix[i]` is the sum of all numbers in `nums` up to and including the number at index `i`.\n\nLet's take a step back - if the question was instead asking \"does a subarray with sum `k` exist,\" how would we detect a subarray having sum `k`? In a prefix sum, differences between elements represent subarray sums. For example, if you had `prefix` representing the prefix sum for an array `nums`, then `prefix[10] - prefix[2]` would be equal to the sum of the subarray in `nums` from index `3` to index `10`. This is because `prefix[10] = nums[0] + nums[1] + nums[2] + ... + nums[10]` and `prefix[2] = nums[0] + nums[1] + nums[2]`. As you can see, all of `prefix[2]` is contained within `prefix[10]`, and subtracting it leaves `nums[3] + ... + nums[10]`.\n\n!?!../Documents/325_1.json:960,540!?!\n\n<br>\n\nTherefore, if there is a subarray with sum `k` in `nums`, then there is a pair of numbers in `prefix` whose difference is `k`. This rephrased problem may seem familiar to you; it's basically a variation of [Two Sum](https://leetcode.com/problems/two-sum/). In Two Sum, we must find two different numbers in an array that equal a target value when added.  We can accomplish this in one pass by storing previously seen numbers in a hash table and, for each number, check if its complement has already been seen. We can adopt a similar technique to solve this problem - store the previously seen prefix sums in a hash map for quick ($$O(1)$$) checking, and check if a specific value exists in the hash map as we iterate along `prefix`. In this case, as we iterate from left to right along `prefix`, if `prefix[i] - k` has already been seen, then we found a pair of indices for a subarray with sum `k`.\n\nNow that we've established how to detect subarrays with sum k, we need to deal with the other part of the original problem - finding the length of the longest subarray with sum k. As mentioned before, we use a hash map to check for existing numbers quickly. Similar to Two Sum, we can store indices as values in this hash map. Therefore, when we find a pair, we can use the stored index and the current index to find the length of the subarray formed by the index pair.\n\nWe don't actually have a prefix array, nor do we need it - one was just being used to describe examples above. Instead, we can use an integer variable to keep track of the prefix sum, and at each number, store the prefix sum up to that number (inclusive) in a hash map along with the current index. If we run into a duplicate (which is possible because of negative numbers), we should not update the index in the hash map because we want the longest subarray, so we want to keep the index as far to the left as possible. For example, if we had the input `nums = [1, -1, 1, 3]` and `k = 4`, then the longest subarray would be the entire array. The prefix sum at each step would be `[1, 0, 1, 4]`. As you can see, we always want to pick the leftmost index to maximize length. Therefore, when we get to the third element and see that `1` already exists in the hash map, we should not replace the value with the current index.\n\nOne more thing: we need to consider the case when the prefix sum is equal to `k`. We can either specifically check when the prefix sum is equal to `k` or we can initialize our hash map with a key of `0` corresponding to a value of `-1`. If you had, for example, `nums = [1, 2]` and `k = 1`, then the longest subarray is, of course, `1`. However, at the first element, our prefix sum is `1`, which means we would need to find a `0` in our hash map to make a pair. Without checking for this case, our algorithm will think that no subarray exists with a sum of `1`.\n\n**Algorithm**\n\n1. Initialize three variables: \n   - An integer `prefixSum` that keeps track of the prefix sum of `nums` as `0`.\n   - An integer `longestSubarray` that will keep track of the longest subarray with sum `k` as 0.\n   - A hash map `indices` that has keys of prefix sums seen so far and values of the first index that each key was seen.\n\n2. Iterate through `nums`. At each index `i`, add `nums[i]` to `prefixSum`. Then, make the following checks:\n    - If `prefixSum == k`, that means the sum of the array up to this index is equal to `k`. Update `longestSubarray = i + 1` (because `i` is 0-indexed)\n    - If `prefixSum - k` exists in `indices`, that means there is a subarray with sum `k` ending at the current `i`. The length will be `i - indices[prefixSum - k]`. If this length is greater than `longestSubarray`, update `longestSubarray`.\n    - If the current `prefixSum` does not yet exist in `indices`, then set `indices[prefixSum] = i`. Only do this if it does not already exist because we only want the earliest instance of this presum.\n\n3. Return `longestSubarray`.\n\n!?!../Documents/325_2.json:960,540!?!\n\n<br>\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/eiXFkSGV/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"eiXFkSGV\"></iframe>\n\n\n**Complexity Analysis**\n\nGiven $$N$$ as the length of `nums`,\n\n* Time complexity: $$O(N)$$\n\n    We only make one pass through `nums`, each time doing a constant amount of work. All hash map operations are $$O(1)$$.\n\n* Space complexity: $$O(N)$$\n\n    Our hash map can potentially hold as many key-value pairs as there are numbers in `nums`. An example of this is when there are no negative numbers in the array.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

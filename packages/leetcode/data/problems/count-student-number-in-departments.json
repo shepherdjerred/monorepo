@@ -1,0 +1,61 @@
+{
+  "questionId": "580",
+  "questionFrontendId": "580",
+  "title": "Count Student Number in Departments",
+  "titleSlug": "count-student-number-in-departments",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Student</code></p>\n\n<pre>\n+--------------+---------+\n| Column Name  | Type    |\n+--------------+---------+\n| student_id   | int     |\n| student_name | varchar |\n| gender       | varchar |\n| dept_id      | int     |\n+--------------+---------+\nstudent_id is the primary key (column with unique values) for this table.\ndept_id is a foreign key (reference column) to dept_id in the Department tables.\nEach row of this table indicates the name of a student, their gender, and the id of their department.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Department</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| dept_id     | int     |\n| dept_name   | varchar |\n+-------------+---------+\ndept_id is the primary key (column with unique values) for this table.\nEach row of this table contains the id and the name of a department.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the respective department name and number of students majoring in each department for all departments in the <code>Department</code> table (even ones with no current students).</p>\n\n<p>Return the result table <strong>ordered</strong> by <code>student_number</code> <strong>in descending order</strong>. In case of a tie, order them by <code>dept_name</code> <strong>alphabetically</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nStudent table:\n+------------+--------------+--------+---------+\n| student_id | student_name | gender | dept_id |\n+------------+--------------+--------+---------+\n| 1          | Jack         | M      | 1       |\n| 2          | Jane         | F      | 1       |\n| 3          | Mark         | M      | 2       |\n+------------+--------------+--------+---------+\nDepartment table:\n+---------+-------------+\n| dept_id | dept_name   |\n+---------+-------------+\n| 1       | Engineering |\n| 2       | Science     |\n| 3       | Law         |\n+---------+-------------+\n<strong>Output:</strong> \n+-------------+----------------+\n| dept_name   | student_number |\n+-------------+----------------+\n| Engineering | 2              |\n| Science     | 1              |\n| Law         | 0              |\n+-------------+----------------+\n</pre>\n",
+  "hints": [
+    "Still remember the difference between 'INNER JOIN' and 'OUTTER JOIN' in SQL?",
+    "Do you know other expressions using the 'COUNT' function besides 'COUNT(*)'?"
+  ],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Student (student_id int,student_name varchar(45), gender varchar(6), dept_id int)\", \"Create table If Not Exists Department (dept_id int, dept_name varchar(255))\"], \"mssql\": [\"Create table Student (student_id int,student_name varchar(45), gender varchar(6), dept_id int)\", \"Create table Department (dept_id int, dept_name varchar(255))\"], \"oraclesql\": [\"Create table Student (student_id int,student_name varchar(45), gender varchar(6), dept_id int)\", \"Create table Department (dept_id int, dept_name varchar(255))\"], \"database\": true, \"name\": \"count_students\", \"pythondata\": [\"Student = pd.DataFrame([], columns=['student_id', 'student_name', 'gender', 'dept_id']).astype({'student_id':'Int64', 'student_name':'object', 'gender':'object', 'dept_id':'Int64'})\", \"Department = pd.DataFrame([], columns=['dept_id', 'dept_name']).astype({'dept_id':'Int64', 'dept_name':'object'})\"], \"postgresql\": [\"\\nCreate table If Not Exists Student (student_id int,student_name varchar(45), gender varchar(6), dept_id int)\", \"Create table If Not Exists Department (dept_id int, dept_name varchar(255))\"], \"database_schema\": {\"Student\": {\"student_id\": \"INT\", \"student_name\": \"VARCHAR(45)\", \"gender\": \"VARCHAR(6)\", \"dept_id\": \"INT\"}, \"Department\": {\"dept_id\": \"INT\", \"dept_name\": \"VARCHAR(255)\"}}}",
+  "stats": "{\"totalAccepted\": \"78.5K\", \"totalSubmission\": \"130.8K\", \"totalAcceptedRaw\": 78467, \"totalSubmissionRaw\": 130836, \"acRate\": \"60.0%\"}",
+  "likes": 254,
+  "dislikes": 38,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Student\":[\"student_id\",\"student_name\",\"gender\",\"dept_id\"],\"Department\":[\"dept_id\",\"dept_name\"]},\"rows\":{\"Student\":[[1,\"Jack\",\"M\",1],[2,\"Jane\",\"F\",1],[3,\"Mark\",\"M\",2]],\"Department\":[[1,\"Engineering\"],[2,\"Science\"],[3,\"Law\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef count_students(student: pd.DataFrame, department: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "159",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach: Using `OUTER JOIN` and `COUNT(expression)` [Accepted]\n\n**Intuition**\n\nUse `GROUP BY` function can measure student number in a department, and then use `COUNT` function to count the number of records of each department.\n\n**Algorithm**\n\nWe can use `OUTER JOIN` to query all departments. The problem is to display '0' for departments without no current students. Some people will write the following query using `COUNT(*)`.\n\n```sql\nSELECT\n    dept_name, COUNT(*) AS student_number\nFROM\n    department\n        LEFT OUTER JOIN\n    student ON department.dept_id = student.dept_id\nGROUP BY department.dept_name\nORDER BY student_number DESC , department.dept_name\n;\n```\n\nUnfortunately, it wrongly displays '1' for departments like 'Law' without current students for the sample input.\n```\n| dept_name   | student_number |\n|-------------|----------------|\n| Engineering | 2              |\n| Law         | 1              |\n| Science     | 1              |\n```\nInstead, `COUNT(expression)` could be used because it does not take account if `expression is null`. You can refer to the [MySQL manual](https://dev.mysql.com/doc/refman/5.7/en/counting-rows.html) for the details.\n\nThus, here is a right solution after fixing the issue above.\n\n**MySQL**\n\n```sql\nSELECT\n    dept_name, COUNT(student_id) AS student_number\nFROM\n    department\n        LEFT OUTER JOIN\n    student ON department.dept_id = student.dept_id\nGROUP BY department.dept_name\nORDER BY student_number DESC , department.dept_name\n;\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

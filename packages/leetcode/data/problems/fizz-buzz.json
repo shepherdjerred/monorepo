@@ -1,0 +1,138 @@
+{
+  "questionId": "412",
+  "questionFrontendId": "412",
+  "title": "Fizz Buzz",
+  "titleSlug": "fizz-buzz",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer <code>n</code>, return <em>a string array </em><code>answer</code><em> (<strong>1-indexed</strong>) where</em>:</p>\n\n<ul>\n\t<li><code>answer[i] == &quot;FizzBuzz&quot;</code> if <code>i</code> is divisible by <code>3</code> and <code>5</code>.</li>\n\t<li><code>answer[i] == &quot;Fizz&quot;</code> if <code>i</code> is divisible by <code>3</code>.</li>\n\t<li><code>answer[i] == &quot;Buzz&quot;</code> if <code>i</code> is divisible by <code>5</code>.</li>\n\t<li><code>answer[i] == i</code> (as a string) if none of the above conditions are true.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> n = 3\n<strong>Output:</strong> [\"1\",\"2\",\"Fizz\"]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> n = 5\n<strong>Output:</strong> [\"1\",\"2\",\"Fizz\",\"4\",\"Buzz\"]\n</pre><p><strong class=\"example\">Example 3:</strong></p>\n<pre><strong>Input:</strong> n = 15\n<strong>Output:</strong> [\"1\",\"2\",\"Fizz\",\"4\",\"Buzz\",\"Fizz\",\"7\",\"8\",\"Fizz\",\"Buzz\",\"11\",\"Fizz\",\"13\",\"14\",\"FizzBuzz\"]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"fizzBuzz\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<string>\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.8M\", \"totalSubmission\": \"2.3M\", \"totalAcceptedRaw\": 1757800, \"totalSubmissionRaw\": 2332403, \"acRate\": \"75.4%\"}",
+  "likes": 3369,
+  "dislikes": 461,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Fizz Buzz Multithreaded\", \"titleSlug\": \"fizz-buzz-multithreaded\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Categorize Box According to Criteria\", \"titleSlug\": \"categorize-box-according-to-criteria\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3",
+    "5",
+    "15"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"mastercard\", \"name\": \"Mastercard\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 11, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 4, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"pure-storage\", \"name\": \"Pure Storage\"}, {\"timesEncountered\": 2, \"slug\": \"cognizant\", \"name\": \"Cognizant\"}, {\"timesEncountered\": 2, \"slug\": \"paypal\", \"name\": \"PayPal\"}]}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> fizzBuzz(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> fizzBuzz(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def fizzBuzz(self, n: int) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def fizzBuzz(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {string[]}\n */\nvar fizzBuzz = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function fizzBuzz(n: number): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> FizzBuzz(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** fizzBuzz(int n, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func fizzBuzz(n int) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun fizzBuzz(n: Int): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func fizzBuzz(_ n: Int) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn fizz_buzz(n: i32) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {String[]}\ndef fizz_buzz(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return String[]\n     */\n    function fizzBuzz($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> fizzBuzz(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def fizzBuzz(n: Int): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec fizz_buzz(n :: integer) :: [String.t]\n  def fizz_buzz(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec fizz_buzz(N :: integer()) -> [unicode:unicode_binary()].\nfizz_buzz(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (fizz-buzz n)\n  (-> exact-integer? (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "569",
+    "content": "## Video Solution\n\n---\n\n<div>\n    <div class=\"video-container\">\n     <iframe src=\"https://player.vimeo.com/video/722301556?texttrack=en-x-autogenerated\" frameborder=\"0\"\n       allow=\"autoplay; fullscreen\"></iframe>\n    </div>\n</div>\n\n> The space complexity analysis focuses only on the extra space used by the algorithm itself, not including the output that the function is expected to return. This is often the case when the output is a required part of the problem's result, and the analysis focuses on the space used beyond what's necessary to produce that output.\n\n## Solution\n---\n\n### Overview\n\nYou must have played FizzBuzz as kids. FizzBuzz charm never gets old. And so here we are looking at how you can take on one step at a time and impress your interviewer with a better and neat approach to solve this problem.\n\n---\n\n### Approach 1: Naive Approach\n\n#### Intuition\n\nThe moment you hear of FizzBuzz you think whether the number is divisible by `3`, `5` or both.\n\n#### Algorithm\n\n1. Initialize an empty answer list.\n1. Iterate on the numbers from $1 ... N$.\n2. For every number, if it is divisible by both 3 and 5, add FizzBuzz to the answer list.\n3. Else, Check if the number is divisible by 3, add Fizz.\n4. Else, Check if the number is divisible by 5, add Buzz.\n5. Else, add the number.\n</pre>\n\n<br>\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/HSWYuFrQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HSWYuFrQ\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity: $O(N)$\n* Space Complexity: $O(1)$\n<br/>\n<br/>\n\n---\n\n### Approach 2: String Concatenation\n\n#### Intuition\n\nThis approach won't reduce the asymptotic complexity, but proves to be a neater solution when `FizzBuzz` comes with a twist.\nWhat if `FizzBuzz` is now `FizzBuzzJazz` i.e.\n<pre>\n3 ---> \"Fizz\" , 5 ---> \"Buzz\", 7 ---> \"Jazz\"\n</pre>\n\nIf you try to solve this with the previous approach the program would have too many conditions to check:\n\n1. Divisible by 3\n2. Divisible by 5\n3. Divisible by 7\n4. Divisible by 3 and 5\n5. Divisible by 3 and 7\n6. Divisible by 7 and 3\n7. Divisible by 3 and 5 and 7\n8. Not divisible by 3 or 5 or 7.\n\nThis way if the `FizzBuzz` mappings increase, the conditions would grow exponentially in your program.  \n\n#### Algorithm\n\nInstead of checking for every combination of these conditions, check for divisibility by given numbers i.e. 3, 5 as given in the problem. If the number is divisible, concatenate the corresponding string mapping `Fizz` or `Buzz` to the current answer string.\n\nFor eg. If we are checking for the number 15, the steps would be:\n<pre>\nCondition 1: 15 % 3 == 0 , num_ans_str = \"Fizz\"\nCondition 2: 15 % 5 == 0 , num_ans_str += \"Buzz\"\n=> num_ans_str = \"FizzBuzz\"\n</pre>\n\nSo for `FizzBuzz` we just check for two conditions instead of three conditions as in the first approach.\n\nSimilarly, for `FizzBuzzJazz` now we would just have three conditions to check for divisibility.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/F2WyDo2x/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"F2WyDo2x\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity: $O(N)$\n* Space Complexity: $O(1)$\n<br/>\n<br/>\n---\n\n### Approach 3: Hash it!\n\n#### Intuition\n\nThis approach is an optimization over approach 2. When the number of mappings are limited, approach 2 looks good. But what if you face a tricky interviewer and he decides to add too many mappings?\n\nHaving a condition for every mapping is not feasible or may be we can say the code might get ugly and tough to maintain.\n\nWhat if tomorrow we have to change a mapping or may be delete a mapping? Are we going to change the code every time we have a modification in the mappings?\n\nWe don't have to. We can put all these mappings in a `Hash Table`.\n\n#### Algorithm\n\n1. Put all the mappings in a hash table. The hash table `fizzBuzzHash` would look something like ``{ 3: 'Fizz', 5: 'Buzz' }``\n2. Iterate on the numbers from $1 ... N$.\n3. For every number, iterate over the `fizzBuzzHash` keys and check for divisibility.\n4. If the number is divisible by the key, concatenate the corresponding hash value to the answer string for current number. We do this for every entry in the hash table.\n5. Add the answer string to the answer list.\n\n> This way you can add/delete mappings to/from to the hash table and not worry about changing the code.\n\nSo, for `FizzBuzzJazz` the hash table would look something like ``{ 3: 'Fizz', 5: 'Buzz', 7: 'Jazz' }``\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/QtnJcTn3/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QtnJcTn3\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity : $O(N)$\n* Space Complexity : $O(1)$\n<br /><br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

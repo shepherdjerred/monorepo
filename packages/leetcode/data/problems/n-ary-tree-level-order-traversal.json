@@ -1,0 +1,108 @@
+{
+  "questionId": "764",
+  "questionFrontendId": "429",
+  "title": "N-ary Tree Level Order Traversal",
+  "titleSlug": "n-ary-tree-level-order-traversal",
+  "difficulty": "Medium",
+  "content": "<p>Given an n-ary tree, return the <em>level order</em> traversal of its nodes&#39; values.</p>\n\n<p><em>Nary-Tree input serialization is represented in their level order traversal, each group of children is separated by the null value (See examples).</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><img src=\"https://assets.leetcode.com/uploads/2018/10/12/narytreeexample.png\" style=\"width: 100%; max-width: 300px;\" /></p>\n\n<pre>\n<strong>Input:</strong> root = [1,null,3,2,4,null,5,6]\n<strong>Output:</strong> [[1],[3,2,4],[5,6]]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/11/08/sample_4_964.png\" style=\"width: 296px; height: 241px;\" /></p>\n\n<pre>\n<strong>Input:</strong> root = [1,null,2,3,4,5,null,null,6,7,null,8,null,9,10,null,null,11,null,12,null,13,null,null,14]\n<strong>Output:</strong> [[1],[2,3,4,5],[6,7,8,9,10],[11,12,13],[14]]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The height of the n-ary tree is less than or equal to <code>1000</code></li>\n\t<li>The total number of nodes is between <code>[0, 10<sup>4</sup>]</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"levelOrder\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<list<integer>>\"\n  },\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"csharp\",\n    \"javascript\",\n    \"python3\",\n    \"golang\",\n    \"ruby\",\n    \"c\",\n    \"kotlin\",\n    \"scala\",\n    \"php\",\n    \"swift\",\n    \"typescript\"\n  ],\n  \"manual\": true, \"typescriptCustomType\" : \"class _Node {\\n    val: number\\n    children: _Node[]\\n    \\n    constructor(v: number) {\\n        this.val = v;\\n        this.children = [];\\n    }\\n}\\n\"\n\n}",
+  "stats": "{\"totalAccepted\": \"364.5K\", \"totalSubmission\": \"509.8K\", \"totalAcceptedRaw\": 364517, \"totalSubmissionRaw\": 509809, \"acRate\": \"71.5%\"}",
+  "likes": 3752,
+  "dislikes": 146,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Binary Tree Level Order Traversal\", \"titleSlug\": \"binary-tree-level-order-traversal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"N-ary Tree Preorder Traversal\", \"titleSlug\": \"n-ary-tree-preorder-traversal\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"N-ary Tree Postorder Traversal\", \"titleSlug\": \"n-ary-tree-postorder-traversal\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"The Time When the Network Becomes Idle\", \"titleSlug\": \"the-time-when-the-network-becomes-idle\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,null,3,2,4,null,5,6]",
+    "[1,null,2,3,4,5,null,null,6,7,null,8,null,9,10,null,null,11,null,12,null,13,null,null,14]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/*\n// Definition for a Node.\nclass Node {\npublic:\n    int val;\n    vector<Node*> children;\n\n    Node() {}\n\n    Node(int _val) {\n        val = _val;\n    }\n\n    Node(int _val, vector<Node*> _children) {\n        val = _val;\n        children = _children;\n    }\n};\n*/\n\nclass Solution {\npublic:\n    vector<vector<int>> levelOrder(Node* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/*\n// Definition for a Node.\nclass Node {\n    public int val;\n    public List<Node> children;\n\n    public Node() {}\n\n    public Node(int _val) {\n        val = _val;\n    }\n\n    public Node(int _val, List<Node> _children) {\n        val = _val;\n        children = _children;\n    }\n};\n*/\n\nclass Solution {\n    public List<List<Integer>> levelOrder(Node root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "\"\"\"\n# Definition for a Node.\nclass Node:\n    def __init__(self, val: Optional[int] = None, children: Optional[List['Node']] = None):\n        self.val = val\n        self.children = children\n\"\"\"\n\nclass Solution:\n    def levelOrder(self, root: 'Node') -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "\"\"\"\n# Definition for a Node.\nclass Node(object):\n    def __init__(self, val=None, children=None):\n        self.val = val\n        self.children = children\n\"\"\"\n\nclass Solution(object):\n    def levelOrder(self, root):\n        \"\"\"\n        :type root: Node\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * // Definition for a _Node.\n * function _Node(val,children) {\n *    this.val = val;\n *    this.children = children;\n * };\n */\n\n/**\n * @param {_Node|null} root\n * @return {number[][]}\n */\nvar levelOrder = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for _Node.\n * class _Node {\n *     val: number\n *     children: _Node[]\n *     \n *     constructor(v: number) {\n *         this.val = v;\n *         this.children = [];\n *     }\n * }\n */\n\n\nfunction levelOrder(root: _Node | null): number[][] {\n\t\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/*\n// Definition for a Node.\npublic class Node {\n    public int val;\n    public IList<Node> children;\n\n    public Node() {}\n\n    public Node(int _val) {\n        val = _val;\n    }\n\n    public Node(int _val, IList<Node> _children) {\n        val = _val;\n        children = _children;\n    }\n}\n*/\n\npublic class Solution {\n    public IList<IList<int>> LevelOrder(Node root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a Node.\n * struct Node {\n *     int val;\n *     int numChildren;\n *     struct Node** children;\n * };\n */\n\n/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** levelOrder(struct Node* root, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a Node.\n * type Node struct {\n *     Val int\n *     Children []*Node\n * }\n */\n\nfunc levelOrder(root *Node) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Definition for a Node.\n * class Node(var `val`: Int) {\n *     var children: List<Node?> = listOf()\n * }\n */\n\nclass Solution {\n    fun levelOrder(root: Node?): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a Node.\n * public class Node {\n *     public var val: Int\n *     public var children: [Node]\n *     public init(_ val: Int) {\n *         self.val = val\n *         self.children = []\n *     }\n * }\n */\n\nclass Solution {\n    func levelOrder(_ root: Node?) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a Node.\n# class Node\n#     attr_accessor :val, :children\n#     def initialize(val)\n#         @val = val\n#         @children = []\n#     end\n# end\n\n# @param {Node} root\n# @return {List[List[int]]}\ndef level_order(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a Node.\n * class Node {\n *     public $val = null;\n *     public $children = null;\n *     function __construct($val = 0) {\n *         $this->val = $val;\n *         $this->children = array();\n *     }\n * }\n */\n\nclass Solution {\n    /**\n     * @param Node $root\n     * @return integer[][]\n     */\n    function levelOrder($root) {\n\t\t\n    }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a Node.\n * class Node(var _value: Int) {\n *   var value: Int = _value\n *   var children: List[Node] = List()\n * }\n */\n\nobject Solution {\n    def levelOrder(root: Node): List[List[Int]] = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "816",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Breadth-first Search using a Queue\n\n**Intuition**\n\nWe want to make a list of sub-lists, where each sub-list is the values from one *row* in the tree. The rows should be in the order they appear from top to bottom.\n\nBecause we're traversing the tree, starting with the nodes nearest to the root and then working our way down to the nodes furthest from the root, this is a type of **breadth-first search**. To do a breadth-first search, we use a **queue**. Recall that a queue is a data structure that we put items in one end, and take them out of the other. We call it First In, First Out (FIFO) because the first items that go in should be the first to come out. It works the same way as the queue you have to wait in to get into a busy stadium.\n\nA **stack** would be the *wrong* data structure to use here. Stacks are used for **depth-first search** (there is a convoluted way you could do it, but it's not *sensible*).\n\nLet's start by using the most basic of queue-based traversal algorithms on the tree to see what it does. This is a fundamental algorithm you should be aiming to *memorize*.\n\n```java\nList<Integer> values = new ArrayList<>();\nQueue<Node> queue = new LinkedList<>();\nqueue.add(root);\nwhile (!queue.isEmpty()) {\n    Node nextNode = queue.remove();\n    values.add(nextNode.val);\n    for (Node child : nextNode.children) {\n        queue.add(child);\n    }\n}\n```\n\nMake a list to put integers in, and a queue to put nodes on. Put the root node onto the queue, and then while the queue is not empty, take a node off the queue, add its value to the list, and add each of its children onto the queue. Note that we are putting **Node** objects onto the queue, *not* integers. If we were to only put the integer values, we'd have no way of getting the child nodes out of them.\n\nLet's see what we get when we use this algorithm to traverse the tree (don't worry about the inner lists yet, we're ensuring we have a way of getting the nodes from left to right and then top to bottom).\n\n!?!../Documents/429_bfs_intro.json:1000,500!?!\n\nIndeed, it does return the nodes from left to right, then top to bottom. Next we'll be looking at how we can take this basic algorithm and modify it so that we have each level in its own sub-list. Have a go at modifying the above algorithm on your own first.\n\n**Algorithm**\n\nThe basic breadth-first search algorithm above got us part of the way, but we still need to do those sub-lists, and also make sure our code works if the root is null (a tree with no data).\n\nWe need to create a new sub-list each time we're starting a new layer, and we need to insert all nodes from the layer into that sub-list. A good way we can do this is by checking the current ```size``` of the queue at the start of the ```while``` loop body. Then, we can have another loop that processes that number of nodes. This way, we are guaranteed to be processing *one layer* for *each* iteration of the ```while``` loop so can put all nodes within the same iteration into the same sub-list. On the first iteration of the while loop, we only have **1** node: the root node. So we'll loop around the inner loop once, removing the root node, and put all of its children onto the queue. Then in the second iteration, we'll remove all the children from the queue (as that's the number of times we'll loop around the inner loop) and put all the grandchildren onto the queue. And so forth.\n\nIt's very important to use a **Queue** type for ```nodesToExplore```, and *not* a Vector, List, or Array. Removing items off the front of those other data structures is an $$O(n)$$ operation because all the remaining elements are moved along to fill the gap. A Queue is designed so that it is $$O(1)$$.\n\n<iframe src=\"https://leetcode.com/playground/AtVGJxCt/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"AtVGJxCt\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$, where $$n$$ is the number of nodes.\n\n    Each node is getting added to the queue, removed from the queue, and added to the result exactly once.\n\n* Space complexity : $$O(n)$$.\n\n    We are using a queue to keep track of nodes we still need to visit the children of. At most, the queue will have 2 layers of the tree on it at any given time. In the worst case, this is all of the nodes. In the best case, it is just 1 node (if we have a tree that is equivalent to a linked list). The average case is difficult to calculate without knowing something of the trees we can expect to see, but in balanced trees, half or more of the nodes are often in the lowest 2 layers. So we should go with the worst case of $$O(n)$$, and know that the average case is probably similar.\n\n<br />\n\n---\n\n### Approach 2: Simplified Breadth-first Search\n\n**Intuition**\n\nA variant of the above approach is to make a new list on each iteration instead of using a single queue. This makes the code slightly simpler because we lose the ```size``` variable and the counting loop, which are a potential source of off-by-one errors.\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/DUmR8Ngk/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"DUmR8Ngk\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$, where $$n$$ is the number of nodes.\n\n* Space complexity : $$O(n)$$. Same as above, we always have lists containing levels of nodes.\n\n<br />\n\n---\n\n### Approach 3: Recursion\n\n**Intuition**\n\nWe can use recursion for this problem. Often we can't use recursion for a breadth-first search (which is what a level-order traversal is). That is because breadth-first search is based on using a **queue**, whereas recursion is using the runtime **stack** and so is suited to depth-first search. In this case, however, we are putting all the values into a list before returning it. This means it's okay for us to get them in a different order to what they'll appear in the final list. As long as we know what level each node is from, and ensure they are in the correct order within each level, it will work.\n\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/bp2n2X9z/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"bp2n2X9z\"></iframe>\n\nThe iterative approach traversed the nodes in level order, whereas the recursive approach traversed them from left to right. While it was still easy to put them into the correct order using the recursive approach for this particular question, it could be problematic in practice. Often when we do a level-order traversal (or a breadth-first search), we are using the **Iterator** pattern and instead of storing the values in a list like we did here, the nodes are obtained one-by-one and processed. The iterator approach getting the nodes in the correct order will be much more useful for this use case. This is especially true with huge trees (e.g. links on a web page that you need to crawl and index).\n\nStack-based *iterative* approaches using a similar strategy to the recursion are *possible* too, however, they are not a good approach because this is supposed to be a breadth-first search problem (which uses queues) and they don't have the elegance of the recursive approach. If you used a stack for this question in an interview, you might leave your interviewer wondering why you felt the need to make the problem more difficult than it needed to be! For this reason, I've chosen not to include them in this article.\n\n**Complexity Analysis**\n\n* Time complexity : $$O(n)$$, where $$n$$ is the number of nodes.\n\n* Space complexity : $$O(\\log n)$$ average case and $$O(n) worst case. The space used is on the runtime stack.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

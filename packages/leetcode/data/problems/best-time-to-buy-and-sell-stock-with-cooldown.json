@@ -1,0 +1,133 @@
+{
+  "questionId": "309",
+  "questionFrontendId": "309",
+  "title": "Best Time to Buy and Sell Stock with Cooldown",
+  "titleSlug": "best-time-to-buy-and-sell-stock-with-cooldown",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array <code>prices</code> where <code>prices[i]</code> is the price of a given stock on the <code>i<sup>th</sup></code> day.</p>\n\n<p>Find the maximum profit you can achieve. You may complete as many transactions as you like (i.e., buy one and sell one share of the stock multiple times) with the following restrictions:</p>\n\n<ul>\n\t<li>After you sell your stock, you cannot buy stock on the next day (i.e., cooldown one day).</li>\n</ul>\n\n<p><strong>Note:</strong> You may not engage in multiple transactions simultaneously (i.e., you must sell the stock before you buy again).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> prices = [1,2,3,0,2]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> transactions = [buy, sell, cooldown, buy, sell]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> prices = [1]\n<strong>Output:</strong> 0\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= prices.length &lt;= 5000</code></li>\n\t<li><code>0 &lt;= prices[i] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"maxProfit\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"prices\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"755.3K\", \"totalSubmission\": \"1.2M\", \"totalAcceptedRaw\": 755319, \"totalSubmissionRaw\": 1221289, \"acRate\": \"61.8%\"}",
+  "likes": 10045,
+  "dislikes": 348,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Best Time to Buy and Sell Stock\", \"titleSlug\": \"best-time-to-buy-and-sell-stock\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Best Time to Buy and Sell Stock II\", \"titleSlug\": \"best-time-to-buy-and-sell-stock-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,0,2]",
+    "[1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"aqr-capital-management-llc\", \"name\": \"AQR Capital Management\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"geico\", \"name\": \"Geico\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxProfit(vector<int>& prices) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxProfit(int[] prices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxProfit(self, prices: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxProfit(self, prices):\n        \"\"\"\n        :type prices: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} prices\n * @return {number}\n */\nvar maxProfit = function(prices) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxProfit(prices: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxProfit(int[] prices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxProfit(int* prices, int pricesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxProfit(prices []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxProfit(prices: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxProfit(_ prices: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_profit(prices: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} prices\n# @return {Integer}\ndef max_profit(prices)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $prices\n     * @return Integer\n     */\n    function maxProfit($prices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxProfit(List<int> prices) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxProfit(prices: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_profit(prices :: [integer]) :: integer\n  def max_profit(prices) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_profit(Prices :: [integer()]) -> integer().\nmax_profit(Prices) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-profit prices)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "942",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\n\nFirst of all, we would like to mention that this is yet another problem from the series of Best-Time-to-Buy-and-Sell-Stock problems, which we list as follows:\n\n- [Best Time to Buy and Sell Stock](https://leetcode.com/problems/best-time-to-buy-and-sell-stock/)\n- [Best Time to Buy and Sell Stock II](https://leetcode.com/problems/best-time-to-buy-and-sell-stock-ii/)\n- [Best Time to Buy and Sell Stock III](https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iii/)\n- [Best Time to Buy and Sell Stock IV](https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iv/)\n\nOne could try to resolve them one by one, which certainly could help with this problem.\n\nThere have been quite some excellent posts in the [Discussion forum](https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-cooldown/discuss/). We would like to mention that the user [fun4LeetCode](https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-cooldown/discuss/75924/Most-consistent-ways-of-dealing-with-the-series-of-stock-problems) even developed a mathematical representation that is able to be generalized to each of the problems.\n\nThat being said, here we contribute some approaches, which hopefully could provide you different perspectives for the problem.\n\nAs one might have seen the hint from the problem description, which says \"dynamic programming\" (_i.e._ DP), we could tackle this problem mainly with the technique called **dynamic programming**.\n\nOften the case, in order to come up with a dynamic programming solution, it would be beneficial to draw down some mathematical formulas to model the problem.\n\n>As a reminder, the nature of dynamic programming is to break the original problem into several subproblems, and then reuse the results of subproblems for the original problem.\n\nTherefore, due to the nature of DP, the mathematical formulas that we should come up with would almost certainly assume the form of **_recursion_**.\n\nBefore embarking on the next sections of this article, we kindly ask the audiences to keep an open mind, fasten your seat belts and enjoy the ride with a heavy (yet healthy) dose of mathematical formulas.\n<br/>\n<br/>\n\n---\n### Approach 1: Dynamic Programming with State Machine\n\n**Intuition**\n\nFirst of all, let us take a different perspective to look at the problem, unlike the other algorithmic problems.\n\nHere, we will treat the problem as a game, and the trader as an agent in the game.\nThe agent can take actions that lead to gain or lose of game points (_i.e._ profits).\nAnd the goal of the game for the agent is to gain the maximal points.\n\nIn addition, we will introduce a tool called [state machine](https://en.wikipedia.org/wiki/Finite-state_machine), which is a mathematical model of computation.\nLater one will see how the state machine coupled with the dynamic programming technique can help us solve the problem easily.\n\nIn the following sections, we will first define a _**state machine**_ that is used to model the behaviors and states of the game agent.\n\nThen, we will demonstrate how to apply the state machine to solve the problem.\n\n**Definition**\n\nLet us define a **_state machine_** to model our agent. The state machine consists of three states, which we define as follows: \n\n- state `held`: in this state, the agent holds a stock that it bought at some point before.\n<br/>\n\n- state `sold`: in this state, the agent has just sold a stock right before entering this state. And the agent holds no stock at hand.\n<br/>\n\n- state `reset`: first of all, one can consider this state as the starting point, where the agent holds no stock and did not sell a stock before.\nMore importantly, it is also the _transient_ state before the `held` and `sold`.\nDue to the **_cooldown_** rule, after the `sold` state, the agent can not immediately acquire any stock, but is _forced_ into the `reset` state.\nOne can consider this state as a \"reset\" button for the cycles of buy and sell transactions.\n\nAt any moment, the agent can only be in **_one_** state. The agent would transition to another state by performing some actions, namely:\n\n- action `sell`: the agent sells a stock at the current moment. After this action, the agent would transition to the `sold` state.\n\n- action `buy`: the agent acquires a stock at the current moment. After this action, the agent would transition to the `held` state.\n\n- action `rest`: this is the action that the agent does no transaction, neither buy or sell. For instance, while holding a stock at the `held` state, the agent might simply do nothing, and at the next moment the agent would remain in the `held` state.\n\nNow, we can assemble the above states and actions into a **state machine**, which we show in the following graph where each node represents a state, and each edge represents a transition between two states. On top of each edge, we indicate the action that triggers the transition.\n\n![state machine](../Figures/309/309_state_machine.png)\n\nNotice that, in all states except the `sold` state, by doing nothing, we would remain in the same state, which is why there is a self-looped transition on these states.\n\n**Deduction**\n\nNow, one might wonder how exactly the state machine that we defined can help to solve the problem.\n\nAs we mentioned before, we model the problem as a **_game_**, and the trader as an **_agent_** in the game. And this is where our state machine comes into the picture. The behaviors and the states of the game agent can be modeled by our state machine. \n\n![mario game](../Figures/309/309_game.png)\n\nGiven a list stock prices (_i.e._ `price[0...n]`), our agent would walk through each price point one by one.\nAt each point, the agent would be in one of three states (_i.e._ `held`, `sold` and `reset`) that we defined before.\nAnd at each point, the agent would take one of the three actions (_i.e._ `buy`, `sell` and `rest`), which then would lead to the next state at the next price point.\n\n>Now if we chain up each state at each price point, it would form a **_graph_** where each **_path_** that starts from the initial price point and ends at the last price point represents a combination of transactions that the agent could perform through out the game.\n\n![graph of state transition](../Figures/309/309_graph.png)\n\nThe above graph shows all possible paths that our game agent walks through the list, which corresponds to all possible combinations of transactions that the trader can perform with the given price sequence.\n\n>In order to solve the problem, the goal is to find such a path in the above graph that maximizes the profits.\n\nIn each node of graph, we also indicate the maximal profits that the agent has gained so far in each state of each step. And we highlight the path that generates the maximal profits.\nDon't worry about them for the moment. We will explain in detail how to calculate in the next section.\n\n**Algorithm**\n\nIn order to implement the above state machine, we could define three arrays (_i.e._ `held[i]`, `sold[i]` and `reset[i]`) which correspond to the three states that we defined before.\n\n>Each element in each array represents the maximal profits that we could gain at the specific price point `i` with the specific state.\nFor instance, the element `sold[2]` represents the maximal profits we gain if we sell the stock at the price point `price[2]`.\n\nAccording to the state machine we defined before, we can then deduce the formulas to calculate the values for the state arrays, as follows:\n\n$$\n    \\text{sold}[i] = \\text{hold}[i-1] + \\text{price}[i] \\\\\n    \\text{held}[i] = \\max{(\\text{held}[i-1], \\quad \\text{reset}[i-1] - \\text{price}[i])} \\\\\n    \\text{reset}[i] = \\max{(\\text{reset}[i-1], \\quad \\text{sold}[i-1])} \n$$\n\nHere is how we interpret each formulas:\n\n- $$\\text{sold}[i]$$: the previous state of `sold` can only be `held`. Therefore, the maximal profits of this state is the maximal profits of the previous state plus the revenue by selling the stock at the current price.\n<br/>\n\n- $$\\text{held}[i]$$: the previous state of `held` could also be `held`, _i.e._ one does no transaction. Or its previous state could be `reset`, from which state, one can acquire a stock at the current price point.\n<br/>\n\n- $$\\text{reset}[i]$$: the previous state of `reset` could either be `reset` or `sold`. Both transitions do not involve any transaction with the stock. \n\n>Finally, the maximal profits that we can gain from this game would be $$\\max{(\\text{sold}[n], \\text{reset}[n])}$$, _i.e._ at the last price point, either we sell the stock or we simply do no transaction, to have the maximal profits.\nIt makes no sense to acquire the stock at the last price point, which only leads to the reduction of profits.\n\nIn particular, as a base case, the game should be kicked off from the state `reset`, since initially we don't hold any stock and we don't have any stock to sell neither.\nTherefore, we assign the initial values of `sold[-1]` and `held[-1]` to be `Integer.MIN_VALUE`, which are intended to _render_ the paths that start from these two states impossible.\n\n\nAs one might notice in the above formulas, in order to calculate the value for each array, we reuse the intermediate values, and this is where the paradigm of _**dynamic programming**_ comes into play.\n\nMore specifically, we only need the intermediate values at exactly one step before the current step. As a result, rather than keeping all the values in the three arrays, we could use a **_sliding window_** of size `1` to calculate the value for $$\\max{(\\text{sold}[n], \\text{reset}[n])}$$.\n\nIn the following animation, we demonstrate the process on how the three arrays are calculated step by step.\n\n!?!../Documents/309_LIS.json:1000,343!?!\n\n>As a **_byproduct_** of this algorithm, not only would we obtain the maximal profits at the end, but also we could recover each action that we should perform along the path, although this is not required by the problem.\n\nIn the above graph, by starting from the final state, and walking backward following the path, we could obtain a sequence of actions that leads to the maximal profits at the end, _i.e._ [`buy`, `sell`, `cooldown`, `buy`, `sell`].\n\n\n<iframe src=\"https://leetcode.com/playground/5gFjY6VR/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"5gFjY6VR\"></iframe>\n\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(N)$$ where $$N$$ is the length of the input price list.\n\n    - We have one loop over the input list, and the operation within one iteration takes constant time.\n    <br/>\n\n- Space Complexity: $$\\mathcal{O}(1)$$, constant memory is used regardless the size of the input.\n<br/>\n<br/>\n\n---\n### Approach 2: Yet-Another Dynamic Programming\n\n**Intuition**\n\nMost of the times, there are more than one approaches to decompose the problem, so that we could apply the technique of dynamic programming.\n\nHere we would like to propose a different perspective on how to model the problem purely with mathematical formulas.\n\nAgain, this would be a journey loaded with mathematical notations, which might be complicated, but it showcases how the mathematics could help one with the dynamic _programming_ (pun intended). \n\n**Definition**\n\nFor a sequence of prices, denoted as $$\\text{price}[0, 1, ..., n]$$, let us first define our **target** function called $$\\text{MP}(i)$$.\nThe function $$\\text{MP}(i)$$ gives the maximal profits that we can gain for the price _subsequence_ starting from the index $$i$$, _i.e._ $$\\text{price}[i, i+1, ..., n]$$.\n\nGiven the definition of the $$\\text{MP}(i)$$ function, one can see that when $$i=0$$ the output of the function, _i.e._ $$\\text{MP}(0)$$, is exactly the result that we need to solve the problem, which is the maximal profits that one can gain for the price subsequence of $$\\text{price}[0, 1, ..., n]$$.\n\nSuppose that we know all the values for $$\\text{MP}(i)$$ onwards until $$\\text{MP}(n)$$, _i.e._ we know the maximal profits that we can gain for any subsequence of $$\\text{price}[k...n] \\quad k \\in [i, n]$$.\n\nNow, let us add a new price point $$\\text{price}[i-1]$$ into the subsequence $$\\text{price}[i...n]$$, all we need to do is to deduce the value for the **unknown** $$\\text{MP}(i-1)$$.\n\n>Up to this point, we have just modeled the problem with our **target** function $$\\text{MP}(i)$$, along with a series of definitions.\nThe problem now is boiled down to deducing the formula for $$\\text{MP}(i-1)$$.\n\nIn the following section, we will demonstrate how to deduce the formula for $$\\text{MP}(i-1)$$.\n\n**Deduction**\n\nWith the newly-added price point $$\\text{price}[i-1]$$, we need to consider **all** possible transactions that we can do to the stock at this price point, which can be broken down into two cases:\n\n- Case 1): we buy this stock with $$\\text{price}[i-1]$$ and then sell it at some point in the following price sequence of $$\\text{price}[i...n]$$.\nNote that, once we sell the stock at a certain point, we need to cool down for a day, then we can reengage with further transactions.\nSuppose that we sell the stock right after we bought it, at the next price point $$\\text{price}[i]$$, the maximal profits we would gain from this choice would be the profit of this transaction (_i.e._ $$\\text{price}[i] - \\text{price}[i-1]$$) **plus** the maximal profits from the rest of the price sequence, as we show in the following:\n\n![example of profit calculation](../Figures/309/309_formula.png)\n\nIn addition, we need to **enumerate** all possible points to sell this stock, and take the maximum among them.\nThe maximal profits that we could gain from this case can be represented by the following:\n\n$$\nC_1 = \\max_{\\{k \\in [i, n]\\}}\\big( \\text{price}[k] - \\text{p}[i-1] + \\text{MP}(k+2) \\big)\n$$\n\n- Case 2): we simply do nothing with this stock. Then the maximal profits that we can gain from this case would be $$\\text{MP}(i)$$, which are also the maximal profits that we can gain from the rest of the price sequence.\n\n$$\nC_2 = \\text{MP}(i)\n$$\n\nBy combining the above two cases, _i.e._ selecting the max value among them, we can obtain the value for $$\\text{MP}(i-1)$$, as follows:\n\n$$\n    \\text{MP}(i-1) = \\max(C_1, C_2)\n$$\n\n$$\n    \\text{MP}(i-1) = \\max\\Big(\\max_{\\{k \\in [i, n]\\}}\\big( \\text{price}[k] - \\text{price}[i-1] + \\text{MP}(k+2) \\big), \\quad \\text{MP}(i) \\Big)\n$$\n\nBy the way, the base case for our recursive function $$\\text{MP}(i)$$ would be $$\\text{MP}(n)$$ which is the maximal profits that we can gain from the sequence with a single price point $$\\text{price}[n]$$.\nAnd the best thing we should do with a single price point is to do no transaction, hence we would neither lose money nor gain any profit, _i.e._ $$\\text{MP}(n) = 0$$.\n\nThe above formulas do model the problem soundly.\nIn addition, one should be able to translate them directly into code.\n\n**Algorithm**\n\nWith the final formula we derived for our target function $$\\text{MP}(i)$$, we can now go ahead and translate it into any programming language.\n\n- Since the formula deals with subsequences of price that start from the last price point, we then could do an **iteration** over the price list in the reversed order.\n<br/>\n\n- We define an array `MP[i]` to hold the values for our target function $$\\text{MP}(i)$$. We initialize the array with zeros, which correspond to the base case where the minimal profits that we can gain is zero. Note that, here we did a trick to pad the array with two additional elements, which is intended to simplify the branching conditions, as one will see later.\n<br/>\n\n- To calculate the value for each element `MP[i]`, we need to look into two cases as we discussed in the previous section, namely:\n\n    - Case 1). we buy the stock at the price point `price[i]`, then we sell it at a later point. As one might notice, the initial padding on the `MP[i]` array saves us from getting out of boundary in the array.\n\n    - Case 2). we do no transaction with the stock at the price point `price[i]`.\n\n- At the end of each iteration, we then pick the largest value from the above two cases as the final value for `MP[i]`.\n\n- At the end of the loop, the `MP[i]` array will be populated. We then return the value of `MP[0]`, which is the desired solution for the problem.\n\n<iframe src=\"https://leetcode.com/playground/7bmVndAs/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"7bmVndAs\"></iframe>\n\n\n**Complexity Analysis**\n\n- Time Complexity: $$\\mathcal{O}(N^2)$$ where $$N$$ is the length of the price list.\n\n    - As one can see, we have nested loops over the price list. The number of iterations in the outer loop is $$N$$. The number of iterations in the inner loop varies from $$1$$ to $$N$$. Therefore, the total number of iterations that we perform is $$ \\sum_{i=1}^{N} i = \\frac{N\\cdot(N+1)}{2}$$.\n\n    - As a result, the overall time complexity of the algorithm is $$\\mathcal{O}(N^2)$$.\n    <br/>\n\n- Space Complexity: $$\\mathcal{O}(N)$$ where $$N$$ is the length of the price list.\n\n    - We allocated an array to hold all the values for our target function $$\\text{MP}(i)$$.\n<br/>\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

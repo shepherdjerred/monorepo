@@ -1,0 +1,149 @@
+{
+  "questionId": "187",
+  "questionFrontendId": "187",
+  "title": "Repeated DNA Sequences",
+  "titleSlug": "repeated-dna-sequences",
+  "difficulty": "Medium",
+  "content": "<p>The <strong>DNA sequence</strong> is composed of a series of nucleotides abbreviated as <code>&#39;A&#39;</code>, <code>&#39;C&#39;</code>, <code>&#39;G&#39;</code>, and <code>&#39;T&#39;</code>.</p>\n\n<ul>\n\t<li>For example, <code>&quot;ACGAATTCCG&quot;</code> is a <strong>DNA sequence</strong>.</li>\n</ul>\n\n<p>When studying <strong>DNA</strong>, it is useful to identify repeated sequences within the DNA.</p>\n\n<p>Given a string <code>s</code> that represents a <strong>DNA sequence</strong>, return all the <strong><code>10</code>-letter-long</strong> sequences (substrings) that occur more than once in a DNA molecule. You may return the answer in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> s = \"AAAAACCCCCAAAAACCCCCCAAAAAGGGTTT\"\n<strong>Output:</strong> [\"AAAAACCCCC\",\"CCCCCAAAAA\"]\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> s = \"AAAAAAAAAAAAA\"\n<strong>Output:</strong> [\"AAAAAAAAAA\"]\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s[i]</code> is either <code>&#39;A&#39;</code>, <code>&#39;C&#39;</code>, <code>&#39;G&#39;</code>, or <code>&#39;T&#39;</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"findRepeatedDnaSequences\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<string>\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"524K\", \"totalSubmission\": \"987.4K\", \"totalAcceptedRaw\": 523956, \"totalSubmissionRaw\": 987409, \"acRate\": \"53.1%\"}",
+  "likes": 3624,
+  "dislikes": 571,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"AAAAACCCCCAAAAACCCCCCAAAAAGGGTTT\"",
+    "\"AAAAAAAAAAAAA\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 11, \"slug\": \"grammarly\", \"name\": \"Grammarly\"}, {\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Rolling Hash",
+      "slug": "rolling-hash"
+    },
+    {
+      "name": "Hash Function",
+      "slug": "hash-function"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> findRepeatedDnaSequences(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> findRepeatedDnaSequences(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findRepeatedDnaSequences(self, s: str) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findRepeatedDnaSequences(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {string[]}\n */\nvar findRepeatedDnaSequences = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findRepeatedDnaSequences(s: string): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> FindRepeatedDnaSequences(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** findRepeatedDnaSequences(char* s, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findRepeatedDnaSequences(s string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findRepeatedDnaSequences(s: String): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findRepeatedDnaSequences(_ s: String) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_repeated_dna_sequences(s: String) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {String[]}\ndef find_repeated_dna_sequences(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return String[]\n     */\n    function findRepeatedDnaSequences($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> findRepeatedDnaSequences(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findRepeatedDnaSequences(s: String): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_repeated_dna_sequences(s :: String.t) :: [String.t]\n  def find_repeated_dna_sequences(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_repeated_dna_sequences(S :: unicode:unicode_binary()) -> [unicode:unicode_binary()].\nfind_repeated_dna_sequences(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-repeated-dna-sequences s)\n  (-> string? (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "769",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nThe follow-up here is to solve the same problem for arbitrary sequence length $$L$$, and to check the situation when $$L$$ is quite large. Hence let's use $$L = 10$$ notation everywhere to ease the problem generalization.\n\n> We will discuss three different ideas on how to proceed. They are all based on sliding window + hashset. The key point is how to implement a window slice. \n\nLinear-time window slice $$\\mathcal{O}(L)$$ is simple, just take a substring. Overall that would result in $$\\mathcal{O}((N - L) L)$$ time complexity and huge space consumption in the case of large sequences.\n\nConstant-time slice $$\\mathcal{O}(1)$$ is where the fun starts because the way you choose will show your actual background.There are two ways to proceed: \n\n- Rabin-Karp = constant-time slice using a rolling hash algorithm.\n\n- Bit manipulation = constant-time slice using bitmasks.\n\nLast two approaches have $$\\mathcal{O}(N - L)$$ time complexity and moderate space consumption even in the case of large sequences.\n\n![pic](../Figures/187/algorithms.png)\n<br /> \n<br />\n\n\n---\n### Approach 1: Linear-time Slice Using Substring + HashSet\n\nThe idea is straightforward : \n\n- Move a sliding window of length L along the string of length N.\n \n- Check if the sequence in the sliding window is in the hashset of already seen sequences. \n\n    - If yes, the repeated sequence is right here. Update the output.\n    \n    - If not, save the sequence in the sliding window in the hashset.  \n\n![pic](../Figures/187/hashes2.png)\n\n<iframe src=\"https://leetcode.com/playground/ijoeFAz2/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"ijoeFAz2\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}((N - L)L)$$, that is $$\\mathcal{O}(N)$$ for the constant $$L = 10$$. In the loop executed $$N - L + 1$$, one builds a substring of length $$L$$. Overall that results in $$\\mathcal{O}((N - L)L)$$ time complexity.\n\n* Space complexity : $$\\mathcal{O}((N - L)L)$$ to keep the hashset, that results in $$\\mathcal{O}(N)$$ for the constant $$L = 10$$. \n<br /> \n<br />\n\n\n---\n### Approach 2: Rabin-Karp: Constant-time Slice Using Rolling Hash\n\nRabin-Karp algorithm is used to perform a multiple pattern search. It's used for plagiarism detection and in bioinformatics to look for similarities in two or more proteins. \n\nDetailed implementation of the Rabin-Karp algorithm for quite a complex case you could find in the article [Longest Duplicate Substring](https://leetcode.com/articles/longest-duplicate-substring/), we do a very basic implementation.\n\n> The idea is to slice over the string and to compute the hash of the sequence in the sliding window, both in a constant time.\n\nLet's use the string `AAAAACCCCCAAAAACCCCCCAAAAAGGGTTT` as an example. First, convert the string to an integer array:\n\n- 'A' -> 0, 'C' -> 1, 'G' -> 2, 'T' -> 3\n\n`AAAAACCCCCAAAAACCCCCCAAAAAGGGTTT` -> `00000111110000011111100000222333`. Time to compute the hash for the first sequence of length L: `0000011111`. The sequence could be considered as a number in a [numeral system](https://en.wikipedia.org/wiki/Numeral_system) with the base 4 and hashed as \n\n$$h_0 = \\sum_{i = 0}^{L - 1}{c_i 4^{L - 1 - i}}$$\n\nHere $$c_{0..4} = 0$$ and $$c_{5..9} = 1$$ are digits of `0000011111`.\n\nNow let's consider the slice `AAAAACCCCC` -> `AAAACCCCCA`. For int arrays that means `0000011111` -> `0000111110`, to remove one leading 0 and add one trailing 0. One integer in, and one out, let's recompute the hash:\n\n$$h_1 = (h_0 \\times 4 - c_0 4^L) + c_{L + 1}$$.\n\nVoila, window slice, and hash recomputation are both done in a constant time.\n \n**Algorithm**\n        \n- Iterate over the start position of the sequence: from 1 to $$N - L$$.\n\n    - If `start == 0`, compute the hash of the first sequence `s[0: L]`. \n        \n    - Otherwise, compute the rolling hash from the previous hash value.\n            \n    - If the hash is in the hashset, one met a repeated sequence, time to update the output. \n            \n    - Otherwise, add hash in the hashset.\n         \n- Return output list.\n \n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/W7sYKqSM/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"W7sYKqSM\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(N - L)$$, that is $$\\mathcal{O}(N)$$ for the constant $$L = 10$$. In the loop executed $$N - L + 1$$ one builds a hash in a constant time, that results in $$\\mathcal{O}(N - L)$$ time complexity.\n\n* Space complexity : $$\\mathcal{O}(N - L)$$ to keep the hashset, that results in $$\\mathcal{O}(N)$$ for the constant $$L = 10$$.\n<br /> \n<br />\n\n\n---\n### Approach 3: Bit Manipulation: Constant-time Slice Using Bitmask\n\n> The idea is to slice over the string and to compute the bitmask of the sequence in the sliding window, both in a constant time.\n\nAs for Rabin-Karp, let's start with conversion of the string to a 2-bits integer array:\n\n$$A -> 0 = 00_2, \\quad C -> 1 = 01_2, \\quad G -> 2 = 10_2, \\quad T -> 3 = 11_2$$\n\n`GAAAAACCCCCAAAAACCCCCCAAAAAGGGTTT` -> `200000111110000011111100000222333`.\n\nTime to compute bitmask for the first sequence of length L: `2000001111`. Each digit in the sequence (0, 1, 2, or 3) takes not more than 2 bits:\n\n$$0 = 00_2, \\quad 1 = 01_2, \\quad 2 = 10_2, \\quad 3 = 11_2$$\n\nHence the bitmask could be computed in the loop:\n\n- Do the left shift to free the last two bits: `bitmask <<= 2`\n\n- Save the current digit from `2000001111` in these last two bits: `bitmask |= nums[i]`\n\n![pic](../Figures/187/first_bitmask2.png)\n\nNow let's consider the slice `GAAAAACCCCC` -> `AAAAACCCCC`. For int arrays that means `20000011111` -> `0000011111`, to remove leading 2 and add trailing 1.\n\n![pic](../Figures/187/slice.png)\n\nTo add trailing 1 is simple, the same idea as just above: \n\n- Do the left shift to free the last two bits: `bitmask <<= 2`\n\n- Save 1 into these last two bits: `bitmask |= 1`\n\nNow the problem is to remove two leading bits, which contain 2. In other words, the problem is to set 2L-bit and (2L + 1)-bit to zero.\n\n> Let's use a bitwise trick to unset the n-th bit: `bitmask &= ~(1 << n)`.\n\nThis trick is very simple:\n\n- `1 << n` is to set n-th bit equal to 1.\n\n- `~(1 << n)` is to set n-th bit equal to 0, and all lower bits to 1.\n\n- `bitmask &= ~(1 << n)` is to set n-th bit of bitmask equal to 0.\n\nStraightforward trick usage is to unset first 2L-bit and then (2L + 1)-bit: `bitmask &= ~(1 << 2 * L) & ~(1 << (2 * L + 1)`. That could be simplified as `bitmask &= ~(3 << 2 * L)`:\n\n- $$3 = (11)_2$$, and hence `3 << 2 * L` would set 2L-bit and (2L + 1)-bit equal to 1.\n\n- `~(3 << 2 * L)` would set 2L-bit and (2L + 1)-bit equal to 0, and all lower bits to 1.\n\n- `bitmask &= ~(3 << 2 * L)` would set 2L-bit and (2L + 1)-bit of bitmask equal to 0.\n\n![pic](../Figures/187/unset.png)\n\nVoila, window slice, and bitmask recomputation are both done in a constant time.\n\n**Algorithm**\n\n- Iterate over the start position of sequence: from 1 to $$N - L$$.\n\n    - If `start == 0`, compute the bitmask of the first sequence `s[0: L]`. \n        \n    - Otherwise, compute the bitmask from the previous bitmask.\n            \n    - If bitmask is in the hashset, one met a repeated sequence, time to update the output. \n            \n    - Otherwise, add bitmask in the hashset.\n         \n- Return output list.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/XvgyCbWN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XvgyCbWN\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(N - L)$$, that is $$\\mathcal{O}(N)$$ for the constant $$L = 10$$. In the loop executed $$N - L + 1$$ one builds a bitmask in a constant time, that results in $$\\mathcal{O}(N - L)$$ time complexity.\n\n* Space complexity : $$\\mathcal{O}(N - L)$$ to keep the hashset, that results in $$\\mathcal{O}(N)$$ for the constant $$L = 10$$.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

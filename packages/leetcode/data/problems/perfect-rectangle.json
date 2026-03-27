@@ -1,0 +1,141 @@
+{
+  "questionId": "391",
+  "questionFrontendId": "391",
+  "title": "Perfect Rectangle",
+  "titleSlug": "perfect-rectangle",
+  "difficulty": "Hard",
+  "content": "<p>Given an array <code>rectangles</code> where <code>rectangles[i] = [x<sub>i</sub>, y<sub>i</sub>, a<sub>i</sub>, b<sub>i</sub>]</code> represents an axis-aligned rectangle. The bottom-left point of the rectangle is <code>(x<sub>i</sub>, y<sub>i</sub>)</code> and the top-right point of it is <code>(a<sub>i</sub>, b<sub>i</sub>)</code>.</p>\n\n<p>Return <code>true</code> <em>if all the rectangles together form an exact cover of a rectangular region</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/27/perectrec1-plane.jpg\" style=\"width: 300px; height: 294px;\" />\n<pre>\n<strong>Input:</strong> rectangles = [[1,1,3,3],[3,1,4,2],[3,2,4,4],[1,3,2,4],[2,3,3,4]]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> All 5 rectangles together form an exact cover of a rectangular region.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/27/perfectrec2-plane.jpg\" style=\"width: 300px; height: 294px;\" />\n<pre>\n<strong>Input:</strong> rectangles = [[1,1,2,3],[1,3,2,4],[3,1,4,2],[3,2,4,4]]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> Because there is a gap between the two rectangular regions.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/03/27/perfecrrec4-plane.jpg\" style=\"width: 300px; height: 294px;\" />\n<pre>\n<strong>Input:</strong> rectangles = [[1,1,3,3],[3,1,4,2],[1,3,2,4],[2,2,4,4]]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> Because two of the rectangles overlap with each other.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= rectangles.length &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>rectangles[i].length == 4</code></li>\n\t<li><code>-10<sup>5</sup> &lt;= x<sub>i</sub> &lt; a<sub>i</sub> &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>5</sup> &lt;= y<sub>i</sub> &lt; b<sub>i</sub> &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"isRectangleCover\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"rectangles\",\r\n      \"type\": \"integer[][]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"60.3K\", \"totalSubmission\": \"160.2K\", \"totalAcceptedRaw\": 60261, \"totalSubmissionRaw\": 160250, \"acRate\": \"37.6%\"}",
+  "likes": 954,
+  "dislikes": 120,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,1,3,3],[3,1,4,2],[3,2,4,4],[1,3,2,4],[2,3,3,4]]",
+    "[[1,1,2,3],[1,3,2,4],[3,1,4,2],[3,2,4,4]]",
+    "[[1,1,3,3],[3,1,4,2],[1,3,2,4],[2,2,4,4]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Geometry",
+      "slug": "geometry"
+    },
+    {
+      "name": "Sweep Line",
+      "slug": "line-sweep"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isRectangleCover(vector<vector<int>>& rectangles) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isRectangleCover(int[][] rectangles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isRectangleCover(self, rectangles: List[List[int]]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isRectangleCover(self, rectangles):\n        \"\"\"\n        :type rectangles: List[List[int]]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} rectangles\n * @return {boolean}\n */\nvar isRectangleCover = function(rectangles) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isRectangleCover(rectangles: number[][]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsRectangleCover(int[][] rectangles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isRectangleCover(int** rectangles, int rectanglesSize, int* rectanglesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isRectangleCover(rectangles [][]int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isRectangleCover(rectangles: Array<IntArray>): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isRectangleCover(_ rectangles: [[Int]]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_rectangle_cover(rectangles: Vec<Vec<i32>>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} rectangles\n# @return {Boolean}\ndef is_rectangle_cover(rectangles)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $rectangles\n     * @return Boolean\n     */\n    function isRectangleCover($rectangles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isRectangleCover(List<List<int>> rectangles) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isRectangleCover(rectangles: Array[Array[Int]]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_rectangle_cover(rectangles :: [[integer]]) :: boolean\n  def is_rectangle_cover(rectangles) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_rectangle_cover(Rectangles :: [[integer()]]) -> boolean().\nis_rectangle_cover(Rectangles) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-rectangle-cover rectangles)\n  (-> (listof (listof exact-integer?)) boolean?)\n  )"
+    }
+  ],
+  "solution": null
+}

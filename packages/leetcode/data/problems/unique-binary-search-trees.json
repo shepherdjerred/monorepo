@@ -1,0 +1,145 @@
+{
+  "questionId": "96",
+  "questionFrontendId": "96",
+  "title": "Unique Binary Search Trees",
+  "titleSlug": "unique-binary-search-trees",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer <code>n</code>, return <em>the number of structurally unique <strong>BST&#39;</strong>s (binary search trees) which has exactly </em><code>n</code><em> nodes of unique values from</em> <code>1</code> <em>to</em> <code>n</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/01/18/uniquebstn3.jpg\" style=\"width: 600px; height: 148px;\" />\n<pre>\n<strong>Input:</strong> n = 3\n<strong>Output:</strong> 5\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1\n<strong>Output:</strong> 1\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 19</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"numTrees\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"n\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"852.9K\", \"totalSubmission\": \"1.3M\", \"totalAcceptedRaw\": 852949, \"totalSubmissionRaw\": 1344354, \"acRate\": \"63.4%\"}",
+  "likes": 11002,
+  "dislikes": 448,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Unique Binary Search Trees II\", \"titleSlug\": \"unique-binary-search-trees-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3",
+    "1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"swiggy\", \"name\": \"Swiggy\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 5, \"slug\": \"clari\", \"name\": \"Clari\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"tower-research\", \"name\": \"Tower Research Capital\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Binary Search Tree",
+      "slug": "binary-search-tree"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numTrees(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numTrees(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numTrees(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numTrees(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar numTrees = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numTrees(n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumTrees(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numTrees(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numTrees(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numTrees(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numTrees(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_trees(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef num_trees(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function numTrees($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numTrees(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numTrees(n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_trees(n :: integer) :: integer\n  def num_trees(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_trees(N :: integer()) -> integer().\nnum_trees(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-trees n)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "555",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Dynamic Programming\n\n**Intuition**\n\nThe problem can be solved in a dynamic programming way.\n\nGiven a sorted sequence `1 ... n`, to construct a Binary Search Tree (BST) out of the sequence,\nwe could enumerate each number `i` in the sequence, and use the number as the root,\nthen, the subsequence `1 ... (i-1)` on its left side would lay on the left branch of the root,\nand similarly the right subsequence `(i+1) ... n` lay on the right branch of the root.\nWe then can construct the subtree from the subsequence recursively.\nThrough the above approach, we could be assured that the BST that we construct are all unique,\nsince they start from unique roots.\n\nAs we can see, the problem can be reduced into problems with smaller sizes,\ninstead of recursively (also repeatedly) solve the subproblems,\nwe can store the solution of subproblems and reuse them later,\n*i.e.* the dynamic programming way.\n\n**Algorithm**\n\nThe problem is to calculate the number of unique BST.\nTo do so, we can define two functions:\n\n1. $$G(n)$$: the number of unique BST for a sequence of length `n`.\n\n2. $$F(i, n)$$: the number of unique BST,\nwhere the number `i` is served as the root of BST ($$1 \\leq i \\leq n$$).\n\nAs we can see,\n>$$G(n)$$ is actually the desired function we need in order to solve the problem.\n\n\n*Later we would see that $$G(n)$$ can be deduced from $$F(i, n)$$, which at the end, would recursively refers to $$G(n)$$.*\n\nFollowing the idea from the Intuition section above,\nwe can see that the total number of unique BST $$G(n)$$,\nis the sum of BST $$F(i, n)$$ enumerating each number `i` (`1 <= i <= n`) as a root. Hence,\n\n$$\nG(n) = \\sum_{i=1}^{n} F(i, n) \\qquad  \\qquad (1)\n$$\n\nParticularly, for the base cases, there is only one combination to construct a BST\nout of a sequence of length 1 (only a root) or nothing (empty tree).\n*i.e.*\n\n$$\nG(0) = 1, \\qquad G(1) = 1\n$$\n\n\nGiven a sequence `1 ... n`, we pick a number `i` out of the sequence as the root,\nthen the number of unique BST with the specified root defined as $$F(i, n)$$,\nis the **cartesian product** of the number of BST for its left and right subtrees, as illustrated below:\n\n<center><img src=\"../Figures/96_BST.png\" width=\"550px\" /></center>\n\nFor example, $$F(3, 7)$$, the number of unique BST tree with the number `3` as its root.\nTo construct an unique BST out of the entire sequence `[1, 2, 3, 4, 5, 6, 7]` with `3` as the root,\nwhich is to say, we need to construct a subtree out of its left subsequence `[1, 2]` and\nanother subtree out of the right subsequence `[4, 5, 6, 7]`,\nand then combine them together (*i.e.* cartesian product).\nNow the tricky part is that we could consider the number of unique BST out of sequence `[1,2]` as $$G(2)$$,\nand the number of of unique BST out of sequence `[4, 5, 6, 7]` as $$G(4)$$. For $$G(n)$$,\nit does not matter the content of the sequence, but the length of the sequence.\nTherefore, $$F(3,7) = G(2) \\cdot G(4)$$. To generalise from the example, we could derive the following formula:\n\n$$\nF(i, n) = G(i-1) \\cdot G(n-i) \\qquad  \\qquad (2)\n$$\n\nBy combining the formulas (1), (2), we obtain a recursive formula for $$G(n)$$, *i.e.*\n\n$$\nG(n) = \\sum_{i=1}^{n}G(i-1) \\cdot G(n-i) \\qquad  \\qquad (3)\n$$\n\nTo calculate the result of function, we start with the lower number, since the value of $$G(n)$$ depends on the values of $$G(0) … G(n-1)$$.\n\nWith the above explanation and formulas, one can easily implement an algorithm to calculate the $$G(n)$$. Here are some examples:\n\n<iframe src=\"https://leetcode.com/playground/5KSZsiEv/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"5KSZsiEv\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : the main computation of the algorithm is done at the statement with `G[i]`.\nSo the time complexity is essentially the number of iterations for the statement,\nwhich is $$\\sum_{i=2}^{n} i = \\frac{(2+n)(n-1)}{2}$$, to be exact, therefore the time complexity is $$O(N^2)$$\n\n* Space complexity : The space complexity of the above algorithm is mainly the storage to\nkeep all the intermediate solutions, therefore $$O(N)$$.\n\n<br/>\n\n---\n\n\n### Approach 2: Mathematical Deduction\n\n**Intuition**\n\nActually, as it turns out, the sequence of  $$G(n)$$ function results is known as [Catalan number](https://en.wikipedia.org/wiki/Catalan_number) $$C_n$$. And one of the more convenient forms for calculation is defined as follows:\n\n$$\nC_0 = 1, \\qquad C_{n+1} = \\frac{2(2n+1)}{n+2}C_n \\qquad  \\qquad (4)\n$$\n\nWe skip the proof here, which one can find following the above reference.\n\n**Algorithm**\n\nGiven the formula (3), it becomes rather easy to calculate $$G_n$$ which is actually $$C_n$$. Here are some examples:\n<iframe src=\"https://leetcode.com/playground/Y6ZyJSy7/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"Y6ZyJSy7\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(N)$$, as one can see, there is one single loop in the algorithm.\n* Space complexity : $$O(1)$$, we use only one variable to store all the intermediate results and the final one.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

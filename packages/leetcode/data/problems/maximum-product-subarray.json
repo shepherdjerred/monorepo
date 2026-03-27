@@ -1,0 +1,133 @@
+{
+  "questionId": "152",
+  "questionFrontendId": "152",
+  "title": "Maximum Product Subarray",
+  "titleSlug": "maximum-product-subarray",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code>, find a <span data-keyword=\"subarray-nonempty\">subarray</span> that has the largest product, and return <em>the product</em>.</p>\n\n<p>The test cases are generated so that the answer will fit in a <strong>32-bit</strong> integer.</p>\n\n<p><strong>Note</strong> that the product of an array with a single element is the value of that element.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,3,-2,4]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> [2,3] has the largest product 6.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [-2,0,-1]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> The result cannot be 2, because [-2,-1] is not a subarray.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>-10 &lt;= nums[i] &lt;= 10</code></li>\n\t<li>The product of any subarray of <code>nums</code> is <strong>guaranteed</strong> to fit in a <strong>32-bit</strong> integer.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"maxProduct\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"2M\", \"totalSubmission\": \"5.5M\", \"totalAcceptedRaw\": 1983995, \"totalSubmissionRaw\": 5485348, \"acRate\": \"36.2%\"}",
+  "likes": 20395,
+  "dislikes": 826,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Subarray\", \"titleSlug\": \"maximum-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"House Robber\", \"titleSlug\": \"house-robber\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Product of Array Except Self\", \"titleSlug\": \"product-of-array-except-self\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Product of Three Numbers\", \"titleSlug\": \"maximum-product-of-three-numbers\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Subarray Product Less Than K\", \"titleSlug\": \"subarray-product-less-than-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,3,-2,4]",
+    "[-2,0,-1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 5, \"slug\": \"wayfair\", \"name\": \"Wayfair\"}, {\"timesEncountered\": 4, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 3, \"slug\": \"hashedin\", \"name\": \"HashedIn\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"siemens\", \"name\": \"Siemens\"}, {\"timesEncountered\": 2, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxProduct(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxProduct(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxProduct(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxProduct(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar maxProduct = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxProduct(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxProduct(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxProduct(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxProduct(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxProduct(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxProduct(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_product(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef max_product(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function maxProduct($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxProduct(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxProduct(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_product(nums :: [integer]) :: integer\n  def max_product(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_product(Nums :: [integer()]) -> integer().\nmax_product(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-product nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "977",
+    "content": "[TOC]\n\n## Solution\n\nIt is advisable to approach [Maximum Subarray](https://leetcode.com/problems/maximum-subarray/) problem first before approaching this problem. The intuition acquired from that problem will help a lot with this problem.\n\n---\n\n### Approach 1: Brute Force (Python TLE)\n\n**Intuition**\n\nThe most naive way to tackle this problem is to go through each element in `nums`, and for each element, consider the product of every a contiguous subarray starting from that element. This will result in a cubic runtime. \n\n    for i in [0...nums-1]: \n        for j in [i..nums-1]: \n            accumulator = 1\n            for k in [i..j]:\n                accumulator = accumulator * nums[k]\n            result = max(result, accumulator)\n\nWe can improve the runtime from cubic to quadratic by removing the innermost `for` loop in the above pseudo code. Rather than calculating the product of every contiguous subarray over and over again, for each element in `nums` (the outermost `for` loop), we accumulate the products of contiguous subarrays starting from that element to subsequent elements as we go through them (the second `for` loop). By doing so, we only need to multiply the current number with accumulated product to get the product of numbers up to the current number.\n\n> **Note:** This brute force approach is included solely to build the foundation for understanding the following approach. \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/XHjDwRMj/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"XHjDwRMj\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(N^2)$$ where $$N$$ is the size of `nums`. Since we are checking every possible contiguous subarray following every element in `nums` we have quadratic runtime.\n\n* Space complexity : $$O(1)$$ since we are not consuming additional space other than two variables: `result` to hold the final result and `accu` to accumulate product of preceding contiguous subarrays.\n\n---\n\n### Approach 2: Dynamic Programming\n\n**Intuition**\n\nRather than looking for every possible subarray to get the largest product, we can scan the array and solve smaller subproblems.\n\nLet's see this problem as a problem of getting the highest combo chain. The way combo chains work is that they build on top of the previous combo chains that you have acquired. The simplest case is when the numbers in `nums` are all positive numbers. In that case, you would only need to keep on multiplying the accumulated result to get a bigger and bigger combo chain as you progress.\n\nHowever, two things can disrupt your combo chain:\n\n- Zeros\n- Negative numbers\n\n**Zeros** will reset your combo chain. A high score which you have achieved will be recorded in placeholder `result`. You will have to *restart* your combo chain after zero. If you encounter another combo chain which is higher than the recorded high score in `result`, you just need to update the `result`.\n\n**Negative numbers** are a little bit tricky. A single negative number can flip the largest combo chain to a very small number. This may sound like your combo chain has been completely disrupted but if you encounter another negative number, your combo chain can be saved. Unlike zero, you still have a hope of saving your combo chain as long as you have another negative number in `nums` (Think of this second negative number as an antidote for the poison that you just consumed). However, if you encounter a zero while you are looking your another negative number to save your combo chain, you lose the hope of saving that combo chain.\n\nWhile going through numbers in `nums`, we will have to keep track of the maximum product up to that number (we will call `max_so_far`) and minimum product up to that number (we will call `min_so_far`). The reason behind keeping track of `max_so_far` is to keep track of the accumulated product of positive numbers. The reason behind keeping track of `min_so_far` is to properly handle negative numbers.\n\n`max_so_far` is updated by taking the **maximum** value among:\n    \n1. Current number.\n    * This value will be picked if the accumulated product has been really bad (even compared to the current number). This can happen when the current number has a preceding zero (e.g. `[0,4]`) or is preceded by a single negative number (e.g. `[-3,5]`).\n2. Product of last `max_so_far` and current number.\n    * This value will be picked if the accumulated product has been steadily increasing (all positive numbers).\n3. Product of last `min_so_far` and current number.\n    * This value will be picked if the current number is a negative number and the combo chain has been disrupted by a single negative number before (In a sense, this value is like an antidote to an already poisoned combo chain).\n\n`min_so_far` is updated in using the same three numbers except that we are taking **minimum**  among the above three numbers.\n\nIn the animation below, you will observe a negative number `-5` disrupting a combo chain but that combo chain is later saved by another negative number `-4`. The only reason this can be saved is because of `min_so_far`. You will also observe a zero disrupting a combo chain. \n\n!?!../Documents/152_maximum_product_subarray.json:1200,600!?!\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/e6aBbjPr/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"e6aBbjPr\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$O(N)$$ where $$N$$ is the size of `nums`. The algorithm achieves linear runtime since we are going through `nums` only once. \n\n* Space complexity : $$O(1)$$ since no additional space is consumed rather than variables which keep track of the maximum product so far, the minimum product so far, current variable, temp variable, and placeholder variable for the result.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

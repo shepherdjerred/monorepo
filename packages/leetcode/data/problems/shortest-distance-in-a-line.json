@@ -1,0 +1,58 @@
+{
+  "questionId": "613",
+  "questionFrontendId": "613",
+  "title": "Shortest Distance in a Line",
+  "titleSlug": "shortest-distance-in-a-line",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Point</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| x           | int  |\n+-------------+------+\nIn SQL, x is the primary key column for this table.\nEach row of this table indicates the position of a point on the X-axis.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Find the shortest distance between any two points from the <code>Point</code> table.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nPoint table:\n+----+\n| x  |\n+----+\n| -1 |\n| 0  |\n| 2  |\n+----+\n<strong>Output:</strong> \n+----------+\n| shortest |\n+----------+\n| 1        |\n+----------+\n<strong>Explanation:</strong> The shortest distance is between points -1 and 0 which is |(-1) - 0| = 1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> How could you optimize your solution if the <code>Point</code> table is ordered <strong>in ascending order</strong>?</p>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create Table If Not Exists Point (x int not null)\"], \"mssql\": [\"Create Table Point (x int not null)\"], \"oraclesql\": [\"Create Table Point (x int not null)\"], \"database\": true, \"name\": \"shortest_distance\", \"pythondata\": [\"Point = pd.DataFrame([], columns=['x']).astype({'x':'Int64'})\"], \"postgresql\": [\"Create Table If Not Exists Point (x int not null)\"], \"database_schema\": {\"Point\": {\"x\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"84.9K\", \"totalSubmission\": \"106.5K\", \"totalAcceptedRaw\": 84871, \"totalSubmissionRaw\": 106540, \"acRate\": \"79.7%\"}",
+  "likes": 344,
+  "dislikes": 41,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Point\":[\"x\"]},\"rows\":{\"Point\":[[-1],[0],[2]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef shortest_distance(point: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "179",
+    "content": "[TOC]\n\n## Solution\n---\n### Approach: Using `ABS()` and `MIN()` functions [Accepted]\n\n**Intuition**\n\nCalculate the distances between each two points first, and then display the minimum one.\n\n**Algorithm**\n\nTo get the distances of each two points, we need to join this table with itself and use `ABS()` function since the distance is nonnegative.\nOne trick here is to add the condition in the join to avoid calculating the distance between a point with itself.\n\n```sql\nSELECT\n    p1.x, p2.x, ABS(p1.x - p2.x) AS distance\nFROM\n    point p1\n        JOIN\n    point p2 ON p1.x != p2.x\n;\n```\n>Note: The columns p1.x, p2.x are only for demonstrating purpose, so they are not actually needed in the end.\n\nTaking the sample data for example, the output would be as below.\n```\n| x  | x  | distance |\n|----|----|----------|\n| 0  | -1 | 1        |\n| 2  | -1 | 3        |\n| -1 | 0  | 1        |\n| 2  | 0  | 2        |\n| -1 | 2  | 3        |\n| 0  | 2  | 2        |\n```\n\nAt last, use `MIN()` to select the smallest value in the *distance* column.\n\n**MySQL**\n\n```sql\nSELECT\n    MIN(ABS(p1.x - p2.x)) AS shortest\nFROM\n    point p1\n        JOIN\n    point p2 ON p1.x != p2.x\n;\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

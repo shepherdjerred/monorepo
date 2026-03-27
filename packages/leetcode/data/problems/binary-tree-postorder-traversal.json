@@ -1,0 +1,143 @@
+{
+  "questionId": "145",
+  "questionFrontendId": "145",
+  "title": "Binary Tree Postorder Traversal",
+  "titleSlug": "binary-tree-postorder-traversal",
+  "difficulty": "Easy",
+  "content": "<p>Given the <code>root</code> of a&nbsp;binary tree, return <em>the postorder traversal of its nodes&#39; values</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">root = [1,null,2,3]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[3,2,1]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/08/29/screenshot-2024-08-29-202743.png\" style=\"width: 200px; height: 264px;\" /></p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">root = [1,2,3,4,5,null,8,null,null,6,7,9]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[4,6,7,5,2,9,8,3,1]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/08/29/tree_2.png\" style=\"width: 350px; height: 286px;\" /></p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">root = []</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[]</span></p>\n</div>\n\n<p><strong class=\"example\">Example 4:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">root = [1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[1]</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of the nodes in the tree is in the range <code>[0, 100]</code>.</li>\n\t<li><code>-100 &lt;= Node.val &lt;= 100</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<strong>Follow up:</strong> Recursive solution is trivial, could you do it iteratively?",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"postorderTraversal\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"root\",\r\n      \"type\": \"TreeNode\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"list<integer>\",\r\n    \"dealloc\": true\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.9M\", \"totalSubmission\": \"2.5M\", \"totalAcceptedRaw\": 1931682, \"totalSubmissionRaw\": 2482157, \"acRate\": \"77.8%\"}",
+  "likes": 7786,
+  "dislikes": 226,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Binary Tree Inorder Traversal\", \"titleSlug\": \"binary-tree-inorder-traversal\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"N-ary Tree Postorder Traversal\", \"titleSlug\": \"n-ary-tree-postorder-traversal\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Fuel Cost to Report to the Capital\", \"titleSlug\": \"minimum-fuel-cost-to-report-to-the-capital\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,null,2,3]",
+    "[1,2,3,4,5,null,8,null,null,6,7,9]",
+    "[]",
+    "[1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 8, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> postorderTraversal(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public List<Integer> postorderTraversal(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def postorderTraversal(self, root: Optional[TreeNode]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def postorderTraversal(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {number[]}\n */\nvar postorderTraversal = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction postorderTraversal(root: TreeNode | null): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public IList<int> PostorderTraversal(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* postorderTraversal(struct TreeNode* root, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc postorderTraversal(root *TreeNode) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun postorderTraversal(root: TreeNode?): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func postorderTraversal(_ root: TreeNode?) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn postorder_traversal(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Integer[]}\ndef postorder_traversal(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Integer[]\n     */\n    function postorderTraversal($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  List<int> postorderTraversal(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def postorderTraversal(root: TreeNode): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec postorder_traversal(root :: TreeNode.t | nil) :: [integer]\n  def postorder_traversal(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec postorder_traversal(Root :: #tree_node{} | null) -> [integer()].\npostorder_traversal(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (postorder-traversal root)\n  (-> (or/c tree-node? #f) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2414",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nTo traverse a tree, we use two main strategies:\n\n- Breadth-First Search (BFS): This strategy involves scanning the tree level by level from the top down, visiting nodes at higher levels before those at lower levels.\n\n- Depth-First Search (DFS): This approach explores as far down a branch as possible before backtracking. It starts at the root, proceeds to a leaf, and then returns to explore other branches. DFS can be further categorized into:\n  - Preorder: Visit the root first, then the left subtree, followed by the right subtree.\n  - Inorder: Visit the left subtree first, then the root, and then the right subtree.\n  - Postorder: Visit the left subtree first, then the right subtree, and finally the root.\n\n![Tree Traversal Example](../Figures/145/traverse2.png)\n*Figure 1. Nodes are numbered in the order they are visited; refer to the sequence `1-2-3-4-5` to compare different traversal strategies.*\n\nFor a binary tree with the root `[1, null, 2, 3]`, the tree structure is as follows:\n\n```\n1\n \\\n  2\n /\n3\n```\n\nIn Postorder traversal, nodes are visited in the sequence: `3` (left subtree), `2` (right subtree), and finally `1` (root). Thus, the output for this input should be `[3, 2, 1]`.\n\n---\n\n### Approach 1: Recursive Postorder Traversal\n\n#### Intuition\n\n![recursion](../Figures/145/recursion.png)\n*Figure 2. Recursive DFS traversals.*\n\nIn this approach, we treat each node as the root of its subtree. We start by recursively traversing the left subtree. If the left child is not null, we continue exploring until the left subtree is fully traversed. Then, we move to the right subtree and repeat the process. After both subtrees are explored, we process the current node by adding its value to the result list.\n\nThe base case occurs when the current node is null, indicating no further subtree to explore. At this point, we simply return and backtrack.\n\n#### Algorithm\n\n1. Define a helper function `postorderTraversalHelper`:\n   - If `currentNode` is `null`, return to stop further recursion.\n   - Recursively call `postorderTraversalHelper` with `currentNode->left` to process the left subtree.\n   - Recursively call `postorderTraversalHelper` with `currentNode->right` to process the right subtree.\n   - Append `currentNode->val` to the `result` array to collect values in postorder.\n2. In the `postorderTraversal` function:\n   - Initialize an empty `result` array to store the postorder ordering of the nodes in`root`.\n   - Call `postorderTraversalHelper` with the root node and `result` to start the traversal.\n   - Return the `result` array containing the postorder traversal.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/X7v7GcVB/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"X7v7GcVB\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes.\n\n- Time complexity: $O(n)$\n\n    Each node is visited once during the traversal, so the time complexity is linear with respect to the number of nodes `n`.\n\n- Space complexity: $O(n)$\n\n    The space complexity is $O(n)$ due to the recursion stack. In the worst case (e.g., a completely unbalanced tree), the recursion stack could hold all `n` nodes.\n\n---\n\n### Approach 2: Manipulating Preorder Traversal (Iterative Hack)\n\n#### Intuition\n\nLet's take a creative leap in this approach by exploiting the relationship between preorder and postorder traversals. In a standard preorder traversal, we visit the root node before we visit the left and right subtrees. However, postorder traversal requires us to visit the left and right subtrees before the root node.\n\nWe can adapt the preorder traversal by visiting nodes in the order of root, right subtree, and then left subtree. Reversing the resulting list from this modified preorder traversal gives us the correct postorder sequence.\n\nWe use a stack to traverse the tree iteratively, starting with the root node. We push the current node onto the stack and add its value to the result list. Instead of moving to the left child, we move to the right child. If there's no right child, we pop a node from the stack and move to its left child. This approach processes the right subtree before the left subtree, aligning with the modified preorder traversal.\n\nAfter traversing the entire tree, we reverse the result list to get the postorder sequence: left subtree, right subtree, root.\n\n#### Algorithm\n \n1. Initialize an empty `result` list to store the traversal result, a `traversalStack` for nodes, and set `currentNode` to `root`.\n2. While `currentNode` is not `null` or `traversalStack` is not empty:\n   - If `currentNode` is not `null`, add `currentNode->val` to the `result` list before processing its children.\n   - Push `currentNode` onto the `traversalStack` to revisit it later.\n   - Move `currentNode` to `currentNode->right` to continue traversal in the right subtree.\n   - If `currentNode` is `null`, pop the top node from `traversalStack` and set it to `currentNode`.\n   - Move `currentNode` to `currentNode->left` to process the left subtree.\n3. Reverse the `result` list to correct the order from preorder to postorder.\n4. Return the `result` list with postorder traversal values.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5wrszGxT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5wrszGxT\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes. \n\n* Time complexity: $O(n)$\n\n    Each node is processed a constant number of times (essentially twice), so the time complexity remains linear with respect to `n`.\n\n* Space complexity: $O(n)$\n\n    The space complexity is $O(2n) = O(n)$ due to the stack used for traversing the tree nodes. This stack could hold up to `n` nodes in the worst case. \n\n---\n\n### Approach 3: Two Stack Postorder Traversal (Iterative)\n\n#### Intuition\n\nInstead of relying on hacks and tricks, this time we will build on the idea that we need to control the order in which nodes are processed to achieve postorder traversal.  \n\nTo achieve postorder traversal without recursion, we use two stacks to control the node processing order systematically.\n\nFirst, we push the root node onto the first stack. This stack simulates the recursive traversal of the tree. To process nodes in postorder (left-right-root), we need a second stack to reverse the order. As we pop nodes from the first stack, we push them onto the second stack. This reversal ensures that nodes are processed in the correct order.\n\nAfter all nodes are transferred to the second stack, popping from it gives us the nodes in postorder sequence. This method efficiently achieves the desired traversal order by leveraging the two stacks to manage the processing sequence without needing a final reversal step.\n\nIn summary, the two-stack approach uses the first stack for tree traversal and the second stack to reverse the order, resulting in a postorder traversal. Despite initially seeming like a manipulation of preorder traversal, the final order of nodes from the second stack aligns with postorder traversal.\n\n#### Algorithm\n \n1. Initialize an empty `result` list, and create `mainStack` and `pathStack` for nodes.\n2. Check if `root` is `null`; if so, return `result` immediately, indicating there are no nodes to process.\n3. Push `root` onto `mainStack` to start the traversal.\n4. While `mainStack` is not empty:\n   - Peek at the top of `mainStack` to examine the current node.\n   - If the top of `pathStack` is the same as the top of `mainStack`, add `root->val` to the `result` list.\n   - Pop the top node from both `mainStack` and `pathStack` after processing.\n   - Otherwise, push the current node onto `pathStack`.\n   - Push `root->right` and `root->left` onto `mainStack` if they exist to process their children.\n5. Return the `result` list containing postorder traversal values.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/GkvWqGqp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GkvWqGqp\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes. \n\n* Time complexity: $O(n)$\n\n    Each node is processed a constant number of times (once when pushed to the first stack and once when popped to the second stack), so the time complexity is linear with respect to `n`.\n\n* Space complexity: $O(n)$\n\n    The space complexity is $O(n)$ due to the use of two stacks. Each stack can hold up to `n` nodes in the worst case.\n\n---\n\n### Approach 4: Single Stack Postorder Traversal (Iterative)\n\n#### Intuition\n\nAfter exploring the two-stack approach, we might seek to optimize further by reducing space complexity. While two stacks effectively manage traversal order, they double our space usage. Instead, we can use a single stack combined with a `previousNode` pointer to track the traversal.\n\nWe start by pushing nodes onto the stack while traversing left, similar to inorder traversal. In postorder traversal, we must process each node after its right subtree. To manage this, the `previousNode` pointer helps remember the last processed node.\n\nWhen a node is reached on the stack, we first check if it has an unvisited right child. If so, we move to that right child since we can't process the current node until after its right subtree. If the node has no right child or its right child has already been processed (indicated by `previousNode`), we process the node by popping it from the stack and adding its value to the result list, then update `previousNode` to this node.\n\n#### Algorithm\n \n1. Initialize an empty `result` list, set `previousNode` to `null`, and initialize `traversalStack`.\n2. Check if `root` is `null`; if so, return `result` immediately, indicating there are no nodes to process.\n3. While `root` is not `null` or `traversalStack` is not empty:\n   - If `root` is not `null`, push `root` onto `traversalStack`.\n   - Move `root` to `root->left` to process the left subtree.\n   - If `root` is `null`, peek at the top of `traversalStack`.\n   - If `root->right` is `null` or `root->right` equals `previousNode`, add `root->val` to `result`.\n   - Pop `root` from `traversalStack`, set `previousNode` to `root`, and set `root` to `null`.\n   - If `root->right` is not `null`, move `root` to `root->right` to continue the traversal.\n4. Return the `result` list containing postorder traversal values.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PMTa9tEv/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PMTa9tEv\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes.\n\n* Time complexity: $O(n)$\n\n    Each node is processed a constant number of times. The stack operations and pointer manipulations also contribute to a linear time complexity with respect to `n`.\n\n* Space complexity: $O(n)$\n\n    Although this approach uses only a single stack, in the worst case, the stack can still hold up to `n` nodes, so the space complexity remains $O(n)$. However, this approach optimizes the space usage compared to using two stacks.\n\n---\n\n### Approach 5: Morris Traversal (No stack)\n\n#### Intuition\n\nAll the approaches so far have been using some auxiliary space. To optimize for space complexity, we can use a traversal algorithm called Morris traversal. In Morris traversal, the tree structure is temporarily modified to create temporary links that simulate the effect of a stack or recursion. As a result, there is no overhead from additional data structures and the space complexity is constant. This traversal is tricky to understand at first, but the high level idea is to link each predecessor back to the current node, which allows us to trace back to the top of the tree. We encourage you to simulate the traversal on a piece of paper to get a stronger understanding.\n\nIn setting up Morris traversal, we introduce a `dummyNode` with a value that is not part of the original tree and link it to the root. Our traversal begins with this dummyNode, treating it as the new root of the tree.\n\nFor each node, we look for its in-order predecessor, the rightmost node in its left subtree. We do this so that the in-order predecessor can be used to create a temporary link back to the current node, simulating the recursive call stack.\n- If the current node has a left child, we find the rightmost node in the left subtree. This rightmost node is the in-order predecessor.\n- We then create a temporary link from this predecessor to the current node by setting its right pointer to the current node.\n\nIf the predecessor’s right pointer is `null`, set it to point to the current node and move to the left child. This simulates the recursive call by allowing us to return to the current node after processing the left subtree.\n\nWhen a node’s predecessor’s right pointer points back to the current node, it indicates the left subtree is processed. Process the current node and reverse the temporary link to restore the tree’s structure.\n\nFinally, move to the right child and continue the traversal.\n\nMorris traversal operates in $O(n)$ time because finding the predecessor is not done for every node but only for nodes with a valid left child.\n\n> Note: Morris traversal may be a surprise topic in interviews. It’s useful to know but not always the main focus; prioritize understanding basic traversal methods first.\n\n#### Algorithm\n \n1. Initialize an empty `result` list and create a dummy node with the value `-1`. Set `dummyNode->left` to `root` and update `root` to `dummyNode`.\n2. Check if `root` is `null`; if so, return `result` immediately, indicating there are no nodes to process.\n3. While `root` is not `null`:\n   - If `root->left` is not `null`, find the rightmost node (predecessor) in the `root->left` subtree.\n   - If the right child of the predecessor is `null`, set the right child to `root` and move `root` to `root->left`.\n   - If the right child of the predecessor is `root`, perform reverse traversal of the `root->left` subtree and add values to `result`.\n   - Reverse the subtree back to its original state by restoring pointers.\n   - Remove the temporary link from the predecessor to `root` and move `root` to `root->right`.\n   - If `root->left` is `null`, move `root` to `root->right`.\n4. Return the `result` list containing postorder traversal values.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/XKjo3KQc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XKjo3KQc\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes.\n\n* Time complexity: $O(n)$\n\n    Each node is visited a constant number of times, and the traversal through the tree is linear in terms of `n`.\n\n* Space complexity: $O(1)$\n\n    The Morris Traversal technique uses no extra space beyond the pointers used for traversal. The temporary modifications to the tree structure are reversed before the traversal ends, so the space complexity is constant.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "questionId": "14",
+  "questionFrontendId": "14",
+  "title": "Longest Common Prefix",
+  "titleSlug": "longest-common-prefix",
+  "difficulty": "Easy",
+  "content": "<p>Write a function to find the longest common prefix string amongst an array of strings.</p>\n\n<p>If there is no common prefix, return an empty string <code>&quot;&quot;</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> strs = [&quot;flower&quot;,&quot;flow&quot;,&quot;flight&quot;]\n<strong>Output:</strong> &quot;fl&quot;\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> strs = [&quot;dog&quot;,&quot;racecar&quot;,&quot;car&quot;]\n<strong>Output:</strong> &quot;&quot;\n<strong>Explanation:</strong> There is no common prefix among the input strings.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= strs.length &lt;= 200</code></li>\n\t<li><code>0 &lt;= strs[i].length &lt;= 200</code></li>\n\t<li><code>strs[i]</code> consists of only lowercase English letters if it is non-empty.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"longestCommonPrefix\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"strs\",\r\n      \"type\": \"string[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"5.6M\", \"totalSubmission\": \"11.9M\", \"totalAcceptedRaw\": 5628693, \"totalSubmissionRaw\": 11902876, \"acRate\": \"47.3%\"}",
+  "likes": 21285,
+  "dislikes": 4926,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Smallest Missing Integer Greater Than Sequential Prefix Sum\", \"titleSlug\": \"smallest-missing-integer-greater-than-sequential-prefix-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Length of the Longest Common Prefix\", \"titleSlug\": \"find-the-length-of-the-longest-common-prefix\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Common Suffix Queries\", \"titleSlug\": \"longest-common-suffix-queries\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Longest Common Prefix After at Most One Removal\", \"titleSlug\": \"longest-common-prefix-after-at-most-one-removal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"flower\",\"flow\",\"flight\"]",
+    "[\"dog\",\"racecar\",\"car\"]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 44, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 17, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 10, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 10, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"deloitte\", \"name\": \"Deloitte\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"virtusa\", \"name\": \"Virtusa\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 10, \"slug\": \"revolut\", \"name\": \"Revolut\"}, {\"timesEncountered\": 8, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 7, \"slug\": \"epam-systems\", \"name\": \"EPAM Systems\"}, {\"timesEncountered\": 7, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 6, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 6, \"slug\": \"sap\", \"name\": \"SAP\"}, {\"timesEncountered\": 6, \"slug\": \"cme-group\", \"name\": \"CME Group\"}, {\"timesEncountered\": 5, \"slug\": \"wipro\", \"name\": \"Wipro\"}, {\"timesEncountered\": 4, \"slug\": \"ibm\", \"name\": \"IBM\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string longestCommonPrefix(vector<string>& strs) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String longestCommonPrefix(String[] strs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestCommonPrefix(self, strs: List[str]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestCommonPrefix(self, strs):\n        \"\"\"\n        :type strs: List[str]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} strs\n * @return {string}\n */\nvar longestCommonPrefix = function(strs) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestCommonPrefix(strs: string[]): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string LongestCommonPrefix(string[] strs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* longestCommonPrefix(char** strs, int strsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestCommonPrefix(strs []string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestCommonPrefix(strs: Array<String>): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestCommonPrefix(_ strs: [String]) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_common_prefix(strs: Vec<String>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} strs\n# @return {String}\ndef longest_common_prefix(strs)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $strs\n     * @return String\n     */\n    function longestCommonPrefix($strs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String longestCommonPrefix(List<String> strs) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestCommonPrefix(strs: Array[String]): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_common_prefix(strs :: [String.t]) :: String.t\n  def longest_common_prefix(strs) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_common_prefix(Strs :: [unicode:unicode_binary()]) -> unicode:unicode_binary().\nlongest_common_prefix(Strs) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-common-prefix strs)\n  (-> (listof string?) string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "46",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/801372731\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n\n### Approach 1: Horizontal scanning\n\n#### Intuition\n\nFor a start we will describe a simple way of finding the longest prefix shared by a set of strings $$LCP(S_1  \\ldots  S_n)$$.\nWe will use the observation that :\n\n$$LCP(S_1 \\ldots S_n) = LCP(LCP(LCP(S_1, S_2),S_3),\\ldots S_n)$$\n\n#### Algorithm\n\n To employ this idea, the algorithm iterates through the strings $$[S_1  \\ldots  S_n]$$, finding at each iteration $$i$$ the longest common prefix of strings $$LCP(S_1  \\ldots  S_i)$$ When $$LCP(S_1  \\ldots  S_i)$$ is an empty string, the algorithm ends. Otherwise after $$n$$ iterations, the algorithm returns $$LCP(S_1  \\ldots  S_n)$$.\n\n ![Finding the longest common prefix](https://leetcode.com/media/original_images/14_basic.png){:width=\"539px\"}\n \n\n *Figure 1. Finding the longest common prefix (Horizontal scanning)*\n \n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Eyfryo9Z/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"Eyfryo9Z\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $$O(S)$$ , where S is the sum of all characters in all strings.\n\n    In the worst case all $$n$$ strings are the same. The algorithm compares the string $$S1$$ with the other strings $$[S_2 \\ldots S_n]$$ There are $$S$$ character comparisons, where $$S$$ is the sum of all characters in the input array.\n\n* Space complexity : $$O(1)$$. We only used constant extra space.\n\n---\n\n### Approach 2: Vertical scanning\n\n#### Algorithm\n\nImagine a very short string is the common prefix at the end of the array. The above approach will still do $$S$$ comparisons. One way to optimize this case is to do vertical scanning. We compare characters from top to bottom on the same column (same character index of  the strings) before moving on to the next column.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/WSSYVp4m/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"WSSYVp4m\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity : $$O(S)$$ , where S is the sum of all characters in all strings.\nIn the worst case there will be $$n$$ equal strings with length $$m$$ and the algorithm performs  $$S = m \\cdot n$$ character comparisons.\nEven though the worst case is still the same as [Approach 1](#approach-1-horizontal-scanning), in the best case there are at most $$n \\cdot minLen$$ comparisons where $$minLen$$ is the length of the shortest string in the array.\n* Space complexity : $$O(1)$$. We only used constant extra space.\n\n---\n\n### Approach 3: Divide and conquer\n\n#### Intuition\n\nThe idea of the algorithm comes from the associative property of LCP operation. We notice that :\n$$LCP(S_1 \\ldots S_n) = LCP(LCP(S_1 \\ldots S_k), LCP (S_{k+1} \\ldots S_n))$$\n, where $$LCP(S_1 \\ldots S_n)$$ is the longest common prefix in set of strings $$[S_1 \\ldots S_n]$$ , $$1 < k < n$$\n\n#### Algorithm\n\nTo apply the observation above, we use divide and conquer technique, where we split the $$LCP(S_i \\ldots S_j)$$ problem into two subproblems $$LCP(S_i \\ldots S_{mid})$$   and $$LCP(S_{mid+1} \\ldots S_j)$$, where `mid` is $$\\frac{i + j}{2}$$. We use their solutions `lcpLeft` and `lcpRight` to construct the solution of the main problem $$LCP(S_i \\ldots S_j)$$. To accomplish this we compare one by one the characters of `lcpLeft` and `lcpRight` till there is no character match. The found common prefix of `lcpLeft` and `lcpRight` is the solution of the  $$LCP(S_i \\ldots S_j)$$.\n\n![Finding the longest common prefix](https://leetcode.com/media/original_images/14_lcp_diviso_et_lmpera.png){:width=\"539px\"}\n\n\n*Figure 2. Finding the longest common prefix of strings using divide and conquer technique*\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DR56kG9E/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DR56kG9E\"></iframe>\n\n#### Complexity Analysis\n\nIn the worst case we have $$n$$ equal strings with length $$m$$\n\n* Time complexity : $$O(S)$$, where $$S$$ is the number of all characters in the array, $$S = m \\cdot n$$\n Time complexity is $$2 \\cdot T\\left ( \\frac{n}{2} \\right ) + O(m)$$. Therefore time complexity is $$O(S)$$.\n  In the best case this algorithm performs  $$O(minLen \\cdot n)$$ comparisons, where  $$minLen$$ is the shortest string of the array\n\n* Space complexity : $$O(m \\cdot \\log n)$$\n\n    There is a memory overhead since we store recursive calls in the execution stack. There are $$\\log n$$ recursive calls, each store need $$m$$ space to store the result,  so space complexity is $$O(m \\cdot \\log n)$$\n\n\n---\n\n### Approach 4: Binary search\n\n#### Intuition\n\nThe idea is to apply binary search method to find the string with maximum value `L`, which is common prefix of all of the strings. The algorithm searches space is the interval $$(0 \\ldots minLen)$$, where `minLen` is minimum string length and the maximum possible common prefix. Each time search space is divided in two equal parts, one of them is discarded, because it is sure that it doesn't contain the solution. There are two possible cases:\n* `S[1...mid]` is not a common string. This means that for each `j > i S[1..j]` is not a common string and we discard the second half of the  search space.\n* `S[1...mid]` is common string. This means that for each `i < j S[1..i]` is a common string and we discard the first half of the search space, because we try to find longer common prefix.\n\n![Finding the longest common prefix](https://leetcode.com/media/original_images/14_lcp_binary_search.png){:width=\"539px\"}\n\n\n*Figure 3. Finding the longest common prefix of strings using binary search technique*\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/M2tJuDXZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"M2tJuDXZ\"></iframe>\n\n#### Complexity Analysis\n\nIn the worst case we have $$n$$ equal strings with length $$m$$\n\n* Time complexity : $$O(S \\cdot \\log m)$$, where $$S$$ is the sum of all characters in all strings.\n\n    The algorithm makes $$\\log m$$ iterations, for each of them there are $$S = m \\cdot n$$ comparisons, which gives in total $$O(S \\cdot \\log m)$$ time complexity.\n\n* Space complexity : $$O(1)$$. We only used constant extra space.\n\n---\n\n### Further Thoughts / Follow up\n\nLet's take a look at a slightly different problem:\n\n> Given a set of keys S = $$[S_1,S_2 \\ldots S_n]$$, find the longest common prefix among a string `q` and S. This LCP query will be called frequently.\n\nWe could optimize LCP queries by storing the set of keys S in a Trie. For more information about Trie, please see this article [Implement a trie (Prefix trie)](https://leetcode.com/articles/implement-trie-prefix-tree/). In a Trie, each node descending from the root represents a common prefix of some keys. But we need to find the longest common prefix of a string `q` and all key strings. This means that we have to find the deepest path from the root, which satisfies the following conditions:\n* it is prefix of query string `q`\n* each node along the path must contain only one child element. Otherwise the found path will not be a common prefix among all strings.\n* the path doesn't comprise of nodes which are marked as end of key. Otherwise the path couldn't be a prefix a of key which is shorter than itself.\n\n#### Algorithm\n\nThe only question left, is how to find the deepest path in the Trie, that fulfills the requirements above. The most effective way is to build a trie from $$[S_1 \\ldots   S_n]$$ strings. Then find the prefix of query string `q` in the Trie. We traverse the Trie from the root, till it is impossible to continue the path in the Trie because one of the conditions above is not satisfied.\n\n![Finding the longest common prefix using Trie](../Figures/14/14_lcp_trie_fix.png)\n\n*Figure 4. Finding the longest common prefix of strings using Trie*\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/bcDyZ5WU/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bcDyZ5WU\"></iframe>\n\n#### Complexity Analysis\n\nIn the worst case query $$q$$ has length $$m$$ and it is equal to all $$n$$ strings of the array.\n\n* Time complexity : preprocessing $$O(S)$$, where $$S$$ is the number of all characters in the array, LCP query $$O(m)$$.\n\n    Trie build has $$O(S)$$ time complexity. To find the common prefix of $$q$$ in the Trie takes in the worst case $$O(m)$$.\n\n* Space complexity : $$O(S)$$. We only used additional  $$S$$ extra space for the Trie.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

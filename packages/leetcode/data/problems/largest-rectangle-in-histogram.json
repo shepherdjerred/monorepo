@@ -1,0 +1,137 @@
+{
+  "questionId": "84",
+  "questionFrontendId": "84",
+  "title": "Largest Rectangle in Histogram",
+  "titleSlug": "largest-rectangle-in-histogram",
+  "difficulty": "Hard",
+  "content": "<p>Given an array of integers <code>heights</code> representing the histogram&#39;s bar height where the width of each bar is <code>1</code>, return <em>the area of the largest rectangle in the histogram</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/01/04/histogram.jpg\" style=\"width: 522px; height: 242px;\" />\n<pre>\n<strong>Input:</strong> heights = [2,1,5,6,2,3]\n<strong>Output:</strong> 10\n<strong>Explanation:</strong> The above is a histogram where width of each bar is 1.\nThe largest rectangle is shown in the red area, which has an area = 10 units.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/01/04/histogram-1.jpg\" style=\"width: 202px; height: 362px;\" />\n<pre>\n<strong>Input:</strong> heights = [2,4]\n<strong>Output:</strong> 4\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= heights.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= heights[i] &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"largestRectangleArea\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"heights\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"1.5M\", \"totalSubmission\": \"3.1M\", \"totalAcceptedRaw\": 1519810, \"totalSubmissionRaw\": 3067510, \"acRate\": \"49.5%\"}",
+  "likes": 19588,
+  "dislikes": 385,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximal Rectangle\", \"titleSlug\": \"maximal-rectangle\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Score of a Good Subarray\", \"titleSlug\": \"maximum-score-of-a-good-subarray\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,1,5,6,2,3]",
+    "[2,4]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"capital-one\", \"name\": \"Capital One\"}, {\"timesEncountered\": 7, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 7, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 5, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 4, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 4, \"slug\": \"coupang\", \"name\": \"Coupang\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Monotonic Stack",
+      "slug": "monotonic-stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int largestRectangleArea(vector<int>& heights) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int largestRectangleArea(int[] heights) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def largestRectangleArea(self, heights: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def largestRectangleArea(self, heights):\n        \"\"\"\n        :type heights: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} heights\n * @return {number}\n */\nvar largestRectangleArea = function(heights) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function largestRectangleArea(heights: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LargestRectangleArea(int[] heights) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int largestRectangleArea(int* heights, int heightsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func largestRectangleArea(heights []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun largestRectangleArea(heights: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func largestRectangleArea(_ heights: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn largest_rectangle_area(heights: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} heights\n# @return {Integer}\ndef largest_rectangle_area(heights)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $heights\n     * @return Integer\n     */\n    function largestRectangleArea($heights) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int largestRectangleArea(List<int> heights) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def largestRectangleArea(heights: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec largest_rectangle_area(heights :: [integer]) :: integer\n  def largest_rectangle_area(heights) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec largest_rectangle_area(Heights :: [integer()]) -> integer().\nlargest_rectangle_area(Heights) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (largest-rectangle-area heights)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "67",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/495920363\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\nWe need to find the rectangle of largest area that can be formed by using the given bars of histogram.\n\n\n---\n### Approach 1: Brute Force\n\nFirstly, we need to take into account the fact that the height of the rectangle formed between any two bars will always be limited by the height of the shortest bar lying between them which can be understood by looking at the figure below:\n\n![Largest Rectangle](https://leetcode.com/media/original_images/84_Largest_Rectangle1.PNG)\n\nThus, we can simply start off by considering every possible pair of bars and finding the area of the rectangle formed between them using the height of the shortest bar lying between them as the height and the spacing between them as the width of the rectangle. We can thus, find the required rectangle with the maximum area.\n\n\n<iframe src=\"https://leetcode.com/playground/GXhbEnvC/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"GXhbEnvC\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity: $$O(n^3)$$. We have to find the minimum height bar $$O(n)$$ lying\nbetween every pair $$O(n^2)$$.\n\n* Space complexity: $$O(1)$$. Constant space is used.\n\n---\n\n### Approach 2: Better Brute Force\n\n**Algorithm**\n\nWe can do one slight modification in the previous approach to optimize it to some extent.\n\nInstead of taking every possible pair and then finding the bar of minimum height lying between them everytime, we can find the bar of minimum height for current pair by using the minimum height bar of the previous pair.\n\nIn mathematical terms, $$minheight=\\min(minheight, heights(j))$$, where $$heights(j)$$ refers to the height of the $$j$$th bar.\n\n\n<iframe src=\"https://leetcode.com/playground/GsMJ26j7/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"GsMJ26j7\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(n^2)$$. Every possible pair is considered\n\n* Space complexity: $$O(1)$$. No extra space is used.\n\n---\n\n### Approach 3: Divide and Conquer Approach\n\n**Algorithm**\n\nThis approach relies on the observation that the rectangle with maximum area will be the maximum of:\n\n1. The widest possible rectangle with height equal to the height of the shortest bar.\n\n2. The largest rectangle confined to the left of the shortest bar(subproblem).\n\n3. The largest rectangle confined to the right of the shortest bar(subproblem).\n\nLet's take an example:\n```\n[6, 4, 5, 2, 4, 3, 9]\n```\n\nHere, the shortest bar is of height 2. The area of the widest rectangle using this bar as height is 2x7=14. Now, we need to look for cases 2 and 3 mentioned above.\n\nThus, we repeat the same process to the left and right of 2. In the left of 2, 4 is the minimum, forming an area of rectangle 4x3=12. Further, rectangles of area 6x1=6 and 5x1=5 exist in its left and right respectively. Similarly we find an area of 3x3=9, 4x1=4 and 9x1=9 to the left of 2. Thus, we get 14 as the correct maximum area. See the figure below for further clarification:\n\n![Divide and Conquer](https://leetcode.com/media/original_images/84_Largest_Rectangle2.PNG)\n\n\n<iframe src=\"https://leetcode.com/playground/hrYRqH2d/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"hrYRqH2d\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity:\n\n    Average Case: $$O\\big(n \\log n\\big)$$.\n\n    Worst Case: $$O(n^2)$$. If the numbers in the array are sorted, we don't gain the advantage of divide and conquer.\n\n* Space complexity: $$O(n)$$. Recursion with worst case depth $$n$$.\n\n---\n\n### Approach 4: Better Divide and Conquer\n\n**Algorithm**\n\nYou can observe that in the Divide and Conquer Approach, we gain the advantage, since the large problem is divided into substantially smaller subproblems. But, we won't gain much advantage with that approach if the array happens to be sorted in either ascending or descending order, since every time we need to find the minimum number in a large subarray $$O(n)$$. Thus, the overall complexity becomes $$O(n^2)$$ in the worst case.\n\nWe can reduce the time complexity by using a Segment Tree to find the minimum every time which can be done in $$O\\big(\\log n\\big)$$ time.\n\nFor implementation, click [here](https://leetcode.com/problems/largest-rectangle-in-histogram/discuss/28941/segment-tree-solution-just-another-idea-onlogn-solution).\n\n**Complexity Analysis**\n\n* Time complexity: $$O\\big(n\\log n\\big)$$. Segment tree takes $$\\log n$$ for a total of $$n$$ times.\n\n* Space complexity: $$O(n)$$. Space required for Segment Tree.\n\n---\n\n### Approach 5: Using Stack\n\n**Algorithm**\n\nIn this approach, we maintain a stack. Initially, we push a -1 onto the stack to mark the end.\n\nWe start with the leftmost bar and keep pushing the current bar's index onto the stack until we get two successive numbers in descending order, i.e. until we get $$heights[i] < heights[i-1]$$. Now, we start popping the numbers from the stack until we hit a number $$stack[j]$$ on the stack such that $$heights\\big[stack[j]\\big] \\leq heights[i]$$.\n\nEvery time we pop, we find out the area of rectangle formed using the current element as the height of the rectangle and the difference between the the current element's index pointed to in the original array and the element $$stack[top-1] - 1$$ as the width\n\ni.e. if we pop an element $$stack[top]$$ and i is the current index to which we are pointing in the original array, the current area of the rectangle will be considered as:\n\n$$\n(i-stack[top-1]-1) \\times heights\\big[stack[top]\\big].\n$$\n\nFurther, if we reach the end of the array, we pop all the elements of the stack and at every pop, this time we use the following equation to find the area:\n  $$(heights.length - stack[top-1] - 1) \\times heights\\big[stack[top]\\big]$$, where $$stack[top]$$ refers to the element just popped. Thus, we can get the area of the of the largest rectangle by comparing the new area found everytime.\n\nThe following example will clarify the process further:\n\n$$\\text{[6, 7, 5, 2, 4, 5, 9, 3]}$$\n\n!?!../Documents/84_Largest_Rectangle.json:1000,563!?!\n\n<iframe src=\"https://leetcode.com/playground/n68KemoZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"n68KemoZ\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$O(n)$$. $$n$$ numbers are pushed and popped.\n\n* Space complexity: $$O(n)$$. Stack is used.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

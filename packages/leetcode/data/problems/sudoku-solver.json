@@ -1,0 +1,128 @@
+{
+  "questionId": "37",
+  "questionFrontendId": "37",
+  "title": "Sudoku Solver",
+  "titleSlug": "sudoku-solver",
+  "difficulty": "Hard",
+  "content": "<p>Write a program to solve a Sudoku puzzle by filling the empty cells.</p>\n\n<p>A sudoku solution must satisfy <strong>all of the following rules</strong>:</p>\n\n<ol>\n\t<li>Each of the digits <code>1-9</code> must occur exactly once in each row.</li>\n\t<li>Each of the digits <code>1-9</code> must occur exactly once in each column.</li>\n\t<li>Each of the digits <code>1-9</code> must occur exactly once in each of the 9 <code>3x3</code> sub-boxes of the grid.</li>\n</ol>\n\n<p>The <code>&#39;.&#39;</code> character indicates empty cells.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Sudoku-by-L2G-20050714.svg/250px-Sudoku-by-L2G-20050714.svg.png\" style=\"height:250px; width:250px\" />\n<pre>\n<strong>Input:</strong> board = [[&quot;5&quot;,&quot;3&quot;,&quot;.&quot;,&quot;.&quot;,&quot;7&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;],[&quot;6&quot;,&quot;.&quot;,&quot;.&quot;,&quot;1&quot;,&quot;9&quot;,&quot;5&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;],[&quot;.&quot;,&quot;9&quot;,&quot;8&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;6&quot;,&quot;.&quot;],[&quot;8&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;6&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;3&quot;],[&quot;4&quot;,&quot;.&quot;,&quot;.&quot;,&quot;8&quot;,&quot;.&quot;,&quot;3&quot;,&quot;.&quot;,&quot;.&quot;,&quot;1&quot;],[&quot;7&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;2&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;6&quot;],[&quot;.&quot;,&quot;6&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;2&quot;,&quot;8&quot;,&quot;.&quot;],[&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;4&quot;,&quot;1&quot;,&quot;9&quot;,&quot;.&quot;,&quot;.&quot;,&quot;5&quot;],[&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;8&quot;,&quot;.&quot;,&quot;.&quot;,&quot;7&quot;,&quot;9&quot;]]\n<strong>Output:</strong> [[&quot;5&quot;,&quot;3&quot;,&quot;4&quot;,&quot;6&quot;,&quot;7&quot;,&quot;8&quot;,&quot;9&quot;,&quot;1&quot;,&quot;2&quot;],[&quot;6&quot;,&quot;7&quot;,&quot;2&quot;,&quot;1&quot;,&quot;9&quot;,&quot;5&quot;,&quot;3&quot;,&quot;4&quot;,&quot;8&quot;],[&quot;1&quot;,&quot;9&quot;,&quot;8&quot;,&quot;3&quot;,&quot;4&quot;,&quot;2&quot;,&quot;5&quot;,&quot;6&quot;,&quot;7&quot;],[&quot;8&quot;,&quot;5&quot;,&quot;9&quot;,&quot;7&quot;,&quot;6&quot;,&quot;1&quot;,&quot;4&quot;,&quot;2&quot;,&quot;3&quot;],[&quot;4&quot;,&quot;2&quot;,&quot;6&quot;,&quot;8&quot;,&quot;5&quot;,&quot;3&quot;,&quot;7&quot;,&quot;9&quot;,&quot;1&quot;],[&quot;7&quot;,&quot;1&quot;,&quot;3&quot;,&quot;9&quot;,&quot;2&quot;,&quot;4&quot;,&quot;8&quot;,&quot;5&quot;,&quot;6&quot;],[&quot;9&quot;,&quot;6&quot;,&quot;1&quot;,&quot;5&quot;,&quot;3&quot;,&quot;7&quot;,&quot;2&quot;,&quot;8&quot;,&quot;4&quot;],[&quot;2&quot;,&quot;8&quot;,&quot;7&quot;,&quot;4&quot;,&quot;1&quot;,&quot;9&quot;,&quot;6&quot;,&quot;3&quot;,&quot;5&quot;],[&quot;3&quot;,&quot;4&quot;,&quot;5&quot;,&quot;2&quot;,&quot;8&quot;,&quot;6&quot;,&quot;1&quot;,&quot;7&quot;,&quot;9&quot;]]\n<strong>Explanation:</strong>&nbsp;The input board is shown above and the only valid solution is shown below:\n\n<img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Sudoku-by-L2G-20050714_solution.svg/250px-Sudoku-by-L2G-20050714_solution.svg.png\" style=\"height:250px; width:250px\" />\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>board.length == 9</code></li>\n\t<li><code>board[i].length == 9</code></li>\n\t<li><code>board[i][j]</code> is a digit or <code>&#39;.&#39;</code>.</li>\n\t<li>It is <strong>guaranteed</strong> that the input board has only one solution.</li>\n</ul>\n",
+  "hints": [
+    "For each cell, place a valid number and try solving for the remaining empty cells.",
+    "If stuck, undo (backtrack) and try another valid number."
+  ],
+  "metaData": "{\n  \"name\": \"solveSudoku\",\n  \"params\": [\n    {\n      \"name\": \"board\",\n      \"type\": \"character[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"void\"\n  },\n  \"output\": {\n    \"paramindex\": 0\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1M\", \"totalSubmission\": \"1.5M\", \"totalAcceptedRaw\": 1013762, \"totalSubmissionRaw\": 1549876, \"acRate\": \"65.4%\"}",
+  "likes": 11075,
+  "dislikes": 345,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Valid Sudoku\", \"titleSlug\": \"valid-sudoku\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Unique Paths III\", \"titleSlug\": \"unique-paths-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[\"5\",\"3\",\".\",\".\",\"7\",\".\",\".\",\".\",\".\"],[\"6\",\".\",\".\",\"1\",\"9\",\"5\",\".\",\".\",\".\"],[\".\",\"9\",\"8\",\".\",\".\",\".\",\".\",\"6\",\".\"],[\"8\",\".\",\".\",\".\",\"6\",\".\",\".\",\".\",\"3\"],[\"4\",\".\",\".\",\"8\",\".\",\"3\",\".\",\".\",\"1\"],[\"7\",\".\",\".\",\".\",\"2\",\".\",\".\",\".\",\"6\"],[\".\",\"6\",\".\",\".\",\".\",\".\",\"2\",\"8\",\".\"],[\".\",\".\",\".\",\"4\",\"1\",\"9\",\".\",\".\",\"5\"],[\".\",\".\",\".\",\".\",\"8\",\".\",\".\",\"7\",\"9\"]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"confluent\", \"name\": \"Confluent\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"ebay\", \"name\": \"eBay\"}], \"more_than_six_months\": [{\"timesEncountered\": 32, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 5, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 3, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 3, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 3, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 2, \"slug\": \"riot-games\", \"name\": \"Riot Games\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    void solveSudoku(vector<vector<char>>& board) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public void solveSudoku(char[][] board) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def solveSudoku(self, board: List[List[str]]) -> None:\n        \"\"\"\n        Do not return anything, modify board in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def solveSudoku(self, board):\n        \"\"\"\n        :type board: List[List[str]]\n        :rtype: None Do not return anything, modify board in-place instead.\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {character[][]} board\n * @return {void} Do not return anything, modify board in-place instead.\n */\nvar solveSudoku = function(board) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n Do not return anything, modify board in-place instead.\n */\nfunction solveSudoku(board: string[][]): void {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public void SolveSudoku(char[][] board) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "void solveSudoku(char** board, int boardSize, int* boardColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func solveSudoku(board [][]byte)  {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun solveSudoku(board: Array<CharArray>): Unit {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func solveSudoku(_ board: inout [[Character]]) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn solve_sudoku(board: &mut Vec<Vec<char>>) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Character[][]} board\n# @return {Void} Do not return anything, modify board in-place instead.\ndef solve_sudoku(board)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[][] $board\n     * @return NULL\n     */\n    function solveSudoku(&$board) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  void solveSudoku(List<List<String>> board) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def solveSudoku(board: Array[Array[Char]]): Unit = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "709",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 0: Brute Force\n\nThe first idea is to use brut-force to generate all possible ways to fill the cells with numbers from `1` to `9`, and then check them to keep the solution only. That means $$9^{81}$$ operations to do, where $$9$$ is the number of available digits and $$81$$ is the number of cells to fill. Hence we're forced to think further about how to optimize.\n<br />\n<br />\n\n\n---\n### Approach 1: Backtracking\n\n**Conceptions to use**\n\nThere are two programming conceptions here that could help.\n\n> The first one is called _constrained programming_. \n\nThat basically means to put restrictions after each number placement. One puts a number on the board and that immediately excludes this number from further usage in the current _row_, _column_ and _sub-box_. That propagates _constraints_ and helps to reduce the number of combinations to consider.\n\n![bla](../Figures/37/37_const3.png)\n\n> The second one called _backtracking_. \n\nLet's imagine that one has already managed to put several numbers on the board. But the combination chosen is not the optimal one and there is no way to place the further numbers. What to do? _To backtrack_. That means to come back, to change the previously placed number, and try to proceed again. If that does not work either, _backtrack_ again.\n\n![bla](../Figures/37/37_backtrack2.png)\n\n**How to enumerate sub-boxes**\n\n> One tip to enumerate sub-boxes: let's use `box_index = (row / 3) * 3 + column / 3` where `/` is an integer division.\n\n<img src=\"../Figures/36/36_boxes_2.png\" width=\"500\">\n\n**Algorithm**\n\nNow everything is ready to write down the backtrack function `backtrack(row = 0, col = 0)`.\n\n* Start from the upper left cell `row = 0, col = 0`. Proceed till the first free cell.\n* Iterate over the numbers from `1` to `9` and try to put each number `d` in the `(row, col)` cell.\n\n    * If number `d` is not yet in the current row, column, and box:\n        \n        * Place the `d` in a `(row, col)` cell.\n        * Write down that `d` is now present in the current row, column, and box.\n        * If we're on the last cell `row == 8, col == 8`:\n            * That means that we've solved the sudoku.\n        * Else\n            * Proceed to place further numbers.\n        * Backtrack if the solution is not yet here: remove the last number from the `(row, col)` cell.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/GB35PAAq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GB35PAAq\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity is constant here since the board size is fixed and there is no N-parameter to measure. Though let's discuss the number of operations needed : $$(9!)^9$$. Let's consider one row, i.e. not more than $$9$$ cells to fill. There are not more than $$9$$ possibilities for the first number to put, not more than $$9 \\times 8$$ for the second one, not more than $$9 \\times 8 \\times 7$$ for the third one, etc. In total that results in not more than $$9!$$ possibilities for just one row, which means no more than $$(9!)^9$$ operations in total.\nLet's compare:\n\n    - $$9^{81} = 196627050475552913618075908526912116283103450944214766927315415537966391196809$$\nfor the brute force, \n\n    - and $$(9!)^9 = 109110688415571316480344899355894085582848000000000$$\nfor the standard backtracking, i.e. the number of operations is reduced in $$10^{27}$$ times!\n\n* Space complexity: the board size is fixed, and the space is used to store board, rows, columns, and box structures, each containing `81` elements.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

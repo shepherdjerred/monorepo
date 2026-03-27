@@ -1,0 +1,139 @@
+{
+  "questionId": "575",
+  "questionFrontendId": "575",
+  "title": "Distribute Candies",
+  "titleSlug": "distribute-candies",
+  "difficulty": "Easy",
+  "content": "<p>Alice has <code>n</code> candies, where the <code>i<sup>th</sup></code> candy is of type <code>candyType[i]</code>. Alice noticed that she started to gain weight, so she visited a doctor.</p>\n\n<p>The doctor advised Alice to only eat <code>n / 2</code> of the candies she has (<code>n</code> is always even). Alice likes her candies very much, and she wants to eat the maximum number of different types of candies while still following the doctor&#39;s advice.</p>\n\n<p>Given the integer array <code>candyType</code> of length <code>n</code>, return <em>the <strong>maximum</strong> number of different types of candies she can eat if she only eats </em><code>n / 2</code><em> of them</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> candyType = [1,1,2,2,3,3]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> Alice can only eat 6 / 2 = 3 candies. Since there are only 3 types, she can eat one of each type.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> candyType = [1,1,2,3]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> Alice can only eat 4 / 2 = 2 candies. Whether she eats types [1,2], [1,3], or [2,3], she still can only eat 2 different types.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> candyType = [6,6,6,6]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> Alice can only eat 4 / 2 = 2 candies. Even though she can eat 2 candies, she only has 1 type.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == candyType.length</code></li>\n\t<li><code>2 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>n</code>&nbsp;is even.</li>\n\t<li><code>-10<sup>5</sup> &lt;= candyType[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "To maximize the number of kinds of candies, we should try to distribute candies such that Alice will gain all kinds.",
+    "What is the upper limit of the number of kinds of candies Alice will gain? Remember candies are to distributed equally.",
+    "Which data structure is the most suitable for finding the number of kinds of candies?",
+    "Will hashset solves the problem? Inserting all candies kind in the hashset and then checking its size with upper limit."
+  ],
+  "metaData": "{\n  \"name\": \"distributeCandies\",\n  \"params\": [\n    {\n      \"name\": \"candyType\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"396.8K\", \"totalSubmission\": \"559.7K\", \"totalAcceptedRaw\": 396757, \"totalSubmissionRaw\": 559712, \"acRate\": \"70.9%\"}",
+  "likes": 1739,
+  "dislikes": 1478,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Number of Operations to Satisfy Conditions\", \"titleSlug\": \"minimum-number-of-operations-to-satisfy-conditions\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Check if Grid Satisfies Conditions\", \"titleSlug\": \"check-if-grid-satisfies-conditions\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,1,2,2,3,3]",
+    "[1,1,2,3]",
+    "[6,6,6,6]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"liveramp\", \"name\": \"LiveRamp\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int distributeCandies(vector<int>& candyType) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int distributeCandies(int[] candyType) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def distributeCandies(self, candyType: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def distributeCandies(self, candyType):\n        \"\"\"\n        :type candyType: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} candyType\n * @return {number}\n */\nvar distributeCandies = function(candyType) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function distributeCandies(candyType: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int DistributeCandies(int[] candyType) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int distributeCandies(int* candyType, int candyTypeSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func distributeCandies(candyType []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun distributeCandies(candyType: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func distributeCandies(_ candyType: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn distribute_candies(candy_type: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} candy_type\n# @return {Integer}\ndef distribute_candies(candy_type)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $candyType\n     * @return Integer\n     */\n    function distributeCandies($candyType) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int distributeCandies(List<int> candyType) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def distributeCandies(candyType: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec distribute_candies(candy_type :: [integer]) :: integer\n  def distribute_candies(candy_type) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec distribute_candies(CandyType :: [integer()]) -> integer().\ndistribute_candies(CandyType) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (distribute-candies candyType)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "125",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nSolving this problem efficiently requires a couple of key observations.\n\n1. If the number of unique candies is *less than or equal to* half the length of `candyType`, then Alice can eat one of each type of candy and the answer is equal to the *number of unique candies*.\n2. Otherwise, the number of candies she can eat is limited to half the length of `candyType`, and so the answer is equal to *half the length of `candyType`*.\n\nIn essence, this problem boils down to finding the *number of unique candies*. We then return whichever value is *smaller* out of the *number of unique candies* and *half the length of `candyType`*.\n\n</br>\n\n---\n\n### Approach 1: Brute Force\n\n**Intuition and Algorithm**\n\nOne way to find the number of unique candies is to traverse over each element in `candyType`, checking whether or not we've already seen a candy of this same type. We can do this check by iterating over all elements *before* the current element. If any of those are of the same type, then this is not a unique candy. We should keep track of the number of unique candies we find.\n\n<iframe src=\"https://leetcode.com/playground/Pq4h8R3Q/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"Pq4h8R3Q\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the the length of `candyType`.\n\n* Time complexity : $$O(N^2)$$. We traverse over each of the $$N$$ elements of $$candyType$$, and for each, we check all of the elements before it. Checking each item for each item is the classic $$O(N^2)$$ time complexity pattern.\n\n* Space complexity : $$O(1)$$. We don't allocate any additional data structures, instead only using constant space variables.\n\n</br>\n\n---\n\n### Approach 2: Sorting\n\n**Intuition and Algorithm**\n\nThe previous approach is too inefficient to reliably avoid a `Time Limit Exceeded` (at the time of writing this article), but most importantly, it is unlikely to impress your interviewer!\n\nIs there a more efficient way that we can count the number of unique candies? Yes, there is! \n\nOne way is to sort `candyType` first, so that we can then count the number of unique candies by comparing adjacent elements in the sorted array. This removes the need to do repeated traversals. \n\nAs a quick warning before we get to the code though, this approach *modifies the input array*. This isn't always a good idea, and is something you should always ask your interviewer about.\n\n> **Interview Tip: In-place Algorithms**\n>\n> In-place algorithms overwrite the input to save space, but sometimes this can cause problems. Here are a couple of situations where an in-place algorithm might not be suitable.\n> 1. The algorithm needs to run in a *multi-threaded* environment, without exclusive access to the array. Other threads might need to read the array too, and might not expect it to be modified.\n> 2. Even if there is only a single thread, or the algorithm has exclusive access to the array while running, the array might need to be reused later or by another thread once the lock has been released.\n>\n> In an interview, you should always check whether or not the interviewer minds you overwriting the input. Be ready to explain the pros and cons of doing so if asked!\n\n<iframe src=\"https://leetcode.com/playground/QCJUaYDY/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"QCJUaYDY\"></iframe>\n\nIf you're using a language that has a built-in *heapify* function, then you can use this to further optimize the space complexity to $$O(1)$$. Here is an example of using `heapify` in Python.\n\n<iframe src=\"https://leetcode.com/playground/YqWcpBxf/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"YqWcpBxf\"></iframe>\n\n\n**Complexity Analysis**\n\nLet $$N$$ be the the length of `candyType`.\n\n* Time complexity : $$O(N \\log N)$$. \n\n    We start by sorting the $$N$$ elements in `candyType`, which has a cost of $$O(N \\log N)$$. \n    \n    We then perform a single pass through `candyType`, performing an $$O(1)$$ operation at each step: this has a total cost of $$O(N)$$.\n\n    This gives us a total of $$O(N \\log N) + O(N)$$. When adding complexities, we only keep the one that is strictly bigger, this leaves us with $$O(N \\log N)$$.\n\n* Space complexity : Dependent on the sorting algorithm implementation, which is generally between $$O(1)$$ and $$O(N)$$.\n\n    Python and Java now use Timsort, which requires $$O(N)$$ space.\n\n    The `heapify` variant for Python is $$O(1)$$, as it uses Heapsort.\n\n</br>\n\n---\n\n### Approach 3: Using a Hash Set\n\n**Intuition and Algorithm**\n\n> **Explore Card**: Check out our [Explore Card on Hash Tables](https://leetcode.com/explore/learn/card/hash-table/) if you are unfamiliar with them.\n\nRecall that a Set cannot contain duplicates, and attempting to add a duplicate item into a Set will do nothing.\n\nTherefore, the best way to find the number of unique elements is to simply insert all of the `candyType` elements into a Hash Set. After that, the number of unique candies is simply the number of elements in the Hash Set.\n\n<iframe src=\"https://leetcode.com/playground/FMJRw6bi/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"FMJRw6bi\"></iframe>\n\n**Complexity Analysis**\n\nLet $$N$$ be the the length of `candyType`.\n\n* Time complexity : $$O(N)$$. \n\n    Adding an item into a Hash Set has an *amortized* time of $$O(1)$$. Therefore, adding $$N$$ items requires $$O(N)$$ time. All of the other operations we use are $$O(1)$$.\n\n\n* Space complexity : $$O(N)$$. \n\n    The worst case for space complexity occurs when all $$N$$ elements are unique. This will result in a Hash Set containing $$N$$ elements.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

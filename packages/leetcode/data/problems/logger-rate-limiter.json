@@ -1,0 +1,136 @@
+{
+  "questionId": "359",
+  "questionFrontendId": "359",
+  "title": "Logger Rate Limiter",
+  "titleSlug": "logger-rate-limiter",
+  "difficulty": "Easy",
+  "content": "<p>Design a logger system that receives a stream of messages along with their timestamps. Each <strong>unique</strong> message should only be printed <strong>at most every 10 seconds</strong> (i.e. a message printed at timestamp <code>t</code> will prevent other identical messages from being printed until timestamp <code>t + 10</code>).</p>\n\n<p>All messages will come in chronological order. Several messages may arrive at the same timestamp.</p>\n\n<p>Implement the <code>Logger</code> class:</p>\n\n<ul>\n\t<li><code>Logger()</code> Initializes the <code>logger</code> object.</li>\n\t<li><code>bool shouldPrintMessage(int timestamp, string message)</code> Returns <code>true</code> if the <code>message</code> should be printed in the given <code>timestamp</code>, otherwise returns <code>false</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;Logger&quot;, &quot;shouldPrintMessage&quot;, &quot;shouldPrintMessage&quot;, &quot;shouldPrintMessage&quot;, &quot;shouldPrintMessage&quot;, &quot;shouldPrintMessage&quot;, &quot;shouldPrintMessage&quot;]\n[[], [1, &quot;foo&quot;], [2, &quot;bar&quot;], [3, &quot;foo&quot;], [8, &quot;bar&quot;], [10, &quot;foo&quot;], [11, &quot;foo&quot;]]\n<strong>Output</strong>\n[null, true, true, false, false, false, true]\n\n<strong>Explanation</strong>\nLogger logger = new Logger();\nlogger.shouldPrintMessage(1, &quot;foo&quot;);  // return true, next allowed timestamp for &quot;foo&quot; is 1 + 10 = 11\nlogger.shouldPrintMessage(2, &quot;bar&quot;);  // return true, next allowed timestamp for &quot;bar&quot; is 2 + 10 = 12\nlogger.shouldPrintMessage(3, &quot;foo&quot;);  // 3 &lt; 11, return false\nlogger.shouldPrintMessage(8, &quot;bar&quot;);  // 8 &lt; 12, return false\nlogger.shouldPrintMessage(10, &quot;foo&quot;); // 10 &lt; 11, return false\nlogger.shouldPrintMessage(11, &quot;foo&quot;); // 11 &gt;= 11, return true, next allowed timestamp for &quot;foo&quot; is 11 + 10 = 21\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= timestamp &lt;= 10<sup>9</sup></code></li>\n\t<li>Every <code>timestamp</code> will be passed in non-decreasing order (chronological order).</li>\n\t<li><code>1 &lt;= message.length &lt;= 30</code></li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>shouldPrintMessage</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"Logger\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"timestamp\"\n        },\n        {\n          \"type\": \"string\",\n          \"name\": \"message\"\n        }\n      ],\n      \"name\": \"shouldPrintMessage\",\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"389.9K\", \"totalSubmission\": \"507.8K\", \"totalAcceptedRaw\": 389927, \"totalSubmissionRaw\": 507750, \"acRate\": \"76.8%\"}",
+  "likes": 1809,
+  "dislikes": 198,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Design Hit Counter\", \"titleSlug\": \"design-hit-counter\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"Logger\",\"shouldPrintMessage\",\"shouldPrintMessage\",\"shouldPrintMessage\",\"shouldPrintMessage\",\"shouldPrintMessage\",\"shouldPrintMessage\"]\n[[],[1,\"foo\"],[2,\"bar\"],[3,\"foo\"],[8,\"bar\"],[10,\"foo\"],[11,\"foo\"]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 3, \"slug\": \"palo-alto-networks\", \"name\": \"Palo Alto Networks\"}, {\"timesEncountered\": 3, \"slug\": \"verily\", \"name\": \"Verily\"}, {\"timesEncountered\": 2, \"slug\": \"deliveroo\", \"name\": \"Deliveroo\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"cloudflare\", \"name\": \"Cloudflare\"}, {\"timesEncountered\": 2, \"slug\": \"waymo\", \"name\": \"Waymo\"}, {\"timesEncountered\": 2, \"slug\": \"grammarly\", \"name\": \"Grammarly\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"netflix\", \"name\": \"Netflix\"}, {\"timesEncountered\": 8, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 4, \"slug\": \"reddit\", \"name\": \"Reddit\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"patreon\", \"name\": \"Patreon\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"docusign\", \"name\": \"Docusign\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Data Stream",
+      "slug": "data-stream"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Logger {\npublic:\n    Logger() {\n        \n    }\n    \n    bool shouldPrintMessage(int timestamp, string message) {\n        \n    }\n};\n\n/**\n * Your Logger object will be instantiated and called as such:\n * Logger* obj = new Logger();\n * bool param_1 = obj->shouldPrintMessage(timestamp,message);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Logger {\n\n    public Logger() {\n        \n    }\n    \n    public boolean shouldPrintMessage(int timestamp, String message) {\n        \n    }\n}\n\n/**\n * Your Logger object will be instantiated and called as such:\n * Logger obj = new Logger();\n * boolean param_1 = obj.shouldPrintMessage(timestamp,message);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Logger:\n\n    def __init__(self):\n        \n\n    def shouldPrintMessage(self, timestamp: int, message: str) -> bool:\n        \n\n\n# Your Logger object will be instantiated and called as such:\n# obj = Logger()\n# param_1 = obj.shouldPrintMessage(timestamp,message)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Logger(object):\n\n    def __init__(self):\n        \n\n    def shouldPrintMessage(self, timestamp, message):\n        \"\"\"\n        :type timestamp: int\n        :type message: str\n        :rtype: bool\n        \"\"\"\n        \n\n\n# Your Logger object will be instantiated and called as such:\n# obj = Logger()\n# param_1 = obj.shouldPrintMessage(timestamp,message)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar Logger = function() {\n    \n};\n\n/** \n * @param {number} timestamp \n * @param {string} message\n * @return {boolean}\n */\nLogger.prototype.shouldPrintMessage = function(timestamp, message) {\n    \n};\n\n/** \n * Your Logger object will be instantiated and called as such:\n * var obj = new Logger()\n * var param_1 = obj.shouldPrintMessage(timestamp,message)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Logger {\n    constructor() {\n        \n    }\n\n    shouldPrintMessage(timestamp: number, message: string): boolean {\n        \n    }\n}\n\n/**\n * Your Logger object will be instantiated and called as such:\n * var obj = new Logger()\n * var param_1 = obj.shouldPrintMessage(timestamp,message)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Logger {\n\n    public Logger() {\n        \n    }\n    \n    public bool ShouldPrintMessage(int timestamp, string message) {\n        \n    }\n}\n\n/**\n * Your Logger object will be instantiated and called as such:\n * Logger obj = new Logger();\n * bool param_1 = obj.ShouldPrintMessage(timestamp,message);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Logger;\n\n\nLogger* loggerCreate() {\n    \n}\n\nbool loggerShouldPrintMessage(Logger* obj, int timestamp, char* message) {\n    \n}\n\nvoid loggerFree(Logger* obj) {\n    \n}\n\n/**\n * Your Logger struct will be instantiated and called as such:\n * Logger* obj = loggerCreate();\n * bool param_1 = loggerShouldPrintMessage(obj, timestamp, message);\n \n * loggerFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Logger struct {\n    \n}\n\n\nfunc Constructor() Logger {\n    \n}\n\n\nfunc (this *Logger) ShouldPrintMessage(timestamp int, message string) bool {\n    \n}\n\n\n/**\n * Your Logger object will be instantiated and called as such:\n * obj := Constructor();\n * param_1 := obj.ShouldPrintMessage(timestamp,message);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Logger() {\n\n    fun shouldPrintMessage(timestamp: Int, message: String): Boolean {\n        \n    }\n\n}\n\n/**\n * Your Logger object will be instantiated and called as such:\n * var obj = Logger()\n * var param_1 = obj.shouldPrintMessage(timestamp,message)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Logger {\n\n    init() {\n        \n    }\n    \n    func shouldPrintMessage(_ timestamp: Int, _ message: String) -> Bool {\n        \n    }\n}\n\n/**\n * Your Logger object will be instantiated and called as such:\n * let obj = Logger()\n * let ret_1: Bool = obj.shouldPrintMessage(timestamp, message)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Logger {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Logger {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn should_print_message(&self, timestamp: i32, message: String) -> bool {\n        \n    }\n}\n\n/**\n * Your Logger object will be instantiated and called as such:\n * let obj = Logger::new();\n * let ret_1: bool = obj.should_print_message(timestamp, message);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Logger\n    def initialize()\n        \n    end\n\n\n=begin\n    :type timestamp: Integer\n    :type message: String\n    :rtype: Boolean\n=end\n    def should_print_message(timestamp, message)\n        \n    end\n\n\nend\n\n# Your Logger object will be instantiated and called as such:\n# obj = Logger.new()\n# param_1 = obj.should_print_message(timestamp, message)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Logger {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $timestamp\n     * @param String $message\n     * @return Boolean\n     */\n    function shouldPrintMessage($timestamp, $message) {\n        \n    }\n}\n\n/**\n * Your Logger object will be instantiated and called as such:\n * $obj = Logger();\n * $ret_1 = $obj->shouldPrintMessage($timestamp, $message);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Logger {\n\n  Logger() {\n    \n  }\n  \n  bool shouldPrintMessage(int timestamp, String message) {\n    \n  }\n}\n\n/**\n * Your Logger object will be instantiated and called as such:\n * Logger obj = Logger();\n * bool param1 = obj.shouldPrintMessage(timestamp,message);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Logger() {\n\n    def shouldPrintMessage(timestamp: Int, message: String): Boolean = {\n        \n    }\n\n}\n\n/**\n * Your Logger object will be instantiated and called as such:\n * val obj = new Logger()\n * val param_1 = obj.shouldPrintMessage(timestamp,message)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Logger do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec should_print_message(timestamp :: integer, message :: String.t) :: boolean\n  def should_print_message(timestamp, message) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Logger.init_()\n# param_1 = Logger.should_print_message(timestamp, message)\n\n# Logger.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec logger_init_() -> any().\nlogger_init_() ->\n  .\n\n-spec logger_should_print_message(Timestamp :: integer(), Message :: unicode:unicode_binary()) -> boolean().\nlogger_should_print_message(Timestamp, Message) ->\n  .\n\n\n%% Your functions will be called as such:\n%% logger_init_(),\n%% Param_1 = logger_should_print_message(Timestamp, Message),\n\n%% logger_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define logger%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; should-print-message : exact-integer? string? -> boolean?\n    (define/public (should-print-message timestamp message)\n      )))\n\n;; Your logger% object will be instantiated and called as such:\n;; (define obj (new logger%))\n;; (define param_1 (send obj should-print-message timestamp message))"
+    }
+  ],
+  "solution": {
+    "id": "826",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/824220484\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Approach 1: Queue + Set\n\n#### Intuition\n\nBefore we tackle the problem, it is imperative to clarify the conditions of the problem, since it was not explicit in the problem description. Here is one important note:\n\n>It is possible that several messages arrive roughly at the same time.\n\nWe could interpret that the input messages are in chronological order, _i.e._ the timestamps of the messages are monotonically increasing, though not _strictly_. This constraint is critical, since it would simplify the task, as one will see in the following solutions.\n\nAs a first solution, let us build a solution _intuitively_ following the tasks described in the problem.\n\n>We keep the incoming messages in a **queue**. In addition, to accelerate the check of duplicates, we use a **set** data structure to index the messages.\n\n![pic](../Figures/359/359_deque.png)\n\nAs one can see from the above example where the number indicates the timestamp of each message, the arrival of the message with the timestamp `18` would invalidate both the messages with the timestamp of `5` and `7` which go beyond the time window of 10 seconds.\n\n#### Algorithm\n\n- First of all, we use a queue as a sort of sliding window to keep all the printable messages in certain time frame (10 seconds).\n\n- At the arrival of each incoming message, it comes with a `timestamp`. This timestamp implies the evolution of the sliding windows. Therefore, we should first invalidate those _expired_ messages in our queue. \n\n- Since the `queue` and `set` data structures should be in sync with each other, we would also remove those expired messages from our message set.\n\n- After the updates of our message queue and set, we then simply check if there is any duplicate for the new incoming message. If not, we add the message to the queue as well as the set.\n\n<iframe src=\"https://leetcode.com/playground/FbxMR5Rd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FbxMR5Rd\"></iframe>\n\nAs one can see, the usage of set data structure is not _absolutely_ necessary. One could simply iterate the message queue to check if there is any duplicate.\n\nAnother important note is that if the messages are not chronologically ordered then we would have to iterate through the entire queue to remove the expired messages, rather than having _early stopping_. Or one could use some sorted queue such as **Priority Queue** to keep the messages.\n\n#### Complexity Analysis\n\n- Time Complexity: **Amortized** $\\mathcal{O}(1)$ per call.\n  \n  While in the worst case a single call might remove up to $N$ obsolete messages from the queue (where $N$ is the number of messages in the queue), **each message is added and removed at most once**. So over multiple calls, the **total work is linear**, and the average (amortized) cost per call remains constant.\n\n- Space Complexity: $$\\mathcal{O}(N)$$ where $$N$$ is the size of the queue. \n\n  We keep the incoming messages in both the queue and set. The upper bound of the required space would be $$2N$$, if we have no duplicate at all.\n\n---\n\n### Approach 2: Hashtable / Dictionary\n\n#### Intuition\n\nOne could combine the queue and set data structure into a **hashtable** or **dictionary**, which gives us the capacity of keeping all unique messages as of queue as well as the capacity to quickly evaluate the duplication of messages as of set.\n\n>The idea is that we keep a hashtable/dictionary with the message as key, and its timestamp as the value. The hashtable keeps all the unique messages along with the latest timestamp that the message was printed.\n\n![pic](../Figures/359/359_hashtable.png)\n\nAs one can see from the above example, there is an entry in the hashtable with the message `m2` and the timestamp `2`. Then there comes another message `m2` with the timestamp `15`. Since the message was printed 13 seconds before (_i.e._ beyond the buffer window), it is therefore eligible to print again the message. As a result, the timestamp of the message `m2` would be updated to `15`.\n\n#### Algorithm\n\n- We initialize a hashtable/dictionary to keep the messages along with the timestamp.\n\n- At the arrival of a new message, the message is eligible to be printed with either of the two conditions as follows:\n\n    - case 1). we have never seen the message before.\n\n    - case 2). we have seen the message before, and it was printed more than 10 seconds ago.\n\n- In both of the above cases, we would then update the entry that is associated with the message in the hashtable, with the latest timestamp.\n\n<iframe src=\"https://leetcode.com/playground/9UjWpJgu/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"9UjWpJgu\"></iframe>\n\n*Note: for clarity, we separate the two cases into two blocks. One could combine the two blocks together to have a more concise solution.*\n\nThe main difference between this approach with hashtable and the previous approach with queue is that in previous approach we do *proactive* cleaning, _i.e._ at each invocation of function, we first remove those expired messages. \n\nWhile in this approach, we keep all the messages even when they are expired. This characteristics might become problematic, since the usage of memory would keep on growing over the time. Sometimes it might be more desirable to have the _garbage collection_ property of the previous approach.\n\n#### Complexity Analysis\n\n- Time Complexity: $$\\mathcal{O}(1)$$. The lookup and update of the hashtable takes a constant time.\n\n- Space Complexity: $$\\mathcal{O}(M)$$ where $$M$$ is the size of all incoming messages. Over the time, the hashtable would have an entry for each unique message that has appeared.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

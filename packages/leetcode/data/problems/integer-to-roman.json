@@ -1,0 +1,138 @@
+{
+  "questionId": "12",
+  "questionFrontendId": "12",
+  "title": "Integer to Roman",
+  "titleSlug": "integer-to-roman",
+  "difficulty": "Medium",
+  "content": "<p>Seven different symbols represent Roman numerals with the following values:</p>\n\n<table>\n\t<thead>\n\t\t<tr>\n\t\t\t<th>Symbol</th>\n\t\t\t<th>Value</th>\n\t\t</tr>\n\t</thead>\n\t<tbody>\n\t\t<tr>\n\t\t\t<td>I</td>\n\t\t\t<td>1</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>V</td>\n\t\t\t<td>5</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>X</td>\n\t\t\t<td>10</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>L</td>\n\t\t\t<td>50</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>C</td>\n\t\t\t<td>100</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>D</td>\n\t\t\t<td>500</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>M</td>\n\t\t\t<td>1000</td>\n\t\t</tr>\n\t</tbody>\n</table>\n\n<p>Roman numerals are formed by appending&nbsp;the conversions of&nbsp;decimal place values&nbsp;from highest to lowest. Converting a decimal place value into a Roman numeral has the following rules:</p>\n\n<ul>\n\t<li>If the value does not start with 4 or&nbsp;9, select the symbol of the maximal value that can be subtracted from the input, append that symbol to the result, subtract its value, and convert the remainder to a Roman numeral.</li>\n\t<li>If the value starts with 4 or 9 use the&nbsp;<strong>subtractive form</strong>&nbsp;representing&nbsp;one symbol subtracted from the following symbol, for example,&nbsp;4 is 1 (<code>I</code>) less than 5 (<code>V</code>): <code>IV</code>&nbsp;and 9 is 1 (<code>I</code>) less than 10 (<code>X</code>): <code>IX</code>.&nbsp;Only the following subtractive forms are used: 4 (<code>IV</code>), 9 (<code>IX</code>),&nbsp;40 (<code>XL</code>), 90 (<code>XC</code>), 400 (<code>CD</code>) and 900 (<code>CM</code>).</li>\n\t<li>Only powers of 10 (<code>I</code>, <code>X</code>, <code>C</code>, <code>M</code>) can be appended consecutively at most 3 times to represent multiples of 10. You cannot append 5&nbsp;(<code>V</code>), 50 (<code>L</code>), or 500 (<code>D</code>) multiple times. If you need to append a symbol&nbsp;4 times&nbsp;use the <strong>subtractive form</strong>.</li>\n</ul>\n\n<p>Given an integer, convert it to a Roman numeral.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">num = 3749</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;MMMDCCXLIX&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<pre>\n3000 = MMM as 1000 (M) + 1000 (M) + 1000 (M)\n 700 = DCC as 500 (D) + 100 (C) + 100 (C)\n  40 = XL as 10 (X) less of 50 (L)\n   9 = IX as 1 (I) less of 10 (X)\nNote: 49 is not 1 (I) less of 50 (L) because the conversion is based on decimal places\n</pre>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">num = 58</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;LVIII&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<pre>\n50 = L\n 8 = VIII\n</pre>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">num = 1994</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;MCMXCIV&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<pre>\n1000 = M\n 900 = CM\n  90 = XC\n   4 = IV\n</pre>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= num &lt;= 3999</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"intToRoman\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"num\",\r\n      \"type\": \"integer\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"string\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"2.1M\", \"totalSubmission\": \"3M\", \"totalAcceptedRaw\": 2093203, \"totalSubmissionRaw\": 2962291, \"acRate\": \"70.7%\"}",
+  "likes": 8510,
+  "dislikes": 5720,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Roman to Integer\", \"titleSlug\": \"roman-to-integer\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Integer to English Words\", \"titleSlug\": \"integer-to-english-words\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3749",
+    "58",
+    "1994"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amd\", \"name\": \"AMD\"}], \"six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"verkada\", \"name\": \"Verkada\"}, {\"timesEncountered\": 2, \"slug\": \"uipath\", \"name\": \"UiPath\"}], \"more_than_six_months\": [{\"timesEncountered\": 18, \"slug\": \"wix\", \"name\": \"Wix\"}, {\"timesEncountered\": 7, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 5, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 4, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 4, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 4, \"slug\": \"bookingcom\", \"name\": \"Booking.com\"}, {\"timesEncountered\": 3, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 3, \"slug\": \"swiggy\", \"name\": \"Swiggy\"}, {\"timesEncountered\": 3, \"slug\": \"docusign\", \"name\": \"Docusign\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string intToRoman(int num) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String intToRoman(int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def intToRoman(self, num: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def intToRoman(self, num):\n        \"\"\"\n        :type num: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} num\n * @return {string}\n */\nvar intToRoman = function(num) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function intToRoman(num: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string IntToRoman(int num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* intToRoman(int num) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func intToRoman(num int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun intToRoman(num: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func intToRoman(_ num: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn int_to_roman(num: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num\n# @return {String}\ndef int_to_roman(num)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $num\n     * @return String\n     */\n    function intToRoman($num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String intToRoman(int num) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def intToRoman(num: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec int_to_roman(num :: integer) :: String.t\n  def int_to_roman(num) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec int_to_roman(Num :: integer()) -> unicode:unicode_binary().\nint_to_roman(Num) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (int-to-roman num)\n  (-> exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "919",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/836644453\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Overview\n\n\nIn a lot of countries, Roman Numerals are taught in elementary school-level math. This has made them a somewhat popular \"easy\" interview question. Unfortunately though, this ignores the fact that *not everybody learned them in school*, and therefore a big advantage has been given to those who did. I suspect it's also difficult for a lot of us who *have* learned them previously to fully appreciate how much easier prior experience makes this question. While this is very unfair, and possibly very frustrating, keep in mind that the best thing you can do is work through this question and the related question [Roman to Integer](https://leetcode.com/problems/roman-to-integer/) so that you don't get caught out by it in a real interview. In short, if you're here reading this, you've saved yourself from getting caught out by it! Thankfully, questions that rely on this kind of prior knowledge are few and far between.\n\n**Have a go at Roman to Integer first**\n\nThe problem of converting a [Roman Numeral to an Integer](https://leetcode.com/problems/roman-to-integer/) is simpler. Therefore, we suggest that you have a go at it first if you're finding this question difficult. This will allow you to become more familiar with the concept of Roman Numerals without the \"ambiguity\" issue that comes up in converting an integer to a Roman Numeral. When converting a Roman Numeral to an integer, there's only one sensible conversion.\n\n**Roman Numeral Symbols**\n\nRoman Numerals are made with `7` single-letter symbols, each with its own value. Additionally, the subtractive rules (as explained in the problem description) give an additional `6` symbols. This gives us a total of `13` unique symbols (each symbol is made of either 1 letter or 2).\n\n![Symbol mapping](../Figures/13/hardcoding_2_fixed.png)\n\nAn integer is represented as a Roman Numeral by finding symbols that add to its value.\n\n**Handling Ambiguity**\n\nOne thing that can be a bit confusing if you're not familiar with Roman Numerals is knowing which representation is the \"correct\" one for a particular integer. For example, consider these possible ways of representing `140`. Which of these is correct?\n\n![Some of the possible ways of representing 140 with Roman Numerals.](../Figures/12/ways_of_representing_140.png)\n\n\n**The system we use to decide** is to select the representation with the largest possible symbols, working from left to right. For example, the representations above with the largest symbol at the start are the ones starting with `C`.\n\n![All ways of representing 140 that start with a C.](../Figures/12/ways_of_representing_140_starting_with_c.png)\n\nTo decide which of these to go with, we look at the next symbol. Two of them have an `X`, which is worth `10`, and one of them has an `XL`, which is worth `40`. Because the `XL` is worth more, we go with that representation. Therefore, the representation for `140` is `CXL`.\n\nThis definition of Roman Numerals is, these days, the \"most accepted\". Interestingly, it still isn't an absolute standard, and throughout history, there have been many variants. If you're interested in math and history, we recommend checking out the [Wikipedia article](https://en.wikipedia.org/wiki/Roman_numerals) for your own interest.\n\n<br/>\n\n---\n\n### Approach 1: Greedy\n\n**Intuition**\n\nRepresenting a given integer as a Roman Numeral requires finding a sequence of the above 13 symbols, where their corresponding values add up to the integer. This sequence must be in order from largest to smallest, based on symbol value. To remind you, these are the symbol values.\n\n![Symbol mapping](../Figures/13/hardcoding_2_fixed.png)\n\nAs explained in the overview, the representation should use the largest possible symbols, working from the left. Therefore, it makes sense to use a **Greedy** algorithm. A Greedy algorithm is an algorithm that makes the best possible decision at the current time; in this case taking out the largest possible symbol it can. \n\nSo to represent a given integer, we look for the *largest* symbol that fits into it. We subtract that, and then look for the largest symbol that fits into the remainder, and so on until the remainder is 0. Each of the symbols we take out are appended onto the output Roman Numeral string.\n\nFor example, suppose we need to make the number `671`.\n\nThe largest symbol that fits into `671` is `D` (which is worth `500`). The next symbol up, `CM`, is worth `900` and so is too big to fit. Therefore, we now have the following.\n\n```text\nRoman Numeral so far: D\nInteger remainder: 671 - 500 = 171\n```\n\nWe now repeat the process with `171`. The largest symbol that fits into it is `C` (worth `100`).\n\n```text\nRoman Numeral so far: DC\nInteger remainder: 171 - 100 = 71\n```\n\nRepeating this with `71`, we find the largest symbol that fits in is `L` (worth `50`).\n\n```text\nRoman Numeral so far: DCL\nInteger remainder: 71 - 50 = 21\n```\n\nFor `21`, the largest symbol that fits in is `X` (worth `10`).\n\n```text\nRoman Numeral so far: DCLX\nInteger remainder: 21 - 10 = 11\n```\n\nFor `11`, the largest symbol that fits in is again `X`.\n\n```text\nRoman Numeral so far: DCLXX\nInteger remainder: 11 - 10 = 1\n```\n\nFinally, the `1` is represented with a `I` and we're done.\n\n```text\nRoman Numeral so far: DCLXXI\nInteger remainder: 1 - 1 = 0\n```\n\nIn pseudocode, this algorithm is as follows.\n\n```text\ndefine function to_roman(integer):\n    roman_numeral = \"\"\n    while integer is non-zero:\n        symbol = biggest valued symbol that fits into integer\n        roman_numeral = concat roman_numeral and symbol\n        integer = integer - value of symbol\n    return roman_numeral\n```\n\nThe cleanest way to implement this in code is to loop over each symbol, from largest to smallest, checking *how many* copies of the current symbol fit into the remaining integer.\n\n```text\ndefine function to_roman(integer):\n    roman_numeral = \"\"\n    for each symbol from largest to smallest:\n        if value of symbol is greater than integer:\n            continue\n        symbol_count = number of times symbol value fits into integer\n        repeat symbol_count times:\n            roman_numeral = concat roman_numeral and symbol\n        integer = integer - (value of symbol * symbol_count)\n\n    return roman_numeral\n```\n\nHere's an animation showing this algorithm run on the number `478`.\n\n!?!../Documents/12_greedy_algorithm.json:960,400!?!\n\n**Algorithm**\n\n<iframe src=\"https://leetcode.com/playground/Q6G5Dc6m/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Q6G5Dc6m\"></iframe>\n\n\n**Complexity Analysis**\n\n- Time complexity : $$O(1)$$.\n\n    As there is a finite set of roman numerals, there is a hard upper limit on how many times the loop can iterate. This upper limit is `15` times, and it occurs for the number `3888`, which has a representation of `MMMDCCCLXXXVIII`. Therefore, we say the time complexity is constant, i.e. $$O(1)$$.\n\n- Space complexity : $$O(1)$$.\n\n    The amount of memory used does not change with the size of the input integer, and is therefore constant.\n\n\n---\n\n### Approach 2: Hardcode Digits\n\n**Intuition**\n\n*Please don't panic and assume you need to memorize the values in this approach. The first approach should be fine, and in-fact has the added bonus of being more flexible if we were to extend the Roman Numeral symbol set to have symbols over 1000. This second approach is only included for completeness. Do try to understand how we derived this approach, though.*\n\nAn interesting observation that can be made is that each of the digits in the integer's decimal representation can be treated *independently* when converting the integer into a Roman Numeral. Notice that all of the symbols can be split into groups based on their highest factor out of `1000`, `100`, `10`, and `1`.\n\n![Dividing the symbols into 4 groups.](../Figures/12/roman_numeral_symbol_values.png)\n\nWhile the number is at least `1000`, an `M (1000)` will be appended to the output and `1000` will be subtracted from the integer. The other symbols won't even be considered until the number is below `1000`. Additionally, the `M (1000)`s cannot represent any lower part of the number. Therefore, we can represent the thousands digit of the integer entirely with `M (1000)`s.\n\nNow, assume we have a remainder of between `100` and `999`. The next symbols considered are those in the hundreds row. The highest symbol that could fit in right now is `CM (900)`, and the lowest is `C (100)`. None of the symbols in this range can possibly modify the tens or ones. As long as the remainder is still above `100`, we can still take at least `C (100)` out of it. This means that we'll only be subtracting symbols from the hundreds row for as long as the number is at least `100`.\n\nThe same argument applies for the tens, and then the ones. \n\nWe can, therefore, work out what the representation for each digit, in each place, is. There are only 34 of them; `0`, `1`, `2`, `3` and `4` for the thousands column, and `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8` and `9` for each of the hundreds, tens, and ones. So with a pencil, paper, and some patience, you can hopefully work out the representation for each of these possibilities and hardcode them. Then, converting an integer to a Roman Numeral will require breaking the integer into digits and appending the relevant representation for each digit.\n\n![Hardcoding all the positions and digits.](../Figures/12/digit_roman_numeral_values.png)\n\nGetting each digit of the number can be done using the modulus and division operators. The division operator removes the digits *below* the place we want, and the modulus operator removes the digits from *above*. This simply leaves the digit we want.\n\n```\nthousands_digit = integer / 1000\nhundreds_digit = (integer % 1000) / 100\ntens_digit = (integer % 100) / 10\nones_digit = integer % 10\n```\n\nThen, we can simply look these up in the hardcoded table, and append the results together!\n\n**Algorithm**\n\nThe cleanest way to go about it in code is to have 4 separate arrays; one for each place value. Then, extract the digits, look up their symbols in the relevant array, and append them all together.\n\n<iframe src=\"https://leetcode.com/playground/KGFZepcW/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KGFZepcW\"></iframe>\n\n**Complexity Analysis**\n\n- Time complexity : $$O(1)$$.\n\n    The same number of operations is done, regardless of the size of the input. Therefore, the time complexity is constant.\n\n- Space complexity : $$O(1)$$.\n\n    While we have Arrays, they are the same size, *regardless of the size of the input*. Therefore, they are constant for the purpose of space-complexity analysis.\n\nThe downside of this approach is that it is inflexible if Roman Numerals were to be extended (which is an interesting follow-up question). For example, what if we said the symbol `H` now represents `5000`, and `P` now represents `10000`, allowing us to represent numbers up to `39999`? Approach 1 will be a lot quicker to modify, as you simply need to add these 2 values to the code without doing any calculations. But for Approach 2, you'll need to calculate and hardcode ten new representations. What if we then added symbols to be able to go up to `399,999,999`? Approach 2 becomes more and more difficult to manage, the more symbols we add.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

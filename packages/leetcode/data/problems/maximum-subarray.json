@@ -1,0 +1,138 @@
+{
+  "questionId": "53",
+  "questionFrontendId": "53",
+  "title": "Maximum Subarray",
+  "titleSlug": "maximum-subarray",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code>, find the <span data-keyword=\"subarray-nonempty\">subarray</span> with the largest sum, and return <em>its sum</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [-2,1,-3,4,-1,2,1,-5,4]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> The subarray [4,-1,2,1] has the largest sum 6.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The subarray [1] has the largest sum 1.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,4,-1,7,8]\n<strong>Output:</strong> 23\n<strong>Explanation:</strong> The subarray [5,4,-1,7,8] has the largest sum 23.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>4</sup> &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> If you have figured out the <code>O(n)</code> solution, try coding another solution using the <strong>divide and conquer</strong> approach, which is more subtle.</p>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"maxSubArray\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"6M\", \"totalSubmission\": \"11.2M\", \"totalAcceptedRaw\": 5973788, \"totalSubmissionRaw\": 11247708, \"acRate\": \"53.1%\"}",
+  "likes": 37743,
+  "dislikes": 1606,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Best Time to Buy and Sell Stock\", \"titleSlug\": \"best-time-to-buy-and-sell-stock\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Maximum Product Subarray\", \"titleSlug\": \"maximum-product-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Degree of an Array\", \"titleSlug\": \"degree-of-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Longest Turbulent Subarray\", \"titleSlug\": \"longest-turbulent-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Score Of Spliced Array\", \"titleSlug\": \"maximum-score-of-spliced-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Absolute Sum of Any Subarray\", \"titleSlug\": \"maximum-absolute-sum-of-any-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Subarray Sum After One Operation\", \"titleSlug\": \"maximum-subarray-sum-after-one-operation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Substring With Largest Variance\", \"titleSlug\": \"substring-with-largest-variance\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Subarrays With Score Less Than K\", \"titleSlug\": \"count-subarrays-with-score-less-than-k\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Value of a String in an Array\", \"titleSlug\": \"maximum-value-of-a-string-in-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Substring With Maximum Cost\", \"titleSlug\": \"find-the-substring-with-maximum-cost\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"K Items With the Maximum Sum\", \"titleSlug\": \"k-items-with-the-maximum-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Maximum Good Subarray Sum\", \"titleSlug\": \"maximum-good-subarray-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximize Subarray Sum After Removing All Occurrences of One Element\", \"titleSlug\": \"maximize-subarray-sum-after-removing-all-occurrences-of-one-element\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[-2,1,-3,4,-1,2,1,-5,4]",
+    "[1]",
+    "[5,4,-1,7,8]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 21, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 15, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 12, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 12, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 6, \"slug\": \"upstart\", \"name\": \"Upstart\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"meesho\", \"name\": \"Meesho\"}], \"six_months\": [{\"timesEncountered\": 11, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 4, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 2, \"slug\": \"dell\", \"name\": \"Dell\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 9, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 8, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 5, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 5, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 4, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 4, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 4, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 4, \"slug\": \"samsung\", \"name\": \"Samsung\"}, {\"timesEncountered\": 4, \"slug\": \"sap\", \"name\": \"SAP\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxSubArray(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxSubArray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxSubArray(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxSubArray(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar maxSubArray = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxSubArray(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxSubArray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxSubArray(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxSubArray(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxSubArray(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxSubArray(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_sub_array(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef max_sub_array(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function maxSubArray($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxSubArray(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxSubArray(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_sub_array(nums :: [integer]) :: integer\n  def max_sub_array(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_sub_array(Nums :: [integer()]) -> integer().\nmax_sub_array(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-sub-array nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1121",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/788112436\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Approach 1: Optimized Brute Force\n\n**Intuition**\n\nThis algorithm doesn't reliably run under the time limit here on LeetCode. We'll still look briefly at it though, as in an interview scenario it would be a great start if you're struggling to come up with a better approach.\n\nCalculate the sum of all subarrays, and keep track of the best one. To actually generate all subarrays would take $$O(N^3)$$ time, but with a little optimization, we can achieve brute force in $$O(N^2)$$ time. The trick is to recognize that all of the subarrays starting at a particular value will share a common prefix.\n\n**Algorithm**\n\n1. Initialize a variable `maxSubarray = -infinity` to keep track of the best subarray. We need to use negative infinity, not 0, because it is possible that there are only negative numbers in the array.\n\n2. Use a `for` loop that considers each index of the array as a starting point.\n\n3. For each starting point, create a variable `currentSubarray = 0`. Then, loop through the array from the starting index, adding each element to `currentSubarray`. Every time we add an element it represents a possible subarray - so continuously update `maxSubarray` to contain the maximum out of the `currentSubarray` and itself.\n\n4. Return `maxSubarray`. \n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/bd4kyLMV/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"bd4kyLMV\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity: $$O(N^2)$$, where $$N$$ is the length of `nums`.\n\n    We use 2 nested `for` loops, with each loop iterating through `nums`.\n\n* Space complexity: $$O(1)$$\n\n    No matter how big the input is, we are only ever using 2 variables: `ans` and `currentSubarray`. \n    \n<br/>\n\n### Approach 2: Dynamic Programming, Kadane's Algorithm\n\n**Intuition**\n\nWhenever you see a question that asks for the maximum or minimum of something, consider Dynamic Programming as a possibility. The difficult part of this problem is figuring out when a negative number is \"worth\" keeping in a subarray. This question in particular is a popular problem that can be solved using an algorithm called [Kadane's Algorithm](https://en.wikipedia.org/wiki/Maximum_subarray_problem#Kadane's_algorithm). If you're good at problem solving though, it's quite likely you'll be able to come up with the algorithm on your own. This algorithm also has a very greedy-like intuition behind it.\n\nLet's focus on one important part: where the optimal subarray **begins**. We'll use the following example.\n\n`nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]`\n\nWe can see that the optimal subarray couldn't possibly involve the first 3 values - the overall sum of those numbers would always *subtract* from the total. Therefore, the subarray either starts at the first `4`, or somewhere further to the right.\n\nWhat if we had this example though?\n\n`nums = [-2,1000000000,-3,4,-1,2,1,-5,4]`\n \nWe need a general way to figure out when a part of the array is **worth** keeping.\n\nAs expected, any subarray whose sum is *positive* is worth keeping. Let's start with an empty array, and iterate through the input, adding numbers to our array as we go along. Whenever the sum of the array is negative, we know the entire array is not worth keeping, so we'll reset it back to an empty array.\n\nHowever, we don't actually need to build the subarray, we can just keep an integer variable `current_subarray` and add the values of each element there. When it becomes negative, we reset it to 0 (an empty array).\n\n!?!../Documents/53_Maximum_Subarray.json:960,540!?!\n\n**Algorithm**\n\n1. Initialize 2 integer variables. Set both of them equal to the first value in the array.\n    - `currentSubarray` will keep the running count of the current subarray we are focusing on.\n    - `maxSubarray` will be our final return value. Continuously update it whenever we find a bigger subarray.\n\n2. Iterate through the array, starting with the 2nd element (as we used the first element to initialize our variables). For each number, add it to the `currentSubarray` we are building. If `currentSubarray` becomes negative, we know it isn't worth keeping, so throw it away. Remember to update `maxSubarray` every time we find a new maximum.\n\n3. Return `maxSubarray`.\n\n**Implementation**\n\nA clever way to update `currentSubarray` is using `currentSubarray = max(num, currentSubarray + num)`. If `currentSubarray` is negative, then `num > currentSubarray + num`.\n\n<iframe src=\"https://leetcode.com/playground/eRheVXqM/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"eRheVXqM\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity: $$O(N)$$, where $$N$$ is the length of `nums`.\n\n    We iterate through every element of `nums` exactly once.\n\n* Space complexity: $$O(1)$$\n\n    No matter how long the input is, we are only ever using 2 variables: `currentSubarray` and `maxSubarray`. \n    \n<br/>\n\n---\n\n### Approach 3: Divide and Conquer (Advanced)\n\n**Intuition**\n\nThis approach is slower than the second approach and uses more space, but it's still a nice and different way to approach the problem. In an interview, sometimes you may be asked for alternative ways to solve a problem - and divide and conquer is an extremely common type of algorithm. This solution will make use of recursion - if you aren't familiar with recursion, check out the [recursion explore card](https://leetcode.com/explore/featured/card/recursion-i/).\n\nDivide and conquer algorithms involve splitting up the input into smaller chunks until they're small enough to be easily solved, and then combining the solutions to get the final overall solution. If you're unfamiliar with them, check out [this explore card](https://leetcode.com/explore/learn/card/recursion-ii/470/divide-and-conquer/2897/). \n\nIf we were to split our input in half, then logically the optimal subarray either:\n\n- Uses elements only from the left side\n- Uses elements only from the right side\n- Uses a combination of elements from both the left and right side\n\nThus, the answer is simply the largest of:\n\n- The maximum subarray contained only in the left side\n- The maximum subarray contained only in the right side\n- The maximum subarray that can use elements from both sides\n\nFinding the maximum subarray from the left and right half is straightforward - just recurse using the respective half of the array. So, the hard part is figuring out how to find the best subarray that uses elements from both sides. Lets use a smaller example, `nums = [5, -2, 1, -3, 4, -2, 1]`. Since we want to use elements from both sides, we also must use the middle element, `-3`. Now, we can also take from the left and the right, but every element must be connected to the middle (since we're still forming a subarray). \n\nThe fact that every element must be connected to the middle actually makes our lives a lot easier - every subarray we consider **must** contain the element immediately beside the center, which means there are only as many subarrays as there are elements. In our example, the right side is `[4, -2, 1]`. There are only 3 subarrays to consider - `[4]`, `[4, -2]`, and `[4, -2, 1]`. To find the best chain of elements we can take from a half, iterate from the middle to the end (start of the array for the left half) and continuously update some counter `curr`.\n\n!?!../Documents/53_Maximum_Subarray_2.json:960,540!?!\n\n**Algorithm**\n\nNow that we know how to find the best subarray containing elements from both sides of any given array, the algorithm is as follows:\n\n1. Define a helper function that we will use for recursion.\n    - This function will take an input `left` and `right`, which defines the bounds of the array. The return value of this function will be the best possible subarray for the array that fits between `left` and `right`.\n    - If `left > right`, we have an empty array. Return negative infinity.\n    - Find the midpoint of our array. This is `(left + right) / 2`, rounded down. Using this midpoint, find the best possible subarray that uses elements from both sides of the array with the algorithm detailed in the animation above.\n    - The best subarray using elements from both sides is only 1 of 3 possibilities. We still need to find the best subarray using only the left or right halves. So, call this function again, once with the left half, and once with the right half.\n    - Return the largest of the 3 values - the best left half sum, the best right half sum, and the best combined sum.\n\n2. Call our helper function with the entire input array (`left = 0`, `right = length - 1`). This is our final answer, so return it.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/PHkcZQQq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PHkcZQQq\"></iframe>\n\n\n**Complexity Analysis**\n\n* Time complexity: $$O(N \\cdot \\log N)$$, where $$N$$ is the length of `nums`.\n    \n    On our first call to `findBestSubarray`, we use for loops to visit every element of `nums`. Then, we split the array in half and call `findBestSubarray` with each half. Both those calls will then iterate through every element in that half, which combined is every element of `nums` again. Then, both those halves will be split in half, and 4 more calls to `findBestSubarray` will happen, each with a quarter of `nums`. As you can see, every time the array is split, we still need to handle every element of the original input `nums`. We have to do this $$\\log N$$ times since that's how many times an array can be split in half.\n\n* Space complexity: $$O(\\log N)$$, where $$N$$ is the length of `nums`.\n    \n    The extra space we use relative to input size is solely occupied by the recursion stack. Each time the array gets split in half, another call of `findBestSubarray` will be added to the recursion stack, until calls start to get resolved by the base case - remember, the base case happens at an empty array, which occurs after $$\\log N$$ calls.\n\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

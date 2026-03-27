@@ -1,0 +1,137 @@
+{
+  "questionId": "393",
+  "questionFrontendId": "393",
+  "title": "UTF-8 Validation",
+  "titleSlug": "utf-8-validation",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>data</code> representing the data, return whether it is a valid <strong>UTF-8</strong> encoding (i.e. it translates to a sequence of valid UTF-8 encoded characters).</p>\n\n<p>A character in <strong>UTF8</strong> can be from <strong>1 to 4 bytes</strong> long, subjected to the following rules:</p>\n\n<ol>\n\t<li>For a <strong>1-byte</strong> character, the first bit is a <code>0</code>, followed by its Unicode code.</li>\n\t<li>For an <strong>n-bytes</strong> character, the first <code>n</code> bits are all one&#39;s, the <code>n + 1</code> bit is <code>0</code>, followed by <code>n - 1</code> bytes with the most significant <code>2</code> bits being <code>10</code>.</li>\n</ol>\n\n<p>This is how the UTF-8 encoding would work:</p>\n\n<pre>\n     Number of Bytes   |        UTF-8 Octet Sequence\n                       |              (binary)\n   --------------------+-----------------------------------------\n            1          |   0xxxxxxx\n            2          |   110xxxxx 10xxxxxx\n            3          |   1110xxxx 10xxxxxx 10xxxxxx\n            4          |   11110xxx 10xxxxxx 10xxxxxx 10xxxxxx\n</pre>\n\n<p><code>x</code> denotes a bit in the binary form of a byte that may be either <code>0</code> or <code>1</code>.</p>\n\n<p><strong>Note: </strong>The input is an array of integers. Only the <strong>least significant 8 bits</strong> of each integer is used to store the data. This means each integer represents only 1 byte of data.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> data = [197,130,1]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> data represents the octet sequence: 11000101 10000010 00000001.\nIt is a valid utf-8 encoding for a 2-bytes character followed by a 1-byte character.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> data = [235,140,4]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> data represented the octet sequence: 11101011 10001100 00000100.\nThe first 3 bits are all one&#39;s and the 4th bit is 0 means it is a 3-bytes character.\nThe next byte is a continuation byte which starts with 10 and that&#39;s correct.\nBut the second continuation byte does not start with 10, so it is invalid.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= data.length &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= data[i] &lt;= 255</code></li>\n</ul>\n",
+  "hints": [
+    "Read the data integer by integer. When you read it, process the least significant 8 bits of it.",
+    "Assume the next encoding is 1-byte data. If it is not 1-byte data, read the next integer and assume it is 2-bytes data.",
+    "Similarly, if it is not 2-bytes data, try 3-bytes then 4-bytes. If you read four integers and it still does not match any pattern, return false."
+  ],
+  "metaData": "{\r\n  \"name\": \"validUtf8\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"data\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"boolean\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"139.6K\", \"totalSubmission\": \"302.5K\", \"totalAcceptedRaw\": 139600, \"totalSubmissionRaw\": 302513, \"acRate\": \"46.1%\"}",
+  "likes": 949,
+  "dislikes": 2888,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[197,130,1]",
+    "[235,140,4]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"tesla\", \"name\": \"Tesla\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool validUtf8(vector<int>& data) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean validUtf8(int[] data) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def validUtf8(self, data: List[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def validUtf8(self, data):\n        \"\"\"\n        :type data: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} data\n * @return {boolean}\n */\nvar validUtf8 = function(data) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function validUtf8(data: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool ValidUtf8(int[] data) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool validUtf8(int* data, int dataSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func validUtf8(data []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun validUtf8(data: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func validUtf8(_ data: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn valid_utf8(data: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} data\n# @return {Boolean}\ndef valid_utf8(data)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $data\n     * @return Boolean\n     */\n    function validUtf8($data) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool validUtf8(List<int> data) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def validUtf8(data: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec valid_utf8(data :: [integer]) :: boolean\n  def valid_utf8(data) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec valid_utf8(Data :: [integer()]) -> boolean().\nvalid_utf8(Data) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (valid-utf8 data)\n  (-> (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "596",
+    "content": "[TOC]\n\n## Solution\n\n### Overview\n\nThis is an interesting problem to work with especially because it is not really hard to code up a solution for, but, you really need to pay attention to the details of the problem. A lot of people trying to solve the problem tend to miss out on small details that are mentioned and end up getting 1 or 2 test cases wrong.\n\n**Note:** The following section provides 3 different examples for the problem and explains them. If the test cases and the rules are clear to you, you can skip over the `Approach 1`.\n\nThe problem statement provides 2 different examples for you to understand the rules to define a valid UTF-8 charset. That might not be enough for a lot of people and so the first thing we would do is try to understand all the rules given in the problem statement and in the meantime look at a few examples in detail that will help clarify the problem. Here are the rules in the question statement:\n\n* A valid UTF-8 character can be `1 - 4` bytes long.\n* For a `1-byte` character, the first bit is a `0`, followed by its unicode.\n* For an `n-bytes` character, the first `n-bits` are all ones, the `n+1` bit is 0, followed by `n-1` bytes with most significant 2 bits being `10`.\n* The input given would be an array of integers containing the data. We have to return if the data in the array represents a valid UTF-8 encoding. The important thing to note here is that the array doesn't contain data for **just a single character**. As can be seen from the first example, the array can contain data for multiple characters all of which can be valid UTF-8 characters and hence the charset represented by the array is valid.\n\nNow that we have our rules defined for us, let us first look at the examples in the question and then some other examples from the discussion section that seem to cause a lot of confusion.\n\n#### Example 1\n\n<pre>\ndata = [197, 130, 1]\n</pre>\n\nLet us look at the octet sequence represented by the integers in this array. So, the octet sequence would be as follows:\n\n<pre>\n11000101 10000010 00000001\n</pre>\n\n> Remember, for an n-bytes UTF-8 character, the first n-bits would be 1 followed by a 0 in the n+1 bit. Then,\n> the next n - 1 bytes would all have 10 as their most significant bits.\n\n<pre>\n[1 1 0] 0 0 1 0 1\n ↑   ↑\n</pre>\n\nClearly, we can see that the 2 most significant bits of this byte are 1s and they are followed by a 0. This implies the start of a valid UTF-8 character. The information that we can gather from this byte is that this is a 2-byte UTF-8 character. This means that the next byte in the sequence must follow the pattern `10xxxxxx`. Let's see if it does.\n\n<pre>\n[1 1 0] 0 0 1 0 1    [1 0] 0 0 0 0 1 0\n ↑   ↑                ↑ ↑\n</pre>\n\nYes, it does follow the intended sequence and hence the first two integers in the array i.e. `197 130` combine to form a valid 2-byte UTF-8 character. Since there are more elements left in the array, we move on and check them in a similar fashion as we did with the numbers above. The next integer in the array is `1`. Let's look at the binary representation for this integer.\n\n<pre>\n00000001\n</pre>\n\nSince the most significant bit itself of this number is a `0`, the only rule it satisfies is the 1-byte UTF-8 character rule. Let's re-iterate the rule:\n\n> For 1-byte character, the first bit or the most significant but is a 0, followed by its unicode code.\n\n<pre>\n[0] 0 0 0 0 0 0 1\n ↑\n</pre>\n\nClearly, the integer `1` is a valid 1-byte UTF-8 character in itself. Since there are no more elements left in the array to process, we will return `True` since there were two characters present in the array and both of them were valid UTF-8 encoded characters.\n\n\n#### Example 2\n\n<pre>\n[235, 140, 4]\n</pre>\n\nThis is the second example that's mentioned in the problem statement.  As before, let us look at the binary representation of the integers in the array.\n\n<pre>\n11101011 10001100 00000100\n</pre>\n\nLet's start with the first integer in our array. The first byte will tell us the length of the UTF-8 character and hence the number of bytes we have to process in all in order to completely process a single UTF-8 character in the array before moving on to another one.\n\n<pre>\n[1 1 1 0] 1 0 1 1\n ↑     ↑\n</pre>\n\nSo, the first few bits of the byte above are `1110`. This means that our UTF-8 character is of `3 bytes` in all. Remember the rule that helps us identify the size of a potential UTF-8 character from it's first byte.\n\n> For an `n-bytes` character, the first `n-bits` are all one's, the `n+1` bit is 0.\n\nFollowing this rule we determined that the first UTF-8 character is of 3 bytes. Since we are done processing one byte of data, we are left with 2 other bytes of data to process before starting with another UTF-8 character. Let's look at the remaining two bytes of the array.\n\n<pre>\n[1 0] 0 0 1 1 0 0       0 0 0 0 0 1 0 0\n ↑ ↑                    ↑ (WRONG!)\n</pre>\n\nThe first byte above follows our pattern of `10xxxxxx` but the second byte does not. We had to verify a UTF-8 encoded 3-byte character as we saw from the first byte of the sequence `11101011`. The final byte is something that doesn't adhere to our rules mentioned before. Since we found an invalid byte, we can simply return `False` and we don't need to process any data further.\n\n#### Example 3\n\nWe will look at one final example before moving onto the solution for this problem. This example has caused a lot of confusion as can be seen from multiple posts on the discussion forum:\n\n* [Discussion Post - 1](https://leetcode.com/problems/utf-8-validation/discuss/87451/The-problem-description-is-super-vague-to-me.)\n* [Discussion Post - 2](https://leetcode.com/problems/utf-8-validation/discuss/147353/250145145145145-seems-valid-yet-the-testcase-flags-that-as-invalid)\n* [Discussion Post - 3](https://leetcode.com/problems/utf-8-validation/discuss/87452/2749-pass-Python-easy-to-understand-don't-understand-why-case-250-145-145-145-145-need-return-false)\n\nSo, the example is:\n\n<pre>\n[250,145,145,145,145]\n</pre>\n\nLet us look at the binary representation of all the integers in the array.\n\n<pre>\n11111010 10010001 10010001 10010001 10010001\n</pre>\n\nAs we have been doing in the previous two examples, let us look at the first byte of data to determine how many number of bytes our UTF-8 encoded character will have. Looking at the first byte of data we can see that our first UTF-8 encoded character in the sequence of data given, is of `5 bytes`.\n\n<pre>\n[1 1 1 1 1 0] 1 0\n ↑         ↑  \n</pre>\n\nIf this is a valid UTF-8 encoded character, the following four bytes of data should be in accordance with the pattern `10xxxxxx`. Let's look at the next 4 bytes of data one on each line.\n\n<pre>\n1. [1 0] 0 1 0 0 0 1\n2. [1 0] 0 1 0 0 0 1\n3. [1 0] 0 1 0 0 0 1\n4. [1 0] 0 1 0 0 0 1\n</pre>\n\nAs we can see above, all the 4 bytes are in accordance with the rules specified in the problem. Why then the result for this specific test case, `False`? People tend to miss out on one of the rules mentioned in the problem.\n\n> This is the first rule in the problem statement and it clearly says that \"A valid UTF-8 character can be 1 - 4 bytes long.\"\n\nThe first byte of data indicates that the UTF-8 encoded character contains `5 bytes` of data which cannot be true. This is why the answer for this specific test case is `False`.\n\nHopefully, most of your doubts would have been cleared by the three examples that we looked at above. Let us now move on to the solution(s) for this problem.\n<br/>\n<br/>\n\n---\n\n### Approach 1: String Manipulation.\n\n#### Intuition\n\nThe problem itself is not that complicated. As long as we adhere to the rules specified in the problem, we should be fine. So, let's jump straight in and look at the algorithm.\n\n#### Algorithm\n\n1. Start processing the integers in the given array one by one.\n2. For every integer, obtain the binary representation in the `string format`. Since integers can be very large, we should only keep/consider the `8 least significant bits` of data and discard the rest as mentioned in the problem statement. After this step, you should have 8-bits or 1-byte string representation for the integer. Let the string we get here be called `bin_rep`.\n3. There are two scenarios that we need to consider here in the next step.\n    1. One is that we are in the middle of processing some UTF-8 encoded character. In this case we simply need to check the first two bits of the string and see if they are `10` i.e. the 2 most significant bits of the integer being `1 and 0`. `bin_rep[:2] == \"10\"`\n    2. The other case is that we already processed some valid UTF-8 characters and we have to start processing a new UTF-8 character. In that case we have to look at a prefix of the string representation and look at the number of `1`s that we encounter before encountering a `0`. This will tell us the size of the next UTF-8 character.\n4. We keep on processing the integers of the array in this way until we either end up processing all of them or we find an invalid scenario.\n\nLet us move on to the implementation of this algorithm.\n\n<iframe src=\"https://leetcode.com/playground/QuH4GHKM/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QuH4GHKM\"></iframe>\n\n\n#### Complexity analysis\n\n* Time Complexity : $O(N)$ since we process each integer of the array and for each integer we obtain an 8 character string which we then use for further processing. Overall the complexity is $O(N)$ considering $N$ is the number of integers in the array.\n* Space Complexity: $O(N)$ since for every integer we create a new string that we play around with.\n<br/>\n<br/>\n\n---\n\n### Approach 2: Bit Manipulation\n\n#### Intuition\n\nThe previous solution is exactly what the problem asks us to do except that the string conversion and manipulation takes a lot of time and that is something unnecessary. We can make use of bit manipulation to perform the same task.\n\n#### Algorithm\n\nLet us look at what parts of a byte corresponding to an integer do we need to process.\n\n1. If it is the starting byte for a UTF-8 character, then we need to process the first $N$ bits where $N$ will be at max 4. Anything more than that and we would have an invalid character.\n2. In case the byte is a part of a UTF-8 character, then we simply need to check the first two bits or the most significant bits. The most significant bit needs to be a `1` and the second most significant bit needs to be a `0`.\n\nLet's see how we can make use of bit manipulation to perform both of these tasks.\n\n<pre>\nmask = 1 << 7\nwhile mask & num:\n    n_bytes += 1\n    mask = mask >> 1\n</pre>\n\nSo, we have taken a mask = `1 << 7` which is basically `10000000`. We will make use of this mask and `logically and` it with the number to see if the bit at a particular position is set of not. We do this iteratively to check how many bits are set starting from the most significant bit (Remember, the integer might be too large but we should only process the 8 least significant bits of data.)\n\nTo check if the most significant bit is a `1` and the second most significant bit is a `0`, we can make use of the following two masks\n\n<pre>\nmask1 = 1 << 7\nmask2 = 1 << 6\n\nif not (num & mask1 and not (num & mask2)):\n    return False\n</pre>\n\nThe above code will simple use the `mask1` to check if the most significant bit is set to `1` and the second most significant bit is set to `0`. if this is not a case, then we return `False`.\n\nLet's move onto the implementation.\n\n<iframe src=\"https://leetcode.com/playground/2dkD5Wvb/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2dkD5Wvb\"></iframe>\n\n#### Complexity analysis\n\n* Time Complexity : $O(N)$.\n* Space Complexity: $O(1)$.\n\n\n\n<br />\n<br />",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

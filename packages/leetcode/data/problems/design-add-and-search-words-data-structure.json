@@ -1,0 +1,142 @@
+{
+  "questionId": "211",
+  "questionFrontendId": "211",
+  "title": "Design Add and Search Words Data Structure",
+  "titleSlug": "design-add-and-search-words-data-structure",
+  "difficulty": "Medium",
+  "content": "<p>Design a data structure that supports adding new words and finding if a string matches any previously added string.</p>\n\n<p>Implement the <code>WordDictionary</code> class:</p>\n\n<ul>\n\t<li><code>WordDictionary()</code>&nbsp;Initializes the object.</li>\n\t<li><code>void addWord(word)</code> Adds <code>word</code> to the data structure, it can be matched later.</li>\n\t<li><code>bool search(word)</code>&nbsp;Returns <code>true</code> if there is any string in the data structure that matches <code>word</code>&nbsp;or <code>false</code> otherwise. <code>word</code> may contain dots <code>&#39;.&#39;</code> where dots can be matched with any letter.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;WordDictionary&quot;,&quot;addWord&quot;,&quot;addWord&quot;,&quot;addWord&quot;,&quot;search&quot;,&quot;search&quot;,&quot;search&quot;,&quot;search&quot;]\n[[],[&quot;bad&quot;],[&quot;dad&quot;],[&quot;mad&quot;],[&quot;pad&quot;],[&quot;bad&quot;],[&quot;.ad&quot;],[&quot;b..&quot;]]\n<strong>Output</strong>\n[null,null,null,null,false,true,true,true]\n\n<strong>Explanation</strong>\nWordDictionary wordDictionary = new WordDictionary();\nwordDictionary.addWord(&quot;bad&quot;);\nwordDictionary.addWord(&quot;dad&quot;);\nwordDictionary.addWord(&quot;mad&quot;);\nwordDictionary.search(&quot;pad&quot;); // return False\nwordDictionary.search(&quot;bad&quot;); // return True\nwordDictionary.search(&quot;.ad&quot;); // return True\nwordDictionary.search(&quot;b..&quot;); // return True\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= word.length &lt;= 25</code></li>\n\t<li><code>word</code> in <code>addWord</code> consists of lowercase English letters.</li>\n\t<li><code>word</code> in <code>search</code> consist of <code>&#39;.&#39;</code> or lowercase English letters.</li>\n\t<li>There will be at most <code>2</code> dots in <code>word</code> for <code>search</code> queries.</li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>addWord</code> and <code>search</code>.</li>\n</ul>\n",
+  "hints": [
+    "You should be familiar with how a Trie works. If not, please work on this problem: <a href=\"https://leetcode.com/problems/implement-trie-prefix-tree/\">Implement Trie (Prefix Tree)</a> first."
+  ],
+  "metaData": "{\n  \"classname\": \"WordDictionary\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"word\"\n        }\n      ],\n      \"name\": \"addWord\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"word\"\n        }\n      ],\n      \"name\": \"search\",\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"874.7K\", \"totalSubmission\": \"1.8M\", \"totalAcceptedRaw\": 874734, \"totalSubmissionRaw\": 1811976, \"acRate\": \"48.3%\"}",
+  "likes": 8071,
+  "dislikes": 492,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Implement Trie (Prefix Tree)\", \"titleSlug\": \"implement-trie-prefix-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Prefix and Suffix Search\", \"titleSlug\": \"prefix-and-suffix-search\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Match Substring After Replacement\", \"titleSlug\": \"match-substring-after-replacement\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Sum of Prefix Scores of Strings\", \"titleSlug\": \"sum-of-prefix-scores-of-strings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Prefix and Suffix Pairs II\", \"titleSlug\": \"count-prefix-and-suffix-pairs-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Prefix and Suffix Pairs I\", \"titleSlug\": \"count-prefix-and-suffix-pairs-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"WordDictionary\",\"addWord\",\"addWord\",\"addWord\",\"search\",\"search\",\"search\",\"search\"]\n[[],[\"bad\"],[\"dad\"],[\"mad\"],[\"pad\"],[\"bad\"],[\".ad\"],[\"b..\"]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 6, \"slug\": \"datadog\", \"name\": \"Datadog\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 2, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}, {\"timesEncountered\": 2, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 2, \"slug\": \"docusign\", \"name\": \"Docusign\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 2, \"slug\": \"rubrik\", \"name\": \"Rubrik\"}]}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class WordDictionary {\npublic:\n    WordDictionary() {\n        \n    }\n    \n    void addWord(string word) {\n        \n    }\n    \n    bool search(string word) {\n        \n    }\n};\n\n/**\n * Your WordDictionary object will be instantiated and called as such:\n * WordDictionary* obj = new WordDictionary();\n * obj->addWord(word);\n * bool param_2 = obj->search(word);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class WordDictionary {\n\n    public WordDictionary() {\n        \n    }\n    \n    public void addWord(String word) {\n        \n    }\n    \n    public boolean search(String word) {\n        \n    }\n}\n\n/**\n * Your WordDictionary object will be instantiated and called as such:\n * WordDictionary obj = new WordDictionary();\n * obj.addWord(word);\n * boolean param_2 = obj.search(word);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class WordDictionary:\n\n    def __init__(self):\n        \n\n    def addWord(self, word: str) -> None:\n        \n\n    def search(self, word: str) -> bool:\n        \n\n\n# Your WordDictionary object will be instantiated and called as such:\n# obj = WordDictionary()\n# obj.addWord(word)\n# param_2 = obj.search(word)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class WordDictionary(object):\n\n    def __init__(self):\n        \n\n    def addWord(self, word):\n        \"\"\"\n        :type word: str\n        :rtype: None\n        \"\"\"\n        \n\n    def search(self, word):\n        \"\"\"\n        :type word: str\n        :rtype: bool\n        \"\"\"\n        \n\n\n# Your WordDictionary object will be instantiated and called as such:\n# obj = WordDictionary()\n# obj.addWord(word)\n# param_2 = obj.search(word)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar WordDictionary = function() {\n    \n};\n\n/** \n * @param {string} word\n * @return {void}\n */\nWordDictionary.prototype.addWord = function(word) {\n    \n};\n\n/** \n * @param {string} word\n * @return {boolean}\n */\nWordDictionary.prototype.search = function(word) {\n    \n};\n\n/** \n * Your WordDictionary object will be instantiated and called as such:\n * var obj = new WordDictionary()\n * obj.addWord(word)\n * var param_2 = obj.search(word)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class WordDictionary {\n    constructor() {\n        \n    }\n\n    addWord(word: string): void {\n        \n    }\n\n    search(word: string): boolean {\n        \n    }\n}\n\n/**\n * Your WordDictionary object will be instantiated and called as such:\n * var obj = new WordDictionary()\n * obj.addWord(word)\n * var param_2 = obj.search(word)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class WordDictionary {\n\n    public WordDictionary() {\n        \n    }\n    \n    public void AddWord(string word) {\n        \n    }\n    \n    public bool Search(string word) {\n        \n    }\n}\n\n/**\n * Your WordDictionary object will be instantiated and called as such:\n * WordDictionary obj = new WordDictionary();\n * obj.AddWord(word);\n * bool param_2 = obj.Search(word);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} WordDictionary;\n\n\nWordDictionary* wordDictionaryCreate() {\n    \n}\n\nvoid wordDictionaryAddWord(WordDictionary* obj, char* word) {\n    \n}\n\nbool wordDictionarySearch(WordDictionary* obj, char* word) {\n    \n}\n\nvoid wordDictionaryFree(WordDictionary* obj) {\n    \n}\n\n/**\n * Your WordDictionary struct will be instantiated and called as such:\n * WordDictionary* obj = wordDictionaryCreate();\n * wordDictionaryAddWord(obj, word);\n \n * bool param_2 = wordDictionarySearch(obj, word);\n \n * wordDictionaryFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type WordDictionary struct {\n    \n}\n\n\nfunc Constructor() WordDictionary {\n    \n}\n\n\nfunc (this *WordDictionary) AddWord(word string)  {\n    \n}\n\n\nfunc (this *WordDictionary) Search(word string) bool {\n    \n}\n\n\n/**\n * Your WordDictionary object will be instantiated and called as such:\n * obj := Constructor();\n * obj.AddWord(word);\n * param_2 := obj.Search(word);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class WordDictionary() {\n\n    fun addWord(word: String) {\n        \n    }\n\n    fun search(word: String): Boolean {\n        \n    }\n\n}\n\n/**\n * Your WordDictionary object will be instantiated and called as such:\n * var obj = WordDictionary()\n * obj.addWord(word)\n * var param_2 = obj.search(word)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass WordDictionary {\n\n    init() {\n        \n    }\n    \n    func addWord(_ word: String) {\n        \n    }\n    \n    func search(_ word: String) -> Bool {\n        \n    }\n}\n\n/**\n * Your WordDictionary object will be instantiated and called as such:\n * let obj = WordDictionary()\n * obj.addWord(word)\n * let ret_2: Bool = obj.search(word)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct WordDictionary {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl WordDictionary {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn add_word(&self, word: String) {\n        \n    }\n    \n    fn search(&self, word: String) -> bool {\n        \n    }\n}\n\n/**\n * Your WordDictionary object will be instantiated and called as such:\n * let obj = WordDictionary::new();\n * obj.add_word(word);\n * let ret_2: bool = obj.search(word);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class WordDictionary\n    def initialize()\n        \n    end\n\n\n=begin\n    :type word: String\n    :rtype: Void\n=end\n    def add_word(word)\n        \n    end\n\n\n=begin\n    :type word: String\n    :rtype: Boolean\n=end\n    def search(word)\n        \n    end\n\n\nend\n\n# Your WordDictionary object will be instantiated and called as such:\n# obj = WordDictionary.new()\n# obj.add_word(word)\n# param_2 = obj.search(word)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class WordDictionary {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param String $word\n     * @return NULL\n     */\n    function addWord($word) {\n        \n    }\n  \n    /**\n     * @param String $word\n     * @return Boolean\n     */\n    function search($word) {\n        \n    }\n}\n\n/**\n * Your WordDictionary object will be instantiated and called as such:\n * $obj = WordDictionary();\n * $obj->addWord($word);\n * $ret_2 = $obj->search($word);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class WordDictionary {\n\n  WordDictionary() {\n    \n  }\n  \n  void addWord(String word) {\n    \n  }\n  \n  bool search(String word) {\n    \n  }\n}\n\n/**\n * Your WordDictionary object will be instantiated and called as such:\n * WordDictionary obj = WordDictionary();\n * obj.addWord(word);\n * bool param2 = obj.search(word);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class WordDictionary() {\n\n    def addWord(word: String): Unit = {\n        \n    }\n\n    def search(word: String): Boolean = {\n        \n    }\n\n}\n\n/**\n * Your WordDictionary object will be instantiated and called as such:\n * val obj = new WordDictionary()\n * obj.addWord(word)\n * val param_2 = obj.search(word)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule WordDictionary do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec add_word(word :: String.t) :: any\n  def add_word(word) do\n    \n  end\n\n  @spec search(word :: String.t) :: boolean\n  def search(word) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# WordDictionary.init_()\n# WordDictionary.add_word(word)\n# param_2 = WordDictionary.search(word)\n\n# WordDictionary.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec word_dictionary_init_() -> any().\nword_dictionary_init_() ->\n  .\n\n-spec word_dictionary_add_word(Word :: unicode:unicode_binary()) -> any().\nword_dictionary_add_word(Word) ->\n  .\n\n-spec word_dictionary_search(Word :: unicode:unicode_binary()) -> boolean().\nword_dictionary_search(Word) ->\n  .\n\n\n%% Your functions will be called as such:\n%% word_dictionary_init_(),\n%% word_dictionary_add_word(Word),\n%% Param_2 = word_dictionary_search(Word),\n\n%% word_dictionary_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define word-dictionary%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; add-word : string? -> void?\n    (define/public (add-word word)\n      )\n    ; search : string? -> boolean?\n    (define/public (search word)\n      )))\n\n;; Your word-dictionary% object will be instantiated and called as such:\n;; (define obj (new word-dictionary%))\n;; (send obj add-word word)\n;; (define param_2 (send obj search word))"
+    }
+  ],
+  "solution": {
+    "id": "972",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\n#### Data Structure Trie\n\nThis article introduces the data structure [trie](https://en.wikipedia.org/wiki/Trie). It could be pronounced in two different ways: as \"tree\" or \"try\". Trie  which is also called a digital tree or a prefix tree is a kind of search-ordered tree data structure mostly used for the efficient dynamic add/search operations with the strings.\n\nTrie is widely used in real life: autocomplete search, spell checker, T9 predictive text, [IP routing (longest prefix matching)](https://www.researchgate.net/figure/An-example-routing-table-and-the-corresponding-binary-trie-built-from-it_fig3_4236637), [some GCC containers](https://gcc.gnu.org/onlinedocs/libstdc++/ext/pb_ds/trie_based_containers.html).\n\nHere is what it looks like\n\n![fig](../Figures/211/trie.png)\n\n\n*Figure 1. Data structure trie.*\n\n\nThere are two main types of trie interview questions:\n\n- [Standard Trie](https://en.wikipedia.org/wiki/Trie). Design a structure to dynamically add and search strings, for example\n\n    - [Add and Search Word]().\n\n    - [Word Search II](https://leetcode.com/articles/word-search-ii).\n\n    - [Design Search Autocomplete System](https://leetcode.com/articles/design-search-autocomplete-system/).\n\n- [Bitwise Trie](https://en.wikipedia.org/wiki/Trie#Bitwise_tries). Design a structure to dynamically add *binary* strings and compute maximum/minimum XOR/AND/etc, for example\n\n    - [Maximum XOR of Two Number in an Array](https://leetcode.com/articles/maximum-xor-of-two-numbers-in-an-array/).\n\n#### Why Trie and not HashMap\n\nIt's quite easy to write the solution using such data structures as hashmap or balanced tree.\n\n<iframe src=\"https://leetcode.com/playground/URHygBFt/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"URHygBFt\"></iframe>\n\nThis solution passes all LeetCode test cases and formally has $$\\mathcal{O}(M \\cdot N)$$ time complexity for the search, where $$M$$ is the length of the word to find, and $$N$$ is the number of words. Although this solution is not efficient for the most important practical use cases:\n\n- Finding all keys with a common prefix.\n\n- Enumerating a dataset of strings in lexicographical order.\n\n- Scaling for the large datasets. Once the hash table increases in size, there are a lot of hash collisions and the search time complexity could degrade to $$\\mathcal{O}(N^2 \\cdot M)$$, where $$N$$ is the number of the inserted keys.\n\n    Trie could use less space compared to hashmap when storing many keys with the same prefix. In this case, using trie has only $$\\mathcal{O}(M \\cdot N)$$ time complexity, where $$M$$ is the key length, and $$N$$ is the number of keys.\n\n<br />\n<br />\n\n\n---\n### Approach 1: Trie\n\n**How to Implement Trie: addWord function**\n\n![fig](../Figures/211/add_word.png)\n\n\n*Figure 2. Trie implementation.*\n\n\nIn trie, each path from the root to the \"word\" node represents one of the input words, for example, o -> a -> t -> h is \"oath\".\n\nTrie implementation is pretty straightforward, it's basically nested hashmaps. At each step, one has to verify, if the child node to add is already present. If yes, just go one step down. If not, add it into the trie and then go one step down.\n\n!?!../Documents/211_LIS.json:1000,472!?!\n\n<iframe src=\"https://leetcode.com/playground/XQf5jTW2/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XQf5jTW2\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(M)$$, where $$M$$ is the key length. At each step, we either examine or create a node in the trie. That takes only $$M$$ operations.\n\n* Space complexity: $$\\mathcal{O}(M)$$. In the worst-case newly inserted key doesn't share a prefix with the keys already inserted in the trie. We have to add $$M$$ new nodes, which takes $$\\mathcal{O}(M)$$ space.\n\n**Search in Trie**\n\nIn the absence of '.' characters, the search would be as simple as `addWord`. Each key is represented in the trie as a path from the root to the internal node or leaf. We start from the root and go down in trie, checking character by character.\n\n![fig](../Figures/211/search2.png)\n\n\n*Figure 3. Search in trie.*\n\n\nThe presence of '.' characters forces us to explore all possible paths at each `.` level.\n\n![fig](../Figures/211/search_dot.png)\n\n\n*Figure 4. Search in trie.*\n\n\n<iframe src=\"https://leetcode.com/playground/8WKNVHAH/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8WKNVHAH\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity: $$\\mathcal{O}(M)$$ for the \"well-defined\" words without dots, where $$M$$ is the key length, and $$N$$ is a number of keys, and $$\\mathcal{O}(N \\cdot 26 ^ M)$$ for the \"undefined\" words. That corresponds to the worst-case situation of searching an undefined word $$\\underbrace{.........}_\\text{M times}$$ which is one character longer than all inserted keys.\n\n* Space complexity: $$\\mathcal{O}(1)$$ for the search of \"well-defined\" words without dots, and up to $$\\mathcal{O}(M)$$ for the \"undefined\" words, to keep the recursion stack.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/JsN2KRNX/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"JsN2KRNX\"></iframe>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

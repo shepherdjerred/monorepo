@@ -1,0 +1,152 @@
+{
+  "questionId": "642",
+  "questionFrontendId": "642",
+  "title": "Design Search Autocomplete System",
+  "titleSlug": "design-search-autocomplete-system",
+  "difficulty": "Hard",
+  "content": "<p>Design a search autocomplete system for a search engine. Users may input a sentence (at least one word and end with a special character <code>&#39;#&#39;</code>).</p>\n\n<p>You are given a string array <code>sentences</code> and an integer array <code>times</code> both of length <code>n</code> where <code>sentences[i]</code> is a previously typed sentence and <code>times[i]</code> is the corresponding number of times the sentence was typed. For each input character except <code>&#39;#&#39;</code>, return the top <code>3</code> historical hot sentences that have the same prefix as the part of the sentence already typed.</p>\n\n<p>Here are the specific rules:</p>\n\n<ul>\n\t<li>The hot degree for a sentence is defined as the number of times a user typed the exactly same sentence before.</li>\n\t<li>The returned top <code>3</code> hot sentences should be sorted by hot degree (The first is the hottest one). If several sentences have the same hot degree, use ASCII-code order (smaller one appears first).</li>\n\t<li>If less than <code>3</code> hot sentences exist, return as many as you can.</li>\n\t<li>When the input is a special character, it means the sentence ends, and in this case, you need to return an empty list.</li>\n</ul>\n\n<p>Implement the <code>AutocompleteSystem</code> class:</p>\n\n<ul>\n\t<li><code>AutocompleteSystem(String[] sentences, int[] times)</code> Initializes the object with the <code>sentences</code> and <code>times</code> arrays.</li>\n\t<li><code>List&lt;String&gt; input(char c)</code> This indicates that the user typed the character <code>c</code>.\n\t<ul>\n\t\t<li>Returns an empty array <code>[]</code> if <code>c == &#39;#&#39;</code> and stores the inputted sentence in the system.</li>\n\t\t<li>Returns the top <code>3</code> historical hot sentences that have the same prefix as the part of the sentence already typed. If there are fewer than <code>3</code> matches, return them all.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;AutocompleteSystem&quot;, &quot;input&quot;, &quot;input&quot;, &quot;input&quot;, &quot;input&quot;]\n[[[&quot;i love you&quot;, &quot;island&quot;, &quot;iroman&quot;, &quot;i love leetcode&quot;], [5, 3, 2, 2]], [&quot;i&quot;], [&quot; &quot;], [&quot;a&quot;], [&quot;#&quot;]]\n<strong>Output</strong>\n[null, [&quot;i love you&quot;, &quot;island&quot;, &quot;i love leetcode&quot;], [&quot;i love you&quot;, &quot;i love leetcode&quot;], [], []]\n\n<strong>Explanation</strong>\nAutocompleteSystem obj = new AutocompleteSystem([&quot;i love you&quot;, &quot;island&quot;, &quot;iroman&quot;, &quot;i love leetcode&quot;], [5, 3, 2, 2]);\nobj.input(&quot;i&quot;); // return [&quot;i love you&quot;, &quot;island&quot;, &quot;i love leetcode&quot;]. There are four sentences that have prefix &quot;i&quot;. Among them, &quot;ironman&quot; and &quot;i love leetcode&quot; have same hot degree. Since &#39; &#39; has ASCII code 32 and &#39;r&#39; has ASCII code 114, &quot;i love leetcode&quot; should be in front of &quot;ironman&quot;. Also we only need to output top 3 hot sentences, so &quot;ironman&quot; will be ignored.\nobj.input(&quot; &quot;); // return [&quot;i love you&quot;, &quot;i love leetcode&quot;]. There are only two sentences that have prefix &quot;i &quot;.\nobj.input(&quot;a&quot;); // return []. There are no sentences that have prefix &quot;i a&quot;.\nobj.input(&quot;#&quot;); // return []. The user finished the input, the sentence &quot;i a&quot; should be saved as a historical sentence in system. And the following input will be counted as a new search.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == sentences.length</code></li>\n\t<li><code>n == times.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 100</code></li>\n\t<li><code>1 &lt;= sentences[i].length &lt;= 100</code></li>\n\t<li><code>1 &lt;= times[i] &lt;= 50</code></li>\n\t<li><code>c</code> is a lowercase English letter, a hash <code>&#39;#&#39;</code>, or space <code>&#39; &#39;</code>.</li>\n\t<li>Each tested sentence will be a sequence of characters <code>c</code> that end with the character <code>&#39;#&#39;</code>.</li>\n\t<li>Each tested sentence will have a length in the range <code>[1, 200]</code>.</li>\n\t<li>The words in each input sentence are separated by single spaces.</li>\n\t<li>At most <code>5000</code> calls will be made to <code>input</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n    \"classname\": \"AutocompleteSystem\",\r\n    \"maxbytesperline\": 200000,\r\n    \"constructor\": {\r\n        \"params\": [\r\n            {\r\n                \"type\": \"string[]\",\r\n                \"name\": \"sentences\"\r\n            },\r\n            {\r\n                \"type\": \"integer[]\",\r\n                \"name\": \"times\"\r\n            },\r\n            {\r\n                \"type\": \"integer\",\r\n                \"name\": \"sentencesSize\",\r\n                \"lang\": \"c\",\r\n                \"value\": \"size_1\"\r\n            },\r\n            {\r\n                \"type\": \"integer\",\r\n                \"name\": \"timesSize\",\r\n                \"lang\": \"c\",\r\n                \"value\": \"size_2\"\r\n            }\r\n        ]\r\n    },\r\n    \"methods\": [\r\n        {\r\n            \"name\" : \"input\",\r\n            \"params\": [\r\n                {\r\n                    \"type\": \"character\",\r\n                    \"name\": \"c\"\r\n                }\r\n            ],\r\n            \"return\": {\r\n                \"type\": \"list<string>\"\r\n            }\r\n        }\r\n    ],\r\n    \"systemdesign\": true,\r\n    \"params\": [\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        },\r\n        {\r\n            \"name\": \"inputs\",\r\n            \"type\": \"integer[]\"\r\n        }\r\n    ],\r\n    \"return\": {\r\n        \"type\": \"list<String>\",\r\n        \"dealloc\": true\r\n    }\r\n}",
+  "stats": "{\"totalAccepted\": \"167.3K\", \"totalSubmission\": \"335.4K\", \"totalAcceptedRaw\": 167269, \"totalSubmissionRaw\": 335395, \"acRate\": \"49.9%\"}",
+  "likes": 2186,
+  "dislikes": 204,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Implement Trie (Prefix Tree)\", \"titleSlug\": \"implement-trie-prefix-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"AutocompleteSystem\",\"input\",\"input\",\"input\",\"input\"]\n[[[\"i love you\",\"island\",\"iroman\",\"i love leetcode\"],[5,3,2,2]],[\"i\"],[\" \"],[\"a\"],[\"#\"]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}, {\"timesEncountered\": 2, \"slug\": \"roblox\", \"name\": \"Roblox\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 2, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 2, \"slug\": \"mongodb\", \"name\": \"MongoDB\"}]}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Data Stream",
+      "slug": "data-stream"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class AutocompleteSystem {\npublic:\n    AutocompleteSystem(vector<string>& sentences, vector<int>& times) {\n        \n    }\n    \n    vector<string> input(char c) {\n        \n    }\n};\n\n/**\n * Your AutocompleteSystem object will be instantiated and called as such:\n * AutocompleteSystem* obj = new AutocompleteSystem(sentences, times);\n * vector<string> param_1 = obj->input(c);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class AutocompleteSystem {\n\n    public AutocompleteSystem(String[] sentences, int[] times) {\n        \n    }\n    \n    public List<String> input(char c) {\n        \n    }\n}\n\n/**\n * Your AutocompleteSystem object will be instantiated and called as such:\n * AutocompleteSystem obj = new AutocompleteSystem(sentences, times);\n * List<String> param_1 = obj.input(c);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class AutocompleteSystem:\n\n    def __init__(self, sentences: List[str], times: List[int]):\n        \n\n    def input(self, c: str) -> List[str]:\n        \n\n\n# Your AutocompleteSystem object will be instantiated and called as such:\n# obj = AutocompleteSystem(sentences, times)\n# param_1 = obj.input(c)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class AutocompleteSystem(object):\n\n    def __init__(self, sentences, times):\n        \"\"\"\n        :type sentences: List[str]\n        :type times: List[int]\n        \"\"\"\n        \n\n    def input(self, c):\n        \"\"\"\n        :type c: str\n        :rtype: List[str]\n        \"\"\"\n        \n\n\n# Your AutocompleteSystem object will be instantiated and called as such:\n# obj = AutocompleteSystem(sentences, times)\n# param_1 = obj.input(c)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} sentences\n * @param {number[]} times\n */\nvar AutocompleteSystem = function(sentences, times) {\n    \n};\n\n/** \n * @param {character} c\n * @return {string[]}\n */\nAutocompleteSystem.prototype.input = function(c) {\n    \n};\n\n/** \n * Your AutocompleteSystem object will be instantiated and called as such:\n * var obj = new AutocompleteSystem(sentences, times)\n * var param_1 = obj.input(c)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class AutocompleteSystem {\n    constructor(sentences: string[], times: number[]) {\n        \n    }\n\n    input(c: string): string[] {\n        \n    }\n}\n\n/**\n * Your AutocompleteSystem object will be instantiated and called as such:\n * var obj = new AutocompleteSystem(sentences, times)\n * var param_1 = obj.input(c)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class AutocompleteSystem {\n\n    public AutocompleteSystem(string[] sentences, int[] times) {\n        \n    }\n    \n    public IList<string> Input(char c) {\n        \n    }\n}\n\n/**\n * Your AutocompleteSystem object will be instantiated and called as such:\n * AutocompleteSystem obj = new AutocompleteSystem(sentences, times);\n * IList<string> param_1 = obj.Input(c);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} AutocompleteSystem;\n\n\nAutocompleteSystem* autocompleteSystemCreate(char** sentences, int sentencesSize, int* times, int timesSize) {\n    \n}\n\nchar** autocompleteSystemInput(AutocompleteSystem* obj, char c, int* retSize) {\n    \n}\n\nvoid autocompleteSystemFree(AutocompleteSystem* obj) {\n    \n}\n\n/**\n * Your AutocompleteSystem struct will be instantiated and called as such:\n * AutocompleteSystem* obj = autocompleteSystemCreate(sentences, sentencesSize, times, timesSize);\n * char** param_1 = autocompleteSystemInput(obj, c, retSize);\n \n * autocompleteSystemFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type AutocompleteSystem struct {\n    \n}\n\n\nfunc Constructor(sentences []string, times []int) AutocompleteSystem {\n    \n}\n\n\nfunc (this *AutocompleteSystem) Input(c byte) []string {\n    \n}\n\n\n/**\n * Your AutocompleteSystem object will be instantiated and called as such:\n * obj := Constructor(sentences, times);\n * param_1 := obj.Input(c);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class AutocompleteSystem(sentences: Array<String>, times: IntArray) {\n\n    fun input(c: Char): List<String> {\n        \n    }\n\n}\n\n/**\n * Your AutocompleteSystem object will be instantiated and called as such:\n * var obj = AutocompleteSystem(sentences, times)\n * var param_1 = obj.input(c)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass AutocompleteSystem {\n\n    init(_ sentences: [String], _ times: [Int]) {\n        \n    }\n    \n    func input(_ c: Character) -> [String] {\n        \n    }\n}\n\n/**\n * Your AutocompleteSystem object will be instantiated and called as such:\n * let obj = AutocompleteSystem(sentences, times)\n * let ret_1: [String] = obj.input(c)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct AutocompleteSystem {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl AutocompleteSystem {\n\n    fn new(sentences: Vec<String>, times: Vec<i32>) -> Self {\n        \n    }\n    \n    fn input(&self, c: char) -> Vec<String> {\n        \n    }\n}\n\n/**\n * Your AutocompleteSystem object will be instantiated and called as such:\n * let obj = AutocompleteSystem::new(sentences, times);\n * let ret_1: Vec<String> = obj.input(c);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class AutocompleteSystem\n\n=begin\n    :type sentences: String[]\n    :type times: Integer[]\n=end\n    def initialize(sentences, times)\n        \n    end\n\n\n=begin\n    :type c: Character\n    :rtype: String[]\n=end\n    def input(c)\n        \n    end\n\n\nend\n\n# Your AutocompleteSystem object will be instantiated and called as such:\n# obj = AutocompleteSystem.new(sentences, times)\n# param_1 = obj.input(c)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class AutocompleteSystem {\n    /**\n     * @param String[] $sentences\n     * @param Integer[] $times\n     */\n    function __construct($sentences, $times) {\n        \n    }\n  \n    /**\n     * @param String $c\n     * @return String[]\n     */\n    function input($c) {\n        \n    }\n}\n\n/**\n * Your AutocompleteSystem object will be instantiated and called as such:\n * $obj = AutocompleteSystem($sentences, $times);\n * $ret_1 = $obj->input($c);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class AutocompleteSystem {\n\n  AutocompleteSystem(List<String> sentences, List<int> times) {\n    \n  }\n  \n  List<String> input(String c) {\n    \n  }\n}\n\n/**\n * Your AutocompleteSystem object will be instantiated and called as such:\n * AutocompleteSystem obj = AutocompleteSystem(sentences, times);\n * List<String> param1 = obj.input(c);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class AutocompleteSystem(_sentences: Array[String], _times: Array[Int]) {\n\n    def input(c: Char): List[String] = {\n        \n    }\n\n}\n\n/**\n * Your AutocompleteSystem object will be instantiated and called as such:\n * val obj = new AutocompleteSystem(sentences, times)\n * val param_1 = obj.input(c)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule AutocompleteSystem do\n  @spec init_(sentences :: [String.t], times :: [integer]) :: any\n  def init_(sentences, times) do\n    \n  end\n\n  @spec input(c :: char) :: [String.t]\n  def input(c) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# AutocompleteSystem.init_(sentences, times)\n# param_1 = AutocompleteSystem.input(c)\n\n# AutocompleteSystem.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec autocomplete_system_init_(Sentences :: [unicode:unicode_binary()], Times :: [integer()]) -> any().\nautocomplete_system_init_(Sentences, Times) ->\n  .\n\n-spec autocomplete_system_input(C :: char()) -> [unicode:unicode_binary()].\nautocomplete_system_input(C) ->\n  .\n\n\n%% Your functions will be called as such:\n%% autocomplete_system_init_(Sentences, Times),\n%% Param_1 = autocomplete_system_input(C),\n\n%% autocomplete_system_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define autocomplete-system%\n  (class object%\n    (super-new)\n    \n    ; sentences : (listof string?)\n    ; times : (listof exact-integer?)\n    (init-field\n      sentences\n      times)\n    \n    ; input : char? -> (listof string?)\n    (define/public (input c)\n      )))\n\n;; Your autocomplete-system% object will be instantiated and called as such:\n;; (define obj (new autocomplete-system% [sentences sentences] [times times]))\n;; (define param_1 (send obj input c))"
+    }
+  ],
+  "solution": {
+    "id": "1967",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nA trie is a data structure that can be used to efficiently search for strings. If you are not familiar with tries, we highly recommend you read the official solution to [this problem](https://leetcode.com/problems/implement-trie-prefix-tree/solution) before proceeding with this approach. We will not delve into implementation details in this article and assume that you are already familiar with tries.\n\nTo summarize, a trie is a tree where each node is labeled. Here, we label each node with a character. The path from the root to any node represents the string that is built by the nodes on the path. The root represents the empty string.\n\n<img src=\"../Figures/642/1.png\" width=\"960\"> <br>\n\n\n\n---\n\n### Approach 1: Trie\n\n**Intuition**\n\nA trie is a great option whenever you want to search in a collection of strings, especially if you are searching one character at a time.\n\nIf we put all the sentences in a trie, we can walk through every sentence simultaneously with each call to `input`.\n\nWe will use a `TrieNode` class to represent the trie nodes. The `AutocompleteSystem` class will be initialized with a `TrieNode root`.\n\n<iframe src=\"https://leetcode.com/playground/iHMVVfdv/shared\" frameBorder=\"0\" width=\"100%\" height=\"191\" name=\"iHMVVfdv\"></iframe>\n\n> The additional `sentences` attribute will be used to count the number of times each sentence was typed.\n\nLet's start by defining a method `addToTrie` that takes a string `sentence` and an integer `count`. Calling `addToTrie(sentence, count)` means that `sentence` was typed `count` times, and we will update our trie to reflect that.\n\n<iframe src=\"https://leetcode.com/playground/D7oXsFdp/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"D7oXsFdp\"></iframe>\n\nAt each trie node, we have a hash map. This hash map holds all the sentences that have the current path as a prefix. Because we need to return the sentences that have been typed the most, we need to map each sentence to its count.\n\nWe can initialize the trie in the constructor with the initial `sentences`. For each `sentences[i]`, we call `addToTrie(sentences[i], times[i])`. In the future, when we finish a sentence by calling `input('#')`, we can easily add the sentence we have typed by calling `addToTrie(sentence, 1)`.\n\nNext, let's talk about how we can implement the `input` function. Calling this function repeatedly represents typing out a sentence. We can keep a class attribute `currSentence` which represents the current sentence we are typing. Additionally, let's keep a class attribute `currNode` that represents the current node in the trie we are located at. Whenever we start typing a new sentence, we set `currNode = root`.\n\nEach time we call `input(c)`, there are 3 possibilities:\n\n1. `c == '#'`: We have finished typing the current sentence. Add `currSentence` as a string to the trie using the `addToTrie` function, and reset our class variables in preparation for the next sentence. Empty `currSentence` and set `currNode = root`, then return an empty list.\n2. `c != '#'`, and `c` is a child of `currNode`: there are some existing sentences that have the current sentence we are typing as a prefix. First, let's add `c` to `currSentence`. Next, walk to the child node by doing `currNode = currNode.children[c]`. Now, fetch the sentences that have the current sentence as a prefix - we store them in the hash map `currNode.sentences` with the mapping `sentence: count`. Finally, sort these sentences according to their count, and return the top 3 sentences according to the criteria in the problem description.\n3. `c != '#'`, but `c` is not a child of `currNode`: there are no existing sentences that have the current sentence we are typing as a prefix. We just need to add `c` to `currSentence` and return an empty list.\n\nHere's an implementation of the above logic:\n\n<iframe src=\"https://leetcode.com/playground/cgkxLxBV/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"cgkxLxBV\"></iframe>\n\nWe can now combine everything to fully implement our solution.\n\n**Algorithm**\n\n1. Create a `TrieNode` class with two attributes:\n    - `children`, a hash map that maps characters to `TrieNode`.\n    - `sentences`, a hash map that maps strings to integers.\n2. Create the function `addToTrie(sentence, count)` that adds `sentence` to the trie `count` times.\n3. `AutocompleteSystem` is initialized with the following attributes:\n    - `root` of type `TrieNode`, the root of our trie.\n    - `currNode` of type `TrieNode`, the current node we are located at in our trie.\n    - `dead` of type `TrieNode`, a dummy node.\n    - `currSentence` of type `StringBuilder` or `list`, depending on the language. This is the current sentence we are typing.\n4. In the constructor of `AutocompleteSystem`, call `addToTrie(sentences[i], times[i])` for each index `i`.\n5. In `input(c)`:\n    - If `c == '#'`, convert `currSentence` to a string and add it to the trie with `addToTrie`. Reset `currSentence` and `currNode` to the root. Return an empty array.\n    - Otherwise, add `c` to `currSentence`. Now, check if `c` is in `currNode.children`.\n    - If it isn't, set `currNode = dead` and return an empty array.\n    - If it is, move `currNode` to the child with `currNode = currNode.children[c]`. Next, fetch the sentences in `currNode.sentences`, sort them, and return the top 3.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/ADxvFfCv/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ADxvFfCv\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `sentences`, $$k$$ as the average length of all sentences, and $$m$$ as the number of times `input` is called,\n\n* Time complexity: $$O(n \\cdot k + m \\cdot (n + \\frac{m}{k}) \\cdot \\log{(n + \\frac{m}{k})})$$\n\n    `constructor`:\n    - We initialize the trie, which costs $$O(n \\cdot k)$$ as we iterate over each character in each sentence.\n\n    `input`:\n    - We add a character to `currSentence` and the trie, both cost $$O(1)$$. Next, we fetch and sort the sentences in the current node. Initially, a node could hold $$O(n)$$ sentences. After we call `input` $$m$$ times, we could add $$\\frac{m}{k}$$ new sentences. Overall, there could be up to $$O(n + \\frac{m}{k})$$ sentences, so a sort would cost $$O((n + \\frac{m}{k}) \\cdot \\log{(n + \\frac{m}{k})})$$.\n    - The work done in the other cases (like adding a new sentence to the trie) will be dominated by this sort.\n    - `input` is called $$m$$ times, which gives us a total of $$O(m \\cdot (n + \\frac{m}{k}) \\cdot \\log{(n + \\frac{m}{k})})$$\n\n* Space complexity: $$O(k \\cdot (n \\cdot k + m))$$\n\n    The worst-case scenario for the trie size is when no two sentences share any prefix. The trie will initially have a size of $$n \\cdot k$$. Then, each call to `input` would create a new node.\n\n    Each of these trie nodes has `children` and `sentences` hash maps. The size of `children` is limited to 26, so we will ignore it. The size of `sentences` is variable, but in the case described, each node will only have 1 entry (because no two sentences share any prefix, so no trie node is visited by more than one sentence). This 1 entry will have a size of $$O(k)$$.\n    \n<br/>\n\n---\n\n### Approach 2: Optimize with Heap\n\n**Intuition**\n\nThe most expensive part of our algorithm in the previous approach was sorting the sentences. We can improve by using a heap instead of just using the built-in sorting algorithm.\n\nOnce we fetch `currNode.sentences`, we will convert it into a heap. Then, we can extract the top 3 sentences from the heap. Everything else will mostly be the same as in the previous approach, so we will just discuss the differences between the two approaches.\n\n**Python**\n\nPython's `heapq` module provides functions `nsmallest` and `nlargest`. They take lists as input and return the `n` best elements. When performed on a list of length $$m$$, these methods have a time complexity of $$O(m + n \\cdot \\log m)$$. We have `n = 3` here, so the time complexity is $$O(m + \\log m) = O(m)$$.\n\nImplementation of the `heapq` functions can be [found here](https://github.com/python/cpython/blob/3.11/Lib/heapq.py).\n\nBy default, `heap` implements min-heaps. Because we want the sentences with larger counts, we need to emulate a max heap. We can do this by modifying `addToTrie`. Instead of doing `+= count`, we will do `-= count`. As the counts are negatives, the larger magnitudes will be considered \"better\" by the min-heap.\n\nThe heap will hold elements as `(count, sentence)`. `heapq` will automatically handle tiebreaks when `count` is equal. `heapq.nsmallest` will give us our answer.\n\n**Java**\n\nPython's `heapq` module is very efficient. It uses a method `heapify` that can convert a list to a heap in linear time. Unfortunately, there is no built-in equivalent method in Java, so we will use a standard \"top k elements\" method.\n\nWe initialize our heap with a custom comparator, similar to the custom comparator we used in the previous approach. However, we will flip the logic in the comparator so that \"worse\" sentences get removed first. We iterate over the sentences and push each one onto the heap. When the heap's size exceeds 3, we pop from it. After handling all sentences, the 3 best sentences will remain in the heap. Now, we simply extract and reverse them.\n\nThe reversal is necessary because the problem wants the 3 sentences in sorted order as well. We changed our custom comparator to be the opposite, so after extracting the 3 sentences, they will be in backward order.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/eBVu6zD5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"eBVu6zD5\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `sentences`, $$k$$ as the average length of all sentences, and $$m$$ as the number of times `input` is called,\n\n> This analysis will assume that you have access to a linear time heapify method, like in the Python implementation.\n\n* Time complexity: $$O(n \\cdot k + m \\cdot (n + \\frac{m}{k}))$$\n\n    `constructor`:\n    - We initialize the trie, which costs $$O(n \\cdot k)$$ as we iterate over each character in each sentence.\n\n    `input`:\n    - We add a character to `currSentence` and the trie, both cost $$O(1)$$. Next, we fetch the sentences in the current node. Initially, a node could hold $$O(n)$$ sentences. After we call `input` $$m$$ times, we could add $$\\frac{m}{k}$$ new sentences. Overall, there could be up to $$O(n + \\frac{m}{k})$$ sentences. We heapify these sentences and find the best 3 in linear time, which costs $$O(n + \\frac{m}{k})$$.\n    - The work done in the other cases (like adding a new sentence to the trie) will be dominated by this.\n    - `input` is called $$m$$ times, which gives us a total of $$O(m \\cdot (n + \\frac{m}{k}))$$.\n\n* Space complexity: $$O(k \\cdot (n \\cdot k + m))$$\n\n    The worst-case scenario for the trie size is when no two sentences share any prefix. The trie will initially have a size of $$n \\cdot k$$. Then, each call to `input` would create a new node.\n\n    Each of these trie nodes has `children` and `sentences` hash maps. The size of `children` is limited to 26, so we will ignore it. The size of `sentences` is variable, but in the case described, each node will only have 1 entry (because no two sentences share any prefix, so no trie node is visited by more than one sentence). This 1 entry will have a size of $$O(k)$$.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

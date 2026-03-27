@@ -1,0 +1,140 @@
+{
+  "questionId": "346",
+  "questionFrontendId": "346",
+  "title": "Moving Average from Data Stream",
+  "titleSlug": "moving-average-from-data-stream",
+  "difficulty": "Easy",
+  "content": "<p>Given a stream of integers and a window size, calculate the moving average of all integers in the sliding window.</p>\n\n<p>Implement the&nbsp;<code>MovingAverage</code> class:</p>\n\n<ul>\n\t<li><code>MovingAverage(int size)</code> Initializes&nbsp;the object with the size of the window <code>size</code>.</li>\n\t<li><code>double next(int val)</code> Returns the moving average of the last <code>size</code> values of the stream.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;MovingAverage&quot;, &quot;next&quot;, &quot;next&quot;, &quot;next&quot;, &quot;next&quot;]\n[[3], [1], [10], [3], [5]]\n<strong>Output</strong>\n[null, 1.0, 5.5, 4.66667, 6.0]\n\n<strong>Explanation</strong>\nMovingAverage movingAverage = new MovingAverage(3);\nmovingAverage.next(1); // return 1.0 = 1 / 1\nmovingAverage.next(10); // return 5.5 = (1 + 10) / 2\nmovingAverage.next(3); // return 4.66667 = (1 + 10 + 3) / 3\nmovingAverage.next(5); // return 6.0 = (10 + 3 + 5) / 3\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= size &lt;= 1000</code></li>\n\t<li><code>-10<sup>5</sup> &lt;= val &lt;= 10<sup>5</sup></code></li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <code>next</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"classname\": \"MovingAverage\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"size\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"val\"\n        }\n      ],\n      \"name\": \"next\",\n      \"return\": {\n        \"type\": \"double\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"530.1K\", \"totalSubmission\": \"660.9K\", \"totalAcceptedRaw\": 530112, \"totalSubmissionRaw\": 660901, \"acRate\": \"80.2%\"}",
+  "likes": 1753,
+  "dislikes": 193,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"K Radius Subarray Averages\", \"titleSlug\": \"k-radius-subarray-averages\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"MovingAverage\",\"next\",\"next\",\"next\",\"next\"]\n[[3],[1],[10],[3],[5]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"spotify\", \"name\": \"Spotify\"}], \"more_than_six_months\": [{\"timesEncountered\": 26, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"tesla\", \"name\": \"Tesla\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Data Stream",
+      "slug": "data-stream"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class MovingAverage {\npublic:\n    MovingAverage(int size) {\n        \n    }\n    \n    double next(int val) {\n        \n    }\n};\n\n/**\n * Your MovingAverage object will be instantiated and called as such:\n * MovingAverage* obj = new MovingAverage(size);\n * double param_1 = obj->next(val);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class MovingAverage {\n\n    public MovingAverage(int size) {\n        \n    }\n    \n    public double next(int val) {\n        \n    }\n}\n\n/**\n * Your MovingAverage object will be instantiated and called as such:\n * MovingAverage obj = new MovingAverage(size);\n * double param_1 = obj.next(val);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class MovingAverage:\n\n    def __init__(self, size: int):\n        \n\n    def next(self, val: int) -> float:\n        \n\n\n# Your MovingAverage object will be instantiated and called as such:\n# obj = MovingAverage(size)\n# param_1 = obj.next(val)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class MovingAverage(object):\n\n    def __init__(self, size):\n        \"\"\"\n        :type size: int\n        \"\"\"\n        \n\n    def next(self, val):\n        \"\"\"\n        :type val: int\n        :rtype: float\n        \"\"\"\n        \n\n\n# Your MovingAverage object will be instantiated and called as such:\n# obj = MovingAverage(size)\n# param_1 = obj.next(val)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} size\n */\nvar MovingAverage = function(size) {\n    \n};\n\n/** \n * @param {number} val\n * @return {number}\n */\nMovingAverage.prototype.next = function(val) {\n    \n};\n\n/** \n * Your MovingAverage object will be instantiated and called as such:\n * var obj = new MovingAverage(size)\n * var param_1 = obj.next(val)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class MovingAverage {\n    constructor(size: number) {\n        \n    }\n\n    next(val: number): number {\n        \n    }\n}\n\n/**\n * Your MovingAverage object will be instantiated and called as such:\n * var obj = new MovingAverage(size)\n * var param_1 = obj.next(val)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class MovingAverage {\n\n    public MovingAverage(int size) {\n        \n    }\n    \n    public double Next(int val) {\n        \n    }\n}\n\n/**\n * Your MovingAverage object will be instantiated and called as such:\n * MovingAverage obj = new MovingAverage(size);\n * double param_1 = obj.Next(val);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} MovingAverage;\n\n\nMovingAverage* movingAverageCreate(int size) {\n    \n}\n\ndouble movingAverageNext(MovingAverage* obj, int val) {\n    \n}\n\nvoid movingAverageFree(MovingAverage* obj) {\n    \n}\n\n/**\n * Your MovingAverage struct will be instantiated and called as such:\n * MovingAverage* obj = movingAverageCreate(size);\n * double param_1 = movingAverageNext(obj, val);\n \n * movingAverageFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type MovingAverage struct {\n    \n}\n\n\nfunc Constructor(size int) MovingAverage {\n    \n}\n\n\nfunc (this *MovingAverage) Next(val int) float64 {\n    \n}\n\n\n/**\n * Your MovingAverage object will be instantiated and called as such:\n * obj := Constructor(size);\n * param_1 := obj.Next(val);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class MovingAverage(size: Int) {\n\n    fun next(`val`: Int): Double {\n        \n    }\n\n}\n\n/**\n * Your MovingAverage object will be instantiated and called as such:\n * var obj = MovingAverage(size)\n * var param_1 = obj.next(`val`)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass MovingAverage {\n\n    init(_ size: Int) {\n        \n    }\n    \n    func next(_ val: Int) -> Double {\n        \n    }\n}\n\n/**\n * Your MovingAverage object will be instantiated and called as such:\n * let obj = MovingAverage(size)\n * let ret_1: Double = obj.next(val)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct MovingAverage {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl MovingAverage {\n\n    fn new(size: i32) -> Self {\n        \n    }\n    \n    fn next(&self, val: i32) -> f64 {\n        \n    }\n}\n\n/**\n * Your MovingAverage object will be instantiated and called as such:\n * let obj = MovingAverage::new(size);\n * let ret_1: f64 = obj.next(val);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class MovingAverage\n\n=begin\n    :type size: Integer\n=end\n    def initialize(size)\n        \n    end\n\n\n=begin\n    :type val: Integer\n    :rtype: Float\n=end\n    def next(val)\n        \n    end\n\n\nend\n\n# Your MovingAverage object will be instantiated and called as such:\n# obj = MovingAverage.new(size)\n# param_1 = obj.next(val)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class MovingAverage {\n    /**\n     * @param Integer $size\n     */\n    function __construct($size) {\n        \n    }\n  \n    /**\n     * @param Integer $val\n     * @return Float\n     */\n    function next($val) {\n        \n    }\n}\n\n/**\n * Your MovingAverage object will be instantiated and called as such:\n * $obj = MovingAverage($size);\n * $ret_1 = $obj->next($val);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class MovingAverage {\n\n  MovingAverage(int size) {\n    \n  }\n  \n  double next(int val) {\n    \n  }\n}\n\n/**\n * Your MovingAverage object will be instantiated and called as such:\n * MovingAverage obj = MovingAverage(size);\n * double param1 = obj.next(val);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class MovingAverage(_size: Int) {\n\n    def next(`val`: Int): Double = {\n        \n    }\n\n}\n\n/**\n * Your MovingAverage object will be instantiated and called as such:\n * val obj = new MovingAverage(size)\n * val param_1 = obj.next(`val`)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule MovingAverage do\n  @spec init_(size :: integer) :: any\n  def init_(size) do\n    \n  end\n\n  @spec next(val :: integer) :: float\n  def next(val) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# MovingAverage.init_(size)\n# param_1 = MovingAverage.next(val)\n\n# MovingAverage.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec moving_average_init_(Size :: integer()) -> any().\nmoving_average_init_(Size) ->\n  .\n\n-spec moving_average_next(Val :: integer()) -> float().\nmoving_average_next(Val) ->\n  .\n\n\n%% Your functions will be called as such:\n%% moving_average_init_(Size),\n%% Param_1 = moving_average_next(Val),\n\n%% moving_average_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define moving-average%\n  (class object%\n    (super-new)\n    \n    ; size : exact-integer?\n    (init-field\n      size)\n    \n    ; next : exact-integer? -> flonum?\n    (define/public (next val)\n      )))\n\n;; Your moving-average% object will be instantiated and called as such:\n;; (define obj (new moving-average% [size size]))\n;; (define param_1 (send obj next val))"
+    }
+  ],
+  "solution": {
+    "id": "777",
+    "content": "[TOC]\n\n## Video Solution\n---\n\n<div>\n    <div class=\"video-container\">\n        <iframe src=\"https://player.vimeo.com/video/782769732\" width=\"640\" height=\"360\" frameborder=\"0\" allow=\"autoplay; fullscreen\" allowfullscreen></iframe>\n    </div>\n</div>\n\n<div>&nbsp;\n</div>\n\n## Solution Article\n\n---\n\n### Approach 1: Array or List\n\n#### Intuition\n\nFollowing the description of the problem, we could simply keep track of all the incoming values with the data structure of *Array* or *List*. Then from the data structure, later we retrieve the necessary elements to calculate the average. \n\n![pic](../Figures/346/346_array.png)\n\n#### Algorithm\n\n- First, we initialize a variable `queue` to store the values from the data stream, and the variable `n` for the size of the moving window.\n\n- At each invocation of `next(val)`, we first append the value to the queue. We then retrieve the last `n` values from the queue, in order to calculate the average. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/dV7gfagb/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"dV7gfagb\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the size of the moving window and $M$ be the number of calls made to `next`.\n\n- Time complexity: $O(N \\cdot M)$\n\n    The `next` method is called $M$ times. In each call, the method iterates over the last $N$ elements of the queue to calculate the sum of the moving window. Since the maximum number of elements in the window is $N$, the loop runs in $O(N)$ time for each call to `next`. Therefore, the total time complexity for $M$ calls is $O(N \\cdot M)$.\n\n    Additionally, the `queue.add(val)` operation is $O(1)$ on average for an `ArrayList`, so it does not significantly affect the overall time complexity.\n\n- Space complexity: $O(M)$\n\n    The space complexity is dominated by the storage of the queue, which can grow up to the size of the total number of elements added to it. Since `next` is called $M$ times, the queue can store up to $M$ elements. Therefore, the space complexity is $O(M)$.\n\n    The auxiliary space used for variables like `windowSum` and loop indices is constant, so it does not affect the overall space complexity.\n\n---\n\n### Approach 2: Double-ended Queue\n\n#### Intuition\n\nWe could do better than the first approach in both time and space complexity.\n\n>First of all, one might notice that we do not need to keep all values from the data stream, but rather the last `n` values which falls into the moving window.\n\nBy definition of the moving window, at each step, we add a new element to the window, and at the same time we remove the oldest element from the window. Here, we could apply a data structure called *double-ended queue* (_a.k.a_ deque) to implement the moving window, which would have the constant time complexity ($$\\mathcal{O}(1)$$) to add or remove an element from both its ends. With the deque, we could reduce the space complexity down to $$\\mathcal{O}(N)$$ where $$N$$ is the size of the moving window.\n\n![pic](../Figures/346/346_deque.png)\n\n>Secondly, to calculate the sum, we do not need to reiterate the elements in the moving window.\n\nWe could keep the sum of the previous moving window, then in order to obtain the sum of the new moving window, we simply add the new element and deduce the oldest element. With this measure, we then can reduce the time complexity to constant.\n\n#### Algorithm\n\nHere is the definition of the _deque_ from Python. We have similar implementation of deque in other programming languages such as Java.\n\n>Deques are a generalization of stacks and queues (the name is pronounced `deck` and is short for `double-ended queue`). Deques support thread-safe, memory efficient appends and pops from either side of the deque with approximately the same O(1) performance in either direction.\n\nFollow the intuition, we replace the queue with the _deque_ and add a new variable `window_sum` in order to calculate the sum of moving window in constant time.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/hnbwWQnf/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"hnbwWQnf\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(M)$\n\n    The `next` method is called $M$ times. In each call, the operations performed include adding an element to the `Deque` (`queue.add(val)`), potentially removing an element from the front of the `Deque`, and updating the `windowSum`. All these operations are $O(1)$ since deque supports constant-time add and poll operations. Therefore, the total time complexity for $M$ calls is $O(M)$.\n\n    Unlike the previous implementation, this approach avoids iterating over the entire window for each call, making it a bit more efficient.\n\n- Space complexity: $O(N)$\n\n    The space complexity is dominated by the storage of the `Deque`, which stores at most $N$ elements (the size of the moving window). Even if `next` is called $M$ times, the `Deque` will never grow beyond $N$ elements because elements are removed when the window size exceeds $N$. Therefore, the space complexity is $O(N)$.\n\n    The auxiliary space used for variables like `windowSum`, `count`, and `tail` is constant, so it does not affect the overall space complexity.\n\n---\n\n### Approach 3: Circular Queue with Array\n\n#### Intuition\n\nOther than the _deque_ data structure, one could also apply another fun data structure called `circular queue`, which is basically a queue with the circular shape.\n\n![pic](../Figures/346/346_circular_queue.png)\n\n- The major advantage of circular queue is that by adding a new element to a full circular queue, it automatically discards the oldest element. Unlike deque, we do not need to explicitly remove the oldest element.\n<br/>\n- Another advantage of circular queue is that a single index suffices to keep track of both ends of the queue, unlike deque where we have to keep a pointer for each end.\n\n#### Algorithm\n\nNo need to resort to any library, one could easily implement a circular queue with a fixed-size array. The key to the implementation is the correlation between the index of `head` and `tail` elements, which we could summarize in the following formula:\n\n$$\n    \\text{tail} = (\\text{head} + 1) \\mod \\text{size}\n$$\n\nIn other words, the `tail` element is right next to the `head` element. Once we move the head forward, we would overwrite the previous tail element.\n\n![pic](../Figures/346/346_snake.png)\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/N3VrYVQ9/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"N3VrYVQ9\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(M)$\n\n    The `next` method is called $M$ times. In each call, the operations performed include calculating the tail index, updating the `windowSum`, updating the `head` pointer, and storing the new value in the `queue` array. All these operations are $O(1)$ since they involve simple arithmetic operations and array accesses. Therefore, the total time complexity for $M$ calls is $O(M)$.\n\n    This is highly efficient because it avoids iterating over the entire window and instead uses a circular buffer to manage the moving window.\n\n- Space complexity: $O(N)$\n\n    The space complexity is dominated by the storage of the `queue` array, which has a fixed size of $N$ (the size of the moving window). The array does not grow with the number of calls to `next`, so the space complexity is $O(N)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

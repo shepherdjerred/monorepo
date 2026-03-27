@@ -1,0 +1,138 @@
+{
+  "questionId": "227",
+  "questionFrontendId": "227",
+  "title": "Basic Calculator II",
+  "titleSlug": "basic-calculator-ii",
+  "difficulty": "Medium",
+  "content": "<p>Given a string <code>s</code> which represents an expression, <em>evaluate this expression and return its value</em>.&nbsp;</p>\n\n<p>The integer division should truncate toward zero.</p>\n\n<p>You may assume that the given expression is always valid. All intermediate results will be in the range of <code>[-2<sup>31</sup>, 2<sup>31</sup> - 1]</code>.</p>\n\n<p><strong>Note:</strong> You are not allowed to use any built-in function which evaluates strings as mathematical expressions, such as <code>eval()</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> s = \"3+2*2\"\n<strong>Output:</strong> 7\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> s = \" 3/2 \"\n<strong>Output:</strong> 1\n</pre><p><strong class=\"example\">Example 3:</strong></p>\n<pre><strong>Input:</strong> s = \" 3+5 / 2 \"\n<strong>Output:</strong> 5\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 3 * 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists of integers and operators <code>(&#39;+&#39;, &#39;-&#39;, &#39;*&#39;, &#39;/&#39;)</code> separated by some number of spaces.</li>\n\t<li><code>s</code> represents <strong>a valid expression</strong>.</li>\n\t<li>All the integers in the expression are non-negative integers in the range <code>[0, 2<sup>31</sup> - 1]</code>.</li>\n\t<li>The answer is <strong>guaranteed</strong> to fit in a <strong>32-bit integer</strong>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"calculate\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"s\",\r\n      \"type\": \"string\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"940.4K\", \"totalSubmission\": \"2M\", \"totalAcceptedRaw\": 940428, \"totalSubmissionRaw\": 2011609, \"acRate\": \"46.8%\"}",
+  "likes": 6601,
+  "dislikes": 953,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Basic Calculator\", \"titleSlug\": \"basic-calculator\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Expression Add Operators\", \"titleSlug\": \"expression-add-operators\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Basic Calculator III\", \"titleSlug\": \"basic-calculator-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Evaluate Valid Expressions\", \"titleSlug\": \"evaluate-valid-expressions\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"3+2*2\"",
+    "\" 3/2 \"",
+    "\" 3+5 / 2 \""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"keeptruckin\", \"name\": \"Motive\"}], \"six_months\": [{\"timesEncountered\": 6, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"rivian\", \"name\": \"Rivian\"}, {\"timesEncountered\": 2, \"slug\": \"ixl\", \"name\": \"IXL\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 8, \"slug\": \"tesla\", \"name\": \"Tesla\"}, {\"timesEncountered\": 7, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 7, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 7, \"slug\": \"rokt\", \"name\": \"Rokt\"}, {\"timesEncountered\": 6, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 4, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}, {\"timesEncountered\": 4, \"slug\": \"verkada\", \"name\": \"Verkada\"}, {\"timesEncountered\": 4, \"slug\": \"zoox\", \"name\": \"Zoox\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}]}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int calculate(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int calculate(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def calculate(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def calculate(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar calculate = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function calculate(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int Calculate(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int calculate(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func calculate(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun calculate(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func calculate(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn calculate(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef calculate(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function calculate($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int calculate(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def calculate(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec calculate(s :: String.t) :: integer\n  def calculate(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec calculate(S :: unicode:unicode_binary()) -> integer().\ncalculate(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (calculate s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1026",
+    "content": "[TOC]\n\n## Solution\n\n---\n### Overview\nThere are multiple variations of this problem like [Basic Calculator](https://leetcode.com/problems/basic-calculator/) and [Basic Calculator III](https://leetcode.com/problems/basic-calculator-iii/). This problem is relatively simpler to solve, as we don't have to take care of the parenthesis.\n\nThe aim is to evaluate the given mathematical expression by applying the basic mathematical rules. The expressions are evaluated from left to right and the order of evaluation depends on the [Operator Precedence](https://en.wikipedia.org/wiki/Order_of_operations). Let's understand how we could implement the problem using different approaches.\n\n---\n### Approach 1: Using Stack\n\n#### Intuition\n\nWe know that there could be 4 types of operations - addition `(+)`, subtraction `(-)`, multiplication `(*)` and division `(/)`.  Without parenthesis, we know that, multiplication  `(*)` and `(\\)` operations would always have higher precedence than addition `(+)` and subtraction `(-)` based on operator precedence rules.\n\n ![img](../Figures/227/calculator_overview.png)\n\nIf we look at the above examples, we can make the following observations -\n- If the current operation is addition `(+)` or subtraction `(-)`, then the expression is evaluated based on the precedence of the next operation.\n\nIn example 1, `4+3` is evaluated later because the next operation is multiplication `(3*5)` which has higher precedence.\nBut,  in example 2, `4+3` is evaluated first because the next operation is subtraction `(3-5)` which has equal precedence.\n\n- If the current operator is multiplication `(*)` or division `(/)`, then the expression is evaluated irrespective of the next operation. This is because in the given set of operations `(+,-,*,/)`, the  `*` and `/` operations have the highest precedence and therefore must be evaluated first.\n\nIn the above examples 3 and 4, `4*3` is always evaluated first irrespective of the next operation.\n\nUsing this intuition let's look at the algorithm to implement the problem.\n\n\n#### Algorithm\n\nScan the input string `s` from left to right and evaluate the expressions based on the following rules\n\n1) If the current character is a digit `0-9` ( operand ), add it to the number `currentNumber`.\n2) Otherwise, the current character must be an operation `(+,-,*, /)`. Evaluate the expression based on the type of operation.\n- Addition `(+)` or Subtraction `(-)`: We must evaluate the expression later based on the next operation. So, we must store the `currentNumber` to be used later. Let's push the currentNumber in the Stack.\n\n>[Stack data structure](https://leetcode.com/explore/learn/card/queue-stack/230/usage-stack/) follows Last In First Out (LIFO) principle. Hence, the last pushed number in the stack would be popped out first for evaluation.  In addition, when we pop from the stack and evaluate this expression in the future, we need a way to determine if the operation was Addition `(+)` or Subtraction `(-)`. To simplify our evaluation, we can push `-currentNumber` in a stack if the current operation is subtraction (`-`) and assume that the operation for all the values in the stack is addition `(+)`. This works because `(a - currentNumber)` is equivalent to `(a + (-currentNumber))`.\n\n - Multiplication `(*)` or Division `(/)`: Pop the top values from the stack and evaluate the current expression. Push the evaluated value back to the stack.\n\nOnce the string is scanned, pop from the stack and add to the `result`.\n\n\n!?!../Documents/227_LIS.json:1414,716!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/6A5bNZvg/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6A5bNZvg\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity: $$\\mathcal{O}(n)$$,  where $$n$$ is the length of the string $$s$$. We iterate over the string $$s$$ at most twice.\n\n* Space Complexity: $$\\mathcal{O}(n)$$, where $$n$$ is the length of the string $$s$$.\n\n---\n### Approach 2: Optimised Approach without the stack\n\n#### Intuition\n\nIn the previous approach, we used a stack to track the values of the evaluated expressions. In the end, we pop all the values from the stack and add to the result. Instead of that, we could add the values to the result beforehand and keep track of the last calculated number, thus eliminating the need for the stack. Let's understand the algorithm in detail.\n\n#### Algorithm\n\nThe approach works similar to _Approach 1_ with the following differences :\n\n- Instead of using a `stack`, we use a variable `lastNumber` to track the value of the last evaluated expression.\n- If the operation is Addition `(+)` or Subtraction `(-)`, add the `lastNumber` to the result instead of pushing it to the stack. The `currentNumber` would be updated to `lastNumber` for the next iteration.\n- If the operation is Multiplication `(*)` or Division `(/)`, we must evaluate the expression `lastNumber * currentNumber` and update the `lastNumber` with the result of the expression.  This would be added to the result after the entire string is scanned.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ao7b4uv8/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ao7b4uv8\"></iframe>\n\n#### Complexity Analysis\n\n* Time Complexity: $$\\mathcal{O}(n)$$,  where $$n$$ is the length of the string $$s$$.\n\n* Space Complexity: $$\\mathcal{O}(1)$$, as we use constant extra space to store `lastNumber`, `result` and so on.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

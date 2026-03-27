@@ -1,0 +1,150 @@
+{
+  "questionId": "268",
+  "questionFrontendId": "268",
+  "title": "Missing Number",
+  "titleSlug": "missing-number",
+  "difficulty": "Easy",
+  "content": "<p>Given an array <code>nums</code> containing <code>n</code> distinct numbers in the range <code>[0, n]</code>, return <em>the only number in the range that is missing from the array.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [3,0,1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><code>n = 3</code> since there are 3 numbers, so all numbers are in the range <code>[0,3]</code>. 2 is the missing number in the range since it does not appear in <code>nums</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [0,1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><code>n = 2</code> since there are 2 numbers, so all numbers are in the range <code>[0,2]</code>. 2 is the missing number in the range since it does not appear in <code>nums</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [9,6,4,2,3,5,7,0,1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">8</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><code>n = 9</code> since there are 9 numbers, so all numbers are in the range <code>[0,9]</code>. 8 is the missing number in the range since it does not appear in <code>nums</code>.</p>\n</div>\n\n<div class=\"simple-translate-system-theme\" id=\"simple-translate\">\n<div>\n<div class=\"simple-translate-button isShow\" style=\"background-image: url(&quot;moz-extension://8a9ffb6b-7e69-4e93-aae1-436a1448eff6/icons/512.png&quot;); height: 22px; width: 22px; top: 318px; left: 36px;\">&nbsp;</div>\n\n<div class=\"simple-translate-panel \" style=\"width: 300px; height: 200px; top: 0px; left: 0px; font-size: 13px;\">\n<div class=\"simple-translate-result-wrapper\" style=\"overflow: hidden;\">\n<div class=\"simple-translate-move\" draggable=\"true\">&nbsp;</div>\n\n<div class=\"simple-translate-result-contents\">\n<p class=\"simple-translate-result\" dir=\"auto\">&nbsp;</p>\n\n<p class=\"simple-translate-candidate\" dir=\"auto\">&nbsp;</p>\n</div>\n</div>\n</div>\n</div>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= n</code></li>\n\t<li>All the numbers of <code>nums</code> are <strong>unique</strong>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> Could you implement a solution using only <code>O(1)</code> extra space complexity and <code>O(n)</code> runtime complexity?</p>\n",
+  "hints": [],
+  "metaData": "{\r\n  \"name\": \"missingNumber\",\r\n  \"params\": [\r\n    {\r\n      \"name\": \"nums\",\r\n      \"type\": \"integer[]\"\r\n    }\r\n  ],\r\n  \"return\": {\r\n    \"type\": \"integer\"\r\n  }\r\n}",
+  "stats": "{\"totalAccepted\": \"3.8M\", \"totalSubmission\": \"5.3M\", \"totalAcceptedRaw\": 3809735, \"totalSubmissionRaw\": 5307036, \"acRate\": \"71.8%\"}",
+  "likes": 14263,
+  "dislikes": 3472,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"First Missing Positive\", \"titleSlug\": \"first-missing-positive\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Single Number\", \"titleSlug\": \"single-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Duplicate Number\", \"titleSlug\": \"find-the-duplicate-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Couples Holding Hands\", \"titleSlug\": \"couples-holding-hands\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find Unique Binary String\", \"titleSlug\": \"find-unique-binary-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Largest Almost Missing Integer\", \"titleSlug\": \"find-the-largest-almost-missing-integer\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,0,1]",
+    "[0,1]",
+    "[9,6,4,2,3,5,7,0,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"arista-networks\", \"name\": \"Arista Networks\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"more_than_six_months\": [{\"timesEncountered\": 22, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 7, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 6, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"revolut\", \"name\": \"Revolut\"}, {\"timesEncountered\": 2, \"slug\": \"blackrock\", \"name\": \"BlackRock\"}, {\"timesEncountered\": 2, \"slug\": \"aqr-capital-management-llc\", \"name\": \"AQR Capital Management\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int missingNumber(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int missingNumber(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def missingNumber(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def missingNumber(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar missingNumber = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function missingNumber(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MissingNumber(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int missingNumber(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func missingNumber(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun missingNumber(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func missingNumber(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn missing_number(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef missing_number(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function missingNumber($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int missingNumber(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def missingNumber(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec missing_number(nums :: [integer]) :: integer\n  def missing_number(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec missing_number(Nums :: [integer()]) -> integer().\nmissing_number(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (missing-number nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "288",
+    "content": "[TOC]\n\n## Video Solution\n\n---\n\n<div>\n  <div class=\"video-container\">\n    <iframe src=\"https://player.vimeo.com/video/731843634?texttrack=en-x-autogenerated\" frameborder=\"0\"\n      allow=\"autoplay; fullscreen\"></iframe>\n  </div>\n</div>\n\n\n## Solution\n\n### Approach #1 Sorting\n\n**Intuition**\n\nIf `nums` were in order, it would be easy to see which number is missing.\n\n**Algorithm**\n\nFirst, we sort `nums`. Then, we check the two special cases that can be\nhandled in constant time - ensuring that 0 is at the beginning and that $$n$$\nis at the end. Given that those assumptions hold, the missing number must\nsomewhere between (but not including) 0 and $$n$$. To find it, we ensure that\nthe number we expect to be at each index is indeed there. Because we handled\nthe edge cases, this is simply the previous number plus 1. Thus, as soon as\nwe find an unexpected number, we can simply return the expected number.\n\n<iframe src=\"https://leetcode.com/playground/nAtJz78D/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"nAtJz78D\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(nlgn)$$\n\n    The only elements of the algorithm that have asymptotically nonconstant\n    time complexity are the main `for` loop (which runs in $$\\mathcal{O}(n)$$ time), and\n    the `sort` invocation (which runs in $$\\mathcal{O}(nlgn)$$ time for Python and Java).\n    Therefore, the runtime is dominated by `sort`, and the entire runtime is\n    $$\\mathcal{O}(nlgn)$$.\n\n* Space complexity : $$\\mathcal{O}(1)$$ (or $$\\mathcal{O}(n)$$)\n\n    In the sample code, we sorted `nums` in place, allowing us to avoid\n    allocating additional space. If modifying `nums` is forbidden, we can\n    allocate an $$\\mathcal{O}(n)$$ size copy and sort that instead.\n\n---\n\n### Approach #2 HashSet [Accepted]\n\n**Intuition**\n\nA brute force method for solving this problem would be to simply check for\nthe presence of each number that we expect to be present. The naive\nimplementation might use a linear scan of the array to check for containment,\nbut we can use a `HashSet` to get constant time containment queries and\noverall linear runtime.\n\n**Algorithm**\n\nThis algorithm is almost identical to the brute force approach, except we\nfirst insert each element of `nums` into a set, allowing us to later query\nfor containment in $$\\mathcal{O}(1)$$ time.\n\n<iframe src=\"https://leetcode.com/playground/a4c9UAvh/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"a4c9UAvh\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(n)$$\n\n    Because the set allows for $$\\mathcal{O}(1)$$ containment queries, the main loop\n    runs in $$\\mathcal{O}(n)$$ time. Creating `num_set` costs $$\\mathcal{O}(n)$$ time, as each set insertion\n    runs in amortized $$\\mathcal{O}(1)$$ time, so the overall runtime is $$\\mathcal{O}(n + n) = \\mathcal{O}(n)$$.\n\n* Space complexity : $$\\mathcal{O}(n)$$\n\n    `nums` contains $$n-1$$ distinct elements, so it costs $$\\mathcal{O}(n)$$ space to\n    store a set containing all of them.\n\n---\n\n### Approach #3 Bit Manipulation\n\n**Intuition**\n\nWe can harness the fact that XOR is its own inverse to find the missing\nelement in linear time.\n\n**Algorithm**\n\nBecause we know that `nums` contains $$n$$ numbers and that it is missing\nexactly one number on the range $$[0..n-1]$$, we know that $$n$$ definitely\nreplaces the missing number in `nums`. Therefore, if we initialize an integer\nto $$n$$ and XOR it with every index and value, we will be left with the\nmissing number. Consider the following example (the values have been sorted\nfor intuitive convenience, but need not be):\n\n <table>\n  <tr>\n    <th>Index</th>\n    <td>0</td>\n    <td>1</td>\n    <td>2</td>\n    <td>3</td>\n  </tr>\n  <tr>\n    <th>Value</th>\n    <td>0</td>\n    <td>1</td>\n    <td>3</td>\n    <td>4</td>\n  </tr>\n</table> \n\n\n\n$$\n\\begin{aligned}\n    missing &= 4 \\wedge (0 \\wedge 0) \\wedge (1 \\wedge 1) \\wedge (2 \\wedge 3) \\wedge (3 \\wedge 4) \\\\\n            &= (4 \\wedge 4) \\wedge (0 \\wedge 0) \\wedge (1 \\wedge 1) \\wedge (3 \\wedge 3) \\wedge 2 \\\\\n            &= 0 \\wedge 0 \\wedge 0 \\wedge 0 \\wedge 2 \\\\ \n            &= 2\n\\end{aligned}\n$$\n\n<iframe src=\"https://leetcode.com/playground/auE4XZ4U/shared\" frameBorder=\"0\" width=\"100%\" height=\"208\" name=\"auE4XZ4U\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(n)$$\n\n    Assuming that XOR is a constant-time operation, this algorithm does\n    constant work on $$n$$ iterations, so the runtime is overall linear.\n\n* Space complexity : $$\\mathcal{O}(1)$$\n\n    This algorithm allocates only constant additional space.\n\n---\n\n\n### Approach #4 Gauss' Formula [Accepted]\n\n**Intuition**\n\nOne of the most well-known stories in mathematics is of a young Gauss, forced\nto find the sum of the first 100 natural numbers by a lazy teacher. Rather\nthan add the numbers by hand, he deduced a [closed-form\nexpression](https://brilliant.org/wiki/sum-of-n-n2-or-n3/) for the sum, or so\nthe story goes. You can see the formula below:\n\n$$\n    \\sum_{i=0}^{n}i = \\frac{n(n+1)}{2}\n$$\n\n**Algorithm**\n\nWe can compute the sum of `nums` in linear time, and by Gauss' formula, we\ncan compute the sum of the first $$n$$ natural numbers in constant time. Therefore,\nthe number that is missing is simply the result of Gauss' formula minus the sum of `nums`,\nas `nums` consists of the first $$n$$ natural numbers minus some number.\n\n<iframe src=\"https://leetcode.com/playground/ks727vae/shared\" frameBorder=\"0\" width=\"100%\" height=\"191\" name=\"ks727vae\"></iframe>\n\n**Complexity Analysis**\n\n* Time complexity : $$\\mathcal{O}(n)$$\n\n    Although Gauss' formula can be computed in $$\\mathcal{O}(1)$$ time, summing `nums`\n    costs us $$\\mathcal{O}(n)$$ time, so the algorithm is overall linear. Because we have\n    no information about _which_ number is missing, an adversary could always\n    design an input for which any algorithm that examines fewer than $$n$$\n    numbers fails. Therefore, this solution is asymptotically optimal.\n\n* Space complexity : $$\\mathcal{O}(1)$$\n\n    This approach only pushes a few integers around, so it has constant\n    memory usage.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}
