@@ -1,0 +1,123 @@
+{
+  "questionId": "4127",
+  "questionFrontendId": "3778",
+  "title": "Minimum Distance Excluding One Maximum Weighted Edge",
+  "titleSlug": "minimum-distance-excluding-one-maximum-weighted-edge",
+  "difficulty": "Medium",
+  "content": "<p>You are given a positive integer <code>n</code> and a 2D integer array <code>edges</code>, where <code>edges[i] = [u<sub>i</sub>, v<sub>i</sub>, w<sub>i</sub>]</code>.</p>\n\n<p>There is a <strong>weighted</strong> <strong>connected</strong> simple undirected graph with <code>n</code> nodes labeled from 0 to <code>n - 1</code>. Each <code>[u<sub>i</sub>, v<sub>i</sub>, w<sub>i</sub>]</code> in <code>edges</code> represents an edge between node <code>u<sub>i</sub></code> and node <code>v<sub>i</sub></code> with <strong>positive</strong> weight <code>w<sub>i</sub></code>.</p>\n\n<p>The <strong>cost</strong> of a path is the <strong>sum</strong> of weights of the edges in the path, <strong>excluding</strong> the edge with the <strong>maximum</strong> weight. If there are multiple edges in the path with the maximum weight, <strong>only</strong> the <strong>first</strong> such edge is excluded.</p>\n\n<p>Return an integer representing the <strong>minimum</strong> <strong>cost</strong> of a path going from node 0 to node <code>n - 1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 5, edges = [[0,1,2],[1,2,7],[2,3,7],[3,4,4]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">13</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There is only one path going from node 0 to node 4: <code>0 -&gt; 1 -&gt; 2 -&gt; 3 -&gt; 4</code>.</p>\n\n<p>The edge weights on this path are 2, 7, 7, and 4.</p>\n\n<p>Excluding the first edge with maximum weight, which is <code>1 -&gt; 2</code>, the cost of this path is <code>2 + 7 + 4 = 13</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 3, edges = [[0,1,1],[1,2,1],[0,2,50000]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There are two paths going from node 0 to node 2:</p>\n\n<ul>\n\t<li><code>0 -&gt; 1 -&gt; 2</code></li>\n</ul>\n\n<p>The edge weights on this path are 1 and 1.</p>\n\n<p>Excluding the first edge with maximum weight, which is <code>0 -&gt; 1</code>, the cost of this path is 1.</p>\n\n<ul>\n\t<li><code>0 -&gt; 2</code></li>\n</ul>\n\n<p>The only edge weight on this path is 1.</p>\n\n<p>Excluding the first edge with maximum weight, which is <code>0 -&gt; 2</code>, the cost of this path is 0.</p>\n\n<p>The minimum cost is <code>min(1, 0) = 0</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>n - 1 &lt;= edges.length &lt;= 10<sup>9</sup></code></li>\n\t<li><code>edges[i] = [u<sub>i</sub>, v<sub>i</sub>, w<sub>i</sub>]</code></li>\n\t<li><code>0 &lt;= u<sub>i</sub> &lt; v<sub>i</sub> &lt; n</code></li>\n\t<li><code>[u<sub>i</sub>, v<sub>i</sub>] != [u<sub>j</sub>, v<sub>j</sub>]</code></li>\n\t<li><code>1 &lt;= w<sub>i</sub> &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li>The graph is connected.</li>\n</ul>\n",
+  "hints": [
+    "Use Dijkstra",
+    "The problem is the same as finding the minimum path from 0 to <code>n - 1</code> with one edge excluded",
+    "Use states <code>(dist, node, excluded)</code> as your Dijkstra elements"
+  ],
+  "metaData": "{\n  \"name\": \"minCostExcludingMax\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"297\", \"totalSubmission\": \"643\", \"totalAcceptedRaw\": 297, \"totalSubmissionRaw\": 643, \"acRate\": \"46.2%\"}",
+  "likes": 3,
+  "dislikes": 3,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "5\n[[0,1,2],[1,2,7],[2,3,7],[3,4,4]]",
+    "3\n[[0,1,1],[1,2,1],[0,2,50000]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long minCostExcludingMax(int n, vector<vector<int>>& edges) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long minCostExcludingMax(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minCostExcludingMax(self, n: int, edges: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minCostExcludingMax(self, n, edges):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @return {number}\n */\nvar minCostExcludingMax = function(n, edges) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minCostExcludingMax(n: number, edges: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MinCostExcludingMax(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long minCostExcludingMax(int n, int** edges, int edgesSize, int* edgesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minCostExcludingMax(n int, edges [][]int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minCostExcludingMax(n: Int, edges: Array<IntArray>): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minCostExcludingMax(_ n: Int, _ edges: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_cost_excluding_max(n: i32, edges: Vec<Vec<i32>>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @return {Integer}\ndef min_cost_excluding_max(n, edges)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @return Integer\n     */\n    function minCostExcludingMax($n, $edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minCostExcludingMax(int n, List<List<int>> edges) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minCostExcludingMax(n: Int, edges: Array[Array[Int]]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_cost_excluding_max(n :: integer, edges :: [[integer]]) :: integer\n  def min_cost_excluding_max(n, edges) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_cost_excluding_max(N :: integer(), Edges :: [[integer()]]) -> integer().\nmin_cost_excluding_max(N, Edges) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-cost-excluding-max n edges)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

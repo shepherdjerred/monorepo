@@ -1,0 +1,142 @@
+{
+  "questionId": "4071",
+  "questionFrontendId": "3799",
+  "title": "Word Squares II",
+  "titleSlug": "word-squares-ii",
+  "difficulty": "Medium",
+  "content": "<p>You are given a string array <code>words</code>, consisting of <strong>distinct</strong> 4-letter strings, each containing lowercase English letters.</p>\n\n<p>A <strong>word square</strong> consists of 4 <strong>distinct</strong> words: <code>top</code>, <code>left</code>, <code>right</code> and <code>bottom</code>, arranged as follows:</p>\n\n<ul>\n\t<li><code>top</code> forms the <strong>top row</strong>.</li>\n\t<li><code>bottom</code> forms the <strong>bottom row</strong>.</li>\n\t<li><code>left</code> forms the <strong>left column</strong> (top to bottom).</li>\n\t<li><code>right</code> forms the <strong>right column</strong> (top to bottom).</li>\n</ul>\n\n<p>It must satisfy:</p>\n\n<ul>\n\t<li><code>top[0] == left[0]</code>, <code>top[3] == right[0]</code></li>\n\t<li><code>bottom[0] == left[3]</code>, <code>bottom[3] == right[3]</code></li>\n</ul>\n\n<p>Return all valid <strong>distinct</strong> word squares, sorted in <strong>ascending lexicographic</strong> order by the 4-tuple <code>(top, left, right, bottom)​​​​​​​</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">words = [&quot;able&quot;,&quot;area&quot;,&quot;echo&quot;,&quot;also&quot;]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[[&quot;able&quot;,&quot;area&quot;,&quot;echo&quot;,&quot;also&quot;],[&quot;area&quot;,&quot;able&quot;,&quot;also&quot;,&quot;echo&quot;]]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There are exactly two valid 4-word squares that satisfy all corner constraints:</p>\n\n<ul>\n\t<li><code>&quot;able&quot;</code> (top), <code>&quot;area&quot;</code> (left), <code>&quot;echo&quot;</code> (right), <code>&quot;also&quot;</code> (bottom)\n\n\t<ul>\n\t\t<li><code>top[0] == left[0] == &#39;a&#39;</code></li>\n\t\t<li><code>top[3] == right[0] == &#39;e&#39;</code></li>\n\t\t<li><code>bottom[0] == left[3] == &#39;a&#39;</code></li>\n\t\t<li><code>bottom[3] == right[3] == &#39;o&#39;</code></li>\n\t</ul>\n\t</li>\n\t<li><code>&quot;area&quot;</code> (top), <code>&quot;able&quot;</code> (left), <code>&quot;also&quot;</code> (right), <code>&quot;echo&quot;</code> (bottom)\n\t<ul>\n\t\t<li>All corner constraints are satisfied.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>Thus, the answer is <code>[[&quot;able&quot;,&quot;area&quot;,&quot;echo&quot;,&quot;also&quot;],[&quot;area&quot;,&quot;able&quot;,&quot;also&quot;,&quot;echo&quot;]]</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">words = [&quot;code&quot;,&quot;cafe&quot;,&quot;eden&quot;,&quot;edge&quot;]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>No combination of four words satisfies all four corner constraints. Thus, the answer is empty array <code>[]</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>4 &lt;= words.length &lt;= 15</code></li>\n\t<li><code>words[i].length == 4</code></li>\n\t<li><code>words[i]</code> consists of only lowercase English letters.</li>\n\t<li>All <code>words[i]</code> are <strong>distinct</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Use bruteforce"
+  ],
+  "metaData": "{\n  \"name\": \"wordSquares\",\n  \"params\": [\n    {\n      \"name\": \"words\",\n      \"type\": \"string[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<list<string>>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"18.9K\", \"totalSubmission\": \"34.4K\", \"totalAcceptedRaw\": 18879, \"totalSubmissionRaw\": 34414, \"acRate\": \"54.9%\"}",
+  "likes": 56,
+  "dislikes": 27,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"able\",\"area\",\"echo\",\"also\"]",
+    "[\"code\",\"cafe\",\"eden\",\"edge\"]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<string>> wordSquares(vector<string>& words) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<String>> wordSquares(String[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def wordSquares(self, words: List[str]) -> List[List[str]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def wordSquares(self, words):\n        \"\"\"\n        :type words: List[str]\n        :rtype: List[List[str]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @return {string[][]}\n */\nvar wordSquares = function(words) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function wordSquares(words: string[]): string[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<string>> WordSquares(string[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nchar*** wordSquares(char** words, int wordsSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func wordSquares(words []string) [][]string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun wordSquares(words: Array<String>): List<List<String>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func wordSquares(_ words: [String]) -> [[String]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn word_squares(words: Vec<String>) -> Vec<Vec<String>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @return {String[][]}\ndef word_squares(words)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @return String[][]\n     */\n    function wordSquares($words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<String>> wordSquares(List<String> words) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def wordSquares(words: Array[String]): List[List[String]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec word_squares(words :: [String.t]) :: [[String.t]]\n  def word_squares(words) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec word_squares(Words :: [unicode:unicode_binary()]) -> [[unicode:unicode_binary()]].\nword_squares(Words) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (word-squares words)\n  (-> (listof string?) (listof (listof string?)))\n  )"
+    }
+  ],
+  "solution": null
+}

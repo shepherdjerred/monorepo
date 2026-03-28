@@ -1,0 +1,141 @@
+{
+  "questionId": "4130",
+  "questionFrontendId": "3781",
+  "title": "Maximum Score After Binary Swaps",
+  "titleSlug": "maximum-score-after-binary-swaps",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code> of length <code>n</code> and a binary string <code>s</code> of the same length.</p>\n\n<p>Initially, your score is 0. Each index <code>i</code> where <code>s[i] = &#39;1&#39;</code> contributes <code>nums[i]</code> to the score.</p>\n\n<p>You may perform <strong>any</strong> number of operations (including zero). In one operation, you may choose an index <code>i</code> such that <code>0 &lt;= i &lt; n - 1</code>, where <code>s[i] = &#39;0&#39;</code>, and <code>s[i + 1] = &#39;1&#39;</code>, and swap these two characters.</p>\n\n<p>Return an integer denoting the <strong>maximum possible score</strong> you can achieve.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [2,1,5,2,3], s = &quot;01010&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">7</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>We can perform the following swaps:</p>\n\n<ul>\n\t<li>Swap at index <code>i = 0</code>: <code>&quot;01010&quot;</code> changes to <code>&quot;10010&quot;</code></li>\n\t<li>Swap at index <code>i = 2</code>: <code>&quot;10010&quot;</code> changes to <code>&quot;10100&quot;</code></li>\n</ul>\n\n<p>Positions 0 and 2 contain <code>&#39;1&#39;</code>, contributing <code>nums[0] + nums[2] = 2 + 5 = 7</code>. This is maximum score achievable.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [4,7,2,9], s = &quot;0000&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There are no <code>&#39;1&#39;</code> characters in <code>s</code>, so no swaps can be performed. The score remains 0.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums.length == s.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>s[i]</code> is either <code>&#39;0&#39;</code> or <code>&#39;1&#39;</code></li>\n</ul>\n",
+  "hints": [
+    "The problem can be solved greedily",
+    "The operation only allows <code>'1'</code>s to move backward",
+    "Going from left to right, maintain a priority queue (max heap)",
+    "When at a <code>'1'</code>, pop the top of the priority queue if it is not empty"
+  ],
+  "metaData": "{\n  \"name\": \"maximumScore\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"s\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"14.2K\", \"totalSubmission\": \"40.5K\", \"totalAcceptedRaw\": 14193, \"totalSubmissionRaw\": 40527, \"acRate\": \"35.0%\"}",
+  "likes": 76,
+  "dislikes": 2,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,1,5,2,3]\n\"01010\"",
+    "[4,7,2,9]\n\"0000\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long maximumScore(vector<int>& nums, string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long maximumScore(int[] nums, String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumScore(self, nums: List[int], s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumScore(self, nums, s):\n        \"\"\"\n        :type nums: List[int]\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {string} s\n * @return {number}\n */\nvar maximumScore = function(nums, s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumScore(nums: number[], s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MaximumScore(int[] nums, string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long maximumScore(int* nums, int numsSize, char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumScore(nums []int, s string) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumScore(nums: IntArray, s: String): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumScore(_ nums: [Int], _ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_score(nums: Vec<i32>, s: String) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {String} s\n# @return {Integer}\ndef maximum_score(nums, s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param String $s\n     * @return Integer\n     */\n    function maximumScore($nums, $s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumScore(List<int> nums, String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumScore(nums: Array[Int], s: String): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_score(nums :: [integer], s :: String.t) :: integer\n  def maximum_score(nums, s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_score(Nums :: [integer()], S :: unicode:unicode_binary()) -> integer().\nmaximum_score(Nums, S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-score nums s)\n  (-> (listof exact-integer?) string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

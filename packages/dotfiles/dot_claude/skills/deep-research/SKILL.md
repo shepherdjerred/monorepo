@@ -255,8 +255,8 @@ The final report should read as if it was written correctly the first time — t
 
 Every research report is delivered in three formats: Markdown (`.md`), Typst (`.typ`), and PDF (`.pdf`).
 
-1. **Create output directory** — Run `mkdir -p ~/.claude/research/` to ensure the directory exists.
-2. **Write Markdown** — Save the final report to `~/.claude/research/[topic-slug].md`.
+1. **Create output directory** — Run `mkdir -p ~/.claude-extra/research/` to ensure the directory exists.
+2. **Write Markdown** — Save the final report to `~/.claude-extra/research/[topic-slug].md`.
 3. **Write Typst** — Do not mechanically convert Markdown to Typst. The Typst document should be _designed for the reader_. Load the `typst-authoring` skill (especially `references/visualizations.md`) and invest effort in:
    - **Comparison tables** instead of prose listing pros/cons
    - **Diagrams** (via fletcher, CeTZ, or pintorita) for architecture, flows, and relationships
@@ -264,9 +264,9 @@ Every research report is delivered in three formats: Markdown (`.md`), Typst (`.
    - **Charts** (via lilaq or CeTZ) when presenting data, benchmarks, or trends
    - **Timeline diagrams** (via timeliney) for roadmaps or chronological analysis
    - **Visual hierarchy** — use color, spacing, and layout to guide the reader's eye
-     The reader should be able to understand the core findings by scanning the document for 60 seconds. Save to `~/.claude/research/[topic-slug].typ`.
-4. **Compile PDF** — Run `typst compile ~/.claude/research/[topic-slug].typ ~/.claude/research/[topic-slug].pdf`. If compilation fails, fix the Typst source (common issues: unescaped special characters `#`, `@`, `$` need `\#`, `\@`, `\$` in content text) and retry.
-5. **Open PDF** — Run `open ~/.claude/research/[topic-slug].pdf` to open the rendered PDF for the user. This step is mandatory — always open the PDF. **Only open the PDF once the entire research process is 100% complete** — all phases finished, editorial synthesis done, quality checklist passed, and final PDF compiled without errors. Never open intermediate or draft versions.
+     The reader should be able to understand the core findings by scanning the document for 60 seconds. Save to `~/.claude-extra/research/[topic-slug].typ`.
+4. **Compile PDF** — Run `typst compile ~/.claude-extra/research/[topic-slug].typ ~/.claude-extra/research/[topic-slug].pdf`. If compilation fails, fix the Typst source (common issues: unescaped special characters `#`, `@`, `$` need `\#`, `\@`, `\$` in content text) and retry.
+5. **Open PDF** — Run `open ~/.claude-extra/research/[topic-slug].pdf` to open the rendered PDF for the user. This step is mandatory — always open the PDF. **Only open the PDF once the entire research process is 100% complete** — all phases finished, editorial synthesis done, quality checklist passed, and final PDF compiled without errors. Never open intermediate or draft versions.
 6. **Present summary** — Show a concise inline summary with:
    - The report title and key findings (3-5 bullets)
    - File paths for all three outputs

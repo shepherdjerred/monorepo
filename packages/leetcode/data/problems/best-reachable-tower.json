@@ -1,0 +1,130 @@
+{
+  "questionId": "4187",
+  "questionFrontendId": "3809",
+  "title": "Best Reachable Tower",
+  "titleSlug": "best-reachable-tower",
+  "difficulty": "Medium",
+  "content": "<p>You are given a 2D integer array <code>towers</code>, where <code>towers[i] = [x<sub>i</sub>, y<sub>i</sub>, q<sub>i</sub>]</code> represents the coordinates <code>(x<sub>i</sub>, y<sub>i</sub>)</code> and quality factor <code>q<sub>i</sub></code> of the <code>i<sup>th</sup></code> tower.</p>\n\n<p>You are also given an integer array <code>center = [cx, cy​​​​​​​]</code> representing your location, and an integer <code>radius</code>.</p>\n\n<p>A tower is <strong>reachable</strong> if its <strong>Manhattan distance</strong> from <code>center</code> is <strong>less than or equal</strong> to <code>radius</code>.</p>\n\n<p>Among all reachable towers:</p>\n\n<ul>\n\t<li>Return the coordinates of the tower with the <strong>maximum</strong> quality factor.</li>\n\t<li>If there is a tie, return the tower with the <strong>lexicographically smallest</strong> coordinate. If no tower is reachable, return <code>[-1, -1]</code>.</li>\n</ul>\nThe <strong>Manhattan Distance</strong> between two cells <code>(x<sub>i</sub>, y<sub>i</sub>)</code> and <code>(x<sub>j</sub>, y<sub>j</sub>)</code> is <code>|x<sub>i</sub> - x<sub>j</sub>| + |y<sub>i</sub> - y<sub>j</sub>|</code>.\n\n<p>A coordinate <code>[x<sub>i</sub>, y<sub>i</sub>]</code> is <strong>lexicographically smaller</strong> than <code>[x<sub>j</sub>, y<sub>j</sub>]</code> if <code>x<sub>i</sub> &lt; x<sub>j</sub></code>, or <code>x<sub>i</sub> == x<sub>j</sub></code> and <code>y<sub>i</sub> &lt; y<sub>j</sub></code>.</p>\n\n<p><code>|x|</code> denotes the <strong>absolute</strong> <strong>value</strong> of <code>x</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">towers = [[1,2,5], [2,1,7], [3,1,9]], center = [1,1], radius = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[3,1]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Tower <code>[1, 2, 5]</code>: Manhattan distance = <code>|1 - 1| + |2 - 1| = 1</code>, reachable.</li>\n\t<li>Tower <code>[2, 1, 7]</code>: Manhattan distance = <code>|2 - 1| + |1 - 1| = 1</code>, reachable.</li>\n\t<li>Tower <code>[3, 1, 9]</code>: Manhattan distance = <code>|3 - 1| + |1 - 1| = 2</code>, reachable.</li>\n</ul>\n\n<p>All towers are reachable. The maximum quality factor is 9, which corresponds to tower <code>[3, 1]</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">towers = [[1,3,4], [2,2,4], [4,4,7]], center = [0,0], radius = 5</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[1,3]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Tower <code>[1, 3, 4]</code>: Manhattan distance = <code>|1 - 0| + |3 - 0| = 4</code>, reachable.</li>\n\t<li>Tower <code>[2, 2, 4]</code>: Manhattan distance = <code>|2 - 0| + |2 - 0| = 4</code>, reachable.</li>\n\t<li>Tower <code>[4, 4, 7]</code>: Manhattan distance = <code>|4 - 0| + |4 - 0| = 8</code>, not reachable.</li>\n</ul>\n\n<p>Among the reachable towers, the maximum quality factor is 4. Both <code>[1, 3]</code> and <code>[2, 2]</code> have the same quality, so the lexicographically smaller coordinate is <code>[1, 3]</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">towers = [[5,6,8], [0,3,5]], center = [1,2], radius = 1</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[-1,-1]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Tower <code>[5, 6, 8]</code>: Manhattan distance = <code>|5 - 1| + |6 - 2| = 8</code>, not reachable.</li>\n\t<li>Tower <code>[0, 3, 5]</code>: Manhattan distance = <code>|0 - 1| + |3 - 2| = 2</code>, not reachable.</li>\n</ul>\n\n<p>No tower is reachable within the given radius, so <code>[-1, -1]</code> is returned.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= towers.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>towers[i] = [x<sub>i</sub>, y<sub>i</sub>, q<sub>i</sub>]</code></li>\n\t<li><code>center = [cx, cy]</code></li>\n\t<li><code>0 &lt;= x<sub>i</sub>, y<sub>i</sub>, q<sub>i</sub>, cx, cy &lt;= 10<sup>5</sup></code>​​​​​​​</li>\n\t<li><code>0 &lt;= radius &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Iterate through all towers and compute the Manhattan distance <code>abs(xi - cx) + abs(yi - cy)</code>.",
+    "Consider only towers with distance less than or equal to <code>radius</code>.",
+    "Track the reachable tower with the highest <code>qi</code>; break ties using lexicographical order on <code>[xi, yi]</code>.",
+    "If no tower is reachable, return <code>[-1, -1]</code>."
+  ],
+  "metaData": "{\n  \"name\": \"bestTower\",\n  \"params\": [\n    {\n      \"name\": \"towers\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"center\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"radius\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"31.3K\", \"totalSubmission\": \"56.1K\", \"totalAcceptedRaw\": 31261, \"totalSubmissionRaw\": 56097, \"acRate\": \"55.7%\"}",
+  "likes": 57,
+  "dislikes": 6,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,2,5],[2,1,7],[3,1,9]]\n[1,1]\n2",
+    "[[1,3,4],[2,2,4],[4,4,7]]\n[0,0]\n5",
+    "[[5,6,8],[0,3,5]]\n[1,2]\n1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> bestTower(vector<vector<int>>& towers, vector<int>& center, int radius) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] bestTower(int[][] towers, int[] center, int radius) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def bestTower(self, towers: List[List[int]], center: List[int], radius: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def bestTower(self, towers, center, radius):\n        \"\"\"\n        :type towers: List[List[int]]\n        :type center: List[int]\n        :type radius: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} towers\n * @param {number[]} center\n * @param {number} radius\n * @return {number[]}\n */\nvar bestTower = function(towers, center, radius) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function bestTower(towers: number[][], center: number[], radius: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] BestTower(int[][] towers, int[] center, int radius) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* bestTower(int** towers, int towersSize, int* towersColSize, int* center, int centerSize, int radius, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func bestTower(towers [][]int, center []int, radius int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun bestTower(towers: Array<IntArray>, center: IntArray, radius: Int): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func bestTower(_ towers: [[Int]], _ center: [Int], _ radius: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn best_tower(towers: Vec<Vec<i32>>, center: Vec<i32>, radius: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} towers\n# @param {Integer[]} center\n# @param {Integer} radius\n# @return {Integer[]}\ndef best_tower(towers, center, radius)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $towers\n     * @param Integer[] $center\n     * @param Integer $radius\n     * @return Integer[]\n     */\n    function bestTower($towers, $center, $radius) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> bestTower(List<List<int>> towers, List<int> center, int radius) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def bestTower(towers: Array[Array[Int]], center: Array[Int], radius: Int): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec best_tower(towers :: [[integer]], center :: [integer], radius :: integer) :: [integer]\n  def best_tower(towers, center, radius) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec best_tower(Towers :: [[integer()]], Center :: [integer()], Radius :: integer()) -> [integer()].\nbest_tower(Towers, Center, Radius) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (best-tower towers center radius)\n  (-> (listof (listof exact-integer?)) (listof exact-integer?) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

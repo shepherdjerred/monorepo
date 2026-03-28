@@ -105,7 +105,7 @@ These are automatically indexed by the daemon and `toolkit recall reindex`:
 | ---------------------------------- | ------------------- |
 | `~/.claude/plans/`                 | claude-plan         |
 | `~/.claude-extra/**`               | claude-extra        |
-| `~/.claude/research/`              | claude-research     |
+| `~/.claude-extra/research/`        | claude-research     |
 | `~/.claude/projects/*/memory/`     | claude-memory       |
 | `~/.recall/fetched/**`             | fetched             |
 | `~/.claude/projects/**` (\*.jsonl) | claude-conversation |

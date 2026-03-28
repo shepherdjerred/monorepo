@@ -1,0 +1,48 @@
+{
+  "questionId": "4195",
+  "questionFrontendId": "3793",
+  "title": "Find Users with High Token Usage",
+  "titleSlug": "find-users-with-high-token-usage",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>prompts</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| user_id     | int     |\n| prompt      | varchar |\n| tokens      | int     |\n+-------------+---------+\n(user_id, prompt) is the primary key (unique value) for this table.\nEach row represents a prompt submitted by a user to an AI system along with the number of tokens consumed.\n</pre>\n\n<p>Write a solution to analyze <strong>AI prompt usage patterns</strong> based on the following requirements:</p>\n\n<ul>\n\t<li>For each user, calculate the <strong>total number of prompts</strong> they have submitted.</li>\n\t<li>For each user, calculate the <strong>average tokens used per prompt </strong>(Rounded to <code>2</code> decimal places).</li>\n\t<li>Only include users who have submitted <strong>at least </strong><code>3</code><strong> prompts</strong>.</li>\n\t<li>Only include users who have submitted <strong>at least one prompt</strong> with <code>tokens</code> <strong>greater than</strong> their own average token usage.</li>\n</ul>\n\n<p>Return <em>the result table ordered by <strong>average tokens</strong> in <strong>descending</strong> order, and then by <code>user_id</code> in <strong>ascending</strong> order.</em></p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>prompts table:</p>\n\n<pre class=\"example-io\">\n+---------+--------------------------+--------+\n| user_id | prompt                   | tokens |\n+---------+--------------------------+--------+\n| 1       | Write a blog outline     | 120    |\n| 1       | Generate SQL query       | 80     |\n| 1       | Summarize an article     | 200    |\n| 2       | Create resume bullet     | 60     |\n| 2       | Improve LinkedIn bio     | 70     |\n| 3       | Explain neural networks  | 300    |\n| 3       | Generate interview Q&amp;A   | 250    |\n| 3       | Write cover letter       | 180    |\n| 3       | Optimize Python code     | 220    |\n+---------+--------------------------+--------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+---------+---------------+------------+\n| user_id | prompt_count  | avg_tokens |\n+---------+---------------+------------+\n| 3       | 4             | 237.5      |\n| 1       | 3             | 133.33     |\n+---------+---------------+------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>User 1</strong>:\n\n\t<ul>\n\t\t<li>Total prompts = 3</li>\n\t\t<li>Average tokens = (120 + 80 + 200) / 3 = 133.33</li>\n\t\t<li>Has a prompt with 200 tokens, which is greater than the average</li>\n\t\t<li>Included in the result</li>\n\t</ul>\n\t</li>\n\t<li><strong>User 2</strong>:\n\t<ul>\n\t\t<li>Total prompts = 2 (less than the required minimum)</li>\n\t\t<li>Excluded from the result</li>\n\t</ul>\n\t</li>\n\t<li><strong>User 3</strong>:\n\t<ul>\n\t\t<li>Total prompts = 4</li>\n\t\t<li>Average tokens = (300 + 250 + 180 + 220) / 4 = 237.5</li>\n\t\t<li>Has prompts with 300 and 250 tokens, both greater than the average</li>\n\t\t<li>Included in the result</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>The Results table is ordered by avg_tokens in descending order, then by user_id in ascending order</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE if not exists prompts (\\n    user_id INT,\\n    prompt VARCHAR(255),\\n    tokens INT\\n)\\n\"], \"mssql\": [\"CREATE TABLE prompts (\\n    user_id INT,\\n    prompt VARCHAR(255),\\n    tokens INT\\n)\"], \"oraclesql\": [\"CREATE TABLE prompts (\\n    user_id NUMBER,\\n    prompt VARCHAR2(255),\\n    tokens NUMBER\\n)\"], \"database\": true, \"name\": \"find_users_with_high_tokens\", \"postgresql\": [\"CREATE TABLE prompts (\\n    user_id INT,\\n    prompt VARCHAR(255),\\n    tokens INT\\n)\"], \"pythondata\": [\"prompts = pd.DataFrame({\\n    \\\"user_id\\\": pd.Series(dtype=\\\"int\\\"),\\n    \\\"prompt\\\": pd.Series(dtype=\\\"string\\\"),\\n    \\\"tokens\\\": pd.Series(dtype=\\\"int\\\")\\n})\\n\"], \"database_schema\": {\"prompts\": {\"user_id\": \"INT\", \"prompt\": \"VARCHAR(255)\", \"tokens\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"7.5K\", \"totalSubmission\": \"13.2K\", \"totalAcceptedRaw\": 7533, \"totalSubmissionRaw\": 13211, \"acRate\": \"57.0%\"}",
+  "likes": 24,
+  "dislikes": 2,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"prompts\":[\"user_id\",\"prompt\",\"tokens\"]},\"rows\":{\"prompts\":[[1,\"Write a blog outline\",120],[1,\"Generate SQL query\",80],[1,\"Summarize an article\",200],[2,\"Create resume bullet\",60],[2,\"Improve LinkedIn bio\",70],[3,\"Explain neural networks\",300],[3,\"Generate interview Q&A\",250],[3,\"Write cover letter\",180],[3,\"Optimize Python code\",220]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_users_with_high_tokens(prompts: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

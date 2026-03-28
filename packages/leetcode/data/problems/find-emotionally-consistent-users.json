@@ -1,0 +1,48 @@
+{
+  "questionId": "4208",
+  "questionFrontendId": "3808",
+  "title": "Find Emotionally Consistent Users",
+  "titleSlug": "find-emotionally-consistent-users",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>reactions</code></p>\n\n<pre>\n+--------------+---------+\n| Column Name  | Type    |\n+--------------+---------+\n| user_id      | int     |\n| content_id   | int     |\n| reaction     | varchar |\n+--------------+---------+\n(user_id, content_id) is the primary key (unique value) for this table.\nEach row represents a reaction given by a user to a piece of content.\n</pre>\n\n<p>Write a solution to identify <strong>emotionally consistent users</strong> based on the following requirements:</p>\n\n<ul>\n\t<li>For each user, count the total number of reactions they have given.</li>\n\t<li>Only include users who have reacted to <strong>at least </strong><code>5</code><strong> different content items</strong>.</li>\n\t<li>A user is considered <strong>emotionally consistent</strong> if <strong>at least </strong><code>60%</code> of their reactions are of the <strong>same type</strong>.</li>\n</ul>\n\n<p>Return <em>the result table ordered by</em> <code>reaction_ratio</code> <em>in <strong>descending</strong> order and then by</em> <code>user_id</code> <em>in <strong>ascending</strong> order</em>.</p>\n\n<p><strong>Note:</strong></p>\n\n<ul>\n\t<li><code>reaction_ratio</code>&nbsp;should be rounded to <code>2</code> decimal places</li>\n</ul>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>reactions table:</p>\n\n<pre class=\"example-io\">\n+---------+------------+----------+\n| user_id | content_id | reaction |\n+---------+------------+----------+\n| 1       | 101        | like     |\n| 1       | 102        | like     |\n| 1       | 103        | like     |\n| 1       | 104        | wow      |\n| 1       | 105        | like     |\n| 2       | 201        | like     |\n| 2       | 202        | wow      |\n| 2       | 203        | sad      |\n| 2       | 204        | like     |\n| 2       | 205        | wow      |\n| 3       | 301        | love     |\n| 3       | 302        | love     |\n| 3       | 303        | love     |\n| 3       | 304        | love     |\n| 3       | 305        | love     |\n+---------+------------+----------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+---------+-------------------+----------------+\n| user_id | dominant_reaction | reaction_ratio |\n+---------+-------------------+----------------+\n| 3       | love              | 1.00           |\n| 1       | like              | 0.80           |\n+---------+-------------------+----------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>User 1</strong>:\n\n\t<ul>\n\t\t<li>Total reactions = 5</li>\n\t\t<li>like&nbsp;appears 4 times</li>\n\t\t<li>reaction_ratio = 4 / 5 = 0.80</li>\n\t\t<li>Meets the 60% consistency requirement</li>\n\t</ul>\n\t</li>\n\t<li><strong>User 2</strong>:\n\t<ul>\n\t\t<li>Total reactions = 5</li>\n\t\t<li>Most frequent reaction appears only 2 times</li>\n\t\t<li>reaction_ratio = 2 / 5 = 0.40</li>\n\t\t<li>Does not meet the consistency requirement</li>\n\t</ul>\n\t</li>\n\t<li><strong>User 3</strong>:\n\t<ul>\n\t\t<li>Total reactions = 5</li>\n\t\t<li>&#39;love&#39; appears 5 times</li>\n\t\t<li>reaction_ratio = 5 / 5 = 1.00</li>\n\t\t<li>Meets the consistency requirement</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>The Results table is ordered by reaction_ratio in descending order, then by user_id in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE reactions (\\n    user_id INT,\\n    content_id INT,\\n    reaction VARCHAR(255)\\n)\\n\"], \"mssql\": [\"CREATE TABLE reactions (\\n    user_id INT,\\n    content_id INT,\\n    reaction VARCHAR(255)\\n)\\n\"], \"oraclesql\": [\"CREATE TABLE reactions (\\n    user_id NUMBER,\\n    content_id NUMBER,\\n    reaction VARCHAR2(255)\\n)\"], \"database\": true, \"name\": \"find_emotionally_consistent_users\", \"postgresql\": [\"CREATE TABLE reactions (\\n    user_id INT,\\n    content_id INT,\\n    reaction VARCHAR(255)\\n)\"], \"pythondata\": [\"reactions = pd.DataFrame({\\n    \\\"user_id\\\": pd.Series(dtype=\\\"int\\\"),\\n    \\\"content_id\\\": pd.Series(dtype=\\\"int\\\"),\\n    \\\"reaction\\\": pd.Series(dtype=\\\"string\\\")\\n})\"], \"database_schema\": {\"reactions\": {\"user_id\": \"INT\", \"content_id\": \"INT\", \"reaction\": \"VARCHAR(255)\"}}}",
+  "stats": "{\"totalAccepted\": \"3.7K\", \"totalSubmission\": \"7.2K\", \"totalAcceptedRaw\": 3666, \"totalSubmissionRaw\": 7238, \"acRate\": \"50.6%\"}",
+  "likes": 28,
+  "dislikes": 1,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"reactions\":[\"user_id\",\"content_id\",\"reaction\"]},\"rows\":{\"reactions\":[[1,101,\"like\"],[1,102,\"like\"],[1,103,\"like\"],[1,104,\"wow\"],[1,105,\"like\"],[2,201,\"like\"],[2,202,\"wow\"],[2,203,\"sad\"],[2,204,\"like\"],[2,205,\"wow\"],[3,301,\"love\"],[3,302,\"love\"],[3,303,\"love\"],[3,304,\"love\"],[3,305,\"love\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_emotionally_consistent_users(reactions: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

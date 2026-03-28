@@ -1,0 +1,134 @@
+{
+  "questionId": "4129",
+  "questionFrontendId": "3804",
+  "title": "Number of Centered Subarrays",
+  "titleSlug": "number-of-centered-subarrays",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code>.</p>\n\n<p>A <strong><span data-keyword=\"subarray-nonempty\">subarray</span></strong> of <code>nums</code> is called <strong>centered</strong> if the sum of its elements is <strong>equal to at least one</strong> element within that <strong>same subarray</strong>.</p>\n\n<p>Return the number of <strong>centered subarrays</strong> of <code>nums</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [-1,1,0]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">5</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>All single-element subarrays (<code>[-1]</code>, <code>[1]</code>, <code>[0]</code>) are centered.</li>\n\t<li>The subarray <code>[1, 0]</code> has a sum of 1, which is present in the subarray.</li>\n\t<li>The subarray <code>[-1, 1, 0]</code> has a sum of 0, which is present in the subarray.</li>\n\t<li>Thus, the answer is 5.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [2,-3]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Only single-element subarrays (<code>[2]</code>, <code>[-3]</code>) are centered.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 500</code></li>\n\t<li><code>-10<sup>5</sup> &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Generate all subarrays and use a hashmap to check whether the sum exists in the generated subarrays."
+  ],
+  "metaData": "{\n  \"name\": \"centeredSubarrays\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"37.4K\", \"totalSubmission\": \"55.9K\", \"totalAcceptedRaw\": 37449, \"totalSubmissionRaw\": 55933, \"acRate\": \"67.0%\"}",
+  "likes": 75,
+  "dislikes": 1,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[-1,1,0]",
+    "[2,-3]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int centeredSubarrays(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int centeredSubarrays(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def centeredSubarrays(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def centeredSubarrays(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar centeredSubarrays = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function centeredSubarrays(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CenteredSubarrays(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int centeredSubarrays(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func centeredSubarrays(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun centeredSubarrays(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func centeredSubarrays(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn centered_subarrays(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef centered_subarrays(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function centeredSubarrays($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int centeredSubarrays(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def centeredSubarrays(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec centered_subarrays(nums :: [integer]) :: integer\n  def centered_subarrays(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec centered_subarrays(Nums :: [integer()]) -> integer().\ncentered_subarrays(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (centered-subarrays nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

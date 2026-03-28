@@ -122,7 +122,7 @@ toolkit recall search "interview prep system design"
 This searches:
 
 - All past Claude conversations (`.jsonl` files)
-- Claude plans and research (`~/.claude/plans/`, `~/.claude/research/`)
+- Claude plans and research (`~/.claude/plans/`, `~/.claude-extra/research/`)
 - Claude memories (`~/.claude/projects/*/memory/`)
 - Monorepo docs (`packages/docs/`)
 - Fetched web pages (`~/.recall/fetched/`)
