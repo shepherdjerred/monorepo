@@ -11,8 +11,16 @@ const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
 function npmPublishStep(pkg: { name: string; dir: string }): BuildkiteStep {
   const deps = WORKSPACE_DEPS[pkg.name] ?? [];
-  const depFlags = deps.flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`]).join(" ");
-  const cmd = [`dagger call publish-npm --pkg-dir ./${pkg.dir} --pkg ${pkg.name}`, depFlags, `--npm-token env:NPM_TOKEN`].filter(Boolean).join(" ");
+  const depFlags = deps
+    .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
+    .join(" ");
+  const cmd = [
+    `dagger call publish-npm --pkg-dir ./${pkg.dir} --pkg ${pkg.name}`,
+    depFlags,
+    `--npm-token env:NPM_TOKEN`,
+  ]
+    .filter(Boolean)
+    .join(" ");
   return {
     label: `:npm: Publish ${pkg.name}`,
     key: `npm-${safeKey(pkg.name)}`,

@@ -2,11 +2,13 @@
 const CI_BASE_IMAGE = "ghcr.io/shepherdjerred/ci-base:403";
 
 /** Build the Kubernetes plugin config for a Buildkite step. */
-export function k8sPlugin(opts: {
-  cpu?: string;
-  memory?: string;
-  secrets?: string[];
-} = {}): Record<string, unknown> {
+export function k8sPlugin(
+  opts: {
+    cpu?: string;
+    memory?: string;
+    secrets?: string[];
+  } = {},
+): Record<string, unknown> {
   const secretRefs: Record<string, unknown>[] = [
     { secretRef: { name: "buildkite-ci-secrets" } },
   ];

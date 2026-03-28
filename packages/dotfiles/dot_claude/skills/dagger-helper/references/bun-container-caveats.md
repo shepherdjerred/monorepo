@@ -18,12 +18,12 @@ If TypeScript type checking fails in Dagger containers but works locally (macOS 
 
 Bun supports multiple install backends controlled by `BUN_INSTALL_LINKS`:
 
-| Backend | Platform Default | Behavior |
-|---------|-----------------|----------|
-| `hardlink` | Linux | Creates hardlinks from cache; fails silently across FS boundaries |
-| `clonefile` | macOS | Uses copy-on-write clone; efficient on APFS |
-| `copyfile` | Fallback | Full copy; always works, uses more disk |
-| `symlink` | None | Symlinks; may cause issues with bundlers |
+| Backend     | Platform Default | Behavior                                                          |
+| ----------- | ---------------- | ----------------------------------------------------------------- |
+| `hardlink`  | Linux            | Creates hardlinks from cache; fails silently across FS boundaries |
+| `clonefile` | macOS            | Uses copy-on-write clone; efficient on APFS                       |
+| `copyfile`  | Fallback         | Full copy; always works, uses more disk                           |
+| `symlink`   | None             | Symlinks; may cause issues with bundlers                          |
 
 For Dagger containers (always Linux), the default is `hardlink`. If experiencing cache-related issues, override with:
 
@@ -35,13 +35,13 @@ For Dagger containers (always Linux), the default is `hardlink`. If experiencing
 
 Since Bun v1.2, the default lockfile is `bun.lock` (text-based JSONC format), replacing the binary `bun.lockb`.
 
-| Aspect | bun.lock (text) | bun.lockb (binary) |
-|--------|----------------|-------------------|
-| Format | JSONC (human-readable) | Binary |
-| Diffable in PRs | Yes | No |
+| Aspect               | bun.lock (text)               | bun.lockb (binary) |
+| -------------------- | ----------------------------- | ------------------ |
+| Format               | JSONC (human-readable)        | Binary             |
+| Diffable in PRs      | Yes                           | No                 |
 | Hashable by CI tools | `hashFiles('bun.lock')` works | Need `bun pm hash` |
-| Merge conflicts | Resolvable | Difficult |
-| Install speed | Optimized in v1.1.39+ | Baseline |
+| Merge conflicts      | Resolvable                    | Difficult          |
+| Install speed        | Optimized in v1.1.39+         | Baseline           |
 
 Migration: `bun install --save-text-lockfile --frozen-lockfile --lockfile-only` then delete `bun.lockb`.
 
@@ -49,13 +49,13 @@ Migration: `bun install --save-text-lockfile --frozen-lockfile --lockfile-only` 
 
 Important distinction for Dagger users:
 
-| Aspect | Bun as Dagger SDK Runtime | Bun Inside Containers |
-|--------|--------------------------|----------------------|
-| Stability | Experimental | Stable, production-ready |
-| Known issues | 5-minute timeout (issue #10091) | Hardlink/cache bugs above |
-| Configuration | `"dagger": { "runtime": "bun" }` in dagger package.json | `dag.container().from("oven/bun:1.2")` |
-| Recommendation | Use Node.js for the SDK runtime | Use Bun for builds/tests |
-| Auto-detection | From `bun.lock`/`bun.lockb` in dagger dir | N/A |
+| Aspect         | Bun as Dagger SDK Runtime                               | Bun Inside Containers                  |
+| -------------- | ------------------------------------------------------- | -------------------------------------- |
+| Stability      | Experimental                                            | Stable, production-ready               |
+| Known issues   | 5-minute timeout (issue #10091)                         | Hardlink/cache bugs above              |
+| Configuration  | `"dagger": { "runtime": "bun" }` in dagger package.json | `dag.container().from("oven/bun:1.2")` |
+| Recommendation | Use Node.js for the SDK runtime                         | Use Bun for builds/tests               |
+| Auto-detection | From `bun.lock`/`bun.lockb` in dagger dir               | N/A                                    |
 
 ## Workspace Hoisting vs Isolated Mode
 
@@ -63,9 +63,9 @@ Bun defaults to hoisted `node_modules`, lifting dependencies to the root. This c
 
 For monorepos in Dagger, consider `--install.strategy=isolated` for deterministic builds. Caching implications:
 
-| Mode | node_modules Layout | Cache Strategy |
-|------|-------------------|----------------|
-| Hoisted (default) | Single root `node_modules` | One CacheVolume for root `node_modules` works |
-| Isolated | Per-package `node_modules` | Prefer caching `~/.bun/install/cache` (global) over individual dirs |
+| Mode              | node_modules Layout        | Cache Strategy                                                      |
+| ----------------- | -------------------------- | ------------------------------------------------------------------- |
+| Hoisted (default) | Single root `node_modules` | One CacheVolume for root `node_modules` works                       |
+| Isolated          | Per-package `node_modules` | Prefer caching `~/.bun/install/cache` (global) over individual dirs |
 
 With isolated mode, caching the global Bun cache is preferred — it's a single directory regardless of how many packages exist.

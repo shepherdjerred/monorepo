@@ -50,13 +50,19 @@ function decodeEntities(text: string): string {
     result = result.replaceAll(entity, char);
   }
   // Numeric entities
-  result = result.replace(/&#(\d+);/g, (_, num) => String.fromCharCode(Number(num)));
-  result = result.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+  result = result.replace(/&#(\d+);/g, (_, num) =>
+    String.fromCharCode(Number(num)),
+  );
+  result = result.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) =>
+    String.fromCharCode(parseInt(hex, 16)),
+  );
   return result;
 }
 
 export function extractConstraints(html: string): string | null {
-  const match = html.match(/<strong>Constraints:<\/strong>\s*<\/p>\s*<ul>([\s\S]*?)<\/ul>/i);
+  const match = html.match(
+    /<strong>Constraints:<\/strong>\s*<\/p>\s*<ul>([\s\S]*?)<\/ul>/i,
+  );
   if (!match) return null;
   return htmlToText(match[1]);
 }

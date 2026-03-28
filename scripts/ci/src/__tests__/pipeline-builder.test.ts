@@ -2,7 +2,12 @@ import { describe, expect, it } from "bun:test";
 import { buildPipeline } from "../pipeline-builder.ts";
 import type { AffectedPackages } from "../lib/types.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
-import { ALL_PACKAGES, PACKAGES_WITH_IMAGES, PACKAGE_TO_SITE, SKIP_PACKAGES } from "../catalog.ts";
+import {
+  ALL_PACKAGES,
+  PACKAGES_WITH_IMAGES,
+  PACKAGE_TO_SITE,
+  SKIP_PACKAGES,
+} from "../catalog.ts";
 
 function emptyAffected(): AffectedPackages {
   return {
@@ -37,7 +42,13 @@ function isGroup(step: unknown): step is BuildkiteGroup {
 }
 
 function isStep(step: unknown): step is BuildkiteStep {
-  return typeof step === "object" && step !== null && "label" in step && !("group" in step) && !("wait" in step);
+  return (
+    typeof step === "object" &&
+    step !== null &&
+    "label" in step &&
+    !("group" in step) &&
+    !("wait" in step)
+  );
 }
 
 function isWait(step: unknown): step is { wait: string } {
@@ -83,14 +94,24 @@ describe("buildPipeline", () => {
   describe("full build", () => {
     it("includes all packages", () => {
       const pipeline = buildPipeline(fullBuild());
-      const pkgGroups = pipeline.steps.filter(isGroup).filter((g) => g.key.startsWith("pkg-"));
+      const pkgGroups = pipeline.steps
+        .filter(isGroup)
+        .filter((g) => g.key.startsWith("pkg-"));
       expect(pkgGroups.length).toBe(ALL_PACKAGES.length - SKIP_PACKAGES.size);
     });
 
     it("includes quality gates", () => {
       const pipeline = buildPipeline(fullBuild());
       const steps = pipeline.steps.filter(isStep);
-      const qualityKeys = ["prettier", "shellcheck", "quality-ratchet", "compliance-check", "knip-check", "gitleaks-check", "suppression-check"];
+      const qualityKeys = [
+        "prettier",
+        "shellcheck",
+        "quality-ratchet",
+        "compliance-check",
+        "knip-check",
+        "gitleaks-check",
+        "suppression-check",
+      ];
       for (const key of qualityKeys) {
         expect(steps.some((s) => s.key === key)).toBe(true);
       }
@@ -168,10 +189,16 @@ describe("buildPipeline", () => {
       function collectKeys(steps: unknown[]) {
         for (const s of steps) {
           if (typeof s === "object" && s !== null) {
-            if ("key" in s && typeof (s as Record<string, unknown>)["key"] === "string") {
+            if (
+              "key" in s &&
+              typeof (s as Record<string, unknown>)["key"] === "string"
+            ) {
               keys.push((s as Record<string, unknown>)["key"] as string);
             }
-            if ("steps" in s && Array.isArray((s as Record<string, unknown>)["steps"])) {
+            if (
+              "steps" in s &&
+              Array.isArray((s as Record<string, unknown>)["steps"])
+            ) {
               collectKeys((s as Record<string, unknown>)["steps"] as unknown[]);
             }
           }
@@ -200,7 +227,8 @@ describe("buildPipeline", () => {
           if (typeof s !== "object" || s === null) continue;
           const obj = s as Record<string, unknown>;
           if (typeof obj["key"] === "string") allKeys.add(obj["key"]);
-          if (typeof obj["depends_on"] === "string") allDeps.push(obj["depends_on"]);
+          if (typeof obj["depends_on"] === "string")
+            allDeps.push(obj["depends_on"]);
           if (Array.isArray(obj["depends_on"])) {
             for (const d of obj["depends_on"]) {
               if (typeof d === "string") allDeps.push(d);

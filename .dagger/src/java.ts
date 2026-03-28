@@ -14,11 +14,9 @@ export function mavenBuildHelper(source: Directory): Container {
     .container()
     .from(MAVEN_IMAGE)
     .withWorkdir("/workspace")
-    .withDirectory(
-      "/workspace",
-      source.directory("packages/castle-casters"),
-      { exclude: [".git", "target"] },
-    )
+    .withDirectory("/workspace", source.directory("packages/castle-casters"), {
+      exclude: [".git", "target"],
+    })
     .withExec(["mvn", "package", "-DskipTests"]);
 }
 
@@ -28,10 +26,8 @@ export function mavenTestHelper(source: Directory): Container {
     .container()
     .from(MAVEN_IMAGE)
     .withWorkdir("/workspace")
-    .withDirectory(
-      "/workspace",
-      source.directory("packages/castle-casters"),
-      { exclude: [".git", "target"] },
-    )
+    .withDirectory("/workspace", source.directory("packages/castle-casters"), {
+      exclude: [".git", "target"],
+    })
     .withExec(["mvn", "test"]);
 }

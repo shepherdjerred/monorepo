@@ -5,6 +5,7 @@
 Migrating CI from Bazel back to Dagger. CI is broken. Goal: nuke all Bazel + Python CI code, complete the Dagger module to cover ALL packages, build a TypeScript pipeline generator, and get CI green end-to-end. No dead code.
 
 Key requirements:
+
 - Per-package granularity via Dagger content caching — change homelab, only homelab builds
 - Failed build retry: union current changes with ALL consecutive failed builds back to last green
 - Note: many services at `*.sjer.red` are publicly accessible via Cloudflare tunnel (not tailnet-only)

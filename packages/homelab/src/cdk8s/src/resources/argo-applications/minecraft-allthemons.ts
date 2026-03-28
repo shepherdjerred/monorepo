@@ -4,7 +4,8 @@ import { createModdedMinecraftApp } from "@shepherdjerred/homelab/cdk8s/src/misc
 export function createMinecraftAllthemonsApp(chart: Chart) {
   return createModdedMinecraftApp(chart, {
     name: "allthemons",
-    curseForgePageUrl: "https://www.curseforge.com/minecraft/modpacks/all-the-mons",
+    curseForgePageUrl:
+      "https://www.curseforge.com/minecraft/modpacks/all-the-mons",
     hostname: "allthemons.sjer.red",
     motd: "All the Mons (ATM10 + Cobblemon)",
     memory: "8G",

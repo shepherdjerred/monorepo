@@ -44,28 +44,38 @@ export function helmPackageHelper(
   chartMuseumUsername: string,
   chartMuseumPassword: Secret,
 ): Container {
-  return dag
-    .container()
-    .from(ALPINE_IMAGE)
-    .withExec(["apk", "add", "--no-cache", "helm", "curl"])
-    .withWorkdir("/chart")
-    .withDirectory(
-      "/chart",
-      source.directory(`packages/homelab/src/cdk8s/helm/${chartName}`),
-    )
-    // Copy CDK8s manifest into templates/ if it exists
-    .withExec([
-      "sh",
-      "-c",
-      `if [ -f /cdk8s-dist/${chartName}.k8s.yaml ]; then mkdir -p templates && cp /cdk8s-dist/${chartName}.k8s.yaml templates/; fi`,
-    ])
-    .withExec(["helm", "package", ".", "--version", version, "--app-version", version])
-    .withSecretVariable("CHARTMUSEUM_PASSWORD", chartMuseumPassword)
-    .withExec([
-      "sh",
-      "-c",
-      `curl -sf -u "${chartMuseumUsername}:$CHARTMUSEUM_PASSWORD" --data-binary @$(ls *.tgz) https://chartmuseum.sjer.red/api/charts`,
-    ]);
+  return (
+    dag
+      .container()
+      .from(ALPINE_IMAGE)
+      .withExec(["apk", "add", "--no-cache", "helm", "curl"])
+      .withWorkdir("/chart")
+      .withDirectory(
+        "/chart",
+        source.directory(`packages/homelab/src/cdk8s/helm/${chartName}`),
+      )
+      // Copy CDK8s manifest into templates/ if it exists
+      .withExec([
+        "sh",
+        "-c",
+        `if [ -f /cdk8s-dist/${chartName}.k8s.yaml ]; then mkdir -p templates && cp /cdk8s-dist/${chartName}.k8s.yaml templates/; fi`,
+      ])
+      .withExec([
+        "helm",
+        "package",
+        ".",
+        "--version",
+        version,
+        "--app-version",
+        version,
+      ])
+      .withSecretVariable("CHARTMUSEUM_PASSWORD", chartMuseumPassword)
+      .withExec([
+        "sh",
+        "-c",
+        `curl -sf -u "${chartMuseumUsername}:$CHARTMUSEUM_PASSWORD" --data-binary @$(ls *.tgz) https://chartmuseum.sjer.red/api/charts`,
+      ])
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -135,12 +145,14 @@ export function publishNpmHelper(
     );
   }
 
-  return container
-    .withExec(["bun", "install", "--frozen-lockfile"])
-    // Replace file: refs with actual versions before publishing
-    .withExec([
-      "sh", "-c",
-      `cd /workspace/packages/${pkg} && node -e '
+  return (
+    container
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      // Replace file: refs with actual versions before publishing
+      .withExec([
+        "sh",
+        "-c",
+        `cd /workspace/packages/${pkg} && node -e '
         const fs = require("fs");
         const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
         for (const [depType, deps] of [["dependencies", pkg.dependencies || {}], ["devDependencies", pkg.devDependencies || {}]]) {
@@ -155,14 +167,15 @@ export function publishNpmHelper(
           }
         }
         fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\\n");
-      '`
-    ])
-    .withSecretVariable("NPM_TOKEN", npmToken)
-    .withExec([
-      "sh",
-      "-c",
-      `echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc && bun publish --access public --tag latest`,
-    ]);
+      '`,
+      ])
+      .withSecretVariable("NPM_TOKEN", npmToken)
+      .withExec([
+        "sh",
+        "-c",
+        `echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc && bun publish --access public --tag latest`,
+      ])
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -463,7 +476,14 @@ export function releasePleaseHelper(
     .container()
     .from(BUN_IMAGE)
     .withExec(["apt-get", "update", "-qq"])
-    .withExec(["apt-get", "install", "-y", "-qq", "--no-install-recommends", "git"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "git",
+    ])
     .withExec(["bun", "add", "-g", `release-please@${RELEASE_PLEASE_VERSION}`])
     .withWorkdir("/workspace")
     .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
@@ -544,8 +564,20 @@ Be direct and concise. If the PR is trivial (pure merge/rebase with minimal chan
     .container()
     .from(BUN_IMAGE)
     .withExec(["apt-get", "update", "-qq"])
-    .withExec(["apt-get", "install", "-y", "-qq", "--no-install-recommends", "git"])
-    .withExec(["bun", "add", "-g", `@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}`])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "git",
+    ])
+    .withExec([
+      "bun",
+      "add",
+      "-g",
+      `@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}`,
+    ])
     .withWorkdir("/workspace")
     .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
     .withSecretVariable("GH_TOKEN", ghToken)
@@ -554,8 +586,10 @@ Be direct and concise. If the PR is trivial (pure merge/rebase with minimal chan
       "claude",
       "--print",
       "--dangerously-skip-permissions",
-      "--model", "claude-opus-4-6",
-      "--max-turns", "35",
+      "--model",
+      "claude-opus-4-6",
+      "--max-turns",
+      "35",
       prompt,
     ]);
 }

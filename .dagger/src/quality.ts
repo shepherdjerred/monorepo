@@ -52,27 +52,17 @@ function bunContainer(source: Directory): Container {
 
 /** Run the quality ratchet script and return its output. */
 export function qualityRatchetHelper(source: Directory): Container {
-  return bunContainer(source).withExec([
-    "bun",
-    "scripts/quality-ratchet.ts",
-  ]);
+  return bunContainer(source).withExec(["bun", "scripts/quality-ratchet.ts"]);
 }
 
 /** Run the compliance check shell script and return its output. */
 export function complianceCheckHelper(source: Directory): Container {
-  return bunContainer(source).withExec([
-    "bash",
-    "scripts/compliance-check.sh",
-  ]);
+  return bunContainer(source).withExec(["bash", "scripts/compliance-check.sh"]);
 }
 
 /** Run knip to detect unused code and return its output. */
 export function knipCheckHelper(source: Directory): Container {
-  return bunContainer(source).withExec([
-    "bunx",
-    "knip",
-    "--no-exit-code",
-  ]);
+  return bunContainer(source).withExec(["bunx", "knip", "--no-exit-code"]);
 }
 
 /** Run gitleaks to detect secrets in the source tree. */
@@ -84,13 +74,7 @@ export function gitleaksCheckHelper(source: Directory): Container {
     .withDirectory("/workspace", source, {
       exclude: SOURCE_EXCLUDES,
     })
-    .withExec([
-      "gitleaks",
-      "detect",
-      "--source",
-      "/workspace",
-      "--no-git",
-    ]);
+    .withExec(["gitleaks", "detect", "--source", "/workspace", "--no-git"]);
 }
 
 /** Run the suppression check script and return its output. */

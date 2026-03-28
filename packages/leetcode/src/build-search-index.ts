@@ -36,13 +36,17 @@ async function main() {
 
   const sourceDb = new Database(SQLITE_PATH, { readonly: true });
   const problems = sourceDb
-    .query("SELECT slug, title, difficulty, content_html FROM problems ORDER BY id")
+    .query(
+      "SELECT slug, title, difficulty, content_html FROM problems ORDER BY id",
+    )
     .all() as ProblemRow[];
   console.log(`[${timestamp()}] Found ${problems.length} problems`);
 
   const embedder = new EmbeddingClient();
   const embeddingsAvailable = await embedder.isAvailable();
-  console.log(`[${timestamp()}] Embeddings: ${embeddingsAvailable ? "available" : "not available (FTS5 only)"}`);
+  console.log(
+    `[${timestamp()}] Embeddings: ${embeddingsAvailable ? "available" : "not available (FTS5 only)"}`,
+  );
 
   let ftsIndexed = 0;
   let vectorsIndexed = 0;
@@ -62,7 +66,11 @@ async function main() {
     try {
       const vectors = await embedder.embed(textBatch);
       for (let i = 0; i < vectors.length; i++) {
-        searchDb.addVector(slugBatch[i], new Float32Array(vectors[i]), textBatch[i]);
+        searchDb.addVector(
+          slugBatch[i],
+          new Float32Array(vectors[i]),
+          textBatch[i],
+        );
         vectorsIndexed++;
       }
     } catch (err) {
@@ -76,26 +84,45 @@ async function main() {
 
   for (const problem of problems) {
     // FTS: always rebuild (idempotent via INSERT OR REPLACE)
-    const tags = (sourceDb.query(`
+    const tags = (
+      sourceDb
+        .query(
+          `
       SELECT t.name FROM topic_tags t
       JOIN problem_tags pt ON pt.tag_id = t.id
       JOIN problems p ON p.id = pt.problem_id
       WHERE p.slug = ?
-    `).all(problem.slug) as TagRow[]).map((t) => t.name);
+    `,
+        )
+        .all(problem.slug) as TagRow[]
+    ).map((t) => t.name);
 
-    const editorial = sourceDb.query(`
+    const editorial = sourceDb
+      .query(
+        `
       SELECT e.content_html FROM editorials e
       JOIN problems p ON p.id = e.problem_id
       WHERE p.slug = ?
-    `).get(problem.slug) as EditorialRow | null;
+    `,
+      )
+      .get(problem.slug) as EditorialRow | null;
 
     const contentHtml = problem.content_html ?? "";
     const description = htmlToText(contentHtml);
     const constraints = extractConstraints(contentHtml) ?? "";
-    const editorialText = editorial?.content_html ? htmlToText(editorial.content_html) : "";
+    const editorialText = editorial?.content_html
+      ? htmlToText(editorial.content_html)
+      : "";
     const tagsStr = tags.join(", ");
 
-    searchDb.addToFts(problem.slug, problem.title, tagsStr, description, constraints, editorialText);
+    searchDb.addToFts(
+      problem.slug,
+      problem.title,
+      tagsStr,
+      description,
+      constraints,
+      editorialText,
+    );
     ftsIndexed++;
 
     // Vector: one embedding per problem (title + tags + description)

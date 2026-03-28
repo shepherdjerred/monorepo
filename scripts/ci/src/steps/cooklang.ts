@@ -17,7 +17,8 @@ export function cooklangReleaseGroup(): BuildkiteGroup {
         key: "cooklang-build",
         if: MAIN_ONLY,
         depends_on: "release",
-        command: "dagger call cooklang-build --pkg-dir ./packages/cooklang-rich-preview",
+        command:
+          "dagger call cooklang-build --pkg-dir ./packages/cooklang-rich-preview",
         timeout_in_minutes: 10,
         retry: RETRY,
         env: DAGGER_ENV,

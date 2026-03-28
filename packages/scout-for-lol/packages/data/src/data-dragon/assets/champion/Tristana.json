@@ -566,10 +566,7 @@
         "If you see Tristana activate Rapid Fire in a fight, stun her and try to back off until the spell dissipates.",
         "Stand away from your creeps in a lane to take less collateral damage from Explosive Charge."
       ],
-      "tags": [
-        "Marksman",
-        "Assassin"
-      ],
+      "tags": ["Marksman", "Assassin"],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -606,11 +603,7 @@
           "description": "Tristana fires her weapon rapidly, increasing her Attack Speed for a short time.",
           "tooltip": "Tristana goes full-auto, gaining <attackSpeed>{{ attackspeedmod*100 }}% Attack Speed</attackSpeed> for {{ buffduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Attack Speed",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Attack Speed", "Cooldown", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ attackspeedmod*100.000000 }}% -> {{ attackspeedmodnl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -618,95 +611,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            20,
-            19,
-            18,
-            17,
-            16
-          ],
+          "cooldown": [20, 19, 18, 17, 16],
           "cooldownBurn": "20/19/18/17/16",
-          "cost": [
-            30,
-            35,
-            40,
-            45,
-            50
-          ],
+          "cost": [30, 35, 40, 45, 50],
           "costBurn": "30/35/40/45/50",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -724,13 +645,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            20,
-            20,
-            20,
-            20,
-            20
-          ],
+          "range": [20, 20, 20, 20, 20],
           "rangeBurn": "20",
           "image": {
             "full": "TristanaQ.png",
@@ -749,11 +664,7 @@
           "description": "Tristana fires at the ground to propel her to a distant location, dealing damage and slowing surrounding units for a brief period where she lands.",
           "tooltip": "Tristana launches herself, dealing <magicDamage>{{ landingdamage }} magic damage</magicDamage> and <status>Slowing</status> by {{ slowmod*-100 }}% for {{ slowduration }} seconds upon landing.<br /><br />Champion takedowns and max stack <spellName>Explosive Charge</spellName> detonations on champions refresh this Ability's Cooldown.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -761,95 +672,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            22,
-            20,
-            18,
-            16,
-            14
-          ],
+          "cooldown": [22, 20, 18, 16, 14],
           "cooldownBurn": "22/20/18/16/14",
-          "cost": [
-            30,
-            35,
-            40,
-            45,
-            50
-          ],
+          "cost": [30, 35, 40, 45, 50],
           "costBurn": "30/35/40/45/50",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -867,13 +706,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            900,
-            900,
-            900,
-            900,
-            900
-          ],
+          "range": [900, 900, 900, 900, 900],
           "rangeBurn": "900",
           "image": {
             "full": "TristanaW.png",
@@ -906,95 +739,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            16,
-            15.5,
-            15,
-            14.5,
-            14
-          ],
+          "cooldown": [16, 15.5, 15, 14.5, 14],
           "cooldownBurn": "16/15.5/15/14.5/14",
-          "cost": [
-            50,
-            55,
-            60,
-            65,
-            70
-          ],
+          "cost": [50, 55, 60, 65, 70],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -1012,13 +773,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            550,
-            550,
-            550,
-            550,
-            550
-          ],
+          "range": [550, 550, 550, 550, 550],
           "rangeBurn": "550",
           "image": {
             "full": "TristanaE.png",
@@ -1037,11 +792,7 @@
           "description": "Tristana loads a massive cannonball into her weapon and fires it at an enemy unit. This deals Magic Damage and knocks the target back. If the target is carrying the Explosive Charge bomb, the bomb detonation radius is doubled.",
           "tooltip": "Tristana fires a massive cannonball, dealing <magicDamage>{{ damagecalc }} magic damage</magicDamage> to the target, <status>Knocking Back</status> and <status>Stunning</status> them and surrounding enemies for {{ stunduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Knockback Distance",
-              "Stun Duration:"
-            ],
+            "label": ["Damage", "Knockback Distance", "Stun Duration:"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ knockbackdistance }} -> {{ knockbackdistanceNL }}",
@@ -1049,71 +800,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            100,
-            100,
-            100
-          ],
+          "cooldown": [100, 100, 100],
           "cooldownBurn": "100",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -1131,11 +834,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            550,
-            550,
-            550
-          ],
+          "range": [550, 550, 550],
           "rangeBurn": "550",
           "image": {
             "full": "TristanaR.png",

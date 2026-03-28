@@ -40,7 +40,6 @@ async function ensureDir(path: string): Promise<void> {
   await $`mkdir -p ${path}`;
 }
 
-
 async function getLatestVersion(): Promise<string> {
   console.log("Fetching latest version...");
   const response = await fetch(`${BASE_URL}/api/versions.json`);
@@ -382,9 +381,12 @@ async function main(): Promise<void> {
     const version = process.argv[2] ?? (await getLatestVersion());
     const cdVersion = getCommunityDragonVersion(version);
     const communityDragonUrl = getCommunityDragonUrl(cdVersion);
-    const communityDragonPositionsUrl = getCommunityDragonPositionsUrl(cdVersion);
+    const communityDragonPositionsUrl =
+      getCommunityDragonPositionsUrl(cdVersion);
     const arenaAugmentsUrl = getArenaAugmentsUrl(cdVersion);
-    console.log(`\nUsing Data Dragon version: ${version} (CommunityDragon: ${cdVersion})\n`);
+    console.log(
+      `\nUsing Data Dragon version: ${version} (CommunityDragon: ${cdVersion})\n`,
+    );
 
     // Ensure directories exist
     await createDirectories();
@@ -423,8 +425,13 @@ async function main(): Promise<void> {
       championNames,
     );
     const runeImagesCount = await downloadRuneImages(runes);
-    const augmentImagesCount = await downloadAugmentImages(communityDragonUrl, arenaAugmentsUrl);
-    const laneImagesCount = await downloadLaneImages(communityDragonPositionsUrl);
+    const augmentImagesCount = await downloadAugmentImages(
+      communityDragonUrl,
+      arenaAugmentsUrl,
+    );
+    const laneImagesCount = await downloadLaneImages(
+      communityDragonPositionsUrl,
+    );
 
     const totalImages =
       spellImagesCount +

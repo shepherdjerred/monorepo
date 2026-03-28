@@ -389,10 +389,7 @@
         "Preventing Olaf from reaching his axe will minimize the amount of harassment he can cause in the laning phase.",
         "Olaf has reduced defenses from damage during Ragnarok, despite being immune to disables. If you can't escape from Olaf during Ragnarok, try focusing your damage on him with your teammates."
       ],
-      "tags": [
-        "Fighter",
-        "Tank"
-      ],
+      "tags": ["Fighter", "Tank"],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -429,12 +426,7 @@
           "description": "Olaf throws an axe into the ground at a target location, dealing damage to enemies it passes through and reducing their Armor and Move Speed. If Olaf picks up the axe, the ability's cooldown is reset.",
           "tooltip": "Olaf throws an axe, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Slowing</status> by {{ slowamount*100 }}% for up to {{ e3 }} seconds (based on distance travelled). Champions hit lose <scaleArmor>{{ shredamount*100 }}% Armor</scaleArmor> for {{ debuffduration }} seconds.<br /><br />If Olaf picks up the axe, this Ability's Cooldown is reduced to {{ tooltipcdrefund }} seconds, or fully refunded if {{ tooltipcdrefund }} seconds has elapsed.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Slow",
-              "Monster Damage",
-              "Mana Cost"
-            ],
+            "label": ["Damage", "Slow", "Monster Damage", "Mana Cost"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowamount*100.000000 }}% -> {{ slowamountnl*100.000000 }}%",
@@ -443,95 +435,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            9,
-            9,
-            9,
-            9,
-            9
-          ],
+          "cooldown": [9, 9, 9, 9, 9],
           "cooldownBurn": "9",
-          "cost": [
-            50,
-            55,
-            60,
-            65,
-            70
-          ],
+          "cost": [50, 55, 60, 65, 70],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              3,
-              3,
-              3,
-              3,
-              3
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [3, 3, 3, 3, 3],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -549,13 +469,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1000,
-            1000,
-            1000,
-            1000,
-            1000
-          ],
+          "range": [1000, 1000, 1000, 1000, 1000],
           "rangeBurn": "1000",
           "image": {
             "full": "OlafAxeThrowCast.png",
@@ -574,11 +488,7 @@
           "description": "Olaf's Attack Speed is increased and he gains a Shield.",
           "tooltip": "Olaf gains <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed> for {{ duration }} seconds, and <shield>{{ baseshield }} plus {{ shieldpercmissinghp*100 }}% missing Health Shield (up to a maximum of {{ maxshieldcalc }} Shield below {{ thresholdformax*100 }}% Health)</shield> for {{ shieldduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Attack Speed",
-              "Base Shield",
-              "Cooldown"
-            ],
+            "label": ["Attack Speed", "Base Shield", "Cooldown"],
             "effect": [
               "{{ attackspeed*100.000000 }}% -> {{ attackspeednl*100.000000 }}%",
               "{{ baseshield }} -> {{ baseshieldNL }}",
@@ -586,95 +496,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            16,
-            15,
-            14,
-            13,
-            12
-          ],
+          "cooldown": [16, 15, 14, 13, 12],
           "cooldownBurn": "16/15/14/13/12",
-          "cost": [
-            50,
-            50,
-            50,
-            50,
-            50
-          ],
+          "cost": [50, 50, 50, 50, 50],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -692,13 +530,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            700,
-            700,
-            700,
-            700,
-            700
-          ],
+          "range": [700, 700, 700, 700, 700],
           "rangeBurn": "700",
           "image": {
             "full": "OlafFrenziedStrikes.png",
@@ -717,105 +549,30 @@
           "description": "Olaf attacks with such force that it deals true damage to his target and himself, refunding the Health cost if he destroys the target.",
           "tooltip": "Olaf ferociously swings his axes, dealing <trueDamage>{{ totaldamage }} true damage</trueDamage>. If the enemy dies, the cost is refunded.<br /><br />Attacks lower the Cooldown of this Ability by 1 second, increased to 2 seconds when attacking monsters.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Cooldown"],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            11,
-            10,
-            9,
-            8,
-            7
-          ],
+          "cooldown": [11, 10, 9, 8, 7],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              70,
-              115,
-              160,
-              205,
-              250
-            ],
-            [
-              40,
-              40,
-              40,
-              40,
-              40
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [70, 115, 160, 205, 250],
+            [40, 40, 40, 40, 40],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -833,13 +590,7 @@
           "vars": [],
           "costType": "Health",
           "maxammo": "-1",
-          "range": [
-            325,
-            325,
-            325,
-            325,
-            325
-          ],
+          "range": [325, 325, 325, 325, 325],
           "rangeBurn": "325",
           "image": {
             "full": "OlafRecklessStrike.png",
@@ -872,71 +623,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            100,
-            90,
-            80
-          ],
+          "cooldown": [100, 90, 80],
           "cooldownBurn": "100/90/80",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -954,11 +657,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            400,
-            400,
-            400
-          ],
+          "range": [400, 400, 400],
           "rangeBurn": "400",
           "image": {
             "full": "OlafRagnarok.png",

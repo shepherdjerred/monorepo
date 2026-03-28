@@ -22,7 +22,11 @@ export function argoCdSyncStep(
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [
-      k8sPlugin({ cpu: "500m", memory: "512Mi", secrets: ["buildkite-argocd-token"] }),
+      k8sPlugin({
+        cpu: "500m",
+        memory: "512Mi",
+        secrets: ["buildkite-argocd-token"],
+      }),
     ],
   };
 }
@@ -42,7 +46,11 @@ export function argoCdHealthStep(
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [
-      k8sPlugin({ cpu: "500m", memory: "512Mi", secrets: ["buildkite-argocd-token"] }),
+      k8sPlugin({
+        cpu: "500m",
+        memory: "512Mi",
+        secrets: ["buildkite-argocd-token"],
+      }),
     ],
   };
 }

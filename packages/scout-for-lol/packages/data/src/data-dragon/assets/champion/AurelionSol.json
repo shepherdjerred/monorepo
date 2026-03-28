@@ -282,9 +282,7 @@
       "blurb": "Aurelion Sol once graced the vast emptiness of the cosmos with celestial wonders of his own devising. Now, he is forced to wield his awesome power at the behest of a space-faring empire that tricked him into servitude. Desiring a return to his...",
       "allytips": [],
       "enemytips": [],
-      "tags": [
-        "Mage"
-      ],
+      "tags": ["Mage"],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -335,95 +333,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            3,
-            3,
-            3,
-            3,
-            3
-          ],
+          "cooldown": [3, 3, 3, 3, 3],
           "cooldownBurn": "3",
-          "cost": [
-            35,
-            40,
-            45,
-            50,
-            55
-          ],
+          "cost": [35, 40, 45, 50, 55],
           "costBurn": "35/40/45/50/55",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -441,13 +367,7 @@
           "vars": [],
           "costType": " Mana per second",
           "maxammo": "-1",
-          "range": [
-            750,
-            750,
-            750,
-            750,
-            750
-          ],
+          "range": [750, 750, 750, 750, 750],
           "rangeBurn": "750",
           "image": {
             "full": "AurelionSolQ.png",
@@ -478,95 +398,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            22,
-            20.5,
-            19,
-            17.5,
-            16
-          ],
+          "cooldown": [22, 20.5, 19, 17.5, 16],
           "cooldownBurn": "22/20.5/19/17.5/16",
-          "cost": [
-            50,
-            55,
-            60,
-            65,
-            70
-          ],
+          "cost": [50, 55, 60, 65, 70],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -584,13 +432,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1500,
-            1500,
-            1500,
-            1500,
-            1500
-          ],
+          "range": [1500, 1500, 1500, 1500, 1500],
           "rangeBurn": "1500",
           "image": {
             "full": "AurelionSolW.png",
@@ -609,103 +451,29 @@
           "description": "Aurelion Sol summons a black hole, damaging enemies and slowly pulling them toward its center. This ability grants Stardust each time an enemy dies within the black hole and for each second an enemy champion is caught inside it. The center of the black hole executes enemies who are below a certain percentage of their maximum health. Stardust increases Singularity's area as well as the execution threshold.",
           "tooltip": "Aurelion Sol summons a black hole, dealing <magicDamage>{{ damagepersecond }} magic damage</magicDamage> per second and <status>Dragging</status> enemies towards the center for {{ duration }} seconds. Enemies in the center below <scaleHealth>{{ currentexecutionthreshold }}% max Health</scaleHealth> die instantly.<br /><br />The black hole absorbs <span class=\"color3458eb\">Stardust</span> when enemies die within it and each second an enemy champion is inside.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage Per Second"
-            ],
+            "label": ["Damage Per Second"],
             "effect": [
               "{{ basedamagepersecond }} -> {{ basedamagepersecondNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            12,
-            12,
-            12,
-            12,
-            12
-          ],
+          "cooldown": [12, 12, 12, 12, 12],
           "cooldownBurn": "12",
-          "cost": [
-            90,
-            90,
-            90,
-            90,
-            90
-          ],
+          "cost": [90, 90, 90, 90, 90],
           "costBurn": "90",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -723,13 +491,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            750,
-            750,
-            750,
-            750,
-            750
-          ],
+          "range": [750, 750, 750, 750, 750],
           "rangeBurn": "750",
           "image": {
             "full": "AurelionSolE.png",
@@ -762,71 +524,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            120,
-            110,
-            100
-          ],
+          "cooldown": [120, 110, 100],
           "cooldownBurn": "120/110/100",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -844,11 +558,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1250,
-            1250,
-            1250
-          ],
+          "range": [1250, 1250, 1250],
           "rangeBurn": "1250",
           "image": {
             "full": "AurelionSolR.png",

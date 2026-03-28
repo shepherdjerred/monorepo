@@ -538,10 +538,7 @@
         "Moving the fight to a different area will deprive Zyra of accumulated seeds.",
         "Seeds placed by Zyra's W are larger, a different color, and grant a small amount of vision to her team."
       ],
-      "tags": [
-        "Mage",
-        "Support"
-      ],
+      "tags": ["Mage", "Support"],
       "partype": "Mana",
       "info": {
         "attack": 4,
@@ -578,105 +575,30 @@
           "description": "Thick vines spread through the ground and explode into spines, dealing magic damage to enemies within the area. If cast near a seed, Deadly Spines grows a Thorn Spitter plant, which fires at enemies from afar.",
           "tooltip": "Zyra causes thick vines to spread and explode into spines, dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage>.<br /><br />If this Ability is cast near a <keywordMajor>Seed</keywordMajor>, the <keywordMajor>Seed</keywordMajor> grows into a Thorn Spitter that deals <magicDamage>{{ spell.zyrap:plantdamage }} magic damage</magicDamage> and lasts {{ spell.zyrap:plantduration }} seconds. Thorn Spitters have 575 range.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Cooldown",
-              "Damage"
-            ],
+            "label": ["Cooldown", "Damage"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ e1 }} -> {{ e1NL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            7,
-            6.5,
-            6,
-            5.5,
-            5
-          ],
+          "cooldown": [7, 6.5, 6, 5.5, 5],
           "cooldownBurn": "7/6.5/6/5.5/5",
-          "cost": [
-            55,
-            55,
-            55,
-            55,
-            55
-          ],
+          "cost": [55, 55, 55, 55, 55],
           "costBurn": "55",
           "datavalues": {},
           "effect": [
             null,
-            [
-              60,
-              100,
-              140,
-              180,
-              220
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [60, 100, 140, 180, 220],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -694,13 +616,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            800,
-            800,
-            800,
-            800,
-            800
-          ],
+          "range": [800, 800, 800, 800, 800],
           "rangeBurn": "800",
           "image": {
             "full": "ZyraQ.png",
@@ -719,103 +635,27 @@
           "description": "Zyra plants a seed, lasting up to 60 seconds. Deadly Spines and Grasping Roots cast near seeds will turn them into plants who fight for Zyra. Zyra can store multiple seeds at once, and killing enemies reduces Rampant Growth's recharge time.",
           "tooltip": "Zyra plants a <keywordMajor>Seed</keywordMajor> that lasts {{ e6 }} seconds. These <keywordMajor>Seeds</keywordMajor> grant <keywordStealth>True Sight</keywordStealth> of enemy champions that step on them for {{ e3 }} seconds, but are still destroyed.<br /><br />This Ability has 2 charges with a {{ ammorechargetime }} second recharge time. Killing an enemy minion or monster reduces the recharge time by {{ e1 }}%. Champion takedowns reduce the recharge time by {{ e2 }}% instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Seed Recharge Rate"
-            ],
-            "effect": [
-              "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
-            ]
+            "label": ["Seed Recharge Rate"],
+            "effect": ["{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"]
           },
           "maxrank": 5,
-          "cooldown": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cooldown": [0, 0, 0, 0, 0],
           "cooldownBurn": "0",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              35,
-              35,
-              35,
-              35,
-              35
-            ],
-            [
-              100,
-              100,
-              100,
-              100,
-              100
-            ],
-            [
-              2,
-              2,
-              2,
-              2,
-              2
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              60,
-              60,
-              60,
-              60,
-              60
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              10,
-              20,
-              30,
-              40,
-              50
-            ],
-            [
-              0.4,
-              0.8,
-              1.2,
-              1.6,
-              2
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [35, 35, 35, 35, 35],
+            [100, 100, 100, 100, 100],
+            [2, 2, 2, 2, 2],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [60, 60, 60, 60, 60],
+            [0, 0, 0, 0, 0],
+            [10, 20, 30, 40, 50],
+            [0.4, 0.8, 1.2, 1.6, 2],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -833,13 +673,7 @@
           "vars": [],
           "costType": "1 Seed",
           "maxammo": "2",
-          "range": [
-            850,
-            850,
-            850,
-            850,
-            850
-          ],
+          "range": [850, 850, 850, 850, 850],
           "rangeBurn": "850",
           "image": {
             "full": "ZyraW.png",
@@ -858,11 +692,7 @@
           "description": "Zyra sends forth vines through the ground to ensnare her target, dealing damage and rooting enemies they come across. If cast near a seed, Grasping Roots grows a Vine Lasher, whose short range attacks reduce enemy Move Speed.",
           "tooltip": "Zyra sends vines forward, <status>Rooting</status> for {{ e5 }} second(s) and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. <br /><br />If this Ability passes near a <keywordMajor>Seed</keywordMajor>, the <keywordMajor>Seed</keywordMajor> grows into a Vine Lasher that deals <magicDamage>{{ spell.zyrap:plantdamage }} magic damage</magicDamage> and lasts {{ spell.zyrap:plantduration }} seconds. Vine Lashers have 400 range, and their Attacks <status>Slow</status> by {{ e2 }}% for {{ e3 }} seconds. The <status>Slow</status> from multiple Vine Lashers stacks up to {{ maxslowstacks }} times.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "@AbilityResourceName@ Cost",
-              "Damage",
-              "Root Duration"
-            ],
+            "label": ["@AbilityResourceName@ Cost", "Damage", "Root Duration"],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -870,95 +700,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            11,
-            11,
-            11,
-            11,
-            11
-          ],
+          "cooldown": [11, 11, 11, 11, 11],
           "cooldownBurn": "11",
-          "cost": [
-            70,
-            75,
-            80,
-            85,
-            90
-          ],
+          "cost": [70, 75, 80, 85, 90],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [
-              60,
-              95,
-              130,
-              165,
-              200
-            ],
-            [
-              30,
-              30,
-              30,
-              30,
-              30
-            ],
-            [
-              2,
-              2,
-              2,
-              2,
-              2
-            ],
-            [
-              4,
-              4,
-              4,
-              0,
-              0
-            ],
-            [
-              1,
-              1.25,
-              1.5,
-              1.75,
-              2
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [60, 95, 130, 165, 200],
+            [30, 30, 30, 30, 30],
+            [2, 2, 2, 2, 2],
+            [4, 4, 4, 0, 0],
+            [1, 1.25, 1.5, 1.75, 2],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -976,13 +734,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1100,
-            1100,
-            1100,
-            1100,
-            1100
-          ],
+          "range": [1100, 1100, 1100, 1100, 1100],
           "rangeBurn": "1100",
           "image": {
             "full": "ZyraE.png",
@@ -1001,81 +753,30 @@
           "description": "Zyra summons a twisted thicket at her target location, dealing damage to enemies as it expands and knocking them airborne as it contracts. Plants within the thicket are enraged.",
           "tooltip": "Zyra summons the fury of nature, growing a twisted thicket that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>. After 2 seconds, the vines snap upwards, <status>Knocking Up</status> for {{ e1 }} second.<br /><br />Zyra's plants within the thicket become enraged, resetting their duration, gaining <healing>{{ e2 }}% Health</healing> and Attacking for {{ plantdamagebonus }}% bonus damage.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Cooldown",
-              "Damage"
-            ],
+            "label": ["Cooldown", "Damage"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ e3 }} -> {{ e3NL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            110,
-            100,
-            90
-          ],
+          "cooldown": [110, 100, 90],
           "cooldownBurn": "110/100/90",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              1,
-              1,
-              1
-            ],
-            [
-              50,
-              50,
-              50
-            ],
-            [
-              200,
-              300,
-              400
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              150,
-              150,
-              150
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [1, 1, 1],
+            [50, 50, 50],
+            [200, 300, 400],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [150, 150, 150],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -1093,11 +794,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            700,
-            700,
-            700
-          ],
+          "range": [700, 700, 700],
           "rangeBurn": "700",
           "image": {
             "full": "ZyraR.png",

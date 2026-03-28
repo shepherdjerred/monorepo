@@ -64,6 +64,7 @@ Create `package.json` (bun workspace member), `tsconfig.json`.
 ### 2. Port catalog (`src/catalog.ts`)
 
 Port from the old Python catalog (reference git history). Include:
+
 - `IMAGE_PUSH_TARGETS`: 9 app images + 4 infra images (13 total)
 - `NPM_PACKAGES`: bun-decompile, astro-opengraph-images, webring, helm-types (4)
 - `DEPLOY_SITES`: sjer.red, clauderon docs, resume, webring, cooklang-rich-preview, status-page, cook (7)
@@ -77,19 +78,20 @@ Port from the old Python catalog (reference git history). Include:
 
 ```typescript
 interface AffectedPackages {
-  packages: Set<string>
-  buildAll: boolean
-  homelabChanged: boolean
-  clauderonChanged: boolean
-  cooklangChanged: boolean
-  castleCastersChanged: boolean
-  resumeChanged: boolean
-  hasImagePackages: Set<string>
-  hasSitePackages: Set<string>
+  packages: Set<string>;
+  buildAll: boolean;
+  homelabChanged: boolean;
+  clauderonChanged: boolean;
+  cooklangChanged: boolean;
+  castleCastersChanged: boolean;
+  resumeChanged: boolean;
+  hasImagePackages: Set<string>;
+  hasSitePackages: Set<string>;
 }
 ```
 
 Logic:
+
 1. **Base revision**: `git merge-base HEAD origin/main` for PRs. For main branch: query Buildkite API for last passed build's commit SHA.
 2. **Changed files**: `git diff --name-only {base} HEAD`
 3. **Infrastructure check**: if any of `bun.lock`, root `package.json`, `tsconfig.base.json`, `.buildkite/`, `.dagger/`, `scripts/ci/` changed → `buildAll = true`
@@ -98,6 +100,7 @@ Logic:
 6. **Feature flags**: set `homelabChanged`, `clauderonChanged`, etc. based on affected packages
 
 **Failed-build retry:**
+
 ```typescript
 async function getLastGreenCommit(branch: string): Promise<string | null> {
   // Query Buildkite API:
@@ -105,6 +108,7 @@ async function getLastGreenCommit(branch: string): Promise<string | null> {
   // Return commit SHA, or null if no green builds
 }
 ```
+
 When on main branch, use `getLastGreenCommit()` instead of merge-base. `git diff {lastGreen}..HEAD` naturally unions all consecutive failures.
 
 ### 4. Implement step generators (`src/steps/*.ts`)
@@ -112,6 +116,7 @@ When on main branch, use `getLastGreenCommit()` instead of merge-base. `git diff
 Each module exports a function returning BuildKite step(s) as JSON objects.
 
 **per-package.ts**: For each affected package, emit a group with lint/typecheck/test steps:
+
 ```typescript
 {
   group: `:dagger: ${pkg}`,
@@ -125,6 +130,7 @@ Each module exports a function returning BuildKite step(s) as JSON objects.
 ```
 
 Special handling for:
+
 - Prisma packages (birmel, scout-for-lol, tasknotes-server): generate → lint/typecheck/test
 - Astro sites: add astro-check and astro-build steps
 - Rust: fmt, clippy, test, cargo-deny
@@ -133,6 +139,7 @@ Special handling for:
 - LaTeX: latex-build
 
 **images.ts**: Image push steps that capture digest metadata:
+
 ```bash
 DIGEST=$(dagger call push-image --source . --pkg birmel --tag $TAG ...)
 buildkite-agent meta-data set "digest:shepherdjerred/birmel" "$DIGEST"
@@ -143,31 +150,53 @@ buildkite-agent meta-data set "digest:shepherdjerred/birmel" "$DIGEST"
 ### 5. Implement K8s plugin builder (`src/lib/k8s-plugin.ts`)
 
 ```typescript
-function k8sPlugin(opts: { cpu?: string, memory?: string, secrets?: string[] }) {
+function k8sPlugin(opts: {
+  cpu?: string;
+  memory?: string;
+  secrets?: string[];
+}) {
   return {
     kubernetes: {
-      checkout: { cloneFlags: "--depth=100 --dissociate", fetchFlags: "--depth=100" },
+      checkout: {
+        cloneFlags: "--depth=100 --dissociate",
+        fetchFlags: "--depth=100",
+      },
       podSpecPatch: {
         serviceAccountName: "buildkite-agent-stack-k8s-controller",
-        containers: [{
-          name: "container-0",
-          image: CI_BASE_IMAGE,
-          resources: { requests: { cpu: opts.cpu ?? "500m", memory: opts.memory ?? "1Gi" } },
-          env: [{ name: "_EXPERIMENTAL_DAGGER_RUNNER_HOST", value: "tcp://dagger-engine.dagger.svc.cluster.local:8080" }],
-          envFrom: [
-            { secretRef: { name: "buildkite-ci-secrets" } },
-            ...(opts.secrets ?? []).map(s => ({ secretRef: { name: s, optional: true } })),
-          ],
-        }],
+        containers: [
+          {
+            name: "container-0",
+            image: CI_BASE_IMAGE,
+            resources: {
+              requests: {
+                cpu: opts.cpu ?? "500m",
+                memory: opts.memory ?? "1Gi",
+              },
+            },
+            env: [
+              {
+                name: "_EXPERIMENTAL_DAGGER_RUNNER_HOST",
+                value: "tcp://dagger-engine.dagger.svc.cluster.local:8080",
+              },
+            ],
+            envFrom: [
+              { secretRef: { name: "buildkite-ci-secrets" } },
+              ...(opts.secrets ?? []).map((s) => ({
+                secretRef: { name: s, optional: true },
+              })),
+            ],
+          },
+        ],
       },
     },
-  }
+  };
 }
 ```
 
 ### 6. Implement pipeline builder (`src/pipeline-builder.ts`)
 
 Assemble all steps based on `AffectedPackages`:
+
 ```
 Per-package groups (affected only)
 Quality gates (every build)
@@ -186,9 +215,9 @@ Version commit-back (if images pushed)
 ### 7. Implement entry point (`src/main.ts`)
 
 ```typescript
-const affected = await detectChanges()
-const pipeline = buildPipeline(affected)
-console.log(JSON.stringify(pipeline))
+const affected = await detectChanges();
+const pipeline = buildPipeline(affected);
+console.log(JSON.stringify(pipeline));
 ```
 
 ### 8. Update `.buildkite/scripts/generate-pipeline.sh`

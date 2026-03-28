@@ -374,10 +374,7 @@
         "Vi will shred your Armor and gain Attack Speed if she manages to hit you three times in a row. Try not to engage in extended brawls with her.",
         "Vi cannot be stopped while using her ult. Remember to save your displacement effects until after she's done charging."
       ],
-      "tags": [
-        "Fighter",
-        "Assassin"
-      ],
+      "tags": ["Fighter", "Assassin"],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -428,95 +425,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            12,
-            10.5,
-            9,
-            7.5,
-            6
-          ],
+          "cooldown": [12, 10.5, 9, 7.5, 6],
           "cooldownBurn": "12/10.5/9/7.5/6",
-          "cost": [
-            50,
-            60,
-            70,
-            80,
-            90
-          ],
+          "cost": [50, 60, 70, 80, 90],
           "costBurn": "50/60/70/80/90",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              15,
-              15,
-              15,
-              15,
-              15
-            ],
-            [
-              6,
-              6,
-              6,
-              6,
-              6
-            ],
-            [
-              5,
-              5,
-              5,
-              5,
-              5
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [15, 15, 15, 15, 15],
+            [6, 6, 6, 6, 6],
+            [5, 5, 5, 5, 5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -534,13 +459,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            250,
-            250,
-            250,
-            250,
-            250
-          ],
+          "range": [250, 250, 250, 250, 250],
           "rangeBurn": "250",
           "image": {
             "full": "ViQ.png",
@@ -559,105 +478,30 @@
           "description": "Vi's punches break her opponent's Armor, dealing bonus damage and granting her Attack Speed.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Every 3rd Attack on the same target deals an additional <physicalDamage>{{ totaldamagetooltip }} max Health physical damage</physicalDamage>, removes <scaleArmor>{{ shredamount }}% Armor</scaleArmor> and grants Vi <attackSpeed>{{ attackspeed }}% Attack Speed</attackSpeed> for {{ sharedbuffsduration }} seconds. It also reduces the remaining Cooldown of <spellName>Blast Shield</spellName> by {{ spell.vipassive:cdreductionon3hit }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Maximum Health Damage",
-              "Attack Speed"
-            ],
+            "label": ["Maximum Health Damage", "Attack Speed"],
             "effect": [
               "{{ maxhealthdamage }}% -> {{ maxhealthdamageNL }}%",
               "{{ attackspeed }}% -> {{ attackspeedNL }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cooldown": [0, 0, 0, 0, 0],
           "cooldownBurn": "0",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -675,13 +519,7 @@
           "vars": [],
           "costType": "Passive",
           "maxammo": "-1",
-          "range": [
-            750,
-            750,
-            750,
-            750,
-            750
-          ],
+          "range": [750, 750, 750, 750, 750],
           "rangeBurn": "750",
           "image": {
             "full": "ViW.png",
@@ -712,95 +550,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
+          "cooldown": [1, 1, 1, 1, 1],
           "cooldownBurn": "1",
-          "cost": [
-            26,
-            32,
-            38,
-            44,
-            50
-          ],
+          "cost": [26, 32, 38, 44, 50],
           "costBurn": "26/32/38/44/50",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              50,
-              50,
-              50,
-              50,
-              50
-            ],
-            [
-              1.5,
-              1.5,
-              1.5,
-              1.5,
-              1.5
-            ],
-            [
-              6,
-              6,
-              6,
-              6,
-              6
-            ],
-            [
-              1,
-              1,
-              1,
-              1,
-              1
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [50, 50, 50, 50, 50],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [6, 6, 6, 6, 6],
+            [1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -818,13 +584,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
-          "range": [
-            400,
-            400,
-            400,
-            400,
-            400
-          ],
+          "range": [400, 400, 400, 400, 400],
           "rangeBurn": "400",
           "image": {
             "full": "ViE.png",
@@ -843,81 +603,30 @@
           "description": "Vi runs down an enemy, knocking aside anyone in the way. When she reaches her target she knocks it into the air, jumps after it, and slams it back into the ground.",
           "tooltip": "Vi singles out an enemy champion, revealing them and dashing unstoppably towards them. Upon reaching them, Vi <status>Knocks</status> them <status>Up</status> for {{ rstunduration }} seconds and deals <physicalDamage>{{ damage }} physical damage</physicalDamage>.<br /><br />Any other enemies Vi collides with are dealt damage, knocked aside, and <status>Stunned</status> for {{ secondarytargetstunduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Base Damage",
-              "Cooldown"
-            ],
+            "label": ["Base Damage", "Cooldown"],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            140,
-            115,
-            90
-          ],
+          "cooldown": [140, 115, 90],
           "cooldownBurn": "140/115/90",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -935,11 +644,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            800,
-            800,
-            800
-          ],
+          "range": [800, 800, 800],
           "rangeBurn": "800",
           "image": {
             "full": "ViR.png",

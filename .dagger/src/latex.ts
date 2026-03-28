@@ -14,10 +14,8 @@ export function latexBuildHelper(source: Directory): Container {
     .container()
     .from(TEXLIVE_IMAGE)
     .withWorkdir("/workspace")
-    .withDirectory(
-      "/workspace",
-      source.directory("packages/resume"),
-      { exclude: [".git"] },
-    )
+    .withDirectory("/workspace", source.directory("packages/resume"), {
+      exclude: [".git"],
+    })
     .withExec(["xelatex", "resume.tex"]);
 }

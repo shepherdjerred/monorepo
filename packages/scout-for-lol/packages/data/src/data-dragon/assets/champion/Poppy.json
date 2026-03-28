@@ -373,10 +373,7 @@
         "When Poppy starts to spin her hammer, she is charging Keeper's Verdict.",
         "You can step on Poppy's shield to deny it from her."
       ],
-      "tags": [
-        "Tank",
-        "Fighter"
-      ],
+      "tags": ["Tank", "Fighter"],
       "partype": "Mana",
       "info": {
         "attack": 6,
@@ -429,95 +426,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            8,
-            7,
-            6,
-            5,
-            4
-          ],
+          "cooldown": [8, 7, 6, 5, 4],
           "cooldownBurn": "8/7/6/5/4",
-          "cost": [
-            35,
-            40,
-            45,
-            50,
-            55
-          ],
+          "cost": [35, 40, 45, 50, 55],
           "costBurn": "35/40/45/50/55",
           "datavalues": {},
           "effect": [
             null,
-            [
-              30,
-              55,
-              80,
-              105,
-              130
-            ],
-            [
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5
-            ],
-            [
-              20,
-              25,
-              30,
-              35,
-              40
-            ],
-            [
-              1,
-              1,
-              1,
-              1,
-              1
-            ],
-            [
-              9,
-              9,
-              9,
-              9,
-              9
-            ],
-            [
-              50,
-              80,
-              110,
-              140,
-              170
-            ],
-            [
-              100,
-              100,
-              100,
-              100,
-              100
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [30, 55, 80, 105, 130],
+            [0.5, 0.5, 0.5, 0.5, 0.5],
+            [20, 25, 30, 35, 40],
+            [1, 1, 1, 1, 1],
+            [9, 9, 9, 9, 9],
+            [50, 80, 110, 140, 170],
+            [100, 100, 100, 100, 100],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -535,13 +460,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            430,
-            430,
-            430,
-            430,
-            430
-          ],
+          "range": [430, 430, 430, 430, 430],
           "rangeBurn": "430",
           "image": {
             "full": "PoppyQ.png",
@@ -560,105 +479,30 @@
           "description": "Poppy passively gains Armor and Magic Resist. This bonus increases when she is low on Health. Poppy can activate Steadfast Presence to gain Move Speed and stop enemy dashes around her. If a dash is stopped, the enemy is slowed and grounded.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Poppy gains <scaleArmor>{{ bonusarmor }} Armor</scaleArmor> and <scaleMR>{{ bonusmr }} Magic Resist</scaleMR>. This bonus is doubled if Poppy is below {{ passiveempoweredhealthpercent*100 }}% Health.<br /><br /><spellActive>Active:</spellActive> Poppy gains <speed>{{ e2 }}% Move Speed</speed> and projects a field around her for {{ e1 }} seconds that stops enemy dashes. Enemies who are stopped by the field are <status>Grounded</status> and <status>Slowed</status> by {{ slowamount*-100 }}% for {{ groundingduration }} seconds and take <magicDamage>{{ interruptdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Cooldown",
-              "Damage"
-            ],
+            "label": ["Cooldown", "Damage"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ e5 }} -> {{ e5NL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            20,
-            18,
-            16,
-            14,
-            12
-          ],
+          "cooldown": [20, 18, 16, 14, 12],
           "cooldownBurn": "20/18/16/14/12",
-          "cost": [
-            50,
-            50,
-            50,
-            50,
-            50
-          ],
+          "cost": [50, 50, 50, 50, 50],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [
-              2,
-              2,
-              2,
-              2,
-              2
-            ],
-            [
-              40,
-              40,
-              40,
-              40,
-              40
-            ],
-            [
-              10,
-              10,
-              10,
-              10,
-              10
-            ],
-            [
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5
-            ],
-            [
-              70,
-              110,
-              150,
-              190,
-              230
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [2, 2, 2, 2, 2],
+            [40, 40, 40, 40, 40],
+            [10, 10, 10, 10, 10],
+            [0.5, 0.5, 0.5, 0.5, 0.5],
+            [70, 110, 150, 190, 230],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -676,13 +520,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            400,
-            400,
-            400,
-            400,
-            400
-          ],
+          "range": [400, 400, 400, 400, 400],
           "rangeBurn": "400",
           "image": {
             "full": "PoppyW.png",
@@ -715,95 +553,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            14,
-            13,
-            12,
-            11,
-            10
-          ],
+          "cooldown": [14, 13, 12, 11, 10],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [
-            70,
-            70,
-            70,
-            70,
-            70
-          ],
+          "cost": [70, 70, 70, 70, 70],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              40,
-              60,
-              80,
-              100,
-              120
-            ],
-            [
-              40,
-              60,
-              80,
-              100,
-              120
-            ],
-            [
-              1.6,
-              1.7,
-              1.8,
-              1.9,
-              2
-            ],
-            [
-              1800,
-              1800,
-              1800,
-              1800,
-              1800
-            ],
-            [
-              400,
-              400,
-              400,
-              400,
-              400
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [40, 60, 80, 100, 120],
+            [40, 60, 80, 100, 120],
+            [1.6, 1.7, 1.8, 1.9, 2],
+            [1800, 1800, 1800, 1800, 1800],
+            [400, 400, 400, 400, 400],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -821,13 +587,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            475,
-            475,
-            475,
-            475,
-            475
-          ],
+          "range": [475, 475, 475, 475, 475],
           "rangeBurn": "475",
           "image": {
             "full": "PoppyE.png",
@@ -846,81 +606,30 @@
           "description": "Poppy channels a hammer strike that knocks enemies very far away.",
           "tooltip": "<charge>Begin Casting:</charge> Poppy begins charging her hammer for up to {{ channelmaxduration }} seconds, <status>Slowing</status> herself by {{ selfslow }}%.<br /><br /><release>Release:</release> Poppy smashes the ground, creating a shockwave that deals <physicalDamage>{{ damage }} physical damage</physicalDamage> to the first champion hit and surrounding enemies, <status>Knocks</status> them <status>Back</status> towards their Nexus, and makes them Untargetable while they fly. The range and <status>Knock Back</status> distance increase with charge duration.<br /><br />An uncharged swing deals <physicalDamage>{{ halfdamage }} physical damage</physicalDamage> and <status>Knocks Up</status> for {{ knockupdurationsnap }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            140,
-            120,
-            100
-          ],
+          "cooldown": [140, 120, 100],
           "cooldownBurn": "140/120/100",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -938,11 +647,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            500,
-            500,
-            500
-          ],
+          "range": [500, 500, 500],
           "rangeBurn": "500",
           "image": {
             "full": "PoppyR.png",

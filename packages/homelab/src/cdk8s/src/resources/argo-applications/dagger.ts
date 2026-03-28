@@ -138,7 +138,11 @@ zfs get sync,logbias,atime "$DATASET"`,
       name: "docker-config-builder",
     },
     subjects: [
-      { kind: "ServiceAccount", name: "docker-config-builder", namespace: "dagger" },
+      {
+        kind: "ServiceAccount",
+        name: "docker-config-builder",
+        namespace: "dagger",
+      },
     ],
   });
 
@@ -203,7 +207,11 @@ echo "Done."`,
                 },
               },
               volumeMounts: [
-                { name: "docker-hub-secret", mountPath: "/secret", readOnly: true },
+                {
+                  name: "docker-hub-secret",
+                  mountPath: "/secret",
+                  readOnly: true,
+                },
               ],
             },
           ],

@@ -10,7 +10,8 @@ export function releaseStep(): BuildkiteStep {
   return daggerStep({
     label: ":bookmark: Release",
     key: "release",
-    daggerCmd: "dagger call release-please --source . --gh-token env:GITHUB_TOKEN",
+    daggerCmd:
+      "dagger call release-please --source . --gh-token env:GITHUB_TOKEN",
     timeoutMinutes: 10,
     condition: MAIN_ONLY,
   });

@@ -222,10 +222,7 @@
       "blurb": "A failed experiment by the Black Rose, Briar's uncontrollable bloodlust required a special pillory to focus her frenzied mind. After years of confinement, this living weapon broke free from her restraints and unleashed herself into the world. Now she's...",
       "allytips": [],
       "enemytips": [],
-      "tags": [
-        "Fighter",
-        "Assassin"
-      ],
+      "tags": ["Fighter", "Assassin"],
       "partype": "Fury",
       "info": {
         "attack": 9,
@@ -262,11 +259,7 @@
           "description": "Briar leaps to a unit and hits enemies with The Heel Wheel (of Pain), stunning them and breaking their Armor.",
           "tooltip": "Briar leaps to a target, <status>Stunning</status> it for {{ stunduration }} seconds, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and reducing {{ shredpercent*100 }}% <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for {{ shredduration }} seconds.<br /><br /><rules>Briar will stop prioritizing champions if she casts this Ability on a minion or monster during <keywordMajor>Blood Frenzy</keywordMajor>.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Armor and Magic Resist Shred",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Armor and Magic Resist Shred", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ shredpercent*100.000000 }}% -> {{ shredpercentnl*100.000000 }}%",
@@ -274,95 +267,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            13,
-            12,
-            11,
-            10,
-            9
-          ],
+          "cooldown": [13, 12, 11, 10, 9],
           "cooldownBurn": "13/12/11/10/9",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -380,13 +301,7 @@
           "vars": [],
           "costType": "% of current Health",
           "maxammo": "-1",
-          "range": [
-            475,
-            475,
-            475,
-            475,
-            475
-          ],
+          "range": [475, 475, 475, 475, 475],
           "rangeBurn": "475",
           "image": {
             "full": "BriarQ.png",
@@ -423,95 +338,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            14,
-            13,
-            12,
-            11,
-            10
-          ],
+          "cooldown": [14, 13, 12, 11, 10],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -529,13 +372,7 @@
           "vars": [],
           "costType": "% of current Health",
           "maxammo": "-1",
-          "range": [
-            350,
-            350,
-            350,
-            350,
-            350
-          ],
+          "range": [350, 350, 350, 350, 350],
           "rangeBurn": "350",
           "image": {
             "full": "BriarW.png",
@@ -554,11 +391,7 @@
           "description": "Briar refocuses her mind, removing Blood Frenzy and channeling energy into a powerful scream that damages and slows enemies. While charging, she takes reduced damage and heals for a portion of her max Health. A fully charged scream knocks foes back, dealing additional damage and stunning those who collide with a wall.",
           "tooltip": "<charge>Begin Charging:</charge> Briar removes <keywordMajor>Blood Frenzy</keywordMajor> and gathers energy, gaining {{ drpercent }}% damage reduction and restoring <healing>{{ percentmaxhpheal }} Health</healing> over 1 second.<br /><br /><release>Release:</release> Briar unleashes a scream that deals up to <magicDamage>{{ damage }} magic damage</magicDamage> based on time charged, and <status>Slows</status> by {{ slowpercent*100 }}% for {{ slowduration }} seconds. When fully charged, the scream <status>Knocks Back</status> enemies, dealing <magicDamage>{{ wallhitdamage }} magic damage</magicDamage> to those who hit a wall and <status>Stunning</status> them for {{ wallstunduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Additional Damage",
-              "Heal Ratio"
-            ],
+            "label": ["Damage", "Additional Damage", "Heal Ratio"],
             "effect": [
               "{{ maxbasedamage }} -> {{ maxbasedamageNL }}",
               "{{ wallhitbasedamage }} -> {{ wallhitbasedamageNL }}",
@@ -566,95 +399,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            16,
-            16,
-            16,
-            16,
-            16
-          ],
+          "cooldown": [16, 16, 16, 16, 16],
           "cooldownBurn": "16",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -672,13 +433,7 @@
           "vars": [],
           "costType": "% of current Health",
           "maxammo": "-1",
-          "range": [
-            400,
-            400,
-            400,
-            400,
-            400
-          ],
+          "range": [400, 400, 400, 400, 400],
           "rangeBurn": "400",
           "image": {
             "full": "BriarE.png",
@@ -697,12 +452,7 @@
           "description": "Briar kicks her pillory's hemolith gemstone, marking the first champion it hits as her prey. She then beelines straight to them, fearing other surrounding enemies upon arriving at her target, and enters a state of complete hemomania. She will pursue her prey until death, gaining the benefits of Blood Frenzy as well as additional Armor, Magic Resistance, Life Steal, and Move Speed.",
           "tooltip": "Briar kicks her pillory's hemolith gemstone and flies to the location of the first champion it hits, marking them as her prey. On landing, she deals <magicDamage>{{ damage }} magic damage</magicDamage> to everything nearby and causes enemies who are not her prey to <status>Flee</status> for {{ fearduration }} seconds. She then enters an empowered <keywordMajor>Blood Frenzy</keywordMajor> and will pursue her prey until death. During this time, she gains {{ totalresists }} <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR>, {{ lifestealpercent*100 }}% Lifesteal, and an additional <speed>{{ extramovespeedpercent*100 }}% Move Speed</speed>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Life Steal",
-              "Move Speed",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Life Steal", "Move Speed", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ lifestealpercent*100.000000 }}% -> {{ lifestealpercentnl*100.000000 }}%",
@@ -711,71 +461,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            120,
-            100,
-            80
-          ],
+          "cooldown": [120, 100, 80],
           "cooldownBurn": "120/100/80",
-          "cost": [
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -793,11 +495,7 @@
           "vars": [],
           "costType": "% of current Health",
           "maxammo": "-1",
-          "range": [
-            12000,
-            12000,
-            12000
-          ],
+          "range": [12000, 12000, 12000],
           "rangeBurn": "12000",
           "image": {
             "full": "BriarR.png",

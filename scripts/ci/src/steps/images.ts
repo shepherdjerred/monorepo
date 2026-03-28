@@ -16,7 +16,9 @@ function imagePushStep(
 ): BuildkiteStep {
   const pkg = img.package ?? img.name;
   const deps = WORKSPACE_DEPS[pkg] ?? [];
-  const depFlags = deps.flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`]).join(" ");
+  const depFlags = deps
+    .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
+    .join(" ");
   const cmd = [
     `DIGEST=$(dagger call push-image --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
     depFlags,
@@ -25,7 +27,9 @@ function imagePushStep(
     `--registry-username $GITHUB_USERNAME`,
     `--registry-password env:GITHUB_TOKEN)`,
     `&& buildkite-agent meta-data set "digest:${img.versionKey}" "$DIGEST"`,
-  ].filter(Boolean).join(" ");
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return {
     label: `:docker: Push ${img.name}`,
@@ -37,7 +41,11 @@ function imagePushStep(
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [
-      k8sPlugin({ cpu: "500m", memory: "1Gi", secrets: ["buildkite-argocd-token"] }),
+      k8sPlugin({
+        cpu: "500m",
+        memory: "1Gi",
+        secrets: ["buildkite-argocd-token"],
+      }),
     ],
   };
 }

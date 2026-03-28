@@ -16,7 +16,10 @@ describe("k8sPlugin", () => {
   });
 
   it("uses custom resources when provided", () => {
-    const plugin = k8sPlugin({ cpu: "2", memory: "4Gi" }) as Record<string, unknown>;
+    const plugin = k8sPlugin({ cpu: "2", memory: "4Gi" }) as Record<
+      string,
+      unknown
+    >;
     const k8s = plugin["kubernetes"] as Record<string, unknown>;
     const pod = k8s["podSpecPatch"] as Record<string, unknown>;
     const containers = pod["containers"] as Record<string, unknown>[];
@@ -42,7 +45,10 @@ describe("k8sPlugin", () => {
   });
 
   it("adds additional secrets when specified", () => {
-    const plugin = k8sPlugin({ secrets: ["buildkite-argocd-token"] }) as Record<string, unknown>;
+    const plugin = k8sPlugin({ secrets: ["buildkite-argocd-token"] }) as Record<
+      string,
+      unknown
+    >;
     const json = JSON.stringify(plugin);
     expect(json).toContain("buildkite-argocd-token");
   });

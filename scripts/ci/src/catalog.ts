@@ -22,16 +22,38 @@ export const IMAGE_PUSH_TARGETS: ImageTarget[] = [
   { name: "birmel", versionKey: "shepherdjerred/birmel" },
   { name: "tasknotes-server", versionKey: "shepherdjerred/tasknotes-server" },
   { name: "scout-for-lol", versionKey: "shepherdjerred/scout-for-lol/beta" },
-  { name: "discord-plays-pokemon", versionKey: "shepherdjerred/discord-plays-pokemon" },
-  { name: "starlight-karma-bot", versionKey: "shepherdjerred/starlight-karma-bot/beta" },
-  { name: "better-skill-capped-fetcher", package: "better-skill-capped", versionKey: "shepherdjerred/better-skill-capped-fetcher" },
+  {
+    name: "discord-plays-pokemon",
+    versionKey: "shepherdjerred/discord-plays-pokemon",
+  },
+  {
+    name: "starlight-karma-bot",
+    versionKey: "shepherdjerred/starlight-karma-bot/beta",
+  },
+  {
+    name: "better-skill-capped-fetcher",
+    package: "better-skill-capped",
+    versionKey: "shepherdjerred/better-skill-capped-fetcher",
+  },
 ];
 
 export const INFRA_PUSH_TARGETS: ImageTarget[] = [
   { name: "homelab", versionKey: "shepherdjerred/homelab" },
-  { name: "dependency-summary", package: "homelab", versionKey: "shepherdjerred/dependency-summary" },
-  { name: "dns-audit", package: "homelab", versionKey: "shepherdjerred/dns-audit" },
-  { name: "caddy-s3proxy", package: "homelab", versionKey: "shepherdjerred/caddy-s3proxy" },
+  {
+    name: "dependency-summary",
+    package: "homelab",
+    versionKey: "shepherdjerred/dependency-summary",
+  },
+  {
+    name: "dns-audit",
+    package: "homelab",
+    versionKey: "shepherdjerred/dns-audit",
+  },
+  {
+    name: "caddy-s3proxy",
+    package: "homelab",
+    versionKey: "shepherdjerred/caddy-s3proxy",
+  },
 ];
 
 // ---------------------------------------------------------------------------

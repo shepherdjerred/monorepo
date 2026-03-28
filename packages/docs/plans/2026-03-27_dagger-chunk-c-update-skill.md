@@ -13,21 +13,26 @@ Update the dagger-helper Claude skill with all findings from the research and co
 ## Context
 
 Read these before starting:
+
 - `~/.claude/research/dagger-best-practices.md` — audit findings
 - Current skill: `packages/dotfiles/dot_claude/skills/dagger-helper/SKILL.md`
 
 ## Steps
 
 ### 1. Read current skill
+
 Read `packages/dotfiles/dot_claude/skills/dagger-helper/SKILL.md` and `references/release-notes.md`.
 
 ### 2. Read research report
+
 Read `~/.claude/research/dagger-best-practices.md` for findings to incorporate.
 
 ### 3. Update SKILL.md
+
 Add or update these sections:
 
 **Error Handling Best Practices:**
+
 - Use `.stdout()` as the terminal call — triggers execution AND returns output for debugging
 - `.sync()` is only for pass/fail side effects where you don't need output
 - Catch `ExecError` explicitly — has `.cmd`, `.exitCode`, `.stdout`, `.stderr` properties
@@ -36,6 +41,7 @@ Add or update these sections:
 - `Promise.allSettled` is fine for parallelism, but check results and throw on failures
 
 **Caching Patterns:**
+
 - Layer ordering: copy `package.json` + `bun.lock` → `bun install` → THEN mount source. Source changes won't invalidate install cache.
 - Use `SOURCE_EXCLUDES` constant for all `withDirectory` calls: `node_modules`, `.eslintcache`, `dist`, `target`, `.git`, `.vscode`, `.idea`, `coverage`, `build`, `.next`, `.tsbuildinfo`, `__pycache__`, `.DS_Store`, `archive`
 - Function caching (v0.19.4+): default 7-day TTL. Use `@func({ cache: "never" })` on deploy/push. Use `@func({ cache: "session" })` on orchestration functions.
@@ -43,6 +49,7 @@ Add or update these sections:
 - Module source changes invalidate ALL function caches
 
 **CI Environment Variables:**
+
 ```bash
 export DAGGER_PROGRESS=plain    # no TUI in CI
 export DAGGER_NO_NAG=1          # suppress upgrade nags
@@ -51,6 +58,7 @@ export DAGGER_NO_UPDATE_CHECK=1 # suppress update checks
 ```
 
 **Debugging Workflow:**
+
 - `dagger call -i <func>` — interactive mode, drops into shell on failure
 - `.terminal()` — insert explicit breakpoint mid-pipeline
 - `--debug` — max verbosity, all internal engine spans
@@ -58,6 +66,7 @@ export DAGGER_NO_UPDATE_CHECK=1 # suppress update checks
 - `--progress=plain` — no TUI, suitable for CI logs
 
 **Anti-Patterns:**
+
 - Floating image tags (`oven/bun:debian`, `swiftlint:latest`) — non-reproducible, pin with Renovate comments
 - Source before deps in layer ordering — defeats caching, install runs on every source change
 - Error swallowing with `.catch()` → string conversion — CI exits 0 on failure
@@ -66,18 +75,22 @@ export DAGGER_NO_UPDATE_CHECK=1 # suppress update checks
 - Calling `curl | bash` without version — gets latest, breaks reproducibility
 
 **Module Organization:**
+
 - `@object()` class MUST stay in `index.ts` — TypeScript SDK constraint
 - CAN import helper functions from other files
 - Pattern: thin `@func()` wrappers in `index.ts` calling into `release.ts`, `quality.ts`, etc.
 
 ### 4. Update release notes
+
 Add v0.20.x notes covering function caching, new error handling, any breaking changes found.
 
 ### 5. Remove stale references
+
 - Remove references to `packages/dagger-utils/` (doesn't exist)
 - Update any outdated API examples
 
 ### 6. Copy to live location
+
 ```bash
 cp packages/dotfiles/dot_claude/skills/dagger-helper/SKILL.md ~/.claude/skills/dagger-helper/SKILL.md
 cp packages/dotfiles/dot_claude/skills/dagger-helper/references/release-notes.md ~/.claude/skills/dagger-helper/references/release-notes.md

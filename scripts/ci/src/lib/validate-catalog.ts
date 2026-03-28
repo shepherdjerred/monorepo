@@ -8,7 +8,9 @@ import { readdir } from "node:fs/promises";
 import { execSync } from "node:child_process";
 
 function getRepoRoot(): string {
-  return execSync("git rev-parse --show-toplevel", { encoding: "utf-8" }).trim();
+  return execSync("git rev-parse --show-toplevel", {
+    encoding: "utf-8",
+  }).trim();
 }
 import {
   ALL_PACKAGES,
@@ -26,7 +28,9 @@ export async function validateCatalog(): Promise<void> {
   // 1. Every packages/* directory must be in ALL_PACKAGES
   // Pipeline generator may run from scripts/ci/ or repo root — use git to find root
   const repoRoot = await getRepoRoot();
-  const packageDirs = await readdir(`${repoRoot}/packages`, { withFileTypes: true });
+  const packageDirs = await readdir(`${repoRoot}/packages`, {
+    withFileTypes: true,
+  });
   const actualPackages = packageDirs
     .filter((d) => d.isDirectory())
     .map((d) => d.name);
@@ -106,5 +110,7 @@ export async function validateCatalog(): Promise<void> {
     );
   }
 
-  console.error(`Catalog validated: ${ALL_PACKAGES.length} packages, ${PACKAGES_WITH_IMAGES.size} with images, ${Object.keys(PACKAGE_TO_SITE).length} with sites`);
+  console.error(
+    `Catalog validated: ${ALL_PACKAGES.length} packages, ${PACKAGES_WITH_IMAGES.size} with images, ${Object.keys(PACKAGE_TO_SITE).length} with sites`,
+  );
 }

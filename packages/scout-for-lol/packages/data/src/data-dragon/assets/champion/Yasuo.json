@@ -692,10 +692,7 @@
         "Yasuo is at his weakest just after he has launched a whirlwind. Engage at that point.",
         "Yasuo's shield from Resolve lasts only 2 seconds. Dealing damage to him will trigger it. Wait it out, then engage."
       ],
-      "tags": [
-        "Fighter",
-        "Assassin"
-      ],
+      "tags": ["Fighter", "Assassin"],
       "partype": "Flow",
       "info": {
         "attack": 8,
@@ -732,103 +729,27 @@
           "description": "Thrusts forward, damaging all enemies in a line.<br><br>On hit, grants a stack of Gathering Storm for a few seconds. At 2 stacks, Steel Tempest fires a whirlwind that knocks <font color='#6655CC'>Airborne</font>.<br><br>Steel Tempest is treated as a basic attack and scales with all the same things.",
           "tooltip": "Yasuo thrusts, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. If he hits, he gains a stack for {{ gatheringstormduration }} seconds. While he has 2 stacks, his next use of this Ability fires a whirlwind from range, dealing the same damage and <status>Knocking Up</status> for {{ knockupdurationtooltiponly }} second.<br /><br />If used while dashing, this Ability strikes in a circle rather than a stab.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage"
-            ],
-            "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}"
-            ]
+            "label": ["Damage"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}"]
           },
           "maxrank": 5,
-          "cooldown": [
-            4,
-            4,
-            4,
-            4,
-            4
-          ],
+          "cooldown": [4, 4, 4, 4, 4],
           "cooldownBurn": "4",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -846,13 +767,7 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [
-            475,
-            475,
-            475,
-            475,
-            475
-          ],
+          "range": [475, 475, 475, 475, 475],
           "rangeBurn": "475",
           "image": {
             "full": "YasuoQ1Wrapper.png",
@@ -871,105 +786,30 @@
           "description": "Creates a moving wall that blocks all enemy projectiles for 4 seconds.",
           "tooltip": "Yasuo creates a drifting wall of wind that blocks all enemy projectiles for 4 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Width",
-              "Cooldown"
-            ],
+            "label": ["Width", "Cooldown"],
             "effect": [
               "{{ e5 }} -> {{ e5NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            25,
-            23,
-            21,
-            19,
-            17
-          ],
+          "cooldown": [25, 23, 21, 19, 17],
           "cooldownBurn": "25/23/21/19/17",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              15,
-              20,
-              25,
-              30,
-              35
-            ],
-            [
-              60,
-              90,
-              120,
-              150,
-              180
-            ],
-            [
-              3,
-              6,
-              9,
-              12,
-              15
-            ],
-            [
-              300,
-              350,
-              400,
-              450,
-              500
-            ],
-            [
-              320,
-              390,
-              460,
-              530,
-              600
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [15, 20, 25, 30, 35],
+            [60, 90, 120, 150, 180],
+            [3, 6, 9, 12, 15],
+            [300, 350, 400, 450, 500],
+            [320, 390, 460, 530, 600],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -987,13 +827,7 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [
-            400,
-            400,
-            400,
-            400,
-            400
-          ],
+          "range": [400, 400, 400, 400, 400],
           "rangeBurn": "400",
           "image": {
             "full": "YasuoW.png",
@@ -1012,11 +846,7 @@
           "description": "Dashes through target enemy, dealing magic damage. Each cast increases subsequent dash's damage, up to a max amount.<br><br>Cannot be re-cast on the same enemy for a few seconds.<br><br><font color='#99FF99'>If Steel Tempest is cast while dashing, it will strike as a circle.</font>",
           "tooltip": "Yasuo dashes through a target, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Each use of this Ability grants <magicDamage>{{ bonusdamageperstack }}</magicDamage> bonus damage to subsequent uses for {{ stackduration }} seconds, stacking up to {{ maxstacks }} times.<br /><br />This Ability has a {{ e2 }} second per-target Cooldown.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Per Unit Cooldown",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Per Unit Cooldown", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ e2 }} -> {{ e2NL }}",
@@ -1024,95 +854,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            0.5,
-            0.4,
-            0.3,
-            0.2,
-            0.1
-          ],
+          "cooldown": [0.5, 0.4, 0.3, 0.2, 0.1],
           "cooldownBurn": "0.5/0.4/0.3/0.2/0.1",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              10,
-              9,
-              8,
-              7,
-              6
-            ],
-            [
-              0.5,
-              0.4,
-              0.3,
-              0.2,
-              0.1
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              750,
-              750,
-              750,
-              750,
-              750
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [10, 9, 8, 7, 6],
+            [0.5, 0.4, 0.3, 0.2, 0.1],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [750, 750, 750, 750, 750],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -1130,13 +888,7 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [
-            475,
-            475,
-            475,
-            475,
-            475
-          ],
+          "range": [475, 475, 475, 475, 475],
           "rangeBurn": "475",
           "image": {
             "full": "YasuoE.png",
@@ -1155,81 +907,30 @@
           "description": "Blinks to an <factionIonia1>Airborne</factionIonia1> enemy champion, dealing physical damage and holding all <factionIonia1>Airborne</factionIonia1> enemies in the area in the air. Grants maximum Flow but resets all stacks of Gathering Storm.<br><br>For a moderate time afterwards, Yasuo's critical strikes gain significant Bonus Armor Penetration.",
           "tooltip": "Yasuo teleports to an <status>Airborne</status> enemy champion, dealing <physicalDamage>{{ damage }} physical damage</physicalDamage> and holding all nearby <status>Airborne</status> enemies up for an additional {{ rknockupduration }} second. Yasuo also gains maximum <keywordMajor>Flow</keywordMajor>, but loses all <spellName>Steel Tempest</spellName> stacks.<br /><br />Afterwards, Yasuo's critical strikes ignore <scaleArmor>{{ rpercentarmorpen }}% bonus Armor</scaleArmor> for {{ rbuffduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Cooldown"],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            70,
-            50,
-            30
-          ],
+          "cooldown": [70, 50, 30],
           "cooldownBurn": "70/50/30",
-          "cost": [
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -1247,11 +948,7 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [
-            1400,
-            1400,
-            1400
-          ],
+          "range": [1400, 1400, 1400],
           "rangeBurn": "1400",
           "image": {
             "full": "YasuoR.png",

@@ -106,18 +106,32 @@ export class EmbeddingClient {
   async isAvailable(): Promise<boolean> {
     if (this.available != null) return this.available;
     try {
-      const check = Bun.spawn(["python3", "-c", "import mlx_embedding_models"], {
-        stdout: "pipe",
-        stderr: "pipe",
-      });
+      const check = Bun.spawn(
+        ["python3", "-c", "import mlx_embedding_models"],
+        {
+          stdout: "pipe",
+          stderr: "pipe",
+        },
+      );
       await check.exited;
       if (check.exitCode === 0) {
         this.available = true;
         return true;
       }
-      console.error("[embeddings] mlx-embedding-models not found, installing...");
+      console.error(
+        "[embeddings] mlx-embedding-models not found, installing...",
+      );
       const install = Bun.spawn(
-        ["python3", "-m", "pip", "install", "--user", "mlx-embedding-models", "transformers<5", "einops"],
+        [
+          "python3",
+          "-m",
+          "pip",
+          "install",
+          "--user",
+          "mlx-embedding-models",
+          "transformers<5",
+          "einops",
+        ],
         { stdout: "inherit", stderr: "inherit" },
       );
       await install.exited;
@@ -137,13 +151,19 @@ export class EmbeddingClient {
   async ensureStarted(): Promise<void> {
     if (this.ready && this.proc != null) return;
     if (this.proc != null) {
-      try { this.proc.kill(); } catch { /* ignore */ }
+      try {
+        this.proc.kill();
+      } catch {
+        /* ignore */
+      }
       this.proc = null;
       this.reader = null;
       this.ready = false;
     }
     if (!(await this.isAvailable())) {
-      throw new Error("MLX embeddings not available. Install with: pip install mlx-embedding-models");
+      throw new Error(
+        "MLX embeddings not available. Install with: pip install mlx-embedding-models",
+      );
     }
     this.proc = Bun.spawn(["python3", "-c", EMBED_SERVER_SCRIPT], {
       stdin: "pipe",
@@ -170,8 +190,12 @@ export class EmbeddingClient {
     stdin.write(request);
     stdin.flush();
     const responseLine = await this.readLine();
-    if (responseLine == null) throw new Error("Embedding server returned no response");
-    const response = JSON.parse(responseLine) as { embeddings?: number[][]; error?: string };
+    if (responseLine == null)
+      throw new Error("Embedding server returned no response");
+    const response = JSON.parse(responseLine) as {
+      embeddings?: number[][];
+      error?: string;
+    };
     if (response.error) throw new Error(`Embedding error: ${response.error}`);
     if (!response.embeddings) throw new Error("No embeddings in response");
     return response.embeddings;
@@ -187,21 +211,32 @@ export class EmbeddingClient {
         this.lineBuffer = this.lineBuffer.slice(newlineIdx + 1);
         return line;
       }
-      if (Date.now() > deadline) throw new Error("Embedding server read timeout");
+      if (Date.now() > deadline)
+        throw new Error("Embedding server read timeout");
       const result = await Promise.race([
         this.reader.read(),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Embedding server read timeout")), Math.max(1000, deadline - Date.now())),
+          setTimeout(
+            () => reject(new Error("Embedding server read timeout")),
+            Math.max(1000, deadline - Date.now()),
+          ),
         ),
       ]);
-      if (result.done) return this.lineBuffer.length > 0 ? this.lineBuffer : null;
-      if (result.value != null) this.lineBuffer += this.decoder.decode(result.value, { stream: true });
+      if (result.done)
+        return this.lineBuffer.length > 0 ? this.lineBuffer : null;
+      if (result.value != null)
+        this.lineBuffer += this.decoder.decode(result.value, { stream: true });
     }
   }
 
   shutdown(): void {
     if (this.proc != null) {
-      try { const stdin = getStdinWriter(this.proc); stdin.end(); } catch { /* ignore */ }
+      try {
+        const stdin = getStdinWriter(this.proc);
+        stdin.end();
+      } catch {
+        /* ignore */
+      }
       this.proc.kill();
       this.proc = null;
       this.reader = null;

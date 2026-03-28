@@ -68,10 +68,10 @@ The `include`/`exclude` fields in `dagger.json` only affect module loading — N
 
 Dagger documents two patterns for monorepo module organization:
 
-| Pattern | Best For | Benefits |
-|---------|----------|----------|
+| Pattern                 | Best For                                   | Benefits                                                                  |
+| ----------------------- | ------------------------------------------ | ------------------------------------------------------------------------- |
 | Top-level + sub-modules | Heterogeneous repos (SDKs, CLIs, web apps) | Better cache granularity, easier debugging, code reuse across sub-modules |
-| Single shared module | Homogeneous repos (all microservices) | Less duplication, lower onboarding friction, consistent CI environment |
+| Single shared module    | Homogeneous repos (all microservices)      | Less duplication, lower onboarding friction, consistent CI environment    |
 
 Dagger's layer cache means even if "unnecessary" CI jobs are triggered, most finish nearly instantly because the cache determines there's nothing to do.
 
@@ -154,23 +154,74 @@ Dagger Checks runs check functions on Dagger Cloud's managed infrastructure and 
 
 ## Version Performance History
 
-| Version | Key Performance Change |
-|---------|----------------------|
-| v0.10 | Fixed re-transferring all files on every call |
-| v0.12 | TUI rendering optimization (only renders visible region) |
-| v0.13 | Pre-call filtering for monorepos — "massive performance gains" |
-| v0.14 | Improved disk usage management |
-| v0.15 | Centralized filesync caching across sessions |
-| v0.16 | General performance boost |
-| v0.19 | ~1s faster module init when cached; improved git implementation |
-| v0.20 | Reduced disk syncing and lock contention; Dagger Shell introduced |
+| Version | Key Performance Change                                            |
+| ------- | ----------------------------------------------------------------- |
+| v0.10   | Fixed re-transferring all files on every call                     |
+| v0.12   | TUI rendering optimization (only renders visible region)          |
+| v0.13   | Pre-call filtering for monorepos — "massive performance gains"    |
+| v0.14   | Improved disk usage management                                    |
+| v0.15   | Centralized filesync caching across sessions                      |
+| v0.16   | General performance boost                                         |
+| v0.19   | ~1s faster module init when cached; improved git implementation   |
+| v0.20   | Reduced disk syncing and lock contention; Dagger Shell introduced |
 
 ## Case Studies (Vendor-Reported)
 
-| Company | Before → After | Notes |
-|---------|---------------|-------|
-| Civo | 30min → 5min | Confounded with monorepo consolidation (40+ repos merged) |
-| OpenMeter | 25min → 5min | Caching + larger runners + Depot; 50% cost reduction |
-| Airbyte | 2-5x faster | 350+ connectors; 75% cost reduction via K8s auto-scaling |
+| Company   | Before → After | Notes                                                     |
+| --------- | -------------- | --------------------------------------------------------- |
+| Civo      | 30min → 5min   | Confounded with monorepo consolidation (40+ repos merged) |
+| OpenMeter | 25min → 5min   | Caching + larger runners + Depot; 50% cost reduction      |
+| Airbyte   | 2-5x faster    | 350+ connectors; 75% cost reduction via K8s auto-scaling  |
 
 All case studies are from Dagger's blog or partner posts. No independent third-party benchmarks found.
+
+## Pain Points at Scale
+
+Known operational issues reported by practitioners:
+
+- **CLI freezes** with ~25 projects in a monorepo — only recovery is closing the terminal (issue #9487)
+- **600GB of volumes** after a day of development / 50-100 invocations (issue #8561)
+- **~2.5GB in-use memory** from buildkit solver operations, marshaling, and gRPC buffers (issue #6719)
+- **Cryptic error messages** — logs hidden or abstracted away; hours spent debugging trivial failures like `.dockerignore` misconfiguration
+- **Module migration** steepened the learning curve — some developers felt "mostly alone" after the API change from client SDKs to modules
+- **Production scaling** — "What is the best way to scale Dagger in production?" remains an open question (issue #6486)
+
+## JS Runtime Comparison in Dagger
+
+### pnpm
+
+`pnpm fetch` downloads packages using only the lockfile (`pnpm-lock.yaml`) — no `package.json` needed. This is ideal for layer caching since the lockfile changes far less frequently than `package.json`. The pattern:
+
+1. Copy `pnpm-lock.yaml` only
+2. `pnpm fetch --frozen-lockfile` (populates store from lockfile)
+3. Copy `package.json`
+4. `pnpm install --frozen-lockfile --offline` (install from pre-fetched store, no network)
+
+Bun lacks a `bun fetch` equivalent — `bun install` requires `package.json`, so metadata changes (scripts, version) can invalidate the install layer. The mitigation is cache volumes for `~/.bun/install/cache`.
+
+pnpm was observed ~1.5x faster than npm/yarn at downloading dependencies in Dagger containers.
+
+### Official Dagger Node Module
+
+The Node module on Daggerverse (`github.com/dagger/dagger/sdk/typescript/dev/node`) provides `build()`, `test()`, `lint()`, `install()`, `withNpm()`, `withYarn()`, `withPnpm()`. It auto-creates cache volumes for dependencies.
+
+### Deno
+
+Supported as Dagger SDK runtime since v0.17.1. Auto-detected from `deno.json`/`deno.lock`. Deno requires no transpilation or `node_modules`, simplifying container builds. Least common in the Dagger ecosystem.
+
+### SDK Runtime Summary
+
+Three TypeScript SDK runtimes: Node.js (stable), Bun (experimental), Deno (experimental). Auto-detection: `package-lock.json`/`yarn.lock`/`pnpm-lock.yaml` → Node; `bun.lock`/`bun.lockb` → Bun; `deno.json`/`deno.lock` → Deno; fallback → Node.
+
+The TypeScript SDK was bundled from ~155MB down to ~4.5MB, cutting cold starts 50% (20-30s → ~11s).
+
+## Optimal Caching Strategy
+
+Use all three caching layers together for maximum performance:
+
+1. **Pre-call filtering** (`ignore` annotations) — prevent unrelated file changes from invalidating caches
+2. **Layer cache** via two-phase install — lockfile + package.json first, `bun install`, then source code
+3. **Cache volumes** (`WithMountedCache`) — mount `~/.bun/install/cache` so even on layer miss, the package manager does incremental work
+4. **Persistent engine** (K8s DaemonSet/Service) or Dagger Cloud — preserve cache across CI runs
+
+Layer cache hit = zero work (fastest). Cache volume hit with layer miss = partial work (package manager only downloads the diff). Both missing = full reinstall from scratch (slowest).

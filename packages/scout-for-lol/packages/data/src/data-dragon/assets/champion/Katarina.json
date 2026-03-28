@@ -556,10 +556,7 @@
         "Katarina's abilities deal magic damage, so even if she's building Attack Damage items, get magic resistance to counter her.",
         "Try to save a disable for when Katarina uses her Death Lotus."
       ],
-      "tags": [
-        "Assassin",
-        "Mage"
-      ],
+      "tags": ["Assassin", "Mage"],
       "partype": "None",
       "info": {
         "attack": 4,
@@ -596,105 +593,30 @@
           "description": "Katarina throws a <font color='#FFF673'>Dagger</font> at the target that then bounces to nearby enemies before ricocheting onto the ground.",
           "tooltip": "Katarina throws a <keywordMajor>Dagger</keywordMajor>, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the target and {{ maxbounces }} nearby enemies. The <keywordMajor>Dagger</keywordMajor> then ricochets onto the ground behind the primary target.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Base Damage",
-              "Cooldown"
-            ],
+            "label": ["Base Damage", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            11,
-            10,
-            9,
-            8,
-            7
-          ],
+          "cooldown": [11, 10, 9, 8, 7],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              2,
-              2,
-              2,
-              2,
-              2
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [2, 2, 2, 2, 2],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -712,13 +634,7 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [
-            625,
-            625,
-            625,
-            625,
-            625
-          ],
+          "range": [625, 625, 625, 625, 625],
           "rangeBurn": "625",
           "image": {
             "full": "KatarinaQ.png",
@@ -737,105 +653,30 @@
           "description": "Katarina gains a burst of Move Speed, tossing a <font color='#FFF673'>Dagger</font> into the air directly above herself.",
           "tooltip": "Katarina tosses a <keywordMajor>Dagger</keywordMajor> into the air and gains <speed>{{ e4 }}% Move Speed</speed> decaying over {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Move Speed",
-              "Cooldown"
-            ],
+            "label": ["Move Speed", "Cooldown"],
             "effect": [
               "{{ e4 }}% -> {{ e4NL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            15,
-            14,
-            13,
-            12,
-            11
-          ],
+          "cooldown": [15, 14, 13, 12, 11],
           "cooldownBurn": "15/14/13/12/11",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              1.25,
-              1.25,
-              1.25,
-              1.25,
-              1.25
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              50,
-              60,
-              70,
-              80,
-              90
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [1.25, 1.25, 1.25, 1.25, 1.25],
+            [0, 0, 0, 0, 0],
+            [50, 60, 70, 80, 90],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -853,13 +694,7 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [
-            25000,
-            25000,
-            25000,
-            25000,
-            25000
-          ],
+          "range": [25000, 25000, 25000, 25000, 25000],
           "rangeBurn": "25000",
           "image": {
             "full": "KatarinaW.png",
@@ -878,105 +713,30 @@
           "description": "Katarina blinks to the target, striking it if its an enemy, or striking the nearest enemy otherwise.",
           "tooltip": "Katarina blinks in the wink of an eye to the target ally, enemy, or <keywordMajor>Dagger</keywordMajor>. If it is an enemy, Katarina strikes for <magicDamage>{{ totaldamage }} magic damage</magicDamage> - otherwise she strikes the nearest enemy in range.<br /><br />Picking up a <keywordMajor>Dagger</keywordMajor> will reduce this Ability's Cooldown by <scaleLevel>{{ daggercooldownreduction }}</scaleLevel> seconds (<scaleLevel>{{ tooltipdaggerreduction }}</scaleLevel>). Katarina can blink to any location near the target.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            12,
-            11,
-            10,
-            9,
-            8
-          ],
+          "cooldown": [12, 11, 10, 9, 8],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -994,13 +754,7 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [
-            725,
-            725,
-            725,
-            725,
-            725
-          ],
+          "range": [725, 725, 725, 725, 725],
           "rangeBurn": "725",
           "image": {
             "full": "KatarinaEWrapper.png",
@@ -1019,11 +773,7 @@
           "description": "Katarina becomes a flurry of blades, dealing massive magic damage while she channels to the 3 nearest enemy champions.",
           "tooltip": "Katarina becomes a flurry of blades, rapidly attacking the three nearest enemy champions with a flurry of knives. Each knife deals <magicDamage>{{ damagecalc }} magic damage</magicDamage> and <physicalDamage>{{ addamagecalc }} physical damage</physicalDamage>, and applies {{ grievousamount*100 }}% Grievous Wounds for {{ grievousduration }} seconds.<br /><br />Total over {{ duration }} seconds to each enemy: <magicDamage>{{ totaldamagecalc }} magic damage</magicDamage> and <physicalDamage>{{ totaladdamagecalc }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage Per Knife",
-              "Cooldown",
-              "On Hit Damage Modifier"
-            ],
+            "label": ["Damage Per Knife", "Cooldown", "On Hit Damage Modifier"],
             "effect": [
               "{{ damagepertick }} -> {{ damagepertickNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -1031,71 +781,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            75,
-            60,
-            45
-          ],
+          "cooldown": [75, 60, 45],
           "cooldownBurn": "75/60/45",
-          "cost": [
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -1113,11 +815,7 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [
-            550,
-            550,
-            550
-          ],
+          "range": [550, 550, 550],
           "rangeBurn": "550",
           "image": {
             "full": "KatarinaR.png",

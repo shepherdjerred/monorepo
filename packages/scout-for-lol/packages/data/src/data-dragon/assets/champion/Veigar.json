@@ -484,9 +484,7 @@
         "Event Horizon only stuns units on the edge. If you're inside the spell, you can still move and attack.",
         "Veigar's ultimate deals increased damage based on your missing health."
       ],
-      "tags": [
-        "Mage"
-      ],
+      "tags": ["Mage"],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -537,95 +535,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            6,
-            5.5,
-            5,
-            4.5,
-            4
-          ],
+          "cooldown": [6, 5.5, 5, 4.5, 4],
           "cooldownBurn": "6/5.5/5/4.5/4",
-          "cost": [
-            30,
-            35,
-            40,
-            45,
-            50
-          ],
+          "cost": [30, 35, 40, 45, 50],
           "costBurn": "30/35/40/45/50",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              1,
-              1,
-              1,
-              1,
-              1
-            ],
-            [
-              2,
-              2,
-              2,
-              2,
-              2
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1],
+            [2, 2, 2, 2, 2],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -643,13 +569,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1000,
-            1000,
-            1000,
-            1000,
-            1000
-          ],
+          "range": [1000, 1000, 1000, 1000, 1000],
           "rangeBurn": "1000",
           "image": {
             "full": "VeigarBalefulStrike.png",
@@ -668,11 +588,7 @@
           "description": "Veigar calls a great mass of dark matter to fall from the sky to the target location, dealing magic damage when it lands. Stacks of Phenomenal Evil reduce Dark Matter's cooldown.",
           "tooltip": "Veigar summons dark matter from the sky, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br />Every {{ spell.veigarpassive:pstacksperdarkmattercdr }} stacks of <keywordMajor>Phenomenal Evil</keywordMajor> reduce this Ability's Cooldown by {{ spell.veigarpassive:darkmattercdrincrement*100 }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Total AP Ratio",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Damage", "Total AP Ratio", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ apratio*100.000000 }}% -> {{ aprationl*100.000000 }}%",
@@ -680,95 +596,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cooldown": [0, 0, 0, 0, 0],
           "cooldownBurn": "0",
-          "cost": [
-            60,
-            65,
-            70,
-            75,
-            80
-          ],
+          "cost": [60, 65, 70, 75, 80],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              1.2,
-              1.2,
-              1.2,
-              1.2,
-              1.2
-            ],
-            [
-              8,
-              8,
-              8,
-              8,
-              8
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [1.2, 1.2, 1.2, 1.2, 1.2],
+            [8, 8, 8, 8, 8],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -786,13 +630,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            950,
-            950,
-            950,
-            950,
-            950
-          ],
+          "range": [950, 950, 950, 950, 950],
           "rangeBurn": "950",
           "image": {
             "full": "VeigarDarkMatter.png",
@@ -823,95 +661,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            20,
-            18.5,
-            17,
-            15.5,
-            14
-          ],
+          "cooldown": [20, 18.5, 17, 15.5, 14],
           "cooldownBurn": "20/18.5/17/15.5/14",
-          "cost": [
-            70,
-            75,
-            80,
-            85,
-            90
-          ],
+          "cost": [70, 75, 80, 85, 90],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [
-              1.5,
-              1.75,
-              2,
-              2.25,
-              2.5
-            ],
-            [
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [1.5, 1.75, 2, 2.25, 2.5],
+            [0.5, 0.5, 0.5, 0.5, 0.5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -929,13 +695,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            725,
-            725,
-            725,
-            725,
-            725
-          ],
+          "range": [725, 725, 725, 725, 725],
           "rangeBurn": "725",
           "image": {
             "full": "VeigarEventHorizon.png",
@@ -954,11 +714,7 @@
           "description": "Blasts target enemy champion, dealing a large amount of magic damage, increasing based on the target's missing health.",
           "tooltip": "Veigar blasts an enemy champion with primal magic to deal between <magicDamage>{{ mindamage }} and {{ maxdamage }} magic damage</magicDamage>, increasing with the target's missing Health. Damage is maximized against enemies below 33% Health.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Total AP Ratio",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Total AP Ratio", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ apratio*100.000000 }}% -> {{ aprationl*100.000000 }}%",
@@ -966,71 +722,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            100,
-            80,
-            60
-          ],
+          "cooldown": [100, 80, 60],
           "cooldownBurn": "100/80/60",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -1048,11 +756,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            650,
-            650,
-            650
-          ],
+          "range": [650, 650, 650],
           "rangeBurn": "650",
           "image": {
             "full": "VeigarR.png",

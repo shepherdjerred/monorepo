@@ -61,13 +61,13 @@ Modpacks with structure, goals, and quest systems for players who prefer guided 
 
 All 5 top picks are deployed on the homelab K8s cluster using the itzg/minecraft-server Helm chart with `AUTO_CURSEFORGE` type. Infrastructure details:
 
-| Server | Hostname | JVM | K8s Memory | Storage |
-|--------|----------|-----|------------|---------|
-| All the Mons | `allthemons.sjer.red` | 8G | 10Gi | 64Gi |
-| FTB StoneBlock 4 | `stoneblock4.sjer.red` | 6G | 8Gi | 32Gi |
-| Better Minecraft | `bettermc.sjer.red` | 6G | 8Gi | 32Gi |
-| All of Create | `allofcreate.sjer.red` | 6G | 8Gi | 32Gi |
-| FTB Skies 2 | `ftbskies2.sjer.red` | 6G | 8Gi | 32Gi |
+| Server           | Hostname               | JVM | K8s Memory | Storage |
+| ---------------- | ---------------------- | --- | ---------- | ------- |
+| All the Mons     | `allthemons.sjer.red`  | 8G  | 10Gi       | 64Gi    |
+| FTB StoneBlock 4 | `stoneblock4.sjer.red` | 6G  | 8Gi        | 32Gi    |
+| Better Minecraft | `bettermc.sjer.red`    | 6G  | 8Gi        | 32Gi    |
+| All of Create    | `allofcreate.sjer.red` | 6G  | 8Gi        | 32Gi    |
+| FTB Skies 2      | `ftbskies2.sjer.red`   | 6G  | 8Gi        | 32Gi    |
 
 - **Whitelist**: RiotShielder, vietnamesechovy
 - **mc-router** auto-hibernation: idle servers scale to 0, wake on connect

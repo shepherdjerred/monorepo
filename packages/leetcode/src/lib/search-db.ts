@@ -15,7 +15,8 @@ export type FtsResult = {
 
 export class SearchDb {
   private db: Database;
-  private vectorCache: { slugs: string[]; vectors: Float32Array[] } | null = null;
+  private vectorCache: { slugs: string[]; vectors: Float32Array[] } | null =
+    null;
 
   constructor(sqlitePath: string = SQLITE_PATH) {
     this.db = new Database(sqlitePath);
@@ -48,32 +49,55 @@ export class SearchDb {
   }
 
   isIndexed(slug: string): boolean {
-    return this.db.query("SELECT 1 FROM search_index_meta WHERE problem_slug = ?").get(slug) != null;
+    return (
+      this.db
+        .query("SELECT 1 FROM search_index_meta WHERE problem_slug = ?")
+        .get(slug) != null
+    );
   }
 
   hasVector(slug: string): boolean {
-    return this.db.query("SELECT 1 FROM problem_vectors WHERE problem_slug = ?").get(slug) != null;
+    return (
+      this.db
+        .query("SELECT 1 FROM problem_vectors WHERE problem_slug = ?")
+        .get(slug) != null
+    );
   }
 
-  addToFts(slug: string, title: string, tags: string, description: string, constraints: string, editorial: string): void {
-    this.db.query(
-      "INSERT OR REPLACE INTO problems_fts (slug, title, tags, description, constraints, editorial) VALUES (?, ?, ?, ?, ?, ?)",
-    ).run(slug, title, tags, description, constraints, editorial);
-    this.db.query(
-      "INSERT OR REPLACE INTO search_index_meta (problem_slug, indexed_at) VALUES (?, ?)",
-    ).run(slug, new Date().toISOString());
+  addToFts(
+    slug: string,
+    title: string,
+    tags: string,
+    description: string,
+    constraints: string,
+    editorial: string,
+  ): void {
+    this.db
+      .query(
+        "INSERT OR REPLACE INTO problems_fts (slug, title, tags, description, constraints, editorial) VALUES (?, ?, ?, ?, ?, ?)",
+      )
+      .run(slug, title, tags, description, constraints, editorial);
+    this.db
+      .query(
+        "INSERT OR REPLACE INTO search_index_meta (problem_slug, indexed_at) VALUES (?, ?)",
+      )
+      .run(slug, new Date().toISOString());
   }
 
   addVector(slug: string, vector: Float32Array, textEmbedded: string): void {
     const blob = Buffer.from(vector.buffer);
-    this.db.query(
-      "INSERT OR REPLACE INTO problem_vectors (problem_slug, vector, text_embedded) VALUES (?, ?, ?)",
-    ).run(slug, blob, textEmbedded);
+    this.db
+      .query(
+        "INSERT OR REPLACE INTO problem_vectors (problem_slug, vector, text_embedded) VALUES (?, ?, ?)",
+      )
+      .run(slug, blob, textEmbedded);
   }
 
   private loadVectorCache(): { slugs: string[]; vectors: Float32Array[] } {
     if (this.vectorCache) return this.vectorCache;
-    const rows = this.db.query("SELECT problem_slug, vector FROM problem_vectors").all() as Array<{
+    const rows = this.db
+      .query("SELECT problem_slug, vector FROM problem_vectors")
+      .all() as Array<{
       problem_slug: string;
       vector: Buffer;
     }>;
@@ -81,7 +105,13 @@ export class SearchDb {
     const vectors: Float32Array[] = [];
     for (const row of rows) {
       slugs.push(row.problem_slug);
-      vectors.push(new Float32Array(row.vector.buffer, row.vector.byteOffset, row.vector.byteLength / 4));
+      vectors.push(
+        new Float32Array(
+          row.vector.buffer,
+          row.vector.byteOffset,
+          row.vector.byteLength / 4,
+        ),
+      );
     }
     this.vectorCache = { slugs, vectors };
     return this.vectorCache;
@@ -91,7 +121,10 @@ export class SearchDb {
     const { slugs, vectors } = this.loadVectorCache();
     const results: VectorResult[] = [];
     for (let i = 0; i < vectors.length; i++) {
-      results.push({ slug: slugs[i], score: dotProduct(queryVector, vectors[i]) });
+      results.push({
+        slug: slugs[i],
+        score: dotProduct(queryVector, vectors[i]),
+      });
     }
     results.sort((a, b) => b.score - a.score);
     return results.slice(0, limit);

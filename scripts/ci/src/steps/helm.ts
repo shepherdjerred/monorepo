@@ -11,7 +11,9 @@ const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
 function cdk8sSynthStep(dependsOn: string[]): BuildkiteStep {
   const deps = WORKSPACE_DEPS["homelab/src/cdk8s"] ?? [];
-  const depFlags = deps.flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`]).join(" ");
+  const depFlags = deps
+    .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
+    .join(" ");
   return {
     label: ":cdk8s: Build cdk8s Manifests",
     key: "homelab-cdk8s",
@@ -31,7 +33,8 @@ function helmPushStep(): BuildkiteStep {
     key: "homelab-helm-push",
     if: MAIN_ONLY,
     depends_on: "homelab-cdk8s",
-    command: "dagger call helm-package --source . --chart-dir packages/homelab/charts --chart-museum-password env:CHARTMUSEUM_PASSWORD",
+    command:
+      "dagger call helm-package --source . --chart-dir packages/homelab/charts --chart-museum-password env:CHARTMUSEUM_PASSWORD",
     parallelism: HELM_CHARTS.length,
     timeout_in_minutes: 10,
     retry: RETRY,

@@ -22,19 +22,11 @@ import {
   suppressionCheckHelper,
 } from "./quality";
 
-import {
-  trivyScanHelper,
-  semgrepScanHelper,
-} from "./security";
+import { trivyScanHelper, semgrepScanHelper } from "./security";
 
-import {
-  mavenBuildHelper,
-  mavenTestHelper,
-} from "./java";
+import { mavenBuildHelper, mavenTestHelper } from "./java";
 
-import {
-  latexBuildHelper,
-} from "./latex";
+import { latexBuildHelper } from "./latex";
 
 import { BUILD_TIME_DEPS, WORKSPACE_DEPS } from "./deps";
 
@@ -128,10 +120,7 @@ export class Monorepo {
         "python3",
         "python3-setuptools",
       ])
-      .withMountedCache(
-        "/root/.bun/install/cache",
-        dag.cacheVolume(BUN_CACHE),
-      )
+      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir(`/workspace/packages/${pkg}`)
       .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
         exclude: SOURCE_EXCLUDES,
@@ -147,10 +136,7 @@ export class Monorepo {
     }
 
     if (tsconfig != null) {
-      container = container.withFile(
-        "/workspace/tsconfig.base.json",
-        tsconfig,
-      );
+      container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
     }
 
     // Per-package lockfile — frozen install
@@ -191,10 +177,7 @@ export class Monorepo {
         "/usr/local/cargo/registry",
         dag.cacheVolume(CARGO_REGISTRY),
       )
-      .withMountedCache(
-        "/usr/local/cargo/git",
-        dag.cacheVolume("cargo-git"),
-      )
+      .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
       .withMountedCache("/workspace/target", dag.cacheVolume(CARGO_TARGET))
       .withWorkdir("/workspace")
       .withDirectory("/workspace", source.directory("packages/clauderon"), {
@@ -404,7 +387,13 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Promise<string> {
-    const generated = this.haGenerate(pkgDir, hassToken, depNames, depDirs, tsconfig);
+    const generated = this.haGenerate(
+      pkgDir,
+      hassToken,
+      depNames,
+      depDirs,
+      tsconfig,
+    );
     return dag
       .container()
       .from(BUN_IMAGE)
@@ -427,7 +416,13 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Promise<string> {
-    const generated = this.haGenerate(pkgDir, hassToken, depNames, depDirs, tsconfig);
+    const generated = this.haGenerate(
+      pkgDir,
+      hassToken,
+      depNames,
+      depDirs,
+      tsconfig,
+    );
     return dag
       .container()
       .from(BUN_IMAGE)
@@ -512,11 +507,9 @@ export class Monorepo {
       .from(BUN_IMAGE)
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir("/workspace")
-      .withDirectory(
-        `/workspace/packages/${pkg}`,
-        pkgDir,
-        { exclude: excludes },
-      );
+      .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
+        exclude: excludes,
+      });
 
     for (let i = 0; i < depNames.length; i++) {
       container = container.withDirectory(
@@ -555,7 +548,14 @@ export class Monorepo {
     version: string = "dev",
     gitSha: string = "unknown",
   ): Promise<string> {
-    const image = this.buildImage(pkgDir, pkg, depNames, depDirs, version, gitSha);
+    const image = this.buildImage(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
     return image
       .withRegistryAuth("ghcr.io", registryUsername, registryPassword)
       .publish(tag);
@@ -651,7 +651,13 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Directory {
-    return this.bunBase(pkgDir, "homelab/src/cdk8s", depNames, depDirs, tsconfig)
+    return this.bunBase(
+      pkgDir,
+      "homelab/src/cdk8s",
+      depNames,
+      depDirs,
+      tsconfig,
+    )
       .withExec(["bun", "run", "build"])
       .directory("/workspace/packages/homelab/src/cdk8s/dist");
   }
@@ -710,10 +716,7 @@ export class Monorepo {
         "/root/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
       )
       .withEnvVariable("CI", "true")
-      .withMountedCache(
-        "/root/.bun/install/cache",
-        dag.cacheVolume(BUN_CACHE),
-      )
+      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir(`/workspace/packages/${pkg}`)
       .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
         exclude: SOURCE_EXCLUDES,
@@ -729,10 +732,7 @@ export class Monorepo {
     }
 
     if (tsconfig != null) {
-      container = container.withFile(
-        "/workspace/tsconfig.base.json",
-        tsconfig,
-      );
+      container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
     }
 
     container = container.withExec(["bun", "install", "--frozen-lockfile"]);
@@ -746,12 +746,14 @@ export class Monorepo {
       }
     }
 
-    return container
-      .withWorkdir(`/workspace/packages/${pkg}`)
-      // Build the site first — playwright tests run against astro preview which needs dist/
-      .withExec(["bunx", "astro", "build"])
-      .withExec(["bun", "run", "test"])
-      .stdout();
+    return (
+      container
+        .withWorkdir(`/workspace/packages/${pkg}`)
+        // Build the site first — playwright tests run against astro preview which needs dist/
+        .withExec(["bunx", "astro", "build"])
+        .withExec(["bun", "run", "test"])
+        .stdout()
+    );
   }
 
   /** Generate/update Playwright snapshot baselines. Returns the snapshots directory. */
@@ -801,10 +803,7 @@ export class Monorepo {
     }
 
     if (tsconfig != null) {
-      container = container.withFile(
-        "/workspace/tsconfig.base.json",
-        tsconfig,
-      );
+      container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
     }
 
     container = container.withExec(["bun", "install", "--frozen-lockfile"]);
@@ -906,7 +905,9 @@ export class Monorepo {
     const dirsFor = (pkg: string) => {
       const pkgDir = source.directory(`packages/${pkg}`);
       const deps = WORKSPACE_DEPS[pkg] ?? [];
-      const depDirs = deps.map((d: string) => source.directory(`packages/${d}`));
+      const depDirs = deps.map((d: string) =>
+        source.directory(`packages/${d}`),
+      );
       return { pkgDir, depNames: deps, depDirs };
     };
 
@@ -919,10 +920,7 @@ export class Monorepo {
     const allChecks: Promise<CheckResult>[] = [];
 
     // Helper to run a check and capture the full error on failure
-    const check = (
-      label: string,
-      container: Container,
-    ): Promise<CheckResult> =>
+    const check = (label: string, container: Container): Promise<CheckResult> =>
       container
         .stdout()
         .then((): CheckResult => ({ label, status: "PASS" }))
@@ -939,18 +937,18 @@ export class Monorepo {
       const { pkgDir, depNames, depDirs } = dirsFor(pkg);
       const base = this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig);
       allChecks.push(
-        check(`${pkg}: lint`, base
-          .withMountedCache(
-            `/workspace/packages/${pkg}/.eslintcache`,
-            dag.cacheVolume(ESLINT_CACHE),
-          )
-          .withExec(["bun", "run", "lint"])),
+        check(
+          `${pkg}: lint`,
+          base
+            .withMountedCache(
+              `/workspace/packages/${pkg}/.eslintcache`,
+              dag.cacheVolume(ESLINT_CACHE),
+            )
+            .withExec(["bun", "run", "lint"]),
+        ),
       );
       allChecks.push(
-        check(
-          `${pkg}: typecheck`,
-          base.withExec(["bun", "run", "typecheck"]),
-        ),
+        check(`${pkg}: typecheck`, base.withExec(["bun", "run", "typecheck"])),
       );
       allChecks.push(
         check(`${pkg}: test`, base.withExec(["bun", "run", "test"])),
@@ -992,9 +990,7 @@ export class Monorepo {
 
     // Go checks
     const goB = this.goBase(source);
-    allChecks.push(
-      check("go: build", goB.withExec(["go", "build", "./..."])),
-    );
+    allChecks.push(check("go: build", goB.withExec(["go", "build", "./..."])));
     allChecks.push(
       check("go: test", goB.withExec(["go", "test", "./...", "-v"])),
     );
@@ -1013,7 +1009,13 @@ export class Monorepo {
 
     // scout-for-lol: generate then lint/typecheck/test
     const scoutInfo = dirsFor("scout-for-lol");
-    const scoutGenerated = this.bunBase(scoutInfo.pkgDir, "scout-for-lol", scoutInfo.depNames, scoutInfo.depDirs, tsconfig)
+    const scoutGenerated = this.bunBase(
+      scoutInfo.pkgDir,
+      "scout-for-lol",
+      scoutInfo.depNames,
+      scoutInfo.depDirs,
+      tsconfig,
+    )
       .withExec(["bun", "run", "generate"])
       .directory("/workspace");
     const scoutContainer = dag
@@ -1043,7 +1045,13 @@ export class Monorepo {
     // homelab/ha: generate types then lint/typecheck (requires HASS_TOKEN)
     if (hassToken != null) {
       const haInfo = dirsFor("homelab/src/ha");
-      const haGenerated = this.bunBase(haInfo.pkgDir, "homelab/src/ha", haInfo.depNames, haInfo.depDirs, tsconfig)
+      const haGenerated = this.bunBase(
+        haInfo.pkgDir,
+        "homelab/src/ha",
+        haInfo.depNames,
+        haInfo.depDirs,
+        tsconfig,
+      )
         .withSecretVariable("HASS_TOKEN", hassToken)
         .withEnvVariable("HASS_BASE_URL", "https://homeassistant.sjer.red")
         .withExec(["bun", "run", "generate-types"])
@@ -1054,10 +1062,7 @@ export class Monorepo {
         .withDirectory("/workspace", haGenerated)
         .withWorkdir("/workspace/packages/homelab/src/ha");
       allChecks.push(
-        check(
-          "homelab/ha: lint",
-          haContainer.withExec(["bun", "run", "lint"]),
-        ),
+        check("homelab/ha: lint", haContainer.withExec(["bun", "run", "lint"])),
       );
       allChecks.push(
         check(
@@ -1190,7 +1195,11 @@ export class Monorepo {
     chartMuseumPassword: Secret,
   ): Promise<string> {
     return helmPackageHelper(
-      source, chartName, version, chartMuseumUsername, chartMuseumPassword,
+      source,
+      chartName,
+      version,
+      chartMuseumUsername,
+      chartMuseumPassword,
     ).stdout();
   }
 
@@ -1205,7 +1214,12 @@ export class Monorepo {
     cloudflareAccountId: Secret | null = null,
   ): Promise<string> {
     return tofuApplyHelper(
-      source, stack, awsAccessKeyId, awsSecretAccessKey, ghToken, cloudflareAccountId,
+      source,
+      stack,
+      awsAccessKeyId,
+      awsSecretAccessKey,
+      ghToken,
+      cloudflareAccountId,
     ).stdout();
   }
 
@@ -1237,9 +1251,17 @@ export class Monorepo {
     depDirs: Directory[] = [],
   ): Promise<string> {
     return deploySiteHelper(
-      pkgDir, pkg, bucket, buildCmd, distSubdir, target,
-      awsAccessKeyId, awsSecretAccessKey, cloudflareAccountId,
-      depNames, depDirs,
+      pkgDir,
+      pkg,
+      bucket,
+      buildCmd,
+      distSubdir,
+      target,
+      awsAccessKeyId,
+      awsSecretAccessKey,
+      cloudflareAccountId,
+      depNames,
+      depDirs,
     ).stdout();
   }
 
@@ -1262,7 +1284,10 @@ export class Monorepo {
     serverUrl: string = "https://argocd.sjer.red",
   ): Promise<string> {
     return argoCdHealthWaitHelper(
-      appName, argoCdToken, timeoutSeconds, serverUrl,
+      appName,
+      argoCdToken,
+      timeoutSeconds,
+      serverUrl,
     ).stdout();
   }
 
@@ -1290,8 +1315,14 @@ export class Monorepo {
   @func()
   clauderonCollectBinaries(source: Directory): Directory {
     return clauderonCollectBinariesHelper(source, [
-      { target: "x86_64-unknown-linux-gnu", filename: "clauderon-linux-x86_64" },
-      { target: "aarch64-unknown-linux-gnu", filename: "clauderon-linux-arm64" },
+      {
+        target: "x86_64-unknown-linux-gnu",
+        filename: "clauderon-linux-x86_64",
+      },
+      {
+        target: "aarch64-unknown-linux-gnu",
+        filename: "clauderon-linux-arm64",
+      },
     ]);
   }
 
@@ -1317,10 +1348,7 @@ export class Monorepo {
 
   /** Run release-please to create release PRs and GitHub releases */
   @func({ cache: "never" })
-  async releasePlease(
-    source: Directory,
-    ghToken: Secret,
-  ): Promise<string> {
+  async releasePlease(source: Directory, ghToken: Secret): Promise<string> {
     return releasePleaseHelper(source, ghToken).stdout();
   }
 
@@ -1344,7 +1372,14 @@ export class Monorepo {
     ghToken: Secret,
     claudeToken: Secret,
   ): Promise<string> {
-    return codeReviewHelper(source, prNumber, baseBranch, commitSha, ghToken, claudeToken).stdout();
+    return codeReviewHelper(
+      source,
+      prNumber,
+      baseBranch,
+      commitSha,
+      ghToken,
+      claudeToken,
+    ).stdout();
   }
 
   /** Run cargo deny check on the Rust project */

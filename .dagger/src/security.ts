@@ -37,7 +37,15 @@ export function trivyScanHelper(source: Directory): Container {
     .withDirectory("/workspace", source, {
       exclude: SOURCE_EXCLUDES,
     })
-    .withExec(["trivy", "fs", "--exit-code", "1", "--severity", "HIGH,CRITICAL", "/workspace"]);
+    .withExec([
+      "trivy",
+      "fs",
+      "--exit-code",
+      "1",
+      "--severity",
+      "HIGH,CRITICAL",
+      "/workspace",
+    ]);
 }
 
 /** Scan the source tree with semgrep for code quality and security issues. */

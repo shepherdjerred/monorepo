@@ -23,7 +23,11 @@ import {
 } from "./steps/quality.ts";
 import { codeReviewStep } from "./steps/code-review.ts";
 import { releaseStep } from "./steps/release.ts";
-import { publishImagesGroup, homelabImagesGroup, allPushKeys } from "./steps/images.ts";
+import {
+  publishImagesGroup,
+  homelabImagesGroup,
+  allPushKeys,
+} from "./steps/images.ts";
 import { publishNpmGroup } from "./steps/npm.ts";
 import { deploySitesGroup, filterSites } from "./steps/sites.ts";
 import { homelabHelmGroup } from "./steps/helm.ts";
@@ -120,8 +124,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
         affected.hasSitePackages,
         affected.buildAll,
       );
-      const deployDeps =
-        appPushKeys.length > 0 ? appPushKeys : ["release"];
+      const deployDeps = appPushKeys.length > 0 ? appPushKeys : ["release"];
       steps.push(deploySitesGroup(sitesToDeploy, deployDeps));
     }
 

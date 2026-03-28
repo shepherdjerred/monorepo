@@ -370,9 +370,7 @@
       "blurb": "In the jungle city of Ixaocan, Qiyana plots her own ruthless path to the high seat of the Yun Tal. Last in line to succeed her parents, she faces those who stand in her way with brash confidence and unprecedented mastery over elemental magic. With the...",
       "allytips": [],
       "enemytips": [],
-      "tags": [
-        "Assassin"
-      ],
+      "tags": ["Assassin"],
       "partype": "Mana",
       "info": {
         "attack": 0,
@@ -409,103 +407,27 @@
           "description": "Qiyana swings her weapon, dealing damage with a bonus effect based on her element.",
           "tooltip": "If Qiyana does not have an <keywordMajor>Enchantment</keywordMajor>, she slashes, dealing <physicalDamage>{{ vanilladamage }} physical damage</physicalDamage> to enemies in a small area. If she does, this Ability gains extra range and an additional effect based on the type of <keywordMajor>Enchantment</keywordMajor>:<li><keywordMajor>Ice Enchantment</keywordMajor>: Briefly <status>Roots</status>, then <status>Slows</status> by {{ slowpotency*-100 }}% for {{ slowduration }} second.<li><keywordMajor>Rock Enchantment</keywordMajor>: Deals an additional <physicalDamage>{{ tremordamage }} physical damage</physicalDamage> to units below {{ critthreshold*100 }}% Health.<li><keywordMajor>Wild Enchantment</keywordMajor>: Leaves a trail that turns Qiyana <keywordStealth>Invisible</keywordStealth> and grants <speed>{{ haste*100 }}% Move Speed</speed>.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage"
-            ],
-            "effect": [
-              "{{ vanillabase }} -> {{ vanillabaseNL }}"
-            ]
+            "label": ["Damage"],
+            "effect": ["{{ vanillabase }} -> {{ vanillabaseNL }}"]
           },
           "maxrank": 5,
-          "cooldown": [
-            7,
-            7,
-            7,
-            7,
-            7
-          ],
+          "cooldown": [7, 7, 7, 7, 7],
           "cooldownBurn": "7",
-          "cost": [
-            35,
-            35,
-            35,
-            35,
-            35
-          ],
+          "cost": [35, 35, 35, 35, 35],
           "costBurn": "35",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -523,13 +445,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
-          "range": [
-            525,
-            525,
-            525,
-            525,
-            525
-          ],
+          "range": [525, 525, 525, 525, 525],
           "rangeBurn": "525",
           "image": {
             "full": "QiyanaQ.png",
@@ -562,95 +478,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            7,
-            7,
-            7,
-            7,
-            7
-          ],
+          "cooldown": [7, 7, 7, 7, 7],
           "cooldownBurn": "7",
-          "cost": [
-            25,
-            30,
-            35,
-            40,
-            45
-          ],
+          "cost": [25, 30, 35, 40, 45],
           "costBurn": "25/30/35/40/45",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -668,13 +512,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
-          "range": [
-            1100,
-            1100,
-            1100,
-            1100,
-            1100
-          ],
+          "range": [1100, 1100, 1100, 1100, 1100],
           "rangeBurn": "1100",
           "image": {
             "full": "QiyanaW.png",
@@ -693,11 +531,7 @@
           "description": "Qiyana dashes to an enemy, damaging them.",
           "tooltip": "Qiyana dashes through an enemy and deals <physicalDamage>{{ damage }} physical damage</physicalDamage> to them.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Base Damage",
-              "Cooldown",
-              "Mana Cost"
-            ],
+            "label": ["Base Damage", "Cooldown", "Mana Cost"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -705,95 +539,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            11,
-            10,
-            9,
-            8,
-            7
-          ],
+          "cooldown": [11, 10, 9, 8, 7],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [
-            40,
-            45,
-            50,
-            55,
-            60
-          ],
+          "cost": [40, 45, 50, 55, 60],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -811,13 +573,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
-          "range": [
-            650,
-            650,
-            650,
-            650,
-            650
-          ],
+          "range": [650, 650, 650, 650, 650],
           "rangeBurn": "650",
           "image": {
             "full": "QiyanaE.png",
@@ -836,81 +592,30 @@
           "description": "Qiyana sends out a shockwave that detonates whatever elements she hits with it, stunning and damaging nearby enemies.",
           "tooltip": "Qiyana launches a shockwave that <status>Knocks Back</status> enemies and detonates when it hits terrain. The explosion follows the entire edge of the terrain, <status>Stunning</status> for between 0.5 and {{ stunduration }} seconds and dealing <physicalDamage>{{ damage }}</physicalDamage> plus <physicalDamage>{{ missinghealthdamagerock }} max Health physical damage</physicalDamage>. <status>Stun</status> duration scales down with distance the shockwave has travelled.<br /><br />Any river or brush the shockwave passes through also explode after a delay for the same damage and <status>Stun</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Initial Damage",
-              "Cooldown"
-            ],
+            "label": ["Initial Damage", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            120,
-            120,
-            120
-          ],
+          "cooldown": [120, 120, 120],
           "cooldownBurn": "120",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -928,11 +633,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
-          "range": [
-            950,
-            950,
-            950
-          ],
+          "range": [950, 950, 950],
           "rangeBurn": "950",
           "image": {
             "full": "QiyanaR.png",

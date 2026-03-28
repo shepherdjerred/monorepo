@@ -468,10 +468,7 @@
         "Blitzcrank's passive Mana Barrier grants him a shield when he is low on health.",
         "Staying behind creeps can prevent you from being Rocket Grabbed. Blitzcrank's Rocket Grab only pulls the first enemy target it encounters."
       ],
-      "tags": [
-        "Tank",
-        "Support"
-      ],
+      "tags": ["Tank", "Support"],
       "partype": "Mana",
       "info": {
         "attack": 4,
@@ -508,105 +505,30 @@
           "description": "Blitzcrank fires their right hand to grab an opponent on its path, dealing damage and dragging it back to them.",
           "tooltip": "Blitzcrank fires their right hand, <status>Pulling</status> the first enemy hit towards them and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            20,
-            19,
-            18,
-            17,
-            16
-          ],
+          "cooldown": [20, 19, 18, 17, 16],
           "cooldownBurn": "20/19/18/17/16",
-          "cost": [
-            100,
-            100,
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              90,
-              140,
-              190,
-              240,
-              290
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [90, 140, 190, 240, 290],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -624,13 +546,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1079,
-            1079,
-            1079,
-            1079,
-            1079
-          ],
+          "range": [1079, 1079, 1079, 1079, 1079],
           "rangeBurn": "1079",
           "image": {
             "full": "RocketGrab.png",
@@ -649,105 +565,30 @@
           "description": "Blitzcrank super charges themself to get dramatically increased Move and Attack Speed. They are temporarily slowed after the effect ends.",
           "tooltip": "Blitzcrank supercharges themself, gaining <speed>{{ movespeedmod*100 }}% decaying Move Speed</speed> and <attackSpeed>{{ attackspeedmod*100 }}% Attack Speed</attackSpeed> for {{ duration }} seconds.<br /><br />Afterwards, Blitzcrank is <status>Slowed</status> by {{ movespeedmodreduction*100 }}% for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Move Speed",
-              "Attack Speed"
-            ],
+            "label": ["Move Speed", "Attack Speed"],
             "effect": [
               "{{ movespeedmod*100.000000 }}% -> {{ movespeedmodnl*100.000000 }}%",
               "{{ attackspeedmod*100.000000 }}% -> {{ attackspeedmodnl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            15,
-            15,
-            15,
-            15,
-            15
-          ],
+          "cooldown": [15, 15, 15, 15, 15],
           "cooldownBurn": "15",
-          "cost": [
-            75,
-            75,
-            75,
-            75,
-            75
-          ],
+          "cost": [75, 75, 75, 75, 75],
           "costBurn": "75",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -765,13 +606,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
+          "range": [1, 1, 1, 1, 1],
           "rangeBurn": "1",
           "image": {
             "full": "Overdrive.png",
@@ -790,103 +625,27 @@
           "description": "Blitzcrank charges up their fist to make the next attack deal double damage and pop their target up in the air.",
           "tooltip": "Blitzcrank charges up their fist, causing their next Attack to <status>Knock Up</status> for {{ ccduration }} second(s) and deal <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Cooldown"
-            ],
-            "effect": [
-              "{{ cooldown }} -> {{ cooldownNL }}"
-            ]
+            "label": ["Cooldown"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
           },
           "maxrank": 5,
-          "cooldown": [
-            7,
-            6.5,
-            6,
-            5.5,
-            5
-          ],
+          "cooldown": [7, 6.5, 6, 5.5, 5],
           "cooldownBurn": "7/6.5/6/5.5/5",
-          "cost": [
-            25,
-            25,
-            25,
-            25,
-            25
-          ],
+          "cost": [25, 25, 25, 25, 25],
           "costBurn": "25",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -904,13 +663,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            300,
-            300,
-            300,
-            300,
-            300
-          ],
+          "range": [300, 300, 300, 300, 300],
           "rangeBurn": "300",
           "image": {
             "full": "PowerFist.png",
@@ -943,71 +696,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            60,
-            40,
-            20
-          ],
+          "cooldown": [60, 40, 20],
           "cooldownBurn": "60/40/20",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -1025,11 +730,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            600,
-            600,
-            600
-          ],
+          "range": [600, 600, 600],
           "rangeBurn": "600",
           "image": {
             "full": "StaticField.png",

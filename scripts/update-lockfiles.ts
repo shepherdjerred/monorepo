@@ -62,8 +62,7 @@ async function main(): Promise<void> {
       await $`bun install`.cwd(dir);
       installed++;
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : String(error);
+      const message = error instanceof Error ? error.message : String(error);
       failures.push({ dir, error: message });
       console.error(`  FAILED: ${message}`);
     }

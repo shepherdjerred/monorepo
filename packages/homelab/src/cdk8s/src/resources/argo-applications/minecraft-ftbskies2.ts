@@ -4,7 +4,8 @@ import { createModdedMinecraftApp } from "@shepherdjerred/homelab/cdk8s/src/misc
 export function createMinecraftFtbskies2App(chart: Chart) {
   return createModdedMinecraftApp(chart, {
     name: "ftbskies2",
-    curseForgePageUrl: "https://www.curseforge.com/minecraft/modpacks/ftb-skies-2",
+    curseForgePageUrl:
+      "https://www.curseforge.com/minecraft/modpacks/ftb-skies-2",
     hostname: "ftbskies2.sjer.red",
     motd: "FTB Skies 2",
     memory: "6G",

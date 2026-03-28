@@ -27,7 +27,9 @@ function parseArgs() {
 
   const query = queryParts.join(" ");
   if (!query) {
-    console.error("Usage: bun run search <query> [--semantic|--keyword|--hybrid] [--limit N]");
+    console.error(
+      "Usage: bun run search <query> [--semantic|--keyword|--hybrid] [--limit N]",
+    );
     process.exit(1);
   }
   return { query, mode, limit };
@@ -57,7 +59,10 @@ async function main() {
       process.exit(1);
     }
     const [queryVector] = await embedder.embed([query]);
-    const vectorResults = searchDb.vectorSearch(new Float32Array(queryVector), limit);
+    const vectorResults = searchDb.vectorSearch(
+      new Float32Array(queryVector),
+      limit,
+    );
     results = vectorResults.map((r) => ({
       slug: r.slug,
       title: "",
@@ -83,11 +88,20 @@ async function main() {
       scores.set(fts[i].slug, (scores.get(fts[i].slug) ?? 0) + 1 / (K + i + 1));
     }
     for (let i = 0; i < vectorResults.length; i++) {
-      scores.set(vectorResults[i].slug, (scores.get(vectorResults[i].slug) ?? 0) + 1 / (K + i + 1));
+      scores.set(
+        vectorResults[i].slug,
+        (scores.get(vectorResults[i].slug) ?? 0) + 1 / (K + i + 1),
+      );
     }
 
     results = Array.from(scores.entries())
-      .map(([slug, score]) => ({ slug, title: "", difficulty: "", tags: [], score }))
+      .map(([slug, score]) => ({
+        slug,
+        title: "",
+        difficulty: "",
+        tags: [],
+        score,
+      }))
       .sort((a, b) => b.score - a.score)
       .slice(0, limit);
   }
@@ -101,12 +115,16 @@ async function main() {
       result.title = problem.title;
       result.difficulty = problem.difficulty;
     }
-    const tags = sourceDb.query(`
+    const tags = sourceDb
+      .query(
+        `
       SELECT t.name FROM topic_tags t
       JOIN problem_tags pt ON pt.tag_id = t.id
       JOIN problems p ON p.id = pt.problem_id
       WHERE p.slug = ?
-    `).all(result.slug) as { name: string }[];
+    `,
+      )
+      .all(result.slug) as { name: string }[];
     result.tags = tags.map((t) => t.name);
   }
 
@@ -117,8 +135,15 @@ async function main() {
     console.log(`\n${results.length} results for "${query}" (${mode} mode):\n`);
     for (let i = 0; i < results.length; i++) {
       const r = results[i];
-      const dc = r.difficulty === "Easy" ? "\x1b[32m" : r.difficulty === "Medium" ? "\x1b[33m" : "\x1b[31m";
-      console.log(`  ${i + 1}. ${r.title} ${dc}[${r.difficulty}]\x1b[0m  (${r.score.toFixed(4)})`);
+      const dc =
+        r.difficulty === "Easy"
+          ? "\x1b[32m"
+          : r.difficulty === "Medium"
+            ? "\x1b[33m"
+            : "\x1b[31m";
+      console.log(
+        `  ${i + 1}. ${r.title} ${dc}[${r.difficulty}]\x1b[0m  (${r.score.toFixed(4)})`,
+      );
       console.log(`     Tags: ${r.tags.join(", ") || "none"}`);
       console.log(`     https://leetcode.com/problems/${r.slug}/`);
       console.log();

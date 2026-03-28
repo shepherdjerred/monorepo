@@ -39,7 +39,9 @@ async function getLastGreenCommit(): Promise<string | null> {
     process.env["BUILDKITE_API_TOKEN"] ??
     process.env["BUILDKITE_AGENT_ACCESS_TOKEN"];
   if (!token) {
-    console.error("⚠️  No Buildkite API token — will fall back to full build on main");
+    console.error(
+      "⚠️  No Buildkite API token — will fall back to full build on main",
+    );
     return null;
   }
 
@@ -48,7 +50,9 @@ async function getLastGreenCommit(): Promise<string | null> {
   const currentBuild = process.env["BUILDKITE_BUILD_NUMBER"] ?? "";
 
   if (!org || !pipeline) {
-    console.error("⚠️  Missing org/pipeline slug — will fall back to full build on main");
+    console.error(
+      "⚠️  Missing org/pipeline slug — will fall back to full build on main",
+    );
     return null;
   }
 
@@ -71,7 +75,9 @@ async function getLastGreenCommit(): Promise<string | null> {
     }
 
     if (!resp.ok) {
-      console.error(`⚠️  Buildkite API failed (HTTP ${resp.status}) — will fall back to full build on main`);
+      console.error(
+        `⚠️  Buildkite API failed (HTTP ${resp.status}) — will fall back to full build on main`,
+      );
       return null;
     }
 
@@ -102,11 +108,15 @@ async function getLastGreenCommit(): Promise<string | null> {
       );
     }
   } catch (e) {
-    console.error(`⚠️  Buildkite API request failed: ${e} — will fall back to full build on main`);
+    console.error(
+      `⚠️  Buildkite API request failed: ${e} — will fall back to full build on main`,
+    );
     return null;
   }
 
-  console.error("⚠️  No qualifying green build found in last 10 builds — will fall back to full build on main");
+  console.error(
+    "⚠️  No qualifying green build found in last 10 builds — will fall back to full build on main",
+  );
   return null;
 }
 
@@ -199,10 +209,13 @@ async function readWorkspaceDeps(): Promise<Map<string, Set<string>>> {
       };
       const workspaceDeps = new Set<string>();
       for (const [name, version] of Object.entries(allDeps)) {
-        if (typeof version === "string" && (version.startsWith("workspace:") || version.startsWith("file:"))) {
+        if (
+          typeof version === "string" &&
+          (version.startsWith("workspace:") || version.startsWith("file:"))
+        ) {
           // Extract the package directory name from the scoped name
           const dirName = name.startsWith("@")
-            ? name.split("/")[1] ?? name
+            ? (name.split("/")[1] ?? name)
             : name;
           workspaceDeps.add(dirName);
         }

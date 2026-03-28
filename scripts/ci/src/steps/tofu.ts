@@ -20,7 +20,11 @@ function tofuStackStep(stack: string): BuildkiteStep {
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [
-      k8sPlugin({ cpu: "500m", memory: "1Gi", secrets: ["buildkite-argocd-token"] }),
+      k8sPlugin({
+        cpu: "500m",
+        memory: "1Gi",
+        secrets: ["buildkite-argocd-token"],
+      }),
     ],
   };
 }

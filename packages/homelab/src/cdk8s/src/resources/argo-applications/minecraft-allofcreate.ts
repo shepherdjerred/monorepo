@@ -4,7 +4,8 @@ import { createModdedMinecraftApp } from "@shepherdjerred/homelab/cdk8s/src/misc
 export function createMinecraftAllofcreateApp(chart: Chart) {
   return createModdedMinecraftApp(chart, {
     name: "allofcreate",
-    curseForgePageUrl: "https://www.curseforge.com/minecraft/modpacks/all-of-create",
+    curseForgePageUrl:
+      "https://www.curseforge.com/minecraft/modpacks/all-of-create",
     hostname: "allofcreate.sjer.red",
     motd: "All of Create",
     memory: "6G",

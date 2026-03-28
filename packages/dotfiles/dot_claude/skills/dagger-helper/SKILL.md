@@ -213,10 +213,10 @@ await Promise.all([
 
 ### Mount vs Copy
 
-| Operation                | Use Case          | In Final Image? | Content-Based Cache? |
-| ------------------------ | ----------------- | --------------- | -------------------- |
+| Operation                | Use Case          | In Final Image? | Content-Based Cache?                                          |
+| ------------------------ | ----------------- | --------------- | ------------------------------------------------------------- |
 | `withMountedDirectory()` | CI operations     | No              | No (BuildKit skips checksums unless read-only non-root mount) |
-| `withDirectory()`        | Publishing images | Yes             | Yes (full content hash) |
+| `withDirectory()`        | Publishing images | Yes             | Yes (full content hash)                                       |
 
 ```typescript
 // CI - mount for speed
@@ -424,7 +424,7 @@ try {
   if (e instanceof ExecError) {
     console.error(`Command: ${e.cmd}`);
     console.error(`Exit code: ${e.exitCode}`);
-    console.error(`Stderr: ${e.stderr}`);  // Access as property, not toString()
+    console.error(`Stderr: ${e.stderr}`); // Access as property, not toString()
     console.error(`Stdout: ${e.stdout}`);
   }
   throw e;
@@ -441,14 +441,18 @@ try {
 ```typescript
 // WRONG: swallows errors, CI always exits 0
 const results = await Promise.allSettled(
-  tasks.map(t => t.sync().catch((e: Error) => `FAIL: ${e.message.slice(0, 80)}`))
+  tasks.map((t) =>
+    t.sync().catch((e: Error) => `FAIL: ${e.message.slice(0, 80)}`),
+  ),
 );
 
 // RIGHT: failures propagate
-const results = await Promise.allSettled(tasks.map(t => t.stdout()));
-const failures = results.filter((r): r is PromiseRejectedResult => r.status === "rejected");
+const results = await Promise.allSettled(tasks.map((t) => t.stdout()));
+const failures = results.filter(
+  (r): r is PromiseRejectedResult => r.status === "rejected",
+);
 if (failures.length > 0) {
-  throw new Error(failures.map(f => f.reason).join("\n"));
+  throw new Error(failures.map((f) => f.reason).join("\n"));
 }
 ```
 
@@ -460,23 +464,40 @@ Copy dependency files and install BEFORE mounting source code. Otherwise, any so
 
 ```typescript
 const SOURCE_EXCLUDES = [
-  "node_modules", ".eslintcache", "dist", "target", ".git",
-  ".vscode", ".idea", "coverage", "build", ".next",
-  ".tsbuildinfo", "__pycache__", ".DS_Store", "archive",
+  "node_modules",
+  ".eslintcache",
+  "dist",
+  "target",
+  ".git",
+  ".vscode",
+  ".idea",
+  "coverage",
+  "build",
+  ".next",
+  ".tsbuildinfo",
+  "__pycache__",
+  ".DS_Store",
+  "archive",
 ];
 
 function bunBase(source: Directory, pkg: string): Container {
-  return dag.container()
-    .from(BUN_IMAGE)
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
-    .withWorkdir("/workspace")
-    // 1. Deps layer (cached unless lockfile changes)
-    .withFile("/workspace/package.json", source.file("package.json"))
-    .withFile("/workspace/bun.lock", source.file("bun.lock"))
-    .withExec(["bun", "install", "--frozen-lockfile"])
-    // 2. Source layer (only invalidated by actual source changes)
-    .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
-    .withWorkdir(`/workspace/packages/${pkg}`);
+  return (
+    dag
+      .container()
+      .from(BUN_IMAGE)
+      .withMountedCache(
+        "/root/.bun/install/cache",
+        dag.cacheVolume("bun-cache"),
+      )
+      .withWorkdir("/workspace")
+      // 1. Deps layer (cached unless lockfile changes)
+      .withFile("/workspace/package.json", source.file("package.json"))
+      .withFile("/workspace/bun.lock", source.file("bun.lock"))
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      // 2. Source layer (only invalidated by actual source changes)
+      .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
+      .withWorkdir(`/workspace/packages/${pkg}`)
+  );
 }
 ```
 
@@ -498,6 +519,7 @@ Default TTL is 7 days. Module source changes invalidate ALL function caches.
 ```
 
 Recommendations:
+
 - `lint`, `typecheck`, `test`, `buildImage`: default (7-day) — inputs determine cache key
 - `pushImage`, `deploySite`, `argoCdSync`, `tofuApply`, `helmPackage`: `cache: "never"` — side effects must always execute
 - `ciAll` (orchestration): `cache: "session"` — run once per session
@@ -517,13 +539,13 @@ export DAGGER_NO_UPDATE_CHECK=1 # suppress update checks
 
 ## Debugging Workflow
 
-| Tool | Purpose |
-| ---- | ------- |
+| Tool                    | Purpose                                        |
+| ----------------------- | ---------------------------------------------- |
 | `dagger call -i <func>` | Interactive mode — drops into shell on failure |
-| `.terminal()` | Insert explicit breakpoint mid-pipeline |
-| `--debug` | Max verbosity — all internal engine spans |
-| `-v` / `-vv` / `-vvv` | Increasing verbosity tiers |
-| `--progress=plain` | No TUI — suitable for CI logs |
+| `.terminal()`           | Insert explicit breakpoint mid-pipeline        |
+| `--debug`               | Max verbosity — all internal engine spans      |
+| `-v` / `-vv` / `-vvv`   | Increasing verbosity tiers                     |
+| `--progress=plain`      | No TUI — suitable for CI logs                  |
 
 ## Anti-Patterns
 
@@ -533,6 +555,7 @@ export DAGGER_NO_UPDATE_CHECK=1 # suppress update checks
 4. **Version-keyed cache volume names** — cold cache on every version bump. Use stable names like `"bun-cache"`, not `"bun-cache-1.2.3"`.
 5. **Missing `.git` in excludes** — `.git` changes every commit, invalidates all downstream layers.
 6. **`curl | bash` without version pinning** — gets latest, breaks reproducibility. Always pin the version in the URL or use a versioned installer.
+7. **Side-effectful `WithExec` without forcing** — if no downstream consumer forces evaluation, the operation silently doesn't execute. Always call `.sync()` or `.stdout()` on containers with side effects.
 
 ## Module Organization
 
@@ -605,8 +628,9 @@ async birmelPublish(
 ## Reference Files
 
 - **`references/release-notes.md`** - Features from Dagger 0.15, 0.16, 0.19, and 0.20: container import/export, Changeset API, Build-an-Agent, engine config, metrics, function caching, TypeScript SDK improvements
-- **`references/monorepo-performance.md`** - Pre-call filtering, `ignore` annotations, `defaultPath` patterns, shared config without `--source .`, multi-module architecture, cache debugging commands, remote/registry cache, Dagger Shell and Checks, version performance history, case studies
+- **`references/monorepo-performance.md`** - Pre-call filtering, `ignore` annotations, `defaultPath` patterns, shared config without `--source .`, multi-module architecture, cache debugging commands, remote/registry cache, Dagger Shell and Checks, version performance history, case studies, pain points at scale, JS runtime comparison (pnpm/Deno), optimal caching strategy
 - **`references/bun-container-caveats.md`** - Bun hardlink behavior across filesystem boundaries with CacheVolumes, `.d.ts` file skip bug (#27095), install backend options (`BUN_INSTALL_LINKS`), `bun.lock` vs `bun.lockb`, SDK runtime vs container runtime, workspace hoisting vs isolated mode caching implications
+- **`references/deep-internals.md`** - Lazy evaluation and DAG model, Sync() semantics, silent non-execution pitfall, container reuse and content-addressed IDs (xxh3), branching vs chaining for parallelism, cache key computation details (mtime ignored, cascade effect), function/module patterns (polyglot, toolchains, constructor, tests sub-module), module publishing
 
 ## When to Ask for Help
 

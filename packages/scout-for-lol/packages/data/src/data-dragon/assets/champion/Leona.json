@@ -460,10 +460,7 @@
         "When Leona activates Eclipse, you have three seconds to get away from her before she deals damage.",
         "Only foes in the center of Solar Flare get stunned, so you can often avoid this if you're quick."
       ],
-      "tags": [
-        "Tank",
-        "Support"
-      ],
+      "tags": ["Tank", "Support"],
       "partype": "Mana",
       "info": {
         "attack": 4,
@@ -500,105 +497,27 @@
           "description": "Leona uses her shield to perform her next basic attack, dealing bonus magic damage and stunning the target.",
           "tooltip": "Leona's next Attack <status>Stuns</status> for {{ e1 }} seconds and deals an additional <magicDamage>{{ totaldamagetooltip }}</magicDamage> magic damage.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "@AbilityResourceName@ Cost"
-            ],
-            "effect": [
-              "{{ e2 }} -> {{ e2NL }}",
-              "{{ cost }} -> {{ costNL }}"
-            ]
+            "label": ["Damage", "@AbilityResourceName@ Cost"],
+            "effect": ["{{ e2 }} -> {{ e2NL }}", "{{ cost }} -> {{ costNL }}"]
           },
           "maxrank": 5,
-          "cooldown": [
-            5,
-            5,
-            5,
-            5,
-            5
-          ],
+          "cooldown": [5, 5, 5, 5, 5],
           "cooldownBurn": "5",
-          "cost": [
-            30,
-            35,
-            40,
-            45,
-            50
-          ],
+          "cost": [30, 35, 40, 45, 50],
           "costBurn": "30/35/40/45/50",
           "datavalues": {},
           "effect": [
             null,
-            [
-              1,
-              1,
-              1,
-              1,
-              1
-            ],
-            [
-              10,
-              35,
-              60,
-              85,
-              110
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [1, 1, 1, 1, 1],
+            [10, 35, 60, 85, 110],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -616,13 +535,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            100,
-            100,
-            100,
-            100,
-            100
-          ],
+          "range": [100, 100, 100, 100, 100],
           "rangeBurn": "100",
           "image": {
             "full": "LeonaShieldOfDaybreak.png",
@@ -655,95 +568,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            14,
-            13,
-            12,
-            11,
-            10
-          ],
+          "cooldown": [14, 13, 12, 11, 10],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [
-            60,
-            60,
-            60,
-            60,
-            60
-          ],
+          "cost": [60, 60, 60, 60, 60],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [
-              55,
-              85,
-              115,
-              145,
-              175
-            ],
-            [
-              20,
-              27.5,
-              35,
-              42.5,
-              50
-            ],
-            [
-              3,
-              3,
-              3,
-              3,
-              3
-            ],
-            [
-              20,
-              27.5,
-              35,
-              42.5,
-              50
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [55, 85, 115, 145, 175],
+            [20, 27.5, 35, 42.5, 50],
+            [3, 3, 3, 3, 3],
+            [20, 27.5, 35, 42.5, 50],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -761,13 +602,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            450,
-            450,
-            450,
-            450,
-            450
-          ],
+          "range": [450, 450, 450, 450, 450],
           "rangeBurn": "450",
           "image": {
             "full": "LeonaSolarBarrier.png",
@@ -786,11 +621,7 @@
           "description": "Leona projects a solar image of her sword, dealing magic damage to all enemies in a line. When the image fades, the last enemy champion struck will be briefly immobilized and Leona will dash to them.",
           "tooltip": "Leona thrusts with a sword of light, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>. The last champion struck will be <status>Rooted</status> for {{ e2 }} seconds and Leona will dash to them.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -798,95 +629,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            12,
-            10.5,
-            9,
-            7.5,
-            6
-          ],
+          "cooldown": [12, 10.5, 9, 7.5, 6],
           "cooldownBurn": "12/10.5/9/7.5/6",
-          "cost": [
-            40,
-            45,
-            50,
-            55,
-            60
-          ],
+          "cost": [40, 45, 50, 55, 60],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [
-              50,
-              90,
-              130,
-              170,
-              210
-            ],
-            [
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [50, 90, 130, 170, 210],
+            [0.5, 0.5, 0.5, 0.5, 0.5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -904,13 +663,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            875,
-            875,
-            875,
-            875,
-            875
-          ],
+          "range": [875, 875, 875, 875, 875],
           "rangeBurn": "875",
           "image": {
             "full": "LeonaZenithBlade.png",
@@ -929,81 +682,30 @@
           "description": "Leona calls down a beam of solar energy, dealing damage to enemies in an area. Enemies in the center of the area are stunned, while enemies on the outside are slowed.",
           "tooltip": "Leona calls down a radiant beam of solar energy dealing <magicDamage>{{ explosioncalculateddamage }} magic damage</magicDamage> and <status>Slowing</status> by {{ slowpercent }}% for {{ ccduration }} seconds. Enemies in the center of the flare are <status>Stunned</status> instead of <status>Slowed</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Cooldown"],
             "effect": [
               "{{ explosionbasedamage }} -> {{ explosionbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            90,
-            75,
-            60
-          ],
+          "cooldown": [90, 75, 60],
           "cooldownBurn": "90/75/60",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              100,
-              100,
-              100
-            ],
-            [
-              3,
-              3,
-              3
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [100, 100, 100],
+            [3, 3, 3],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -1021,11 +723,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1200,
-            1200,
-            1200
-          ],
+          "range": [1200, 1200, 1200],
           "rangeBurn": "1200",
           "image": {
             "full": "LeonaSolarFlare.png",
