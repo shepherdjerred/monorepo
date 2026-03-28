@@ -1,0 +1,137 @@
+{
+  "questionId": "3833",
+  "questionFrontendId": "3538",
+  "title": "Merge Operations for Minimum Travel Time",
+  "titleSlug": "merge-operations-for-minimum-travel-time",
+  "difficulty": "Hard",
+  "content": "<p data-end=\"452\" data-start=\"24\">You are given a straight road of length <code>l</code> km, an integer <code>n</code>, an integer <code>k</code><strong data-end=\"83\" data-start=\"78\">, </strong>and <strong>two</strong> integer arrays, <code>position</code> and <code>time</code>, each of length <code>n</code>.</p>\n\n<p data-end=\"452\" data-start=\"24\">The array <code>position</code> lists the positions (in km) of signs in <strong>strictly</strong> increasing order (with <code>position[0] = 0</code> and <code>position[n - 1] = l</code>).</p>\n\n<p data-end=\"452\" data-start=\"24\">Each <code>time[i]</code> represents the time (in minutes) required to travel 1 km between <code>position[i]</code> and <code>position[i + 1]</code>.</p>\n\n<p data-end=\"593\" data-start=\"454\">You <strong>must</strong> perform <strong>exactly</strong> <code>k</code> merge operations. In one merge, you can choose any <strong>two</strong> adjacent signs at indices <code>i</code> and <code>i + 1</code> (with <code>i &gt; 0</code> and <code>i + 1 &lt; n</code>) and:</p>\n\n<ul data-end=\"701\" data-start=\"595\">\n\t<li data-end=\"624\" data-start=\"595\">Update the sign at index <code>i + 1</code> so that its time becomes <code>time[i] + time[i + 1]</code>.</li>\n\t<li data-end=\"624\" data-start=\"595\">Remove the sign at index <code>i</code>.</li>\n</ul>\n\n<p data-end=\"846\" data-start=\"703\">Return the <strong>minimum</strong> <strong>total</strong> <strong>travel time</strong> (in minutes) to travel from 0 to <code>l</code> after <strong>exactly</strong> <code>k</code> merges.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">l = 10, n = 4, k = 1, position = [0,3,8,10], time = [5,8,3,6]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">62</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li data-end=\"121\" data-start=\"11\">\n\t<p data-end=\"121\" data-start=\"13\">Merge the signs at indices 1 and 2. Remove the sign at index 1, and change the time at index 2 to <code>8 + 3 = 11</code>.</p>\n\t</li>\n\t<li data-end=\"144\" data-start=\"15\">After the merge:\n\t<ul>\n\t\t<li data-end=\"214\" data-start=\"145\"><code>position</code> array: <code>[0, 8, 10]</code></li>\n\t\t<li data-end=\"214\" data-start=\"145\"><code>time</code> array: <code>[5, 11, 6]</code></li>\n\t\t<li data-end=\"214\" data-start=\"145\" style=\"opacity: 0\"> </li>\n\t</ul>\n\t</li>\n\t<li data-end=\"214\" data-start=\"145\">\n\t<table data-end=\"386\" data-start=\"231\" style=\"border: 1px solid black;\">\n\t\t<thead data-end=\"269\" data-start=\"231\">\n\t\t\t<tr data-end=\"269\" data-start=\"231\">\n\t\t\t\t<th data-end=\"241\" data-start=\"231\" style=\"border: 1px solid black;\">Segment</th>\n\t\t\t\t<th data-end=\"252\" data-start=\"241\" style=\"border: 1px solid black;\">Distance (km)</th>\n\t\t\t\t<th data-end=\"260\" data-start=\"252\" style=\"border: 1px solid black;\">Time per km (min)</th>\n\t\t\t\t<th data-end=\"269\" data-start=\"260\" style=\"border: 1px solid black;\">Segment Travel Time (min)</th>\n\t\t\t</tr>\n\t\t</thead>\n\t\t<tbody data-end=\"386\" data-start=\"309\">\n\t\t\t<tr data-end=\"347\" data-start=\"309\">\n\t\t\t\t<td style=\"border: 1px solid black;\">0 &rarr; 8</td>\n\t\t\t\t<td style=\"border: 1px solid black;\">8</td>\n\t\t\t\t<td style=\"border: 1px solid black;\">5</td>\n\t\t\t\t<td style=\"border: 1px solid black;\">8 &times; 5 = 40</td>\n\t\t\t</tr>\n\t\t\t<tr data-end=\"386\" data-start=\"348\">\n\t\t\t\t<td style=\"border: 1px solid black;\">8 &rarr; 10</td>\n\t\t\t\t<td style=\"border: 1px solid black;\">2</td>\n\t\t\t\t<td style=\"border: 1px solid black;\">11</td>\n\t\t\t\t<td style=\"border: 1px solid black;\">2 &times; 11 = 22</td>\n\t\t\t</tr>\n\t\t</tbody>\n\t</table>\n\t</li>\n\t<li data-end=\"214\" data-start=\"145\">Total Travel Time: <code>40 + 22 = 62</code>, which is the minimum possible time after exactly 1 merge.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">l = 5, n = 5, k = 1, position = [0,1,2,3,5], time = [8,3,9,3,3]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">34</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li data-end=\"567\" data-start=\"438\">Merge the signs at indices 1 and 2. Remove the sign at index 1, and change the time at index 2 to <code>3 + 9 = 12</code>.</li>\n\t<li data-end=\"755\" data-start=\"568\">After the merge:\n\t<ul>\n\t\t<li data-end=\"755\" data-start=\"568\"><code>position</code> array: <code>[0, 2, 3, 5]</code></li>\n\t\t<li data-end=\"755\" data-start=\"568\"><code>time</code> array: <code>[8, 12, 3, 3]</code></li>\n\t\t<li data-end=\"755\" data-start=\"568\" style=\"opacity: 0\"> </li>\n\t</ul>\n\t</li>\n\t<li data-end=\"755\" data-start=\"568\">\n\t<table data-end=\"966\" data-start=\"772\" style=\"border: 1px solid black;\">\n\t\t<thead data-end=\"810\" data-start=\"772\">\n\t\t\t<tr data-end=\"810\" data-start=\"772\">\n\t\t\t\t<th data-end=\"782\" data-start=\"772\" style=\"border: 1px solid black;\">Segment</th>\n\t\t\t\t<th data-end=\"793\" data-start=\"782\" style=\"border: 1px solid black;\">Distance (km)</th>\n\t\t\t\t<th data-end=\"801\" data-start=\"793\" style=\"border: 1px solid black;\">Time per km (min)</th>\n\t\t\t\t<th data-end=\"810\" data-start=\"801\" style=\"border: 1px solid black;\">Segment Travel Time (min)</th>\n\t\t\t</tr>\n\t\t</thead>\n\t\t<tbody data-end=\"966\" data-start=\"850\">\n\t\t\t<tr data-end=\"888\" data-start=\"850\">\n\t\t\t\t<td style=\"border: 1px solid black;\">0 &rarr; 2</td>\n\t\t\t\t<td style=\"border: 1px solid black;\">2</td>\n\t\t\t\t<td style=\"border: 1px solid black;\">8</td>\n\t\t\t\t<td style=\"border: 1px solid black;\">2 &times; 8 = 16</td>\n\t\t\t</tr>\n\t\t\t<tr data-end=\"927\" data-start=\"889\">\n\t\t\t\t<td style=\"border: 1px solid black;\">2 &rarr; 3</td>\n\t\t\t\t<td style=\"border: 1px solid black;\">1</td>\n\t\t\t\t<td style=\"border: 1px solid black;\">12</td>\n\t\t\t\t<td style=\"border: 1px solid black;\">1 &times; 12 = 12</td>\n\t\t\t</tr>\n\t\t\t<tr data-end=\"966\" data-start=\"928\">\n\t\t\t\t<td style=\"border: 1px solid black;\">3 &rarr; 5</td>\n\t\t\t\t<td style=\"border: 1px solid black;\">2</td>\n\t\t\t\t<td style=\"border: 1px solid black;\">3</td>\n\t\t\t\t<td style=\"border: 1px solid black;\">2 &times; 3 = 6</td>\n\t\t\t</tr>\n\t\t</tbody>\n\t</table>\n\t</li>\n\t<li data-end=\"755\" data-start=\"568\">Total Travel Time: <code>16 + 12 + 6 = 34</code><b>, </b>which is the minimum possible time after exactly 1 merge.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li data-end=\"35\" data-start=\"15\"><code>1 &lt;= l &lt;= 10<sup>5</sup></code></li>\n\t<li data-end=\"52\" data-start=\"36\"><code>2 &lt;= n &lt;= min(l + 1, 50)</code></li>\n\t<li data-end=\"81\" data-start=\"53\"><code>0 &lt;= k &lt;= min(n - 2, 10)</code></li>\n\t<li data-end=\"81\" data-start=\"53\"><code>position.length == n</code></li>\n\t<li data-end=\"81\" data-start=\"53\"><code>position[0] = 0</code> and <code>position[n - 1] = l</code></li>\n\t<li data-end=\"200\" data-start=\"80\"><code>position</code> is sorted in strictly increasing order.</li>\n\t<li data-end=\"81\" data-start=\"53\"><code>time.length == n</code></li>\n\t<li data-end=\"81\" data-start=\"53\"><code>1 &lt;= time[i] &lt;= 100​</code></li>\n\t<li data-end=\"81\" data-start=\"53\"><code>1 &lt;= sum(time) &lt;= 100</code>​​​​​​</li>\n</ul>\n",
+  "hints": [
+    "Use dynamic programming.",
+    "After <code>k</code> merges, you’ll have <code>n-k</code> signs left.",
+    "Define <code>DP[i][j][s]</code> as the minimum travel time for positions <code>0..i</code> when <code>i</code> is kept, <code>j</code> deletions are done overall, and <code>s</code> consecutive deletions occurred immediately before <code>i</code>.",
+    "Update the DP by either merging (increment <code>s</code> and <code>j</code>) or not merging (reset <code>s</code>) and adding the appropriate travel time."
+  ],
+  "metaData": "{\n  \"name\": \"minTravelTime\",\n  \"params\": [\n    {\n      \"name\": \"l\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"position\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"time\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"4.9K\", \"totalSubmission\": \"16.1K\", \"totalAcceptedRaw\": 4949, \"totalSubmissionRaw\": 16071, \"acRate\": \"30.8%\"}",
+  "likes": 69,
+  "dislikes": 10,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "10\n4\n1\n[0,3,8,10]\n[5,8,3,6]",
+    "5\n5\n1\n[0,1,2,3,5]\n[8,3,9,3,3]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minTravelTime(int l, int n, int k, vector<int>& position, vector<int>& time) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minTravelTime(int l, int n, int k, int[] position, int[] time) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minTravelTime(self, l: int, n: int, k: int, position: List[int], time: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minTravelTime(self, l, n, k, position, time):\n        \"\"\"\n        :type l: int\n        :type n: int\n        :type k: int\n        :type position: List[int]\n        :type time: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} l\n * @param {number} n\n * @param {number} k\n * @param {number[]} position\n * @param {number[]} time\n * @return {number}\n */\nvar minTravelTime = function(l, n, k, position, time) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minTravelTime(l: number, n: number, k: number, position: number[], time: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinTravelTime(int l, int n, int k, int[] position, int[] time) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minTravelTime(int l, int n, int k, int* position, int positionSize, int* time, int timeSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minTravelTime(l int, n int, k int, position []int, time []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minTravelTime(l: Int, n: Int, k: Int, position: IntArray, time: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minTravelTime(_ l: Int, _ n: Int, _ k: Int, _ position: [Int], _ time: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_travel_time(l: i32, n: i32, k: i32, position: Vec<i32>, time: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} l\n# @param {Integer} n\n# @param {Integer} k\n# @param {Integer[]} position\n# @param {Integer[]} time\n# @return {Integer}\ndef min_travel_time(l, n, k, position, time)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $l\n     * @param Integer $n\n     * @param Integer $k\n     * @param Integer[] $position\n     * @param Integer[] $time\n     * @return Integer\n     */\n    function minTravelTime($l, $n, $k, $position, $time) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minTravelTime(int l, int n, int k, List<int> position, List<int> time) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minTravelTime(l: Int, n: Int, k: Int, position: Array[Int], time: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_travel_time(l :: integer, n :: integer, k :: integer, position :: [integer], time :: [integer]) :: integer\n  def min_travel_time(l, n, k, position, time) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_travel_time(L :: integer(), N :: integer(), K :: integer(), Position :: [integer()], Time :: [integer()]) -> integer().\nmin_travel_time(L, N, K, Position, Time) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-travel-time l n k position time)\n  (-> exact-integer? exact-integer? exact-integer? (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

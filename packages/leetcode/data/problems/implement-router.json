@@ -1,0 +1,152 @@
+{
+  "questionId": "3827",
+  "questionFrontendId": "3508",
+  "title": "Implement Router",
+  "titleSlug": "implement-router",
+  "difficulty": "Medium",
+  "content": "<p>Design a data structure that can efficiently manage data packets in a network router. Each data packet consists of the following attributes:</p>\n\n<ul>\n\t<li><code>source</code>: A unique identifier for the machine that generated the packet.</li>\n\t<li><code>destination</code>: A unique identifier for the target machine.</li>\n\t<li><code>timestamp</code>: The time at which the packet arrived at the router.</li>\n</ul>\n\n<p>Implement the <code>Router</code> class:</p>\n\n<p><code>Router(int memoryLimit)</code>: Initializes the Router object with a fixed memory limit.</p>\n\n<ul>\n\t<li><code>memoryLimit</code> is the <strong>maximum</strong> number of packets the router can store at any given time.</li>\n\t<li>If adding a new packet would exceed this limit, the <strong>oldest</strong> packet must be removed to free up space.</li>\n</ul>\n\n<p><code>bool addPacket(int source, int destination, int timestamp)</code>: Adds a packet with the given attributes to the router.</p>\n\n<ul>\n\t<li>A packet is considered a duplicate if another packet with the same <code>source</code>, <code>destination</code>, and <code>timestamp</code> already exists in the router.</li>\n\t<li>Return <code>true</code> if the packet is successfully added (i.e., it is not a duplicate); otherwise return <code>false</code>.</li>\n</ul>\n\n<p><code>int[] forwardPacket()</code>: Forwards the next packet in FIFO (First In First Out) order.</p>\n\n<ul>\n\t<li>Remove the packet from storage.</li>\n\t<li>Return the packet as an array <code>[source, destination, timestamp]</code>.</li>\n\t<li>If there are no packets to forward, return an empty array.</li>\n</ul>\n\n<p><code>int getCount(int destination, int startTime, int endTime)</code>:</p>\n\n<ul>\n\t<li>Returns the number of packets currently stored in the router (i.e., not yet forwarded) that have the specified destination and have timestamps in the inclusive range <code>[startTime, endTime]</code>.</li>\n</ul>\n\n<p><strong>Note</strong> that queries for <code>addPacket</code> will be made in non-decreasing order of <code>timestamp</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong><br />\n<span class=\"example-io\">[&quot;Router&quot;, &quot;addPacket&quot;, &quot;addPacket&quot;, &quot;addPacket&quot;, &quot;addPacket&quot;, &quot;addPacket&quot;, &quot;forwardPacket&quot;, &quot;addPacket&quot;, &quot;getCount&quot;]<br />\n[[3], [1, 4, 90], [2, 5, 90], [1, 4, 90], [3, 5, 95], [4, 5, 105], [], [5, 2, 110], [5, 100, 110]]</span></p>\n\n<p><strong>Output:</strong><br />\n<span class=\"example-io\">[null, true, true, false, true, true, [2, 5, 90], true, 1] </span></p>\n\n<p><strong>Explanation</strong></p>\nRouter router = new Router(3); // Initialize Router with memoryLimit of 3.<br />\nrouter.addPacket(1, 4, 90); // Packet is added. Return True.<br />\nrouter.addPacket(2, 5, 90); // Packet is added. Return True.<br />\nrouter.addPacket(1, 4, 90); // This is a duplicate packet. Return False.<br />\nrouter.addPacket(3, 5, 95); // Packet is added. Return True<br />\nrouter.addPacket(4, 5, 105); // Packet is added, <code>[1, 4, 90]</code> is removed as number of packets exceeds memoryLimit. Return True.<br />\nrouter.forwardPacket(); // Return <code>[2, 5, 90]</code> and remove it from router.<br />\nrouter.addPacket(5, 2, 110); // Packet is added. Return True.<br />\nrouter.getCount(5, 100, 110); // The only packet with destination 5 and timestamp in the inclusive range <code>[100, 110]</code> is <code>[4, 5, 105]</code>. Return 1.</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong><br />\n<span class=\"example-io\">[&quot;Router&quot;, &quot;addPacket&quot;, &quot;forwardPacket&quot;, &quot;forwardPacket&quot;]<br />\n[[2], [7, 4, 90], [], []]</span></p>\n\n<p><strong>Output:</strong><br />\n<span class=\"example-io\">[null, true, [7, 4, 90], []] </span></p>\n\n<p><strong>Explanation</strong></p>\nRouter router = new Router(2); // Initialize <code>Router</code> with <code>memoryLimit</code> of 2.<br />\nrouter.addPacket(7, 4, 90); // Return True.<br />\nrouter.forwardPacket(); // Return <code>[7, 4, 90]</code>.<br />\nrouter.forwardPacket(); // There are no packets left, return <code>[]</code>.</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= memoryLimit &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= source, destination &lt;= 2 * 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= timestamp &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= startTime &lt;= endTime &lt;= 10<sup>9</sup></code></li>\n\t<li>At most <code>10<sup>5</sup></code> calls will be made to <code>addPacket</code>, <code>forwardPacket</code>, and <code>getCount</code> methods altogether.</li>\n\t<li>queries for <code>addPacket</code> will be made in non-decreasing order of <code>timestamp</code>.</li>\n</ul>\n",
+  "hints": [
+    "A deque can simulate the adding and forwarding of packets efficiently.",
+    "Use binary search for counting packets within a timestamp range."
+  ],
+  "metaData": "{\n  \"classname\": \"Router\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"name\": \"memoryLimit\",\n        \"type\": \"integer\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"source\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"destination\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"timestamp\"\n        }\n      ],\n      \"return\": {\n        \"type\": \"boolean\"\n      },\n      \"name\": \"addPacket\"\n    },\n    {\n      \"params\": [],\n      \"name\": \"forwardPacket\",\n      \"return\": {\n        \"type\": \"integer[]\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"destination\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"startTime\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"endTime\"\n        }\n      ],\n      \"name\": \"getCount\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"89.1K\", \"totalSubmission\": \"227.9K\", \"totalAcceptedRaw\": 89145, \"totalSubmissionRaw\": 227944, \"acRate\": \"39.1%\"}",
+  "likes": 485,
+  "dislikes": 116,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"Router\",\"addPacket\",\"addPacket\",\"addPacket\",\"addPacket\",\"addPacket\",\"forwardPacket\",\"addPacket\",\"getCount\"]\n[[3],[1,4,90],[2,5,90],[1,4,90],[3,5,95],[4,5,105],[],[5,2,110],[5,100,110]]",
+    "[\"Router\",\"addPacket\",\"forwardPacket\",\"forwardPacket\"]\n[[2],[7,4,90],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Router {\npublic:\n    Router(int memoryLimit) {\n        \n    }\n    \n    bool addPacket(int source, int destination, int timestamp) {\n        \n    }\n    \n    vector<int> forwardPacket() {\n        \n    }\n    \n    int getCount(int destination, int startTime, int endTime) {\n        \n    }\n};\n\n/**\n * Your Router object will be instantiated and called as such:\n * Router* obj = new Router(memoryLimit);\n * bool param_1 = obj->addPacket(source,destination,timestamp);\n * vector<int> param_2 = obj->forwardPacket();\n * int param_3 = obj->getCount(destination,startTime,endTime);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Router {\n\n    public Router(int memoryLimit) {\n        \n    }\n    \n    public boolean addPacket(int source, int destination, int timestamp) {\n        \n    }\n    \n    public int[] forwardPacket() {\n        \n    }\n    \n    public int getCount(int destination, int startTime, int endTime) {\n        \n    }\n}\n\n/**\n * Your Router object will be instantiated and called as such:\n * Router obj = new Router(memoryLimit);\n * boolean param_1 = obj.addPacket(source,destination,timestamp);\n * int[] param_2 = obj.forwardPacket();\n * int param_3 = obj.getCount(destination,startTime,endTime);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Router:\n\n    def __init__(self, memoryLimit: int):\n        \n\n    def addPacket(self, source: int, destination: int, timestamp: int) -> bool:\n        \n\n    def forwardPacket(self) -> List[int]:\n        \n\n    def getCount(self, destination: int, startTime: int, endTime: int) -> int:\n        \n\n\n# Your Router object will be instantiated and called as such:\n# obj = Router(memoryLimit)\n# param_1 = obj.addPacket(source,destination,timestamp)\n# param_2 = obj.forwardPacket()\n# param_3 = obj.getCount(destination,startTime,endTime)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Router(object):\n\n    def __init__(self, memoryLimit):\n        \"\"\"\n        :type memoryLimit: int\n        \"\"\"\n        \n\n    def addPacket(self, source, destination, timestamp):\n        \"\"\"\n        :type source: int\n        :type destination: int\n        :type timestamp: int\n        :rtype: bool\n        \"\"\"\n        \n\n    def forwardPacket(self):\n        \"\"\"\n        :rtype: List[int]\n        \"\"\"\n        \n\n    def getCount(self, destination, startTime, endTime):\n        \"\"\"\n        :type destination: int\n        :type startTime: int\n        :type endTime: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your Router object will be instantiated and called as such:\n# obj = Router(memoryLimit)\n# param_1 = obj.addPacket(source,destination,timestamp)\n# param_2 = obj.forwardPacket()\n# param_3 = obj.getCount(destination,startTime,endTime)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} memoryLimit\n */\nvar Router = function(memoryLimit) {\n    \n};\n\n/** \n * @param {number} source \n * @param {number} destination \n * @param {number} timestamp\n * @return {boolean}\n */\nRouter.prototype.addPacket = function(source, destination, timestamp) {\n    \n};\n\n/**\n * @return {number[]}\n */\nRouter.prototype.forwardPacket = function() {\n    \n};\n\n/** \n * @param {number} destination \n * @param {number} startTime \n * @param {number} endTime\n * @return {number}\n */\nRouter.prototype.getCount = function(destination, startTime, endTime) {\n    \n};\n\n/** \n * Your Router object will be instantiated and called as such:\n * var obj = new Router(memoryLimit)\n * var param_1 = obj.addPacket(source,destination,timestamp)\n * var param_2 = obj.forwardPacket()\n * var param_3 = obj.getCount(destination,startTime,endTime)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Router {\n    constructor(memoryLimit: number) {\n        \n    }\n\n    addPacket(source: number, destination: number, timestamp: number): boolean {\n        \n    }\n\n    forwardPacket(): number[] {\n        \n    }\n\n    getCount(destination: number, startTime: number, endTime: number): number {\n        \n    }\n}\n\n/**\n * Your Router object will be instantiated and called as such:\n * var obj = new Router(memoryLimit)\n * var param_1 = obj.addPacket(source,destination,timestamp)\n * var param_2 = obj.forwardPacket()\n * var param_3 = obj.getCount(destination,startTime,endTime)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Router {\n\n    public Router(int memoryLimit) {\n        \n    }\n    \n    public bool AddPacket(int source, int destination, int timestamp) {\n        \n    }\n    \n    public int[] ForwardPacket() {\n        \n    }\n    \n    public int GetCount(int destination, int startTime, int endTime) {\n        \n    }\n}\n\n/**\n * Your Router object will be instantiated and called as such:\n * Router obj = new Router(memoryLimit);\n * bool param_1 = obj.AddPacket(source,destination,timestamp);\n * int[] param_2 = obj.ForwardPacket();\n * int param_3 = obj.GetCount(destination,startTime,endTime);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Router;\n\n\nRouter* routerCreate(int memoryLimit) {\n    \n}\n\nbool routerAddPacket(Router* obj, int source, int destination, int timestamp) {\n    \n}\n\nint* routerForwardPacket(Router* obj, int* retSize) {\n    \n}\n\nint routerGetCount(Router* obj, int destination, int startTime, int endTime) {\n    \n}\n\nvoid routerFree(Router* obj) {\n    \n}\n\n/**\n * Your Router struct will be instantiated and called as such:\n * Router* obj = routerCreate(memoryLimit);\n * bool param_1 = routerAddPacket(obj, source, destination, timestamp);\n \n * int* param_2 = routerForwardPacket(obj, retSize);\n \n * int param_3 = routerGetCount(obj, destination, startTime, endTime);\n \n * routerFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Router struct {\n    \n}\n\n\nfunc Constructor(memoryLimit int) Router {\n    \n}\n\n\nfunc (this *Router) AddPacket(source int, destination int, timestamp int) bool {\n    \n}\n\n\nfunc (this *Router) ForwardPacket() []int {\n    \n}\n\n\nfunc (this *Router) GetCount(destination int, startTime int, endTime int) int {\n    \n}\n\n\n/**\n * Your Router object will be instantiated and called as such:\n * obj := Constructor(memoryLimit);\n * param_1 := obj.AddPacket(source,destination,timestamp);\n * param_2 := obj.ForwardPacket();\n * param_3 := obj.GetCount(destination,startTime,endTime);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Router(memoryLimit: Int) {\n\n    fun addPacket(source: Int, destination: Int, timestamp: Int): Boolean {\n        \n    }\n\n    fun forwardPacket(): IntArray {\n        \n    }\n\n    fun getCount(destination: Int, startTime: Int, endTime: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your Router object will be instantiated and called as such:\n * var obj = Router(memoryLimit)\n * var param_1 = obj.addPacket(source,destination,timestamp)\n * var param_2 = obj.forwardPacket()\n * var param_3 = obj.getCount(destination,startTime,endTime)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Router {\n\n    init(_ memoryLimit: Int) {\n        \n    }\n    \n    func addPacket(_ source: Int, _ destination: Int, _ timestamp: Int) -> Bool {\n        \n    }\n    \n    func forwardPacket() -> [Int] {\n        \n    }\n    \n    func getCount(_ destination: Int, _ startTime: Int, _ endTime: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your Router object will be instantiated and called as such:\n * let obj = Router(memoryLimit)\n * let ret_1: Bool = obj.addPacket(source, destination, timestamp)\n * let ret_2: [Int] = obj.forwardPacket()\n * let ret_3: Int = obj.getCount(destination, startTime, endTime)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Router {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Router {\n\n    fn new(memoryLimit: i32) -> Self {\n        \n    }\n    \n    fn add_packet(&self, source: i32, destination: i32, timestamp: i32) -> bool {\n        \n    }\n    \n    fn forward_packet(&self) -> Vec<i32> {\n        \n    }\n    \n    fn get_count(&self, destination: i32, start_time: i32, end_time: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your Router object will be instantiated and called as such:\n * let obj = Router::new(memoryLimit);\n * let ret_1: bool = obj.add_packet(source, destination, timestamp);\n * let ret_2: Vec<i32> = obj.forward_packet();\n * let ret_3: i32 = obj.get_count(destination, startTime, endTime);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Router\n\n=begin\n    :type memory_limit: Integer\n=end\n    def initialize(memory_limit)\n        \n    end\n\n\n=begin\n    :type source: Integer\n    :type destination: Integer\n    :type timestamp: Integer\n    :rtype: Boolean\n=end\n    def add_packet(source, destination, timestamp)\n        \n    end\n\n\n=begin\n    :rtype: Integer[]\n=end\n    def forward_packet()\n        \n    end\n\n\n=begin\n    :type destination: Integer\n    :type start_time: Integer\n    :type end_time: Integer\n    :rtype: Integer\n=end\n    def get_count(destination, start_time, end_time)\n        \n    end\n\n\nend\n\n# Your Router object will be instantiated and called as such:\n# obj = Router.new(memory_limit)\n# param_1 = obj.add_packet(source, destination, timestamp)\n# param_2 = obj.forward_packet()\n# param_3 = obj.get_count(destination, start_time, end_time)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Router {\n    /**\n     * @param Integer $memoryLimit\n     */\n    function __construct($memoryLimit) {\n        \n    }\n  \n    /**\n     * @param Integer $source\n     * @param Integer $destination\n     * @param Integer $timestamp\n     * @return Boolean\n     */\n    function addPacket($source, $destination, $timestamp) {\n        \n    }\n  \n    /**\n     * @return Integer[]\n     */\n    function forwardPacket() {\n        \n    }\n  \n    /**\n     * @param Integer $destination\n     * @param Integer $startTime\n     * @param Integer $endTime\n     * @return Integer\n     */\n    function getCount($destination, $startTime, $endTime) {\n        \n    }\n}\n\n/**\n * Your Router object will be instantiated and called as such:\n * $obj = Router($memoryLimit);\n * $ret_1 = $obj->addPacket($source, $destination, $timestamp);\n * $ret_2 = $obj->forwardPacket();\n * $ret_3 = $obj->getCount($destination, $startTime, $endTime);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Router {\n\n  Router(int memoryLimit) {\n    \n  }\n  \n  bool addPacket(int source, int destination, int timestamp) {\n    \n  }\n  \n  List<int> forwardPacket() {\n    \n  }\n  \n  int getCount(int destination, int startTime, int endTime) {\n    \n  }\n}\n\n/**\n * Your Router object will be instantiated and called as such:\n * Router obj = Router(memoryLimit);\n * bool param1 = obj.addPacket(source,destination,timestamp);\n * List<int> param2 = obj.forwardPacket();\n * int param3 = obj.getCount(destination,startTime,endTime);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Router(_memoryLimit: Int) {\n\n    def addPacket(source: Int, destination: Int, timestamp: Int): Boolean = {\n        \n    }\n\n    def forwardPacket(): Array[Int] = {\n        \n    }\n\n    def getCount(destination: Int, startTime: Int, endTime: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your Router object will be instantiated and called as such:\n * val obj = new Router(memoryLimit)\n * val param_1 = obj.addPacket(source,destination,timestamp)\n * val param_2 = obj.forwardPacket()\n * val param_3 = obj.getCount(destination,startTime,endTime)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Router do\n  @spec init_(memory_limit :: integer) :: any\n  def init_(memory_limit) do\n    \n  end\n\n  @spec add_packet(source :: integer, destination :: integer, timestamp :: integer) :: boolean\n  def add_packet(source, destination, timestamp) do\n    \n  end\n\n  @spec forward_packet() :: [integer]\n  def forward_packet() do\n    \n  end\n\n  @spec get_count(destination :: integer, start_time :: integer, end_time :: integer) :: integer\n  def get_count(destination, start_time, end_time) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Router.init_(memory_limit)\n# param_1 = Router.add_packet(source, destination, timestamp)\n# param_2 = Router.forward_packet()\n# param_3 = Router.get_count(destination, start_time, end_time)\n\n# Router.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec router_init_(MemoryLimit :: integer()) -> any().\nrouter_init_(MemoryLimit) ->\n  .\n\n-spec router_add_packet(Source :: integer(), Destination :: integer(), Timestamp :: integer()) -> boolean().\nrouter_add_packet(Source, Destination, Timestamp) ->\n  .\n\n-spec router_forward_packet() -> [integer()].\nrouter_forward_packet() ->\n  .\n\n-spec router_get_count(Destination :: integer(), StartTime :: integer(), EndTime :: integer()) -> integer().\nrouter_get_count(Destination, StartTime, EndTime) ->\n  .\n\n\n%% Your functions will be called as such:\n%% router_init_(MemoryLimit),\n%% Param_1 = router_add_packet(Source, Destination, Timestamp),\n%% Param_2 = router_forward_packet(),\n%% Param_3 = router_get_count(Destination, StartTime, EndTime),\n\n%% router_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define router%\n  (class object%\n    (super-new)\n    \n    ; memory-limit : exact-integer?\n    (init-field\n      memory-limit)\n    \n    ; add-packet : exact-integer? exact-integer? exact-integer? -> boolean?\n    (define/public (add-packet source destination timestamp)\n      )\n    ; forward-packet : -> (listof exact-integer?)\n    (define/public (forward-packet)\n      )\n    ; get-count : exact-integer? exact-integer? exact-integer? -> exact-integer?\n    (define/public (get-count destination start-time end-time)\n      )))\n\n;; Your router% object will be instantiated and called as such:\n;; (define obj (new router% [memory-limit memory-limit]))\n;; (define param_1 (send obj add-packet source destination timestamp))\n;; (define param_2 (send obj forward-packet))\n;; (define param_3 (send obj get-count destination start-time end-time))"
+    }
+  ],
+  "solution": {
+    "id": "2838",
+    "content": "### Approach: Simulation\n\n#### Intuition\n\nThis question requires us to implement a router based on the task description. The router needs to support the following operations:\n\n- $\\textit{addPacket}$: Add a packet. If the packet already exists in the router’s memory, return $\\text{false}$; otherwise, return $\\text{true}$. If the router’s memory is full, the oldest packet (smallest timestamp) must be removed before adding the new packet.  \n- $\\textit{forwardPacket}$: Forward the next packet in first-in-first-out order and return its $\\textit{source}$, $\\textit{destination}$, and $\\textit{timestamp}$ as an array.  \n- $\\textit{getCount}$: Return the number of packets with a given destination address and timestamps between $\\textit{startTime}$ and $\\textit{endTime}$ (inclusive).\n\nWe first define the members of the $\\textit{Router}$ class:\n\n1. $\\textit{memLimit}$: an int, representing the size of the router’s memory.  \n2. $\\textit{length}$: an int, representing the current number of packets in memory.  \n3. $\\textit{isExist}$: an ordered set of triples (each consisting of ints) that tracks whether a packet exists in memory.  \n4. $\\textit{sameDestQue}$: an unordered hash table where the key is the packet’s $\\textit{destination}$, and the value is a deque of timestamps for packets with that destination.  \n5. $\\textit{que}$: a deque of triples representing all packets in memory.  \n\nNext, we implement the three operations:\n\n- $\\textit{addPacket}$: First, check whether the packet already exists. If it does, return $\\text{false}$. If the memory is full, the oldest packet must be removed by calling $\\textit{forwardPacket}$. Then, insert the new packet into $\\textit{que}$, add its timestamp to $\\textit{sameDestQue}$, register it in $\\textit{isExist}$, and return $\\text{true}$.  \n- $\\textit{forwardPacket}$: Check if $\\textit{que}$ is empty. If it is, return an empty array. Otherwise, remove the first packet from $\\textit{que}$, erase it from $\\textit{isExist}$, remove its timestamp from $\\textit{sameDestQue}$, and return its $\\textit{source}$, $\\textit{destination}$, and $\\textit{timestamp}$.  \n- $\\textit{getCount}$: In the deque corresponding to $\\textit{destination}$ in $\\textit{sameDestQue}$, use binary search to count the elements between $\\textit{startTime}$ and $\\textit{endTime}$.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/oByG2rz5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"oByG2rz5\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the router memory size.\n\n- Time complexity:  \n    The constructor of $\\textit{Router}$ runs in $O(1)$ since it only performs assignments.  \n    The $\\textit{addPacket}$ operation runs in $O(\\log n)$ because of the lookup and insertion in the set.  \n    The $\\textit{forwardPacket}$ operation also runs in $O(\\log n)$ due to deletion from the set.  \n    The $\\textit{getCount}$ operation runs in $O(\\log n)$ because it uses binary search on the deque of timestamps.  \n\n- Space complexity: $O(n)$\n    The $\\textit{Router}$ class requires $O(n)$ space for storing packets and related data structures. Each method itself uses only constant extra space, so their additional space complexity is $O(1)$.  \n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

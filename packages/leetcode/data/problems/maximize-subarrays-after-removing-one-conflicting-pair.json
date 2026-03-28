@@ -1,0 +1,147 @@
+{
+  "questionId": "3789",
+  "questionFrontendId": "3480",
+  "title": "Maximize Subarrays After Removing One Conflicting Pair",
+  "titleSlug": "maximize-subarrays-after-removing-one-conflicting-pair",
+  "difficulty": "Hard",
+  "content": "<p>You are given an integer <code>n</code> which represents an array <code>nums</code> containing the numbers from 1 to <code>n</code> in order. Additionally, you are given a 2D array <code>conflictingPairs</code>, where <code>conflictingPairs[i] = [a, b]</code> indicates that <code>a</code> and <code>b</code> form a conflicting pair.</p>\n\n<p>Remove <strong>exactly</strong> one element from <code>conflictingPairs</code>. Afterward, count the number of <span data-keyword=\"subarray-nonempty\">non-empty subarrays</span> of <code>nums</code> which do not contain both <code>a</code> and <code>b</code> for any remaining conflicting pair <code>[a, b]</code>.</p>\n\n<p>Return the <strong>maximum</strong> number of subarrays possible after removing <strong>exactly</strong> one conflicting pair.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 4, conflictingPairs = [[2,3],[1,4]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">9</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Remove <code>[2, 3]</code> from <code>conflictingPairs</code>. Now, <code>conflictingPairs = [[1, 4]]</code>.</li>\n\t<li>There are 9 subarrays in <code>nums</code> where <code>[1, 4]</code> do not appear together. They are <code>[1]</code>, <code>[2]</code>, <code>[3]</code>, <code>[4]</code>, <code>[1, 2]</code>, <code>[2, 3]</code>, <code>[3, 4]</code>, <code>[1, 2, 3]</code> and <code>[2, 3, 4]</code>.</li>\n\t<li>The maximum number of subarrays we can achieve after removing one element from <code>conflictingPairs</code> is 9.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 5, conflictingPairs = [[1,2],[2,5],[3,5]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">12</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Remove <code>[1, 2]</code> from <code>conflictingPairs</code>. Now, <code>conflictingPairs = [[2, 5], [3, 5]]</code>.</li>\n\t<li>There are 12 subarrays in <code>nums</code> where <code>[2, 5]</code> and <code>[3, 5]</code> do not appear together.</li>\n\t<li>The maximum number of subarrays we can achieve after removing one element from <code>conflictingPairs</code> is 12.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= conflictingPairs.length &lt;= 2 * n</code></li>\n\t<li><code>conflictingPairs[i].length == 2</code></li>\n\t<li><code>1 &lt;= conflictingPairs[i][j] &lt;= n</code></li>\n\t<li><code>conflictingPairs[i][0] != conflictingPairs[i][1]</code></li>\n</ul>\n",
+  "hints": [
+    "Let <code>f[i]</code> (where <code>i = 1, 2, 3, ..., n</code>) be the end index of the longest valid subarray (without any conflicting pair) starting at index <code>i</code>.",
+    "The answer is: <code>sigma(f[i] - i + 1) for i in [1..n]</code>, which simplifies to: <code>sigma(f[i]) - n * (n + 1) / 2 + n</code>.",
+    "Focus on maintaining <code>f[i]</code>.",
+    "If we have a conflicting pair <code>(x, y)</code> with <code>x < y</code>: 1. Sort the conflicting pairs by <code>y</code> values in non-increasing order.  2. Update each prefix of the <code>f</code> array accordingly.",
+    "Use a segment tree or another suitable data structure to maintain the range update and sum query efficiently."
+  ],
+  "metaData": "{\n  \"name\": \"maxSubarrays\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"conflictingPairs\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"57.5K\", \"totalSubmission\": \"89K\", \"totalAcceptedRaw\": 57498, \"totalSubmissionRaw\": 88978, \"acRate\": \"64.6%\"}",
+  "likes": 306,
+  "dislikes": 57,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "4\n[[2,3],[1,4]]",
+    "5\n[[1,2],[2,5],[3,5]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long maxSubarrays(int n, vector<vector<int>>& conflictingPairs) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long maxSubarrays(int n, int[][] conflictingPairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxSubarrays(self, n: int, conflictingPairs: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxSubarrays(self, n, conflictingPairs):\n        \"\"\"\n        :type n: int\n        :type conflictingPairs: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} conflictingPairs\n * @return {number}\n */\nvar maxSubarrays = function(n, conflictingPairs) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxSubarrays(n: number, conflictingPairs: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MaxSubarrays(int n, int[][] conflictingPairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long maxSubarrays(int n, int** conflictingPairs, int conflictingPairsSize, int* conflictingPairsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxSubarrays(n int, conflictingPairs [][]int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxSubarrays(n: Int, conflictingPairs: Array<IntArray>): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxSubarrays(_ n: Int, _ conflictingPairs: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_subarrays(n: i32, conflicting_pairs: Vec<Vec<i32>>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} conflicting_pairs\n# @return {Integer}\ndef max_subarrays(n, conflicting_pairs)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $conflictingPairs\n     * @return Integer\n     */\n    function maxSubarrays($n, $conflictingPairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxSubarrays(int n, List<List<int>> conflictingPairs) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxSubarrays(n: Int, conflictingPairs: Array[Array[Int]]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_subarrays(n :: integer, conflicting_pairs :: [[integer]]) :: integer\n  def max_subarrays(n, conflicting_pairs) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_subarrays(N :: integer(), ConflictingPairs :: [[integer()]]) -> integer().\nmax_subarrays(N, ConflictingPairs) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-subarrays n conflictingPairs)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2803",
+    "content": "### Approach: Enumeration\n\n#### Intuition\n\nConsider a simplified version of the problem: calculating the number of valid subarrays that do not contain any conflicting pairs, without deleting any of them.\n\nFor the simplified problem, we first enumerate the left endpoint $i$ of the subarray. Then, under the condition that no conflicting pairs are included, we determine the range of valid values for the right endpoint $j$. For each conflicting pair $\\textit{conflictingPairs}[k] = [a_k, b_k]$, we assume $a_k < b_k$ (if not, we swap their positions). There are two cases:\n\n- If $a_k < i$, then no matter how $j$ is chosen, the subarray will not include both $a_k$ and $b_k$.\n\n- If $a_k \\ge i$, then we must have $j < b_k$.\n\nBased on this, we define $b_1 = \\min_{a_k \\ge i} b_k$, and the valid range for $j$ becomes:\n\n$$\ni \\le j \\lt \\min(b_1, n + 1)\n$$\n\nTherefore, the number of valid subarrays with left endpoint $i$ is $\\min(n + 1, b_1) - i$.\nTo compute $b_1$ efficiently, we use arrays $\\textit{bMin}_1$ and $\\textit{bMin}_2$ to record the smallest and second smallest values of $b$ among all conflicting pairs $(a, b)$ where $a < b$. Then, $b_1$ can be found using the suffix minimum of $\\textit{bMin}_1$.\n\nNow consider the case where we delete exactly one conflicting pair. For a subarray with left endpoint $i$, the valid range of its right endpoint $j$ is determined by $b_1$. If the deleted conflicting pair does not involve $b_1$, then the number of valid subarrays starting at $i$ remains unchanged.\n\nAssume $b_1$ is located at index $i_{b_1}$ in $\\textit{bMin}1$, i.e., $\\textit{bMin}1[i{b_1}] = b_1$. We define $\\textit{delCount}[i{b_1}]$ to record the number of additional valid subarrays that can be gained by deleting the conflicting pair associated with $b_1$.\n\nLet $b_2$ be the second smallest suffix value of $\\textit{bMin}_1$ starting at index $i$. After deleting $b_1$, the new $b_1'$ becomes $\\min(b_2, \\textit{bMin}2[i{b_1}])$. The number of additional valid subarrays gained is:\n\n$$\n\\min(b_1', n + 1) - \\min(b_1, n + 1)\n$$\n\nThis value is then added to $\\textit{delCount}[i_{b_1}]$.\n\nFinally, the maximum number of valid subarrays after deleting exactly one conflicting pair is equal to the number of valid subarrays without any deletion, plus the maximum value in $\\textit{delCount}$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4u9Vpqc6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4u9Vpqc6\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array $\\textit{nums}$.\n\n- Time complexity: $O(n)$.\n  \n  We only need to traverse the array once.\n\n- Space complexity: $O(n)$.\n  \n  We use an array to record the number of valid subarrays added after deleting conflicting pairs.\n  \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

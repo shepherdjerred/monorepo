@@ -1,0 +1,163 @@
+{
+  "questionId": "3863",
+  "questionFrontendId": "3607",
+  "title": "Power Grid Maintenance",
+  "titleSlug": "power-grid-maintenance",
+  "difficulty": "Medium",
+  "content": "<p data-end=\"401\" data-start=\"120\">You are given an integer <code data-end=\"194\" data-start=\"191\">c</code> representing <code data-end=\"211\" data-start=\"208\">c</code> power stations, each with a unique identifier <code>id</code> from 1 to <code>c</code> (1‑based indexing).</p>\n\n<p data-end=\"401\" data-start=\"120\">These stations are interconnected via <code data-end=\"295\" data-start=\"292\">n</code> <strong>bidirectional</strong> cables, represented by a 2D array <code data-end=\"357\" data-start=\"344\">connections</code>, where each element <code data-end=\"430\" data-start=\"405\">connections[i] = [u<sub>i</sub>, v<sub>i</sub>]</code> indicates a connection between station <code>u<sub>i</sub></code> and station <code>v<sub>i</sub></code>. Stations that are directly or indirectly connected form a <strong>power grid</strong>.</p>\n\n<p data-end=\"626\" data-start=\"586\">Initially, <strong>all</strong> stations are online (operational).</p>\n\n<p data-end=\"720\" data-start=\"628\">You are also given a 2D array <code data-end=\"667\" data-start=\"658\">queries</code>, where each query is one of the following <em>two</em> types:</p>\n\n<ul data-end=\"995\" data-start=\"722\">\n\t<li data-end=\"921\" data-start=\"722\">\n\t<p data-end=\"921\" data-start=\"724\"><code data-end=\"732\" data-start=\"724\">[1, x]</code>: A maintenance check is requested for station <code data-end=\"782\" data-start=\"779\">x</code>. If station <code>x</code> is online, it resolves the check by itself. If station <code>x</code> is offline, the check is resolved by the operational station with the smallest <code>id</code> in the same <strong>power grid</strong> as <code>x</code>. If <strong>no</strong> <strong>operational</strong> station <em>exists</em> in that grid, return -1.</p>\n\t</li>\n\t<li data-end=\"995\" data-start=\"923\">\n\t<p data-end=\"995\" data-start=\"925\"><code data-end=\"933\" data-start=\"925\">[2, x]</code>: Station <code data-end=\"946\" data-start=\"943\">x</code> goes offline (i.e., it becomes non-operational).</p>\n\t</li>\n</ul>\n\n<p data-end=\"1106\" data-start=\"997\">Return an array of integers representing the results of each query of type <code data-end=\"1080\" data-start=\"1072\">[1, x]</code> in the <strong>order</strong> they appear.</p>\n\n<p data-end=\"1106\" data-start=\"997\"><strong>Note:</strong> The power grid preserves its structure; an offline (non‑operational) node remains part of its grid and taking it offline does not alter connectivity.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">c = 5, connections = [[1,2],[2,3],[3,4],[4,5]], queries = [[1,3],[2,1],[1,1],[2,2],[1,2]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[3,2,3]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2025/04/15/powergrid.jpg\" style=\"width: 361px; height: 42px;\" /></p>\n\n<ul>\n\t<li data-end=\"223\" data-start=\"143\">Initially, all stations <code>{1, 2, 3, 4, 5}</code> are online and form a single power grid.</li>\n\t<li data-end=\"322\" data-start=\"226\">Query <code>[1,3]</code>: Station 3 is online, so the maintenance check is resolved by station 3.</li>\n\t<li data-end=\"402\" data-start=\"325\">Query <code>[2,1]</code>: Station 1 goes offline. The remaining online stations are <code>{2, 3, 4, 5}</code>.</li>\n\t<li data-end=\"557\" data-start=\"405\">Query <code>[1,1]</code>: Station 1 is offline, so the check is resolved by the operational station with the smallest <code>id</code> among <code>{2, 3, 4, 5}</code>, which is station 2.</li>\n\t<li data-end=\"641\" data-start=\"560\">Query <code>[2,2]</code>: Station 2 goes offline. The remaining online stations are <code>{3, 4, 5}</code>.</li>\n\t<li data-end=\"800\" data-start=\"644\">Query <code>[1,2]</code>: Station 2 is offline, so the check is resolved by the operational station with the smallest <code>id</code> among <code>{3, 4, 5}</code>, which is station 3.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">c = 3, connections = [], queries = [[1,1],[2,1],[1,1]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[1,-1]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li data-end=\"976\" data-start=\"909\">There are no connections, so each station is its own isolated grid.</li>\n\t<li data-end=\"1096\" data-start=\"979\">Query <code>[1,1]</code>: Station 1 is online in its isolated grid, so the maintenance check is resolved by station 1.</li>\n\t<li data-end=\"1135\" data-start=\"1099\">Query <code>[2,1]</code>: Station 1 goes offline.</li>\n\t<li data-end=\"1237\" data-start=\"1138\">Query <code>[1,1]</code>: Station 1 is offline and there are no other stations in its grid, so the result is -1.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li data-end=\"155\" data-start=\"139\"><code>1 &lt;= c &lt;= 10<sup>5</sup></code></li>\n\t<li data-end=\"213\" data-start=\"158\"><code>0 &lt;= n == connections.length &lt;= min(10<sup>5</sup>, c * (c - 1) / 2)</code></li>\n\t<li data-end=\"244\" data-start=\"216\"><code>connections[i].length == 2</code></li>\n\t<li data-end=\"295\" data-start=\"247\"><code>1 &lt;= u<sub>i</sub>, v<sub>i</sub> &lt;= c</code></li>\n\t<li data-end=\"338\" data-start=\"298\"><code>u<sub>i</sub> != v<sub>i</sub></code></li>\n\t<li data-end=\"374\" data-start=\"341\"><code>1 &lt;= queries.length &lt;= 2 * 10<sup>5</sup></code></li>\n\t<li data-end=\"401\" data-start=\"377\"><code>queries[i].length == 2</code></li>\n\t<li data-end=\"436\" data-start=\"404\"><code>queries[i][0]</code> is either 1 or 2.</li>\n\t<li data-end=\"462\" data-start=\"439\"><code>1 &lt;= queries[i][1] &lt;= c</code></li>\n</ul>\n",
+  "hints": [
+    "Use DFS or BFS to assign each station a component ID",
+    "For each component, maintain a sorted set of online station IDs",
+    "For query <code>[2, x]</code>, remove <code>x</code> from the set of its component",
+    "For query <code>[1, x]</code>, if <code>x</code> is in its component’s set return <code>x</code>; otherwise if the set is non-empty return its smallest element; else return <code>-1</code>",
+    "Precompute all components and then handle each query in O(log n) time using the sorted sets"
+  ],
+  "metaData": "{\n  \"name\": \"processQueries\",\n  \"params\": [\n    {\n      \"name\": \"c\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"connections\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"queries\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"92.6K\", \"totalSubmission\": \"164.6K\", \"totalAcceptedRaw\": 92599, \"totalSubmissionRaw\": 164632, \"acRate\": \"56.2%\"}",
+  "likes": 532,
+  "dislikes": 57,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "5\n[[1,2],[2,3],[3,4],[4,5]]\n[[1,3],[2,1],[1,1],[2,2],[1,2]]",
+    "3\n[]\n[[1,1],[2,1],[1,1]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 10, \"slug\": \"cisco\", \"name\": \"Cisco\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> processQueries(int c, vector<vector<int>>& connections, vector<vector<int>>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] processQueries(int c, int[][] connections, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def processQueries(self, c: int, connections: List[List[int]], queries: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def processQueries(self, c, connections, queries):\n        \"\"\"\n        :type c: int\n        :type connections: List[List[int]]\n        :type queries: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} c\n * @param {number[][]} connections\n * @param {number[][]} queries\n * @return {number[]}\n */\nvar processQueries = function(c, connections, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function processQueries(c: number, connections: number[][], queries: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] ProcessQueries(int c, int[][] connections, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* processQueries(int c, int** connections, int connectionsSize, int* connectionsColSize, int** queries, int queriesSize, int* queriesColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func processQueries(c int, connections [][]int, queries [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun processQueries(c: Int, connections: Array<IntArray>, queries: Array<IntArray>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func processQueries(_ c: Int, _ connections: [[Int]], _ queries: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn process_queries(c: i32, connections: Vec<Vec<i32>>, queries: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} c\n# @param {Integer[][]} connections\n# @param {Integer[][]} queries\n# @return {Integer[]}\ndef process_queries(c, connections, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $c\n     * @param Integer[][] $connections\n     * @param Integer[][] $queries\n     * @return Integer[]\n     */\n    function processQueries($c, $connections, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> processQueries(int c, List<List<int>> connections, List<List<int>> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def processQueries(c: Int, connections: Array[Array[Int]], queries: Array[Array[Int]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec process_queries(c :: integer, connections :: [[integer]], queries :: [[integer]]) :: [integer]\n  def process_queries(c, connections, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec process_queries(C :: integer(), Connections :: [[integer()]], Queries :: [[integer()]]) -> [integer()].\nprocess_queries(C, Connections, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (process-queries c connections queries)\n  (-> exact-integer? (listof (listof exact-integer?)) (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2868",
+    "content": "According to the problem statement, the original task can be divided into two independent sub-problems: **calculating connected components and maintaining the minimum identifier of currently online power stations**.\n\nFor these two sub-problems, we present two solution methods, which can be freely combined as needed.\n\n### Approach 1: Union-Find + Reverse Processing Query\n\n#### Intuition\n\n**Calculate connected components**\n\nUse the Union-Find data structure to calculate connected components. This method assumes the reader is already familiar with the principles, implementation, and path compression optimization of Union-Find.\n\nMerge nodes that have a connected relationship, then use the root node of each set as a handle for the connected component. Subsequently, the query operation of the Union-Find structure can quickly determine which connected component a particular node belongs to.\n\n**Maintaining the minimum identifier of the currently online power stations**\n\nConsider processing the queries in reverse order. From this perspective, an offline operation effectively becomes an online operation. As each power plant comes back online, maintaining the minimum identifier among all online power plants simply requires repeatedly taking the $\\min$ and updating it.\n\nTo implement reverse query processing, we first need to pre-process the final state of each power plant’s online status. It is easy to notice that a power plant may be taken offline multiple times, and once it is first taken offline, subsequent operations have no further effect on its status. Therefore, during reverse processing, we cannot immediately bring a power plant online upon encountering an offline operation. Instead, we should first check whether this is the first time the power plant was taken offline, and only then make the corresponding adjustments.\n\nIn practice, for each power plant $i$, we can count the number of times it is taken offline, denoted as $\\textit{offlineCount}_i$. During the reverse processing of the queries, every time we encounter an offline operation, we decrement the corresponding $\\textit{offlineCount}_i$ by one. When a power plant $s$ satisfies $\\textit{offlineCount}_s = 1$, it indicates that this is the moment when the power plant was first taken offline in the original order of operations.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/i3LVoXJE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"i3LVoXJE\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the length of $\\textit{connections}$, i.e., the number of edges in the graph; $q$ be the length of $\\textit{queries}$; and $α$ be the inverse Ackermann function.\n\n- Time complexity: $O((m + c + q) \\times α(c))$.\n  \n  Assuming the disjoint set union implementation uses path compression, computing the connected components takes $O(m \\times α(c))$, preprocessing the minimum number of online sites for each connected component takes $O(c \\times α(c))$, and finally traversing the queries in reverse to compute the answers takes $O(q \\times α(c))$.\n\n- Space complexity: $O(c)$.\n  \n  Union-Find, $\\textit{online}$, $\\textit{offlineCounts}$ and $\\textit{minimumOnlineStations}$ all require $O(c)$ space.\n\n### Approach 2: DFS/BFS + Priority Queue\n\n#### Intuition\n\n**Calculate connected components**\n\nBuild a graph based on the problem information, then use $\\text{DFS}$ (depth-first search) or $\\text{BFS}$ (breadth-first search) to calculate connected components.\n\nThe specific approach is to traverse all nodes that are not yet part of any connected component, using an outer loop to mark each unvisited node as the entry point of a new component. All nodes that can be reached through this entry node belong to the same connected component, and maintaining this information in the graph is sufficient.\n\n**Maintaining the minimum identifier of the currently online power stations**\n\nIt is easy to think of using a priority queue (min-heap) to maintain the indices of online power stations within a connected component. However, when a power station goes offline, performing a deletion operation on the heap can be cumbersome. One solution is to use the lazy deletion technique, where deletions are handled uniformly during the pop operation from the heap.\n\nOn the graph, maintain an $\\textit{offline}$ property for each power station. If a power station needs to be taken offline, we do not process the priority queue immediately, but only change the $\\textit{offline}$ property of the power station. When a query operation occurs, we first check the $\\textit{offline}$ property of the queried power station. If it is online, we directly use it as the answer. Otherwise, we pop elements from the top of the priority queue until the queue is empty or the top element's $\\textit{offline}$ property is false, at which point the top element is the desired one.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Q92yih8o/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Q92yih8o\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the length of $\\textit{connections}$, i.e., the number of edges in the graph; $q$ is the length of $\\textit{queries}$.\n\n- Time complexity: $O(m + c \\log c + q)$.\n\n  - Mapping requires $O(c + m)$.\n  - Take DFS traversal as an example, the traversal itself requires $O(c + m)$, inserting vertices into a priority queue requires $O(c \\log c)$, and the total time required for the traversal process is $O(c \\log c + m)$.\n  - Each vertex is popped from the priority queue at most once during the query phase, and the total query process requires $O(q + c \\log c)$.\n\n- Space complexity: $O(c + m)$.\n  \n  Adjacency list storage requires $O(c + m)$, and the priority queue $\\textit{powerGrids}$ requires a total of $O(c)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

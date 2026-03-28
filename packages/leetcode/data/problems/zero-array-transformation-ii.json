@@ -1,0 +1,144 @@
+{
+  "questionId": "3643",
+  "questionFrontendId": "3356",
+  "title": "Zero Array Transformation II",
+  "titleSlug": "zero-array-transformation-ii",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code> of length <code>n</code> and a 2D array <code>queries</code> where <code>queries[i] = [l<sub>i</sub>, r<sub>i</sub>, val<sub>i</sub>]</code>.</p>\n\n<p>Each <code>queries[i]</code> represents the following action on <code>nums</code>:</p>\n\n<ul>\n\t<li>Decrement the value at each index in the range <code>[l<sub>i</sub>, r<sub>i</sub>]</code> in <code>nums</code> by <strong>at most</strong> <code>val<sub>i</sub></code>.</li>\n\t<li>The amount by which each value is decremented<!-- notionvc: b232c9d9-a32d-448c-85b8-b637de593c11 --> can be chosen <strong>independently</strong> for each index.</li>\n</ul>\n\n<p>A <strong>Zero Array</strong> is an array with all its elements equal to 0.</p>\n\n<p>Return the <strong>minimum</strong> possible <strong>non-negative</strong> value of <code>k</code>, such that after processing the first <code>k</code> queries in <strong>sequence</strong>, <code>nums</code> becomes a <strong>Zero Array</strong>. If no such <code>k</code> exists, return -1.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [2,0,2], queries = [[0,2,1],[0,2,1],[1,1,3]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>For i = 0 (l = 0, r = 2, val = 1):</strong>\n\n\t<ul>\n\t\t<li>Decrement values at indices <code>[0, 1, 2]</code> by <code>[1, 0, 1]</code> respectively.</li>\n\t\t<li>The array will become <code>[1, 0, 1]</code>.</li>\n\t</ul>\n\t</li>\n\t<li><strong>For i = 1 (l = 0, r = 2, val = 1):</strong>\n\t<ul>\n\t\t<li>Decrement values at indices <code>[0, 1, 2]</code> by <code>[1, 0, 1]</code> respectively.</li>\n\t\t<li>The array will become <code>[0, 0, 0]</code>, which is a Zero Array. Therefore, the minimum value of <code>k</code> is 2.</li>\n\t</ul>\n\t</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [4,3,2,1], queries = [[1,3,2],[0,2,1]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">-1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>For i = 0 (l = 1, r = 3, val = 2):</strong>\n\n\t<ul>\n\t\t<li>Decrement values at indices <code>[1, 2, 3]</code> by <code>[2, 2, 1]</code> respectively.</li>\n\t\t<li>The array will become <code>[4, 1, 0, 0]</code>.</li>\n\t</ul>\n\t</li>\n\t<li><strong>For i = 1 (l = 0, r = 2, val<span style=\"font-size: 13.3333px;\"> </span>= 1):</strong>\n\t<ul>\n\t\t<li>Decrement values at indices <code>[0, 1, 2]</code> by <code>[1, 1, 0]</code> respectively.</li>\n\t\t<li>The array will become <code>[3, 0, 0, 0]</code>, which is not a Zero Array.</li>\n\t</ul>\n\t</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 5 * 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= queries.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>queries[i].length == 3</code></li>\n\t<li><code>0 &lt;= l<sub>i</sub> &lt;= r<sub>i</sub> &lt; nums.length</code></li>\n\t<li><code>1 &lt;= val<sub>i</sub> &lt;= 5</code></li>\n</ul>\n",
+  "hints": [
+    "Can we apply binary search here?",
+    "Utilize a difference array to optimize the processing of queries."
+  ],
+  "metaData": "{\n  \"name\": \"minZeroArray\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"queries\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"133K\", \"totalSubmission\": \"305K\", \"totalAcceptedRaw\": 132978, \"totalSubmissionRaw\": 304996, \"acRate\": \"43.6%\"}",
+  "likes": 1028,
+  "dislikes": 86,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Corporate Flight Bookings\", \"titleSlug\": \"corporate-flight-bookings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Moves to Make Array Complementary\", \"titleSlug\": \"minimum-moves-to-make-array-complementary\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Zero Array Transformation IV\", \"titleSlug\": \"zero-array-transformation-iv\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,0,2]\n[[0,2,1],[0,2,1],[1,1,3]]",
+    "[4,3,2,1]\n[[1,3,2],[0,2,1]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 35, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minZeroArray(vector<int>& nums, vector<vector<int>>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minZeroArray(int[] nums, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minZeroArray(self, nums: List[int], queries: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minZeroArray(self, nums, queries):\n        \"\"\"\n        :type nums: List[int]\n        :type queries: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number[][]} queries\n * @return {number}\n */\nvar minZeroArray = function(nums, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minZeroArray(nums: number[], queries: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinZeroArray(int[] nums, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minZeroArray(int* nums, int numsSize, int** queries, int queriesSize, int* queriesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minZeroArray(nums []int, queries [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minZeroArray(nums: IntArray, queries: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minZeroArray(_ nums: [Int], _ queries: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_zero_array(nums: Vec<i32>, queries: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer[][]} queries\n# @return {Integer}\ndef min_zero_array(nums, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer[][] $queries\n     * @return Integer\n     */\n    function minZeroArray($nums, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minZeroArray(List<int> nums, List<List<int>> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minZeroArray(nums: Array[Int], queries: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_zero_array(nums :: [integer], queries :: [[integer]]) :: integer\n  def min_zero_array(nums, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_zero_array(Nums :: [integer()], Queries :: [[integer()]]) -> integer().\nmin_zero_array(Nums, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-zero-array nums queries)\n  (-> (listof exact-integer?) (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2705",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an integer array `nums` of length `n`, and a list of queries that are each in the form `[left, right, val]`. For a given range `[left, right]`, we can decrease each element in that range by at most `val`. Our task is to determine the earliest query that allows us to turn `nums` into an array of all zeroes. If it's not possible, we return `-1`.  \n\nWe can look at an example of the queries being processed:\n\n!?!../Documents/3356/slideshow1.json:960,540!?!\n\nFrom this example, we can see that there are two main operations that will occur:\n\n1. Iterating through each element in `queries`.\n2. Applying the range and value of each query to `nums`.\n\nWe need to assess how to optimally handle both operations to find the earliest value of `k` to reach a zero array.\n\n---\n\n### Approach 1: Binary Search\n\n#### Intuition\n\nA simple approach would be to iterate through each query, applying the updates directly to `nums` and checking whether all elements have become zero. However, given the constraints where both `nums` and `queries` can be as large as $10^5$, this approach is too slow. Each query might require traversing the entire array, leading to an impractical time complexity.  \n\nTo optimize this, we need a more efficient way to apply queries to `nums`. Instead of modifying each element individually, we can take advantage of a **difference array**. This technique allows us to apply a range update in constant time. The key idea is to store the changes at the boundaries of the range rather than updating every element inside it. For a query $[ \\text{left}, \\text{right}, \\text{val} ]$, we add `val` at index `left`, and subtract `val` at index `right + 1`. When we later compute the prefix sum of this difference array, it reconstructs the actual values efficiently. This way, instead of updating `nums` repeatedly, we can process all queries in an optimized manner and then traverse `nums` just once to check if all elements have become zero.  \n\nLet's look at how the difference array can be applied to this problem:\n\n!?!../Documents/3356/slideshow2.json:960,540!?!\n\nNow that we optimized how we apply queries, the next step is to determine how many queries we actually need. Instead of processing all queries one by one, we can use **binary search** to quickly determine the minimum number of queries required to achieve the zero array. We start by setting two pointers: `left = 0` and `right = len(queries)`, representing the search range. The middle index, `mid = (left + right) / 2`, represents the number of queries we will attempt to apply. We update `nums` using only the first `mid` queries, compute the final state using the prefix sum of the difference array, and check if `nums` is now a zero array.  \n\nIf it is possible to achieve a zero array with `mid` queries, we reduce our search range by setting `right = mid - 1`, since we might be able to do it with even fewer queries. Otherwise, we increase our search range by setting `left = mid + 1`, since we need more queries to reach the desired state. This binary search ensures that instead of checking every possible number of queries linearly $O(N)$, we find the answer in $O(\\log N)$ time.  \n\n#### Algorithm\n\n- Define a function `canFormZeroArray`, which takes the parameters `nums`, `queries`, and integer `k` and returns a boolean value:\n    - Initialize:\n        - `n` to the size of `nums`.\n        - `sum` to `0` to track the cumulative sum of updates added to a given index.\n        - `differenceArray` as a vector of integers of size `n + 1` to apply range updates\n    - Iterate through the first `k` elements of `queries`:\n        - Initialize `start`, `end`, and `val` to the respective values of the current query.\n        - Increment `differenceArray[start]` by `val` to update the start of the range.\n        - Decrement `differenceArray[end + 1]` by `val` to update the end of the range.\n    - Iterate through `nums`. For each index, `numIndex`:\n        - Increment `sum` by `differenceArray[numIndex]`;\n        - If `sum` is less than `nums[numIndex]`, return `false`, indicating that a zero array cannot be formed after the first `k` queries.\n    - Return `true`, meaning a zero array was formed after `k` queries.\n\n- Define `minZeroArray`:\n    - Initialize:\n        - `n` to the size of `nums`.\n        - `left` to `0`.\n        - `right` to the size of `queries`.\n    - If a zero array cannot be formed at `right`, return `-1`, since that means we processed all the queries without reaching a zero array.\n    - Perform binary search on `queries`. While `left` is less than or equal to `right`:\n        - Initialize `middle` to half of the current search interval (`left + (right - left) / 2`).\n        - If `canFormZeroArray` returns `false` when we pass `middle` as the `k` parameter, set `right` to `middle - 1`.\n        - Else, set `left` to `middle + 1`.\n    - Return `left`, which is the earliest query that a zero array can be formed.\n    \n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/XkQaAdC4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XkQaAdC4\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the size of array `nums` and $M$ be the size of array `queries`.\n\n* Time Complexity: $O(log(M) \\cdot (N + M))$\n\n    We perform a binary search on `queries`, which repeatedly divides the search space in half at each step, leading to a time complexity of $log(M)$.\n\n    In each iteration of the binary search, we first iterate through the first `k` elements in `queries`. In the worst case, we have to iterate through each element when `k` is the size of `queries`, leading to a time complexity of $O(M)$.\n\n    From there, we iterate through each element of `nums` until one of the elements exceeds the value of `sum`. In the worst case, we have to iterate through each element in `nums` when this doesn't occur, leading to a time complexity of $O(N)$.\n\n    As a result, each iteration of the binary search has a time complexity of $O(N + M)$. Combining each iteration leads to a final time complexity of $O(log(M) \\cdot (N + M))$.\n\n* Space Complexity: $O(N)$\n\n    The space complexity is based on the array `differenceArray`. Here, `differenceArray` is set to hold elements from the range `[0, N + 1]` to track all the changes in `nums`. As a result, this creates a space complexity of $O(N + 1)$, which can be simplified to $O(N)$.\n\n---\n\n### Approach 2: Line Sweep\n\n#### Intuition\n\nIn our previous approach, we used binary search to determine how many queries were needed to turn `nums` into a zero array. This allowed us to efficiently process a subset of `queries`, applying them to a **difference array**, and then checking if `nums` had become all zeros. While this was an improvement over a naive approach, there was still an inefficiency: we were iterating over `queries` twice: once for binary search and again while applying updates.  \n\nTo optimize further, we can change our perspective on how we traverse the data. Instead of iterating through `queries`, we can iterate directly through `nums`, using it as the main loop. This means that as we process each element in `nums`, we dynamically apply only the necessary queries at the right moment. The key challenge, then, is finding an efficient way to apply queries while moving through `nums`.  \n\nThis is where a line sweep approach comes into play. Line sweeping is a technique that processes an array incrementally, maintaining only the relevant updates at each step. Instead of processing all queries upfront, we maintain an **active set of queries** and update `nums` only when necessary. Here, the **difference array** helps us track how `nums` is being modified, while `queries` provide the updates at specific points.  \n\nWe start at index `0` of `nums` and check if it can be turned into `0` with the queries we have processed so far. If it cannot be zeroed out, we process additional queries to apply their effects. The key observation is that at any index `i` in `nums`, a query `[left, right, val]` can fall into three possible cases:  \n\n1. If `i < left`, the query affects a later part of `nums`, so we store it for later processing.  \n2. If `left ≤ i ≤ right`, the query is immediately relevant and should be applied.  \n3. If `right < i`, the query is no longer useful for the current index and can be ignored.  \n\nFor example, if we're at index `4` in `nums` and the current query accesses the range `[0,2]`, we do not need to process that query and can simply move on to the next query.\n\nOtherwise, we continue to the next element of `nums`. We repeat this process until we reach the end of either `nums` or `queries`, where we then return either `k` or `-1`, respectively. \n\nThrough this process, we only have to iterate through both `nums` and `queries` at most once each while skipping over unnecessary queries.\n\n#### Algorithm\n- Initialize:\n    - `n` to the size of `nums`.\n    - `sum` to `0` to track the cumulative sum of updates applied up to a given index\n    - `k` to `0` to represent the number of queries used.\n    - `differenceArray` as a vector of integers set to size `n + 1` to apply range updates.\n- Iterate through `nums`. For each `index`:\n    - If `sum + differenceArray[index]` is less than `nums[index]`, meaning more operations need to be applied at the current index:\n        - Increase `k` by `1`.\n        - If `k` is greater than the size of `queries`, return `-1`, since we processed all the queries without reaching a zero array.\n        - Initialize `left`, `right`, and `val` to the respective values of the current query.\n        - If `right` is greater than or equal to `index`:\n            - Increment `differenceArray[max(left, index)]` by `val` to update the start of the range.\n            - Decrement `differenceArray[right + 1]` by `val` to update the end of the range.\n    - Increment `sum` by `differenceArray[index]`.\n- Return `k`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/nYxo3uqw/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nYxo3uqw\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the size of `nums` and $M$ be the size of `queries`.\n\n* Time Complexity: $O(N + M)$\n\n    We iterate through each element of `nums` at most once. Within this loop, we loop through each element of `queries` at most once. \n    \n    The program returns a value and ends when we reach the end of either of these arrays. In the worst case, we iterate through each element in `nums` and `queries` once before returning a value. As a result, this leads to a time complexity of $O(N + M)$.\n\n* Space Complexity: $O(N)$\n\n    The space complexity is based on the array `differenceArray`. Here, `differenceArray` is set to hold elements from the range `[0, N + 1]` to track all the changes in `nums`. As a result, this creates a space complexity of $O(N + 1)$, which can be simplified to $O(N)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

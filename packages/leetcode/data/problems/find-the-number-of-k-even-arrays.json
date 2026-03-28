@@ -1,0 +1,128 @@
+{
+  "questionId": "3614",
+  "questionFrontendId": "3339",
+  "title": "Find the Number of K-Even Arrays",
+  "titleSlug": "find-the-number-of-k-even-arrays",
+  "difficulty": "Medium",
+  "content": "<p>You are given three integers <code>n</code>, <code>m</code>, and <code>k</code>.</p>\n\n<p>An array <code>arr</code> is called <strong>k-even</strong> if there are <strong>exactly</strong> <code>k</code> indices such that, for each of these indices <code>i</code> (<code>0 &lt;= i &lt; n - 1</code>):</p>\n\n<ul>\n\t<li><code>(arr[i] * arr[i + 1]) - arr[i] - arr[i + 1]</code> is <em>even</em>.</li>\n</ul>\n\n<p>Return the number of possible <strong>k-even</strong> arrays of size <code>n</code> where all elements are in the range <code>[1, m]</code>.</p>\n\n<p>Since the answer may be very large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 3, m = 4, k = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">8</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The 8 possible 2-even arrays are:</p>\n\n<ul>\n\t<li><code>[2, 2, 2]</code></li>\n\t<li><code>[2, 2, 4]</code></li>\n\t<li><code>[2, 4, 2]</code></li>\n\t<li><code>[2, 4, 4]</code></li>\n\t<li><code>[4, 2, 2]</code></li>\n\t<li><code>[4, 2, 4]</code></li>\n\t<li><code>[4, 4, 2]</code></li>\n\t<li><code>[4, 4, 4]</code></li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 5, m = 1, k = 0</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The only 0-even array is <code>[1, 1, 1, 1, 1]</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 7, m = 7, k = 5</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">5832</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 750</code></li>\n\t<li><code>0 &lt;= k &lt;= n - 1</code></li>\n\t<li><code>1 &lt;= m &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Use dynamic programming.",
+    "Store whether the last element was even or odd."
+  ],
+  "metaData": "{\n  \"name\": \"countOfArrays\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"m\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"619\", \"totalSubmission\": \"1K\", \"totalAcceptedRaw\": 619, \"totalSubmissionRaw\": 1013, \"acRate\": \"61.1%\"}",
+  "likes": 6,
+  "dislikes": 3,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Sort Array By Parity II\", \"titleSlug\": \"sort-array-by-parity-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3\n4\n2",
+    "5\n1\n0",
+    "7\n7\n5"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countOfArrays(int n, int m, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countOfArrays(int n, int m, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countOfArrays(self, n: int, m: int, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countOfArrays(self, n, m, k):\n        \"\"\"\n        :type n: int\n        :type m: int\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} m\n * @param {number} k\n * @return {number}\n */\nvar countOfArrays = function(n, m, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countOfArrays(n: number, m: number, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountOfArrays(int n, int m, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countOfArrays(int n, int m, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countOfArrays(n int, m int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countOfArrays(n: Int, m: Int, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countOfArrays(_ n: Int, _ m: Int, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_of_arrays(n: i32, m: i32, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} m\n# @param {Integer} k\n# @return {Integer}\ndef count_of_arrays(n, m, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $m\n     * @param Integer $k\n     * @return Integer\n     */\n    function countOfArrays($n, $m, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countOfArrays(int n, int m, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countOfArrays(n: Int, m: Int, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_of_arrays(n :: integer, m :: integer, k :: integer) :: integer\n  def count_of_arrays(n, m, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_of_arrays(N :: integer(), M :: integer(), K :: integer()) -> integer().\ncount_of_arrays(N, M, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-of-arrays n m k)\n  (-> exact-integer? exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

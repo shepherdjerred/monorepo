@@ -1,0 +1,152 @@
+{
+  "questionId": "3902",
+  "questionFrontendId": "3600",
+  "title": "Maximize Spanning Tree Stability with Upgrades",
+  "titleSlug": "maximize-spanning-tree-stability-with-upgrades",
+  "difficulty": "Hard",
+  "content": "<p>You are given an integer <code>n</code>, representing <code>n</code> nodes numbered from 0 to <code>n - 1</code> and a list of <code>edges</code>, where <code>edges[i] = [u<sub>i</sub>, v<sub>i</sub>, s<sub>i</sub>, must<sub>i</sub>]</code>:</p>\n\n<ul>\n\t<li><code>u<sub>i</sub></code> and <code>v<sub>i</sub></code> indicates an undirected edge between nodes <code>u<sub>i</sub></code> and <code>v<sub>i</sub></code>.</li>\n\t<li><code>s<sub>i</sub></code> is the strength of the edge.</li>\n\t<li><code>must<sub>i</sub></code> is an integer (0 or 1). If <code>must<sub>i</sub> == 1</code>, the edge <strong>must</strong> be included in the<strong> </strong><strong>spanning tree</strong>. These edges <strong>cannot</strong> be <strong>upgraded</strong>.</li>\n</ul>\n\n<p>You are also given an integer <code>k</code>, the <strong>maximum</strong> number of upgrades you can perform. Each upgrade <strong>doubles</strong> the strength of an edge, and each eligible edge (with <code>must<sub>i</sub> == 0</code>) can be upgraded <strong>at most</strong> once.</p>\n\n<p>The <strong>stability</strong> of a spanning tree is defined as the <strong>minimum</strong> strength score among all edges included in it.</p>\n\n<p>Return the <strong>maximum</strong> possible stability of any valid spanning tree. If it is impossible to connect all nodes, return <code>-1</code>.</p>\n\n<p><strong>Note</strong>: A <strong>spanning tree</strong> of a graph with <code>n</code> nodes is a subset of the edges that connects all nodes together (i.e. the graph is <strong>connected</strong>) <em>without</em> forming any cycles, and uses <strong>exactly</strong> <code>n - 1</code> edges.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 3, edges = [[0,1,2,1],[1,2,3,0]], k = 1</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Edge <code>[0,1]</code> with strength = 2 must be included in the spanning tree.</li>\n\t<li>Edge <code>[1,2]</code> is optional and can be upgraded from 3 to 6 using one upgrade.</li>\n\t<li>The resulting spanning tree includes these two edges with strengths 2 and 6.</li>\n\t<li>The minimum strength in the spanning tree is 2, which is the maximum possible stability.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 3, edges = [[0,1,4,0],[1,2,3,0],[0,2,1,0]], k = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">6</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Since all edges are optional and up to <code>k = 2</code> upgrades are allowed.</li>\n\t<li>Upgrade edges <code>[0,1]</code> from 4 to 8 and <code>[1,2]</code> from 3 to 6.</li>\n\t<li>The resulting spanning tree includes these two edges with strengths 8 and 6.</li>\n\t<li>The minimum strength in the tree is 6, which is the maximum possible stability.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 3, edges = [[0,1,1,1],[1,2,1,1],[2,0,1,1]], k = 0</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">-1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>All edges are mandatory and form a cycle, which violates the spanning tree property of acyclicity. Thus, the answer is -1.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= edges.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>edges[i] = [u<sub>i</sub>, v<sub>i</sub>, s<sub>i</sub>, must<sub>i</sub>]</code></li>\n\t<li><code>0 &lt;= u<sub>i</sub>, v<sub>i</sub> &lt; n</code></li>\n\t<li><code>u<sub>i</sub> != v<sub>i</sub></code></li>\n\t<li><code>1 &lt;= s<sub>i</sub> &lt;= 10<sup>5</sup></code></li>\n\t<li><code>must<sub>i</sub></code> is either <code>0</code> or <code>1</code>.</li>\n\t<li><code>0 &lt;= k &lt;= n</code></li>\n\t<li>There are no duplicate edges.</li>\n</ul>\n",
+  "hints": [
+    "Sort the <code>edges</code> array in descending order of weights.",
+    "Try using binary search on <code>ans</code>.",
+    "Implement a <code>chk</code> function which first adds all the edges with <code>must = 1</code>, and then adds the edges with <code>must = 0</code>, using any remaining upgrades greedily.",
+    "Use a <code>DSU</code> with path compression and union by size/rank to maintain connected components.",
+    "Don't forget the case where you cannot form an MST because more than one component remains after processing all edges."
+  ],
+  "metaData": "{\n  \"name\": \"maxStability\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"68.4K\", \"totalSubmission\": \"102.9K\", \"totalAcceptedRaw\": 68436, \"totalSubmissionRaw\": 102927, \"acRate\": \"66.5%\"}",
+  "likes": 364,
+  "dislikes": 17,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "3\n[[0,1,2,1],[1,2,3,0]]\n1",
+    "3\n[[0,1,4,0],[1,2,3,0],[0,2,1,0]]\n2",
+    "3\n[[0,1,1,1],[1,2,1,1],[2,0,1,1]]\n0"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Minimum Spanning Tree",
+      "slug": "minimum-spanning-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxStability(int n, vector<vector<int>>& edges, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxStability(int n, int[][] edges, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxStability(self, n: int, edges: List[List[int]], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxStability(self, n, edges, k):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @param {number} k\n * @return {number}\n */\nvar maxStability = function(n, edges, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxStability(n: number, edges: number[][], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxStability(int n, int[][] edges, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxStability(int n, int** edges, int edgesSize, int* edgesColSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxStability(n int, edges [][]int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxStability(n: Int, edges: Array<IntArray>, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxStability(_ n: Int, _ edges: [[Int]], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_stability(n: i32, edges: Vec<Vec<i32>>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @param {Integer} k\n# @return {Integer}\ndef max_stability(n, edges, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @param Integer $k\n     * @return Integer\n     */\n    function maxStability($n, $edges, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxStability(int n, List<List<int>> edges, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxStability(n: Int, edges: Array[Array[Int]], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_stability(n :: integer, edges :: [[integer]], k :: integer) :: integer\n  def max_stability(n, edges, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_stability(N :: integer(), Edges :: [[integer()]], K :: integer()) -> integer().\nmax_stability(N, Edges, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-stability n edges k)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2933",
+    "content": "### Approach: Binary Answer + Minimum Spanning Tree\n\n#### Prerequisites\n\nThis method assumes that the reader is already familiar with:\n\n- The idea of binary search on the answer and its algorithmic framework.\n- The definition of a minimum spanning tree and the Kruskal algorithm used to construct it, including its core idea and implementation.\n\n#### Intuition\n\nThis problem essentially asks us to find the **maximum possible value of the minimum edge weight** in a spanning tree. Problems involving expressions such as \"maximize the minimum\" or \"minimize the maximum\" are often solved using a **binary search on the answer** framework. In this problem, we perform a binary search on the minimum edge weight and check whether it is possible to construct a spanning tree that satisfies this constraint.\n\nNext, consider the following question: for a given minimum edge weight constraint, what strategy should we use to construct a spanning tree? A greedy strategy is the natural choice. If it is impossible to construct a spanning tree while selecting edges that satisfy the constraint as much as possible, then selecting less optimal edges will certainly not help satisfy the requirement. This reasoning follows directly from the greedy properties of spanning tree algorithms.\n\nFirst, ignore the ability to double edge weights $k$ times. To make the selected edges satisfy the constraint as much as possible, we should greedily choose edges with **larger weights**. This is equivalent to constructing a **maximum spanning tree**. We use the $\\text{Kruskal}$ algorithm as the basic framework for building this spanning tree.\n\nNow consider the doubling strategy. Since we greedily choose edges with larger weights, the doubling opportunities are naturally used only when necessary. When we encounter an edge whose weight is less than the current constraint, we attempt to double its weight in order to satisfy the constraint and continue building the spanning tree. If the doubled weight is still less than the constraint, or if all doubling opportunities have already been used, then none of the remaining edges can satisfy the constraint, and this construction attempt fails.\n\nDuring preprocessing, we first **force-select** the edges with $\\textit{must} = 1$ to establish the initial state of the Union-Find structure. The minimum edge weight among these edges serves as the upper bound for the binary search. Meanwhile, to construct a maximum spanning tree, we sort the edges with $\\textit{must} = 0$ in **descending order of weight**.\n\nDuring the binary search process, we follow the steps of Kruskal's algorithm while applying the strategy described above. We continuously maintain the Union-Find structure to ensure correctness.\n\nThe problem states that the resulting spanning tree must satisfy three properties. Under the condition that the graph is **acyclic**, the properties of **connectivity** and **having exactly $n - 1$ edges** are equivalent. Since the Union-Find structure already guarantees that no cycles are formed, we simply check whether the number of selected edges is exactly $n - 1$ to determine whether a valid spanning tree has been constructed.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/9Jnryqbs/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"9Jnryqbs\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the length of $\\textit{edges}$, and $v$ be the upper bound of the binary search.\n\n- Time complexity: $O(m \\log m + (n + m \\cdot \\log n) \\cdot \\log v)$.\n\n  The `find` operation in the Union-Find structure takes $O(\\log n)$ amortized time with path compression alone (without union by rank). Sorting the edges during preprocessing takes $O(m \\log m)$ time. Preprocessing the edges with $\\textit{must} = 1$ requires $O(m \\cdot \\log n)$ time.\n\n  The binary search runs for $O(\\log v)$ iterations. In each iteration, cloning the initial Union-Find state takes $O(n)$ time, and maintaining the Union-Find structure requires $O(m \\cdot \\log n)$. Therefore, the overall time complexity is $O(m \\log m + (n + m \\cdot \\log n) \\cdot \\log v)$.\n\n  > Note: The binary search is not strictly necessary here. Since Kruskal's algorithm processes edges in decreasing weight order, it naturally constructs a maximum spanning tree. After building the tree, the minimum edge weight (after optimally doubling the $k$ smallest tree edges) is the answer. This would simplify the time complexity to $O(m \\log m + m \\cdot \\log n)$.\n\n- Space complexity: $O(n + m)$.\n  \n  The Union-Find structure requires $O(n)$ space, and storing the separated edge lists requires $O(m)$ space.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

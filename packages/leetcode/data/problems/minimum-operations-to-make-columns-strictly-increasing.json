@@ -1,0 +1,135 @@
+{
+  "questionId": "3691",
+  "questionFrontendId": "3402",
+  "title": "Minimum Operations to Make Columns Strictly Increasing",
+  "titleSlug": "minimum-operations-to-make-columns-strictly-increasing",
+  "difficulty": "Easy",
+  "content": "<p>You are given a <code>m x n</code> matrix <code>grid</code> consisting of <b>non-negative</b> integers.</p>\n\n<p>In one operation, you can increment the value of any <code>grid[i][j]</code> by 1.</p>\n\n<p>Return the <strong>minimum</strong> number of operations needed to make all columns of <code>grid</code> <strong>strictly increasing</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">grid = [[3,2],[1,3],[3,4],[0,1]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">15</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>To make the <code>0<sup>th</sup></code> column strictly increasing, we can apply 3 operations on <code>grid[1][0]</code>, 2 operations on <code>grid[2][0]</code>, and 6 operations on <code>grid[3][0]</code>.</li>\n\t<li>To make the <code>1<sup>st</sup></code> column strictly increasing, we can apply 4 operations on <code>grid[3][1]</code>.</li>\n</ul>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/11/10/firstexample.png\" style=\"width: 200px; height: 347px;\" /></div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">grid = [[3,2,1],[2,1,0],[1,2,3]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">12</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>To make the <code>0<sup>th</sup></code> column strictly increasing, we can apply 2 operations on <code>grid[1][0]</code>, and 4 operations on <code>grid[2][0]</code>.</li>\n\t<li>To make the <code>1<sup>st</sup></code> column strictly increasing, we can apply 2 operations on <code>grid[1][1]</code>, and 2 operations on <code>grid[2][1]</code>.</li>\n\t<li>To make the <code>2<sup>nd</sup></code> column strictly increasing, we can apply 2 operations on <code>grid[1][2]</code>.</li>\n</ul>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/11/10/secondexample.png\" style=\"width: 300px; height: 257px;\" /></div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 50</code></li>\n\t<li><code>0 &lt;= grid[i][j] &lt; 2500</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<div class=\"spoiler\">\n<div>\n<pre>\n\n&nbsp;</pre>\n</div>\n</div>\n",
+  "hints": [
+    "<code>grid[i + 1][j]</code> must be at least equal to <code>grid[i][j] + 1<code>.",
+    "Iterate on <code>i</code> in increasing order, and set <code>grid[i + 1][j] = max(grid[i][j]+1, grid[i + 1][j])<code>."
+  ],
+  "metaData": "{\n  \"name\": \"minimumOperations\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"37.6K\", \"totalSubmission\": \"51.7K\", \"totalAcceptedRaw\": 37607, \"totalSubmissionRaw\": 51721, \"acRate\": \"72.7%\"}",
+  "likes": 66,
+  "dislikes": 5,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Operations to Make the Array Increasing\", \"titleSlug\": \"minimum-operations-to-make-the-array-increasing\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[3,2],[1,3],[3,4],[0,1]]",
+    "[[3,2,1],[2,1,0],[1,2,3]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"ibm\", \"name\": \"IBM\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumOperations(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumOperations(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumOperations(self, grid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumOperations(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number}\n */\nvar minimumOperations = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumOperations(grid: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumOperations(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumOperations(int** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumOperations(grid [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumOperations(grid: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumOperations(_ grid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_operations(grid: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer}\ndef minimum_operations(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer\n     */\n    function minimumOperations($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumOperations(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumOperations(grid: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_operations(grid :: [[integer]]) :: integer\n  def minimum_operations(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_operations(Grid :: [[integer()]]) -> integer().\nminimum_operations(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-operations grid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

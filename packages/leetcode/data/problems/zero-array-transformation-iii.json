@@ -1,0 +1,153 @@
+{
+  "questionId": "3647",
+  "questionFrontendId": "3362",
+  "title": "Zero Array Transformation III",
+  "titleSlug": "zero-array-transformation-iii",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code> of length <code>n</code> and a 2D array <code>queries</code> where <code>queries[i] = [l<sub>i</sub>, r<sub>i</sub>]</code>.</p>\n\n<p>Each <code>queries[i]</code> represents the following action on <code>nums</code>:</p>\n\n<ul>\n\t<li>Decrement the value at each index in the range <code>[l<sub>i</sub>, r<sub>i</sub>]</code> in <code>nums</code> by <strong>at most</strong><strong> </strong>1.</li>\n\t<li>The amount by which the value is decremented can be chosen <strong>independently</strong> for each index.</li>\n</ul>\n\n<p>A <strong>Zero Array</strong> is an array with all its elements equal to 0.</p>\n\n<p>Return the <strong>maximum </strong>number of elements that can be removed from <code>queries</code>, such that <code>nums</code> can still be converted to a <strong>zero array</strong> using the <em>remaining</em> queries. If it is not possible to convert <code>nums</code> to a <strong>zero array</strong>, return -1.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [2,0,2], queries = [[0,2],[0,2],[1,1]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>After removing <code>queries[2]</code>, <code>nums</code> can still be converted to a zero array.</p>\n\n<ul>\n\t<li>Using <code>queries[0]</code>, decrement <code>nums[0]</code> and <code>nums[2]</code> by 1 and <code>nums[1]</code> by 0.</li>\n\t<li>Using <code>queries[1]</code>, decrement <code>nums[0]</code> and <code>nums[2]</code> by 1 and <code>nums[1]</code> by 0.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,1,1,1], queries = [[1,3],[0,2],[1,3],[1,2]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>We can remove <code>queries[2]</code> and <code>queries[3]</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,2,3,4], queries = [[0,3]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">-1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><code>nums</code> cannot be converted to a zero array even after using all the queries.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= queries.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>queries[i].length == 2</code></li>\n\t<li><code>0 &lt;= l<sub>i</sub> &lt;= r<sub>i</sub> &lt; nums.length</code></li>\n</ul>\n",
+  "hints": [
+    "Sort the queries.",
+    "We need to greedily pick the queries with farthest ending point first."
+  ],
+  "metaData": "{\n  \"name\": \"maxRemoval\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"queries\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"76.6K\", \"totalSubmission\": \"139.6K\", \"totalAcceptedRaw\": 76602, \"totalSubmissionRaw\": 139609, \"acRate\": \"54.9%\"}",
+  "likes": 695,
+  "dislikes": 126,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Corporate Flight Bookings\", \"titleSlug\": \"corporate-flight-bookings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Moves to Make Array Complementary\", \"titleSlug\": \"minimum-moves-to-make-array-complementary\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Zero Array Transformation IV\", \"titleSlug\": \"zero-array-transformation-iv\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,0,2]\n[[0,2],[0,2],[1,1]]",
+    "[1,1,1,1]\n[[1,3],[0,2],[1,3],[1,2]]",
+    "[1,2,3,4]\n[[0,3]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 17, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxRemoval(vector<int>& nums, vector<vector<int>>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxRemoval(int[] nums, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxRemoval(self, nums: List[int], queries: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxRemoval(self, nums, queries):\n        \"\"\"\n        :type nums: List[int]\n        :type queries: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number[][]} queries\n * @return {number}\n */\nvar maxRemoval = function(nums, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxRemoval(nums: number[], queries: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxRemoval(int[] nums, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxRemoval(int* nums, int numsSize, int** queries, int queriesSize, int* queriesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxRemoval(nums []int, queries [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxRemoval(nums: IntArray, queries: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxRemoval(_ nums: [Int], _ queries: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_removal(nums: Vec<i32>, queries: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer[][]} queries\n# @return {Integer}\ndef max_removal(nums, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer[][] $queries\n     * @return Integer\n     */\n    function maxRemoval($nums, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxRemoval(List<int> nums, List<List<int>> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxRemoval(nums: Array[Int], queries: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_removal(nums :: [integer], queries :: [[integer]]) :: integer\n  def max_removal(nums, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_removal(Nums :: [integer()], Queries :: [[integer()]]) -> integer().\nmax_removal(Nums, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-removal nums queries)\n  (-> (listof exact-integer?) (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2759",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach: Greedy + Priority Queue\n\n#### Intuition\n\nFirst, we consider the element at index $0$ in $\\textit{nums}$. If $\\textit{nums}[0] > 0$, we must find at least $\\textit{nums}[0]$ elements in $\\textit{queries}$ with left endpoints of $0$ to retain so that $\\textit{nums}[0]$ can be reduced to $0$. Now, which elements of $\\textit{nums}[0]$ should we choose? Greedily, we should select those with the largest right endpoints. After this selection, we move on to $\\textit{nums}[1]$. The elements selected in the previous step may not include index $1$, and we need to remove them. This can be accomplished using the difference array $\\textit{deltaArray}$.\n\nAt this point, the cumulative number of operations may not be enough to reduce $\\textit{nums}[1]$ to $0$, and we need to select elements from $\\textit{queries}$, similar to the previous step. We can select the elements with the largest right endpoints from the portion of unselected elements whose left endpoints are $\\leq 1$ until the number of operations satisfies the condition to reduce $\\textit{nums}[1]$ to $0$. This calculation can be efficiently handled using a priority queue (or $\\textit{heap}$).\n\nAs we traverse $\\textit{nums}$, we continuously insert the right endpoints of the $\\textit{queries}$ corresponding to the left endpoints into the $\\textit{heap}$. When the number of operations is insufficient, we keep extracting the largest right endpoint from the $\\textit{heap}$ until the required number of operations is met. After completing the traversal, the size of the $\\textit{heap}$ represents the number of $\\textit{queries}$ that can be deleted.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/dMuyWYij/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dMuyWYij\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of $\\textit{nums}$ and $m$ be the length of $\\textit{queries}$.\n\n- Time complexity: $O(n + m \\times \\log{m})$.\n  \n  Sorting the $\\textit{queries}$ takes $O(m \\log{m})$ time. Each insertion and deletion from the priority queue (which tracks the endpoints) requires $O(\\log{m})$ time.\n\n- Space complexity: $O(n + m)$.\n  \n  We need to store both the difference array and the priority queue, which require $O(n)$ and $O(m)$ space, respectively.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

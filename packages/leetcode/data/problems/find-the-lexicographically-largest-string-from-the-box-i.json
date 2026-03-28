@@ -1,0 +1,139 @@
+{
+  "questionId": "3683",
+  "questionFrontendId": "3403",
+  "title": "Find the Lexicographically Largest String From the Box I",
+  "titleSlug": "find-the-lexicographically-largest-string-from-the-box-i",
+  "difficulty": "Medium",
+  "content": "<p>You are given a string <code>word</code>, and an integer <code>numFriends</code>.</p>\n\n<p>Alice is organizing a game for her <code>numFriends</code> friends. There are multiple rounds in the game, where in each round:</p>\n\n<ul>\n\t<li><code>word</code> is split into <code>numFriends</code> <strong>non-empty</strong> strings, such that no previous round has had the <strong>exact</strong> same split.</li>\n\t<li>All the split words are put into a box.</li>\n</ul>\n\n<p>Find the <span data-keyword=\"lexicographically-smaller-string\">lexicographically largest</span> string from the box after all the rounds are finished.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">word = &quot;dbca&quot;, numFriends = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;dbc&quot;</span></p>\n\n<p><strong>Explanation:</strong>&nbsp;</p>\n\n<p>All possible splits are:</p>\n\n<ul>\n\t<li><code>&quot;d&quot;</code> and <code>&quot;bca&quot;</code>.</li>\n\t<li><code>&quot;db&quot;</code> and <code>&quot;ca&quot;</code>.</li>\n\t<li><code>&quot;dbc&quot;</code> and <code>&quot;a&quot;</code>.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">word = &quot;gggg&quot;, numFriends = 4</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;g&quot;</span></p>\n\n<p><strong>Explanation:</strong>&nbsp;</p>\n\n<p>The only possible split is: <code>&quot;g&quot;</code>, <code>&quot;g&quot;</code>, <code>&quot;g&quot;</code>, and <code>&quot;g&quot;</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= word.length &lt;= 5&nbsp;* 10<sup>3</sup></code></li>\n\t<li><code>word</code> consists only of lowercase English letters.</li>\n\t<li><code>1 &lt;= numFriends &lt;= word.length</code></li>\n</ul>\n",
+  "hints": [
+    "Find lexicographically largest substring of size <code>n - numFriends + 1</code> or less starting at every index."
+  ],
+  "metaData": "{\n  \"name\": \"answerString\",\n  \"params\": [\n    {\n      \"type\": \"string\",\n      \"name\": \"word\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"numFriends\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"111K\", \"totalSubmission\": \"271.1K\", \"totalAcceptedRaw\": 111039, \"totalSubmissionRaw\": 271149, \"acRate\": \"41.0%\"}",
+  "likes": 487,
+  "dislikes": 128,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Last Substring in Lexicographical Order\", \"titleSlug\": \"last-substring-in-lexicographical-order\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Construct the Lexicographically Largest Valid Sequence\", \"titleSlug\": \"construct-the-lexicographically-largest-valid-sequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"dbca\"\n2",
+    "\"gggg\"\n4"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string answerString(string word, int numFriends) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String answerString(String word, int numFriends) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def answerString(self, word: str, numFriends: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def answerString(self, word, numFriends):\n        \"\"\"\n        :type word: str\n        :type numFriends: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} word\n * @param {number} numFriends\n * @return {string}\n */\nvar answerString = function(word, numFriends) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function answerString(word: string, numFriends: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string AnswerString(string word, int numFriends) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* answerString(char* word, int numFriends) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func answerString(word string, numFriends int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun answerString(word: String, numFriends: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func answerString(_ word: String, _ numFriends: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn answer_string(word: String, num_friends: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} word\n# @param {Integer} num_friends\n# @return {String}\ndef answer_string(word, num_friends)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $word\n     * @param Integer $numFriends\n     * @return String\n     */\n    function answerString($word, $numFriends) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String answerString(String word, int numFriends) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def answerString(word: String, numFriends: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec answer_string(word :: String.t, num_friends :: integer) :: String.t\n  def answer_string(word, num_friends) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec answer_string(Word :: unicode:unicode_binary(), NumFriends :: integer()) -> unicode:unicode_binary().\nanswer_string(Word, NumFriends) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (answer-string word numFriends)\n  (-> string? exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2766",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Enumeration\n\n#### Intuition\n\nWhen $\\textit{numFriends} = 1$, we simply return the entire $\\textit{word}$.\n\nWhen $\\textit{numFriends} > 1$, we consider all substrings starting at index $i$. Under the constraints of the problem, the maximum length of such a substring is $\\min(n - \\textit{numFriends} + 1, n - i)$. Among substrings of a fixed starting index, longer substrings have higher lexicographical order. Therefore, we can iterate over all starting indices $i$ from $0$ to $n - 1$, extract the substring of length $\\min(n - \\textit{numFriends} + 1, n - i)$ starting at $i$, and return the lexicographically largest substring among them.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Mis8AqBb/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"Mis8AqBb\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string $\\textit{word}$.\n\n- Time Complexity: $O(n^2)$\n\n    We need to enumerate all substrings that meet the problem’s conditions. Since there are up to $n$ possible starting indices and for each we may extract a substring of up to $O(n)$ length, the overall time complexity is $O(n^2)$.\n\n- Space Complexity: $O(n)$ or $O(1)$\n\n    The space complexity depends on how the language handles string slicing:\n\n    - In languages where slicing creates a new copy of the substring (e.g., C++, Java), the space complexity is $O(n)$ due to the storage of temporary substrings.\n\n    - In languages where slicing creates a view or reference without copying (e.g., Python), the space complexity can be considered $O(1)$.\n\n### Approach 2: Two Pointers\n\n#### Intuition\n\n> **Note:** To fully understand the two-pointer method used here, it's essential to first solve [1163. Last Substring in Lexicographical Order](https://leetcode.com/problems/last-substring-in-lexicographical-order/), which introduces the core idea behind this technique.\n\nAs in Approach 1, when $\\textit{numFriends} > 1$, if the left endpoint of the lexicographically largest suffix of the string is $i$, then the substring $s_i$ which starts at index $i$ and has length $\\min(n - \\textit{numFriends} + 1, n - i)$ will be the lexicographically largest substring that satisfies the problem's constraints.\n\nWe use a proof by contradiction to verify this. Suppose there exists another valid substring $s_j$, starting at index $j$, such that $s_j > s_i$ lexicographically. We consider two cases:\n\n- Case 1: $s_i$ is a suffix substring\nThat is, $n - \\textit{numFriends} + 1 \\geq n - i$. Then $s_i$ spans to the end of the string, and $s_j > s_i$ contradicts the assumption that $s_i$ is the lexicographically largest suffix.\n\n- Case 2: $s_i$ is not a suffix substring\nThat is, $n - \\textit{numFriends} + 1 < n - i$, meaning $s_i$ is shorter than the entire suffix. Since $s_j$ must also be of length at most $n - \\textit{numFriends} + 1$, it is no longer than $s_i$. If $s_j > s_i$, it must differ at some position where the character in $s_j$ is greater than that in $s_i$. This implies that the suffix starting at $j$ is greater than the suffix starting at $i$, which again contradicts the assumption that the suffix starting at $i$ is the lexicographically largest.\n\nTherefore, $s_i$ must indeed produce the answer.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/FaCgNtGs/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FaCgNtGs\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string $\\textit{word}$.\n\n- Time Complexity: $O(n)$\n\n    The two pointers together traverse at most $n$ characters. Each character is compared only a constant number of times, so the overall time complexity is linear.\n\n- Space Complexity: $O(n)$ or $O(1)$\n\n    The space complexity depends on the language's string handling behavior.\n\n    - In languages where string slicing creates a new copy (e.g., C++, Java), the space complexity is $O(n)$ in the worst case due to substring creation.\n\n    - In languages where string slices are views or references (e.g., Python), the space overhead can be considered $O(1)$ since no new characters are copied.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

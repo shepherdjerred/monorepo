@@ -1,0 +1,128 @@
+{
+  "questionId": "3567",
+  "questionFrontendId": "3280",
+  "title": "Convert Date to Binary",
+  "titleSlug": "convert-date-to-binary",
+  "difficulty": "Easy",
+  "content": "<p>You are given a string <code>date</code> representing a Gregorian calendar date in the <code>yyyy-mm-dd</code> format.</p>\n\n<p><code>date</code> can be written in its binary representation obtained by converting year, month, and day to their binary representations without any leading zeroes and writing them down in <code>year-month-day</code> format.</p>\n\n<p>Return the <strong>binary</strong> representation of <code>date</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">date = &quot;2080-02-29&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;100000100000-10-11101&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><span class=\"example-io\">100000100000, 10, and 11101 are the binary representations of 2080, 02, and 29 respectively.</span></p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">date = &quot;1900-01-01&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;11101101100-1-1&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><span class=\"example-io\">11101101100, 1, and 1 are the binary representations of 1900, 1, and 1 respectively.</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>date.length == 10</code></li>\n\t<li><code>date[4] == date[7] == &#39;-&#39;</code>, and all other <code>date[i]</code>&#39;s are digits.</li>\n\t<li>The input is generated such that <code>date</code> represents a valid Gregorian calendar date between Jan 1<sup>st</sup>, 1900 and Dec 31<sup>st</sup>, 2100 (both inclusive).</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"convertDateToBinary\",\n  \"params\": [\n    {\n      \"name\": \"date\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"87.7K\", \"totalSubmission\": \"98.7K\", \"totalAcceptedRaw\": 87665, \"totalSubmissionRaw\": 98738, \"acRate\": \"88.8%\"}",
+  "likes": 159,
+  "dislikes": 11,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of 1 Bits\", \"titleSlug\": \"number-of-1-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Convert to Base -2\", \"titleSlug\": \"convert-to-base-2\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"2080-02-29\"",
+    "\"1900-01-01\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string convertDateToBinary(string date) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String convertDateToBinary(String date) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def convertDateToBinary(self, date: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def convertDateToBinary(self, date):\n        \"\"\"\n        :type date: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} date\n * @return {string}\n */\nvar convertDateToBinary = function(date) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function convertDateToBinary(date: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string ConvertDateToBinary(string date) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* convertDateToBinary(char* date) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func convertDateToBinary(date string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun convertDateToBinary(date: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func convertDateToBinary(_ date: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn convert_date_to_binary(date: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} date\n# @return {String}\ndef convert_date_to_binary(date)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $date\n     * @return String\n     */\n    function convertDateToBinary($date) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String convertDateToBinary(String date) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def convertDateToBinary(date: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec convert_date_to_binary(date :: String.t) :: String.t\n  def convert_date_to_binary(date) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec convert_date_to_binary(Date :: unicode:unicode_binary()) -> unicode:unicode_binary().\nconvert_date_to_binary(Date) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (convert-date-to-binary date)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": null
+}

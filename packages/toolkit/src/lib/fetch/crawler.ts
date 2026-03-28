@@ -24,6 +24,7 @@ export type CrawlOptions = {
   useBrowser: boolean;
   useSitemap: boolean;
   verbose: boolean;
+  quiet: boolean;
   tags: string[];
 };
 
@@ -40,22 +41,25 @@ export type CrawlResult = {
  */
 export async function crawlSite(options: CrawlOptions): Promise<CrawlResult> {
   const start = performance.now();
-  const { baseUrl, maxDepth, useBrowser, useSitemap, verbose, tags } = options;
+  const { baseUrl, maxDepth, useBrowser, useSitemap, verbose, quiet, tags } = options;
+  const log = quiet ? () => {} : (msg: string) => console.log(msg);
 
   const urls = await (useSitemap
-    ? fetchSitemapUrls(baseUrl, useBrowser, verbose)
-    : discoverUrls(baseUrl, maxDepth, useBrowser, verbose));
+    ? fetchSitemapUrls(baseUrl, useBrowser, verbose, log)
+    : discoverUrls(baseUrl, maxDepth, useBrowser, verbose, log));
 
-  if (verbose) {
-    console.error(`[crawl] discovered ${String(urls.length)} URLs`);
-  }
+  log(`Discovered ${String(urls.length)} pages`);
 
   const savedPaths: string[] = [];
   let errors = 0;
 
+  const total = urls.length;
   for (const [i, url] of urls.entries()) {
     // Rate limit between fetches
     if (i > 0) await sleep(DELAY_MS);
+
+    const progress = `[${String(i + 1)}/${String(total)}]`;
+    log(`${progress} ${url}`);
 
     try {
       const result = useBrowser
@@ -85,8 +89,7 @@ export async function crawlSite(options: CrawlOptions): Promise<CrawlResult> {
       }
     } catch (error) {
       errors++;
-      if (verbose)
-        console.error(`[crawl] error fetching ${url}: ${String(error)}`);
+      log(`${progress} ERROR: ${url}: ${String(error)}`);
     }
   }
 
@@ -106,7 +109,9 @@ async function discoverUrls(
   maxDepth: number,
   useBrowser: boolean,
   verbose: boolean,
+  log: (msg: string) => void,
 ): Promise<string[]> {
+  log("Discovering pages...");
   const domain = extractDomain(startUrl);
   const visited = new Set<string>();
   const queue: { url: string; depth: number }[] = [{ url: startUrl, depth: 0 }];
@@ -155,13 +160,12 @@ async function fetchSitemapUrls(
   baseUrl: string,
   _useBrowser: boolean,
   verbose: boolean,
+  log: (msg: string) => void,
 ): Promise<string[]> {
   const parsed = new URL(baseUrl);
   const sitemapUrl = `${parsed.origin}/sitemap.xml`;
 
-  if (verbose) {
-    console.error(`[crawl] fetching sitemap: ${sitemapUrl}`);
-  }
+  log(`Fetching sitemap: ${sitemapUrl}`);
 
   // Fetch raw XML (use lightpanda with html dump since it's XML)
   const proc = Bun.spawn(
@@ -210,6 +214,7 @@ async function fetchSitemapUrls(
     );
   }
 
+  log(`Found ${String(urls.length)} URLs in sitemap`);
   return urls.length > 0 ? urls : [baseUrl];
 }
 

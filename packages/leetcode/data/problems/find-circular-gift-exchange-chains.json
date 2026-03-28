@@ -1,0 +1,53 @@
+{
+  "questionId": "3746",
+  "questionFrontendId": "3401",
+  "title": "Find Circular Gift Exchange Chains",
+  "titleSlug": "find-circular-gift-exchange-chains",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>SecretSanta</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| giver_id    | int  |\n| receiver_id | int  |\n| gift_value  | int  |\n+-------------+------+\n(giver_id, receiver_id) is the unique key for this table.   \nEach row represents a record of a gift exchange between two employees, giver_id represents the employee who gives a gift, receiver_id represents the employee who receives the gift and gift_value represents the value of the gift given.  \n</pre>\n\n<p>Write a solution to find the <strong>total gift value</strong> and <strong>length</strong> of<strong> circular chains</strong> of Secret Santa gift exchanges:</p>\n\n<p>A <strong>circular chain</strong> is defined as a series of exchanges where:</p>\n\n<ul>\n\t<li>Each employee gives a gift to <strong>exactly one</strong> other employee.</li>\n\t<li>Each employee receives a gift <strong>from exactly</strong> one other employee.</li>\n\t<li>The exchanges form a continuous <strong>loop</strong> (e.g., employee A gives a gift to B, B gives to C, and C gives back to A).</li>\n</ul>\n\n<p>Return <em>the result ordered by the chain length and total gift value of the chain in&nbsp;<strong>descending</strong> order</em>.&nbsp;</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>SecretSanta table:</p>\n\n<pre class=\"example-io\">\n+----------+-------------+------------+\n| giver_id | receiver_id | gift_value |\n+----------+-------------+------------+\n| 1        | 2           | 20         |\n| 2        | 3           | 30         |\n| 3        | 1           | 40         |\n| 4        | 5           | 25         |\n| 5        | 4           | 35         |\n+----------+-------------+------------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+----------+--------------+------------------+\n| chain_id | chain_length | total_gift_value |\n+----------+--------------+------------------+\n| 1        | 3            | 90               |\n| 2        | 2            | 60               |\n+----------+--------------+------------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>Chain 1</strong> involves employees 1, 2, and 3:\n\n\t<ul>\n\t\t<li>Employee 1 gives a gift to 2, employee 2 gives a gift to 3, and employee 3 gives a gift to 1.</li>\n\t\t<li>Total gift value for this chain = 20 + 30 + 40 = 90.</li>\n\t</ul>\n\t</li>\n\t<li><strong>Chain 2</strong> involves employees 4 and 5:\n\t<ul>\n\t\t<li>Employee 4 gives a gift to 5, and employee 5 gives a gift to 4.</li>\n\t\t<li>Total gift value for this chain = 25 + 35 = 60.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>The result table is ordered by the chain length and total gift value of the chain in descending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE SecretSanta (\\n    giver_id INT,\\n    receiver_id INT,\\n    gift_value INT\\n)\\n\"], \"mssql\": [\"CREATE TABLE SecretSanta (\\n    giver_id INT,\\n    receiver_id INT,\\n    gift_value INT\\n)\\n\"], \"oraclesql\": [\"CREATE TABLE SecretSanta (\\n    giver_id NUMBER,\\n    receiver_id NUMBER,\\n    gift_value NUMBER\\n)\\n\"], \"database\": true, \"name\": \"find_gift_chains\", \"pythondata\": [\"SecretSanta = pd.DataFrame(columns=[\\\"giver_id\\\", \\\"receiver_id\\\", \\\"gift_value\\\"]).astype({\\\"giver_id\\\": \\\"int\\\", \\\"receiver_id\\\": \\\"int\\\", \\\"gift_value\\\": \\\"int\\\"})\\n\"], \"postgresql\": [\"CREATE TABLE SecretSanta (\\n    giver_id INT,\\n    receiver_id INT,\\n    gift_value INT\\n)\\n\"], \"database_schema\": {\"SecretSanta\": {\"giver_id\": \"INT\", \"receiver_id\": \"INT\", \"gift_value\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"847\", \"totalSubmission\": \"1.6K\", \"totalAcceptedRaw\": 847, \"totalSubmissionRaw\": 1645, \"acRate\": \"51.5%\"}",
+  "likes": 3,
+  "dislikes": 2,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"SecretSanta\":[\"giver_id\",\"receiver_id\",\"gift_value\"]},\"rows\":{\"SecretSanta\":[[1,2,20],[2,3,30],[3,1,40],[4,5,25],[5,4,35]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_gift_chains(secret_santa: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

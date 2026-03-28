@@ -1,0 +1,145 @@
+{
+  "questionId": "3548",
+  "questionFrontendId": "3272",
+  "title": "Find the Count of Good Integers",
+  "titleSlug": "find-the-count-of-good-integers",
+  "difficulty": "Hard",
+  "content": "<p>You are given two <strong>positive</strong> integers <code>n</code> and <code>k</code>.</p>\n\n<p>An integer <code>x</code> is called <strong>k-palindromic</strong> if:</p>\n\n<ul>\n\t<li><code>x</code> is a <span data-keyword=\"palindrome-integer\">palindrome</span>.</li>\n\t<li><code>x</code> is divisible by <code>k</code>.</li>\n</ul>\n\n<p>An integer is called <strong>good</strong> if its digits can be <em>rearranged</em> to form a <strong>k-palindromic</strong> integer. For example, for <code>k = 2</code>, 2020 can be rearranged to form the <em>k-palindromic</em> integer 2002, whereas 1010 cannot be rearranged to form a <em>k-palindromic</em> integer.</p>\n\n<p>Return the count of <strong>good</strong> integers containing <code>n</code> digits.</p>\n\n<p><strong>Note</strong> that <em>any</em> integer must <strong>not</strong> have leading zeros, <strong>neither</strong> before <strong>nor</strong> after rearrangement. For example, 1010 <em>cannot</em> be rearranged to form 101.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 3, k = 5</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">27</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><em>Some</em> of the good integers are:</p>\n\n<ul>\n\t<li>551 because it can be rearranged to form 515.</li>\n\t<li>525 because it is already k-palindromic.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 1, k = 4</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The two good integers are 4 and 8.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 5, k = 6</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2468</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10</code></li>\n\t<li><code>1 &lt;= k &lt;= 9</code></li>\n</ul>\n",
+  "hints": [
+    "How to generate all K-palindromic strings of length <code>n</code>? Do we need to go through all <code>n</code> digits?",
+    "Use permutations to calculate the number of possible rearrangements."
+  ],
+  "metaData": "{\n  \"name\": \"countGoodIntegers\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"72.9K\", \"totalSubmission\": \"105.1K\", \"totalAcceptedRaw\": 72939, \"totalSubmissionRaw\": 105071, \"acRate\": \"69.4%\"}",
+  "likes": 466,
+  "dislikes": 112,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Palindrome Number\", \"titleSlug\": \"palindrome-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Closest Palindrome\", \"titleSlug\": \"find-the-closest-palindrome\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3\n5",
+    "1\n4",
+    "5\n6"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Combinatorics",
+      "slug": "combinatorics"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long countGoodIntegers(int n, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long countGoodIntegers(int n, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countGoodIntegers(self, n: int, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countGoodIntegers(self, n, k):\n        \"\"\"\n        :type n: int\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} k\n * @return {number}\n */\nvar countGoodIntegers = function(n, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countGoodIntegers(n: number, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long CountGoodIntegers(int n, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long countGoodIntegers(int n, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countGoodIntegers(n int, k int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countGoodIntegers(n: Int, k: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countGoodIntegers(_ n: Int, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_good_integers(n: i32, k: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} k\n# @return {Integer}\ndef count_good_integers(n, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $k\n     * @return Integer\n     */\n    function countGoodIntegers($n, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countGoodIntegers(int n, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countGoodIntegers(n: Int, k: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_good_integers(n :: integer, k :: integer) :: integer\n  def count_good_integers(n, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_good_integers(N :: integer(), K :: integer()) -> integer().\ncount_good_integers(N, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-good-integers n k)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2731",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Enumeration + Permutations and Combinations\n\n#### Intuition\n\nAccording to the description, if $x$ is a **palindromic** integer and divisible by $k$, then $x$ is called a **k-palindromic** integer. The question requires finding the number of **k-palindromic** integers with a digit length of $n$. According to the definition of **palindromic** integers, the sequence of digits on the left side of a **palindromic** integer is the same as the reverse sequence on the right side. If the digits on the left side are known, the digits on the right side can be determined. In the case of a digit length of $n$, we discuss the following categories:\n\n+ If $n$ is even, then the first $\\dfrac{n}{2}$ digits of the left half of the **palindromic** integer are in the same order as the reversed $\\dfrac{n}{2}$ digits of the right half. The range of values for the first $\\dfrac{n}{2}$ digits of the left half is $[0,10^{\\frac{n}{2}})$, since there cannot be leading zeros, there are a total of $10^{\\frac{n}{2}}-10^{\\frac{n-2}{2}}$ different **palindromic** integers.\n\n+ If $n$ is odd, then the left half of the **palindromic** integer has the same sequence as the reverse of the right half for the first $\\dfrac{n-1}{2}$ digits, and the middle digit has a value range of $[0,9]$. The direct enumeration of the value range of the first $\\dfrac{n + 1}{2}$ digits of the left half of the integer is $[0,10^{\\frac{n + 1}{2}})$, since there cannot be leading zeros, there are a total of $10^{\\frac{n+1}{2}} - 10^{\\frac{n-1}{2}}$ different **palindromic** integers.\n\nFrom the above deductions, it can be known that when the length is $n$, there are a total of $10^{\\lfloor \\frac{n+1}{2} \\rfloor} - 10^{\\lfloor \\frac{n-1}{2} \\rfloor}$ palindromic integers. The given range of $n$ is $[1,10]$, and there are at most $10^5$ different **k-palindromic** integers. Therefore, it is possible to enumerate and find all **k-palindromic** integers. Let $m = \\lfloor \\frac{n-1}{2} \\rfloor$, and let $\\textit{base} = 10^m$. Enumerate the left half of the palindromic integer, whose value range is in $[\\textit{base}, 10 \\times \\textit{base})$, to generate a palindromic integer of length $n$. At this time, if the palindromic integer is divisible by $k$, then the palindromic integer is a **k-palindromic** integer.\n\nAccording to the description, if the digits of an integer can be rearranged to form a **k-palindromic** integer, then the integer is called a \"good integer.\" That is, if an integer has the same digits as a **k-palindromic** integer and does not contain leading zeros, then it is a \"good integer.\" The problem requires finding the number of all \"good integers\" of length $n$. We know that for a **k-palindromic** integer, any permutation of the characters that do not contain leading zeros can be called a \"good integer.\" Since all valid **k-palindromic** integers have been found, the problem now converts to finding the number of different permutation combinations of the given string.\n\nWhen calculating, since different palindromic integers may consist of the same digits, to avoid redundant calculations, the string of each palindromic integer can be regularized. The string can be sorted in lexicographical order, which ensures the uniqueness of the same digit characters. We use the hash map $\\textit{dict}$ to record the sorted strings. If the sorted string s has appeared in the hash map, it will not be recorded again. Next, consider the problem of permutations and combinations, as the same characters may appear multiple times, which requires consideration of multiple combinations. Assuming the given string of length $n$ has the occurrences of digits '0' to '9' as $c_0, c_1, \\cdots, c_9$, and disregarding leading zeros, the number of permutations that can be formed is:\n\n$$\\dfrac{n!}{\\prod_{i=0}^{9}c_i!}$$\n\nConsidering that there cannot be a leading $0$, at this point, it is first necessary to select a character that is not $'0'$ from the $n$ characters to place at the first position. There are $n-c_0$ characters that are not $'0'$. The remaining $n-1$ characters can be arranged arbitrarily, resulting in $(n-1)!$ combinations. In this case, without considering repeated elements, the number of combination schemes is $(n-c_0) \\cdot (n-1)!$. Since some elements are repeated, it is necessary to divide by the permutations of the repeated elements. Therefore, the number of combinations is:\n\n$$\\dfrac{(n-c_0) \\cdot (n-1)!}{\\prod_{i=0}^{9}c_i!}$$\n\nEnumerate the valid strings $s$ in the hash map $\\textit{dict}$, and count the number of occurrences of characters from $`0’$ to $`9’$ in $s$, and store the counts in the array $\\textit{cnt}$. According to $\\textit{cnt}$, calculate the number of different combinations that $s$ can form, that is, the number of **good integers** that $s$ can form. Add this to the result $\\textit{ans}$, and return the final result.\n\n> The permutation and combination proof is as follows:\n\nSince there are $n$ positions to place $n$ characters, first consider the character $'0'$, as it cannot be placed at the first position, it can only be chosen from the last $n-1$ positions to place $c_0$ of them, at this time there are $\\binom{n-1}{c_0}$ ways. Next consider the character $'1'$, at this time it can be chosen from $n-c_0$ positions to place $c_1$ of them, at this time there are $\\binom{n-c_0}{c_1}$ ways. Similarly, the number of ways for $'2',\\cdots,'9'$ can be derived. Therefore, the total number of ways is:\n$$S = \\binom{n-1}{c_0}\\binom{n-c_0}{c_1}\\cdots\\binom{n-c_0-c_1\\cdots-c_8}{c_9}$$ \nThe expansion of the above formula is as follows:\n$$S = \\dfrac{(n-1)!}{c_0!(n-1-c_0)!} \\cdot \\dfrac{(n-c_0)!}{c_1!(n-c_0-c_1)!}\\cdots\\dfrac{(n-c_0-c_1-\\cdots-c_8)!}{c_9!(n-c0-c_1-\\cdots-c_9)!}$$ \nBy simplifying the above expression, we can obtain:\n$$S = \\dfrac{(n-c_0) \\cdot (n-1)!}{c_0!c_1!\\cdots c_9!0!} = \\dfrac{(n-c_0) \\cdot (n-1)!}{\\prod_{i=0}^{9}c_i!}$$\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/9eKvLikm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"9eKvLikm\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the given number, $m = \\lfloor \\dfrac{n+1}{2} \\rfloor$.\n\n- Time complexity: $O(n \\log n \\times 10^m)$.\n\nSince there can be at most $10^m$ **k-palindromic** integers, it takes $O(10^m)$ time to enumerate all **k-palindromic** integers. Each **k-palindromic** integer has $n$ digits, and the digits need to be sorted, which takes $O(n \\log n)$ time. Calculating the factorial of $n$ takes $O(n)$ time, so the overall time complexity is $O(n \\log n \\times 10^m)$.\n\n- Space complexity: $O(n \\times 10^m)$.\n\nWe need to enumerate all possible **k-palindromic** integers, there can be at most $10^m$ **k-palindromic** integers, each palindrome has $n$ digits, the space required in the hash map is $O(n)$, therefore, the required space is $O(n \\times 10^m)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "questionId": "3792",
+  "questionFrontendId": "3451",
+  "title": "Find Invalid IP Addresses",
+  "titleSlug": "find-invalid-ip-addresses",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code> logs</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| log_id      | int     |\n| ip          | varchar |\n| status_code | int     |\n+-------------+---------+\nlog_id is the unique key for this table.\nEach row contains server access log information including IP address and HTTP status code.\n</pre>\n\n<p>Write a solution to find <strong>invalid IP addresses</strong>. An IPv4 address is invalid if it meets any of these conditions:</p>\n\n<ul>\n\t<li>Contains numbers <strong>greater than</strong> <code>255</code> in any octet</li>\n\t<li>Has <strong>leading zeros</strong> in any octet (like <code>01.02.03.04</code>)</li>\n\t<li>Has <strong>less or more</strong> than <code>4</code> octets</li>\n</ul>\n\n<p>Return <em>the result table </em><em>ordered by</em> <code>invalid_count</code>,&nbsp;<code>ip</code>&nbsp;<em>in <strong>descending</strong> order respectively</em>.&nbsp;</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>logs table:</p>\n\n<pre class=\"example-io\">\n+--------+---------------+-------------+\n| log_id | ip            | status_code | \n+--------+---------------+-------------+\n| 1      | 192.168.1.1   | 200         | \n| 2      | 256.1.2.3     | 404         | \n| 3      | 192.168.001.1 | 200         | \n| 4      | 192.168.1.1   | 200         | \n| 5      | 192.168.1     | 500         | \n| 6      | 256.1.2.3     | 404         | \n| 7      | 192.168.001.1 | 200         | \n+--------+---------------+-------------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+---------------+--------------+\n| ip            | invalid_count|\n+---------------+--------------+\n| 256.1.2.3     | 2            |\n| 192.168.001.1 | 2            |\n| 192.168.1     | 1            |\n+---------------+--------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>256.1.2.3&nbsp;is invalid because 256 &gt; 255</li>\n\t<li>192.168.001.1&nbsp;is invalid because of leading zeros</li>\n\t<li>192.168.1&nbsp;is invalid because it has only 3 octets</li>\n</ul>\n\n<p>The output table is ordered by invalid_count, ip in descending order respectively.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE logs (\\n    log_id INT,\\n    ip VARCHAR(255),\\n    status_code INT\\n)\\n\"], \"mssql\": [\"CREATE TABLE logs (\\n    log_id INT,\\n    ip VARCHAR(255),\\n    status_code INT\\n)\\n\"], \"oraclesql\": [\"CREATE TABLE logs (\\n    log_id NUMBER,\\n    ip VARCHAR2(255),\\n    status_code NUMBER\\n)\\n\"], \"database\": true, \"name\": \"find_invalid_ips\", \"postgresql\": [\"CREATE TABLE logs (\\n    log_id INTEGER,\\n    ip VARCHAR(255),           \\n    status_code INTEGER        \\n);\"], \"pythondata\": [\"logs = pd.DataFrame(columns=[\\\"log_id\\\", \\\"ip\\\", \\\"status_code\\\"]).astype({\\\"log_id\\\": \\\"Int64\\\", \\\"ip\\\": \\\"string\\\", \\\"status_code\\\": \\\"Int64\\\"})\\n\"], \"database_schema\": {\"logs\": {\"log_id\": \"INT\", \"ip\": \"VARCHAR(255)\", \"status_code\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"11.2K\", \"totalSubmission\": \"21.5K\", \"totalAcceptedRaw\": 11167, \"totalSubmissionRaw\": 21548, \"acRate\": \"51.8%\"}",
+  "likes": 38,
+  "dislikes": 8,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"logs\":[\"log_id\",\"ip\",\"status_code\"]},\"rows\":{\"logs\":[[1,\"192.168.1.1\",200],[2,\"256.1.2.3\",404],[3,\"192.168.001.1\",200],[4,\"192.168.1.1\",200],[5,\"192.168.1\",500],[6,\"256.1.2.3\",404],[7,\"192.168.001.1\",200]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_invalid_ips(logs: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

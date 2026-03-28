@@ -1,0 +1,53 @@
+{
+  "questionId": "3589",
+  "questionFrontendId": "3278",
+  "title": "Find Candidates for Data Scientist Position II",
+  "titleSlug": "find-candidates-for-data-scientist-position-ii",
+  "difficulty": "Medium",
+  "content": "<p>Table: <font face=\"monospace\"><code>Candidates</code></font></p>\n\n<pre>\n+--------------+---------+ \n| Column Name  | Type    | \n+--------------+---------+ \n| candidate_id | int     | \n| skill        | varchar |\n| proficiency  | int     |\n+--------------+---------+\n(candidate_id, skill) is the unique key for this table.\nEach row includes candidate_id, skill, and proficiency level (1-5).\n</pre>\n\n<p>Table: <font face=\"monospace\"><code>Projects</code></font></p>\n\n<pre>\n+--------------+---------+ \n| Column Name  | Type    | \n+--------------+---------+ \n| project_id   | int     | \n| skill        | varchar |\n| importance   | int     |\n+--------------+---------+\n(project_id, skill) is the primary key for this table.\nEach row includes project_id, required skill, and its importance (1-5) for the project.\n</pre>\n\n<p>Leetcode is staffing for multiple data science projects. Write a solution to find the <strong>best candidate</strong> for<strong> each project</strong> based on the following criteria:</p>\n\n<ol>\n\t<li>Candidates must have <strong>all</strong> the skills required for a project.</li>\n\t<li>Calculate a <strong>score</strong> for each candidate-project pair as follows:\n\t<ul>\n\t\t<li><strong>Start</strong> with <code>100</code> points</li>\n\t\t<li><strong>Add</strong> <code>10</code> points for each skill where <strong>proficiency &gt; importance</strong></li>\n\t\t<li><strong>Subtract</strong> <code>5</code> points for each skill where <strong>proficiency &lt; importance</strong></li>\n\t\t<li>If the candidate&#39;s skill proficiency <strong>equal </strong>to the project&#39;s skill importance, the score remains unchanged</li>\n\t</ul>\n\t</li>\n</ol>\n\n<p>Include only the top candidate (highest score) for each project. If there&rsquo;s a <strong>tie</strong>, choose the candidate with the <strong>lower</strong> <code>candidate_id</code>. If there is <strong>no suitable candidate</strong> for a project, <strong>do not return</strong>&nbsp;that project.</p>\n\n<p>Return a result table ordered by <code>project_id</code> in ascending order.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p><code>Candidates</code> table:</p>\n\n<pre class=\"example-io\">\n+--------------+-----------+-------------+\n| candidate_id | skill     | proficiency |\n+--------------+-----------+-------------+\n| 101          | Python    | 5           |\n| 101          | Tableau   | 3           |\n| 101          | PostgreSQL| 4           |\n| 101          | TensorFlow| 2           |\n| 102          | Python    | 4           |\n| 102          | Tableau   | 5           |\n| 102          | PostgreSQL| 4           |\n| 102          | R         | 4           |\n| 103          | Python    | 3           |\n| 103          | Tableau   | 5           |\n| 103          | PostgreSQL| 5           |\n| 103          | Spark     | 4           |\n+--------------+-----------+-------------+\n</pre>\n\n<p><code>Projects</code> table:</p>\n\n<pre class=\"example-io\">\n+-------------+-----------+------------+\n| project_id  | skill     | importance |\n+-------------+-----------+------------+\n| 501         | Python    | 4          |\n| 501         | Tableau   | 3          |\n| 501         | PostgreSQL| 5          |\n| 502         | Python    | 3          |\n| 502         | Tableau   | 4          |\n| 502         | R         | 2          |\n+-------------+-----------+------------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+-------------+--------------+-------+\n| project_id  | candidate_id | score |\n+-------------+--------------+-------+\n| 501         | 101          | 105   |\n| 502         | 102          | 130   |\n+-------------+--------------+-------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>For Project 501, Candidate 101 has the highest score of 105. All other candidates have the same score but Candidate 101 has the lowest candidate_id among them.</li>\n\t<li>For Project 502, Candidate 102 has the highest score of 130.</li>\n</ul>\n\n<p>The output table is ordered by project_id in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table if not exists Candidates(candidate_id int, skill varchar(50), proficiency int)\", \"Create table if not exists Projects( project_id int, skill varchar(50), importance int)\"], \"mssql\": [\"Create table Candidates(candidate_id int, skill varchar(50), proficiency int)\", \"Create table  Projects( project_id int, skill varchar(50), importance int)\"], \"oraclesql\": [\"Create table Candidates(candidate_id number, skill varchar2(50), proficiency number)\", \"Create table Projects(project_id number, skill varchar2(50), importance number)\"], \"database\": true, \"name\": \"find_best_candidates\", \"postgresql\": [\"CREATE TABLE IF NOT EXISTS Candidates (\\n    candidate_id INT,\\n    skill VARCHAR(50),\\n    proficiency INT\\n);\\n\", \"CREATE TABLE IF NOT EXISTS Projects (\\n    project_id INT,\\n    skill VARCHAR(50),\\n    importance INT\\n);\\n\"], \"pythondata\": [\"Candidates = pd.DataFrame({\\n    'candidate_id': pd.Series(dtype='int'),\\n    'skill': pd.Series(dtype='str'),\\n    'proficiency': pd.Series(dtype='int')\\n})\", \"Projects = pd.DataFrame({\\n    'project_id': pd.Series(dtype='int'),\\n    'skill': pd.Series(dtype='str'),\\n    'importance': pd.Series(dtype='int')\\n})\"], \"database_schema\": {\"Candidates\": {\"candidate_id\": \"INT\", \"skill\": \"VARCHAR(50)\", \"proficiency\": \"INT\"}, \"Projects\": {\"project_id\": \"INT\", \"skill\": \"VARCHAR(50)\", \"importance\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"2.2K\", \"totalSubmission\": \"5.1K\", \"totalAcceptedRaw\": 2160, \"totalSubmissionRaw\": 5066, \"acRate\": \"42.6%\"}",
+  "likes": 12,
+  "dislikes": 5,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Candidates\":[\"candidate_id\",\"skill\",\"proficiency\"],\"Projects\":[\"project_id\",\"skill\",\"importance\"]},\"rows\":{\"Candidates\":[[101,\"Python\",5],[101,\"Tableau\",3],[101,\"PostgreSQL\",4],[101,\"TensorFlow\",2],[102,\"Python\",4],[102,\"Tableau\",5],[102,\"PostgreSQL\",4],[102,\"R\",4],[103,\"Python\",3],[103,\"Tableau\",5],[103,\"PostgreSQL\",5],[103,\"Spark\",4]],\"Projects\":[[501,\"Python\",4],[501,\"Tableau\",3],[501,\"PostgreSQL\",5],[502,\"Python\",3],[502,\"Tableau\",4],[502,\"R\",2]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_best_candidates(candidates: pd.DataFrame, projects: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

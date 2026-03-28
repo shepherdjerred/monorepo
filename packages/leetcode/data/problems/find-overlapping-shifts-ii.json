@@ -1,0 +1,53 @@
+{
+  "questionId": "3585",
+  "questionFrontendId": "3268",
+  "title": "Find Overlapping Shifts II",
+  "titleSlug": "find-overlapping-shifts-ii",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>EmployeeShifts</code></p>\n\n<pre>\n+------------------+----------+\n| Column Name      | Type     |\n+------------------+----------+\n| employee_id      | int      |\n| start_time       | datetime |\n| end_time         | datetime |\n+------------------+----------+\n(employee_id, start_time) is the unique key for this table.\nThis table contains information about the shifts worked by employees, including the start time, and end time.\n</pre>\n\n<p>Write a solution to analyze overlapping shifts for each employee. Two shifts are considered overlapping if they occur on the <strong>same date</strong> and one shift&#39;s <code>end_time</code> is <strong>later than</strong> another shift&#39;s <code>start_time</code>.</p>\n\n<p>For <strong>each employee</strong>, calculate the following:</p>\n\n<ol>\n\t<li>The <strong>maximum</strong> number of shifts that <strong>overlap</strong> at any <strong>given time</strong>.</li>\n\t<li>The <strong>total duration</strong> of all overlaps in minutes.</li>\n</ol>\n\n<p><em>Return the result table ordered by</em> <code>employee_id</code> <em>in <strong>ascending</strong> order</em>.</p>\n\n<p>The query result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p><code>EmployeeShifts</code> table:</p>\n\n<pre class=\"example-io\">\n+-------------+---------------------+---------------------+\n| employee_id | start_time          | end_time            |\n+-------------+---------------------+---------------------+\n| 1           | 2023-10-01 09:00:00 | 2023-10-01 17:00:00 |\n| 1           | 2023-10-01 15:00:00 | 2023-10-01 23:00:00 |\n| 1           | 2023-10-01 16:00:00 | 2023-10-02 00:00:00 |\n| 2           | 2023-10-01 09:00:00 | 2023-10-01 17:00:00 |\n| 2           | 2023-10-01 11:00:00 | 2023-10-01 19:00:00 |\n| 3           | 2023-10-01 09:00:00 | 2023-10-01 17:00:00 |\n+-------------+---------------------+---------------------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+-------------+---------------------------+------------------------+\n| employee_id | max_overlapping_shifts    | total_overlap_duration |\n+-------------+---------------------------+------------------------+\n| 1           | 3                         | 600                    |\n| 2           | 2                         | 360                    |\n| 3           | 1                         | 0                      |\n+-------------+---------------------------+------------------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Employee 1 has 3 shifts:\n\t<ul>\n\t\t<li>2023-10-01 09:00:00 to 2023-10-01 17:00:00</li>\n\t\t<li>2023-10-01 15:00:00 to 2023-10-01 23:00:00</li>\n\t\t<li>2023-10-01 16:00:00 to 2023-10-02 00:00:00</li>\n\t</ul>\n\tThe maximum number of overlapping shifts is 3 (from 16:00 to 17:00). The total overlap duration is: - 2 hours (15:00-17:00) between 1st and 2nd shifts - 1 hour (16:00-17:00) between 1st and 3rd shifts - 7 hours (16:00-23:00) between 2nd and 3rd shifts Total: 10 hours = 600 minutes</li>\n\t<li>Employee 2 has 2 shifts:\n\t<ul>\n\t\t<li>2023-10-01 09:00:00 to 2023-10-01 17:00:00</li>\n\t\t<li>2023-10-01 11:00:00 to 2023-10-01 19:00:00</li>\n\t</ul>\n\tThe maximum number of overlapping shifts is 2. The total overlap duration is 6 hours (11:00-17:00) = 360 minutes.</li>\n\t<li>Employee 3 has only 1 shift, so there are no overlaps.</li>\n</ul>\n\n<p>The output table contains the employee_id, the maximum number of simultaneous overlaps, and the total overlap duration in minutes for each employee, ordered by employee_id in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table if not exists EmployeeShifts(employee_id int, start_time datetime, end_time datetime)\"], \"mssql\": [\"Create table  EmployeeShifts(employee_id int, start_time datetime, end_time datetime)\"], \"oraclesql\": [\"Create table  EmployeeShifts(employee_id number, start_time date, end_time date)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD HH24:MI:SS'\"], \"database\": true, \"name\": \"calculate_shift_overlaps\", \"postgresql\": [\"CREATE TABLE IF NOT EXISTS EmployeeShifts (\\n    employee_id INT,\\n    start_time TIMESTAMP,\\n    end_time TIMESTAMP\\n);\\n\"], \"pythondata\": [\"EmployeeShifts = pd.DataFrame([], columns=['employee_id', 'start_time', 'end_time']).astype({\\n    'employee_id': 'Int64',                 # Nullable integer type\\n    'start_time': 'datetime64[ns]',         # Datetime for start time\\n    'end_time': 'datetime64[ns]'            # Datetime for end time\\n})\"], \"database_schema\": {\"EmployeeShifts\": {\"employee_id\": \"INT\", \"start_time\": \"DATETIME\", \"end_time\": \"DATETIME\"}}}",
+  "stats": "{\"totalAccepted\": \"1.3K\", \"totalSubmission\": \"2.2K\", \"totalAcceptedRaw\": 1252, \"totalSubmissionRaw\": 2240, \"acRate\": \"55.9%\"}",
+  "likes": 7,
+  "dislikes": 7,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"EmployeeShifts\":[\"employee_id\",\"start_time\",\"end_time\"]},\"rows\":{\"EmployeeShifts\":[[1,\"2023-10-01 09:00:00\",\"2023-10-01 17:00:00\"],[1,\"2023-10-01 15:00:00\",\"2023-10-01 23:00:00\"],[1,\"2023-10-01 16:00:00\",\"2023-10-02 00:00:00\"],[2,\"2023-10-01 09:00:00\",\"2023-10-01 17:00:00\"],[2,\"2023-10-01 11:00:00\",\"2023-10-01 19:00:00\"],[3,\"2023-10-01 09:00:00\",\"2023-10-01 17:00:00\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef calculate_shift_overlaps(employee_shifts: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

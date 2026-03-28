@@ -1,0 +1,53 @@
+{
+  "questionId": "3782",
+  "questionFrontendId": "3436",
+  "title": "Find Valid Emails",
+  "titleSlug": "find-valid-emails",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Users</code></p>\n\n<pre>\n+-----------------+---------+\n| Column Name     | Type    |\n+-----------------+---------+\n| user_id         | int     |\n| email           | varchar |\n+-----------------+---------+\n(user_id) is the unique key for this table.\nEach row contains a user&#39;s unique ID and email address.\n</pre>\n\n<p>Write a solution to find all the <strong>valid email addresses</strong>. A valid email address meets the following criteria:</p>\n\n<ul>\n\t<li>It contains exactly one <code>@</code> symbol.</li>\n\t<li>It ends with <code>.com</code>.</li>\n\t<li>The part before the <code>@</code> symbol contains only <strong>alphanumeric</strong> characters and <strong>underscores</strong>.</li>\n\t<li>The part after the <code>@</code> symbol and before <code>.com</code> contains a domain name <strong>that contains only letters</strong>.</li>\n</ul>\n\n<p>Return<em> the result table ordered by</em> <code>user_id</code> <em>in</em> <strong>ascending </strong><em>order</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>Users table:</p>\n\n<pre class=\"example-io\">\n+---------+---------------------+\n| user_id | email               |\n+---------+---------------------+\n| 1       | alice@example.com   |\n| 2       | bob_at_example.com  |\n| 3       | charlie@example.net |\n| 4       | david@domain.com    |\n| 5       | eve@invalid         |\n+---------+---------------------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+---------+-------------------+\n| user_id | email             |\n+---------+-------------------+\n| 1       | alice@example.com |\n| 4       | david@domain.com  |\n+---------+-------------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>alice@example.com</strong> is valid because it contains one <code>@</code>, alice&nbsp;is alphanumeric, and example.com&nbsp;starts with a letter and ends with .com.</li>\n\t<li><strong>bob_at_example.com</strong> is invalid because it contains an underscore instead of an <code>@</code>.</li>\n\t<li><strong>charlie@example.net</strong> is invalid because the domain does not end with <code>.com</code>.</li>\n\t<li><strong>david@domain.com</strong> is valid because it meets all criteria.</li>\n\t<li><strong>eve@invalid</strong> is invalid because the domain does not end with <code>.com</code>.</li>\n</ul>\n\n<p>Result table is ordered by user_id in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE If not Exists Users (\\n    user_id INT,\\n    email VARCHAR(255)\\n)\"], \"mssql\": [\"CREATE TABLE Users (\\n    user_id INT,\\n    email VARCHAR(255)\\n)\"], \"oraclesql\": [\"CREATE TABLE Users (\\n    user_id NUMBER,\\n    email VARCHAR2(255)\\n)\"], \"database\": true, \"name\": \"find_valid_emails\", \"postgresql\": [\"CREATE TABLE IF NOT EXISTS users (\\n    user_id INT,\\n    email VARCHAR(255)\\n);\\n\"], \"pythondata\": [\"Users = pd.DataFrame(columns=[\\\"user_id\\\", \\\"email\\\"]).astype({\\\"user_id\\\": \\\"int32\\\", \\\"email\\\": \\\"string\\\"})\\n\"], \"database_schema\": {\"Users\": {\"user_id\": \"INT\", \"email\": \"VARCHAR(255)\"}}}",
+  "stats": "{\"totalAccepted\": \"27.1K\", \"totalSubmission\": \"61.8K\", \"totalAcceptedRaw\": 27140, \"totalSubmissionRaw\": 61766, \"acRate\": \"43.9%\"}",
+  "likes": 62,
+  "dislikes": 8,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Users\":[\"user_id\",\"email\"]},\"rows\":{\"Users\":[[1,\"alice@example.com\"],[2,\"bob_at_example.com\"],[3,\"charlie@example.net\"],[4,\"david@domain.com\"],[5,\"eve@invalid\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_valid_emails(users: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

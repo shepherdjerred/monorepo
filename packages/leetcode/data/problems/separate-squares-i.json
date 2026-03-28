@@ -1,0 +1,135 @@
+{
+  "questionId": "3763",
+  "questionFrontendId": "3453",
+  "title": "Separate Squares I",
+  "titleSlug": "separate-squares-i",
+  "difficulty": "Medium",
+  "content": "<p>You are given a 2D integer array <code>squares</code>. Each <code>squares[i] = [x<sub>i</sub>, y<sub>i</sub>, l<sub>i</sub>]</code> represents the coordinates of the bottom-left point and the side length of a square parallel to the x-axis.</p>\n\n<p>Find the <strong>minimum</strong> y-coordinate value of a horizontal line such that the total area of the squares above the line <em>equals</em> the total area of the squares below the line.</p>\n\n<p>Answers within <code>10<sup>-5</sup></code> of the actual answer will be accepted.</p>\n\n<p><strong>Note</strong>: Squares <strong>may</strong> overlap. Overlapping areas should be counted <strong>multiple times</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">squares = [[0,0,1],[2,2,1]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1.00000</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2025/01/06/4062example1drawio.png\" style=\"width: 378px; height: 352px;\" /></p>\n\n<p>Any horizontal line between <code>y = 1</code> and <code>y = 2</code> will have 1 square unit above it and 1 square unit below it. The lowest option is 1.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">squares = [[0,0,2],[1,1,1]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1.16667</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2025/01/15/4062example2drawio.png\" style=\"width: 378px; height: 352px;\" /></p>\n\n<p>The areas are:</p>\n\n<ul>\n\t<li>Below the line: <code>7/6 * 2 (Red) + 1/6 (Blue) = 15/6 = 2.5</code>.</li>\n\t<li>Above the line: <code>5/6 * 2 (Red) + 5/6 (Blue) = 15/6 = 2.5</code>.</li>\n</ul>\n\n<p>Since the areas above and below the line are equal, the output is <code>7/6 = 1.16667</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= squares.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>squares[i] = [x<sub>i</sub>, y<sub>i</sub>, l<sub>i</sub>]</code></li>\n\t<li><code>squares[i].length == 3</code></li>\n\t<li><code>0 &lt;= x<sub>i</sub>, y<sub>i</sub> &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= l<sub>i</sub> &lt;= 10<sup>9</sup></code></li>\n\t<li>The total area of all the squares will not exceed <code>10<sup>12</sup></code>.</li>\n</ul>\n",
+  "hints": [
+    "Binary search on the answer."
+  ],
+  "metaData": "{\n  \"name\": \"separateSquares\",\n  \"params\": [\n    {\n      \"name\": \"squares\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"double\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"125.6K\", \"totalSubmission\": \"216.7K\", \"totalAcceptedRaw\": 125562, \"totalSubmissionRaw\": 216653, \"acRate\": \"58.0%\"}",
+  "likes": 675,
+  "dislikes": 121,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[0,0,1],[2,2,1]]",
+    "[[0,0,2],[1,1,1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    double separateSquares(vector<vector<int>>& squares) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public double separateSquares(int[][] squares) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def separateSquares(self, squares: List[List[int]]) -> float:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def separateSquares(self, squares):\n        \"\"\"\n        :type squares: List[List[int]]\n        :rtype: float\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} squares\n * @return {number}\n */\nvar separateSquares = function(squares) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function separateSquares(squares: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public double SeparateSquares(int[][] squares) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "double separateSquares(int** squares, int squaresSize, int* squaresColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func separateSquares(squares [][]int) float64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun separateSquares(squares: Array<IntArray>): Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func separateSquares(_ squares: [[Int]]) -> Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn separate_squares(squares: Vec<Vec<i32>>) -> f64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} squares\n# @return {Float}\ndef separate_squares(squares)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $squares\n     * @return Float\n     */\n    function separateSquares($squares) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  double separateSquares(List<List<int>> squares) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def separateSquares(squares: Array[Array[Int]]): Double = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec separate_squares(squares :: [[integer]]) :: float\n  def separate_squares(squares) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec separate_squares(Squares :: [[integer()]]) -> float().\nseparate_squares(Squares) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (separate-squares squares)\n  (-> (listof (listof exact-integer?)) flonum?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2902",
+    "content": "### Approach 1: Binary Search\n\n#### Intuition\n\nLet the length of the array $\\textit{squares}$ be $n$, where each element is $(x_i, y_i, l_i)$. Then the total area of all squares is:\n\n$$\n\\textit{totalArea} = \\sum_{i=0}^{n-1} l_i^2\n$$\n\nAccording to the problem requirements, we need to find a dividing line $y$ such that the sum of the areas of all squares above $y$ is equal to the sum of the areas of all squares below $y$. Let the area of squares below $y$ be $\\textit{area}_y$, and at this point, the following condition must be satisfied:\n\n$$\n\\textit{area}_y \\cdot 2= \\textit{totalArea}\n$$\n\nAs $y$ increases, $\\textit{area}_y$ is non-decreasing, so binary search can be used. Specifically, we can perform a binary search to find the smallest value of $y$ such that the total area of squares below $y$ satisfies:\n\n$$\n\\textit{area}_y \\cdot 2 \\ge \\textit{totalArea}\n$$\n\nGiven a value of $y$, if the square $(x_i, y_i, l_i)$ satisfies $y_i < y$, then it is below $y$, otherwise it is above $y$. The area of the square below $y$ is then:\n\n$$\n\\textit{area} = l_i \\cdot \\min(y - y_i, l_i)\n$$\n\nWe can calculate the sum of the areas of all squares below $y$ based on this property:\n\n$$\n\\textit{area}_y = \\sum_{i=0}^{n-1}  l_i \\cdot \\max(0,\\min(y - y_i, l_i))\n$$\n\nDue to precision issues in area calculation, the problem requires that the error between the returned answer and the actual value be within $10^{-5}$. We need to use $10^{-5}$ as the precision in binary search, i.e., use the condition that the difference between the upper and lower bounds does not exceed $\\text{10}^{-5}$ as the termination condition for binary search:\n\n$$\n\\textit{hi} - \\textit{lo} \\le 10^{-5}\n$$\n\nWe find the smallest $ y $ value through binary search, which is the answer.\n\nWe can analyze the upper limit of the number of binary search iterations. Let the initial length of the binary search interval be $L$. Each binary search reduces the interval length by half. To meet the problem's error requirement, the interval length needs to be reduced to at least $10^{-5}$. Let the number of iterations be $k$, then we have:\n\n$$\n\\dfrac{L}{2^k} \\le 10^{-5}\n$$\n\nSolving this inequality gives:\n\n$$\nk \\ge \\log_2 (L \\cdot 10^5)\n$$\n\nUnder the data range of this problem, $0 \\le L \\le 10^9$, at this time $k \\ge \\log_2 (L \\cdot 10^5) \\ge \\log_2 (10^{14}) = 14 \\log_2 (10) \\approx 46.506993328423076$. The upper limit of the number of binary search iterations is $47$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TKf4MnEe/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TKf4MnEe\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array $\\textit{squares}$.\n\n- Time complexity: $O(n \\log (LU))$.\n  \n  Let each element in the array be $(x_i, y_i, l_i)$. Here, $U = \\max(y_i + l_i)$ and $L = 10^5$. The time complexity of each check in binary search is $O(n)$, and the number of binary search iterations is $O(\\log (LU))$, so the total time complexity is $O(n \\log (LU))$.\n\n- Space complexity: $O(1)$.\n\n### Approach 2: Scanning Line\n\n#### Intuition\n\nFirst, we can calculate the total area of all squares, denoted as $\\textit{totalArea}$. Then, we scan from bottom to top, setting the sum of the covered area below the scan line $y = y^{'}$ as $\\textit{area}$, so the sum of the area above the scan line is $\\textit{totalArea}−\\textit{area}$.\n\nThe problem requires that the area below $y = y^{'}$ is equal to the area above, that is:\n\n$$\n\\textit{area} = \\textit{totalArea}− \\textit{area}\n$$\n\nThat is:\n\n$$\n\\textit{area} = \\dfrac{\\textit{totalArea}}{2}\n$$\n\nLet the current scanning line pass through the upper or lower boundary of a square at $y = y^{'}$, at which point the covered area below the scanning line is $\\textit{area}$; when moving upward, the next scanning line that needs to pass through the upper or lower boundary of a square is $y = y^{''}$, at which point the sum of the lengths of the bottom edges covered by the squares is $\\textit{width}$. Then, the sum of the covered areas below the scanning line $y = y^{''}$ is:\n\n$$\n\\textit{area} + \\textit{width} \\cdot (y^{''} - y^{'})\n$$\n\nAt this time, the following conditions must be met:\n\n$$\n\\textit{area} < \\dfrac{\\textit{totalArea}}{2} \\\\\n\\textit{area} + \\textit{width} \\cdot (y^{''} - y^{'}) \\ge \\dfrac{\\textit{totalArea}}{2}\n$$\n\nIt can be known that the target value $y$ must be within the interval $[y^{'}, y^{''}]$.\n\nSince all the rectangles in the covered area between two scan lines have the same height, when the scan line moves a length of $\\Delta$ over the interval $[y^{'},y^{''}]$, the change in the covered area is $\\Delta \\cdot \\textit{width}$. At this point, the covered area only needs to increase by $\\dfrac{\\textit{totalArea}}{2} - \\textit{area}$ to satisfy the condition of equal upper and lower areas. Thus, we can directly calculate the target value $y$ as:\n\n$$\ny = y^{'} + \\dfrac{\\dfrac{\\textit{totalArea}}{2} - \\textit{area}}{\\textit{width}} = y^{'} + \\dfrac{\\textit{totalArea} - 2\\cdot \\textit{area}}{2\\cdot\\textit{width}}\n$$\n\nWe traverse the scan lines formed by the top and bottom boundaries of all squares in order and return the target value once it is found.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/evwd6qGF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"evwd6qGF\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array $\\textit{squares}$.\n\n- Time complexity: $O(n \\log n)$.\n  \n  The time complexity of sorting is $O(n \\log n)$.\n\n- Space complexity: $O(n)$.\n  \n  The space required to store the scanning line height is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

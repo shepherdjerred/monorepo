@@ -1,0 +1,153 @@
+{
+  "questionId": "3835",
+  "questionFrontendId": "3578",
+  "title": "Count Partitions With Max-Min Difference at Most K",
+  "titleSlug": "count-partitions-with-max-min-difference-at-most-k",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code> and an integer <code>k</code>. Your task is to partition <code>nums</code> into one or more <strong>non-empty</strong> contiguous segments such that in each segment, the difference between its <strong>maximum</strong> and <strong>minimum</strong> elements is <strong>at most</strong> <code>k</code>.</p>\n\n<p>Return the total number of ways to partition <code>nums</code> under this condition.</p>\n\n<p>Since the answer may be too large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [9,4,1,3,7], k = 4</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">6</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There are 6 valid partitions where the difference between the maximum and minimum elements in each segment is at most <code>k = 4</code>:</p>\n\n<ul>\n\t<li><code>[[9], [4], [1], [3], [7]]</code></li>\n\t<li><code>[[9], [4], [1], [3, 7]]</code></li>\n\t<li><code>[[9], [4], [1, 3], [7]]</code></li>\n\t<li><code>[[9], [4, 1], [3], [7]]</code></li>\n\t<li><code>[[9], [4, 1], [3, 7]]</code></li>\n\t<li><code>[[9], [4, 1, 3], [7]]</code></li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [3,3,4], k = 0</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There are 2 valid partitions that satisfy the given conditions:</p>\n\n<ul>\n\t<li><code>[[3], [3], [4]]</code></li>\n\t<li><code>[[3, 3], [4]]</code></li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= nums.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>0 &lt;= k &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use dynamic programming.",
+    "Let <code>dp[idx]</code> be the count of ways to partition the array with the last partition ending at index <code>idx</code>.",
+    "Try using a sliding window; we can track the minimum and maximum in the window using deques."
+  ],
+  "metaData": "{\n  \"name\": \"countPartitions\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"65.1K\", \"totalSubmission\": \"110.7K\", \"totalAcceptedRaw\": 65066, \"totalSubmissionRaw\": 110745, \"acRate\": \"58.8%\"}",
+  "likes": 528,
+  "dislikes": 135,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Great Partitions\", \"titleSlug\": \"number-of-great-partitions\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[9,4,1,3,7]\n4",
+    "[3,3,4]\n0"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    },
+    {
+      "name": "Monotonic Queue",
+      "slug": "monotonic-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countPartitions(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countPartitions(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countPartitions(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countPartitions(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar countPartitions = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countPartitions(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountPartitions(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countPartitions(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countPartitions(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countPartitions(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countPartitions(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_partitions(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef count_partitions(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function countPartitions($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countPartitions(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countPartitions(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_partitions(nums :: [integer], k :: integer) :: integer\n  def count_partitions(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_partitions(Nums :: [integer()], K :: integer()) -> integer().\ncount_partitions(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-partitions nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2888",
+    "content": "### Approach 1: Sliding Window + Dynamic Programming\n\n#### Intuition\n\nThe problem asks us to split the array $\\textit{nums}$ into one or more **non-empty** contiguous subarrays such that, in every subarray, the difference between the **maximum** and **minimum** elements is at most $k$. We need to compute the total number of such valid partitioning schemes. Let $n$ be the length of $\\textit{nums}$. We can enumerate each index $i$ and calculate the number of valid partitions for the prefix $\\textit{nums}[0\\cdots i]$. Since the number of partitions at index $i$ depends on the starting index $j$ of the last subarray and the number of partitions for the prefix $\\textit{nums}[0\\cdots j-1]$, dynamic programming is suitable.\n\nDefine $\\textit{dp}[i+1]$ as the number of valid partitions for $\\textit{nums}[0\\cdots i]$. When $i=0$, the prefix is empty and is considered a valid base case, so we set $\\textit{dp}[0] = 1$. Suppose the last subarray starts at index $j$. To compute $\\textit{dp}[i]$, we need the number of partitions for the prefix $\\textit{nums}[0\\cdots j-1]$, which is $\\textit{dp}[j]$. Since multiple starting positions may be valid, if the set of valid $j$ values is ${j_0,j_1,\\dots,j_{m-1}}$, we obtain the recurrence\n\n$\n\\textit{dp}[i+1] = \\sum_{s=0}^{m-1}\\textit{dp}[j_s].\n$\n\nEnumerating all such $j$ values yields an $O(n^2)$ algorithm, so we need further optimization.\n\nNext, consider the range of valid $j$. Fix the right endpoint $i$. As we extend the window leftward, the subarray grows and the max-min difference might exceed $k$. Hence the valid starting indices form a continuous interval $[L,i]$, giving:\n\n$\n\\textit{dp}[i+1] = \\sum_{j=L}^{i} \\textit{dp}[j].\n$\n\nWe can compute this using prefix sums. Let\n\n$\n\\textit{prefix}[i+1] = \\sum_{j=0}^{i} \\textit{dp}[j].\n$\n\nThen\n\n$\n\\textit{dp}[i+1] = \\textit{prefix}[i] - \\textit{prefix}[L-1].\n$\n\nThe key step is to find the smallest valid $L$. If the max-min difference for $\\textit{nums}[j\\cdots i]$ is within $k$, then all subarrays contained inside it also satisfy the condition. Thus we only need to maintain the smallest valid $j$. We can do this using the sliding window technique from problem 239, maintaining the max and min values within the window using an ordered set or a priority queue. When the difference exceeds $k$, we move the left boundary to restore validity. The final answer is $\\textit{dp}[n]$.\n\nThe computation proceeds as follows:\n\n* Initialize $\\textit{dp}$ and $\\textit{prefix}$ with $\\textit{dp}[0]=1$ and $\\textit{prefix}[0]=1$.\n* For each index $i$, insert $\\textit{nums}[i]$ into the ordered set. If the current max-min difference exceeds $k$, increment $j$ and remove $\\textit{nums}[j]$ until the window becomes valid again.\n* Compute $\\textit{dp}[i+1] = \\textit{prefix}[i] - \\textit{prefix}[j-1]$ and update $\\textit{prefix}[i+1]$, applying the modulus as needed.\n* After the loop finishes, return $\\textit{dp}[n]$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/AKnsR6jk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"AKnsR6jk\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array.\n\n- Time complexiy: $O(n \\log n)$.\n  \n  Each element is inserted into and removed from an ordered multiset at most once. Each operation costs $O(\\log n)$, and there are $O(n)$ such operations.\n\n- Space complexity: $O(n)$.\n  \n  The ordered multiset can contain up to $n$ elements, and the DP and prefix arrays each hold $n+1$ entries.\n\n---\n\n### Approach 2: Monotonic Queue Optimization\n\n#### Intuition\n\nWhen maintaining the sliding window, we can again refer to the ideas used in problem [239. Sliding Window Maximum](https://leetcode.com/problems/sliding-window-maximum/). Instead of using an ordered set, we can further optimize the solution with monotonic queues. These queues maintain the maximum and minimum values in the current window, ensuring that the difference between them never exceeds $k$. Once this condition is met, the dynamic programming transitions follow the same structure described in the first approach.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/94EDoPaz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"94EDoPaz\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the given array.\n\n- Time complexity: $O(n)$.\n  \n  Each index is pushed and popped from the monotonic queues at most once, so all queue operations together take linear time. The remaining work is also linear, giving a total of $O(n)$.\n\n- Space complexity: $O(n)$.\n  \n  The monotonic queues can each hold up to $n$ elements, and we store the DP and prefix arrays of size $n+1$, resulting in $O(n)$ total space usage.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

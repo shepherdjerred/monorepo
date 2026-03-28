@@ -1,0 +1,157 @@
+{
+  "questionId": "3851",
+  "questionFrontendId": "3539",
+  "title": "Find Sum of Array Product of Magical Sequences",
+  "titleSlug": "find-sum-of-array-product-of-magical-sequences",
+  "difficulty": "Hard",
+  "content": "<p>You are given two integers, <code>m</code> and <code>k</code>, and an integer array <code>nums</code>.</p>\nA sequence of integers <code>seq</code> is called <strong>magical</strong> if:\n\n<ul>\n\t<li><code>seq</code> has a size of <code>m</code>.</li>\n\t<li><code>0 &lt;= seq[i] &lt; nums.length</code></li>\n\t<li>The <strong>binary representation</strong> of <code>2<sup>seq[0]</sup> + 2<sup>seq[1]</sup> + ... + 2<sup>seq[m - 1]</sup></code> has <code>k</code> <strong>set bits</strong>.</li>\n</ul>\n\n<p>The <strong>array product</strong> of this sequence is defined as <code>prod(seq) = (nums[seq[0]] * nums[seq[1]] * ... * nums[seq[m - 1]])</code>.</p>\n\n<p>Return the <strong>sum</strong> of the <strong>array products</strong> for all valid <strong>magical</strong> sequences.</p>\n\n<p>Since the answer may be large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>A <strong>set bit</strong> refers to a bit in the binary representation of a number that has a value of 1.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">m = 5, k = 5, nums = [1,10,100,10000,1000000]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">991600007</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>All permutations of <code>[0, 1, 2, 3, 4]</code> are magical sequences, each with an array product of 10<sup>13</sup>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">m = 2, k = 2, nums = [5,4,3,2,1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">170</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The magical sequences are <code>[0, 1]</code>, <code>[0, 2]</code>, <code>[0, 3]</code>, <code>[0, 4]</code>, <code>[1, 0]</code>, <code>[1, 2]</code>, <code>[1, 3]</code>, <code>[1, 4]</code>, <code>[2, 0]</code>, <code>[2, 1]</code>, <code>[2, 3]</code>, <code>[2, 4]</code>, <code>[3, 0]</code>, <code>[3, 1]</code>, <code>[3, 2]</code>, <code>[3, 4]</code>, <code>[4, 0]</code>, <code>[4, 1]</code>, <code>[4, 2]</code>, and <code>[4, 3]</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">m = 1, k = 1, nums = [28]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">28</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The only magical sequence is <code>[0]</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= m &lt;= 30</code></li>\n\t<li><code>1 &lt;= nums.length &lt;= 50</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>8</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use Dynamic Programming",
+    "Let <code>dp[i][j][mask]</code> be the state after choosing <code>i</code> numbers (indices)",
+    "The partial sum <code>S = 2^(seq[0]) + 2^(seq[1]) + ... + 2^(seq[i - 1])</code> has produced exactly <code>j</code> set bits once you’ve fully propagated any carries",
+    "The <code>mask</code> represents the \"window\" of lower-order bits from <code>S</code> that have not yet been fully processed (i.e. bits that might later create new set bits when additional terms are added)",
+    "Use combinatorics",
+    "How many ways are there to permute a sequence of entities where some are repetitive?"
+  ],
+  "metaData": "{\n  \"name\": \"magicalSum\",\n  \"params\": [\n    {\n      \"name\": \"m\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"nums\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"52.9K\", \"totalSubmission\": \"85.6K\", \"totalAcceptedRaw\": 52884, \"totalSubmissionRaw\": 85565, \"acRate\": \"61.8%\"}",
+  "likes": 217,
+  "dislikes": 157,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Product of Array Except Self\", \"titleSlug\": \"product-of-array-except-self\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Smallest Number With All Set Bits\", \"titleSlug\": \"smallest-number-with-all-set-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "5\n5\n[1,10,100,10000,1000000]",
+    "2\n2\n[5,4,3,2,1]",
+    "1\n1\n[28]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Combinatorics",
+      "slug": "combinatorics"
+    },
+    {
+      "name": "Bitmask",
+      "slug": "bitmask"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int magicalSum(int m, int k, vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int magicalSum(int m, int k, int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def magicalSum(self, m: int, k: int, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def magicalSum(self, m, k, nums):\n        \"\"\"\n        :type m: int\n        :type k: int\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} m\n * @param {number} k\n * @param {number[]} nums\n * @return {number}\n */\nvar magicalSum = function(m, k, nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function magicalSum(m: number, k: number, nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MagicalSum(int m, int k, int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int magicalSum(int m, int k, int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func magicalSum(m int, k int, nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun magicalSum(m: Int, k: Int, nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func magicalSum(_ m: Int, _ k: Int, _ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn magical_sum(m: i32, k: i32, nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} m\n# @param {Integer} k\n# @param {Integer[]} nums\n# @return {Integer}\ndef magical_sum(m, k, nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $m\n     * @param Integer $k\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function magicalSum($m, $k, $nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int magicalSum(int m, int k, List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def magicalSum(m: Int, k: Int, nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec magical_sum(m :: integer, k :: integer, nums :: [integer]) :: integer\n  def magical_sum(m, k, nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec magical_sum(M :: integer(), K :: integer(), Nums :: [integer()]) -> integer().\nmagical_sum(M, K, Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (magical-sum m k nums)\n  (-> exact-integer? exact-integer? (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2846",
+    "content": "### Approach: Dynamic Programming\n\n#### Intuition\n\nLet the length of the array $\\textit{nums}$ be $n$. According to the problem statement, we need to sequentially pick indices from $0$ to $n - 1$ to form a sequence $\\textit{seq}$. Suppose the index $t$ is picked $r_t$ times. Then, the total number of chosen elements is:\n\n$$\n\\sum_{t=0}^{n - 1} r_t = m\n$$\n\nSince elements picked from the same index are indistinguishable, the number of distinct arrangements of such a sequence is:\n\n$$\n\\frac{m!}{\\prod_{t=0}^{n - 1} r_t!}\n$$\n\nEach arrangement contributes a product value of $\\prod_{t=0}^{n - 1}\\textit{nums}[t]^{r_t}$, so the overall contribution from all such arrangements can be expressed as:\n\n$$\n\\frac{m!}{\\prod_{t=0}^{n - 1}r_t!} \\times \\prod_{t=0}^{n - 1}\\textit{nums}[t]^{r_t}\n= m! \\times \\prod_{t=0}^{n - 1}\\frac{\\textit{nums}[t]^{r_t}}{r_t!}\n$$\n\nTo model this process, note that each sequence corresponds to a binary-like number $T$ defined as:\n\n$$\nT = \\sum_{t=0}^{n - 1} r_t \\times 2^t\n$$\n\nOur goal is to compute the sum of all weighted products where the number of set bits in $T$ is exactly $k$.\n\nTo simulate how $T$ forms, we can use dynamic programming to capture how bits accumulate as we move through the indices of $\\textit{nums}$.\nSuppose we have processed elements from index $0$ to $i$, and a total of $j$ elements have been picked so far. The current “binary contribution” can be represented by a value $p$, which encodes how many carry values are still pending to be propagated to higher bits.\n\nLet $f(i, j, p)$ denote the cumulative sum of all valid picking schemes that lead to this state. Each such configuration represents all possible ways to choose elements among indices $0$ to $i$ while contributing the multiplicative factor:\n\n$$\n\\prod_{t=0}^{i}\\frac{\\textit{nums}[t]^{r_t}}{r_t!}\n$$\n\nNow, when we consider the next index $i+1$, suppose it is picked $r_{i+1}$ times.\nThis affects both the total number of elements chosen and the binary representation we are building.\nEach previous state $f(i, j, p)$ contributes to a new state $f(i + 1, j + r_{i+1}, p + 2^{i+1} \\times r_{i+1})$ with the weight:\n\n$$\nf(i, j, p) \\times \\frac{\\textit{nums}[i + 1]^{r_{i + 1}}}{r_{i + 1}!}\n$$\n\nTo make this process more manageable, notice that when we pick the number at index $i + 1$, it only affects the higher bits of the binary representation and not the lower $i$ bits that are already finalized.\nWe can therefore separate the binary value $p$ into two parts:\n\n* the **lower $i$ bits**, which represent bits already resolved, and\n* the **remaining higher bits**, which still carry forward.\n\nLet the finalized lower bits be represented by $q$. Then, the DP state can be extended to $f(i, j, p, q)$, which now records both the carry value and the finalized bit count.\nWhen choosing $r_{i+1}$ copies of index $i + 1$, we update the state as:\n\n$$\nf(i + 1, j + r_{i + 1}, \\lfloor \\tfrac{p}{2} \\rfloor + r_{i + 1}, q + (p \\bmod 2))\n$$\n\nand the contribution from the current state $f(i, j, p, q)$ is:\n\n$$\nf(i, j, p, q) \\times \\frac{\\textit{nums}[i + 1]^{r_{i + 1}}}{r_{i + 1}!}\n$$\n\nThis recurrence captures how carries are propagated to higher bits and how finalized bits are accumulated at each stage.\n\n**Base Case:**\n\nWhen $i = 0$, we are only dealing with index $0$, so no lower bits exist yet and $q = 0$.\nThe base state is therefore initialized as:\n\n$$\nf(0, j, j, 0) = \\frac{\\textit{nums}[0]^{j}}{j!}\n$$\n\n**Final Computation:**\n\nAfter processing all indices up to $n - 1$, each DP state $(p, q)$ represents a possible configuration of the binary number $T$.\nThe total number of set bits in $T$ is the sum of:\n\n* the bits that remain set in $p$, and\n* the finalized bits accumulated in $q$.\n\nTherefore, the total sum of all valid magic sequences is obtained by summing all DP states where this total equals $k$:\n\n$$\n\\sum_{b_p + q = k} \\left(m! \\times f(n-1, m, p, q)\\right)\n$$\n\nwhere $b_p$ denotes the number of set bits in $p$ (i.e., $\\text{popcount}(p)$).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/iy866ECz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"iy866ECz\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array $\\textit{nums}$, $m$ be the length of the sequence $\\textit{seq}$, and $k$ be the limit on the number of set bits.\n\n- Time complexity: $O(nm^3k)$. \n  \n    Here, $f(i, j, p, q)$ has parameter ranges $i < n$, $j \\leq m$, $p \\leq 2m$, and $q \\leq k$.\n\n- Space complexity: $O(nm^2k)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

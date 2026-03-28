@@ -1,0 +1,145 @@
+{
+  "questionId": "3721",
+  "questionFrontendId": "3433",
+  "title": "Count Mentions Per User",
+  "titleSlug": "count-mentions-per-user",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>numberOfUsers</code> representing the total number of users and an array <code>events</code> of size <code>n x 3</code>.</p>\n\n<p>Each <code inline=\"\">events[i]</code> can be either of the following two types:</p>\n\n<ol>\n\t<li><strong>Message Event:</strong> <code>[&quot;MESSAGE&quot;, &quot;timestamp<sub>i</sub>&quot;, &quot;mentions_string<sub>i</sub>&quot;]</code>\n\n\t<ul>\n\t\t<li>This event indicates that a set of users was mentioned in a message at <code>timestamp<sub>i</sub></code>.</li>\n\t\t<li>The <code>mentions_string<sub>i</sub></code> string can contain one of the following tokens:\n\t\t<ul>\n\t\t\t<li><code>id&lt;number&gt;</code>: where <code>&lt;number&gt;</code> is an integer in range <code>[0,numberOfUsers - 1]</code>. There can be <strong>multiple</strong> ids separated by a single whitespace and may contain duplicates. This can mention even the offline users.</li>\n\t\t\t<li><code>ALL</code>: mentions <strong>all</strong> users.</li>\n\t\t\t<li><code>HERE</code>: mentions all <strong>online</strong> users.</li>\n\t\t</ul>\n\t\t</li>\n\t</ul>\n\t</li>\n\t<li><strong>Offline Event:</strong> <code>[&quot;OFFLINE&quot;, &quot;timestamp<sub>i</sub>&quot;, &quot;id<sub>i</sub>&quot;]</code>\n\t<ul>\n\t\t<li>This event indicates that the user <code>id<sub>i</sub></code> had become offline at <code>timestamp<sub>i</sub></code> for <strong>60 time units</strong>. The user will automatically be online again at time <code>timestamp<sub>i</sub> + 60</code>.</li>\n\t</ul>\n\t</li>\n</ol>\n\n<p>Return an array <code>mentions</code> where <code>mentions[i]</code> represents the number of mentions the user with id <code>i</code> has across all <code>MESSAGE</code> events.</p>\n\n<p>All users are initially online, and if a user goes offline or comes back online, their status change is processed <em>before</em> handling any message event that occurs at the same timestamp.</p>\n\n<p><strong>Note </strong>that a user can be mentioned <strong>multiple</strong> times in a <strong>single</strong> message event, and each mention should be counted <strong>separately</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">numberOfUsers = 2, events = [[&quot;MESSAGE&quot;,&quot;10&quot;,&quot;id1 id0&quot;],[&quot;OFFLINE&quot;,&quot;11&quot;,&quot;0&quot;],[&quot;MESSAGE&quot;,&quot;71&quot;,&quot;HERE&quot;]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[2,2]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Initially, all users are online.</p>\n\n<p>At timestamp 10, <code>id1</code> and <code>id0</code> are mentioned. <code>mentions = [1,1]</code></p>\n\n<p>At timestamp 11, <code>id0</code> goes <strong>offline.</strong></p>\n\n<p>At timestamp 71, <code>id0</code> comes back <strong>online</strong> and <code>&quot;HERE&quot;</code> is mentioned. <code>mentions = [2,2]</code></p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">numberOfUsers = 2, events = [[&quot;MESSAGE&quot;,&quot;10&quot;,&quot;id1 id0&quot;],[&quot;OFFLINE&quot;,&quot;11&quot;,&quot;0&quot;],[&quot;MESSAGE&quot;,&quot;12&quot;,&quot;ALL&quot;]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[2,2]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Initially, all users are online.</p>\n\n<p>At timestamp 10, <code>id1</code> and <code>id0</code> are mentioned. <code>mentions = [1,1]</code></p>\n\n<p>At timestamp 11, <code>id0</code> goes <strong>offline.</strong></p>\n\n<p>At timestamp 12, <code>&quot;ALL&quot;</code> is mentioned. This includes offline users, so both <code>id0</code> and <code>id1</code> are mentioned. <code>mentions = [2,2]</code></p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">numberOfUsers = 2, events = [[&quot;OFFLINE&quot;,&quot;10&quot;,&quot;0&quot;],[&quot;MESSAGE&quot;,&quot;12&quot;,&quot;HERE&quot;]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[0,1]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Initially, all users are online.</p>\n\n<p>At timestamp 10, <code>id0</code> goes <strong>offline.</strong></p>\n\n<p>At timestamp 12, <code>&quot;HERE&quot;</code> is mentioned. Because <code>id0</code> is still offline, they will not be mentioned. <code>mentions = [0,1]</code></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= numberOfUsers &lt;= 100</code></li>\n\t<li><code>1 &lt;= events.length &lt;= 100</code></li>\n\t<li><code>events[i].length == 3</code></li>\n\t<li><code>events[i][0]</code> will be one of <code>MESSAGE</code> or <code>OFFLINE</code>.</li>\n\t<li><code>1 &lt;= int(events[i][1]) &lt;= 10<sup>5</sup></code></li>\n\t<li>The number of <code>id&lt;number&gt;</code> mentions in any <code>&quot;MESSAGE&quot;</code> event is between <code>1</code> and <code>100</code>.</li>\n\t<li><code>0 &lt;= &lt;number&gt; &lt;= numberOfUsers - 1</code></li>\n\t<li>It is <strong>guaranteed</strong> that the user id referenced in the <code>OFFLINE</code> event is <strong>online</strong> at the time the event occurs.</li>\n</ul>\n",
+  "hints": [
+    "Sort events by timestamp and then process each event.",
+    "Maintain two sets for offline and online user IDs."
+  ],
+  "metaData": "{\n  \"name\": \"countMentions\",\n  \"params\": [\n    {\n      \"name\": \"numberOfUsers\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"list<list<string>>\",\n      \"name\": \"events\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"85.1K\", \"totalSubmission\": \"167.6K\", \"totalAcceptedRaw\": 85098, \"totalSubmissionRaw\": 167566, \"acRate\": \"50.8%\"}",
+  "likes": 391,
+  "dislikes": 250,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "2\n[[\"MESSAGE\",\"10\",\"id1 id0\"],[\"OFFLINE\",\"11\",\"0\"],[\"MESSAGE\",\"71\",\"HERE\"]]",
+    "2\n[[\"MESSAGE\",\"10\",\"id1 id0\"],[\"OFFLINE\",\"11\",\"0\"],[\"MESSAGE\",\"12\",\"ALL\"]]",
+    "2\n[[\"OFFLINE\",\"10\",\"0\"],[\"MESSAGE\",\"12\",\"HERE\"]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"bcg\", \"name\": \"BCG\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> countMentions(int numberOfUsers, vector<vector<string>>& events) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] countMentions(int numberOfUsers, List<List<String>> events) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countMentions(self, numberOfUsers: int, events: List[List[str]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countMentions(self, numberOfUsers, events):\n        \"\"\"\n        :type numberOfUsers: int\n        :type events: List[List[str]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} numberOfUsers\n * @param {string[][]} events\n * @return {number[]}\n */\nvar countMentions = function(numberOfUsers, events) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countMentions(numberOfUsers: number, events: string[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] CountMentions(int numberOfUsers, IList<IList<string>> events) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* countMentions(int numberOfUsers, char*** events, int eventsSize, int* eventsColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countMentions(numberOfUsers int, events [][]string) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countMentions(numberOfUsers: Int, events: List<List<String>>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countMentions(_ numberOfUsers: Int, _ events: [[String]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_mentions(number_of_users: i32, events: Vec<Vec<String>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} number_of_users\n# @param {String[][]} events\n# @return {Integer[]}\ndef count_mentions(number_of_users, events)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $numberOfUsers\n     * @param String[][] $events\n     * @return Integer[]\n     */\n    function countMentions($numberOfUsers, $events) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> countMentions(int numberOfUsers, List<List<String>> events) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countMentions(numberOfUsers: Int, events: List[List[String]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_mentions(number_of_users :: integer, events :: [[String.t]]) :: [integer]\n  def count_mentions(number_of_users, events) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_mentions(NumberOfUsers :: integer(), Events :: [[unicode:unicode_binary()]]) -> [integer()].\ncount_mentions(NumberOfUsers, Events) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-mentions numberOfUsers events)\n  (-> exact-integer? (listof (listof string?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2895",
+    "content": "### Approach: Playback After Sorting\n\n#### Intuition\n\nWe first sort all events by time. For events with the same time, offline events should come first, because according to the problem statement, user state changes should be processed and synchronized before all other events that occur at the same time.\n\nAfter sorting, we process each event in chronological order from front to back. We can use a hash table to record each user's online time, and determine whether the user is online by comparing it with the current time. During traversal:\n\n1. For message events, the cases where the mentioned object is $\\textit{ALL}$ or $\\textit{HERE}$ are relatively easy to handle. However, for the other case, we need to parse a $\\textit{mentions_string}$ that contains multiple specified $\\textit{id}$s. This string is composed of multiple $\\textit{idx}$ separated by spaces, where $x$ is the integer we need to parse. In most languages, we can concatenate consecutive digits to form an $\\textit{id}$ and split when we reach the end of the string or the next character is a space. For languages that provide a string split method, we can split the string by space $\\textit{split}$, then remove the prefix of each entry to obtain each user $\\textit{id}$.\n2. For offline events, set the user's online status in the hash table for sixty units of time after the event.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/83aGK3LL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"83aGK3LL\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be $\\textit{numberOfUsers}$, $m$ be the length of $\\textit{events}$, and $t$ be the maximum timestamp.\n\n- Time complexity: $O(nm + m\\log m\\log t)$.\n  \n  The time complexity of sorting $\\textit{events}$ is $O(m\\log m\\log t)$, and timestamp parsing takes $O(\\log t)$. Traversing and processing each event takes $O(nm)$.\n\n- Space complexity: $O(n + m)$ or $O(n + \\log m)$.\n\n  $O(n)$ for the arrays used to track mentions and online status. Additionally, sorting the $m$ events requires extra space that depends on the sorting implementation, which can range from $O(\\log m)$ to $O(m)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

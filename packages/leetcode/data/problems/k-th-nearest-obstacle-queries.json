@@ -1,0 +1,132 @@
+{
+  "questionId": "3495",
+  "questionFrontendId": "3275",
+  "title": "K-th Nearest Obstacle Queries",
+  "titleSlug": "k-th-nearest-obstacle-queries",
+  "difficulty": "Medium",
+  "content": "<p>There is an infinite 2D plane.</p>\n\n<p>You are given a positive integer <code>k</code>. You are also given a 2D array <code>queries</code>, which contains the following queries:</p>\n\n<ul>\n\t<li><code>queries[i] = [x, y]</code>: Build an obstacle at coordinate <code>(x, y)</code> in the plane. It is guaranteed that there is <strong>no</strong> obstacle at this coordinate when this query is made.</li>\n</ul>\n\n<p>After each query, you need to find the <strong>distance</strong> of the <code>k<sup>th</sup></code> <strong>nearest</strong> obstacle from the origin.</p>\n\n<p>Return an integer array <code>results</code> where <code>results[i]</code> denotes the <code>k<sup>th</sup></code> nearest obstacle after query <code>i</code>, or <code>results[i] == -1</code> if there are less than <code>k</code> obstacles.</p>\n\n<p><strong>Note</strong> that initially there are <strong>no</strong> obstacles anywhere.</p>\n\n<p>The <strong>distance</strong> of an obstacle at coordinate <code>(x, y)</code> from the origin is given by <code>|x| + |y|</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">queries = [[1,2],[3,4],[2,3],[-3,0]], k = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[-1,7,5,3]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Initially, there are 0 obstacles.</li>\n\t<li>After <code>queries[0]</code>, there are less than 2 obstacles.</li>\n\t<li>After <code>queries[1]</code>, there are obstacles at distances 3 and 7.</li>\n\t<li>After <code>queries[2]</code>, there are obstacles at distances 3, 5, and 7.</li>\n\t<li>After <code>queries[3]</code>, there are obstacles at distances 3, 3, 5, and 7.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">queries = [[5,5],[4,4],[3,3]], k = 1</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[10,8,6]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>After <code>queries[0]</code>, there is an obstacle at distance 10.</li>\n\t<li>After <code>queries[1]</code>, there are obstacles at distances 8 and 10.</li>\n\t<li>After <code>queries[2]</code>, there are obstacles at distances 6, 8, and 10.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= queries.length &lt;= 2 * 10<sup>5</sup></code></li>\n\t<li>All <code>queries[i]</code> are unique.</li>\n\t<li><code>-10<sup>9</sup> &lt;= queries[i][0], queries[i][1] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Consider if there are more than <code>k</code> obstacles. Can the <code>k + 1<sup>th</sup></code> obstacle ever be the answer to any query?",
+    "Maintain a max heap of size <code>k</code>, thus heap will contain minimum element at the top in that queue.",
+    "Remove top element and insert new element from input array if current max is larger than this."
+  ],
+  "metaData": "{\n  \"name\": \"resultsArray\",\n  \"params\": [\n    {\n      \"name\": \"queries\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"36.1K\", \"totalSubmission\": \"73.7K\", \"totalAcceptedRaw\": 36095, \"totalSubmissionRaw\": 73707, \"acRate\": \"49.0%\"}",
+  "likes": 117,
+  "dislikes": 17,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"K Closest Points to Origin\", \"titleSlug\": \"k-closest-points-to-origin\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,2],[3,4],[2,3],[-3,0]]\n2",
+    "[[5,5],[4,4],[3,3]]\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> resultsArray(vector<vector<int>>& queries, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] resultsArray(int[][] queries, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def resultsArray(self, queries: List[List[int]], k: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def resultsArray(self, queries, k):\n        \"\"\"\n        :type queries: List[List[int]]\n        :type k: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} queries\n * @param {number} k\n * @return {number[]}\n */\nvar resultsArray = function(queries, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function resultsArray(queries: number[][], k: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] ResultsArray(int[][] queries, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* resultsArray(int** queries, int queriesSize, int* queriesColSize, int k, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func resultsArray(queries [][]int, k int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun resultsArray(queries: Array<IntArray>, k: Int): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func resultsArray(_ queries: [[Int]], _ k: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn results_array(queries: Vec<Vec<i32>>, k: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} queries\n# @param {Integer} k\n# @return {Integer[]}\ndef results_array(queries, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $queries\n     * @param Integer $k\n     * @return Integer[]\n     */\n    function resultsArray($queries, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> resultsArray(List<List<int>> queries, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def resultsArray(queries: Array[Array[Int]], k: Int): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec results_array(queries :: [[integer]], k :: integer) :: [integer]\n  def results_array(queries, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec results_array(Queries :: [[integer()]], K :: integer()) -> [integer()].\nresults_array(Queries, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (results-array queries k)\n  (-> (listof (listof exact-integer?)) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

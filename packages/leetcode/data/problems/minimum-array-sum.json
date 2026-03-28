@@ -1,0 +1,132 @@
+{
+  "questionId": "3654",
+  "questionFrontendId": "3366",
+  "title": "Minimum Array Sum",
+  "titleSlug": "minimum-array-sum",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code> and three integers <code>k</code>, <code>op1</code>, and <code>op2</code>.</p>\n\n<p>You can perform the following operations on <code>nums</code>:</p>\n\n<ul>\n\t<li><strong>Operation 1</strong>: Choose an index <code>i</code> and divide <code>nums[i]</code> by 2, <strong>rounding up</strong> to the nearest whole number. You can perform this operation at most <code>op1</code> times, and not more than <strong>once</strong> per index.</li>\n\t<li><strong>Operation 2</strong>: Choose an index <code>i</code> and subtract <code>k</code> from <code>nums[i]</code>, but only if <code>nums[i]</code> is greater than or equal to <code>k</code>. You can perform this operation at most <code>op2</code> times, and not more than <strong>once</strong> per index.</li>\n</ul>\n\n<p><strong>Note:</strong> Both operations can be applied to the same index, but at most once each.</p>\n\n<p>Return the <strong>minimum</strong> possible <strong>sum</strong> of all elements in <code>nums</code> after performing any number of operations.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [2,8,3,19,3], k = 3, op1 = 1, op2 = 1</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">23</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Apply Operation 2 to <code>nums[1] = 8</code>, making <code>nums[1] = 5</code>.</li>\n\t<li>Apply Operation 1 to <code>nums[3] = 19</code>, making <code>nums[3] = 10</code>.</li>\n\t<li>The resulting array becomes <code>[2, 5, 3, 10, 3]</code>, which has the minimum possible sum of 23 after applying the operations.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [2,4,3], k = 3, op1 = 2, op2 = 1</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Apply Operation 1 to <code>nums[0] = 2</code>, making <code>nums[0] = 1</code>.</li>\n\t<li>Apply Operation 1 to <code>nums[1] = 4</code>, making <code>nums[1] = 2</code>.</li>\n\t<li>Apply Operation 2 to <code>nums[2] = 3</code>, making <code>nums[2] = 0</code>.</li>\n\t<li>The resulting array becomes <code>[1, 2, 0]</code>, which has the minimum possible sum of 3 after applying the operations.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 100</code></li>\n\t<li><code><font face=\"monospace\">0 &lt;= nums[i] &lt;= 10<sup>5</sup></font></code></li>\n\t<li><code>0 &lt;= k &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= op1, op2 &lt;= nums.length</code></li>\n</ul>\n",
+  "hints": [
+    "Think of dynamic programming with states to track progress and remaining operations.",
+    "Use <code>dp[index][op1][op2]</code> where each state tracks progress at <code>index</code> with <code>op1</code> and <code>op2</code> operations left.",
+    "At each state, try applying only operation 1, only operation 2, both in sequence, or skip both to find optimal results."
+  ],
+  "metaData": "{\n  \"name\": \"minArraySum\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"op1\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"op2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"16.6K\", \"totalSubmission\": \"53.4K\", \"totalAcceptedRaw\": 16634, \"totalSubmissionRaw\": 53448, \"acRate\": \"31.1%\"}",
+  "likes": 171,
+  "dislikes": 16,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,8,3,19,3]\n3\n1\n1",
+    "[2,4,3]\n3\n2\n1"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minArraySum(vector<int>& nums, int k, int op1, int op2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minArraySum(int[] nums, int k, int op1, int op2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minArraySum(self, nums: List[int], k: int, op1: int, op2: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minArraySum(self, nums, k, op1, op2):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :type op1: int\n        :type op2: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @param {number} op1\n * @param {number} op2\n * @return {number}\n */\nvar minArraySum = function(nums, k, op1, op2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minArraySum(nums: number[], k: number, op1: number, op2: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinArraySum(int[] nums, int k, int op1, int op2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minArraySum(int* nums, int numsSize, int k, int op1, int op2) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minArraySum(nums []int, k int, op1 int, op2 int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minArraySum(nums: IntArray, k: Int, op1: Int, op2: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minArraySum(_ nums: [Int], _ k: Int, _ op1: Int, _ op2: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_array_sum(nums: Vec<i32>, k: i32, op1: i32, op2: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @param {Integer} op1\n# @param {Integer} op2\n# @return {Integer}\ndef min_array_sum(nums, k, op1, op2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @param Integer $op1\n     * @param Integer $op2\n     * @return Integer\n     */\n    function minArraySum($nums, $k, $op1, $op2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minArraySum(List<int> nums, int k, int op1, int op2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minArraySum(nums: Array[Int], k: Int, op1: Int, op2: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_array_sum(nums :: [integer], k :: integer, op1 :: integer, op2 :: integer) :: integer\n  def min_array_sum(nums, k, op1, op2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_array_sum(Nums :: [integer()], K :: integer(), Op1 :: integer(), Op2 :: integer()) -> integer().\nmin_array_sum(Nums, K, Op1, Op2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-array-sum nums k op1 op2)\n  (-> (listof exact-integer?) exact-integer? exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

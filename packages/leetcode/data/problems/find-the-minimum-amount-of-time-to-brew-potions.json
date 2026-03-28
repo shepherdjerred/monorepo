@@ -1,0 +1,142 @@
+{
+  "questionId": "3794",
+  "questionFrontendId": "3494",
+  "title": "Find the Minimum Amount of Time to Brew Potions",
+  "titleSlug": "find-the-minimum-amount-of-time-to-brew-potions",
+  "difficulty": "Medium",
+  "content": "<p>You are given two integer arrays, <code>skill</code> and <code><font face=\"monospace\">mana</font></code>, of length <code>n</code> and <code>m</code>, respectively.</p>\n\n<p>In a laboratory, <code>n</code> wizards must brew <code>m</code> potions <em>in order</em>. Each potion has a mana capacity <code>mana[j]</code> and <strong>must</strong> pass through <strong>all</strong> the wizards sequentially to be brewed properly. The time taken by the <code>i<sup>th</sup></code> wizard on the <code>j<sup>th</sup></code> potion is <code>time<sub>ij</sub> = skill[i] * mana[j]</code>.</p>\n\n<p>Since the brewing process is delicate, a potion <strong>must</strong> be passed to the next wizard immediately after the current wizard completes their work. This means the timing must be <em>synchronized</em> so that each wizard begins working on a potion <strong>exactly</strong> when it arrives. ​</p>\n\n<p>Return the <strong>minimum</strong> amount of time required for the potions to be brewed properly.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">skill = [1,5,2,4], mana = [5,1,4,2]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">110</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<table style=\"border: 1px solid black;\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<th style=\"border: 1px solid black;\">Potion Number</th>\n\t\t\t<th style=\"border: 1px solid black;\">Start time</th>\n\t\t\t<th style=\"border: 1px solid black;\">Wizard 0 done by</th>\n\t\t\t<th style=\"border: 1px solid black;\">Wizard 1 done by</th>\n\t\t\t<th style=\"border: 1px solid black;\">Wizard 2 done by</th>\n\t\t\t<th style=\"border: 1px solid black;\">Wizard 3 done by</th>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"border: 1px solid black;\">0</td>\n\t\t\t<td style=\"border: 1px solid black;\">0</td>\n\t\t\t<td style=\"border: 1px solid black;\">5</td>\n\t\t\t<td style=\"border: 1px solid black;\">30</td>\n\t\t\t<td style=\"border: 1px solid black;\">40</td>\n\t\t\t<td style=\"border: 1px solid black;\">60</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"border: 1px solid black;\">1</td>\n\t\t\t<td style=\"border: 1px solid black;\">52</td>\n\t\t\t<td style=\"border: 1px solid black;\">53</td>\n\t\t\t<td style=\"border: 1px solid black;\">58</td>\n\t\t\t<td style=\"border: 1px solid black;\">60</td>\n\t\t\t<td style=\"border: 1px solid black;\">64</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"border: 1px solid black;\">2</td>\n\t\t\t<td style=\"border: 1px solid black;\">54</td>\n\t\t\t<td style=\"border: 1px solid black;\">58</td>\n\t\t\t<td style=\"border: 1px solid black;\">78</td>\n\t\t\t<td style=\"border: 1px solid black;\">86</td>\n\t\t\t<td style=\"border: 1px solid black;\">102</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"border: 1px solid black;\">3</td>\n\t\t\t<td style=\"border: 1px solid black;\">86</td>\n\t\t\t<td style=\"border: 1px solid black;\">88</td>\n\t\t\t<td style=\"border: 1px solid black;\">98</td>\n\t\t\t<td style=\"border: 1px solid black;\">102</td>\n\t\t\t<td style=\"border: 1px solid black;\">110</td>\n\t\t</tr>\n\t</tbody>\n</table>\n\n<p>As an example for why wizard 0 cannot start working on the 1<sup>st</sup> potion before time <code>t = 52</code>, consider the case where the wizards started preparing the 1<sup>st</sup> potion at time <code>t = 50</code>. At time <code>t = 58</code>, wizard 2 is done with the 1<sup>st</sup> potion, but wizard 3 will still be working on the 0<sup>th</sup> potion till time <code>t = 60</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">skill = [1,1,1], mana = [1,1,1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">5</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ol>\n\t<li>Preparation of the 0<sup>th</sup> potion begins at time <code>t = 0</code>, and is completed by time <code>t = 3</code>.</li>\n\t<li>Preparation of the 1<sup>st</sup> potion begins at time <code>t = 1</code>, and is completed by time <code>t = 4</code>.</li>\n\t<li>Preparation of the 2<sup>nd</sup> potion begins at time <code>t = 2</code>, and is completed by time <code>t = 5</code>.</li>\n</ol>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">skill = [1,2,3,4], mana = [1,2]</span></p>\n\n<p><strong>Output:</strong> 21</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == skill.length</code></li>\n\t<li><code>m == mana.length</code></li>\n\t<li><code>1 &lt;= n, m &lt;= 5000</code></li>\n\t<li><code>1 &lt;= mana[i], skill[i] &lt;= 5000</code></li>\n</ul>\n",
+  "hints": [
+    "Maintain each wizard's earliest free time (for the last potion) as <code>f[i]</code>.",
+    "Let <code>x</code> be the current mana value. Starting from <code>now = f[0]</code>, update <code>now = max(now + skill[i - 1] * x, f[i])</code> for <code>i in [1..n]</code>. Then, the final <code>f[n - 1] = now + skill[n - 1] * x</code> for this potion.",
+    "Update all other <code>f</code> values by <code>f[i] = f[i + 1] - skill[i + 1] * x</code> for <code>i in [0..n - 2]</code> (in reverse order)."
+  ],
+  "metaData": "{\n  \"name\": \"minTime\",\n  \"params\": [\n    {\n      \"name\": \"skill\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"mana\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"87.1K\", \"totalSubmission\": \"139K\", \"totalAcceptedRaw\": 87071, \"totalSubmissionRaw\": 138955, \"acRate\": \"62.7%\"}",
+  "likes": 509,
+  "dislikes": 361,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,5,2,4]\n[5,1,4,2]",
+    "[1,1,1]\n[1,1,1]",
+    "[1,2,3,4]\n[1,2]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long minTime(vector<int>& skill, vector<int>& mana) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long minTime(int[] skill, int[] mana) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minTime(self, skill: List[int], mana: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minTime(self, skill, mana):\n        \"\"\"\n        :type skill: List[int]\n        :type mana: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} skill\n * @param {number[]} mana\n * @return {number}\n */\nvar minTime = function(skill, mana) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minTime(skill: number[], mana: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MinTime(int[] skill, int[] mana) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long minTime(int* skill, int skillSize, int* mana, int manaSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minTime(skill []int, mana []int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minTime(skill: IntArray, mana: IntArray): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minTime(_ skill: [Int], _ mana: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_time(skill: Vec<i32>, mana: Vec<i32>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} skill\n# @param {Integer[]} mana\n# @return {Integer}\ndef min_time(skill, mana)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $skill\n     * @param Integer[] $mana\n     * @return Integer\n     */\n    function minTime($skill, $mana) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minTime(List<int> skill, List<int> mana) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minTime(skill: Array[Int], mana: Array[Int]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_time(skill :: [integer], mana :: [integer]) :: integer\n  def min_time(skill, mana) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_time(Skill :: [integer()], Mana :: [integer()]) -> integer().\nmin_time(Skill, Mana) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-time skill mana)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2844",
+    "content": "### Approach: Dynamic Programming\n\n#### Intuition\n\nThe requirement is that each potion must be brewed by every wizard, and each wizard can brew only one potion at a time. Once the brewing of a potion begins, it cannot be paused midway and must be completed continuously by all wizards.\n\nFirst, the brewing of the first potion begins at time $0$, so the time each wizard takes to brew it is fixed and easy to calculate. However, the starting time for subsequent potions is not immediately clear.\n\nWe may allow the brewing process of the $j$-th potion to be non-continuous (while the first $j - 1$ potions still require continuity) and let the time for the $i$-th wizard to finish brewing the $j$-th potion be $\\textit{times}[i][j]$. Then we have:\n\n$$\n\\textit{times}[i][j] = max(\\textit{times}[i-1][j], \\textit{times}[i][j-1]) + \\textit{skill}[i] \\times \\textit{mana}[j]\n$$\n\nAfter one round of recursion, we obtain the completion time of the $j$-th potion, $\\textit{times}[n - 1][j]$. At this point, we traverse backwards to update the completion times of the $j$-th potion for the previous wizards, eliminating the gaps introduced by the earlier allowance of discontinuous brewing.\n\nDuring implementation, $\\textit{times}$ can be optimized to a one-dimensional array.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/BAVPMFGj/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"BAVPMFGj\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of $\\textit{skill}$ and $m$ be the length of $\\textit{mana}$.\n\n- Time complexity: $O(nm)$.\n  \n  The dynamic programming approach requires $O(nm)$ time.\n\n- Space complexity: $O(n)$.\n  \n  We use a one-dimensional array to store intermediate results.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

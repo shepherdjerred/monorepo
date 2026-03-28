@@ -1,0 +1,53 @@
+{
+  "questionId": "3803",
+  "questionFrontendId": "3465",
+  "title": "Find Products with Valid Serial Numbers",
+  "titleSlug": "find-products-with-valid-serial-numbers",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>products</code></p>\n\n<pre>\n+--------------+------------+\n| Column Name  | Type       |\n+--------------+------------+\n| product_id   | int        |\n| product_name | varchar    |\n| description  | varchar    |\n+--------------+------------+\n(product_id) is the unique key for this table.\nEach row in the table represents a product with its unique ID, name, and description.\n</pre>\n\n<p>Write a solution to find all products whose description <strong>contains a valid serial number</strong> pattern. A valid serial number follows these rules:</p>\n\n<ul>\n\t<li>It starts with the letters <strong>SN</strong>&nbsp;(case-sensitive).</li>\n\t<li>Followed by exactly <code>4</code> digits.</li>\n\t<li>It must have a hyphen (-) <strong>followed by exactly</strong> <code>4</code> digits.</li>\n\t<li>The serial number must be within the description (it may not necessarily start at the beginning).</li>\n</ul>\n\n<p>Return <em>the result table&nbsp;ordered by</em> <code>product_id</code> <em>in <strong>ascending</strong> order</em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>products table:</p>\n\n<pre class=\"example-io\">\n+------------+--------------+------------------------------------------------------+\n| product_id | product_name | description                                          |\n+------------+--------------+------------------------------------------------------+\n| 1          | Widget A     | This is a sample product with SN1234-5678            |\n| 2          | Widget B     | A product with serial SN9876-1234 in the description |\n| 3          | Widget C     | Product SN1234-56789 is available now                |\n| 4          | Widget D     | No serial number here                                |\n| 5          | Widget E     | Check out SN4321-8765 in this description            |\n+------------+--------------+------------------------------------------------------+\n    </pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+------------+--------------+------------------------------------------------------+\n| product_id | product_name | description                                          |\n+------------+--------------+------------------------------------------------------+\n| 1          | Widget A     | This is a sample product with SN1234-5678            |\n| 2          | Widget B     | A product with serial SN9876-1234 in the description |\n| 5          | Widget E     | Check out SN4321-8765 in this description            |\n+------------+--------------+------------------------------------------------------+\n    </pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>Product 1:</strong> Valid serial number SN1234-5678</li>\n\t<li><strong>Product 2:</strong> Valid serial number SN9876-1234</li>\n\t<li><strong>Product 3:</strong> Invalid serial number SN1234-56789 (contains 5 digits after the hyphen)</li>\n\t<li><strong>Product 4:</strong> No serial number in the description</li>\n\t<li><strong>Product 5:</strong> Valid serial number SN4321-8765</li>\n</ul>\n\n<p>The result table is ordered by product_id in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE If not exists products (\\n    product_id INT,\\n    product_name VARCHAR(255),\\n    description VARCHAR(255)\\n)\\n\"], \"mssql\": [\"CREATE TABLE products (\\n    product_id INT,\\n    product_name VARCHAR(255),\\n    description VARCHAR(255)\\n)\"], \"oraclesql\": [\"CREATE TABLE products (\\n    product_id NUMBER,\\n    product_name VARCHAR2(255),\\n    description VARCHAR2(255)\\n)\\n\"], \"database\": true, \"name\": \"find_valid_serial_products\", \"postgresql\": [\"CREATE TABLE IF NOT EXISTS products (\\n    product_id SERIAL PRIMARY KEY,\\n    product_name VARCHAR(255) NOT NULL,\\n    description TEXT\\n);\\n\"], \"pythondata\": [\"products = pd.DataFrame(columns=['product_id', 'product_name', 'description']).astype({'product_id': 'int32', 'product_name': 'string', 'description': 'string'})\\n\"], \"database_schema\": {\"products\": {\"product_id\": \"INT\", \"product_name\": \"VARCHAR(255)\", \"description\": \"VARCHAR(255)\"}}}",
+  "stats": "{\"totalAccepted\": \"19.3K\", \"totalSubmission\": \"63.3K\", \"totalAcceptedRaw\": 19288, \"totalSubmissionRaw\": 63311, \"acRate\": \"30.5%\"}",
+  "likes": 55,
+  "dislikes": 27,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"products\":[\"product_id\",\"product_name\",\"description\"]},\"rows\":{\"products\":[[1,\"Widget A\",\"This is a sample product with SN1234-5678\"],[2,\"Widget B\",\"A product with serial SN9876-1234 in the description\"],[3,\"Widget C\",\"Product SN1234-56789 is available now\"],[4,\"Widget D\",\"No serial number here\"],[5,\"Widget E\",\"Check out SN4321-8765 in this description\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_valid_serial_products(products: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

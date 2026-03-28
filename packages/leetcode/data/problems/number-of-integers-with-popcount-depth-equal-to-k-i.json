@@ -1,0 +1,140 @@
+{
+  "questionId": "3937",
+  "questionFrontendId": "3621",
+  "title": "Number of Integers With Popcount-Depth Equal to K I",
+  "titleSlug": "number-of-integers-with-popcount-depth-equal-to-k-i",
+  "difficulty": "Hard",
+  "content": "<p>You are given two integers <code>n</code> and <code>k</code>.</p>\n\n<p>For any positive integer <code>x</code>, define the following sequence:</p>\n\n<ul>\n\t<li><code>p<sub>0</sub> = x</code></li>\n\t<li><code>p<sub>i+1</sub> = popcount(p<sub>i</sub>)</code> for all <code>i &gt;= 0</code>, where <code>popcount(y)</code> is the number of set bits (1&#39;s) in the binary representation of <code>y</code>.</li>\n</ul>\n\n<p>This sequence will eventually reach the value 1.</p>\n\n<p>The <strong>popcount-depth</strong> of <code>x</code> is defined as the <strong>smallest</strong> integer <code>d &gt;= 0</code> such that <code>p<sub>d</sub> = 1</code>.</p>\n\n<p>For example, if <code>x = 7</code> (binary representation <code>&quot;111&quot;</code>). Then, the sequence is: <code>7 &rarr; 3 &rarr; 2 &rarr; 1</code>, so the popcount-depth of 7 is 3.</p>\n\n<p>Your task is to determine the number of integers in the range <code>[1, n]</code> whose popcount-depth is <strong>exactly</strong> equal to <code>k</code>.</p>\n\n<p>Return the number of such integers.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 4, k = 1</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The following integers in the range <code>[1, 4]</code> have popcount-depth exactly equal to 1:</p>\n\n<table style=\"border: 1px solid black;\">\n\t<thead>\n\t\t<tr>\n\t\t\t<th align=\"center\" style=\"border: 1px solid black;\">x</th>\n\t\t\t<th align=\"center\" style=\"border: 1px solid black;\">Binary</th>\n\t\t\t<th align=\"left\" style=\"border: 1px solid black;\">Sequence</th>\n\t\t</tr>\n\t</thead>\n\t<tbody>\n\t\t<tr>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">2</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\"><code>&quot;10&quot;</code></td>\n\t\t\t<td align=\"left\" style=\"border: 1px solid black;\"><code>2 &rarr; 1</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">4</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\"><code>&quot;100&quot;</code></td>\n\t\t\t<td align=\"left\" style=\"border: 1px solid black;\"><code>4 &rarr; 1</code></td>\n\t\t</tr>\n\t</tbody>\n</table>\n\n<p>Thus, the answer is 2.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 7, k = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The following integers in the range <code>[1, 7]</code> have popcount-depth exactly equal to 2:</p>\n\n<table style=\"border: 1px solid black;\">\n\t<thead>\n\t\t<tr>\n\t\t\t<th style=\"border: 1px solid black;\">x</th>\n\t\t\t<th style=\"border: 1px solid black;\">Binary</th>\n\t\t\t<th style=\"border: 1px solid black;\">Sequence</th>\n\t\t</tr>\n\t</thead>\n\t<tbody>\n\t\t<tr>\n\t\t\t<td style=\"border: 1px solid black;\">3</td>\n\t\t\t<td style=\"border: 1px solid black;\"><code>&quot;11&quot;</code></td>\n\t\t\t<td style=\"border: 1px solid black;\"><code>3 &rarr; 2 &rarr; 1</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"border: 1px solid black;\">5</td>\n\t\t\t<td style=\"border: 1px solid black;\"><code>&quot;101&quot;</code></td>\n\t\t\t<td style=\"border: 1px solid black;\"><code>5 &rarr; 2 &rarr; 1</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"border: 1px solid black;\">6</td>\n\t\t\t<td style=\"border: 1px solid black;\"><code>&quot;110&quot;</code></td>\n\t\t\t<td style=\"border: 1px solid black;\"><code>6 &rarr; 2 &rarr; 1</code></td>\n\t\t</tr>\n\t</tbody>\n</table>\n\n<p>Thus, the answer is 3.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>15</sup></code></li>\n\t<li><code>0 &lt;= k &lt;= 5</code></li>\n</ul>\n",
+  "hints": [
+    "Use digit dynamic programming on the binary representation of <code>n</code>: let <code>dp[pos][ones][tight]</code> = number of ways to choose bits from the most significant down to position <code>pos</code> with exactly <code>ones</code> ones so far, where <code>tight</code> indicates whether you're still matching the prefix of <code>n</code>.",
+    "Precompute <code>depth[j]</code> for all <code>j</code> from <code>0</code> to <code>64</code> by repeatedly applying <code>popcount(j)</code> until you reach <code>1</code>.",
+    "After your DP, let <code>dp_final[j]</code> be the count of numbers <= <code>n</code> that have exactly <code>j</code> ones; the answer is the sum of all <code>dp_final[j]</code> for which <code>depth[j] == k</code>."
+  ],
+  "metaData": "{\n  \"name\": \"popcountDepth\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"long\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"4.6K\", \"totalSubmission\": \"20.6K\", \"totalAcceptedRaw\": 4615, \"totalSubmissionRaw\": 20594, \"acRate\": \"22.4%\"}",
+  "likes": 53,
+  "dislikes": 5,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find Pattern in Infinite Stream II\", \"titleSlug\": \"find-pattern-in-infinite-stream-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "4\n1",
+    "7\n2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Combinatorics",
+      "slug": "combinatorics"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long popcountDepth(long long n, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long popcountDepth(long n, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def popcountDepth(self, n: int, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def popcountDepth(self, n, k):\n        \"\"\"\n        :type n: int\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} k\n * @return {number}\n */\nvar popcountDepth = function(n, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function popcountDepth(n: number, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long PopcountDepth(long n, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long popcountDepth(long long n, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func popcountDepth(n int64, k int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun popcountDepth(n: Long, k: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func popcountDepth(_ n: Int, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn popcount_depth(n: i64, k: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} k\n# @return {Integer}\ndef popcount_depth(n, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $k\n     * @return Integer\n     */\n    function popcountDepth($n, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int popcountDepth(int n, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def popcountDepth(n: Long, k: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec popcount_depth(n :: integer, k :: integer) :: integer\n  def popcount_depth(n, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec popcount_depth(N :: integer(), K :: integer()) -> integer().\npopcount_depth(N, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (popcount-depth n k)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

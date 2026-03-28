@@ -1,0 +1,53 @@
+{
+  "questionId": "3711",
+  "questionFrontendId": "3374",
+  "title": "First Letter Capitalization II",
+  "titleSlug": "first-letter-capitalization-ii",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>user_content</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| content_id  | int     |\n| content_text| varchar |\n+-------------+---------+\ncontent_id is the unique key for this table.\nEach row contains a unique ID and the corresponding text content.\n</pre>\n\n<p>Write a solution to transform the text in the <code>content_text</code> column by applying the following rules:</p>\n\n<ul>\n\t<li>Convert the <strong>first letter</strong> of each word to <strong>uppercase</strong> and the <strong>remaining</strong> letters to <strong>lowercase</strong></li>\n\t<li>Special handling for words containing special characters:\n\t<ul>\n\t\t<li>For words connected with a hyphen <code>-</code>, <strong>both parts</strong> should be <strong>capitalized</strong> (<strong>e.g.</strong>, top-rated&nbsp;&rarr; Top-Rated)</li>\n\t</ul>\n\t</li>\n\t<li>All other <strong>formatting</strong> and <strong>spacing</strong> should remain <strong>unchanged</strong></li>\n</ul>\n\n<p>Return <em>the result table that includes both the original <code>content_text</code> and the modified text following the above rules</em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>user_content table:</p>\n\n<pre class=\"example-io\">\n+------------+---------------------------------+\n| content_id | content_text                    |\n+------------+---------------------------------+\n| 1          | hello world of SQL              |\n| 2          | the QUICK-brown fox             |\n| 3          | modern-day DATA science         |\n| 4          | web-based FRONT-end development |\n+------------+---------------------------------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+------------+---------------------------------+---------------------------------+\n| content_id | original_text                   | converted_text                  |\n+------------+---------------------------------+---------------------------------+\n| 1          | hello world of SQL              | Hello World Of Sql              |\n| 2          | the QUICK-brown fox             | The Quick-Brown Fox             |\n| 3          | modern-day DATA science         | Modern-Day Data Science         |\n| 4          | web-based FRONT-end development | Web-Based Front-End Development |\n+------------+---------------------------------+---------------------------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>For content_id = 1:\n\t<ul>\n\t\t<li>Each word&#39;s first letter is capitalized: &quot;Hello World Of Sql&quot;</li>\n\t</ul>\n\t</li>\n\t<li>For content_id = 2:\n\t<ul>\n\t\t<li>Contains the hyphenated word &quot;QUICK-brown&quot; which becomes &quot;Quick-Brown&quot;</li>\n\t\t<li>Other words follow normal capitalization rules</li>\n\t</ul>\n\t</li>\n\t<li>For content_id = 3:\n\t<ul>\n\t\t<li>Hyphenated word &quot;modern-day&quot; becomes &quot;Modern-Day&quot;</li>\n\t\t<li>&quot;DATA&quot; is converted to &quot;Data&quot;</li>\n\t</ul>\n\t</li>\n\t<li>For content_id = 4:\n\t<ul>\n\t\t<li>Contains two hyphenated words: &quot;web-based&quot; &rarr; &quot;Web-Based&quot;</li>\n\t\t<li>And &quot;FRONT-end&quot; &rarr; &quot;Front-End&quot;</li>\n\t</ul>\n\t</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>context_text</code> contains only English letters, and the characters in the list <code>[&#39;\\&#39;, &#39; &#39;, &#39;@&#39;, &#39;-&#39;, &#39;/&#39;, &#39;^&#39;, &#39;,&#39;]</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE If not exists user_content (\\n    content_id INT,\\n    content_text VARCHAR(255)\\n)\"], \"mssql\": [\"CREATE TABLE user_content (\\n    content_id INT,\\n    content_text VARCHAR(255)\\n)\"], \"oraclesql\": [\"CREATE TABLE user_content (\\n    content_id NUMBER,\\n    content_text VARCHAR2(255)\\n)\"], \"database\": true, \"name\": \"capitalize_content\", \"pythondata\": [\"user_content = pd.DataFrame({\\n    'content_id': pd.Series(dtype='int'),\\n    'content_text': pd.Series(dtype='str')\\n})\"], \"postgresql\": [\"CREATE TABLE IF NOT EXISTS user_content (\\n    content_id SERIAL PRIMARY KEY,\\n    content_text VARCHAR(255)\\n);\\n\"], \"database_schema\": {\"user_content\": {\"content_id\": \"INT\", \"content_text\": \"VARCHAR(255)\"}}}",
+  "stats": "{\"totalAccepted\": \"9.6K\", \"totalSubmission\": \"18K\", \"totalAcceptedRaw\": 9637, \"totalSubmissionRaw\": 17981, \"acRate\": \"53.6%\"}",
+  "likes": 31,
+  "dislikes": 16,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"user_content\":[\"content_id\",\"content_text\"]},\"rows\":{\"user_content\":[[1,\"hello world of SQL\"],[2,\"the QUICK-brown fox\"],[3,\"modern-day DATA science\"],[4,\"web-based FRONT-end development\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef capitalize_content(user_content: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

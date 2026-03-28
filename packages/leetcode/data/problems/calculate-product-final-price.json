@@ -1,0 +1,53 @@
+{
+  "questionId": "3609",
+  "questionFrontendId": "3293",
+  "title": "Calculate Product Final Price",
+  "titleSlug": "calculate-product-final-price",
+  "difficulty": "Medium",
+  "content": "<p>Table: <font face=\"monospace\"><code>Products</code></font></p>\n\n<pre>\n+------------+---------+ \n| Column Name| Type    | \n+------------+---------+ \n| product_id | int     | \n| category   | varchar |\n| price      | decimal |\n+------------+---------+\nproduct_id is the unique key for this table.\nEach row includes the product&#39;s ID, its category, and its price.\n</pre>\n\n<p>Table: <font face=\"monospace\"><code>Discounts</code></font></p>\n\n<pre>\n+------------+---------+ \n| Column Name| Type    | \n+------------+---------+ \n| category   | varchar |\n| discount   | int     |\n+------------+---------+\ncategory is the primary key for this table.\nEach row contains a product category and the percentage discount applied to that category (values range from 0 to 100).\n</pre>\n\n<p>Write a solution to find the <strong>final price</strong> of each product after applying the <strong>category discount</strong>. If a product&#39;s category has <strong>no</strong> <strong>associated</strong> <strong>discount</strong>, its price remains <strong>unchanged</strong>.</p>\n\n<p>Return <em>the result table ordered by</em> <code>product_id</code><em> in <strong>ascending</strong> order.</em></p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p><code>Products</code> table:</p>\n\n<pre class=\"example-io\">\n+------------+-------------+-------+\n| product_id | category    | price |\n+------------+-------------+-------+\n| 1          | Electronics | 1000  |\n| 2          | Clothing    | 50    |\n| 3          | Electronics | 1200  | \n| 4          | Home        | 500   |\n+------------+-------------+-------+\n  </pre>\n\n<p><code>Discounts</code> table:</p>\n\n<pre class=\"example-io\">\n+------------+----------+\n| category   | discount |\n+------------+----------+\n| Electronics| 10       |\n| Clothing   | 20       |\n+------------+----------+\n  </pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+------------+------------+-------------+\n| product_id | final_price| category    |\n+------------+------------+-------------+\n| 1          | 900        | Electronics |\n| 2          | 40         | Clothing    |\n| 3          | 1080       | Electronics |\n| 4          | 500        | Home        |\n+------------+------------+-------------+\n  </pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>For product 1, it belongs to the Electronics&nbsp;category which has a 10% discount, so the final price is 1000 - (10% of 1000) = 900.</li>\n\t<li>For product 2, it belongs to the Clothing&nbsp;category which has a 20% discount, so the final price is 50 - (20% of 50) = 40.</li>\n\t<li>For product 3, it belongs to the Electronics&nbsp;category and receives a 10% discount, so the final price is 1200 - (10% of 1200) = 1080.</li>\n\t<li>For product 4, no discount is available for the Home&nbsp;category, so the final price remains 500.</li>\n</ul>\nResult table is ordered by product_id in ascending order.</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table if not exists Products (product_id int, category varchar(50), price int)\", \"Create table if not exists Discounts(category varchar(50), discount int)\"], \"mssql\": [\"Create table Products (product_id int, category varchar(50), price int)\", \"Create table Discounts(category varchar(50), discount int)\"], \"oraclesql\": [\"Create table Products (product_id Number, category varchar2(50), price Number)\", \"Create table Discounts(category varchar2(50), discount Number)\"], \"database\": true, \"name\": \"calculate_final_prices\", \"postgresql\": [\"CREATE TABLE IF NOT EXISTS Products (\\n    product_id INT,\\n    category VARCHAR(50),\\n    price INT\\n);\\n\", \"CREATE TABLE IF NOT EXISTS Discounts (\\n    category VARCHAR(50),\\n    discount INT\\n);\\n\"], \"pythondata\": [\"Products = pd.DataFrame(columns=['product_id', 'category', 'price'], dtype=int)\\n\", \"Discounts = pd.DataFrame({'category': pd.Series(dtype='str'), 'discount': pd.Series(dtype='int')})\\n\"], \"database_schema\": {\"Products\": {\"product_id\": \"INT\", \"category\": \"VARCHAR(50)\", \"price\": \"INT\"}, \"Discounts\": {\"category\": \"VARCHAR(50)\", \"discount\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"2.8K\", \"totalSubmission\": \"3.5K\", \"totalAcceptedRaw\": 2808, \"totalSubmissionRaw\": 3549, \"acRate\": \"79.1%\"}",
+  "likes": 10,
+  "dislikes": 1,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Products\":[\"product_id\",\"category\",\"price\"],\"Discounts\":[\"category\",\"discount\"]},\"rows\":{\"Products\":[[1,\"Electronics\",1000],[2,\"Clothing\",50],[3,\"Electronics\",1200],[4,\"Home\",500]],\"Discounts\":[[\"Electronics\",10],[\"Clothing\",20]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef calculate_final_prices(products: pd.DataFrame, discounts: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

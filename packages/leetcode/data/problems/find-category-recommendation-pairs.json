@@ -1,0 +1,53 @@
+{
+  "questionId": "3891",
+  "questionFrontendId": "3554",
+  "title": "Find Category Recommendation Pairs",
+  "titleSlug": "find-category-recommendation-pairs",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>ProductPurchases</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type | \n+-------------+------+\n| user_id     | int  |\n| product_id  | int  |\n| quantity    | int  |\n+-------------+------+\n(user_id, product_id) is the unique identifier for this table. \nEach row represents a purchase of a product by a user in a specific quantity.\n</pre>\n\n<p>Table: <code>ProductInfo</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    | \n+-------------+---------+\n| product_id  | int     |\n| category    | varchar |\n| price       | decimal |\n+-------------+---------+\nproduct_id is the unique identifier for this table.\nEach row assigns a category and price to a product.\n</pre>\n\n<p>Amazon wants to understand shopping patterns across product categories. Write a solution to:</p>\n\n<ol>\n\t<li>Find all <strong>category pairs</strong> (where <code>category1</code> &lt; <code>category2</code>)</li>\n\t<li>For <strong>each category pair</strong>, determine the number of <strong>unique</strong> <strong>customers</strong> who purchased products from <strong>both</strong> categories</li>\n</ol>\n\n<p>A category pair is considered <strong>reportable</strong> if at least <code>3</code> different customers have purchased products from both categories.</p>\n\n<p>Return <em>the result table of reportable category pairs ordered by <strong>customer_count</strong> in <strong>descending</strong> order, and in case of a tie, by <strong>category1</strong> in <strong>ascending</strong> order lexicographically, and then by <strong>category2</strong> in <strong>ascending</strong> order.</em></p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>ProductPurchases table:</p>\n\n<pre class=\"example-io\">\n+---------+------------+----------+\n| user_id | product_id | quantity |\n+---------+------------+----------+\n| 1       | 101        | 2        |\n| 1       | 102        | 1        |\n| 1       | 201        | 3        |\n| 1       | 301        | 1        |\n| 2       | 101        | 1        |\n| 2       | 102        | 2        |\n| 2       | 103        | 1        |\n| 2       | 201        | 5        |\n| 3       | 101        | 2        |\n| 3       | 103        | 1        |\n| 3       | 301        | 4        |\n| 3       | 401        | 2        |\n| 4       | 101        | 1        |\n| 4       | 201        | 3        |\n| 4       | 301        | 1        |\n| 4       | 401        | 2        |\n| 5       | 102        | 2        |\n| 5       | 103        | 1        |\n| 5       | 201        | 2        |\n| 5       | 202        | 3        |\n+---------+------------+----------+\n</pre>\n\n<p>ProductInfo table:</p>\n\n<pre class=\"example-io\">\n+------------+-------------+-------+\n| product_id | category    | price |\n+------------+-------------+-------+\n| 101        | Electronics | 100   |\n| 102        | Books       | 20    |\n| 103        | Books       | 35    |\n| 201        | Clothing    | 45    |\n| 202        | Clothing    | 60    |\n| 301        | Sports      | 75    |\n| 401        | Kitchen     | 50    |\n+------------+-------------+-------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+-------------+-------------+----------------+\n| category1   | category2   | customer_count |\n+-------------+-------------+----------------+\n| Books       | Clothing    | 3              |\n| Books       | Electronics | 3              |\n| Clothing    | Electronics | 3              |\n| Electronics | Sports      | 3              |\n+-------------+-------------+----------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>Books-Clothing</strong>:\n\n\t<ul>\n\t\t<li>User 1 purchased products from Books (102) and Clothing (201)</li>\n\t\t<li>User 2 purchased products from Books (102, 103) and Clothing (201)</li>\n\t\t<li>User 5 purchased products from Books (102, 103) and Clothing (201, 202)</li>\n\t\t<li>Total: 3 customers purchased from both categories</li>\n\t</ul>\n\t</li>\n\t<li><strong>Books-Electronics</strong>:\n\t<ul>\n\t\t<li>User 1 purchased products from Books (102) and Electronics (101)</li>\n\t\t<li>User 2 purchased products from Books (102, 103) and Electronics (101)</li>\n\t\t<li>User 3 purchased products from Books (103) and Electronics (101)</li>\n\t\t<li>Total: 3 customers purchased from both categories</li>\n\t</ul>\n\t</li>\n\t<li><strong>Clothing-Electronics</strong>:\n\t<ul>\n\t\t<li>User 1 purchased products from Clothing (201) and Electronics (101)</li>\n\t\t<li>User 2 purchased products from Clothing (201) and Electronics (101)</li>\n\t\t<li>User 4 purchased products from Clothing (201) and Electronics (101)</li>\n\t\t<li>Total: 3 customers purchased from both categories</li>\n\t</ul>\n\t</li>\n\t<li><strong>Electronics-Sports</strong>:\n\t<ul>\n\t\t<li>User 1 purchased products from Electronics (101) and Sports (301)</li>\n\t\t<li>User 3 purchased products from Electronics (101) and Sports (301)</li>\n\t\t<li>User 4 purchased products from Electronics (101) and Sports (301)</li>\n\t\t<li>Total: 3 customers purchased from both categories</li>\n\t</ul>\n\t</li>\n\t<li>Other category pairs like Clothing-Sports (only 2 customers: Users 1 and 4) and Books-Kitchen (only 1 customer: User 3) have fewer than 3 shared customers and are not included in the result.</li>\n</ul>\n\n<p>The result is ordered by customer_count in descending order. Since all pairs have the same customer_count of 3, they are ordered by category1 (then category2) in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE if not exists ProductPurchases (\\n    user_id INT,\\n    product_id INT,\\n    quantity INT\\n)\", \"CREATE TABLE  if not exists ProductInfo (\\n    product_id INT,\\n    category VARCHAR(100),\\n    price DECIMAL(10, 2)\\n)\"], \"mssql\": [\"CREATE TABLE ProductPurchases (\\n    user_id INT,\\n    product_id INT,\\n    quantity INT\\n)\", \"CREATE TABLE ProductInfo (\\n    product_id INT,\\n    category VARCHAR(100),\\n    price DECIMAL(10, 2)\\n)\"], \"oraclesql\": [\"CREATE TABLE ProductPurchases (\\n    user_id NUMBER,\\n    product_id NUMBER,\\n    quantity NUMBER\\n)\", \"CREATE TABLE ProductInfo (\\n    product_id NUMBER,\\n    category VARCHAR2(100),\\n    price NUMBER(10, 2)\\n)\"], \"postgresql\": [\"CREATE TABLE ProductPurchases (\\n    user_id INTEGER,\\n    product_id INTEGER,\\n    quantity INTEGER\\n);\", \"CREATE TABLE ProductInfo (\\n    product_id INTEGER,\\n    category VARCHAR(100),\\n    price NUMERIC(10, 2)\\n);\"], \"name\": \"find_category_recommendation_pairs\", \"pythondata\": [\"ProductPurchases = pd.DataFrame({\\n    \\\"user_id\\\": pd.Series(dtype='int64'),\\n    \\\"product_id\\\": pd.Series(dtype='int64'),\\n    \\\"quantity\\\": pd.Series(dtype='int64')\\n})\", \"ProductInfo= pd.DataFrame({\\n    \\\"product_id\\\": pd.Series(dtype='int64'),\\n    \\\"category\\\": pd.Series(dtype='string'),\\n    \\\"price\\\": pd.Series(dtype='float64')  # Reflects NUMBER(10, 2)\\n})\"], \"database\": true, \"database_schema\": {\"ProductPurchases\": {\"user_id\": \"INT\", \"product_id\": \"INT\", \"quantity\": \"INT\"}, \"ProductInfo\": {\"product_id\": \"INT\", \"category\": \"VARCHAR(100)\", \"price\": \"DECIMAL(10, 2)\"}}}",
+  "stats": "{\"totalAccepted\": \"9.5K\", \"totalSubmission\": \"15.1K\", \"totalAcceptedRaw\": 9491, \"totalSubmissionRaw\": 15109, \"acRate\": \"62.8%\"}",
+  "likes": 35,
+  "dislikes": 5,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"ProductPurchases\":[\"user_id\",\"product_id\",\"quantity\"],\"ProductInfo\":[\"product_id\",\"category\",\"price\"]},\"rows\":{\"ProductPurchases\":[[1,101,2],[1,102,1],[1,201,3],[1,301,1],[2,101,1],[2,102,2],[2,103,1],[2,201,5],[3,101,2],[3,103,1],[3,301,4],[3,401,2],[4,101,1],[4,201,3],[4,301,1],[4,401,2],[5,102,2],[5,103,1],[5,201,2],[5,202,3]],\"ProductInfo\":[[101,\"Electronics\",100],[102,\"Books\",20],[103,\"Books\",35],[201,\"Clothing\",45],[202,\"Clothing\",60],[301,\"Sports\",75],[401,\"Kitchen\",50]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_category_recommendation_pairs(product_purchases: pd.DataFrame, product_info: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

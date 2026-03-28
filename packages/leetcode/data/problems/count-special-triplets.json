@@ -1,0 +1,141 @@
+{
+  "questionId": "3885",
+  "questionFrontendId": "3583",
+  "title": "Count Special Triplets",
+  "titleSlug": "count-special-triplets",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code>.</p>\n\n<p>A <strong>special triplet</strong> is defined as a triplet of indices <code>(i, j, k)</code> such that:</p>\n\n<ul>\n\t<li><code>0 &lt;= i &lt; j &lt; k &lt; n</code>, where <code>n = nums.length</code></li>\n\t<li><code>nums[i] == nums[j] * 2</code></li>\n\t<li><code>nums[k] == nums[j] * 2</code></li>\n</ul>\n\n<p>Return the total number of <strong>special triplets</strong> in the array.</p>\n\n<p>Since the answer may be large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [6,3,6]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The only special triplet is <code>(i, j, k) = (0, 1, 2)</code>, where:</p>\n\n<ul>\n\t<li><code>nums[0] = 6</code>, <code>nums[1] = 3</code>, <code>nums[2] = 6</code></li>\n\t<li><code>nums[0] = nums[1] * 2 = 3 * 2 = 6</code></li>\n\t<li><code>nums[2] = nums[1] * 2 = 3 * 2 = 6</code></li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [0,1,0,0]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The only special triplet is <code>(i, j, k) = (0, 2, 3)</code>, where:</p>\n\n<ul>\n\t<li><code>nums[0] = 0</code>, <code>nums[2] = 0</code>, <code>nums[3] = 0</code></li>\n\t<li><code>nums[0] = nums[2] * 2 = 0 * 2 = 0</code></li>\n\t<li><code>nums[3] = nums[2] * 2 = 0 * 2 = 0</code></li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [8,4,2,8,4]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There are exactly two special triplets:</p>\n\n<ul>\n\t<li><code>(i, j, k) = (0, 1, 3)</code>\n\n\t<ul>\n\t\t<li><code>nums[0] = 8</code>, <code>nums[1] = 4</code>, <code>nums[3] = 8</code></li>\n\t\t<li><code>nums[0] = nums[1] * 2 = 4 * 2 = 8</code></li>\n\t\t<li><code>nums[3] = nums[1] * 2 = 4 * 2 = 8</code></li>\n\t</ul>\n\t</li>\n\t<li><code>(i, j, k) = (1, 2, 4)</code>\n\t<ul>\n\t\t<li><code>nums[1] = 4</code>, <code>nums[2] = 2</code>, <code>nums[4] = 4</code></li>\n\t\t<li><code>nums[1] = nums[2] * 2 = 2 * 2 = 4</code></li>\n\t\t<li><code>nums[4] = nums[2] * 2 = 2 * 2 = 4</code></li>\n\t</ul>\n\t</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= n == nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use frequency arrays or maps, e.g. <code>freqPrev</code> and <code>freqNext</code>—to track how many times each value appears before and after the current index.",
+    "For each index <code>j</code> in the triplet (<code>i</code>,<code>j</code>,<code>k</code>), compute its contribution to the answer using your freqPrev and freqNext counts."
+  ],
+  "metaData": "{\n  \"name\": \"specialTriplets\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"117.1K\", \"totalSubmission\": \"248.6K\", \"totalAcceptedRaw\": 117134, \"totalSubmissionRaw\": 248580, \"acRate\": \"47.1%\"}",
+  "likes": 554,
+  "dislikes": 23,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[6,3,6]",
+    "[0,1,0,0]",
+    "[8,4,2,8,4]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int specialTriplets(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int specialTriplets(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def specialTriplets(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def specialTriplets(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar specialTriplets = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function specialTriplets(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int SpecialTriplets(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int specialTriplets(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func specialTriplets(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun specialTriplets(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func specialTriplets(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn special_triplets(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef special_triplets(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function specialTriplets($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int specialTriplets(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def specialTriplets(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec special_triplets(nums :: [integer]) :: integer\n  def special_triplets(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec special_triplets(Nums :: [integer()]) -> integer().\nspecial_triplets(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (special-triplets nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2892",
+    "content": "### Approach 1: Enumeration + Counting\n\n#### Intuition\n\nAccording to the problem statement, it is easy to observe that for the triplet (i, j, k), we have nums[i] = nums[k]. Consider counting by enumerating the numbers on both sides or in the middle.\n\nEnumerating numbers on both sides, for example enumerating $\\textit{nums}[i]$, and searching for valid $(j, k)$ pairs requires maintaining the relative position information between numbers in the $\\textit{nums}$ array, which is tedious and difficult to implement under this data range constraint.\n\nInstead, consider enumerating the middle element $\\textit{nums}[j]$. At this point, we only need to know how many numbers on both sides are equal to $\\textit{nums}[j] \\times 2$ so that we can compute the contribution of $\\textit{nums}[j]$ to the answer.\n\nSuppose there are $\\textit{LeftCnt}$ indices that meet the condition on the left side of the current position and $\\textit{RightCnt}$ indices that meet the condition on the right side. According to the multiplication principle for counting problems, their contribution to the answer is $\\textit{LeftCnt} \\times \\textit{RightCnt} \\bmod (10^9 + 7)$.\n\nNow consider how to calculate $\\textit{LeftCnt}$ and $\\textit{RightCnt}$.\n\nUse a hash table to count the elements in $\\textit{nums}$. Maintain two hash tables, $\\textit{numCnt}$ and $\\textit{numPartialCnt}$, representing the total number of occurrences of each element in the entire array and the number of occurrences up to the current traversal position, respectively.\n\nWe can precompute $\\textit{numCnt}$ and then update $\\textit{numPartialCnt}$ while enumerating. Let the target value to be searched at this point be $t$ (that is, twice $\\textit{nums}[j]$). It follows that $\\textit{LeftCnt} = \\textit{numPartialCnt}[t]$ and $\\textit{RightCnt} = \\textit{numCnt}[t] - \\textit{numPartialCnt}[t]$.\n\nFinally, note the impact of the current element when updating $\\textit{numPartialCnt}$. When $\\textit{nums}[j] = 0$, we are looking for three identical numbers, so the update must occur after calculating $\\textit{LeftCnt}$ and before calculating $\\textit{RightCnt}$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/amc3G4Rn/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"amc3G4Rn\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of $\\textit{nums}$.\n\n- Time complexity: $O(n)$.\n  \n  Traversing $\\textit{nums}$ takes $O(n)$ and accessing the hash table takes $O(1)$, so the total complexity is $O(n)$.\n\n- Space complexity: $O(n)$.\n  \n  The hash tables require $O(n)$ space.\n\n### Approach 2: Enumeration + Binary Search\n\n#### Intuition\n\nThe basic idea is the same as in the first method, the difference being that after building the position index, binary search is used to compute $\\textit{LeftCnt}$ and $\\textit{RightCnt}$.\n\nUse a hash table $\\textit{pos}$ to build the position index for each element, storing the sequence of indices where the element appears in $\\textit{nums}$.\n\nSince the length of the index sequence indicates the number of occurrences of each element, for the current position $j$, we can compute $\\textit{LeftCnt}$ and $\\textit{RightCnt}$ by performing a binary search to find the position of $j$ in the target element’s index sequence.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Nc3RTaK5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Nc3RTaK5\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of $\\textit{nums}$.\n\n- Time complexity: $O(n \\log n)$.\n  \n  Traversing $\\textit{nums}$ takes $O(n)$, hash table access takes $O(1)$, and binary search takes $O(\\log n)$, giving a total of $O(n \\log n)$.\n\n- Space complexity: $O(n)$.\n  \n  The hash table stores index sequences and requires $O(n)$ space on average.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

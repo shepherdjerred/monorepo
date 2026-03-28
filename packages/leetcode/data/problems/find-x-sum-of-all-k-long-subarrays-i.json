@@ -1,0 +1,143 @@
+{
+  "questionId": "3610",
+  "questionFrontendId": "3318",
+  "title": "Find X-Sum of All K-Long Subarrays I",
+  "titleSlug": "find-x-sum-of-all-k-long-subarrays-i",
+  "difficulty": "Easy",
+  "content": "<p>You are given an array <code>nums</code> of <code>n</code> integers and two integers <code>k</code> and <code>x</code>.</p>\n\n<p>The <strong>x-sum</strong> of an array is calculated by the following procedure:</p>\n\n<ul>\n\t<li>Count the occurrences of all elements in the array.</li>\n\t<li>Keep only the occurrences of the top <code>x</code> most frequent elements. If two elements have the same number of occurrences, the element with the <strong>bigger</strong> value is considered more frequent.</li>\n\t<li>Calculate the sum of the resulting array.</li>\n</ul>\n\n<p><strong>Note</strong> that if an array has less than <code>x</code> distinct elements, its <strong>x-sum</strong> is the sum of the array.</p>\n\n<p>Return an integer array <code>answer</code> of length <code>n - k + 1</code> where <code>answer[i]</code> is the <strong>x-sum</strong> of the <span data-keyword=\"subarray-nonempty\">subarray</span> <code>nums[i..i + k - 1]</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,1,2,2,3,4,2,3], k = 6, x = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[6,10,12]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>For subarray <code>[1, 1, 2, 2, 3, 4]</code>, only elements 1 and 2 will be kept in the resulting array. Hence, <code>answer[0] = 1 + 1 + 2 + 2</code>.</li>\n\t<li>For subarray <code>[1, 2, 2, 3, 4, 2]</code>, only elements 2 and 4 will be kept in the resulting array. Hence, <code>answer[1] = 2 + 2 + 2 + 4</code>. Note that 4 is kept in the array since it is bigger than 3 and 1 which occur the same number of times.</li>\n\t<li>For subarray <code>[2, 2, 3, 4, 2, 3]</code>, only elements 2 and 3 are kept in the resulting array. Hence, <code>answer[2] = 2 + 2 + 2 + 3 + 3</code>.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [3,8,7,8,7,5], k = 2, x = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[11,15,15,15,12]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Since <code>k == x</code>, <code>answer[i]</code> is equal to the sum of the subarray <code>nums[i..i + k - 1]</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n == nums.length &lt;= 50</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 50</code></li>\n\t<li><code>1 &lt;= x &lt;= k &lt;= nums.length</code></li>\n</ul>\n",
+  "hints": [
+    "Implement the x-sum function. Then, run x-sum on every subarray of <code>nums</code> of size <code>k</code>."
+  ],
+  "metaData": "{\n  \"name\": \"findXSum\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"x\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"142K\", \"totalSubmission\": \"186.7K\", \"totalAcceptedRaw\": 142047, \"totalSubmissionRaw\": 186721, \"acRate\": \"76.1%\"}",
+  "likes": 562,
+  "dislikes": 328,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,1,2,2,3,4,2,3]\n6\n2",
+    "[3,8,7,8,7,5]\n2\n2"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> findXSum(vector<int>& nums, int k, int x) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] findXSum(int[] nums, int k, int x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findXSum(self, nums: List[int], k: int, x: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findXSum(self, nums, k, x):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :type x: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @param {number} x\n * @return {number[]}\n */\nvar findXSum = function(nums, k, x) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findXSum(nums: number[], k: number, x: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] FindXSum(int[] nums, int k, int x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* findXSum(int* nums, int numsSize, int k, int x, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findXSum(nums []int, k int, x int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findXSum(nums: IntArray, k: Int, x: Int): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findXSum(_ nums: [Int], _ k: Int, _ x: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_x_sum(nums: Vec<i32>, k: i32, x: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @param {Integer} x\n# @return {Integer[]}\ndef find_x_sum(nums, k, x)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @param Integer $x\n     * @return Integer[]\n     */\n    function findXSum($nums, $k, $x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> findXSum(List<int> nums, int k, int x) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findXSum(nums: Array[Int], k: Int, x: Int): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_x_sum(nums :: [integer], k :: integer, x :: integer) :: [integer]\n  def find_x_sum(nums, k, x) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_x_sum(Nums :: [integer()], K :: integer(), X :: integer()) -> [integer()].\nfind_x_sum(Nums, K, X) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-x-sum nums k x)\n  (-> (listof exact-integer?) exact-integer? exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2866",
+    "content": "### Approach: Hash Table + Sorting\n\n#### Intuition\n\nWe enumerate all subarrays of length $k$, using a hash table $\\textit{cnt}$ to count the occurrences of each number within the subarray. For each key-value pair $(\\textit{key}, \\textit{value})$ in the hash table—where $\\textit{key}$ represents a number and $\\textit{value}$ represents its occurrence count—we store them in an array and sort this array primarily in descending order by $\\textit{value}$, and secondarily in descending order by $\\textit{key}$.\n\nAfter sorting, the first $x$ tuples correspond to the $x$ most frequent elements and their counts. By summing their products, we obtain the answer for this subarray.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/2rdjrpjQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2rdjrpjQ\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(n \\times k \\log k)$.\n  \n  The time to enumerate all subarrays of length $k$ is $O(n)$, and each subarray takes $O(k \\log k)$ time for sorting and computing the answer.\n\n- Space complexity: $O(k)$.\n  \n  This is the space required for hash table and arrays.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "questionId": "3943",
+  "questionFrontendId": "3611",
+  "title": "Find Overbooked Employees",
+  "titleSlug": "find-overbooked-employees",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>employees</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| employee_id   | int     |\n| employee_name | varchar |\n| department    | varchar |\n+---------------+---------+\nemployee_id is the unique identifier for this table.\nEach row contains information about an employee and their department.\n</pre>\n\n<p>Table: <code>meetings</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| meeting_id    | int     |\n| employee_id   | int     |\n| meeting_date  | date    |\n| meeting_type  | varchar |\n| duration_hours| decimal |\n+---------------+---------+\nmeeting_id is the unique identifier for this table.\nEach row represents a meeting attended by an employee. meeting_type can be &#39;Team&#39;, &#39;Client&#39;, or &#39;Training&#39;.\n</pre>\n\n<p>Write a solution to find employees who are <strong>meeting-heavy</strong> - employees who spend more than <code>50%</code> of their working time in meetings during any given week.</p>\n\n<ul>\n\t<li>Assume a standard work week is <code>40</code><strong> hours</strong></li>\n\t<li>Calculate <strong>total meeting hours</strong> per employee <strong>per week</strong> (<strong>Monday to Sunday</strong>)</li>\n\t<li>An employee is meeting-heavy if their weekly meeting hours <code>&gt;</code> <code>20</code> hours (<code>50%</code> of <code>40</code> hours)</li>\n\t<li>Count how many weeks each employee was meeting-heavy</li>\n\t<li><strong>Only include</strong> employees who were meeting-heavy for <strong>at least </strong><code>2</code><strong> weeks</strong></li>\n</ul>\n\n<p>Return <em>the result table ordered by the number of meeting-heavy weeks in <strong>descending</strong> order, then by employee name in <strong>ascending</strong> order</em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>employees table:</p>\n\n<pre class=\"example-io\">\n+-------------+----------------+-------------+\n| employee_id | employee_name  | department  |\n+-------------+----------------+-------------+\n| 1           | Alice Johnson  | Engineering |\n| 2           | Bob Smith      | Marketing   |\n| 3           | Carol Davis    | Sales       |\n| 4           | David Wilson   | Engineering |\n| 5           | Emma Brown     | HR          |\n+-------------+----------------+-------------+\n</pre>\n\n<p>meetings table:</p>\n\n<pre class=\"example-io\">\n+------------+-------------+--------------+--------------+----------------+\n| meeting_id | employee_id | meeting_date | meeting_type | duration_hours |\n+------------+-------------+--------------+--------------+----------------+\n| 1          | 1           | 2023-06-05   | Team         | 8.0            |\n| 2          | 1           | 2023-06-06   | Client       | 6.0            |\n| 3          | 1           | 2023-06-07   | Training     | 7.0            |\n| 4          | 1           | 2023-06-12   | Team         | 12.0           |\n| 5          | 1           | 2023-06-13   | Client       | 9.0            |\n| 6          | 2           | 2023-06-05   | Team         | 15.0           |\n| 7          | 2           | 2023-06-06   | Client       | 8.0            |\n| 8          | 2           | 2023-06-12   | Training     | 10.0           |\n| 9          | 3           | 2023-06-05   | Team         | 4.0            |\n| 10         | 3           | 2023-06-06   | Client       | 3.0            |\n| 11         | 4           | 2023-06-05   | Team         | 25.0           |\n| 12         | 4           | 2023-06-19   | Client       | 22.0           |\n| 13         | 5           | 2023-06-05   | Training     | 2.0            |\n+------------+-------------+--------------+--------------+----------------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+-------------+----------------+-------------+---------------------+\n| employee_id | employee_name  | department  | meeting_heavy_weeks |\n+-------------+----------------+-------------+---------------------+\n| 1           | Alice Johnson  | Engineering | 2                   |\n| 4           | David Wilson   | Engineering | 2                   |\n+-------------+----------------+-------------+---------------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>Alice Johnson (employee_id = 1):</strong>\n\n\t<ul>\n\t\t<li>Week of June 5-11 (2023-06-05 to 2023-06-11): 8.0 + 6.0 + 7.0 = 21.0 hours (&gt; 20 hours)</li>\n\t\t<li>Week of June 12-18 (2023-06-12 to 2023-06-18): 12.0 + 9.0 = 21.0 hours (&gt; 20 hours)</li>\n\t\t<li>Meeting-heavy for 2 weeks</li>\n\t</ul>\n\t</li>\n\t<li><strong>David Wilson (employee_id = 4):</strong>\n\t<ul>\n\t\t<li>Week of June 5-11: 25.0 hours (&gt; 20 hours)</li>\n\t\t<li>Week of June 19-25: 22.0 hours (&gt; 20 hours)</li>\n\t\t<li>Meeting-heavy for 2 weeks</li>\n\t</ul>\n\t</li>\n\t<li><strong>Employees not included:</strong>\n\t<ul>\n\t\t<li>Bob Smith (employee_id = 2): Week of June 5-11: 15.0 + 8.0 = 23.0 hours (&gt; 20), Week of June 12-18: 10.0 hours (&lt; 20). Only 1 meeting-heavy week</li>\n\t\t<li>Carol Davis (employee_id = 3): Week of June 5-11: 4.0 + 3.0 = 7.0 hours (&lt; 20). No meeting-heavy weeks</li>\n\t\t<li>Emma Brown (employee_id = 5): Week of June 5-11: 2.0 hours (&lt; 20). No meeting-heavy weeks</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>The result table is ordered by meeting_heavy_weeks in descending order, then by employee name in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE if not exists employees (\\n    employee_id INT,\\n    employee_name VARCHAR(255),\\n    department VARCHAR(100)\\n)\", \"CREATE TABLE meetings (\\n    meeting_id INT,\\n    employee_id INT,\\n    meeting_date DATE,\\n    meeting_type VARCHAR(50),\\n    duration_hours DECIMAL(4, 2)\\n)\"], \"mssql\": [\"CREATE TABLE employees (\\n    employee_id INT,\\n    employee_name VARCHAR(255),\\n    department VARCHAR(100)\\n)\", \"CREATE TABLE meetings (\\n    meeting_id INT,\\n    employee_id INT,\\n    meeting_date DATE,\\n    meeting_type VARCHAR(50),\\n    duration_hours DECIMAL(4, 2)\\n)\"], \"oraclesql\": [\"CREATE TABLE employees (\\n    employee_id NUMBER,\\n    employee_name VARCHAR2(255),\\n    department VARCHAR2(100)\\n)\", \"CREATE TABLE meetings (\\n    meeting_id NUMBER,\\n    employee_id NUMBER,\\n    meeting_date DATE,\\n    meeting_type VARCHAR2(50),\\n    duration_hours NUMBER(4, 2)\\n)\", \"ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD'\"], \"database\": true, \"name\": \"find_overbooked_employees\", \"postgresql\": [\"CREATE TABLE IF NOT EXISTS employees (\\n    employee_id INTEGER,\\n    employee_name VARCHAR(255),\\n    department VARCHAR(100)\\n);\\n\", \"CREATE TABLE IF NOT EXISTS meetings (\\n    meeting_id INTEGER,\\n    employee_id INTEGER,\\n    meeting_date DATE,\\n    meeting_type VARCHAR(50),\\n    duration_hours NUMERIC(4, 2)\\n);\\n\"], \"pythondata\": [\"employees = pd.DataFrame(columns=['employee_id', 'employee_name', 'department']).astype({'employee_id': 'Int64', 'employee_name': 'string', 'department': 'string'})\\n\", \"meetings = pd.DataFrame(columns=['meeting_id', 'employee_id', 'meeting_date', 'meeting_type', 'duration_hours']).astype({'meeting_id': 'Int64', 'employee_id': 'Int64', 'meeting_date': 'datetime64[ns]', 'meeting_type': 'string', 'duration_hours': 'float64'})\\n\"], \"database_schema\": {\"employees\": {\"employee_id\": \"INT\", \"employee_name\": \"VARCHAR(255)\", \"department\": \"VARCHAR(100)\"}, \"meetings\": {\"meeting_id\": \"INT\", \"employee_id\": \"INT\", \"meeting_date\": \"DATE\", \"meeting_type\": \"VARCHAR(50)\", \"duration_hours\": \"DECIMAL(4, 2)\"}}}",
+  "stats": "{\"totalAccepted\": \"9.5K\", \"totalSubmission\": \"21.3K\", \"totalAcceptedRaw\": 9531, \"totalSubmissionRaw\": 21343, \"acRate\": \"44.7%\"}",
+  "likes": 44,
+  "dislikes": 10,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"employees\":[\"employee_id\",\"employee_name\",\"department\"],\"meetings\":[\"meeting_id\",\"employee_id\",\"meeting_date\",\"meeting_type\",\"duration_hours\"]},\"rows\":{\"employees\":[[1,\"Alice Johnson\",\"Engineering\"],[2,\"Bob Smith\",\"Marketing\"],[3,\"Carol Davis\",\"Sales\"],[4,\"David Wilson\",\"Engineering\"],[5,\"Emma Brown\",\"HR\"]],\"meetings\":[[1,1,\"2023-06-05\",\"Team\",8.0],[2,1,\"2023-06-06\",\"Client\",6.0],[3,1,\"2023-06-07\",\"Training\",7.0],[4,1,\"2023-06-12\",\"Team\",12.0],[5,1,\"2023-06-13\",\"Client\",9.0],[6,2,\"2023-06-05\",\"Team\",15.0],[7,2,\"2023-06-06\",\"Client\",8.0],[8,2,\"2023-06-12\",\"Training\",10.0],[9,3,\"2023-06-05\",\"Team\",4.0],[10,3,\"2023-06-06\",\"Client\",3.0],[11,4,\"2023-06-05\",\"Team\",25.0],[12,4,\"2023-06-19\",\"Client\",22.0],[13,5,\"2023-06-05\",\"Training\",2.0]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_overbooked_employees(employees: pd.DataFrame, meetings: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,139 @@
+{
+  "questionId": "3908",
+  "questionFrontendId": "3608",
+  "title": "Minimum Time for K Connected Components",
+  "titleSlug": "minimum-time-for-k-connected-components",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>n</code> and an undirected graph with <code>n</code> nodes labeled from 0 to <code>n - 1</code>. This is represented by a 2D array <code>edges</code>, where <code>edges[i] = [u<sub>i</sub>, v<sub>i</sub>, time<sub>i</sub>]</code> indicates an undirected edge between nodes <code>u<sub>i</sub></code> and <code>v<sub>i</sub></code> that can be removed at <code>time<sub>i</sub></code>.</p>\n\n<p>You are also given an integer <code>k</code>.</p>\n\n<p>Initially, the graph may be connected or disconnected. Your task is to find the <strong>minimum</strong> time <code>t</code> such that after removing all edges with <code>time &lt;= t</code>, the graph contains <strong>at least</strong> <code>k</code> connected components.</p>\n\n<p>Return the <strong>minimum</strong> time <code>t</code>.</p>\n\n<p>A <strong>connected component</strong> is a subgraph of a graph in which there exists a path between any two vertices, and no vertex of the subgraph shares an edge with a vertex outside of the subgraph.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 2, edges = [[0,1,3]], k = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img src=\"https://assets.leetcode.com/uploads/2025/05/31/screenshot-2025-06-01-at-022724.png\" style=\"width: 230px; height: 85px;\" /></p>\n\n<ul>\n\t<li>Initially, there is one connected component <code>{0, 1}</code>.</li>\n\t<li>At <code>time = 1</code> or <code>2</code>, the graph remains unchanged.</li>\n\t<li>At <code>time = 3</code>, edge <code>[0, 1]</code> is removed, resulting in <code>k = 2</code> connected components <code>{0}</code>, <code>{1}</code>. Thus, the answer is 3.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 3, edges = [[0,1,2],[1,2,4]], k = 3</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">4</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img src=\"https://assets.leetcode.com/uploads/2025/05/31/screenshot-2025-06-01-at-022812.png\" style=\"width: 180px; height: 164px;\" /></p>\n\n<ul>\n\t<li>Initially, there is one connected component <code>{0, 1, 2}</code>.</li>\n\t<li>At <code>time = 2</code>, edge <code>[0, 1]</code> is removed, resulting in two connected components <code>{0}</code>, <code>{1, 2}</code>.</li>\n\t<li>At <code>time = 4</code>, edge <code>[1, 2]</code> is removed, resulting in <code>k = 3</code> connected components <code>{0}</code>, <code>{1}</code>, <code>{2}</code>. Thus, the answer is 4.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 3, edges = [[0,2,5]], k = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img src=\"https://assets.leetcode.com/uploads/2025/05/31/screenshot-2025-06-01-at-022930.png\" style=\"width: 180px; height: 155px;\" /></p>\n\n<ul>\n\t<li>Since there are already <code>k = 2</code> disconnected components <code>{1}</code>, <code>{0, 2}</code>, no edge removal is needed. Thus, the answer is 0.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= edges.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>edges[i] = [u<sub>i</sub>, v<sub>i</sub>, time<sub>i</sub>]</code></li>\n\t<li><code>0 &lt;= u<sub>i</sub>, v<sub>i</sub> &lt; n</code></li>\n\t<li><code>u<sub>i</sub> != v<sub>i</sub></code></li>\n\t<li><code>1 &lt;= time<sub>i</sub> &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= n</code></li>\n\t<li>There are no duplicate edges.</li>\n</ul>\n",
+  "hints": [
+    "Binary-search the smallest <code>t</code> such that, after removing all edges with <code>time <= t</code>, the graph splits into >= <code>k</code> connected components."
+  ],
+  "metaData": "{\n  \"name\": \"minTime\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"17.3K\", \"totalSubmission\": \"38.3K\", \"totalAcceptedRaw\": 17342, \"totalSubmissionRaw\": 38314, \"acRate\": \"45.3%\"}",
+  "likes": 126,
+  "dislikes": 6,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "2\n[[0,1,3]]\n2",
+    "3\n[[0,1,2],[1,2,4]]\n3",
+    "3\n[[0,2,5]]\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minTime(int n, vector<vector<int>>& edges, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minTime(int n, int[][] edges, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minTime(self, n: int, edges: List[List[int]], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minTime(self, n, edges, k):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @param {number} k\n * @return {number}\n */\nvar minTime = function(n, edges, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minTime(n: number, edges: number[][], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinTime(int n, int[][] edges, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minTime(int n, int** edges, int edgesSize, int* edgesColSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minTime(n int, edges [][]int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minTime(n: Int, edges: Array<IntArray>, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minTime(_ n: Int, _ edges: [[Int]], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_time(n: i32, edges: Vec<Vec<i32>>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @param {Integer} k\n# @return {Integer}\ndef min_time(n, edges, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @param Integer $k\n     * @return Integer\n     */\n    function minTime($n, $edges, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minTime(int n, List<List<int>> edges, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minTime(n: Int, edges: Array[Array[Int]], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_time(n :: integer, edges :: [[integer]], k :: integer) :: integer\n  def min_time(n, edges, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_time(N :: integer(), Edges :: [[integer()]], K :: integer()) -> integer().\nmin_time(N, Edges, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-time n edges k)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

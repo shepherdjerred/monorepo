@@ -1,0 +1,139 @@
+{
+  "questionId": "3814",
+  "questionFrontendId": "3506",
+  "title": "Find Time Required to Eliminate Bacterial Strains",
+  "titleSlug": "find-time-required-to-eliminate-bacterial-strains",
+  "difficulty": "Hard",
+  "content": "<p>You are given an integer array <code>timeReq</code> and an integer <code>splitTime</code>.</p>\n\n<p>In the microscopic world of the human body, the immune system faces an extraordinary challenge: combatting a rapidly multiplying bacterial colony that threatens the body&#39;s survival.</p>\n\n<p>Initially, only one <strong>white blood cell</strong> (<strong>WBC</strong>) is deployed to eliminate the bacteria. However, the lone WBC quickly realizes it cannot keep up with the bacterial growth rate.</p>\n\n<p>The WBC devises a clever strategy to fight the bacteria:</p>\n\n<ul>\n\t<li>The <code>i<sup>th</sup></code> bacterial strain takes <code>timeReq[i]</code> units of time to be eliminated.</li>\n\t<li>A single WBC can eliminate <strong>only one</strong> bacterial strain. Afterwards, the WBC is exhausted and cannot perform any other tasks.</li>\n\t<li>A WBC can split itself into two WBCs, but this requires <code>splitTime</code> units of time. Once split, the two WBCs can work in <strong>parallel</strong> on eliminating the bacteria.</li>\n\t<li><em>Only one</em> WBC can work on a single bacterial strain. Multiple WBCs <strong>cannot</strong> attack one strain in parallel.</li>\n</ul>\n\n<p>You must determine the <strong>minimum</strong> time required to eliminate all the bacterial strains.</p>\n\n<p><strong>Note</strong> that the bacterial strains can be eliminated in any order.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">timeReq = [10,4,5], splitTime = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">12</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The elimination process goes as follows:</p>\n\n<ul>\n\t<li>Initially, there is a single WBC. The WBC splits into 2 WBCs after 2 units of time.</li>\n\t<li>One of the WBCs eliminates strain 0 at a time <code>t = 2 + 10 = 12.</code> The other WBC splits again, using 2 units of time.</li>\n\t<li>The 2 new WBCs eliminate the bacteria at times <code>t = 2 + 2 + 4</code> and <code>t = 2 + 2 + 5</code>.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">timeReq = [10,4], splitTime = 5</span></p>\n\n<p><strong>Output:</strong>15</p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The elimination process goes as follows:</p>\n\n<ul>\n\t<li>Initially, there is a single WBC. The WBC splits into 2 WBCs after 5 units of time.</li>\n\t<li>The 2 new WBCs eliminate the bacteria at times <code>t = 5 + 10</code> and <code>t = 5 + 4</code>.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= timeReq.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= timeReq[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= splitTime &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use binary search.",
+    "First perform all the divisions, then assign the bacteria greedily."
+  ],
+  "metaData": "{\n  \"name\": \"minEliminationTime\",\n  \"params\": [\n    {\n      \"name\": \"timeReq\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"splitTime\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"511\", \"totalSubmission\": \"833\", \"totalAcceptedRaw\": 511, \"totalSubmissionRaw\": 833, \"acRate\": \"61.3%\"}",
+  "likes": 4,
+  "dislikes": 1,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Minimum Time to Build Blocks\", \"titleSlug\": \"minimum-time-to-build-blocks\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[10,4,5]\n2",
+    "[10,4]\n5"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long minEliminationTime(vector<int>& timeReq, int splitTime) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long minEliminationTime(int[] timeReq, int splitTime) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minEliminationTime(self, timeReq: List[int], splitTime: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minEliminationTime(self, timeReq, splitTime):\n        \"\"\"\n        :type timeReq: List[int]\n        :type splitTime: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} timeReq\n * @param {number} splitTime\n * @return {number}\n */\nvar minEliminationTime = function(timeReq, splitTime) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minEliminationTime(timeReq: number[], splitTime: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MinEliminationTime(int[] timeReq, int splitTime) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long minEliminationTime(int* timeReq, int timeReqSize, int splitTime) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minEliminationTime(timeReq []int, splitTime int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minEliminationTime(timeReq: IntArray, splitTime: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minEliminationTime(_ timeReq: [Int], _ splitTime: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_elimination_time(time_req: Vec<i32>, split_time: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} time_req\n# @param {Integer} split_time\n# @return {Integer}\ndef min_elimination_time(time_req, split_time)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $timeReq\n     * @param Integer $splitTime\n     * @return Integer\n     */\n    function minEliminationTime($timeReq, $splitTime) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minEliminationTime(List<int> timeReq, int splitTime) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minEliminationTime(timeReq: Array[Int], splitTime: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_elimination_time(time_req :: [integer], split_time :: integer) :: integer\n  def min_elimination_time(time_req, split_time) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_elimination_time(TimeReq :: [integer()], SplitTime :: integer()) -> integer().\nmin_elimination_time(TimeReq, SplitTime) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-elimination-time timeReq splitTime)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

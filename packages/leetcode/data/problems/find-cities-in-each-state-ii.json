@@ -1,0 +1,53 @@
+{
+  "questionId": "3650",
+  "questionFrontendId": "3328",
+  "title": "Find Cities in Each State II",
+  "titleSlug": "find-cities-in-each-state-ii",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>cities</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    | \n+-------------+---------+\n| state       | varchar |\n| city        | varchar |\n+-------------+---------+\n(state, city) is the combination of columns with unique values for this table.\nEach row of this table contains the state name and the city name within that state.\n</pre>\n\n<p>Write a solution to find <strong>all the cities</strong> in <strong>each state</strong> and analyze them based on the following requirements:</p>\n\n<ul>\n\t<li>Combine all cities into a <strong>comma-separated</strong> string for each state.</li>\n\t<li>Only include states that have <strong>at least</strong> <code>3</code> cities.</li>\n\t<li>Only include states where <strong>at least one city</strong> starts with the <strong>same letter as the state name</strong>.</li>\n</ul>\n\n<p>Return <em>the result table ordered by</em> <em>the count of matching-letter cities in <strong>descending</strong> order</em>&nbsp;<em>and then by state name in <strong>ascending</strong> order</em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>cities table:</p>\n\n<pre class=\"example-io\">\n+--------------+---------------+\n| state        | city          |\n+--------------+---------------+\n| New York     | New York City |\n| New York     | Newark        |\n| New York     | Buffalo       |\n| New York     | Rochester     |\n| California   | San Francisco |\n| California   | Sacramento    |\n| California   | San Diego     |\n| California   | Los Angeles   |\n| Texas        | Tyler         |\n| Texas        | Temple        |\n| Texas        | Taylor        |\n| Texas        | Dallas        |\n| Pennsylvania | Philadelphia  |\n| Pennsylvania | Pittsburgh    |\n| Pennsylvania | Pottstown     |\n+--------------+---------------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+-------------+-------------------------------------------+-----------------------+\n| state       | cities                                    | matching_letter_count |\n+-------------+-------------------------------------------+-----------------------+\n| Pennsylvania| Philadelphia, Pittsburgh, Pottstown       | 3                     |\n| Texas       | Dallas, Taylor, Temple, Tyler             | 3                     |\n| New York    | Buffalo, Newark, New York City, Rochester | 2                     |\n+-------------+-------------------------------------------+-----------------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>Pennsylvania</strong>:\n\n\t<ul>\n\t\t<li>Has 3 cities (meets minimum requirement)</li>\n\t\t<li>All 3 cities start with &#39;P&#39; (same as state)</li>\n\t\t<li>matching_letter_count = 3</li>\n\t</ul>\n\t</li>\n\t<li><strong>Texas</strong>:\n\t<ul>\n\t\t<li>Has 4 cities (meets minimum requirement)</li>\n\t\t<li>3 cities (Taylor, Temple, Tyler) start with &#39;T&#39; (same as state)</li>\n\t\t<li>matching_letter_count = 3</li>\n\t</ul>\n\t</li>\n\t<li><strong>New York</strong>:\n\t<ul>\n\t\t<li>Has 4 cities (meets minimum requirement)</li>\n\t\t<li>2 cities (Newark, New York City) start with &#39;N&#39; (same as state)</li>\n\t\t<li>matching_letter_count = 2</li>\n\t</ul>\n\t</li>\n\t<li><strong>California</strong> is not included in the output because:\n\t<ul>\n\t\t<li>Although it has 4 cities (meets minimum requirement)</li>\n\t\t<li>No cities start with &#39;C&#39; (doesn&#39;t meet the matching letter requirement)</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p><strong>Note:</strong></p>\n\n<ul>\n\t<li>Results are ordered by matching_letter_count in descending order</li>\n\t<li>When matching_letter_count is the same (Texas and New York both have 2), they are ordered by state name alphabetically</li>\n\t<li>Cities in each row are ordered alphabetically</li>\n</ul>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table if not exists cities( state varchar(100),city varchar(100))\"], \"mssql\": [\"Create table  cities( state varchar(100),city varchar(100))\"], \"oraclesql\": [\"Create table cities( state varchar2(100),city varchar2(100))\"], \"database\": true, \"name\": \"state_city_analysis\", \"postgresql\": [\"CREATE TABLE IF NOT EXISTS cities (\\n    state VARCHAR(100),\\n    city VARCHAR(100)\\n);\\n\"], \"pythondata\": [\"cities = pd.DataFrame(data,columns=('state','city')).astype({'state':'object','city':'object'})\"], \"database_schema\": {\"cities\": {\"state\": \"VARCHAR(100)\", \"city\": \"VARCHAR(100)\"}}}",
+  "stats": "{\"totalAccepted\": \"2.1K\", \"totalSubmission\": \"3K\", \"totalAcceptedRaw\": 2088, \"totalSubmissionRaw\": 3038, \"acRate\": \"68.7%\"}",
+  "likes": 11,
+  "dislikes": 2,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"cities\":[\"state\",\"city\"]},\"rows\":{\"cities\":[[\"New York\",\"New York City\"],[\"New York\",\"Newark\"],[\"New York\",\"Buffalo\"],[\"New York\",\"Rochester\"],[\"California\",\"San Francisco\"],[\"California\",\"Sacramento\"],[\"California\",\"San Diego\"],[\"California\",\"Los Angeles\"],[\"Texas\",\"Tyler\"],[\"Texas\",\"Temple\"],[\"Texas\",\"Taylor\"],[\"Texas\",\"Dallas\"],[\"Pennsylvania\",\"Philadelphia\"],[\"Pennsylvania\",\"Pittsburgh\"],[\"Pennsylvania\",\"Pottstown\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef state_city_analysis(cities: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

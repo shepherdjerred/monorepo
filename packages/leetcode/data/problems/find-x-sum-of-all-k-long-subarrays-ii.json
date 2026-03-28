@@ -1,0 +1,145 @@
+{
+  "questionId": "3592",
+  "questionFrontendId": "3321",
+  "title": "Find X-Sum of All K-Long Subarrays II",
+  "titleSlug": "find-x-sum-of-all-k-long-subarrays-ii",
+  "difficulty": "Hard",
+  "content": "<p>You are given an array <code>nums</code> of <code>n</code> integers and two integers <code>k</code> and <code>x</code>.</p>\n\n<p>The <strong>x-sum</strong> of an array is calculated by the following procedure:</p>\n\n<ul>\n\t<li>Count the occurrences of all elements in the array.</li>\n\t<li>Keep only the occurrences of the top <code>x</code> most frequent elements. If two elements have the same number of occurrences, the element with the <strong>bigger</strong> value is considered more frequent.</li>\n\t<li>Calculate the sum of the resulting array.</li>\n</ul>\n\n<p><strong>Note</strong> that if an array has less than <code>x</code> distinct elements, its <strong>x-sum</strong> is the sum of the array.</p>\n\n<p>Return an integer array <code>answer</code> of length <code>n - k + 1</code> where <code>answer[i]</code> is the <strong>x-sum</strong> of the <span data-keyword=\"subarray-nonempty\">subarray</span> <code>nums[i..i + k - 1]</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,1,2,2,3,4,2,3], k = 6, x = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[6,10,12]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>For subarray <code>[1, 1, 2, 2, 3, 4]</code>, only elements 1 and 2 will be kept in the resulting array. Hence, <code>answer[0] = 1 + 1 + 2 + 2</code>.</li>\n\t<li>For subarray <code>[1, 2, 2, 3, 4, 2]</code>, only elements 2 and 4 will be kept in the resulting array. Hence, <code>answer[1] = 2 + 2 + 2 + 4</code>. Note that 4 is kept in the array since it is bigger than 3 and 1 which occur the same number of times.</li>\n\t<li>For subarray <code>[2, 2, 3, 4, 2, 3]</code>, only elements 2 and 3 are kept in the resulting array. Hence, <code>answer[2] = 2 + 2 + 2 + 3 + 3</code>.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [3,8,7,8,7,5], k = 2, x = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[11,15,15,15,12]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Since <code>k == x</code>, <code>answer[i]</code> is equal to the sum of the subarray <code>nums[i..i + k - 1]</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>nums.length == n</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= x &lt;= k &lt;= nums.length</code></li>\n</ul>\n",
+  "hints": [
+    "Use sliding window.",
+    "Use two sets ordered by frequency. One of the sets will only contain the top <code>x</code> frequent elements, and the second will contain all other elements.",
+    "Update the two sets whenever you slide the window, and maintain a sum of the elements in the set with <code>x</code> elements"
+  ],
+  "metaData": "{\n  \"name\": \"findXSum\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"x\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"65.1K\", \"totalSubmission\": \"158.4K\", \"totalAcceptedRaw\": 65141, \"totalSubmissionRaw\": 158449, \"acRate\": \"41.1%\"}",
+  "likes": 448,
+  "dislikes": 51,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,1,2,2,3,4,2,3]\n6\n2",
+    "[3,8,7,8,7,5]\n2\n2"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<long long> findXSum(vector<int>& nums, int k, int x) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long[] findXSum(int[] nums, int k, int x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findXSum(self, nums: List[int], k: int, x: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findXSum(self, nums, k, x):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :type x: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @param {number} x\n * @return {number[]}\n */\nvar findXSum = function(nums, k, x) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findXSum(nums: number[], k: number, x: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long[] FindXSum(int[] nums, int k, int x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nlong long* findXSum(int* nums, int numsSize, int k, int x, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findXSum(nums []int, k int, x int) []int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findXSum(nums: IntArray, k: Int, x: Int): LongArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findXSum(_ nums: [Int], _ k: Int, _ x: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_x_sum(nums: Vec<i32>, k: i32, x: i32) -> Vec<i64> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @param {Integer} x\n# @return {Integer[]}\ndef find_x_sum(nums, k, x)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @param Integer $x\n     * @return Integer[]\n     */\n    function findXSum($nums, $k, $x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> findXSum(List<int> nums, int k, int x) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findXSum(nums: Array[Int], k: Int, x: Int): Array[Long] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_x_sum(nums :: [integer], k :: integer, x :: integer) :: [integer]\n  def find_x_sum(nums, k, x) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_x_sum(Nums :: [integer()], K :: integer(), X :: integer()) -> [integer()].\nfind_x_sum(Nums, K, X) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-x-sum nums k x)\n  (-> (listof exact-integer?) exact-integer? exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2867",
+    "content": "### Approach: Hash Table + Ordered Set\n\n#### Intuition\n\nWhen we calculate the x-sum of the subarray starting at $\\textit{nums}[i]$ and then calculate the x-sum of the subarray starting at $\\textit{nums}[i+1]$, the latter includes $\\textit{nums}[i+k]$ instead of $\\textit{nums}[i]$. Therefore, we need to design a data structure that supports the following three operations:\n\n- Add an element.\n- Delete an element.\n- Calculate the $\\text{x-sum}$ of all current elements\n\nAccording to the problem description, $\\text{x-sum}$ is the sum of the $x$ most frequently occurring elements. This suggests that we can use a sorted set to maintain these elements and their frequencies. Specifically, we maintain two sorted sets:\n- A set $\\textit{large}$ for the most frequently occurring $x$ elements.\n- A set $\\textit{small}$ for the remaining elements.\n\nEach item in a sorted set is a tuple $(\\textit{occ}, \\textit{num})$, representing the element $\\textit{num}$ and its frequency $\\textit{occ}$. Both sorted sets are maintained in ascending order based on $\\textit{occ}$ as the primary key and $\\textit{num}$ as the secondary key.\n\nWhen we add an element $\\textit{num}$, we first obtain its occurrence count $\\textit{occ}$. If $\\textit{occ} > 0$, we remove $(\\textit{occ}, \\textit{num})$ from the ordered set and then add $(\\textit{occ} + 1, \\textit{num})$.\n\nWhen we delete an element $\\textit{num}$, we obtain its occurrence count $\\textit{occ}$, remove $(\\textit{occ}, \\textit{num})$ from the ordered set, and if $\\textit{occ} > 1$, we add $(\\textit{occ} - 1, \\textit{num})$.\n\nFor adding $(\\textit{occ}, \\textit{num})$ to an ordered set:\n- If the number of tuples in $\\textit{large}$ is less than $x$, add $(\\textit{occ}, \\textit{num})$ to $\\textit{large}$.\n- If $(\\textit{occ}, \\textit{num})$ is smaller than the smallest pair in $\\textit{large}$, add it to $\\textit{small}$.\n- Otherwise, remove the smallest tuple from $\\textit{large}$, move it to $\\textit{small}$, and add $(\\textit{occ}, \\textit{num})$ to $\\textit{large}$.\n\nFor removing $(\\textit{occ}, \\textit{num})$ from an ordered set:\n- If $(\\textit{occ}, \\textit{num})$ is smaller than the smallest pair in $\\textit{large}$, it belongs to $\\textit{small}$ and should be removed from it.\n- Otherwise, it is removed from $\\textit{large}$. At this point, if $\\textit{small}$ is not empty, the largest tuple in $\\textit{small}$ is moved to $\\textit{large}$.\n\nThe frequency $\\textit{occ}$ of each element can be maintained using an auxiliary hash table. Whenever a pair is added to or removed from $\\textit{large}$, we increase or decrease $\\textit{occ} \\times \\textit{num}$ accordingly. This allows us to efficiently obtain the $\\text{x-sum}$ at any moment.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/eSEZvq6B/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"eSEZvq6B\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(n \\log n)$.\n  \n  Each insertion or removal operation on an ordered set takes $O(\\log n)$ time. Since every element in the array $\\textit{nums}$ triggers only a constant number of such operations, the overall time complexity is $O(n \\log n)$.\n\n- Space complexity: $O(n)$.\n  \n  It is the space required for ordered set and hash table.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

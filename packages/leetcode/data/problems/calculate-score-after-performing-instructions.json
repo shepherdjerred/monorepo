@@ -1,0 +1,140 @@
+{
+  "questionId": "3732",
+  "questionFrontendId": "3522",
+  "title": "Calculate Score After Performing Instructions",
+  "titleSlug": "calculate-score-after-performing-instructions",
+  "difficulty": "Medium",
+  "content": "<p>You are given two arrays, <code>instructions</code> and <code>values</code>, both of size <code>n</code>.</p>\n\n<p>You need to simulate a process based on the following rules:</p>\n\n<ul>\n\t<li>You start at the first instruction at index <code>i = 0</code> with an initial score of 0.</li>\n\t<li>If <code>instructions[i]</code> is <code>&quot;add&quot;</code>:\n\t<ul>\n\t\t<li>Add <code>values[i]</code> to your score.</li>\n\t\t<li>Move to the next instruction <code>(i + 1)</code>.</li>\n\t</ul>\n\t</li>\n\t<li>If <code>instructions[i]</code> is <code>&quot;jump&quot;</code>:\n\t<ul>\n\t\t<li>Move to the instruction at index <code>(i + values[i])</code> without modifying your score.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>The process ends when you either:</p>\n\n<ul>\n\t<li>Go out of bounds (i.e., <code>i &lt; 0 or i &gt;= n</code>), or</li>\n\t<li>Attempt to revisit an instruction that has been previously executed. The revisited instruction is not executed.</li>\n</ul>\n\n<p>Return your score at the end of the process.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">instructions = [&quot;jump&quot;,&quot;add&quot;,&quot;add&quot;,&quot;jump&quot;,&quot;add&quot;,&quot;jump&quot;], values = [2,1,3,1,-2,-3]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Simulate the process starting at instruction 0:</p>\n\n<ul>\n\t<li>At index 0: Instruction is <code>&quot;jump&quot;</code>, move to index <code>0 + 2 = 2</code>.</li>\n\t<li>At index 2: Instruction is <code>&quot;add&quot;</code>, add <code>values[2] = 3</code> to your score and move to index 3. Your score becomes 3.</li>\n\t<li>At index 3: Instruction is <code>&quot;jump&quot;</code>, move to index <code>3 + 1 = 4</code>.</li>\n\t<li>At index 4: Instruction is <code>&quot;add&quot;</code>, add <code>values[4] = -2</code> to your score and move to index 5. Your score becomes 1.</li>\n\t<li>At index 5: Instruction is <code>&quot;jump&quot;</code>, move to index <code>5 + (-3) = 2</code>.</li>\n\t<li>At index 2: Already visited. The process ends.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">instructions = [&quot;jump&quot;,&quot;add&quot;,&quot;add&quot;], values = [3,1,1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Simulate the process starting at instruction 0:</p>\n\n<ul>\n\t<li>At index 0: Instruction is <code>&quot;jump&quot;</code>, move to index <code>0 + 3 = 3</code>.</li>\n\t<li>At index 3: Out of bounds. The process ends.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">instructions = [&quot;jump&quot;], values = [0]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Simulate the process starting at instruction 0:</p>\n\n<ul>\n\t<li>At index 0: Instruction is <code>&quot;jump&quot;</code>, move to index <code>0 + 0 = 0</code>.</li>\n\t<li>At index 0: Already visited. The process ends.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == instructions.length == values.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>instructions[i]</code> is either <code>&quot;add&quot;</code> or <code>&quot;jump&quot;</code>.</li>\n\t<li><code>-10<sup>5</sup> &lt;= values[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Simulate the process step by step, following the rules for each instruction.",
+    "Use a data structure to track which instructions have already been executed to detect revisits."
+  ],
+  "metaData": "{\n  \"name\": \"calculateScore\",\n  \"params\": [\n    {\n      \"name\": \"instructions\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"values\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"40.3K\", \"totalSubmission\": \"70.8K\", \"totalAcceptedRaw\": 40315, \"totalSubmissionRaw\": 70765, \"acRate\": \"57.0%\"}",
+  "likes": 46,
+  "dislikes": 10,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"jump\",\"add\",\"add\",\"jump\",\"add\",\"jump\"]\n[2,1,3,1,-2,-3]",
+    "[\"jump\",\"add\",\"add\"]\n[3,1,1]",
+    "[\"jump\"]\n[0]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"apple\", \"name\": \"Apple\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long calculateScore(vector<string>& instructions, vector<int>& values) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long calculateScore(String[] instructions, int[] values) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def calculateScore(self, instructions: List[str], values: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def calculateScore(self, instructions, values):\n        \"\"\"\n        :type instructions: List[str]\n        :type values: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} instructions\n * @param {number[]} values\n * @return {number}\n */\nvar calculateScore = function(instructions, values) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function calculateScore(instructions: string[], values: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long CalculateScore(string[] instructions, int[] values) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long calculateScore(char** instructions, int instructionsSize, int* values, int valuesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func calculateScore(instructions []string, values []int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun calculateScore(instructions: Array<String>, values: IntArray): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func calculateScore(_ instructions: [String], _ values: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn calculate_score(instructions: Vec<String>, values: Vec<i32>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} instructions\n# @param {Integer[]} values\n# @return {Integer}\ndef calculate_score(instructions, values)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $instructions\n     * @param Integer[] $values\n     * @return Integer\n     */\n    function calculateScore($instructions, $values) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int calculateScore(List<String> instructions, List<int> values) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def calculateScore(instructions: Array[String], values: Array[Int]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec calculate_score(instructions :: [String.t], values :: [integer]) :: integer\n  def calculate_score(instructions, values) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec calculate_score(Instructions :: [unicode:unicode_binary()], Values :: [integer()]) -> integer().\ncalculate_score(Instructions, Values) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (calculate-score instructions values)\n  (-> (listof string?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

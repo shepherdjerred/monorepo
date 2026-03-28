@@ -1,0 +1,137 @@
+{
+  "questionId": "3892",
+  "questionFrontendId": "3573",
+  "title": "Best Time to Buy and Sell Stock V",
+  "titleSlug": "best-time-to-buy-and-sell-stock-v",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>prices</code> where <code>prices[i]</code> is the price of a stock in dollars on the <code>i<sup>th</sup></code> day, and an integer <code>k</code>.</p>\n\n<p>You are allowed to make at most <code>k</code> transactions, where each transaction can be either of the following:</p>\n\n<ul>\n\t<li>\n\t<p><strong>Normal transaction</strong>: Buy on day <code>i</code>, then sell on a later day <code>j</code> where <code>i &lt; j</code>. You profit <code>prices[j] - prices[i]</code>.</p>\n\t</li>\n\t<li>\n\t<p><strong>Short selling transaction</strong>: Sell on day <code>i</code>, then buy back on a later day <code>j</code> where <code>i &lt; j</code>. You profit <code>prices[i] - prices[j]</code>.</p>\n\t</li>\n</ul>\n\n<p><strong>Note</strong> that you must complete each transaction before starting another. Additionally, you can't buy or sell on the same day you are selling or buying back as part of a previous transaction.</p>\n\n<p>Return the <strong>maximum</strong> total profit you can earn by making <strong>at most</strong> <code>k</code> transactions.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">prices = [1,7,9,8,2], k = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">14</span></p>\n\n<p><strong>Explanation:</strong></p>\nWe can make $14 of profit through 2 transactions:\n\n<ul>\n\t<li>A normal transaction: buy the stock on day 0 for $1 then sell it on day 2 for $9.</li>\n\t<li>A short selling transaction: sell the stock on day 3 for $8 then buy back on day 4 for $2.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">prices = [12,16,19,19,8,1,19,13,9], k = 3</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">36</span></p>\n\n<p><strong>Explanation:</strong></p>\nWe can make $36 of profit through 3 transactions:\n\n<ul>\n\t<li>A normal transaction: buy the stock on day 0 for $12 then sell it on day 2 for $19.</li>\n\t<li>A short selling transaction: sell the stock on day 3 for $19 then buy back on day 4 for $8.</li>\n\t<li>A normal transaction: buy the stock on day 5 for $1 then sell it on day 6 for $19.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= prices.length &lt;= 10<sup>3</sup></code></li>\n\t<li><code>1 &lt;= prices[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= prices.length / 2</code></li>\n</ul>\n",
+  "hints": [
+    "Use dynamic programming.",
+    "Keep the following states: <code>idx</code>, <code>transactionsDone</code>, <code>transactionType</code>, <code>isTransactionRunning</code>.",
+    "Transactions transition from completed -> running and from running -> completed."
+  ],
+  "metaData": "{\n  \"name\": \"maximumProfit\",\n  \"params\": [\n    {\n      \"name\": \"prices\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"79.5K\", \"totalSubmission\": \"131K\", \"totalAcceptedRaw\": 79536, \"totalSubmissionRaw\": 131003, \"acRate\": \"60.7%\"}",
+  "likes": 419,
+  "dislikes": 61,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Best Time to Buy and Sell Stock\", \"titleSlug\": \"best-time-to-buy-and-sell-stock\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,7,9,8,2]\n2",
+    "[12,16,19,19,8,1,19,13,9]\n3"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long maximumProfit(vector<int>& prices, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long maximumProfit(int[] prices, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumProfit(self, prices: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumProfit(self, prices, k):\n        \"\"\"\n        :type prices: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} prices\n * @param {number} k\n * @return {number}\n */\nvar maximumProfit = function(prices, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumProfit(prices: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MaximumProfit(int[] prices, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long maximumProfit(int* prices, int pricesSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumProfit(prices []int, k int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumProfit(prices: IntArray, k: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumProfit(_ prices: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_profit(prices: Vec<i32>, k: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} prices\n# @param {Integer} k\n# @return {Integer}\ndef maximum_profit(prices, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $prices\n     * @param Integer $k\n     * @return Integer\n     */\n    function maximumProfit($prices, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumProfit(List<int> prices, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumProfit(prices: Array[Int], k: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_profit(prices :: [integer], k :: integer) :: integer\n  def maximum_profit(prices, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_profit(Prices :: [integer()], K :: integer()) -> integer().\nmaximum_profit(Prices, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-profit prices k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2896",
+    "content": "### Approach 1: Memoization Search\n\n#### Intuition\n\nThis problem is essentially the same as the problem statement of “[188. Best Time to Buy and Sell Stock IV](https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iv/description/)”, except that here we also allow an additional action: short selling. Because of this extra operation, the state definition from the original problem needs to be extended.\n\nIn the editorial for problem 188, the dynamic programming states are defined like this. The value `dfs(i, j, 0)` represents the maximum profit after day `i` if exactly `j` transactions have been completed and we end the day holding no stock. Similarly, `dfs(i, j, 1)` represents the maximum profit after day `i` with exactly `j` completed transactions while holding one stock.\n\nSince this problem allows short selling, meaning we can sell first and buy later, we introduce a third state. The value `dfs(i, j, 2)` represents the maximum profit after day `i` with exactly `j` completed transactions while holding a short position.\n\nWith these three states defined, consider what can happen on day `i` when we want to end up with exactly `j` completed transactions.\n\nOne possibility is that nothing happens on that day. If we neither buy nor sell, then all three states simply carry over from day `i - 1`:\n\n* `dfs(i, j, 0) = dfs(i - 1, j, 0)`\n* `dfs(i, j, 1) = dfs(i - 1, j, 1)`\n* `dfs(i, j, 2) = dfs(i - 1, j, 2)`\n\nAnother possibility is that we buy on day `i`. There are two situations in which this can occur. If we were not holding anything at the end of day `i - 1`, buying the stock starts the `j`th normal transaction, so we come from `dfs(i - 1, j - 1, 0)` and pay the cost of `prices[i]`, giving\n`dfs(i, j, 1) = dfs(i - 1, j - 1, 0) - prices[i]`.\n\nThe other case is that we were holding a short position. Buying in this situation closes the short transaction, so we move from `dfs(i - 1, j, 2)` and again subtract the cost, giving\n`dfs(i, j, 0) = dfs(i - 1, j, 2) - prices[i]`.\n\nThe third possibility on day `i` is that we sell. If we were holding a stock at the end of the previous day, selling completes the `j`th ordinary transaction, so we move from `dfs(i - 1, j, 1)` and gain `prices[i]`, which results in\n`dfs(i, j, 0) = dfs(i - 1, j, 1) + prices[i]`.\n\nIf instead we were holding nothing at the end of the previous day, selling opens the `j`th short selling transaction. In that case we come from `dfs(i - 1, j - 1, 0)` and add the profit `prices[i]`, which gives\n`dfs(i, j, 2) = dfs(i - 1, j - 1, 0) + prices[i]`.\n\nThese cases lead directly to the final recurrence:\n\n$$ \n\\text{dfs}(i,j,0) = \\max(\\text{dfs}(i - 1,j,0),\\ \\text{dfs}(i - 1,j,1) + \\textit{prices}[i],\\ \\text{dfs}(i - 1,j,2) - \\textit{prices}[i])\n$$ \n\n$$ \n\\text{dfs}(i,j,1) = \\max(\\text{dfs}(i - 1,j,1),\\ \\text{dfs}(i - 1,j - 1,0) - \\textit{prices}[i])\n$$ \n\n$$ \n\\text{dfs}(i,j,2) = \\max(\\text{dfs}(i - 1,j,2),\\ \\text{dfs}(i - 1,j - 1,0) + \\textit{prices}[i])\n$$ \n\nNext consider the boundary conditions. On day `0`, only one price exists. If no action is taken, the profit is zero. If we buy, the profit is `-prices[0]`. If we short, the profit is `prices[0]`. When `j = 0`, no transactions are allowed, so the profit must be zero in all states. Translating these observations into formulas:\n\n* For all `i`, if `j = 0`, then `dfs(i, 0, 0) = dfs(i, 0, 1) = dfs(i, 0, 2) = 0`.\n* For `i = 0` and any `1 ≤ j ≤ k`, we have `dfs(0, j, 0) = 0`, `dfs(0, j, 1) = -prices[0]`, and `dfs(0, j, 2) = prices[0]`.\n\nAfter computing all states up to day `n - 1`, the final answer is `dfs(n - 1, k, 0)`, since we can make at most `k` total transactions and we must end with no stock or short position.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/RQBSm8Ya/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RQBSm8Ya\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the given array $\\textit{prices}$, and $k$ be the given number.\n\n- Time complexity: $O(nk)$.\n  \n  Memorized search has a total of $3\\times n\\times k$ substates, so the time complexity is $O(nk)$.\n\n- Space complexity: $O(nk)$.\n  \n  Memorized search requires storing a total of $3\\times n\\times k$ substates, so the maximum space needed is $O(nk)$.\n\n### Approach 2: Dynamic Programming\n\n#### Intuition\n\nSimilarly, we can solve it using a bottom-up dynamic programming approach, by expanding the memoized search recursively.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/D5QRVeAj/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"D5QRVeAj\"></iframe>\n\nWe observe that the optimal state on day $i$ depends only on the optimal state on day $i-1$, and is unrelated to the optimal states on earlier days. At this point, we can use a rolling array, retaining only the optimal state of the previous day, thereby reducing the space complexity to $O(k)$. During actual traversal, we can calculate sequentially in the order of $j$ from large to small, without the need to create temporary variables.\n\n<iframe src=\"https://leetcode.com/playground/iJrpkZhT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"iJrpkZhT\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the given array $\\textit{prices}$, and $k$ be the given number.\n\n- Time complexity: $O(nk)$.\n  \n  Dynamic programming has a total of $3\\times n\\times k$ substates, so the time complexity is $O(nk)$.\n\n- Space complexity: $O(k)$.\n  \n  After space optimization, only $3k$ states need to be stored each time, so the space complexity is $O(k)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

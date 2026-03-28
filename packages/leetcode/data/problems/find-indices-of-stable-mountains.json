@@ -1,0 +1,125 @@
+{
+  "questionId": "3582",
+  "questionFrontendId": "3285",
+  "title": "Find Indices of Stable Mountains",
+  "titleSlug": "find-indices-of-stable-mountains",
+  "difficulty": "Easy",
+  "content": "<p>There are <code>n</code> mountains in a row, and each mountain has a height. You are given an integer array <code>height</code> where <code>height[i]</code> represents the height of mountain <code>i</code>, and an integer <code>threshold</code>.</p>\n\n<p>A mountain is called <strong>stable</strong> if the mountain just before it (<strong>if it exists</strong>) has a height <strong>strictly greater</strong> than <code>threshold</code>. <strong>Note</strong> that mountain 0 is <strong>not</strong> stable.</p>\n\n<p>Return an array containing the indices of <em>all</em> <strong>stable</strong> mountains in <strong>any</strong> order.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">height = [1,2,3,4,5], threshold = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[3,4]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Mountain 3 is stable because <code>height[2] == 3</code> is greater than <code>threshold == 2</code>.</li>\n\t<li>Mountain 4 is stable because <code>height[3] == 4</code> is greater than <code>threshold == 2</code>.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">height = [10,1,10,1,10], threshold = 3</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[1,3]</span></p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">height = [10,1,10,1,10], threshold = 10</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[]</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n == height.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= height[i] &lt;= 100</code></li>\n\t<li><code>1 &lt;= threshold &lt;= 100</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"stableMountains\",\n  \"params\": [\n    {\n      \"name\": \"height\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"threshold\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"68.6K\", \"totalSubmission\": \"79K\", \"totalAcceptedRaw\": 68628, \"totalSubmissionRaw\": 79016, \"acRate\": \"86.9%\"}",
+  "likes": 105,
+  "dislikes": 40,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find in Mountain Array\", \"titleSlug\": \"find-in-mountain-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5]\n2",
+    "[10,1,10,1,10]\n3",
+    "[10,1,10,1,10]\n10"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> stableMountains(vector<int>& height, int threshold) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> stableMountains(int[] height, int threshold) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def stableMountains(self, height: List[int], threshold: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def stableMountains(self, height, threshold):\n        \"\"\"\n        :type height: List[int]\n        :type threshold: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} height\n * @param {number} threshold\n * @return {number[]}\n */\nvar stableMountains = function(height, threshold) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function stableMountains(height: number[], threshold: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> StableMountains(int[] height, int threshold) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* stableMountains(int* height, int heightSize, int threshold, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func stableMountains(height []int, threshold int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun stableMountains(height: IntArray, threshold: Int): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func stableMountains(_ height: [Int], _ threshold: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn stable_mountains(height: Vec<i32>, threshold: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} height\n# @param {Integer} threshold\n# @return {Integer[]}\ndef stable_mountains(height, threshold)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $height\n     * @param Integer $threshold\n     * @return Integer[]\n     */\n    function stableMountains($height, $threshold) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> stableMountains(List<int> height, int threshold) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def stableMountains(height: Array[Int], threshold: Int): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec stable_mountains(height :: [integer], threshold :: integer) :: [integer]\n  def stable_mountains(height, threshold) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec stable_mountains(Height :: [integer()], Threshold :: integer()) -> [integer()].\nstable_mountains(Height, Threshold) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (stable-mountains height threshold)\n  (-> (listof exact-integer?) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

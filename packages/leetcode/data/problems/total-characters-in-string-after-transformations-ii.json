@@ -1,0 +1,148 @@
+{
+  "questionId": "3630",
+  "questionFrontendId": "3337",
+  "title": "Total Characters in String After Transformations II",
+  "titleSlug": "total-characters-in-string-after-transformations-ii",
+  "difficulty": "Hard",
+  "content": "<p>You are given a string <code>s</code> consisting of lowercase English letters, an integer <code>t</code> representing the number of <strong>transformations</strong> to perform, and an array <code>nums</code> of size 26. In one <strong>transformation</strong>, every character in <code>s</code> is replaced according to the following rules:</p>\n\n<ul>\n\t<li>Replace <code>s[i]</code> with the <strong>next</strong> <code>nums[s[i] - &#39;a&#39;]</code> consecutive characters in the alphabet. For example, if <code>s[i] = &#39;a&#39;</code> and <code>nums[0] = 3</code>, the character <code>&#39;a&#39;</code> transforms into the next 3 consecutive characters ahead of it, which results in <code>&quot;bcd&quot;</code>.</li>\n\t<li>The transformation <strong>wraps</strong> around the alphabet if it exceeds <code>&#39;z&#39;</code>. For example, if <code>s[i] = &#39;y&#39;</code> and <code>nums[24] = 3</code>, the character <code>&#39;y&#39;</code> transforms into the next 3 consecutive characters ahead of it, which results in <code>&quot;zab&quot;</code>.</li>\n</ul>\n\n<p>Return the length of the resulting string after <strong>exactly</strong> <code>t</code> transformations.</p>\n\n<p>Since the answer may be very large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;abcyy&quot;, t = 2, nums = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">7</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>\n\t<p><strong>First Transformation (t = 1):</strong></p>\n\n\t<ul>\n\t\t<li><code>&#39;a&#39;</code> becomes <code>&#39;b&#39;</code> as <code>nums[0] == 1</code></li>\n\t\t<li><code>&#39;b&#39;</code> becomes <code>&#39;c&#39;</code> as <code>nums[1] == 1</code></li>\n\t\t<li><code>&#39;c&#39;</code> becomes <code>&#39;d&#39;</code> as <code>nums[2] == 1</code></li>\n\t\t<li><code>&#39;y&#39;</code> becomes <code>&#39;z&#39;</code> as <code>nums[24] == 1</code></li>\n\t\t<li><code>&#39;y&#39;</code> becomes <code>&#39;z&#39;</code> as <code>nums[24] == 1</code></li>\n\t\t<li>String after the first transformation: <code>&quot;bcdzz&quot;</code></li>\n\t</ul>\n\t</li>\n\t<li>\n\t<p><strong>Second Transformation (t = 2):</strong></p>\n\n\t<ul>\n\t\t<li><code>&#39;b&#39;</code> becomes <code>&#39;c&#39;</code> as <code>nums[1] == 1</code></li>\n\t\t<li><code>&#39;c&#39;</code> becomes <code>&#39;d&#39;</code> as <code>nums[2] == 1</code></li>\n\t\t<li><code>&#39;d&#39;</code> becomes <code>&#39;e&#39;</code> as <code>nums[3] == 1</code></li>\n\t\t<li><code>&#39;z&#39;</code> becomes <code>&#39;ab&#39;</code> as <code>nums[25] == 2</code></li>\n\t\t<li><code>&#39;z&#39;</code> becomes <code>&#39;ab&#39;</code> as <code>nums[25] == 2</code></li>\n\t\t<li>String after the second transformation: <code>&quot;cdeabab&quot;</code></li>\n\t</ul>\n\t</li>\n\t<li>\n\t<p><strong>Final Length of the string:</strong> The string is <code>&quot;cdeabab&quot;</code>, which has 7 characters.</p>\n\t</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;azbk&quot;, t = 1, nums = [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">8</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>\n\t<p><strong>First Transformation (t = 1):</strong></p>\n\n\t<ul>\n\t\t<li><code>&#39;a&#39;</code> becomes <code>&#39;bc&#39;</code> as <code>nums[0] == 2</code></li>\n\t\t<li><code>&#39;z&#39;</code> becomes <code>&#39;ab&#39;</code> as <code>nums[25] == 2</code></li>\n\t\t<li><code>&#39;b&#39;</code> becomes <code>&#39;cd&#39;</code> as <code>nums[1] == 2</code></li>\n\t\t<li><code>&#39;k&#39;</code> becomes <code>&#39;lm&#39;</code> as <code>nums[10] == 2</code></li>\n\t\t<li>String after the first transformation: <code>&quot;bcabcdlm&quot;</code></li>\n\t</ul>\n\t</li>\n\t<li>\n\t<p><strong>Final Length of the string:</strong> The string is <code>&quot;bcabcdlm&quot;</code>, which has 8 characters.</p>\n\t</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists only of lowercase English letters.</li>\n\t<li><code>1 &lt;= t &lt;= 10<sup>9</sup></code></li>\n\t<li><code><font face=\"monospace\">nums.length == 26</font></code></li>\n\t<li><code><font face=\"monospace\">1 &lt;= nums[i] &lt;= 25</font></code></li>\n</ul>\n",
+  "hints": [
+    "Model the problem as a matrix multiplication problem.",
+    "Use exponentiation to quickly multiply matrices."
+  ],
+  "metaData": "{\n  \"name\": \"lengthAfterTransformations\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"t\"\n    },\n    {\n      \"type\": \"list<integer>\",\n      \"name\": \"nums\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"63.5K\", \"totalSubmission\": \"109.4K\", \"totalAcceptedRaw\": 63459, \"totalSubmissionRaw\": 109380, \"acRate\": \"58.0%\"}",
+  "likes": 387,
+  "dislikes": 83,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"abcyy\"\n2\n[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]",
+    "\"azbk\"\n1\n[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int lengthAfterTransformations(string s, int t, vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int lengthAfterTransformations(String s, int t, List<Integer> nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def lengthAfterTransformations(self, s: str, t: int, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def lengthAfterTransformations(self, s, t, nums):\n        \"\"\"\n        :type s: str\n        :type t: int\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} t\n * @param {number[]} nums\n * @return {number}\n */\nvar lengthAfterTransformations = function(s, t, nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function lengthAfterTransformations(s: string, t: number, nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LengthAfterTransformations(string s, int t, IList<int> nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int lengthAfterTransformations(char* s, int t, int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func lengthAfterTransformations(s string, t int, nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun lengthAfterTransformations(s: String, t: Int, nums: List<Int>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func lengthAfterTransformations(_ s: String, _ t: Int, _ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn length_after_transformations(s: String, t: i32, nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} t\n# @param {Integer[]} nums\n# @return {Integer}\ndef length_after_transformations(s, t, nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $t\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function lengthAfterTransformations($s, $t, $nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int lengthAfterTransformations(String s, int t, List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def lengthAfterTransformations(s: String, t: Int, nums: List[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec length_after_transformations(s :: String.t, t :: integer, nums :: [integer]) :: integer\n  def length_after_transformations(s, t, nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec length_after_transformations(S :: unicode:unicode_binary(), T :: integer(), Nums :: [integer()]) -> integer().\nlength_after_transformations(S, T, Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (length-after-transformations s t nums)\n  (-> string? exact-integer? (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2753",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach: Matrix Multiplication + Matrix Exponentiation By Squaring\n\n#### Intuition\n\nWe use $f(i, c)$ to represent the number of occurrences of the character $c$ in the string after $i$ transformations. For convenience, we let the value range of $c$ be $[0, 26)$, corresponding to the 26 characters from $a$ to $z$ in sequence.\n\nInitially, all $f(0, c)$ values are equal to the number of occurrences of $c$ in the given string $s$. When we iterate from $f(i-1, \\cdots)$ to $f(i, \\cdots)$, we use the recurrence:\n\n$$\nf(i, c) = \\sum_{c'=0}^{25} \\left[ f(i-1, c') \\times T(c, c') \\right]\n$$\n\nHere, the value of $T(c, c')$ is either 0 or 1. If $c'$ is included in the substitution set of $c$ during a single transformation, the value is 1; otherwise, it is 0. The values of $T(c, c')$ can be obtained from the given array $\\textit{nums}$.\n\nThe time complexity of directly using the recurrence is high, so optimization is necessary. Notice that $T(c, c')$ is independent of $i$; it remains fixed in each round of iteration. Therefore, if we express $f(i, c)$ and $f(i-1, c')$ as $n \\times 1$ column vectors, and $T(c, c')$ as an $n \\times n$ matrix, the recurrence becomes a matrix multiplication:\n\n$$\n\\begin{pmatrix}\nf(i, 0) \\\\\nf(i, 1) \\\\\n\\vdots \\\\\nf(i, 25)\n\\end{pmatrix}\n=\\begin{pmatrix}\nT(0, 0) & T(0, 1) & \\cdots & T(0, 25) \\\\\nT(1, 0) & T(1, 1) & \\cdots & T(1, 25) \\\\\n\\vdots & \\vdots & \\ddots & \\vdots \\\\\nT(25, 0) & T(25, 1) & \\cdots & T(25, 25)\n\\end{pmatrix}\n\\begin{pmatrix}\nf(i-1, 0) \\\\\nf(i-1, 1) \\\\\n\\vdots \\\\\nf(i-1, 25)\n\\end{pmatrix}\n$$\n\nSo, after $t$ iterations:\n\n$$\n\\begin{pmatrix}\nf(t, 0) \\\\\nf(t, 1) \\\\\n\\vdots \\\\\nf(t, 25)\n\\end{pmatrix}\n=\\begin{pmatrix}\nT(0, 0) & T(0, 1) & \\cdots & T(0, 25) \\\\\nT(1, 0) & T(1, 1) & \\cdots & T(1, 25) \\\\\n\\vdots & \\vdots & \\ddots & \\vdots \\\\\nT(25, 0) & T(25, 1) & \\cdots & T(25, 25)\n\\end{pmatrix}^t\n\\begin{pmatrix}\nf(0, 0) \\\\\nf(0, 1) \\\\\n\\vdots \\\\\nf(0, 25)\n\\end{pmatrix}\n$$\n\nThus, we can first compute the $t$-th power of the matrix corresponding to $T(c, c')$, and then multiply it by the initial column vector $f(0, \\cdots)$ to obtain all values $f(t, \\cdots)$. The sum of these values gives the final answer.\n\nThe exponentiation of the transformation matrix can be efficiently performed using [matrix exponentiation by squaring](https://en.wikipedia.org/wiki/Exponentiation_by_squaring), which we will not elaborate on here.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/QRSezZjn/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QRSezZjn\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string $s$, and let $|\\Sigma|$ denote the size of the character set, which is 26 in this case.\n\n- Time complexity: $O(n + \\log t \\times |\\Sigma|^3)$.\n  \n  We first traverse the string to count the occurrences of each character. Then, we apply matrix exponentiation by squaring to compute repeated matrix multiplication.\n  \n- Space complexity: $O(|\\Sigma|^2)$.\n  \n  This is the space required to store the transformation matrix.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

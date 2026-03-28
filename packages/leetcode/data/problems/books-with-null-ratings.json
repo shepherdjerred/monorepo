@@ -1,0 +1,53 @@
+{
+  "questionId": "3695",
+  "questionFrontendId": "3358",
+  "title": "Books with NULL Ratings",
+  "titleSlug": "books-with-null-ratings",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>books</code></p>\n\n<pre>\n+----------------+---------+\n| Column Name    | Type    |\n+----------------+---------+\n| book_id        | int     |\n| title          | varchar |\n| author         | varchar |\n| published_year | int     |\n| rating         | decimal |\n+----------------+---------+\nbook_id is the unique key for this table.\nEach row of this table contains information about a book including its unique ID, title, author, publication year, and rating.\nrating can be NULL, indicating that the book hasn&#39;t been rated yet.\n</pre>\n\n<p>Write a solution to find all books that have not been rated yet (i.e., have a <strong>NULL</strong> rating).</p>\n\n<p>Return <em>the result table</em> <em>ordered by</em> <code>book_id</code> in <strong>ascending</strong> order.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>books table:</p>\n\n<pre class=\"example-io\">\n+---------+------------------------+------------------+----------------+--------+\n| book_id | title                  | author           | published_year | rating |\n+---------+------------------------+------------------+----------------+--------+\n| 1       | The Great Gatsby       | F. Scott         | 1925           | 4.5    |\n| 2       | To Kill a Mockingbird  | Harper Lee       | 1960           | NULL   |\n| 3       | Pride and Prejudice    | Jane Austen      | 1813           | 4.8    |\n| 4       | The Catcher in the Rye | J.D. Salinger    | 1951           | NULL   |\n| 5       | Animal Farm            | George Orwell    | 1945           | 4.2    |\n| 6       | Lord of the Flies      | William Golding  | 1954           | NULL   |\n+---------+------------------------+------------------+----------------+--------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+---------+------------------------+------------------+----------------+\n| book_id | title                  | author           | published_year |\n+---------+------------------------+------------------+----------------+\n| 2       | To Kill a Mockingbird  | Harper Lee       | 1960           |\n| 4       | The Catcher in the Rye | J.D. Salinger    | 1951           |\n| 6       | Lord of the Flies      | William Golding  | 1954           |\n+---------+------------------------+------------------+----------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>The books with book_id 2, 4, and 6 have NULL ratings.</li>\n\t<li>These books are included in the result table.</li>\n\t<li>The other books (book_id 1, 3, and 5) have ratings and are not included.</li>\n</ul>\nThe result is ordered by book_id in ascending order</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table books (\\n    book_id int,\\n    title varchar(255),\\n    author varchar(100),\\n    published_year int,\\n    rating decimal(3,1)\\n)\"], \"mssql\": [\"Create table books (\\n    book_id int,\\n    title varchar(255),\\n    author varchar(100),\\n    published_year int,\\n    rating decimal(3,1)\\n)\"], \"oraclesql\": [\"Create table books (\\n    book_id number,\\n    title varchar2(255),\\n    author varchar2(100),\\n    published_year number,\\n    rating number(3,1)\\n)\"], \"database\": true, \"name\": \"find_unrated_books\", \"postgresql\": [\"CREATE TABLE books (\\n    book_id INTEGER,\\n    title VARCHAR(255),\\n    author VARCHAR(100),\\n    published_year INTEGER,\\n    rating NUMERIC(3, 1)\\n);\\n\"], \"pythondata\": [\"books = pd.DataFrame({ \\\"book_id\\\": pd.Series(dtype=\\\"int\\\"), \\\"title\\\": pd.Series(dtype=\\\"str\\\"), \\\"author\\\": pd.Series(dtype=\\\"str\\\"), \\\"published_year\\\": pd.Series(dtype=\\\"int\\\"), \\\"rating\\\": pd.Series(dtype=\\\"float\\\") })\\n\"], \"database_schema\": {\"books\": {\"book_id\": \"INT\", \"title\": \"VARCHAR(255)\", \"author\": \"VARCHAR(100)\", \"published_year\": \"INT\", \"rating\": \"DECIMAL(3, 1)\"}}}",
+  "stats": "{\"totalAccepted\": \"3.6K\", \"totalSubmission\": \"4.3K\", \"totalAcceptedRaw\": 3562, \"totalSubmissionRaw\": 4298, \"acRate\": \"82.9%\"}",
+  "likes": 9,
+  "dislikes": 0,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"books\":[\"book_id\",\"title\",\"author\",\"published_year\",\"rating\"]},\"rows\":{\"books\":[[1,\"The Great Gatsby\",\"F. Scott\",1925,4.5],[2,\"To Kill a Mockingbird\",\"Harper Lee\",1960,null],[3,\"Pride and Prejudice\",\"Jane Austen\",1813,4.8],[4,\"The Catcher in the Rye\",\"J.D. Salinger\",1951,null],[5,\"Animal Farm\",\"George Orwell\",1945,4.2],[6,\"Lord of the Flies\",\"William Golding\",1954,null]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_unrated_books(books: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

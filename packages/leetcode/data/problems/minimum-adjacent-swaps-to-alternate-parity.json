@@ -1,0 +1,137 @@
+{
+  "questionId": "3904",
+  "questionFrontendId": "3587",
+  "title": "Minimum Adjacent Swaps to Alternate Parity",
+  "titleSlug": "minimum-adjacent-swaps-to-alternate-parity",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array <code>nums</code> of <strong>distinct</strong> integers.</p>\n\n<p>In one operation, you can swap any two <strong>adjacent</strong> elements in the array.</p>\n\n<p>An arrangement of the array is considered <strong>valid</strong> if the parity of adjacent elements <strong>alternates</strong>, meaning every pair of neighboring elements consists of one even and one odd number.</p>\n\n<p>Return the <strong>minimum</strong> number of adjacent swaps required to transform <code>nums</code> into any valid arrangement.</p>\n\n<p>If it is impossible to rearrange <code>nums</code> such that no two adjacent elements have the same parity, return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [2,4,6,5,7]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Swapping 5 and 6, the array becomes <code>[2,4,5,6,7]</code></p>\n\n<p>Swapping 5 and 4, the array becomes <code>[2,5,4,6,7]</code></p>\n\n<p>Swapping 6 and 7, the array becomes <code>[2,5,4,7,6]</code>. The array is now a valid arrangement. Thus, the answer is 3.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [2,4,5,7]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>By swapping 4 and 5, the array becomes <code>[2,5,4,7]</code>, which is a valid arrangement. Thus, the answer is 1.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,2,3]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The array is already a valid arrangement. Thus, no operations are needed.</p>\n</div>\n\n<p><strong class=\"example\">Example 4:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [4,5,6,8]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">-1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>No valid arrangement is possible. Thus, the answer is -1.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li>All elements in <code>nums</code> are <strong>distinct</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Compute <code>evenCnt</code> and <code>oddCnt</code> in <code>nums</code>. If abs(evenCnt - oddCnt) > 1, return -1 immediately.",
+    "Let <code>n</code> = len(nums). You’ll try at most two target parity‐patterns: one starting with even at index 0, one with odd at index 0.",
+    "If <code>n</code> is odd, only the pattern whose starting parity matches the larger of <code>evenCnt</code> or <code>oddCnt</code> is feasible. If <code>n</code> is even, both starting‐even and starting‐odd patterns are possible—compute both and take the minimum.",
+    "For a given target pattern, collect the indices of all even elements in <code>nums</code> (or odd elements) and the indices where an even (or odd) should go in the pattern.",
+    "The minimum adjacent‐swap cost to align those elements is the sum of absolute differences between each element’s current index and its target index.",
+    "Return the smallest cost over valid patterns."
+  ],
+  "metaData": "{\n  \"name\": \"minSwaps\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"20.7K\", \"totalSubmission\": \"48.9K\", \"totalAcceptedRaw\": 20678, \"totalSubmissionRaw\": 48928, \"acRate\": \"42.3%\"}",
+  "likes": 93,
+  "dislikes": 16,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,4,6,5,7]",
+    "[2,4,5,7]",
+    "[1,2,3]",
+    "[4,5,6,8]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minSwaps(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minSwaps(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minSwaps(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minSwaps(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar minSwaps = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minSwaps(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinSwaps(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minSwaps(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minSwaps(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minSwaps(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minSwaps(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_swaps(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef min_swaps(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function minSwaps($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minSwaps(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minSwaps(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_swaps(nums :: [integer]) :: integer\n  def min_swaps(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_swaps(Nums :: [integer()]) -> integer().\nmin_swaps(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-swaps nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

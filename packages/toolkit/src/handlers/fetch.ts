@@ -54,6 +54,7 @@ export async function handleFetchCommand(
       useBrowser: values.browser,
       useSitemap: values.sitemap,
       verbose: values.verbose,
+      quiet: values.json,
       tags: values.tags?.split(",") ?? [],
     });
 

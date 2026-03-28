@@ -1,0 +1,53 @@
+{
+  "questionId": "3726",
+  "questionFrontendId": "3390",
+  "title": "Longest Team Pass Streak",
+  "titleSlug": "longest-team-pass-streak",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Teams</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| player_id   | int     |\n| team_name   | varchar | \n+-------------+---------+\nplayer_id is the unique key for this table.\nEach row contains the unique identifier for player and the name of one of the teams participating in that match.\n</pre>\n\n<p>Table: <code>Passes</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| pass_from   | int     |\n| time_stamp  | varchar |\n| pass_to     | int     |\n+-------------+---------+\n(pass_from, time_stamp) is the unique key for this table.\npass_from is a foreign key to player_id from Teams table.\nEach row represents a pass made during a match, time_stamp represents the time in minutes (00:00-90:00) when the pass was made,\npass_to is the player_id of the player receiving the pass.\n</pre>\n\n<p>Write a solution to find the <strong>longest successful pass streak</strong> for <strong>each team</strong> during the match. The rules are as follows:</p>\n\n<ul>\n\t<li>A successful pass streak is defined as consecutive passes where:\n\t<ul>\n\t\t<li>Both the <code>pass_from</code> and <code>pass_to</code> players belong to the same team</li>\n\t</ul>\n\t</li>\n\t<li>A streak breaks when either:\n\t<ul>\n\t\t<li>The pass is intercepted (received by a player from the opposing team)</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>Return <em>the result table ordered by</em> <code>team_name</code> <em>in <strong>ascending</strong> order</em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>Teams table:</p>\n\n<pre>\n+-----------+-----------+\n| player_id | team_name |\n+-----------+-----------+\n| 1         | Arsenal   |\n| 2         | Arsenal   |\n| 3         | Arsenal   |\n| 4         | Arsenal   |\n| 5         | Chelsea   |\n| 6         | Chelsea   |\n| 7         | Chelsea   |\n| 8         | Chelsea   |\n+-----------+-----------+\n</pre>\n\n<p>Passes table:</p>\n\n<pre>\n+-----------+------------+---------+\n| pass_from | time_stamp | pass_to |\n+-----------+------------+---------+\n| 1         | 00:05      | 2       |\n| 2         | 00:07      | 3       |\n| 3         | 00:08      | 4       |\n| 4         | 00:10      | 5       |\n| 6         | 00:15      | 7       |\n| 7         | 00:17      | 8       |\n| 8         | 00:20      | 6       |\n| 6         | 00:22      | 5       |\n| 1         | 00:25      | 2       |\n| 2         | 00:27      | 3       |\n+-----------+------------+---------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre>\n+-----------+----------------+\n| team_name | longest_streak |\n+-----------+----------------+\n| Arsenal   | 3              |\n| Chelsea   | 4              |\n+-----------+----------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>Arsenal</strong>&#39;s streaks:\n\n\t<ul>\n\t\t<li>First streak: 3 passes (1&rarr;2&rarr;3&rarr;4) ended when player 4 passed to Chelsea&#39;s player 5</li>\n\t\t<li>Second streak: 2 passes (1&rarr;2&rarr;3)</li>\n\t\t<li>Longest streak = 3</li>\n\t</ul>\n\t</li>\n\t<li><strong>Chelsea</strong>&#39;s streaks:\n\t<ul>\n\t\t<li>First streak: 3 passes (6&rarr;7&rarr;8&rarr;6&rarr;5)</li>\n\t\t<li>Longest streak = 4</li>\n\t</ul>\n\t</li>\n</ul>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE If not exists Teams (\\n    player_id INT,\\n    team_name VARCHAR(100)\\n)\\n\\n\", \"CREATE TABLE if not exists Passes (\\n    pass_from INT,\\n    time_stamp VARCHAR(5),\\n    pass_to INT\\n)\"], \"mssql\": [\"CREATE TABLE Teams (\\n    player_id INT,\\n    team_name VARCHAR(100)\\n)\\n\", \"\\nCREATE TABLE Passes (\\n    pass_from INT,\\n    time_stamp VARCHAR(5),\\n    pass_to INT\\n)\"], \"oraclesql\": [\"CREATE TABLE Teams (\\n    player_id NUMBER,\\n    team_name VARCHAR2(100)\\n)\\n\\n\", \"CREATE TABLE Passes (\\n    pass_from NUMBER,\\n    time_stamp VARCHAR2(5),\\n    pass_to NUMBER\\n)\"], \"database\": true, \"name\": \"calculate_longest_streaks\", \"pythondata\": [\"Teams = pd.DataFrame(columns=[\\\"player_id\\\", \\\"team_name\\\"]).astype({\\\"player_id\\\": \\\"int\\\", \\\"team_name\\\": \\\"string\\\"})\\n\", \"Passes = pd.DataFrame(columns=[\\\"pass_from\\\", \\\"time_stamp\\\", \\\"pass_to\\\"]).astype({\\\"pass_from\\\": \\\"int\\\", \\\"time_stamp\\\": \\\"string\\\", \\\"pass_to\\\": \\\"int\\\"})\\n\"], \"postgresql\": [\"CREATE TABLE IF NOT EXISTS Teams (\\n    player_id INTEGER,\\n    team_name VARCHAR(100)\\n);\\n\", \"CREATE TABLE IF NOT EXISTS Passes (\\n    pass_from INTEGER,\\n    time_stamp VARCHAR(5),\\n    pass_to INTEGER\\n);\\n\"], \"database_schema\": {\"Teams\": {\"player_id\": \"INT\", \"team_name\": \"VARCHAR(100)\"}, \"Passes\": {\"pass_from\": \"INT\", \"time_stamp\": \"VARCHAR(5)\", \"pass_to\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"966\", \"totalSubmission\": \"2.4K\", \"totalAcceptedRaw\": 966, \"totalSubmissionRaw\": 2393, \"acRate\": \"40.4%\"}",
+  "likes": 3,
+  "dislikes": 9,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Teams\":[\"player_id\",\"team_name\"],\"Passes\":[\"pass_from\",\"time_stamp\",\"pass_to\"]},\"rows\":{\"Teams\":[[1,\"Arsenal\"],[2,\"Arsenal\"],[3,\"Arsenal\"],[4,\"Arsenal\"],[5,\"Chelsea\"],[6,\"Chelsea\"],[7,\"Chelsea\"],[8,\"Chelsea\"]],\"Passes\":[[1,\"00:05\",2],[2,\"00:07\",3],[3,\"00:08\",4],[4,\"00:10\",5],[6,\"00:15\",7],[7,\"00:17\",8],[8,\"00:20\",6],[6,\"00:22\",5],[1,\"00:25\",2],[2,\"00:27\",3]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef calculate_longest_streaks(teams: pd.DataFrame, passes: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

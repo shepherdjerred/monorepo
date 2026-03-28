@@ -1,0 +1,131 @@
+{
+  "questionId": "3566",
+  "questionFrontendId": "3324",
+  "title": "Find the Sequence of Strings Appeared on the Screen",
+  "titleSlug": "find-the-sequence-of-strings-appeared-on-the-screen",
+  "difficulty": "Medium",
+  "content": "<p>You are given a string <code>target</code>.</p>\n\n<p>Alice is going to type <code>target</code> on her computer using a special keyboard that has <strong>only two</strong> keys:</p>\n\n<ul>\n\t<li>Key 1 appends the character <code>&quot;a&quot;</code> to the string on the screen.</li>\n\t<li>Key 2 changes the <strong>last</strong> character of the string on the screen to its <strong>next</strong> character in the English alphabet. For example, <code>&quot;c&quot;</code> changes to <code>&quot;d&quot;</code> and <code>&quot;z&quot;</code> changes to <code>&quot;a&quot;</code>.</li>\n</ul>\n\n<p><strong>Note</strong> that initially there is an <em>empty</em> string <code>&quot;&quot;</code> on the screen, so she can <strong>only</strong> press key 1.</p>\n\n<p>Return a list of <em>all</em> strings that appear on the screen as Alice types <code>target</code>, in the order they appear, using the <strong>minimum</strong> key presses.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">target = &quot;abc&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[&quot;a&quot;,&quot;aa&quot;,&quot;ab&quot;,&quot;aba&quot;,&quot;abb&quot;,&quot;abc&quot;]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The sequence of key presses done by Alice are:</p>\n\n<ul>\n\t<li>Press key 1, and the string on the screen becomes <code>&quot;a&quot;</code>.</li>\n\t<li>Press key 1, and the string on the screen becomes <code>&quot;aa&quot;</code>.</li>\n\t<li>Press key 2, and the string on the screen becomes <code>&quot;ab&quot;</code>.</li>\n\t<li>Press key 1, and the string on the screen becomes <code>&quot;aba&quot;</code>.</li>\n\t<li>Press key 2, and the string on the screen becomes <code>&quot;abb&quot;</code>.</li>\n\t<li>Press key 2, and the string on the screen becomes <code>&quot;abc&quot;</code>.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">target = &quot;he&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[&quot;a&quot;,&quot;b&quot;,&quot;c&quot;,&quot;d&quot;,&quot;e&quot;,&quot;f&quot;,&quot;g&quot;,&quot;h&quot;,&quot;ha&quot;,&quot;hb&quot;,&quot;hc&quot;,&quot;hd&quot;,&quot;he&quot;]</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= target.length &lt;= 400</code></li>\n\t<li><code>target</code> consists only of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Append the character <code>'a'</code> using key 1.",
+    "Convert it to the required character using key 2."
+  ],
+  "metaData": "{\n  \"name\": \"stringSequence\",\n  \"params\": [\n    {\n      \"name\": \"target\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<string>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"42.4K\", \"totalSubmission\": \"52.9K\", \"totalAcceptedRaw\": 42441, \"totalSubmissionRaw\": 52882, \"acRate\": \"80.3%\"}",
+  "likes": 140,
+  "dislikes": 12,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Keyboard Row\", \"titleSlug\": \"keyboard-row\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abc\"",
+    "\"he\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> stringSequence(string target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> stringSequence(String target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def stringSequence(self, target: str) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def stringSequence(self, target):\n        \"\"\"\n        :type target: str\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} target\n * @return {string[]}\n */\nvar stringSequence = function(target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function stringSequence(target: string): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> StringSequence(string target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** stringSequence(char* target, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func stringSequence(target string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun stringSequence(target: String): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func stringSequence(_ target: String) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn string_sequence(target: String) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} target\n# @return {String[]}\ndef string_sequence(target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $target\n     * @return String[]\n     */\n    function stringSequence($target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> stringSequence(String target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def stringSequence(target: String): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec string_sequence(target :: String.t) :: [String.t]\n  def string_sequence(target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec string_sequence(Target :: unicode:unicode_binary()) -> [unicode:unicode_binary()].\nstring_sequence(Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (string-sequence target)\n  (-> string? (listof string?))\n  )"
+    }
+  ],
+  "solution": null
+}

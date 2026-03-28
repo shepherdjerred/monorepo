@@ -1,0 +1,159 @@
+{
+  "questionId": "3772",
+  "questionFrontendId": "3510",
+  "title": "Minimum Pair Removal to Sort Array II",
+  "titleSlug": "minimum-pair-removal-to-sort-array-ii",
+  "difficulty": "Hard",
+  "content": "<p>Given an array <code>nums</code>, you can perform the following operation any number of times:</p>\n\n<ul>\n\t<li>Select the <strong>adjacent</strong> pair with the <strong>minimum</strong> sum in <code>nums</code>. If multiple such pairs exist, choose the leftmost one.</li>\n\t<li>Replace the pair with their sum.</li>\n</ul>\n\n<p>Return the <strong>minimum number of operations</strong> needed to make the array <strong>non-decreasing</strong>.</p>\n\n<p>An array is said to be <strong>non-decreasing</strong> if each element is greater than or equal to its previous element (if it exists).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [5,2,3,1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>The pair <code>(3,1)</code> has the minimum sum of 4. After replacement, <code>nums = [5,2,4]</code>.</li>\n\t<li>The pair <code>(2,4)</code> has the minimum sum of 6. After replacement, <code>nums = [5,6]</code>.</li>\n</ul>\n\n<p>The array <code>nums</code> became non-decreasing in two operations.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,2,2]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The array <code>nums</code> is already sorted.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "We can perform the simulation using data structures.",
+    "Maintain an array index and value using a map since we need to find the next and previous ones.",
+    "Maintain the indices to be removed using a hash set.",
+    "Maintain the neighbor sums with the smaller indices (set or priority queue).",
+    "Keep the 3 structures in sync during the removals."
+  ],
+  "metaData": "{\n  \"name\": \"minimumPairRemoval\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"65.4K\", \"totalSubmission\": \"167.2K\", \"totalAcceptedRaw\": 65372, \"totalSubmissionRaw\": 167205, \"acRate\": \"39.1%\"}",
+  "likes": 406,
+  "dislikes": 39,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[5,2,3,1]",
+    "[1,2,2]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    },
+    {
+      "name": "Doubly-Linked List",
+      "slug": "doubly-linked-list"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumPairRemoval(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumPairRemoval(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumPairRemoval(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumPairRemoval(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar minimumPairRemoval = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumPairRemoval(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumPairRemoval(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumPairRemoval(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumPairRemoval(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumPairRemoval(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumPairRemoval(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_pair_removal(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef minimum_pair_removal(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function minimumPairRemoval($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumPairRemoval(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumPairRemoval(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_pair_removal(nums :: [integer]) :: integer\n  def minimum_pair_removal(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_pair_removal(Nums :: [integer()]) -> integer().\nminimum_pair_removal(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-pair-removal nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2912",
+    "content": "### Approach: Priority Queue + Lazy Deletion\n\n#### Intuition\n\nThis problem is an enhanced version of [3507. Minimum Pair Removal to Sort Array I](https://leetcode.com/problems/minimum-pair-removal-to-sort-array-i/). A naive simulation will time out for this data scale, so we need to optimize the three key logic steps in the original simulation: finding the minimum adjacent pair sum, checking the monotonicity of the current array, and merging the minimum adjacent pair.\n\n**Maintain the minimum sum of adjacent number pairs**\n\nFirstly, consider how to find the sum of the smallest adjacent number pair. It is easy to think of using a priority queue to maintain all adjacent pairs. We store references to adjacent number pairs in the priority queue. Assuming the current adjacent number pair popped out is $(i, j)$, after the merge operation, the elements originally located at $i - 1$ and $j + 1$ will form two new adjacent number pairs with the newly merged element. Therefore, these new number pairs need to be added to the priority queue. At the same time, the two number pairs originally formed by $(i - 1, i)$ and $(j, j + 1)$, if they exist, become dirty data in the priority queue. In this situation, it is common to apply the lazy deletion technique, that is, determine whether the popped data is dirty data during the pop operation, rather than immediately deleting the corresponding elements from the priority queue.\n\nThere are multiple ways to determine whether elements in a priority queue are dirty data. Here is one approach: assuming that pairs are always merged to the left, we maintain two pieces of information:\n\n- Use a $\\textit{merged}$ array to determine whether an element at a certain position has already been merged. Only when both elements are not merged are their references considered valid.\n- When storing a pair of numbers, store the current pair and its sum. When popping the pair, even if both elements are valid, if the sum has changed, it is clearly dirty data.\n\nThere exists an extreme case where both elements in a pair are valid and the sum of the pair remains unchanged, yet the pair is still considered dirty data. It can be proven that this situation does not affect the correctness of the result, because even if the pair is dirty data, it remains the target of the current merge round.\n\n**Maintain the monotonicity of the array**\n\nNext, we determine the monotonicity of the array. It is not difficult to observe that the monotonicity of adjacent elements determines the overall monotonicity of the array. Therefore, we maintain a variable $\\textit{decreaseCount}$, which represents the number of decreasing adjacent pairs in the current $\\textit{nums}$. Clearly, when $\\textit{decreaseCount}$ is $0$, $\\textit{nums}$ is in a non-decreasing state.\n\nWe can maintain the changes in $\\textit{decreaseCount}$ during the process of merging a pair $(i, j)$. We consider three cases:\n\n- For the pair $(i, j)$, if it originally satisfies $\\textit{nums}[i] > \\textit{nums}[j]$, then $\\textit{decreaseCount}$ should be decremented by one.\n- If $i$ is not the first element, consider the change in monotonicity between $\\textit{nums}[i - 1]$ and $\\textit{nums}[i]$ before and after merging. If it changes from decreasing to non-decreasing, decrement $\\textit{decreaseCount}$ by one; otherwise, increment it by one.\n- Similarly, if $j$ is not the last element, apply the same logic to update the relationship between $\\textit{nums}[j]$ and $\\textit{nums}[j + 1]$.\n\nAt this point, $\\textit{decreaseCount} = 0$ becomes the termination condition of the outer loop.\n\n**Merge elements**\n\nAfter the above processing, we no longer need to traverse $\\textit{nums}$ directly. Instead, we only need to obtain the predecessor and successor of the current pair. Moreover, merging elements inevitably involves deletion in a linear structure. Therefore, using a doubly linked list to maintain $\\textit{nums}$ is the most suitable choice.\n\nAfter optimizing the above three logic steps, simulating the process of repeatedly finding the minimum adjacent pair and merging them according to the problem requirements allows us to solve the problem efficiently.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TPdy9op4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TPdy9op4\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of $\\textit{nums}$.\n\n- Time complexity: $O(n \\log n)$.\n  \n  The merge operation can be performed at most $n - 1$ times. Each merge involves priority queue operations that take $O(\\log n)$ time, while all other operations are constant time. Therefore, the overall time complexity is $O(n \\log n)$.\n\n- Space complexity: $O(n)$.\n  \n  The auxiliary data structures, including the doubly linked list and the priority queue, occupy $O(n)$ space.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

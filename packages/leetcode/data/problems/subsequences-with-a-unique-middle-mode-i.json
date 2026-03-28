@@ -1,0 +1,140 @@
+{
+  "questionId": "3700",
+  "questionFrontendId": "3395",
+  "title": "Subsequences with a Unique Middle Mode I",
+  "titleSlug": "subsequences-with-a-unique-middle-mode-i",
+  "difficulty": "Hard",
+  "content": "<p>Given an integer array <code>nums</code>, find the number of <span data-keyword=\"subsequence-array\">subsequences</span> of size 5 of&nbsp;<code>nums</code> with a <strong>unique middle mode</strong>.</p>\n\n<p>Since the answer may be very large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>A <strong>mode</strong> of a sequence of numbers is defined as the element that appears the <strong>maximum</strong> number of times in the sequence.</p>\n\n<p>A sequence of numbers contains a<strong> unique mode</strong> if it has only one mode.</p>\n\n<p>A sequence of numbers <code>seq</code> of size 5 contains a <strong>unique middle mode</strong> if the <em>middle element</em> (<code>seq[2]</code>) is a <strong>unique mode</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,1,1,1,1,1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">6</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><code>[1, 1, 1, 1, 1]</code> is the only subsequence of size 5 that can be formed, and it has a unique middle mode of 1. This subsequence can be formed in 6 different ways, so the output is 6.&nbsp;</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,2,2,3,3,4]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">4</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><code>[1, 2, 2, 3, 4]</code> and <code>[1, 2, 3, 3, 4]</code>&nbsp;each have a unique middle mode because the number at index 2 has the greatest frequency in the subsequence. <code>[1, 2, 2, 3, 3]</code> does not have a unique middle mode because 2 and 3 appear twice.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [0,1,2,3,4,5,6,7,8]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There is no subsequence of length 5 with a unique middle mode.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>5 &lt;= nums.length &lt;= 1000</code></li>\n\t<li><code><font face=\"monospace\">-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></font></code></li>\n</ul>\n",
+  "hints": [
+    "For each index, find the number of subsequences for which it is the unique middle mode. What combinations of values can the two numbers on the left and the right take?",
+    "For example, we can have exactly 1 element on the left equal to the middle and all other elements differ. What other combinations are acceptable?"
+  ],
+  "metaData": "{\n  \"name\": \"subsequencesWithMiddleMode\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"2.7K\", \"totalSubmission\": \"12.8K\", \"totalAcceptedRaw\": 2708, \"totalSubmissionRaw\": 12839, \"acRate\": \"21.1%\"}",
+  "likes": 24,
+  "dislikes": 25,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Subsequences with a Unique Middle Mode II\", \"titleSlug\": \"subsequences-with-a-unique-middle-mode-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,1,1,1,1,1]",
+    "[1,2,2,3,3,4]",
+    "[0,1,2,3,4,5,6,7,8]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Combinatorics",
+      "slug": "combinatorics"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int subsequencesWithMiddleMode(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int subsequencesWithMiddleMode(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def subsequencesWithMiddleMode(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def subsequencesWithMiddleMode(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar subsequencesWithMiddleMode = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function subsequencesWithMiddleMode(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int SubsequencesWithMiddleMode(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int subsequencesWithMiddleMode(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func subsequencesWithMiddleMode(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun subsequencesWithMiddleMode(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func subsequencesWithMiddleMode(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn subsequences_with_middle_mode(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef subsequences_with_middle_mode(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function subsequencesWithMiddleMode($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int subsequencesWithMiddleMode(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def subsequencesWithMiddleMode(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec subsequences_with_middle_mode(nums :: [integer]) :: integer\n  def subsequences_with_middle_mode(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec subsequences_with_middle_mode(Nums :: [integer()]) -> integer().\nsubsequences_with_middle_mode(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (subsequences-with-middle-mode nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

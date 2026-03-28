@@ -1,0 +1,144 @@
+{
+  "questionId": "3775",
+  "questionFrontendId": "3454",
+  "title": "Separate Squares II",
+  "titleSlug": "separate-squares-ii",
+  "difficulty": "Hard",
+  "content": "<p>You are given a 2D integer array <code>squares</code>. Each <code>squares[i] = [x<sub>i</sub>, y<sub>i</sub>, l<sub>i</sub>]</code> represents the coordinates of the bottom-left point and the side length of a square parallel to the x-axis.</p>\n\n<p>Find the <strong>minimum</strong> y-coordinate value of a horizontal line such that the total area covered by squares above the line <em>equals</em> the total area covered by squares below the line.</p>\n\n<p>Answers within <code>10<sup>-5</sup></code> of the actual answer will be accepted.</p>\n\n<p><strong>Note</strong>: Squares <strong>may</strong> overlap. Overlapping areas should be counted <strong>only once</strong> in this version.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">squares = [[0,0,1],[2,2,1]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1.00000</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2025/01/15/4065example1drawio.png\" style=\"width: 269px; height: 203px;\" /></p>\n\n<p>Any horizontal line between <code>y = 1</code> and <code>y = 2</code> results in an equal split, with 1 square unit above and 1 square unit below. The minimum y-value is 1.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">squares = [[0,0,2],[1,1,1]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1.00000</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2025/01/15/4065example2drawio.png\" style=\"width: 269px; height: 203px;\" /></p>\n\n<p>Since the blue square overlaps with the red square, it will not be counted again. Thus, the line <code>y = 1</code> splits the squares into two equal parts.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= squares.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>squares[i] = [x<sub>i</sub>, y<sub>i</sub>, l<sub>i</sub>]</code></li>\n\t<li><code>squares[i].length == 3</code></li>\n\t<li><code>0 &lt;= x<sub>i</sub>, y<sub>i</sub> &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= l<sub>i</sub> &lt;= 10<sup>9</sup></code></li>\n\t<li>The total area of all the squares will not exceed <code>10<sup>15</sup></code>.</li>\n</ul>\n",
+  "hints": [
+    "Use a line sweep and a segment tree.",
+    "The line must lie in one of the squares."
+  ],
+  "metaData": "{\n  \"name\": \"separateSquares\",\n  \"params\": [\n    {\n      \"name\": \"squares\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"double\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"60.7K\", \"totalSubmission\": \"101.5K\", \"totalAcceptedRaw\": 60677, \"totalSubmissionRaw\": 101467, \"acRate\": \"59.8%\"}",
+  "likes": 272,
+  "dislikes": 65,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Rectangle Area II\", \"titleSlug\": \"rectangle-area-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,0,1],[2,2,1]]",
+    "[[0,0,2],[1,1,1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    },
+    {
+      "name": "Sweep Line",
+      "slug": "line-sweep"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    double separateSquares(vector<vector<int>>& squares) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public double separateSquares(int[][] squares) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def separateSquares(self, squares: List[List[int]]) -> float:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def separateSquares(self, squares):\n        \"\"\"\n        :type squares: List[List[int]]\n        :rtype: float\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} squares\n * @return {number}\n */\nvar separateSquares = function(squares) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function separateSquares(squares: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public double SeparateSquares(int[][] squares) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "double separateSquares(int** squares, int squaresSize, int* squaresColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func separateSquares(squares [][]int) float64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun separateSquares(squares: Array<IntArray>): Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func separateSquares(_ squares: [[Int]]) -> Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn separate_squares(squares: Vec<Vec<i32>>) -> f64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} squares\n# @return {Float}\ndef separate_squares(squares)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $squares\n     * @return Float\n     */\n    function separateSquares($squares) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  double separateSquares(List<List<int>> squares) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def separateSquares(squares: Array[Array[Int]]): Double = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec separate_squares(squares :: [[integer]]) :: float\n  def separate_squares(squares) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec separate_squares(Squares :: [[integer()]]) -> float().\nseparate_squares(Squares) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (separate-squares squares)\n  (-> (listof (listof exact-integer?)) flonum?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2903",
+    "content": "### Approach: Scanning Line + Segment Tree\n\n#### Intuition\n\nSince the overlapping area of squares is counted only once, we can refer to the third approach from the editorial of the problem \"[850. Rectangle Area II](https://leetcode.com/problems/rectangle-area-ii/editorial/)\", which uses a segment tree together with a scan line algorithm.\n\n![3454_1](../Figures/3454/1.png)\n\nConsider the figure above. To compute the covered area at a given moment, we only need to know the total horizontal coverage, such as $w_1 + w_2$. The covered area for that vertical slice is then $h \\times (w_1 + w_2)$. Using a scan line algorithm, we can compute the total area covered by all squares.\n\nThe plane is divided into multiple horizontal strips. The height of each strip is the vertical distance swept by the scan line, while the horizontal coverage varies dynamically. For each square, we mark its bottom edge with $+1$ and its top edge with $-1$. Whenever the scan line encounters a horizontal edge, we update the coverage count for the corresponding interval. The width of each strip is defined as the total length of x-intervals whose coverage count is greater than zero.\n\n![Scanning line](https://oi-wiki.org/geometry/images/scanning.svg)\n\nTo implement this, we first collect and sort all distinct x-coordinates of the squares and discretize them. A segment tree is then used to maintain the dynamic horizontal coverage. As the scan line moves upward, each event updates a continuous x-interval, which is an interval update. Therefore, a segment tree with lazy propagation is required.\n\nEach node of the segment tree maintains:\n\n- the coverage count of the interval\n- the total covered length of the interval when the coverage count is greater than zero\n\nUsing this structure, we can compute the total covered area, denoted as $\\textit{totalArea}$.\n\nNext, we need to find the smallest value of $y$ such that the covered area below $y$ is equal to the covered area above $y$. Let the covered area below a scan line at $y = y'$ be $\\textit{area}$. Then the area above the scan line is $\\textit{totalArea} - \\textit{area}$.\n\nThe problem requires:\n\n$$\n\\textit{area} = \\textit{totalArea}− \\textit{area}\n$$\n\nwhich simplifies to:\n\n$$\n\\textit{area} = \\dfrac{\\textit{totalArea}}{2}\n$$\n\nSuppose the scan line moves from $y = y'$ to the next event at $y = y''$. Let the total horizontal coverage in this interval be $\\textit{width}$. The covered area below $y = y''$ is:\n\n$$\n\\textit{area} + \\textit{width} \\cdot (y^{''} - y^{'})\n$$\n\nIf the following conditions hold:\n\n$$\n\\textit{area} < \\dfrac{\\textit{totalArea}}{2} \\\\\n\\textit{area} + \\textit{width} \\cdot (y^{''} - y{'}) \\ge \\dfrac{\\textit{totalArea}}{2}\n$$\n\nthen the target value of $y$ lies within the interval $[y', y'']$.\n\nSince the horizontal coverage remains constant within this interval, moving the scan line upward by $\\Delta$ increases the covered area by $\\Delta \\cdot \\textit{width}$. To reach exactly half of the total area, the scan line must move up by:\n\n$$\n\\Delta = \\frac{\\frac{\\textit{totalArea}}{2} - \\textit{area}}{\\textit{width}}\n$$\n\nThus, the target value of $y$ is:\n\n$$\ny = y' + \\frac{\\frac{\\textit{totalArea}}{2} - \\textit{area}}{\\textit{width}} = y' + \\frac{\\textit{totalArea} - 2 \\cdot \\textit{area}}{2 \\cdot \\textit{width}}\n$$\n\nIn practice, we can avoid performing a second scan by recording the covered area and horizontal coverage for each height interval during the first scan, and then locating the correct interval using traversal or binary search.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/6idffNK6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6idffNK6\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array $\\textit{squares}$.\n\n- Time complexity: $O(n \\log n)$.\n  \n  The time complexity of sorting is $O(n \\log n)$, and each update and query operation on the segment tree has a time complexity of $O(\\log n)$. Since there are a total of $n$ queries and updates, the overall time complexity is $O(n \\log n)$.\n\n- Space complexity: $O(n)$.\n  \n  The space required for a segment tree is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

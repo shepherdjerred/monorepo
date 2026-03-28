@@ -1,0 +1,53 @@
+{
+  "questionId": "3757",
+  "questionFrontendId": "3415",
+  "title": "Find Products with Three Consecutive Digits ",
+  "titleSlug": "find-products-with-three-consecutive-digits",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Products</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| product_id  | int     |\n| name        | varchar |\n+-------------+---------+\nproduct_id is the unique key for this table.\nEach row of this table contains the ID and name of a product.\n</pre>\n\n<p>Write a solution to find all <strong>products</strong> whose names contain a <strong>sequence of exactly three consecutive digits in a row</strong>.&nbsp;</p>\n\n<p>Return <em>the result table ordered by</em> <code>product_id</code> <em>in <strong>ascending</strong> order.</em></p>\n\n<p>The result format is in the following example.</p>\n\n<p><strong>Note</strong> that the name may contain multiple such sequences, but each should have length three.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>products table:</p>\n\n<pre class=\"example-io\">\n+-------------+--------------------+\n| product_id  | name               |\n+-------------+--------------------+\n| 1           | ABC123XYZ          |\n| 2           | A12B34C            |\n| 3           | Product56789       |\n| 4           | NoDigitsHere       |\n| 5           | 789Product         |\n| 6           | Item003Description |\n| 7           | Product12X34       |\n+-------------+--------------------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+-------------+--------------------+\n| product_id  | name               |\n+-------------+--------------------+\n| 1           | ABC123XYZ          |\n| 5           | 789Product         |\n| 6           | Item003Description |\n+-------------+--------------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Product 1: ABC123XYZ contains the digits 123.</li>\n\t<li>Product 5: 789Product&nbsp;contains the digits 789.</li>\n\t<li>Product 6: Item003Description&nbsp;contains 003, which is exactly three digits.</li>\n</ul>\n\n<p><strong>Note:</strong></p>\n\n<ul>\n\t<li>Results are ordered by <code>product_id</code> in ascending order.</li>\n\t<li>Only products with exactly three consecutive digits in their names are included in the result.</li>\n</ul>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE if not exists products  (\\n    product_id INT,\\n    name VARCHAR(255)\\n)\\n\"], \"mssql\": [\"CREATE TABLE products (\\n    product_id INT,\\n    name VARCHAR(255)\\n)\\n\"], \"oraclesql\": [\"CREATE TABLE products (\\n    product_id NUMBER,\\n    name VARCHAR2(255)\\n)\\n\"], \"postgresql\": [\"CREATE TABLE if not exists products  (\\n    product_id INT,\\n    name VARCHAR(255)\\n)\\n\"], \"database\": true, \"name\": \"find_products\", \"pythondata\": [\"Products = pd.DataFrame(columns=['product_id', 'name']).astype({'product_id': 'int', 'name': 'string'})\"], \"database_schema\": {\"products\": {\"product_id\": \"INT\", \"name\": \"VARCHAR(255)\"}}}",
+  "stats": "{\"totalAccepted\": \"2K\", \"totalSubmission\": \"2.5K\", \"totalAcceptedRaw\": 2041, \"totalSubmissionRaw\": 2527, \"acRate\": \"80.8%\"}",
+  "likes": 4,
+  "dislikes": 3,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Products\":[\"product_id\",\"name\"]},\"rows\":{\"Products\":[[1,\"ABC123XYZ\"],[2,\"A12B34C\"],[3,\"Product56789\"],[4,\"NoDigitsHere\"],[5,\"789Product\"],[6,\"Item003Description\"],[7,\"Product12X34\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_products(products: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

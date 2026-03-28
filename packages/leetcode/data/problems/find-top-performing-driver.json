@@ -1,0 +1,53 @@
+{
+  "questionId": "3624",
+  "questionFrontendId": "3308",
+  "title": "Find Top Performing Driver",
+  "titleSlug": "find-top-performing-driver",
+  "difficulty": "Medium",
+  "content": "<p>Table: <font face=\"monospace\"><code>Drivers</code></font></p>\n\n<pre>\n+--------------+---------+\n| Column Name  | Type    |\n+--------------+---------+\n| driver_id    | int     |\n| name         | varchar |\n| age          | int     |\n| experience   | int     |\n| accidents    | int     |\n+--------------+---------+\n(driver_id) is the unique key for this table.\nEach row includes a driver&#39;s ID, their name, age, years of driving experience, and the number of accidents they&rsquo;ve had.\n</pre>\n\n<p>Table: <font face=\"monospace\"><code>Vehicles</code></font></p>\n\n<pre>\n+--------------+---------+\n| vehicle_id   | int     |\n| driver_id    | int     |\n| model        | varchar |\n| fuel_type    | varchar |\n| mileage      | int     |\n+--------------+---------+\n(vehicle_id, driver_id, fuel_type) is the unique key for this table.\nEach row includes the vehicle&#39;s ID, the driver who operates it, the model, fuel type, and mileage.\n</pre>\n\n<p>Table: <font face=\"monospace\"><code>Trips</code></font></p>\n\n<pre>\n+--------------+---------+\n| trip_id      | int     |\n| vehicle_id   | int     |\n| distance     | int     |\n| duration     | int     |\n| rating       | int     |\n+--------------+---------+\n(trip_id) is the unique key for this table.\nEach row includes a trip&#39;s ID, the vehicle used, the distance covered (in miles), the trip duration (in minutes), and the passenger&#39;s rating (1-5).\n</pre>\n\n<p>Uber is analyzing drivers based on their trips. Write a solution to find the <strong>top-performing driver</strong> for <strong>each fuel type</strong> based on the following criteria:</p>\n\n<ol>\n\t<li>A driver&#39;s performance is calculated as the <strong>average rating</strong> across all their trips. Average rating should be rounded to <code>2</code> decimal places.</li>\n\t<li>If two drivers have the same average rating, the driver with the <strong>longer total distance</strong> traveled should be ranked higher.</li>\n\t<li>If there is <strong>still a tie</strong>, choose the driver with the <strong>fewest accidents</strong>.</li>\n</ol>\n\n<p>Return <em>the result table ordered by</em> <code>fuel_type</code> <em>in </em><strong>ascending</strong><em> order.</em></p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p><code>Drivers</code> table:</p>\n\n<pre class=\"example-io\">\n+-----------+----------+-----+------------+-----------+\n| driver_id | name     | age | experience | accidents |\n+-----------+----------+-----+------------+-----------+\n| 1         | Alice    | 34  | 10         | 1         |\n| 2         | Bob      | 45  | 20         | 3         |\n| 3         | Charlie  | 28  | 5          | 0         |\n+-----------+----------+-----+------------+-----------+\n</pre>\n\n<p><code>Vehicles</code> table:</p>\n\n<pre class=\"example-io\">\n+------------+-----------+---------+-----------+---------+\n| vehicle_id | driver_id | model   | fuel_type | mileage |\n+------------+-----------+---------+-----------+---------+\n| 100        | 1         | Sedan   | Gasoline  | 20000   |\n| 101        | 2         | SUV     | Electric  | 30000   |\n| 102        | 3         | Coupe   | Gasoline  | 15000   |\n+------------+-----------+---------+-----------+---------+\n</pre>\n\n<p><code>Trips</code> table:</p>\n\n<pre class=\"example-io\">\n+---------+------------+----------+----------+--------+\n| trip_id | vehicle_id | distance | duration | rating |\n+---------+------------+----------+----------+--------+\n| 201     | 100        | 50       | 30       | 5      |\n| 202     | 100        | 30       | 20       | 4      |\n| 203     | 101        | 100      | 60       | 4      |\n| 204     | 101        | 80       | 50       | 5      |\n| 205     | 102        | 40       | 30       | 5      |\n| 206     | 102        | 60       | 40       | 5      |\n+---------+------------+----------+----------+--------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+-----------+-----------+--------+----------+\n| fuel_type | driver_id | rating | distance |\n+-----------+-----------+--------+----------+\n| Electric  | 2         | 4.50   | 180      |\n| Gasoline  | 3         | 5.00   | 100      |\n+-----------+-----------+--------+----------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>For fuel type <code>Gasoline</code>, both Alice (Driver 1) and Charlie (Driver 3) have trips. Charlie has an average rating of 5.0, while Alice has 4.5. Therefore, Charlie is selected.</li>\n\t<li>For fuel type <code>Electric</code>, Bob (Driver 2) is the only driver with an average rating of 4.5, so he is selected.</li>\n</ul>\n\n<p>The output table is ordered by <code>fuel_type</code> in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE If not exists Drivers (\\n    driver_id INT ,\\n    name VARCHAR(100),\\n    age INT,\\n    experience INT,\\n    accidents INT\\n)\", \"CREATE TABLE If not exists Vehicles (\\n    vehicle_id INT ,\\n    driver_id INT,\\n    model VARCHAR(100),\\n    fuel_type VARCHAR(50),\\n    mileage INT)\", \"CREATE TABLE  If not exists Trips (\\n    trip_id INT ,\\n    vehicle_id INT,\\n    distance INT,\\n    duration INT,\\n    rating INT\\n)\"], \"mssql\": [\"CREATE TABLE Drivers (\\n    driver_id INT,\\n    name NVARCHAR(100),\\n    age INT,\\n    experience INT,\\n    accidents INT\\n)\", \"CREATE TABLE Vehicles (\\n    vehicle_id INT,\\n    driver_id INT,\\n    model NVARCHAR(100),\\n    fuel_type NVARCHAR(50),\\n    mileage INT\\n)\", \"CREATE TABLE Trips (\\n    trip_id INT,\\n    vehicle_id INT,\\n    distance INT,\\n    duration INT,\\n    rating INT CHECK (rating BETWEEN 1 AND 5)\\n)\"], \"oraclesql\": [\"CREATE TABLE Drivers (\\n    driver_id NUMBER,\\n    name VARCHAR2(100),\\n    age NUMBER,\\n    experience NUMBER,\\n    accidents NUMBER\\n)\", \"CREATE TABLE Vehicles (\\n    vehicle_id NUMBER,\\n    driver_id NUMBER,\\n    model VARCHAR2(100),\\n    fuel_type VARCHAR2(50),\\n    mileage NUMBER\\n)\", \"\\nCREATE TABLE Trips (\\n    trip_id NUMBER,\\n    vehicle_id NUMBER,\\n    distance NUMBER,\\n    duration NUMBER,\\n    rating NUMBER )\"], \"database\": true, \"name\": \"get_top_performing_drivers\", \"pythondata\": [\"Drivers = pd.DataFrame({\\n    'driver_id': pd.Series(dtype='int'),\\n    'name': pd.Series(dtype='str'),\\n    'age': pd.Series(dtype='int'),\\n    'experience': pd.Series(dtype='int'),\\n    'accidents': pd.Series(dtype='int')\\n})\", \"Vehicles = pd.DataFrame({\\n    'vehicle_id': pd.Series(dtype='int'),\\n    'driver_id': pd.Series(dtype='int'),\\n    'model': pd.Series(dtype='str'),\\n    'fuel_type': pd.Series(dtype='str'),\\n    'mileage': pd.Series(dtype='int')\\n})\", \"Trips = pd.DataFrame({\\n    'trip_id': pd.Series(dtype='int'),\\n    'vehicle_id': pd.Series(dtype='int'),\\n    'distance': pd.Series(dtype='int'),\\n    'duration': pd.Series(dtype='int'),\\n    'rating': pd.Series(dtype='int')\\n})\"], \"postgresql\": [\"CREATE TABLE Drivers (\\n    driver_id SERIAL PRIMARY KEY,\\n    name VARCHAR(100),\\n    age INT,\\n    experience INT,\\n    accidents INT\\n);\\n\", \"CREATE TABLE Vehicles (\\n    vehicle_id SERIAL PRIMARY KEY,\\n    driver_id INT,\\n    model VARCHAR(100),\\n    fuel_type VARCHAR(50),\\n    mileage INT\\n);\\n\", \"CREATE TABLE Trips (\\n    trip_id SERIAL PRIMARY KEY,\\n    vehicle_id INT,\\n    distance INT,\\n    duration INT,\\n    rating INT CHECK (rating BETWEEN 1 AND 5)\\n);\\n\", \"TRUNCATE TABLE Vehicles, Drivers;\\n\"], \"database_schema\": {\"Drivers\": {\"driver_id\": \"INT\", \"name\": \"VARCHAR(100)\", \"age\": \"INT\", \"experience\": \"INT\", \"accidents\": \"INT\"}, \"Vehicles\": {\"vehicle_id\": \"INT\", \"driver_id\": \"INT\", \"model\": \"VARCHAR(100)\", \"fuel_type\": \"VARCHAR(50)\", \"mileage\": \"INT\"}, \"Trips\": {\"trip_id\": \"INT\", \"vehicle_id\": \"INT\", \"distance\": \"INT\", \"duration\": \"INT\", \"rating\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"2.5K\", \"totalSubmission\": \"5.1K\", \"totalAcceptedRaw\": 2496, \"totalSubmissionRaw\": 5067, \"acRate\": \"49.3%\"}",
+  "likes": 7,
+  "dislikes": 2,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Drivers\":[\"driver_id\",\"name\",\"age\",\"experience\",\"accidents\"],\"Vehicles\":[\"vehicle_id\",\"driver_id\",\"model\",\"fuel_type\",\"mileage\"],\"Trips\":[\"trip_id\",\"vehicle_id\",\"distance\",\"duration\",\"rating\"]},\"rows\":{\"Drivers\":[[1,\"Alice\",34,10,1],[2,\"Bob\",45,20,3],[3,\"Charlie\",28,5,0]],\"Vehicles\":[[100,1,\"Sedan\",\"Gasoline\",20000],[101,2,\"SUV\",\"Electric\",30000],[102,3,\"Coupe\",\"Gasoline\",15000]],\"Trips\":[[201,100,50,30,5],[202,100,30,20,4],[203,101,100,60,4],[204,101,80,50,5],[205,102,40,30,5],[206,102,60,40,5]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef get_top_performing_drivers(drivers: pd.DataFrame, vehicles: pd.DataFrame, trips: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

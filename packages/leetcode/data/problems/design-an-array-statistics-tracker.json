@@ -1,0 +1,150 @@
+{
+  "questionId": "3710",
+  "questionFrontendId": "3369",
+  "title": "Design an Array Statistics Tracker ",
+  "titleSlug": "design-an-array-statistics-tracker",
+  "difficulty": "Hard",
+  "content": "<p>Design a data structure that keeps track of the values in it and answers some queries regarding their mean, median, and mode.</p>\n\n<p>Implement the <code>StatisticsTracker</code> class.</p>\n\n<ul>\n\t<li><code>StatisticsTracker()</code>: Initialize&nbsp;the <code>StatisticsTracker</code> object with an empty array.</li>\n\t<li><code>void addNumber(int number)</code>: Add&nbsp;<code>number</code> to the data structure.</li>\n\t<li><code>void removeFirstAddedNumber()</code>: Remove&nbsp;the earliest added number from the data structure.</li>\n\t<li><code>int getMean()</code>: Return&nbsp;the floored <strong>mean</strong> of the numbers in the data structure.</li>\n\t<li><code>int getMedian()</code>: Return&nbsp;the <strong>median</strong> of the numbers in the data structure.</li>\n\t<li><code>int getMode()</code>: Return&nbsp;the <strong>mode</strong> of the numbers in the data structure. If there are multiple modes, return the smallest one.</li>\n</ul>\n\n<p><strong>Note</strong>:</p>\n\n<ul>\n\t<li>The <strong>mean</strong> of an array is the sum of all the values divided by the number of values in the array.</li>\n\t<li>The <strong>median</strong> of an array is the middle element of the array when it is sorted in non-decreasing order. If there are two choices for a median, the larger of the two values is taken.</li>\n\t<li>The <strong>mode</strong> of an array is the element that appears most often in the array.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong><br />\n<span class=\"example-io\">[&quot;StatisticsTracker&quot;, &quot;addNumber&quot;, &quot;addNumber&quot;, &quot;addNumber&quot;, &quot;addNumber&quot;, &quot;getMean&quot;, &quot;getMedian&quot;, &quot;getMode&quot;, &quot;removeFirstAddedNumber&quot;, &quot;getMode&quot;]<br />\n[[], [4], [4], [2], [3], [], [], [], [], []]</span></p>\n\n<p><strong>Output:</strong><br />\n<span class=\"example-io\">[null, null, null, null, null, 3, 4, 4, null, 2] </span></p>\n\n<p><strong>Explanation</strong></p>\nStatisticsTracker statisticsTracker = new StatisticsTracker();<br />\nstatisticsTracker.addNumber(4); // The data structure now contains [4]<br />\nstatisticsTracker.addNumber(4); // The data structure now contains [4, 4]<br />\nstatisticsTracker.addNumber(2); // The data structure now contains [4, 4, 2]<br />\nstatisticsTracker.addNumber(3); // The data structure now contains [4, 4, 2, 3]<br />\nstatisticsTracker.getMean(); // return 3<br />\nstatisticsTracker.getMedian(); // return 4<br />\nstatisticsTracker.getMode(); // return 4<br />\nstatisticsTracker.removeFirstAddedNumber(); // The data structure now contains [4, 2, 3]<br />\nstatisticsTracker.getMode(); // return 2</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong><br />\n<span class=\"example-io\">[&quot;StatisticsTracker&quot;, &quot;addNumber&quot;, &quot;addNumber&quot;, &quot;getMean&quot;, &quot;removeFirstAddedNumber&quot;, &quot;addNumber&quot;, &quot;addNumber&quot;, &quot;removeFirstAddedNumber&quot;, &quot;getMedian&quot;, &quot;addNumber&quot;, &quot;getMode&quot;]<br />\n[[], [9], [5], [], [], [5], [6], [], [], [8], []]</span></p>\n\n<p><strong>Output:</strong><br />\n<span class=\"example-io\">[null, null, null, 7, null, null, null, null, 6, null, 5] </span></p>\n\n<p><strong>Explanation</strong></p>\nStatisticsTracker statisticsTracker = new StatisticsTracker();<br />\nstatisticsTracker.addNumber(9); // The data structure now contains [9]<br />\nstatisticsTracker.addNumber(5); // The data structure now contains [9, 5]<br />\nstatisticsTracker.getMean(); // return 7<br />\nstatisticsTracker.removeFirstAddedNumber(); // The data structure now contains [5]<br />\nstatisticsTracker.addNumber(5); // The data structure now contains [5, 5]<br />\nstatisticsTracker.addNumber(6); // The data structure now contains [5, 5, 6]<br />\nstatisticsTracker.removeFirstAddedNumber(); // The data structure now contains [5, 6]<br />\nstatisticsTracker.getMedian(); // return 6<br />\nstatisticsTracker.addNumber(8); // The data structure now contains [5, 6, 8]<br />\nstatisticsTracker.getMode(); // return 5</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= number &lt;= 10<sup>9</sup></code></li>\n\t<li>At most, <code>10<sup>5</sup></code> calls will be made to <code>addNumber</code>, <code>removeFirstAddedNumber</code>, <code>getMean</code>, <code>getMedian</code>, and <code>getMode</code> in total.</li>\n\t<li><code>removeFirstAddedNumber</code>, <code>getMean</code>, <code>getMedian</code>, and <code>getMode</code> will be called only if there is at least one element in the data structure.</li>\n</ul>\n",
+  "hints": [
+    "Maintain separate data structures for each statistic."
+  ],
+  "metaData": "{\n  \"classname\": \"StatisticsTracker\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"number\"\n        }\n      ],\n      \"name\": \"addNumber\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [],\n      \"name\": \"removeFirstAddedNumber\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [],\n      \"name\": \"getMean\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    },\n    {\n      \"params\": [],\n      \"name\": \"getMedian\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    },\n    {\n      \"params\": [],\n      \"name\": \"getMode\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"1.4K\", \"totalSubmission\": \"3.9K\", \"totalAcceptedRaw\": 1407, \"totalSubmissionRaw\": 3940, \"acRate\": \"35.7%\"}",
+  "likes": 15,
+  "dislikes": 2,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"StatisticsTracker\",\"addNumber\",\"addNumber\",\"addNumber\",\"addNumber\",\"getMean\",\"getMedian\",\"getMode\",\"removeFirstAddedNumber\",\"getMode\"]\n[[],[4],[4],[2],[3],[],[],[],[],[]]",
+    "[\"StatisticsTracker\",\"addNumber\",\"addNumber\",\"getMean\",\"removeFirstAddedNumber\",\"addNumber\",\"addNumber\",\"removeFirstAddedNumber\",\"getMedian\",\"addNumber\",\"getMode\"]\n[[],[9],[5],[],[],[5],[6],[],[],[8],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Data Stream",
+      "slug": "data-stream"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class StatisticsTracker {\npublic:\n    StatisticsTracker() {\n        \n    }\n    \n    void addNumber(int number) {\n        \n    }\n    \n    void removeFirstAddedNumber() {\n        \n    }\n    \n    int getMean() {\n        \n    }\n    \n    int getMedian() {\n        \n    }\n    \n    int getMode() {\n        \n    }\n};\n\n/**\n * Your StatisticsTracker object will be instantiated and called as such:\n * StatisticsTracker* obj = new StatisticsTracker();\n * obj->addNumber(number);\n * obj->removeFirstAddedNumber();\n * int param_3 = obj->getMean();\n * int param_4 = obj->getMedian();\n * int param_5 = obj->getMode();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class StatisticsTracker {\n\n    public StatisticsTracker() {\n        \n    }\n    \n    public void addNumber(int number) {\n        \n    }\n    \n    public void removeFirstAddedNumber() {\n        \n    }\n    \n    public int getMean() {\n        \n    }\n    \n    public int getMedian() {\n        \n    }\n    \n    public int getMode() {\n        \n    }\n}\n\n/**\n * Your StatisticsTracker object will be instantiated and called as such:\n * StatisticsTracker obj = new StatisticsTracker();\n * obj.addNumber(number);\n * obj.removeFirstAddedNumber();\n * int param_3 = obj.getMean();\n * int param_4 = obj.getMedian();\n * int param_5 = obj.getMode();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class StatisticsTracker:\n\n    def __init__(self):\n        \n\n    def addNumber(self, number: int) -> None:\n        \n\n    def removeFirstAddedNumber(self) -> None:\n        \n\n    def getMean(self) -> int:\n        \n\n    def getMedian(self) -> int:\n        \n\n    def getMode(self) -> int:\n        \n\n\n# Your StatisticsTracker object will be instantiated and called as such:\n# obj = StatisticsTracker()\n# obj.addNumber(number)\n# obj.removeFirstAddedNumber()\n# param_3 = obj.getMean()\n# param_4 = obj.getMedian()\n# param_5 = obj.getMode()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class StatisticsTracker(object):\n\n    def __init__(self):\n        \n\n    def addNumber(self, number):\n        \"\"\"\n        :type number: int\n        :rtype: None\n        \"\"\"\n        \n\n    def removeFirstAddedNumber(self):\n        \"\"\"\n        :rtype: None\n        \"\"\"\n        \n\n    def getMean(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def getMedian(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n    def getMode(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your StatisticsTracker object will be instantiated and called as such:\n# obj = StatisticsTracker()\n# obj.addNumber(number)\n# obj.removeFirstAddedNumber()\n# param_3 = obj.getMean()\n# param_4 = obj.getMedian()\n# param_5 = obj.getMode()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar StatisticsTracker = function() {\n    \n};\n\n/** \n * @param {number} number\n * @return {void}\n */\nStatisticsTracker.prototype.addNumber = function(number) {\n    \n};\n\n/**\n * @return {void}\n */\nStatisticsTracker.prototype.removeFirstAddedNumber = function() {\n    \n};\n\n/**\n * @return {number}\n */\nStatisticsTracker.prototype.getMean = function() {\n    \n};\n\n/**\n * @return {number}\n */\nStatisticsTracker.prototype.getMedian = function() {\n    \n};\n\n/**\n * @return {number}\n */\nStatisticsTracker.prototype.getMode = function() {\n    \n};\n\n/** \n * Your StatisticsTracker object will be instantiated and called as such:\n * var obj = new StatisticsTracker()\n * obj.addNumber(number)\n * obj.removeFirstAddedNumber()\n * var param_3 = obj.getMean()\n * var param_4 = obj.getMedian()\n * var param_5 = obj.getMode()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class StatisticsTracker {\n    constructor() {\n        \n    }\n\n    addNumber(number: number): void {\n        \n    }\n\n    removeFirstAddedNumber(): void {\n        \n    }\n\n    getMean(): number {\n        \n    }\n\n    getMedian(): number {\n        \n    }\n\n    getMode(): number {\n        \n    }\n}\n\n/**\n * Your StatisticsTracker object will be instantiated and called as such:\n * var obj = new StatisticsTracker()\n * obj.addNumber(number)\n * obj.removeFirstAddedNumber()\n * var param_3 = obj.getMean()\n * var param_4 = obj.getMedian()\n * var param_5 = obj.getMode()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class StatisticsTracker {\n\n    public StatisticsTracker() {\n        \n    }\n    \n    public void AddNumber(int number) {\n        \n    }\n    \n    public void RemoveFirstAddedNumber() {\n        \n    }\n    \n    public int GetMean() {\n        \n    }\n    \n    public int GetMedian() {\n        \n    }\n    \n    public int GetMode() {\n        \n    }\n}\n\n/**\n * Your StatisticsTracker object will be instantiated and called as such:\n * StatisticsTracker obj = new StatisticsTracker();\n * obj.AddNumber(number);\n * obj.RemoveFirstAddedNumber();\n * int param_3 = obj.GetMean();\n * int param_4 = obj.GetMedian();\n * int param_5 = obj.GetMode();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} StatisticsTracker;\n\n\nStatisticsTracker* statisticsTrackerCreate() {\n    \n}\n\nvoid statisticsTrackerAddNumber(StatisticsTracker* obj, int number) {\n    \n}\n\nvoid statisticsTrackerRemoveFirstAddedNumber(StatisticsTracker* obj) {\n    \n}\n\nint statisticsTrackerGetMean(StatisticsTracker* obj) {\n    \n}\n\nint statisticsTrackerGetMedian(StatisticsTracker* obj) {\n    \n}\n\nint statisticsTrackerGetMode(StatisticsTracker* obj) {\n    \n}\n\nvoid statisticsTrackerFree(StatisticsTracker* obj) {\n    \n}\n\n/**\n * Your StatisticsTracker struct will be instantiated and called as such:\n * StatisticsTracker* obj = statisticsTrackerCreate();\n * statisticsTrackerAddNumber(obj, number);\n \n * statisticsTrackerRemoveFirstAddedNumber(obj);\n \n * int param_3 = statisticsTrackerGetMean(obj);\n \n * int param_4 = statisticsTrackerGetMedian(obj);\n \n * int param_5 = statisticsTrackerGetMode(obj);\n \n * statisticsTrackerFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type StatisticsTracker struct {\n    \n}\n\n\nfunc Constructor() StatisticsTracker {\n    \n}\n\n\nfunc (this *StatisticsTracker) AddNumber(number int)  {\n    \n}\n\n\nfunc (this *StatisticsTracker) RemoveFirstAddedNumber()  {\n    \n}\n\n\nfunc (this *StatisticsTracker) GetMean() int {\n    \n}\n\n\nfunc (this *StatisticsTracker) GetMedian() int {\n    \n}\n\n\nfunc (this *StatisticsTracker) GetMode() int {\n    \n}\n\n\n/**\n * Your StatisticsTracker object will be instantiated and called as such:\n * obj := Constructor();\n * obj.AddNumber(number);\n * obj.RemoveFirstAddedNumber();\n * param_3 := obj.GetMean();\n * param_4 := obj.GetMedian();\n * param_5 := obj.GetMode();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class StatisticsTracker() {\n\n    fun addNumber(number: Int) {\n        \n    }\n\n    fun removeFirstAddedNumber() {\n        \n    }\n\n    fun getMean(): Int {\n        \n    }\n\n    fun getMedian(): Int {\n        \n    }\n\n    fun getMode(): Int {\n        \n    }\n\n}\n\n/**\n * Your StatisticsTracker object will be instantiated and called as such:\n * var obj = StatisticsTracker()\n * obj.addNumber(number)\n * obj.removeFirstAddedNumber()\n * var param_3 = obj.getMean()\n * var param_4 = obj.getMedian()\n * var param_5 = obj.getMode()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass StatisticsTracker {\n\n    init() {\n        \n    }\n    \n    func addNumber(_ number: Int) {\n        \n    }\n    \n    func removeFirstAddedNumber() {\n        \n    }\n    \n    func getMean() -> Int {\n        \n    }\n    \n    func getMedian() -> Int {\n        \n    }\n    \n    func getMode() -> Int {\n        \n    }\n}\n\n/**\n * Your StatisticsTracker object will be instantiated and called as such:\n * let obj = StatisticsTracker()\n * obj.addNumber(number)\n * obj.removeFirstAddedNumber()\n * let ret_3: Int = obj.getMean()\n * let ret_4: Int = obj.getMedian()\n * let ret_5: Int = obj.getMode()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct StatisticsTracker {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl StatisticsTracker {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn add_number(&self, number: i32) {\n        \n    }\n    \n    fn remove_first_added_number(&self) {\n        \n    }\n    \n    fn get_mean(&self) -> i32 {\n        \n    }\n    \n    fn get_median(&self) -> i32 {\n        \n    }\n    \n    fn get_mode(&self) -> i32 {\n        \n    }\n}\n\n/**\n * Your StatisticsTracker object will be instantiated and called as such:\n * let obj = StatisticsTracker::new();\n * obj.add_number(number);\n * obj.remove_first_added_number();\n * let ret_3: i32 = obj.get_mean();\n * let ret_4: i32 = obj.get_median();\n * let ret_5: i32 = obj.get_mode();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class StatisticsTracker\n    def initialize()\n        \n    end\n\n\n=begin\n    :type number: Integer\n    :rtype: Void\n=end\n    def add_number(number)\n        \n    end\n\n\n=begin\n    :rtype: Void\n=end\n    def remove_first_added_number()\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def get_mean()\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def get_median()\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def get_mode()\n        \n    end\n\n\nend\n\n# Your StatisticsTracker object will be instantiated and called as such:\n# obj = StatisticsTracker.new()\n# obj.add_number(number)\n# obj.remove_first_added_number()\n# param_3 = obj.get_mean()\n# param_4 = obj.get_median()\n# param_5 = obj.get_mode()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class StatisticsTracker {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $number\n     * @return NULL\n     */\n    function addNumber($number) {\n        \n    }\n  \n    /**\n     * @return NULL\n     */\n    function removeFirstAddedNumber() {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function getMean() {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function getMedian() {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function getMode() {\n        \n    }\n}\n\n/**\n * Your StatisticsTracker object will be instantiated and called as such:\n * $obj = StatisticsTracker();\n * $obj->addNumber($number);\n * $obj->removeFirstAddedNumber();\n * $ret_3 = $obj->getMean();\n * $ret_4 = $obj->getMedian();\n * $ret_5 = $obj->getMode();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class StatisticsTracker {\n\n  StatisticsTracker() {\n    \n  }\n  \n  void addNumber(int number) {\n    \n  }\n  \n  void removeFirstAddedNumber() {\n    \n  }\n  \n  int getMean() {\n    \n  }\n  \n  int getMedian() {\n    \n  }\n  \n  int getMode() {\n    \n  }\n}\n\n/**\n * Your StatisticsTracker object will be instantiated and called as such:\n * StatisticsTracker obj = StatisticsTracker();\n * obj.addNumber(number);\n * obj.removeFirstAddedNumber();\n * int param3 = obj.getMean();\n * int param4 = obj.getMedian();\n * int param5 = obj.getMode();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class StatisticsTracker() {\n\n    def addNumber(number: Int): Unit = {\n        \n    }\n\n    def removeFirstAddedNumber(): Unit = {\n        \n    }\n\n    def getMean(): Int = {\n        \n    }\n\n    def getMedian(): Int = {\n        \n    }\n\n    def getMode(): Int = {\n        \n    }\n\n}\n\n/**\n * Your StatisticsTracker object will be instantiated and called as such:\n * val obj = new StatisticsTracker()\n * obj.addNumber(number)\n * obj.removeFirstAddedNumber()\n * val param_3 = obj.getMean()\n * val param_4 = obj.getMedian()\n * val param_5 = obj.getMode()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule StatisticsTracker do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec add_number(number :: integer) :: any\n  def add_number(number) do\n    \n  end\n\n  @spec remove_first_added_number() :: any\n  def remove_first_added_number() do\n    \n  end\n\n  @spec get_mean() :: integer\n  def get_mean() do\n    \n  end\n\n  @spec get_median() :: integer\n  def get_median() do\n    \n  end\n\n  @spec get_mode() :: integer\n  def get_mode() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# StatisticsTracker.init_()\n# StatisticsTracker.add_number(number)\n# StatisticsTracker.remove_first_added_number()\n# param_3 = StatisticsTracker.get_mean()\n# param_4 = StatisticsTracker.get_median()\n# param_5 = StatisticsTracker.get_mode()\n\n# StatisticsTracker.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec statistics_tracker_init_() -> any().\nstatistics_tracker_init_() ->\n  .\n\n-spec statistics_tracker_add_number(Number :: integer()) -> any().\nstatistics_tracker_add_number(Number) ->\n  .\n\n-spec statistics_tracker_remove_first_added_number() -> any().\nstatistics_tracker_remove_first_added_number() ->\n  .\n\n-spec statistics_tracker_get_mean() -> integer().\nstatistics_tracker_get_mean() ->\n  .\n\n-spec statistics_tracker_get_median() -> integer().\nstatistics_tracker_get_median() ->\n  .\n\n-spec statistics_tracker_get_mode() -> integer().\nstatistics_tracker_get_mode() ->\n  .\n\n\n%% Your functions will be called as such:\n%% statistics_tracker_init_(),\n%% statistics_tracker_add_number(Number),\n%% statistics_tracker_remove_first_added_number(),\n%% Param_3 = statistics_tracker_get_mean(),\n%% Param_4 = statistics_tracker_get_median(),\n%% Param_5 = statistics_tracker_get_mode(),\n\n%% statistics_tracker_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define statistics-tracker%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; add-number : exact-integer? -> void?\n    (define/public (add-number number)\n      )\n    ; remove-first-added-number : -> void?\n    (define/public (remove-first-added-number)\n      )\n    ; get-mean : -> exact-integer?\n    (define/public (get-mean)\n      )\n    ; get-median : -> exact-integer?\n    (define/public (get-median)\n      )\n    ; get-mode : -> exact-integer?\n    (define/public (get-mode)\n      )))\n\n;; Your statistics-tracker% object will be instantiated and called as such:\n;; (define obj (new statistics-tracker%))\n;; (send obj add-number number)\n;; (send obj remove-first-added-number)\n;; (define param_3 (send obj get-mean))\n;; (define param_4 (send obj get-median))\n;; (define param_5 (send obj get-mode))"
+    }
+  ],
+  "solution": null
+}

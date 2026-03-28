@@ -1,0 +1,143 @@
+{
+  "questionId": "3752",
+  "questionFrontendId": "3535",
+  "title": "Unit Conversion II",
+  "titleSlug": "unit-conversion-ii",
+  "difficulty": "Medium",
+  "content": "<p>There are <code>n</code> types of units indexed from <code>0</code> to <code>n - 1</code>.</p>\n\n<p>You are given a 2D integer array <code>conversions</code> of length <code>n - 1</code>, where <code>conversions[i] = [sourceUnit<sub>i</sub>, targetUnit<sub>i</sub>, conversionFactor<sub>i</sub>]</code>. This indicates that a single unit of type <code>sourceUnit<sub>i</sub></code> is equivalent to <code>conversionFactor<sub>i</sub></code> units of type <code>targetUnit<sub>i</sub></code>.</p>\n\n<p>You are also given a 2D integer array <code>queries</code> of length <code>q</code>, where <code>queries[i] = [unitA<sub>i</sub>, unitB<sub>i</sub>]</code>.</p>\n\n<p>Return an array <code face=\"monospace\">answer</code> of length <code>q</code> where <code>answer[i]</code> is the number of units of type <code>unitB<sub>i</sub></code> equivalent to 1 unit of type <code>unitA<sub>i</sub></code>, and can be represented as <code>p/q</code> where <code>p</code> and <code>q</code> are coprime. Return each <code>answer[i]</code> as <code>pq<sup>-1</sup></code> <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>, where <code>q<sup>-1</sup></code> represents the multiplicative inverse of <code>q</code> modulo <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">conversions = [[0,1,2],[0,2,6]], queries = [[1,2],[1,0]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[3,500000004]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>In the first query, we can convert unit 1 into 3 units of type 2 using the inverse of <code>conversions[0]</code>, then <code>conversions[1]</code>.</li>\n\t<li>In the second query, we can convert unit 1 into 1/2 units of type 0 using the inverse of <code>conversions[0]</code>. We return 500000004 since it is the multiplicative inverse of 2.</li>\n</ul>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2025/03/13/example1.png\" style=\"width: 500px; height: 500px;\" /></div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">conversions = [[0,1,2],[0,2,6],[0,3,8],[2,4,2],[2,5,4],[3,6,3]], queries = [[1,2],[0,4],[6,5],[4,6],[6,1]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[3,12,1,2,83333334]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>In the first query, we can convert unit 1 into 3 units of type 2 using the inverse of <code>conversions[0]</code>, then <code>conversions[1]</code>.</li>\n\t<li>In the second query, we can convert unit 0 into 12 units of type 4 using <code>conversions[1]</code>, then <code>conversions[3]</code>.</li>\n\t<li>In the third query, we can convert unit 6 into 1 unit of type 5 using the inverse of <code>conversions[5]</code>, the inverse of <code>conversions[2]</code>, <code>conversions[1]</code>, then <code>conversions[4]</code>.</li>\n\t<li>In the fourth query, we can convert unit 4 into 2 units of type 6 using the inverse of <code>conversions[3]</code>, the inverse of <code>conversions[1]</code>, <code>conversions[2]</code>, then <code>conversions[5]</code>.</li>\n\t<li>In the fifth query, we can convert unit 6 into 1/12 units of type 1 using the inverse of <code>conversions[5]</code>, the inverse of <code>conversions[2]</code>, then <code>conversions[0]</code>. We return 83333334 since it is the multiplicative inverse of 12.</li>\n</ul>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2025/03/13/example2.png\" style=\"width: 504px; height: 493px;\" /></div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>conversions.length == n - 1</code></li>\n\t<li><code>0 &lt;= sourceUnit<sub>i</sub>, targetUnit<sub>i</sub> &lt; n</code></li>\n\t<li><code>1 &lt;= conversionFactor<sub>i</sub> &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= q &lt;= 10<sup>5</sup></code></li>\n\t<li><code>queries.length == q</code></li>\n\t<li><code>0 &lt;= unitA<sub>i</sub>, unitB<sub>i</sub> &lt; n</code></li>\n\t<li>It is guaranteed that unit 0 can be <strong>uniquely</strong> converted into any other unit through a combination of forward or backward conversions.</li>\n</ul>\n",
+  "hints": [
+    "Using a dfs, compute an array <code>fromRoot</code> such that <code>fromRoot[a]</code> is the number of units of type <code>a</code> equivalent to a single unit of type 0.",
+    "<code>answer[i] = fromRoot[unitA<sub>i</sub>]<sup>-1</sup> * fromRoot[unitB<sub>i</sub>]</code>"
+  ],
+  "metaData": "{\n  \"name\": \"queryConversions\",\n  \"params\": [\n    {\n      \"name\": \"conversions\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"queries\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"586\", \"totalSubmission\": \"858\", \"totalAcceptedRaw\": 586, \"totalSubmissionRaw\": 858, \"acRate\": \"68.3%\"}",
+  "likes": 5,
+  "dislikes": 8,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[0,1,2],[0,2,6]]\n[[1,2],[1,0]]",
+    "[[0,1,2],[0,2,6],[0,3,8],[2,4,2],[2,5,4],[3,6,3]]\n[[1,2],[0,4],[6,5],[4,6],[6,1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> queryConversions(vector<vector<int>>& conversions, vector<vector<int>>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] queryConversions(int[][] conversions, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def queryConversions(self, conversions: List[List[int]], queries: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def queryConversions(self, conversions, queries):\n        \"\"\"\n        :type conversions: List[List[int]]\n        :type queries: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} conversions\n * @param {number[][]} queries\n * @return {number[]}\n */\nvar queryConversions = function(conversions, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function queryConversions(conversions: number[][], queries: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] QueryConversions(int[][] conversions, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* queryConversions(int** conversions, int conversionsSize, int* conversionsColSize, int** queries, int queriesSize, int* queriesColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func queryConversions(conversions [][]int, queries [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun queryConversions(conversions: Array<IntArray>, queries: Array<IntArray>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func queryConversions(_ conversions: [[Int]], _ queries: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn query_conversions(conversions: Vec<Vec<i32>>, queries: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} conversions\n# @param {Integer[][]} queries\n# @return {Integer[]}\ndef query_conversions(conversions, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $conversions\n     * @param Integer[][] $queries\n     * @return Integer[]\n     */\n    function queryConversions($conversions, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> queryConversions(List<List<int>> conversions, List<List<int>> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def queryConversions(conversions: Array[Array[Int]], queries: Array[Array[Int]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec query_conversions(conversions :: [[integer]], queries :: [[integer]]) :: [integer]\n  def query_conversions(conversions, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec query_conversions(Conversions :: [[integer()]], Queries :: [[integer()]]) -> [integer()].\nquery_conversions(Conversions, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (query-conversions conversions queries)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

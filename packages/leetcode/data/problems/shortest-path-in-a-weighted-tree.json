@@ -1,0 +1,145 @@
+{
+  "questionId": "3829",
+  "questionFrontendId": "3515",
+  "title": "Shortest Path in a Weighted Tree",
+  "titleSlug": "shortest-path-in-a-weighted-tree",
+  "difficulty": "Hard",
+  "content": "<p>You are given an integer <code>n</code> and an undirected, weighted tree rooted at node 1 with <code>n</code> nodes numbered from 1 to <code>n</code>. This is represented by a 2D array <code>edges</code> of length <code>n - 1</code>, where <code>edges[i] = [u<sub>i</sub>, v<sub>i</sub>, w<sub>i</sub>]</code> indicates an undirected edge from node <code>u<sub>i</sub></code> to <code>v<sub>i</sub></code> with weight <code>w<sub>i</sub></code>.</p>\n\n<p>You are also given a 2D integer array <code>queries</code> of length <code>q</code>, where each <code>queries[i]</code> is either:</p>\n\n<ul>\n\t<li><code>[1, u, v, w&#39;]</code> &ndash; <strong>Update</strong> the weight of the edge between nodes <code>u</code> and <code>v</code> to <code>w&#39;</code>, where <code>(u, v)</code> is guaranteed to be an edge present in <code>edges</code>.</li>\n\t<li><code>[2, x]</code> &ndash; <strong>Compute</strong> the <strong>shortest</strong> path distance from the root node 1 to node <code>x</code>.</li>\n</ul>\n\n<p>Return an integer array <code>answer</code>, where <code>answer[i]</code> is the <strong>shortest</strong> path distance from node 1 to <code>x</code> for the <code>i<sup>th</sup></code> query of <code>[2, x]</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 2, edges = [[1,2,7]], queries = [[2,2],[1,1,2,4],[2,2]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[7,4]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img src=\"https://assets.leetcode.com/uploads/2025/03/13/screenshot-2025-03-13-at-133524.png\" style=\"width: 200px; height: 75px;\" /></p>\n\n<ul>\n\t<li>Query <code>[2,2]</code>: The shortest path from root node 1 to node 2 is 7.</li>\n\t<li>Query <code>[1,1,2,4]</code>: The weight of edge <code>(1,2)</code> changes from 7 to 4.</li>\n\t<li>Query <code>[2,2]</code>: The shortest path from root node 1 to node 2 is 4.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 3, edges = [[1,2,2],[1,3,4]], queries = [[2,1],[2,3],[1,1,3,7],[2,2],[2,3]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[0,4,2,7]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img src=\"https://assets.leetcode.com/uploads/2025/03/13/screenshot-2025-03-13-at-132247.png\" style=\"width: 180px; height: 141px;\" /></p>\n\n<ul>\n\t<li>Query <code>[2,1]</code>: The shortest path from root node 1 to node 1 is 0.</li>\n\t<li>Query <code>[2,3]</code>: The shortest path from root node 1 to node 3 is 4.</li>\n\t<li>Query <code>[1,1,3,7]</code>: The weight of edge <code>(1,3)</code> changes from 4 to 7.</li>\n\t<li>Query <code>[2,2]</code>: The shortest path from root node 1 to node 2 is 2.</li>\n\t<li>Query <code>[2,3]</code>: The shortest path from root node 1 to node 3 is 7.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 4, edges = [[1,2,2],[2,3,1],[3,4,5]], queries = [[2,4],[2,3],[1,2,3,3],[2,2],[2,3]]</span></p>\n\n<p><strong>Output:</strong> [8,3,2,5]</p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img src=\"https://assets.leetcode.com/uploads/2025/03/13/screenshot-2025-03-13-at-133306.png\" style=\"width: 400px; height: 85px;\" /></p>\n\n<ul>\n\t<li>Query <code>[2,4]</code>: The shortest path from root node 1 to node 4 consists of edges <code>(1,2)</code>, <code>(2,3)</code>, and <code>(3,4)</code> with weights <code>2 + 1 + 5 = 8</code>.</li>\n\t<li>Query <code>[2,3]</code>: The shortest path from root node 1 to node 3 consists of edges <code>(1,2)</code> and <code>(2,3)</code> with weights <code>2 + 1 = 3</code>.</li>\n\t<li>Query <code>[1,2,3,3]</code>: The weight of edge <code>(2,3)</code> changes from 1 to 3.</li>\n\t<li>Query <code>[2,2]</code>: The shortest path from root node 1 to node 2 is 2.</li>\n\t<li>Query <code>[2,3]</code>: The shortest path from root node 1 to node 3 consists of edges <code>(1,2)</code> and <code>(2,3)</code> with updated weights <code>2 + 3 = 5</code>.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>edges.length == n - 1</code></li>\n\t<li><code>edges[i] == [u<sub>i</sub>, v<sub>i</sub>, w<sub>i</sub>]</code></li>\n\t<li><code>1 &lt;= u<sub>i</sub>, v<sub>i</sub> &lt;= n</code></li>\n\t<li><code>1 &lt;= w<sub>i</sub> &lt;= 10<sup>4</sup></code></li>\n\t<li>The input is generated such that <code>edges</code> represents a valid tree.</li>\n\t<li><code>1 &lt;= queries.length == q &lt;= 10<sup>5</sup></code></li>\n\t<li><code>queries[i].length == 2</code> or <code>4</code>\n\t<ul>\n\t\t<li><code>queries[i] == [1, u, v, w&#39;]</code> or,</li>\n\t\t<li><code>queries[i] == [2, x]</code></li>\n\t\t<li><code>1 &lt;= u, v, x &lt;= n</code></li>\n\t\t<li><code data-end=\"37\" data-start=\"29\">(u, v)</code> is always an edge from <code data-end=\"74\" data-start=\"67\">edges</code>.</li>\n\t\t<li><code>1 &lt;= w&#39; &lt;= 10<sup>4</sup></code></li>\n\t</ul>\n\t</li>\n</ul>\n",
+  "hints": [
+    "Use an Euler tour to flatten the tree into an array so each node’s subtree corresponds to a contiguous segment.",
+    "Build a segment tree over this Euler tour to support efficient range updates and point queries.",
+    "For an update query [1, <code>u</code>, <code>v</code>, <code>w'</code>], adjust the distance for all descendants by applying a delta update to the corresponding range in the flattened array."
+  ],
+  "metaData": "{\n  \"name\": \"treeQueries\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"queries\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"7.1K\", \"totalSubmission\": \"16.9K\", \"totalAcceptedRaw\": 7126, \"totalSubmissionRaw\": 16899, \"acRate\": \"42.2%\"}",
+  "likes": 63,
+  "dislikes": 2,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "2\n[[1,2,7]]\n[[2,2],[1,1,2,4],[2,2]]",
+    "3\n[[1,2,2],[1,3,4]]\n[[2,1],[2,3],[1,1,3,7],[2,2],[2,3]]",
+    "4\n[[1,2,2],[2,3,1],[3,4,5]]\n[[2,4],[2,3],[1,2,3,3],[2,2],[2,3]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"juspay\", \"name\": \"Juspay\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Binary Indexed Tree",
+      "slug": "binary-indexed-tree"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> treeQueries(int n, vector<vector<int>>& edges, vector<vector<int>>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] treeQueries(int n, int[][] edges, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def treeQueries(self, n: int, edges: List[List[int]], queries: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def treeQueries(self, n, edges, queries):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :type queries: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @param {number[][]} queries\n * @return {number[]}\n */\nvar treeQueries = function(n, edges, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function treeQueries(n: number, edges: number[][], queries: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] TreeQueries(int n, int[][] edges, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* treeQueries(int n, int** edges, int edgesSize, int* edgesColSize, int** queries, int queriesSize, int* queriesColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func treeQueries(n int, edges [][]int, queries [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun treeQueries(n: Int, edges: Array<IntArray>, queries: Array<IntArray>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func treeQueries(_ n: Int, _ edges: [[Int]], _ queries: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn tree_queries(n: i32, edges: Vec<Vec<i32>>, queries: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @param {Integer[][]} queries\n# @return {Integer[]}\ndef tree_queries(n, edges, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @param Integer[][] $queries\n     * @return Integer[]\n     */\n    function treeQueries($n, $edges, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> treeQueries(int n, List<List<int>> edges, List<List<int>> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def treeQueries(n: Int, edges: Array[Array[Int]], queries: Array[Array[Int]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec tree_queries(n :: integer, edges :: [[integer]], queries :: [[integer]]) :: [integer]\n  def tree_queries(n, edges, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec tree_queries(N :: integer(), Edges :: [[integer()]], Queries :: [[integer()]]) -> [integer()].\ntree_queries(N, Edges, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (tree-queries n edges queries)\n  (-> exact-integer? (listof (listof exact-integer?)) (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

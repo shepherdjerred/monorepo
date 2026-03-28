@@ -1,0 +1,53 @@
+{
+  "questionId": "3898",
+  "questionFrontendId": "3564",
+  "title": "Seasonal Sales Analysis",
+  "titleSlug": "seasonal-sales-analysis",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>sales</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| sale_id       | int     |\n| product_id    | int     |\n| sale_date     | date    |\n| quantity      | int     |\n| price         | decimal |\n+---------------+---------+\nsale_id is the unique identifier for this table.\nEach row contains information about a product sale including the product_id, date of sale, quantity sold, and price per unit.\n</pre>\n\n<p>Table: <code>products</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| product_id    | int     |\n| product_name  | varchar |\n| category      | varchar |\n+---------------+---------+\nproduct_id is the unique identifier for this table.\nEach row contains information about a product including its name and category.\n</pre>\n\n<p>Write a solution to find the most popular product category for each season. The seasons are defined as:</p>\n\n<ul>\n\t<li><strong>Winter</strong>: December, January, February</li>\n\t<li><strong>Spring</strong>: March, April, May</li>\n\t<li><strong>Summer</strong>: June, July, August</li>\n\t<li><strong>Fall</strong>: September, October, November</li>\n</ul>\n\n<p>The <strong>popularity</strong> of a <strong>category</strong> is determined by the <strong>total quantity sold</strong> in that <strong>season</strong>. If there is a <strong>tie</strong>, select the category with the highest <strong>total revenue</strong> (<code>quantity &times; price</code>). If there is still a tie, return the lexicographically smaller category.</p>\n\n<p>Return <em>the result table ordered by season in <strong>ascending</strong> order</em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>sales table:</p>\n\n<pre class=\"example-io\">\n+---------+------------+------------+----------+-------+\n| sale_id | product_id | sale_date  | quantity | price |\n+---------+------------+------------+----------+-------+\n| 1       | 1          | 2023-01-15 | 5        | 10.00 |\n| 2       | 2          | 2023-01-20 | 4        | 15.00 |\n| 3       | 3          | 2023-03-10 | 3        | 18.00 |\n| 4       | 4          | 2023-04-05 | 1        | 20.00 |\n| 5       | 1          | 2023-05-20 | 2        | 10.00 |\n| 6       | 2          | 2023-06-12 | 4        | 15.00 |\n| 7       | 5          | 2023-06-15 | 5        | 12.00 |\n| 8       | 3          | 2023-07-24 | 2        | 18.00 |\n| 9       | 4          | 2023-08-01 | 5        | 20.00 |\n| 10      | 5          | 2023-09-03 | 3        | 12.00 |\n| 11      | 1          | 2023-09-25 | 6        | 10.00 |\n| 12      | 2          | 2023-11-10 | 4        | 15.00 |\n| 13      | 3          | 2023-12-05 | 6        | 18.00 |\n| 14      | 4          | 2023-12-22 | 3        | 20.00 |\n| 15      | 5          | 2024-02-14 | 2        | 12.00 |\n+---------+------------+------------+----------+-------+\n</pre>\n\n<p>products table:</p>\n\n<pre class=\"example-io\">\n+------------+-----------------+----------+\n| product_id | product_name    | category |\n+------------+-----------------+----------+\n| 1          | Warm Jacket     | Apparel  |\n| 2          | Designer Jeans  | Apparel  |\n| 3          | Cutting Board   | Kitchen  |\n| 4          | Smart Speaker   | Tech     |\n| 5          | Yoga Mat        | Fitness  |\n+------------+-----------------+----------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+---------+----------+----------------+---------------+\n| season  | category | total_quantity | total_revenue |\n+---------+----------+----------------+---------------+\n| Fall    | Apparel  | 10             | 120.00        |\n| Spring  | Kitchen  | 3              | 54.00         |\n| Summer  | Tech     | 5              | 100.00        |\n| Winter  | Apparel  | 9              | 110.00        |\n+---------+----------+----------------+---------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>Fall (Sep, Oct, Nov):</strong>\n\n\t<ul>\n\t\t<li>Apparel: 10 items sold (6 Jackets in Sep, 4 Jeans in Nov), revenue $120.00 (6&times;$10.00 + 4&times;$15.00)</li>\n\t\t<li>Fitness: 3 Yoga Mats sold in Sep, revenue $36.00</li>\n\t\t<li>Most popular: Apparel with highest total quantity (10)</li>\n\t</ul>\n\t</li>\n\t<li><strong>Spring (Mar, Apr, May):</strong>\n\t<ul>\n\t\t<li>Kitchen: 3 Cutting Boards sold in Mar, revenue $54.00</li>\n\t\t<li>Tech: 1 Smart Speaker sold in Apr, revenue $20.00</li>\n\t\t<li>Apparel: 2 Warm Jackets sold in May, revenue $20.00</li>\n\t\t<li>Most popular: Kitchen with highest total quantity (3) and highest revenue ($54.00)</li>\n\t</ul>\n\t</li>\n\t<li><strong>Summer (Jun, Jul, Aug):</strong>\n\t<ul>\n\t\t<li>Apparel: 4 Designer Jeans sold in Jun, revenue $60.00</li>\n\t\t<li>Fitness: 5 Yoga Mats sold in Jun, revenue $60.00</li>\n\t\t<li>Kitchen: 2 Cutting Boards sold in Jul, revenue $36.00</li>\n\t\t<li>Tech: 5 Smart Speakers sold in Aug, revenue $100.00</li>\n\t\t<li>Most popular: Tech and Fitness both have 5 items, but Tech has higher revenue ($100.00 vs $60.00)</li>\n\t</ul>\n\t</li>\n\t<li><strong>Winter (Dec, Jan, Feb):</strong>\n\t<ul>\n\t\t<li>Apparel: 9 items sold (5 Jackets in Jan, 4 Jeans in Jan), revenue $110.00</li>\n\t\t<li>Kitchen: 6 Cutting Boards sold in Dec, revenue $108.00</li>\n\t\t<li>Tech: 3 Smart Speakers sold in Dec, revenue $60.00</li>\n\t\t<li>Fitness: 2 Yoga Mats sold in Feb, revenue $24.00</li>\n\t\t<li>Most popular: Apparel with highest total quantity (9) and highest revenue ($110.00)</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>The result table is ordered by season in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE if not exists products (\\n    product_id INT,\\n    product_name VARCHAR(255),\\n    category VARCHAR(50)\\n)\", \"CREATE TABLE if not exists sales (\\n    sale_id INT,\\n    product_id INT,\\n    sale_date DATE,\\n    quantity INT,\\n    price DECIMAL(10, 2)\\n)\"], \"mssql\": [\"CREATE TABLE products (\\n    product_id INT,\\n    product_name VARCHAR(255),\\n    category VARCHAR(50)\\n)\", \"\\nCREATE TABLE sales (\\n    sale_id INT,\\n    product_id INT,\\n    sale_date DATE,\\n    quantity INT,\\n    price DECIMAL(10, 2)\\n)\"], \"oraclesql\": [\"CREATE TABLE products (\\n    product_id NUMBER,\\n    product_name VARCHAR2(255),\\n    category VARCHAR2(50)\\n)\", \"CREATE TABLE sales (\\n    sale_id NUMBER,\\n    product_id NUMBER,\\n    sale_date DATE,\\n    quantity NUMBER,\\n    price NUMBER(10, 2)\\n)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"seasonal_sales_analysis\", \"postgresql\": [\"CREATE TABLE products (\\n    product_id INTEGER,\\n    product_name VARCHAR(255),\\n    category VARCHAR(50)\\n);\\n\", \"CREATE TABLE IF NOT EXISTS sales (\\n    sale_id INT,\\n    product_id INT,\\n    sale_date DATE,\\n    quantity INT,\\n    price DECIMAL(10, 2)\\n);\\n\"], \"pythondata\": [\"products = pd.DataFrame(columns=['product_id', 'product_name', 'category']).astype({'product_id': 'int64', 'product_name': 'string', 'category': 'string'})\\n\", \"sales = pd.DataFrame(columns=['sale_id', 'product_id', 'sale_date', 'quantity', 'price']).astype({'sale_id': 'int64', 'product_id': 'int64', 'sale_date': 'datetime64[ns]', 'quantity': 'int64', 'price': 'float64'})\\n\"], \"database_schema\": {\"products\": {\"product_id\": \"INT\", \"product_name\": \"VARCHAR(255)\", \"category\": \"VARCHAR(50)\"}, \"sales\": {\"sale_id\": \"INT\", \"product_id\": \"INT\", \"sale_date\": \"DATE\", \"quantity\": \"INT\", \"price\": \"DECIMAL(10, 2)\"}}}",
+  "stats": "{\"totalAccepted\": \"13.5K\", \"totalSubmission\": \"21.8K\", \"totalAcceptedRaw\": 13488, \"totalSubmissionRaw\": 21842, \"acRate\": \"61.8%\"}",
+  "likes": 63,
+  "dislikes": 4,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"sales\":[\"sale_id\",\"product_id\",\"sale_date\",\"quantity\",\"price\"],\"products\":[\"product_id\",\"product_name\",\"category\"]},\"rows\":{\"sales\":[[1,1,\"2023-01-15\",5,10.00],[2,2,\"2023-01-20\",4,15.00],[3,3,\"2023-03-10\",3,18.00],[4,4,\"2023-04-05\",1,20.00],[5,1,\"2023-05-20\",2,10.00],[6,2,\"2023-06-12\",4,15.00],[7,5,\"2023-06-15\",5,12.00],[8,3,\"2023-07-24\",2,18.00],[9,4,\"2023-08-01\",5,20.00],[10,5,\"2023-09-03\",3,12.00],[11,1,\"2023-09-25\",6,10.00],[12,2,\"2023-11-10\",4,15.00],[13,3,\"2023-12-05\",6,18.00],[14,4,\"2023-12-22\",3,20.00],[15,5,\"2024-02-14\",2,12.00]],\"products\":[[1,\"Warm Jacket\",\"Apparel\"],[2,\"Designer Jeans\",\"Apparel\"],[3,\"Cutting Board\",\"Kitchen\"],[4,\"Smart Speaker\",\"Tech\"],[5,\"Yoga Mat\",\"Fitness\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef seasonal_sales_analysis(products: pd.DataFrame, sales: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

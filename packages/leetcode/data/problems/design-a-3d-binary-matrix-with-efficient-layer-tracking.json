@@ -1,0 +1,147 @@
+{
+  "questionId": "3735",
+  "questionFrontendId": "3391",
+  "title": "Design a 3D Binary Matrix with Efficient Layer Tracking",
+  "titleSlug": "design-a-3d-binary-matrix-with-efficient-layer-tracking",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <code>n x n x n</code> <strong>binary</strong> 3D array <code>matrix</code>.</p>\n\n<p>Implement the <code>Matrix3D</code> class:</p>\n\n<ul>\n\t<li><code>Matrix3D(int n)</code> Initializes the object with the 3D binary array <code>matrix</code>, where <strong>all</strong> elements are initially set to 0.</li>\n\t<li><code>void setCell(int x, int y, int z)</code> Sets the value at <code>matrix[x][y][z]</code> to 1.</li>\n\t<li><code>void unsetCell(int x, int y, int z)</code> Sets the value at <code>matrix[x][y][z]</code> to 0.</li>\n\t<li><code>int largestMatrix()</code> Returns the index <code>x</code> where <code>matrix[x]</code> contains the most number of 1&#39;s. If there are multiple such indices, return the <strong>largest</strong> <code>x</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong><br />\n<span class=\"example-io\">[&quot;Matrix3D&quot;, &quot;setCell&quot;, &quot;largestMatrix&quot;, &quot;setCell&quot;, &quot;largestMatrix&quot;, &quot;setCell&quot;, &quot;largestMatrix&quot;]<br />\n[[3], [0, 0, 0], [], [1, 1, 2], [], [0, 0, 1], []]</span></p>\n\n<p><strong>Output:</strong><br />\n<span class=\"example-io\">[null, null, 0, null, 1, null, 0] </span></p>\n\n<p><strong>Explanation</strong></p>\nMatrix3D matrix3D = new Matrix3D(3); // Initializes a <code>3 x 3 x 3</code> 3D array <code>matrix</code>, filled with all 0&#39;s.<br />\nmatrix3D.setCell(0, 0, 0); // Sets <code>matrix[0][0][0]</code> to 1.<br />\nmatrix3D.largestMatrix(); // Returns 0. <code>matrix[0]</code> has the most number of 1&#39;s.<br />\nmatrix3D.setCell(1, 1, 2); // Sets <code>matrix[1][1][2]</code> to 1.<br />\nmatrix3D.largestMatrix(); // Returns 1. <code>matrix[0]</code> and <code>matrix[1]</code> tie with the most number of 1&#39;s, but index 1 is bigger.<br />\nmatrix3D.setCell(0, 0, 1); // Sets <code>matrix[0][0][1]</code> to 1.<br />\nmatrix3D.largestMatrix(); // Returns 0. <code>matrix[0]</code> has the most number of 1&#39;s.</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong><br />\n<span class=\"example-io\">[&quot;Matrix3D&quot;, &quot;setCell&quot;, &quot;largestMatrix&quot;, &quot;unsetCell&quot;, &quot;largestMatrix&quot;]<br />\n[[4], [2, 1, 1], [], [2, 1, 1], []]</span></p>\n\n<p><strong>Output:</strong><br />\n<span class=\"example-io\">[null, null, 2, null, 3] </span></p>\n\n<p><strong>Explanation</strong></p>\nMatrix3D matrix3D = new Matrix3D(4); // Initializes a <code>4 x 4 x 4</code> 3D array <code>matrix</code>, filled with all 0&#39;s.<br />\nmatrix3D.setCell(2, 1, 1); // Sets <code>matrix[2][1][1]</code> to 1.<br />\nmatrix3D.largestMatrix(); // Returns 2. <code>matrix[2]</code> has the most number of 1&#39;s.<br />\nmatrix3D.unsetCell(2, 1, 1); // Sets <code>matrix[2][1][1]</code> to 0.<br />\nmatrix3D.largestMatrix(); // Returns 3. All indices from 0 to 3 tie with the same number of 1&#39;s, but index 3 is the biggest.</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 100</code></li>\n\t<li><code>0 &lt;= x, y, z &lt; n</code></li>\n\t<li>At most <code>10<sup>5</sup></code> calls are made in total to <code>setCell</code> and <code>unsetCell</code>.</li>\n\t<li>At most <code>10<sup>4</sup></code> calls are made to <code>largestMatrix</code>.</li>\n</ul>\n",
+  "hints": [
+    "Keep track of the number of 1’s on each matrix.",
+    "Use a data structure that allows to efficiently insert, delete or get the biggest pair on a list of pairs."
+  ],
+  "metaData": "{\n  \"classname\": \"Matrix3D\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"n\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"x\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"y\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"z\"\n        }\n      ],\n      \"name\": \"setCell\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"x\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"y\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"z\"\n        }\n      ],\n      \"name\": \"unsetCell\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [],\n      \"name\": \"largestMatrix\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"1.1K\", \"totalSubmission\": \"1.7K\", \"totalAcceptedRaw\": 1113, \"totalSubmissionRaw\": 1654, \"acRate\": \"67.3%\"}",
+  "likes": 9,
+  "dislikes": 1,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"Matrix3D\",\"setCell\",\"largestMatrix\",\"setCell\",\"largestMatrix\",\"setCell\",\"largestMatrix\"]\n[[3],[0,0,0],[],[1,1,2],[],[0,0,1],[]]",
+    "[\"Matrix3D\",\"setCell\",\"largestMatrix\",\"unsetCell\",\"largestMatrix\"]\n[[4],[2,1,1],[],[2,1,1],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"amdocs\", \"name\": \"Amdocs\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Matrix3D {\npublic:\n    Matrix3D(int n) {\n        \n    }\n    \n    void setCell(int x, int y, int z) {\n        \n    }\n    \n    void unsetCell(int x, int y, int z) {\n        \n    }\n    \n    int largestMatrix() {\n        \n    }\n};\n\n/**\n * Your Matrix3D object will be instantiated and called as such:\n * Matrix3D* obj = new Matrix3D(n);\n * obj->setCell(x,y,z);\n * obj->unsetCell(x,y,z);\n * int param_3 = obj->largestMatrix();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Matrix3D {\n\n    public Matrix3D(int n) {\n        \n    }\n    \n    public void setCell(int x, int y, int z) {\n        \n    }\n    \n    public void unsetCell(int x, int y, int z) {\n        \n    }\n    \n    public int largestMatrix() {\n        \n    }\n}\n\n/**\n * Your Matrix3D object will be instantiated and called as such:\n * Matrix3D obj = new Matrix3D(n);\n * obj.setCell(x,y,z);\n * obj.unsetCell(x,y,z);\n * int param_3 = obj.largestMatrix();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Matrix3D:\n\n    def __init__(self, n: int):\n        \n\n    def setCell(self, x: int, y: int, z: int) -> None:\n        \n\n    def unsetCell(self, x: int, y: int, z: int) -> None:\n        \n\n    def largestMatrix(self) -> int:\n        \n\n\n# Your Matrix3D object will be instantiated and called as such:\n# obj = Matrix3D(n)\n# obj.setCell(x,y,z)\n# obj.unsetCell(x,y,z)\n# param_3 = obj.largestMatrix()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Matrix3D(object):\n\n    def __init__(self, n):\n        \"\"\"\n        :type n: int\n        \"\"\"\n        \n\n    def setCell(self, x, y, z):\n        \"\"\"\n        :type x: int\n        :type y: int\n        :type z: int\n        :rtype: None\n        \"\"\"\n        \n\n    def unsetCell(self, x, y, z):\n        \"\"\"\n        :type x: int\n        :type y: int\n        :type z: int\n        :rtype: None\n        \"\"\"\n        \n\n    def largestMatrix(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your Matrix3D object will be instantiated and called as such:\n# obj = Matrix3D(n)\n# obj.setCell(x,y,z)\n# obj.unsetCell(x,y,z)\n# param_3 = obj.largestMatrix()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n */\nvar Matrix3D = function(n) {\n    \n};\n\n/** \n * @param {number} x \n * @param {number} y \n * @param {number} z\n * @return {void}\n */\nMatrix3D.prototype.setCell = function(x, y, z) {\n    \n};\n\n/** \n * @param {number} x \n * @param {number} y \n * @param {number} z\n * @return {void}\n */\nMatrix3D.prototype.unsetCell = function(x, y, z) {\n    \n};\n\n/**\n * @return {number}\n */\nMatrix3D.prototype.largestMatrix = function() {\n    \n};\n\n/** \n * Your Matrix3D object will be instantiated and called as such:\n * var obj = new Matrix3D(n)\n * obj.setCell(x,y,z)\n * obj.unsetCell(x,y,z)\n * var param_3 = obj.largestMatrix()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Matrix3D {\n    constructor(n: number) {\n        \n    }\n\n    setCell(x: number, y: number, z: number): void {\n        \n    }\n\n    unsetCell(x: number, y: number, z: number): void {\n        \n    }\n\n    largestMatrix(): number {\n        \n    }\n}\n\n/**\n * Your Matrix3D object will be instantiated and called as such:\n * var obj = new Matrix3D(n)\n * obj.setCell(x,y,z)\n * obj.unsetCell(x,y,z)\n * var param_3 = obj.largestMatrix()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Matrix3D {\n\n    public Matrix3D(int n) {\n        \n    }\n    \n    public void SetCell(int x, int y, int z) {\n        \n    }\n    \n    public void UnsetCell(int x, int y, int z) {\n        \n    }\n    \n    public int LargestMatrix() {\n        \n    }\n}\n\n/**\n * Your Matrix3D object will be instantiated and called as such:\n * Matrix3D obj = new Matrix3D(n);\n * obj.SetCell(x,y,z);\n * obj.UnsetCell(x,y,z);\n * int param_3 = obj.LargestMatrix();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Matrix3D;\n\n\nMatrix3D* matrix3DCreate(int n) {\n    \n}\n\nvoid matrix3DSetCell(Matrix3D* obj, int x, int y, int z) {\n    \n}\n\nvoid matrix3DUnsetCell(Matrix3D* obj, int x, int y, int z) {\n    \n}\n\nint matrix3DLargestMatrix(Matrix3D* obj) {\n    \n}\n\nvoid matrix3DFree(Matrix3D* obj) {\n    \n}\n\n/**\n * Your Matrix3D struct will be instantiated and called as such:\n * Matrix3D* obj = matrix3DCreate(n);\n * matrix3DSetCell(obj, x, y, z);\n \n * matrix3DUnsetCell(obj, x, y, z);\n \n * int param_3 = matrix3DLargestMatrix(obj);\n \n * matrix3DFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Matrix3D struct {\n    \n}\n\n\nfunc Constructor(n int) Matrix3D {\n    \n}\n\n\nfunc (this *Matrix3D) SetCell(x int, y int, z int)  {\n    \n}\n\n\nfunc (this *Matrix3D) UnsetCell(x int, y int, z int)  {\n    \n}\n\n\nfunc (this *Matrix3D) LargestMatrix() int {\n    \n}\n\n\n/**\n * Your Matrix3D object will be instantiated and called as such:\n * obj := Constructor(n);\n * obj.SetCell(x,y,z);\n * obj.UnsetCell(x,y,z);\n * param_3 := obj.LargestMatrix();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Matrix3D(n: Int) {\n\n    fun setCell(x: Int, y: Int, z: Int) {\n        \n    }\n\n    fun unsetCell(x: Int, y: Int, z: Int) {\n        \n    }\n\n    fun largestMatrix(): Int {\n        \n    }\n\n}\n\n/**\n * Your Matrix3D object will be instantiated and called as such:\n * var obj = Matrix3D(n)\n * obj.setCell(x,y,z)\n * obj.unsetCell(x,y,z)\n * var param_3 = obj.largestMatrix()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Matrix3D {\n\n    init(_ n: Int) {\n        \n    }\n    \n    func setCell(_ x: Int, _ y: Int, _ z: Int) {\n        \n    }\n    \n    func unsetCell(_ x: Int, _ y: Int, _ z: Int) {\n        \n    }\n    \n    func largestMatrix() -> Int {\n        \n    }\n}\n\n/**\n * Your Matrix3D object will be instantiated and called as such:\n * let obj = Matrix3D(n)\n * obj.setCell(x, y, z)\n * obj.unsetCell(x, y, z)\n * let ret_3: Int = obj.largestMatrix()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Matrix3D {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Matrix3D {\n\n    fn new(n: i32) -> Self {\n        \n    }\n    \n    fn set_cell(&self, x: i32, y: i32, z: i32) {\n        \n    }\n    \n    fn unset_cell(&self, x: i32, y: i32, z: i32) {\n        \n    }\n    \n    fn largest_matrix(&self) -> i32 {\n        \n    }\n}\n\n/**\n * Your Matrix3D object will be instantiated and called as such:\n * let obj = Matrix3D::new(n);\n * obj.set_cell(x, y, z);\n * obj.unset_cell(x, y, z);\n * let ret_3: i32 = obj.largest_matrix();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Matrix3D\n\n=begin\n    :type n: Integer\n=end\n    def initialize(n)\n        \n    end\n\n\n=begin\n    :type x: Integer\n    :type y: Integer\n    :type z: Integer\n    :rtype: Void\n=end\n    def set_cell(x, y, z)\n        \n    end\n\n\n=begin\n    :type x: Integer\n    :type y: Integer\n    :type z: Integer\n    :rtype: Void\n=end\n    def unset_cell(x, y, z)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def largest_matrix()\n        \n    end\n\n\nend\n\n# Your Matrix3D object will be instantiated and called as such:\n# obj = Matrix3D.new(n)\n# obj.set_cell(x, y, z)\n# obj.unset_cell(x, y, z)\n# param_3 = obj.largest_matrix()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Matrix3D {\n    /**\n     * @param Integer $n\n     */\n    function __construct($n) {\n        \n    }\n  \n    /**\n     * @param Integer $x\n     * @param Integer $y\n     * @param Integer $z\n     * @return NULL\n     */\n    function setCell($x, $y, $z) {\n        \n    }\n  \n    /**\n     * @param Integer $x\n     * @param Integer $y\n     * @param Integer $z\n     * @return NULL\n     */\n    function unsetCell($x, $y, $z) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function largestMatrix() {\n        \n    }\n}\n\n/**\n * Your Matrix3D object will be instantiated and called as such:\n * $obj = Matrix3D($n);\n * $obj->setCell($x, $y, $z);\n * $obj->unsetCell($x, $y, $z);\n * $ret_3 = $obj->largestMatrix();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Matrix3D {\n\n  Matrix3D(int n) {\n    \n  }\n  \n  void setCell(int x, int y, int z) {\n    \n  }\n  \n  void unsetCell(int x, int y, int z) {\n    \n  }\n  \n  int largestMatrix() {\n    \n  }\n}\n\n/**\n * Your Matrix3D object will be instantiated and called as such:\n * Matrix3D obj = Matrix3D(n);\n * obj.setCell(x,y,z);\n * obj.unsetCell(x,y,z);\n * int param3 = obj.largestMatrix();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Matrix3D(_n: Int) {\n\n    def setCell(x: Int, y: Int, z: Int): Unit = {\n        \n    }\n\n    def unsetCell(x: Int, y: Int, z: Int): Unit = {\n        \n    }\n\n    def largestMatrix(): Int = {\n        \n    }\n\n}\n\n/**\n * Your Matrix3D object will be instantiated and called as such:\n * val obj = new Matrix3D(n)\n * obj.setCell(x,y,z)\n * obj.unsetCell(x,y,z)\n * val param_3 = obj.largestMatrix()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Matrix3D do\n  @spec init_(n :: integer) :: any\n  def init_(n) do\n    \n  end\n\n  @spec set_cell(x :: integer, y :: integer, z :: integer) :: any\n  def set_cell(x, y, z) do\n    \n  end\n\n  @spec unset_cell(x :: integer, y :: integer, z :: integer) :: any\n  def unset_cell(x, y, z) do\n    \n  end\n\n  @spec largest_matrix() :: integer\n  def largest_matrix() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Matrix3D.init_(n)\n# Matrix3D.set_cell(x, y, z)\n# Matrix3D.unset_cell(x, y, z)\n# param_3 = Matrix3D.largest_matrix()\n\n# Matrix3D.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec matrix3_d_init_(N :: integer()) -> any().\nmatrix3_d_init_(N) ->\n  .\n\n-spec matrix3_d_set_cell(X :: integer(), Y :: integer(), Z :: integer()) -> any().\nmatrix3_d_set_cell(X, Y, Z) ->\n  .\n\n-spec matrix3_d_unset_cell(X :: integer(), Y :: integer(), Z :: integer()) -> any().\nmatrix3_d_unset_cell(X, Y, Z) ->\n  .\n\n-spec matrix3_d_largest_matrix() -> integer().\nmatrix3_d_largest_matrix() ->\n  .\n\n\n%% Your functions will be called as such:\n%% matrix3_d_init_(N),\n%% matrix3_d_set_cell(X, Y, Z),\n%% matrix3_d_unset_cell(X, Y, Z),\n%% Param_3 = matrix3_d_largest_matrix(),\n\n%% matrix3_d_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define matrix3-d%\n  (class object%\n    (super-new)\n    \n    ; n : exact-integer?\n    (init-field\n      n)\n    \n    ; set-cell : exact-integer? exact-integer? exact-integer? -> void?\n    (define/public (set-cell x y z)\n      )\n    ; unset-cell : exact-integer? exact-integer? exact-integer? -> void?\n    (define/public (unset-cell x y z)\n      )\n    ; largest-matrix : -> exact-integer?\n    (define/public (largest-matrix)\n      )))\n\n;; Your matrix3-d% object will be instantiated and called as such:\n;; (define obj (new matrix3-d% [n n]))\n;; (send obj set-cell x y z)\n;; (send obj unset-cell x y z)\n;; (define param_3 (send obj largest-matrix))"
+    }
+  ],
+  "solution": null
+}

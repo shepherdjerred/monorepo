@@ -1,0 +1,145 @@
+{
+  "questionId": "3864",
+  "questionFrontendId": "3577",
+  "title": "Count the Number of Computer Unlocking Permutations",
+  "titleSlug": "count-the-number-of-computer-unlocking-permutations",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array <code>complexity</code> of length <code>n</code>.</p>\n\n<p>There are <code>n</code> <strong>locked</strong> computers in a room with labels from 0 to <code>n - 1</code>, each with its own <strong>unique</strong> password. The password of the computer <code>i</code> has a complexity <code>complexity[i]</code>.</p>\n\n<p>The password for the computer labeled 0 is <strong>already</strong> decrypted and serves as the root. All other computers must be unlocked using it or another previously unlocked computer, following this information:</p>\n\n<ul>\n\t<li>You can decrypt the password for the computer <code>i</code> using the password for computer <code>j</code>, where <code>j</code> is <strong>any</strong> integer less than <code>i</code> with a lower complexity. (i.e. <code>j &lt; i</code> and <code>complexity[j] &lt; complexity[i]</code>)</li>\n\t<li>To decrypt the password for computer <code>i</code>, you must have already unlocked a computer <code>j</code> such that <code>j &lt; i</code> and <code>complexity[j] &lt; complexity[i]</code>.</li>\n</ul>\n\n<p>Find the number of <span data-keyword=\"permutation-array\">permutations</span> of <code>[0, 1, 2, ..., (n - 1)]</code> that represent a valid order in which the computers can be unlocked, starting from computer 0 as the only initially unlocked one.</p>\n\n<p>Since the answer may be large, return it <strong>modulo</strong> 10<sup>9</sup> + 7.</p>\n\n<p><strong>Note</strong> that the password for the computer <strong>with label</strong> 0 is decrypted, and <em>not</em> the computer with the first position in the permutation.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">complexity = [1,2,3]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The valid permutations are:</p>\n\n<ul>\n\t<li>[0, 1, 2]\n\t<ul>\n\t\t<li>Unlock computer 0 first with root password.</li>\n\t\t<li>Unlock computer 1 with password of computer 0 since <code>complexity[0] &lt; complexity[1]</code>.</li>\n\t\t<li>Unlock computer 2 with password of computer 1 since <code>complexity[1] &lt; complexity[2]</code>.</li>\n\t</ul>\n\t</li>\n\t<li>[0, 2, 1]\n\t<ul>\n\t\t<li>Unlock computer 0 first with root password.</li>\n\t\t<li>Unlock computer 2 with password of computer 0 since <code>complexity[0] &lt; complexity[2]</code>.</li>\n\t\t<li>Unlock computer 1 with password of computer 0 since <code>complexity[0] &lt; complexity[1]</code>.</li>\n\t</ul>\n\t</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">complexity = [3,3,3,4,4,4]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There are no possible permutations which can unlock all computers.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= complexity.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= complexity[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Ensure that the element at index 0 has the unique minimum complexity (no other element can match its value).",
+    "Fix index 0 as the first in the unlocking order.",
+    "The remaining indices from <code>1</code> to <code>n - 1</code> can then be arranged arbitrarily, yielding <code>factorial(n - 1)</code> possible orders."
+  ],
+  "metaData": "{\n  \"name\": \"countPermutations\",\n  \"params\": [\n    {\n      \"name\": \"complexity\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"93.5K\", \"totalSubmission\": \"158.5K\", \"totalAcceptedRaw\": 93495, \"totalSubmissionRaw\": 158501, \"acRate\": \"59.0%\"}",
+  "likes": 357,
+  "dislikes": 129,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Clumsy Factorial\", \"titleSlug\": \"clumsy-factorial\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3]",
+    "[3,3,3,4,4,4]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Brainteaser",
+      "slug": "brainteaser"
+    },
+    {
+      "name": "Combinatorics",
+      "slug": "combinatorics"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countPermutations(vector<int>& complexity) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countPermutations(int[] complexity) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countPermutations(self, complexity: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countPermutations(self, complexity):\n        \"\"\"\n        :type complexity: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} complexity\n * @return {number}\n */\nvar countPermutations = function(complexity) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countPermutations(complexity: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountPermutations(int[] complexity) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countPermutations(int* complexity, int complexitySize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countPermutations(complexity []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countPermutations(complexity: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countPermutations(_ complexity: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_permutations(complexity: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} complexity\n# @return {Integer}\ndef count_permutations(complexity)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $complexity\n     * @return Integer\n     */\n    function countPermutations($complexity) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countPermutations(List<int> complexity) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countPermutations(complexity: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_permutations(complexity :: [integer]) :: integer\n  def count_permutations(complexity) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_permutations(Complexity :: [integer()]) -> integer().\ncount_permutations(Complexity) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-permutations complexity)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2891",
+    "content": "### Approach: Brain Teaser\n\n#### Intuition\n\nThe password complexity of the computer with index $0$ is denoted as $T = \\textit{complexity}[0]$.\n\nIf there exists a computer with an index greater than $0$ whose password complexity is less than or equal to $T$, then we should pick the one with the smallest password complexity. Since no computer has a smaller complexity than that, it can never be unlocked, so the answer is $0$.\n\nIf no such computer exists, then every computer can be unlocked by computer $0$ at the start, and the rest can be unlocked in any order. Thus, the answer is $(n-1)!$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/HLA8wDi5/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"HLA8wDi5\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(n)$.\n\n- Space complexity: $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

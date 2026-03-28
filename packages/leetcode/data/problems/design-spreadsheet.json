@@ -1,0 +1,149 @@
+{
+  "questionId": "3797",
+  "questionFrontendId": "3484",
+  "title": "Design Spreadsheet",
+  "titleSlug": "design-spreadsheet",
+  "difficulty": "Medium",
+  "content": "<p>A spreadsheet is a grid with 26 columns (labeled from <code>&#39;A&#39;</code> to <code>&#39;Z&#39;</code>) and a given number of <code>rows</code>. Each cell in the spreadsheet can hold an integer value between 0 and 10<sup>5</sup>.</p>\n\n<p>Implement the <code>Spreadsheet</code> class:</p>\n\n<ul>\n\t<li><code>Spreadsheet(int rows)</code> Initializes a spreadsheet with 26 columns (labeled <code>&#39;A&#39;</code> to <code>&#39;Z&#39;</code>) and the specified number of rows. All cells are initially set to 0.</li>\n\t<li><code>void setCell(String cell, int value)</code> Sets the value of the specified <code>cell</code>. The cell reference is provided in the format <code>&quot;AX&quot;</code> (e.g., <code>&quot;A1&quot;</code>, <code>&quot;B10&quot;</code>), where the letter represents the column (from <code>&#39;A&#39;</code> to <code>&#39;Z&#39;</code>) and the number represents a <strong>1-indexed</strong> row.</li>\n\t<li><code>void resetCell(String cell)</code> Resets the specified cell to 0.</li>\n\t<li><code>int getValue(String formula)</code> Evaluates a formula of the form <code>&quot;=X+Y&quot;</code>, where <code>X</code> and <code>Y</code> are <strong>either</strong> cell references or non-negative integers, and returns the computed sum.</li>\n</ul>\n\n<p><strong>Note:</strong> If <code>getValue</code> references a cell that has not been explicitly set using <code>setCell</code>, its value is considered 0.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong><br />\n<span class=\"example-io\">[&quot;Spreadsheet&quot;, &quot;getValue&quot;, &quot;setCell&quot;, &quot;getValue&quot;, &quot;setCell&quot;, &quot;getValue&quot;, &quot;resetCell&quot;, &quot;getValue&quot;]<br />\n[[3], [&quot;=5+7&quot;], [&quot;A1&quot;, 10], [&quot;=A1+6&quot;], [&quot;B2&quot;, 15], [&quot;=A1+B2&quot;], [&quot;A1&quot;], [&quot;=A1+B2&quot;]]</span></p>\n\n<p><strong>Output:</strong><br />\n<span class=\"example-io\">[null, 12, null, 16, null, 25, null, 15] </span></p>\n\n<p><strong>Explanation</strong></p>\nSpreadsheet spreadsheet = new Spreadsheet(3); // Initializes a spreadsheet with 3 rows and 26 columns<br data-end=\"321\" data-start=\"318\" />\nspreadsheet.getValue(&quot;=5+7&quot;); // returns 12 (5+7)<br data-end=\"373\" data-start=\"370\" />\nspreadsheet.setCell(&quot;A1&quot;, 10); // sets A1 to 10<br data-end=\"423\" data-start=\"420\" />\nspreadsheet.getValue(&quot;=A1+6&quot;); // returns 16 (10+6)<br data-end=\"477\" data-start=\"474\" />\nspreadsheet.setCell(&quot;B2&quot;, 15); // sets B2 to 15<br data-end=\"527\" data-start=\"524\" />\nspreadsheet.getValue(&quot;=A1+B2&quot;); // returns 25 (10+15)<br data-end=\"583\" data-start=\"580\" />\nspreadsheet.resetCell(&quot;A1&quot;); // resets A1 to 0<br data-end=\"634\" data-start=\"631\" />\nspreadsheet.getValue(&quot;=A1+B2&quot;); // returns 15 (0+15)</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= rows &lt;= 10<sup>3</sup></code></li>\n\t<li><code>0 &lt;= value &lt;= 10<sup>5</sup></code></li>\n\t<li>The formula is always in the format <code>&quot;=X+Y&quot;</code>, where <code>X</code> and <code>Y</code> are either valid cell references or <strong>non-negative</strong> integers with values less than or equal to <code>10<sup>5</sup></code>.</li>\n\t<li>Each cell reference consists of a capital letter from <code>&#39;A&#39;</code> to <code>&#39;Z&#39;</code> followed by a row number between <code>1</code> and <code>rows</code>.</li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made in <strong>total</strong> to <code>setCell</code>, <code>resetCell</code>, and <code>getValue</code>.</li>\n</ul>\n",
+  "hints": [
+    "Use a hashmap to represent the cells, where the key is the cell reference (e.g., <code>\"A1\"</code>) and the value is the integer stored in the cell.",
+    "For <code>setCell</code>, simply assign the given value to the specified cell in the hashmap.",
+    "For <code>resetCell</code>, set the value of the specified cell to <code>0</code> in the hashmap.",
+    "For <code>getValue</code>, find the values of the operands from the hashmap and return their sum."
+  ],
+  "metaData": "{\n  \"classname\": \"Spreadsheet\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"rows\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"cell\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"value\"\n        }\n      ],\n      \"name\": \"setCell\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"cell\"\n        }\n      ],\n      \"name\": \"resetCell\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"formula\"\n        }\n      ],\n      \"name\": \"getValue\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"119.3K\", \"totalSubmission\": \"160.6K\", \"totalAcceptedRaw\": 119252, \"totalSubmissionRaw\": 160647, \"acRate\": \"74.2%\"}",
+  "likes": 326,
+  "dislikes": 31,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Excel Sheet Column Title\", \"titleSlug\": \"excel-sheet-column-title\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"Spreadsheet\",\"getValue\",\"setCell\",\"getValue\",\"setCell\",\"getValue\",\"resetCell\",\"getValue\"]\n[[3],[\"=5+7\"],[\"A1\",10],[\"=A1+6\"],[\"B2\",15],[\"=A1+B2\"],[\"A1\"],[\"=A1+B2\"]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"citadel\", \"name\": \"Citadel\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"rippling\", \"name\": \"Rippling\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Spreadsheet {\npublic:\n    Spreadsheet(int rows) {\n        \n    }\n    \n    void setCell(string cell, int value) {\n        \n    }\n    \n    void resetCell(string cell) {\n        \n    }\n    \n    int getValue(string formula) {\n        \n    }\n};\n\n/**\n * Your Spreadsheet object will be instantiated and called as such:\n * Spreadsheet* obj = new Spreadsheet(rows);\n * obj->setCell(cell,value);\n * obj->resetCell(cell);\n * int param_3 = obj->getValue(formula);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Spreadsheet {\n\n    public Spreadsheet(int rows) {\n        \n    }\n    \n    public void setCell(String cell, int value) {\n        \n    }\n    \n    public void resetCell(String cell) {\n        \n    }\n    \n    public int getValue(String formula) {\n        \n    }\n}\n\n/**\n * Your Spreadsheet object will be instantiated and called as such:\n * Spreadsheet obj = new Spreadsheet(rows);\n * obj.setCell(cell,value);\n * obj.resetCell(cell);\n * int param_3 = obj.getValue(formula);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Spreadsheet:\n\n    def __init__(self, rows: int):\n        \n\n    def setCell(self, cell: str, value: int) -> None:\n        \n\n    def resetCell(self, cell: str) -> None:\n        \n\n    def getValue(self, formula: str) -> int:\n        \n\n\n# Your Spreadsheet object will be instantiated and called as such:\n# obj = Spreadsheet(rows)\n# obj.setCell(cell,value)\n# obj.resetCell(cell)\n# param_3 = obj.getValue(formula)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Spreadsheet(object):\n\n    def __init__(self, rows):\n        \"\"\"\n        :type rows: int\n        \"\"\"\n        \n\n    def setCell(self, cell, value):\n        \"\"\"\n        :type cell: str\n        :type value: int\n        :rtype: None\n        \"\"\"\n        \n\n    def resetCell(self, cell):\n        \"\"\"\n        :type cell: str\n        :rtype: None\n        \"\"\"\n        \n\n    def getValue(self, formula):\n        \"\"\"\n        :type formula: str\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your Spreadsheet object will be instantiated and called as such:\n# obj = Spreadsheet(rows)\n# obj.setCell(cell,value)\n# obj.resetCell(cell)\n# param_3 = obj.getValue(formula)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} rows\n */\nvar Spreadsheet = function(rows) {\n    \n};\n\n/** \n * @param {string} cell \n * @param {number} value\n * @return {void}\n */\nSpreadsheet.prototype.setCell = function(cell, value) {\n    \n};\n\n/** \n * @param {string} cell\n * @return {void}\n */\nSpreadsheet.prototype.resetCell = function(cell) {\n    \n};\n\n/** \n * @param {string} formula\n * @return {number}\n */\nSpreadsheet.prototype.getValue = function(formula) {\n    \n};\n\n/** \n * Your Spreadsheet object will be instantiated and called as such:\n * var obj = new Spreadsheet(rows)\n * obj.setCell(cell,value)\n * obj.resetCell(cell)\n * var param_3 = obj.getValue(formula)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Spreadsheet {\n    constructor(rows: number) {\n        \n    }\n\n    setCell(cell: string, value: number): void {\n        \n    }\n\n    resetCell(cell: string): void {\n        \n    }\n\n    getValue(formula: string): number {\n        \n    }\n}\n\n/**\n * Your Spreadsheet object will be instantiated and called as such:\n * var obj = new Spreadsheet(rows)\n * obj.setCell(cell,value)\n * obj.resetCell(cell)\n * var param_3 = obj.getValue(formula)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Spreadsheet {\n\n    public Spreadsheet(int rows) {\n        \n    }\n    \n    public void SetCell(string cell, int value) {\n        \n    }\n    \n    public void ResetCell(string cell) {\n        \n    }\n    \n    public int GetValue(string formula) {\n        \n    }\n}\n\n/**\n * Your Spreadsheet object will be instantiated and called as such:\n * Spreadsheet obj = new Spreadsheet(rows);\n * obj.SetCell(cell,value);\n * obj.ResetCell(cell);\n * int param_3 = obj.GetValue(formula);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Spreadsheet;\n\n\nSpreadsheet* spreadsheetCreate(int rows) {\n    \n}\n\nvoid spreadsheetSetCell(Spreadsheet* obj, char* cell, int value) {\n    \n}\n\nvoid spreadsheetResetCell(Spreadsheet* obj, char* cell) {\n    \n}\n\nint spreadsheetGetValue(Spreadsheet* obj, char* formula) {\n    \n}\n\nvoid spreadsheetFree(Spreadsheet* obj) {\n    \n}\n\n/**\n * Your Spreadsheet struct will be instantiated and called as such:\n * Spreadsheet* obj = spreadsheetCreate(rows);\n * spreadsheetSetCell(obj, cell, value);\n \n * spreadsheetResetCell(obj, cell);\n \n * int param_3 = spreadsheetGetValue(obj, formula);\n \n * spreadsheetFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Spreadsheet struct {\n    \n}\n\n\nfunc Constructor(rows int) Spreadsheet {\n    \n}\n\n\nfunc (this *Spreadsheet) SetCell(cell string, value int)  {\n    \n}\n\n\nfunc (this *Spreadsheet) ResetCell(cell string)  {\n    \n}\n\n\nfunc (this *Spreadsheet) GetValue(formula string) int {\n    \n}\n\n\n/**\n * Your Spreadsheet object will be instantiated and called as such:\n * obj := Constructor(rows);\n * obj.SetCell(cell,value);\n * obj.ResetCell(cell);\n * param_3 := obj.GetValue(formula);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Spreadsheet(rows: Int) {\n\n    fun setCell(cell: String, value: Int) {\n        \n    }\n\n    fun resetCell(cell: String) {\n        \n    }\n\n    fun getValue(formula: String): Int {\n        \n    }\n\n}\n\n/**\n * Your Spreadsheet object will be instantiated and called as such:\n * var obj = Spreadsheet(rows)\n * obj.setCell(cell,value)\n * obj.resetCell(cell)\n * var param_3 = obj.getValue(formula)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Spreadsheet {\n\n    init(_ rows: Int) {\n        \n    }\n    \n    func setCell(_ cell: String, _ value: Int) {\n        \n    }\n    \n    func resetCell(_ cell: String) {\n        \n    }\n    \n    func getValue(_ formula: String) -> Int {\n        \n    }\n}\n\n/**\n * Your Spreadsheet object will be instantiated and called as such:\n * let obj = Spreadsheet(rows)\n * obj.setCell(cell, value)\n * obj.resetCell(cell)\n * let ret_3: Int = obj.getValue(formula)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Spreadsheet {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Spreadsheet {\n\n    fn new(rows: i32) -> Self {\n        \n    }\n    \n    fn set_cell(&self, cell: String, value: i32) {\n        \n    }\n    \n    fn reset_cell(&self, cell: String) {\n        \n    }\n    \n    fn get_value(&self, formula: String) -> i32 {\n        \n    }\n}\n\n/**\n * Your Spreadsheet object will be instantiated and called as such:\n * let obj = Spreadsheet::new(rows);\n * obj.set_cell(cell, value);\n * obj.reset_cell(cell);\n * let ret_3: i32 = obj.get_value(formula);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Spreadsheet\n\n=begin\n    :type rows: Integer\n=end\n    def initialize(rows)\n        \n    end\n\n\n=begin\n    :type cell: String\n    :type value: Integer\n    :rtype: Void\n=end\n    def set_cell(cell, value)\n        \n    end\n\n\n=begin\n    :type cell: String\n    :rtype: Void\n=end\n    def reset_cell(cell)\n        \n    end\n\n\n=begin\n    :type formula: String\n    :rtype: Integer\n=end\n    def get_value(formula)\n        \n    end\n\n\nend\n\n# Your Spreadsheet object will be instantiated and called as such:\n# obj = Spreadsheet.new(rows)\n# obj.set_cell(cell, value)\n# obj.reset_cell(cell)\n# param_3 = obj.get_value(formula)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Spreadsheet {\n    /**\n     * @param Integer $rows\n     */\n    function __construct($rows) {\n        \n    }\n  \n    /**\n     * @param String $cell\n     * @param Integer $value\n     * @return NULL\n     */\n    function setCell($cell, $value) {\n        \n    }\n  \n    /**\n     * @param String $cell\n     * @return NULL\n     */\n    function resetCell($cell) {\n        \n    }\n  \n    /**\n     * @param String $formula\n     * @return Integer\n     */\n    function getValue($formula) {\n        \n    }\n}\n\n/**\n * Your Spreadsheet object will be instantiated and called as such:\n * $obj = Spreadsheet($rows);\n * $obj->setCell($cell, $value);\n * $obj->resetCell($cell);\n * $ret_3 = $obj->getValue($formula);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Spreadsheet {\n\n  Spreadsheet(int rows) {\n    \n  }\n  \n  void setCell(String cell, int value) {\n    \n  }\n  \n  void resetCell(String cell) {\n    \n  }\n  \n  int getValue(String formula) {\n    \n  }\n}\n\n/**\n * Your Spreadsheet object will be instantiated and called as such:\n * Spreadsheet obj = Spreadsheet(rows);\n * obj.setCell(cell,value);\n * obj.resetCell(cell);\n * int param3 = obj.getValue(formula);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Spreadsheet(_rows: Int) {\n\n    def setCell(cell: String, value: Int): Unit = {\n        \n    }\n\n    def resetCell(cell: String): Unit = {\n        \n    }\n\n    def getValue(formula: String): Int = {\n        \n    }\n\n}\n\n/**\n * Your Spreadsheet object will be instantiated and called as such:\n * val obj = new Spreadsheet(rows)\n * obj.setCell(cell,value)\n * obj.resetCell(cell)\n * val param_3 = obj.getValue(formula)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Spreadsheet do\n  @spec init_(rows :: integer) :: any\n  def init_(rows) do\n    \n  end\n\n  @spec set_cell(cell :: String.t, value :: integer) :: any\n  def set_cell(cell, value) do\n    \n  end\n\n  @spec reset_cell(cell :: String.t) :: any\n  def reset_cell(cell) do\n    \n  end\n\n  @spec get_value(formula :: String.t) :: integer\n  def get_value(formula) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Spreadsheet.init_(rows)\n# Spreadsheet.set_cell(cell, value)\n# Spreadsheet.reset_cell(cell)\n# param_3 = Spreadsheet.get_value(formula)\n\n# Spreadsheet.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec spreadsheet_init_(Rows :: integer()) -> any().\nspreadsheet_init_(Rows) ->\n  .\n\n-spec spreadsheet_set_cell(Cell :: unicode:unicode_binary(), Value :: integer()) -> any().\nspreadsheet_set_cell(Cell, Value) ->\n  .\n\n-spec spreadsheet_reset_cell(Cell :: unicode:unicode_binary()) -> any().\nspreadsheet_reset_cell(Cell) ->\n  .\n\n-spec spreadsheet_get_value(Formula :: unicode:unicode_binary()) -> integer().\nspreadsheet_get_value(Formula) ->\n  .\n\n\n%% Your functions will be called as such:\n%% spreadsheet_init_(Rows),\n%% spreadsheet_set_cell(Cell, Value),\n%% spreadsheet_reset_cell(Cell),\n%% Param_3 = spreadsheet_get_value(Formula),\n\n%% spreadsheet_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define spreadsheet%\n  (class object%\n    (super-new)\n    \n    ; rows : exact-integer?\n    (init-field\n      rows)\n    \n    ; set-cell : string? exact-integer? -> void?\n    (define/public (set-cell cell value)\n      )\n    ; reset-cell : string? -> void?\n    (define/public (reset-cell cell)\n      )\n    ; get-value : string? -> exact-integer?\n    (define/public (get-value formula)\n      )))\n\n;; Your spreadsheet% object will be instantiated and called as such:\n;; (define obj (new spreadsheet% [rows rows]))\n;; (send obj set-cell cell value)\n;; (send obj reset-cell cell)\n;; (define param_3 (send obj get-value formula))"
+    }
+  ],
+  "solution": {
+    "id": "2839",
+    "content": "### Approach 1: Simulation\n\n#### Intuition\n\nAccording to the problem statement, we can directly use a two-dimensional array $\\textit{grid}$ with $\\textit{rows}$ rows and 26 columns to store the values of the cells. When querying or updating a cell, we simply access the corresponding element in the array. The implementation of the $\\text{Spreadsheet}$ class is as follows:\n\n+ Initialization: Call $\\text{Spreadsheet(int rows)}$ to create a two-dimensional array $\\textit{grid}$ with $\\textit{rows}$ rows and 26 columns, initializing all elements to $0$.\n\n+ $\\text{void setCell(String cell, int value)}$: Set the value of the specified cell to $\\textit{value}$. Parse the row and column indices from the string $\\textit{cell}$ according to the rules, and assign $\\textit{value}$ to the corresponding entry in $\\textit{grid}$.\n\n+ $\\text{void resetCell(String cell)}$: Reset the value of the specified cell to $0$. Parse the row and column indices from $\\textit{cell}$ and set the corresponding entry in $\\textit{grid}$ to $0$.\n\n+ $\\text{int getValue(String formula)}$: Compute the value of a formula. The formula format is \"=X+Y\". Parse $X$ and $Y$ from the string. If the first character of $X$ or $Y$ is a letter, it refers to a cell, and the corresponding value is retrieved from $\\textit{grid}$. If the first character is a digit, it represents an integer. Finally, return the sum of the two values.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/CibDRvsP/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"CibDRvsP\"></iframe>\n\n#### Complexity Analysis\n\nLet $\\textit{rows}$ denote the number of rows in the spreadsheet, and let $C = 26$ denote the number of columns.\n\n- Time complexity: Initializing the table takes $O(C \\times \\textit{rows})$ time, since we must allocate a 2D array of size $\\textit{rows} \\times 26$. Other operations take $O(1)$ time, since they involve only string parsing and cell lookup.\n\n- Space complexity: $O(C \\times \\textit{rows})$. Create a two-dimensional array with $\\textit{rows}$ rows and $26$ columns, requiring space of $O(C \\times \\textit{rows})$.\n\n### Approach 2: Hash Table\n\n#### Intuition\n\nSince each cell has a unique identifier, we can store cell values in a hash table. In this case, updating or querying a cell corresponds to updating or retrieving an entry from the hash table. The implementation of the $\\text{Spreadsheet}$ class is as follows:\n\n+ Initialization: Call $\\text{Spreadsheet(int rows)}$. At this point, simply initialize the hash table $\\textit{cellValues}$.\n\n+ $\\text{void setCell(String cell, int value)}$: Set the value of the specified cell to $\\textit{value}$ by updating the hash table entry corresponding to $\\textit{cell}$.\n\n+ $\\text{void resetCell(String cell)}$: Reset the value of the specified cell to $0$ by removing the corresponding key from the hash table.\n\n+ $\\text{int getValue(String formula)}$: Compute the value of a formula. The format is `\"=X+Y\"`. Parse $X$ and $Y$. If the first character is a letter, the identifier corresponds to a cell, and the value is retrieved from the hash table. Otherwise, it is treated as an integer. Return the sum of the two values.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Nwps2jTV/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Nwps2jTV\"></iframe>\n\n#### Complexity Analysis\n\nLet $\\textit{cellsCount}$ denote the number of non-zero cells, which depends on how many times $\\textit{setCell}$ is called.\n\n- Time complexity: All operations run in $O(1)$ time, since they involve only hash table lookups/updates and string parsing.\n\n- Space complexity: $O(\\textit{cellsCount})$, as the hash table stores only non-zero cells.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

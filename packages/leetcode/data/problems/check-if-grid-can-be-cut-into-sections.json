@@ -1,0 +1,137 @@
+{
+  "questionId": "3657",
+  "questionFrontendId": "3394",
+  "title": "Check if Grid can be Cut into Sections",
+  "titleSlug": "check-if-grid-can-be-cut-into-sections",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>n</code> representing the dimensions of an <code>n x n</code><!-- notionvc: fa9fe4ed-dff8-4410-8196-346f2d430795 --> grid, with the origin at the bottom-left corner of the grid. You are also given a 2D array of coordinates <code>rectangles</code>, where <code>rectangles[i]</code> is in the form <code>[start<sub>x</sub>, start<sub>y</sub>, end<sub>x</sub>, end<sub>y</sub>]</code>, representing a rectangle on the grid. Each rectangle is defined as follows:</p>\n\n<ul>\n\t<li><code>(start<sub>x</sub>, start<sub>y</sub>)</code>: The bottom-left corner of the rectangle.</li>\n\t<li><code>(end<sub>x</sub>, end<sub>y</sub>)</code>: The top-right corner of the rectangle.</li>\n</ul>\n\n<p><strong>Note </strong>that the rectangles do not overlap. Your task is to determine if it is possible to make <strong>either two horizontal or two vertical cuts</strong> on the grid such that:</p>\n\n<ul>\n\t<li>Each of the three resulting sections formed by the cuts contains <strong>at least</strong> one rectangle.</li>\n\t<li>Every rectangle belongs to <strong>exactly</strong> one section.</li>\n</ul>\n\n<p>Return <code>true</code> if such cuts can be made; otherwise, return <code>false</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 5, rectangles = [[1,0,5,2],[0,2,2,4],[3,2,5,3],[0,4,4,5]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">true</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/10/23/tt1drawio.png\" style=\"width: 285px; height: 280px;\" /></p>\n\n<p>The grid is shown in the diagram. We can make horizontal cuts at <code>y = 2</code> and <code>y = 4</code>. Hence, output is true.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 4, rectangles = [[0,0,1,1],[2,0,3,4],[0,2,2,3],[3,0,4,3]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">true</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/10/23/tc2drawio.png\" style=\"width: 240px; height: 240px;\" /></p>\n\n<p>We can make vertical cuts at <code>x = 2</code> and <code>x = 3</code>. Hence, output is true.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 4, rectangles = [[0,2,2,4],[1,0,3,2],[2,2,3,4],[3,0,4,2],[3,2,4,4]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">false</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>We cannot make two horizontal or two vertical cuts that satisfy the conditions. Hence, output is false.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= n &lt;= 10<sup>9</sup></code></li>\n\t<li><code>3 &lt;= rectangles.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= rectangles[i][0] &lt; rectangles[i][2] &lt;= n</code></li>\n\t<li><code>0 &lt;= rectangles[i][1] &lt; rectangles[i][3] &lt;= n</code></li>\n\t<li>No two rectangles overlap.</li>\n</ul>\n",
+  "hints": [
+    "For each rectangle, consider ranges <code>[start_x, end_x]</code> and <code>[start_y, end_y]</code> separately.",
+    "For x and y directions, check whether we can split it into 3 parts."
+  ],
+  "metaData": "{\n  \"name\": \"checkValidCuts\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"rectangles\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"113.2K\", \"totalSubmission\": \"165.8K\", \"totalAcceptedRaw\": 113194, \"totalSubmissionRaw\": 165805, \"acRate\": \"68.3%\"}",
+  "likes": 625,
+  "dislikes": 38,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "5\n[[1,0,5,2],[0,2,2,4],[3,2,5,3],[0,4,4,5]]",
+    "4\n[[0,0,1,1],[2,0,3,4],[0,2,2,3],[3,0,4,3]]",
+    "4\n[[0,2,2,4],[1,0,3,2],[2,2,3,4],[3,0,4,2],[3,2,4,4]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 17, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool checkValidCuts(int n, vector<vector<int>>& rectangles) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean checkValidCuts(int n, int[][] rectangles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def checkValidCuts(self, n: int, rectangles: List[List[int]]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def checkValidCuts(self, n, rectangles):\n        \"\"\"\n        :type n: int\n        :type rectangles: List[List[int]]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} rectangles\n * @return {boolean}\n */\nvar checkValidCuts = function(n, rectangles) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function checkValidCuts(n: number, rectangles: number[][]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CheckValidCuts(int n, int[][] rectangles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool checkValidCuts(int n, int** rectangles, int rectanglesSize, int* rectanglesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func checkValidCuts(n int, rectangles [][]int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun checkValidCuts(n: Int, rectangles: Array<IntArray>): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func checkValidCuts(_ n: Int, _ rectangles: [[Int]]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn check_valid_cuts(n: i32, rectangles: Vec<Vec<i32>>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} rectangles\n# @return {Boolean}\ndef check_valid_cuts(n, rectangles)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $rectangles\n     * @return Boolean\n     */\n    function checkValidCuts($n, $rectangles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool checkValidCuts(int n, List<List<int>> rectangles) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def checkValidCuts(n: Int, rectangles: Array[Array[Int]]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec check_valid_cuts(n :: integer, rectangles :: [[integer]]) :: boolean\n  def check_valid_cuts(n, rectangles) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec check_valid_cuts(N :: integer(), Rectangles :: [[integer()]]) -> boolean().\ncheck_valid_cuts(N, Rectangles) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (check-valid-cuts n rectangles)\n  (-> exact-integer? (listof (listof exact-integer?)) boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2720",
+    "content": "[TOC]\n\n## Solution \n    \n---\n\n### Approach: Line Sweep\n\n#### Intuition\n\nWe are given an integer `n` representing the dimensions of an `n x n` grid, along with a set of non-overlapping rectangles placed within this grid. We need to find whether we can make either two horizontal or two vertical cuts such that the grid is divided into three distinct sections. Each section must contain at least one rectangle, and no rectangle should span across multiple sections. Since the rectangles do not overlap, we can take advantage of their structure to find natural divisions in the grid. Instead of considering every possible cut position, we can focus on gaps between rectangles, as valid cuts can only occur in those spaces.\n\nA natural way to do this is by scanning the grid along one dimension at a time. If we examine vertical cuts, for instance, we can sort the rectangles based on their `startx` coordinate (the x-coordinate of their bottom-left corner). As we scan from left to right, we track the furthest `endx` encountered so far. If a rectangle's `startx` is greater than the maximum `endx` we’ve seen, this indicates an empty vertical space where a cut can be made. If we can find at least two such gaps, we can make two vertical cuts, successfully dividing the grid into three sections.\n\nFor example, consider the following rectangles sorted by their `startx`:\n\n1. `[1,1,3,3]`\n2. `[4,2,5,5]`\n3. `[6,0,8,4]`\n   \nHere, there is a gap between `endx = 3` (of the first rectangle) and `startx = 4` (of the second rectangle), as well as between `endx = 5` (of the second rectangle) and `startx = 6` (of the third rectangle). Since we have at least two such gaps, we can place two vertical cuts, ensuring that all three resulting sections contain at least one rectangle.\n\nThe same logic applies if we want to explore horizontal cuts. In this case, we sort the rectangles by their `starty` coordinate (the y-coordinate of their bottom-left corner) and scan the grid from bottom to top. We track the furthest `endy` coordinate encountered and look for gaps between consecutive rectangles. If we find at least two such gaps, we can make two horizontal cuts, successfully dividing the grid into three sections.\n\nTo implement this, we define a helper function that checks for valid cuts along a given dimension. This function sorts the rectangles based on their starting coordinate and scans through them while maintaining the furthest ending coordinate seen so far. Each time a gap is detected, we increment a counter. If this counter reaches at least two, we confirm that two cuts can be made along that dimension.\n\nThe following slideshow shows how the algorithm works for horizontal cuts in Example 2 of the problem description:\n\n!?!../Documents/3394/slideshow.json:760,1062!?!\n\nWe then apply this function to both dimensions - checking first for vertical cuts and then for horizontal cuts. If either approach succeeds, we return true; otherwise, we return false.\n\n> Note: This approach is very similar to the well-known problem [Merge Intervals](https://leetcode.com/problems/merge-intervals/description/). We recommend solving that problem as well to gain a deeper understanding of this concept.\n\n#### Algorithm\n\nMain method `checkValidCuts`:\n\n- Return the result of checking for valid cuts in both horizontal (dimension 0) and vertical (dimension 1) directions using a logical OR operation.\n\nHelper method `checkCuts(rectangles, dim)`:\n\n- Initialize a variable `gapCount` to `0` to track the number of gaps between rectangles.\n- Sort the `rectangles` array based on the starting coordinate in the specified dimension.\n- Initialize a variable `furthestEnd` to the ending coordinate of the first rectangle in the sorted array.\n- Iterate through the remaining rectangles starting from index `1`. For each rectangle:\n  - Check if its starting coordinate in the given dimension is greater than or equal to the current `furthestEnd`.\n    - If a gap is found, increment the `gapCount`.\n  - Update `furthestEnd` to be the maximum of the current `furthestEnd` and the ending coordinate of the current rectangle.\n- After processing all rectangles, return true if the `gapCount` is at least 2, indicating that we can make two cuts to create three sections.\n\n#### Implementation\n\n> Interview Tip: In-Place Algorithms   \n> In-place algorithms overwrite the input to save space, but sometimes this can cause problems. Here are a couple of situations where an in-place algorithm might not be suitable:   \n> 1. The algorithm needs to run in a multi-threaded environment without exclusive access to the array. Other threads might need to read the array as well and may not expect it to be modified.   \n> 2. Even if there is only a single thread or the algorithm has exclusive access to the array while running, the array might need to be reused later or by another thread once the lock has been released.   \n> In an interview, always check whether the interviewer is okay with you overwriting the input. Be prepared to explain the pros and cons of doing so if asked!  \n\n<iframe src=\"https://leetcode.com/playground/EDqj5veQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"EDqj5veQ\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of rectangles.\n\n- Time complexity: $O(n \\log n)$\n\n    The time complexity is dominated by the sorting operation, which takes $O(n \\log n)$ time. We call the `checkCuts` function twice (once for horizontal cuts and once for vertical cuts), and each call performs sorting and a linear scan through the rectangles. This gives us $2 \\cdot (O(n \\log n) + O(n))$, which simplifies to $O(n \\log n)$.\n\n- Space complexity: $O(S)$\n\n    The space taken by the sorting algorithm ($S$) depends on the language of implementation:\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O(\\log n)$.\n    - In Python, the `sort()` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(n)$ .\n\n    Other than this, we're only using a few variables (`gapCount`, `furthestEnd`, loop indices) that don't scale with the input size. Therefore, the overall space complexity remains $O(S)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

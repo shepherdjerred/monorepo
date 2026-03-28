@@ -1,0 +1,53 @@
+{
+  "questionId": "3921",
+  "questionFrontendId": "3580",
+  "title": "Find Consistently Improving Employees",
+  "titleSlug": "find-consistently-improving-employees",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>employees</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| employee_id | int     |\n| name        | varchar |\n+-------------+---------+\nemployee_id is the unique identifier for this table.\nEach row contains information about an employee.\n</pre>\n\n<p>Table: <code>performance_reviews</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| review_id   | int  |\n| employee_id | int  |\n| review_date | date |\n| rating      | int  |\n+-------------+------+\nreview_id is the unique identifier for this table.\nEach row represents a performance review for an employee. The rating is on a scale of 1-5 where 5 is excellent and 1 is poor.\n</pre>\n\n<p>Write a solution to find employees who have consistently improved their performance over <strong>their last three reviews</strong>.</p>\n\n<ul>\n\t<li>An employee must have <strong>at least </strong><code>3</code><strong> review</strong> to be considered</li>\n\t<li>The employee&#39;s <strong>last </strong><code>3</code><strong> reviews</strong> must show <strong>strictly increasing ratings</strong> (each review better than the previous)</li>\n\t<li>Use the most recent <code>3</code> reviews based on <code>review_date</code> for each employee</li>\n\t<li>Calculate the <strong>improvement score</strong> as the difference between the latest rating and the earliest rating among the last <code>3</code> reviews</li>\n</ul>\n\n<p>Return <em>the result table ordered by <strong>improvement score</strong> in <strong>descending</strong> order, then by <strong>name</strong> in <strong>ascending</strong> order</em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>employees table:</p>\n\n<pre class=\"example-io\">\n+-------------+----------------+\n| employee_id | name           |\n+-------------+----------------+\n| 1           | Alice Johnson  |\n| 2           | Bob Smith      |\n| 3           | Carol Davis    |\n| 4           | David Wilson   |\n| 5           | Emma Brown     |\n+-------------+----------------+\n</pre>\n\n<p>performance_reviews table:</p>\n\n<pre class=\"example-io\">\n+-----------+-------------+-------------+--------+\n| review_id | employee_id | review_date | rating |\n+-----------+-------------+-------------+--------+\n| 1         | 1           | 2023-01-15  | 2      |\n| 2         | 1           | 2023-04-15  | 3      |\n| 3         | 1           | 2023-07-15  | 4      |\n| 4         | 1           | 2023-10-15  | 5      |\n| 5         | 2           | 2023-02-01  | 3      |\n| 6         | 2           | 2023-05-01  | 2      |\n| 7         | 2           | 2023-08-01  | 4      |\n| 8         | 2           | 2023-11-01  | 5      |\n| 9         | 3           | 2023-03-10  | 1      |\n| 10        | 3           | 2023-06-10  | 2      |\n| 11        | 3           | 2023-09-10  | 3      |\n| 12        | 3           | 2023-12-10  | 4      |\n| 13        | 4           | 2023-01-20  | 4      |\n| 14        | 4           | 2023-04-20  | 4      |\n| 15        | 4           | 2023-07-20  | 4      |\n| 16        | 5           | 2023-02-15  | 3      |\n| 17        | 5           | 2023-05-15  | 2      |\n+-----------+-------------+-------------+--------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+-------------+----------------+-------------------+\n| employee_id | name           | improvement_score |\n+-------------+----------------+-------------------+\n| 2           | Bob Smith      | 3                 |\n| 1           | Alice Johnson  | 2                 |\n| 3           | Carol Davis    | 2                 |\n+-------------+----------------+-------------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>Alice Johnson (employee_id = 1):</strong>\n\n\t<ul>\n\t\t<li>Has 4 reviews with ratings: 2, 3, 4, 5</li>\n\t\t<li>Last 3 reviews (by date): 2023-04-15 (3), 2023-07-15 (4), 2023-10-15 (5)</li>\n\t\t<li>Ratings are strictly increasing: 3 &rarr; 4 &rarr; 5</li>\n\t\t<li>Improvement score: 5 - 3 = 2</li>\n\t</ul>\n\t</li>\n\t<li><strong>Carol Davis (employee_id = 3):</strong>\n\t<ul>\n\t\t<li>Has 4 reviews with ratings: 1, 2, 3, 4</li>\n\t\t<li>Last 3 reviews (by date): 2023-06-10 (2), 2023-09-10 (3), 2023-12-10 (4)</li>\n\t\t<li>Ratings are strictly increasing: 2 &rarr; 3 &rarr; 4</li>\n\t\t<li>Improvement score: 4 - 2 = 2</li>\n\t</ul>\n\t</li>\n\t<li><strong>Bob Smith (employee_id = 2):</strong>\n\t<ul>\n\t\t<li>Has 4 reviews with ratings: 3, 2, 4, 5</li>\n\t\t<li>Last 3 reviews (by date): 2023-05-01 (2), 2023-08-01 (4), 2023-11-01 (5)</li>\n\t\t<li>Ratings are strictly increasing: 2 &rarr; 4 &rarr; 5</li>\n\t\t<li>Improvement score: 5 - 2 = 3</li>\n\t</ul>\n\t</li>\n\t<li><strong>Employees not included:</strong>\n\t<ul>\n\t\t<li>David Wilson (employee_id = 4): Last 3 reviews are all 4 (no improvement)</li>\n\t\t<li>Emma Brown (employee_id = 5): Only has 2 reviews (needs at least 3)</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>The output table is ordered by improvement_score in descending order, then by name in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE employees (\\n    employee_id INT,\\n    name VARCHAR(255)\\n)\", \"CREATE TABLE performance_reviews (\\n    review_id INT,\\n    employee_id INT,\\n    review_date DATE,\\n    rating INT\\n)\"], \"mssql\": [\"CREATE TABLE employees (\\n    employee_id INT,\\n    name VARCHAR(255)\\n)\", \"CREATE TABLE performance_reviews (\\n    review_id INT,\\n    employee_id INT,\\n    review_date DATE,\\n    rating INT\\n)\"], \"oraclesql\": [\"CREATE TABLE employees (\\n    employee_id NUMBER,\\n    name VARCHAR2(255)\\n)\", \"CREATE TABLE performance_reviews (\\n    review_id NUMBER,\\n    employee_id NUMBER,\\n    review_date DATE,\\n    rating NUMBER\\n)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"find_consistently_improving_employees\", \"postgresql\": [\"CREATE TABLE employees (\\n    employee_id INTEGER,\\n    name VARCHAR(255)\\n);\\n\", \"CREATE TABLE performance_reviews (\\n    review_id INTEGER,\\n    employee_id INTEGER,\\n    review_date DATE,\\n    rating NUMERIC\\n);\\n\"], \"pythondata\": [\"employees = pd.DataFrame({\\n    'employee_id': pd.Series(dtype='int'),\\n    'name': pd.Series(dtype='str')\\n})\", \"performance_reviews = pd.DataFrame({\\n    'review_id': pd.Series(dtype='int'),\\n    'employee_id': pd.Series(dtype='int'),\\n    'review_date': pd.Series(dtype='datetime64[ns]'),\\n    'rating': pd.Series(dtype='float')  # Use float to accommodate decimal ratings\\n})\"], \"database_schema\": {\"employees\": {\"employee_id\": \"INT\", \"name\": \"VARCHAR(255)\"}, \"performance_reviews\": {\"review_id\": \"INT\", \"employee_id\": \"INT\", \"review_date\": \"DATE\", \"rating\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"11.5K\", \"totalSubmission\": \"20.6K\", \"totalAcceptedRaw\": 11453, \"totalSubmissionRaw\": 20580, \"acRate\": \"55.7%\"}",
+  "likes": 47,
+  "dislikes": 1,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"employees\":[\"employee_id\",\"name\"],\"performance_reviews\":[\"review_id\",\"employee_id\",\"review_date\",\"rating\"]},\"rows\":{\"employees\":[[1,\"Alice Johnson\"],[2,\"Bob Smith\"],[3,\"Carol Davis\"],[4,\"David Wilson\"],[5,\"Emma Brown\"]],\"performance_reviews\":[[1,1,\"2023-01-15\",2],[2,1,\"2023-04-15\",3],[3,1,\"2023-07-15\",4],[4,1,\"2023-10-15\",5],[5,2,\"2023-02-01\",3],[6,2,\"2023-05-01\",2],[7,2,\"2023-08-01\",4],[8,2,\"2023-11-01\",5],[9,3,\"2023-03-10\",1],[10,3,\"2023-06-10\",2],[11,3,\"2023-09-10\",3],[12,3,\"2023-12-10\",4],[13,4,\"2023-01-20\",4],[14,4,\"2023-04-20\",4],[15,4,\"2023-07-20\",4],[16,5,\"2023-02-15\",3],[17,5,\"2023-05-15\",2]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_consistently_improving_employees(employees: pd.DataFrame, performance_reviews: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

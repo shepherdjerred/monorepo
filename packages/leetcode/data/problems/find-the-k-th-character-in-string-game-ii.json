@@ -1,0 +1,140 @@
+{
+  "questionId": "3601",
+  "questionFrontendId": "3307",
+  "title": "Find the K-th Character in String Game II",
+  "titleSlug": "find-the-k-th-character-in-string-game-ii",
+  "difficulty": "Hard",
+  "content": "<p>Alice and Bob are playing a game. Initially, Alice has a string <code>word = &quot;a&quot;</code>.</p>\n\n<p>You are given a <strong>positive</strong> integer <code>k</code>. You are also given an integer array <code>operations</code>, where <code>operations[i]</code> represents the <strong>type</strong> of the <code>i<sup>th</sup></code> operation.</p>\n\n<p>Now Bob will ask Alice to perform <strong>all</strong> operations in sequence:</p>\n\n<ul>\n\t<li>If <code>operations[i] == 0</code>, <strong>append</strong> a copy of <code>word</code> to itself.</li>\n\t<li>If <code>operations[i] == 1</code>, generate a new string by <strong>changing</strong> each character in <code>word</code> to its <strong>next</strong> character in the English alphabet, and <strong>append</strong> it to the <em>original</em> <code>word</code>. For example, performing the operation on <code>&quot;c&quot;</code> generates <code>&quot;cd&quot;</code> and performing the operation on <code>&quot;zb&quot;</code> generates <code>&quot;zbac&quot;</code>.</li>\n</ul>\n\n<p>Return the value of the <code>k<sup>th</sup></code> character in <code>word</code> after performing all the operations.</p>\n\n<p><strong>Note</strong> that the character <code>&#39;z&#39;</code> can be changed to <code>&#39;a&#39;</code> in the second type of operation.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">k = 5, operations = [0,0,0]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;a&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Initially, <code>word == &quot;a&quot;</code>. Alice performs the three operations as follows:</p>\n\n<ul>\n\t<li>Appends <code>&quot;a&quot;</code> to <code>&quot;a&quot;</code>, <code>word</code> becomes <code>&quot;aa&quot;</code>.</li>\n\t<li>Appends <code>&quot;aa&quot;</code> to <code>&quot;aa&quot;</code>, <code>word</code> becomes <code>&quot;aaaa&quot;</code>.</li>\n\t<li>Appends <code>&quot;aaaa&quot;</code> to <code>&quot;aaaa&quot;</code>, <code>word</code> becomes <code>&quot;aaaaaaaa&quot;</code>.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">k = 10, operations = [0,1,0,1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;b&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Initially, <code>word == &quot;a&quot;</code>. Alice performs the four operations as follows:</p>\n\n<ul>\n\t<li>Appends <code>&quot;a&quot;</code> to <code>&quot;a&quot;</code>, <code>word</code> becomes <code>&quot;aa&quot;</code>.</li>\n\t<li>Appends <code>&quot;bb&quot;</code> to <code>&quot;aa&quot;</code>, <code>word</code> becomes <code>&quot;aabb&quot;</code>.</li>\n\t<li>Appends <code>&quot;aabb&quot;</code> to <code>&quot;aabb&quot;</code>, <code>word</code> becomes <code>&quot;aabbaabb&quot;</code>.</li>\n\t<li>Appends <code>&quot;bbccbbcc&quot;</code> to <code>&quot;aabbaabb&quot;</code>, <code>word</code> becomes <code>&quot;aabbaabbbbccbbcc&quot;</code>.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= 10<sup>14</sup></code></li>\n\t<li><code>1 &lt;= operations.length &lt;= 100</code></li>\n\t<li><code>operations[i]</code> is either 0 or 1.</li>\n\t<li>The input is generated such that <code>word</code> has <strong>at least</strong> <code>k</code> characters after all operations.</li>\n</ul>\n",
+  "hints": [
+    "Try to replay the operations <code>k<sup>th</sup></code> character was part of.",
+    "The <code>k<sup>th</sup></code> character is only affected if it is present in the first half of the string."
+  ],
+  "metaData": "{\n  \"name\": \"kthCharacter\",\n  \"params\": [\n    {\n      \"name\": \"k\",\n      \"type\": \"long\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"operations\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"character\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"87.7K\", \"totalSubmission\": \"180.9K\", \"totalAcceptedRaw\": 87718, \"totalSubmissionRaw\": 180865, \"acRate\": \"48.5%\"}",
+  "likes": 525,
+  "dislikes": 31,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Shifting Letters\", \"titleSlug\": \"shifting-letters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "5\n[0,0,0]",
+    "10\n[0,1,0,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    char kthCharacter(long long k, vector<int>& operations) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public char kthCharacter(long k, int[] operations) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def kthCharacter(self, k: int, operations: List[int]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def kthCharacter(self, k, operations):\n        \"\"\"\n        :type k: int\n        :type operations: List[int]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} k\n * @param {number[]} operations\n * @return {character}\n */\nvar kthCharacter = function(k, operations) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function kthCharacter(k: number, operations: number[]): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public char KthCharacter(long k, int[] operations) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char kthCharacter(long long k, int* operations, int operationsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func kthCharacter(k int64, operations []int) byte {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun kthCharacter(k: Long, operations: IntArray): Char {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func kthCharacter(_ k: Int, _ operations: [Int]) -> Character {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn kth_character(k: i64, operations: Vec<i32>) -> char {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} k\n# @param {Integer[]} operations\n# @return {Character}\ndef kth_character(k, operations)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $k\n     * @param Integer[] $operations\n     * @return String\n     */\n    function kthCharacter($k, $operations) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String kthCharacter(int k, List<int> operations) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def kthCharacter(k: Long, operations: Array[Int]): Char = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec kth_character(k :: integer, operations :: [integer]) :: char\n  def kth_character(k, operations) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec kth_character(K :: integer(), Operations :: [integer()]) -> char().\nkth_character(K, Operations) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (kth-character k operations)\n  (-> exact-integer? (listof exact-integer?) char?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2789",
+    "content": "### Approach 1: Iteration\n\n#### Intuition\n\nThe general idea of this problem is the same as that of \"[Find the K-th Character in String Game I](https://leetcode.com/problems/find-the-k-th-character-in-string-game-i/description/),\" with the only difference being that we need to determine which operation the current $k$ is located in.\n\nLet $k = 2^t + a$. If $a = 0$, then the current $k$ is in the $(t - 1)$-th operation; if $a \\neq 0$, then the current $k$ is in the $t$-th operation.\n\nThis conclusion can be easily derived by simulating with small amounts of data.\n\nAfter determining the number of operations corresponding to the current $k$, we can decide whether to accumulate the answer using the `operations` array provided in the problem. If `operations[t] = 1`, we perform the accumulation; otherwise, we do not.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KpQUBwLn/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"KpQUBwLn\"></iframe>\n\n#### Complexity analysis\n\n- Time complexity: $O(\\log k)$.\n  \n  Only related to the binary digits of $k$.\n\n- Space complexity: $O(1)$.\n\n### Approach 2: Mathematics\n\n#### Intuition\n\nChange the way of thinking: if you start counting from the character after the original string, reaching the $k$-th character is equivalent to moving forward $k - 1$ characters.\n\nWrite $k - 1$ in binary. When the $t$-th bit is $1$, it corresponds to shifting forward by $2^{t - 1}$ characters, which is equivalent to applying the $(t - 1)$-th operation.\n\nTherefore, we only need to pay attention to the positions of the binary number representing $k - 1$ where the bit is $1$. If the corresponding value in the `operations` array at that position is $1$, we add it to the answer.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4gsvjvkL/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"4gsvjvkL\"></iframe>\n\n#### Complexity analysis\n\n- Time complexity: $O(\\log k)$.\n  \n  This depends only on the number of binary digits in $k$.\n\n- Space complexity: $O(1)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

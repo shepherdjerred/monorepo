@@ -1,0 +1,141 @@
+{
+  "questionId": "3741",
+  "questionFrontendId": "3440",
+  "title": "Reschedule Meetings for Maximum Free Time II",
+  "titleSlug": "reschedule-meetings-for-maximum-free-time-ii",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>eventTime</code> denoting the duration of an event. You are also given two integer arrays <code>startTime</code> and <code>endTime</code>, each of length <code>n</code>.</p>\n\n<p>These represent the start and end times of <code>n</code> <strong>non-overlapping</strong> meetings that occur during the event between time <code>t = 0</code> and time <code>t = eventTime</code>, where the <code>i<sup>th</sup></code> meeting occurs during the time <code>[startTime[i], endTime[i]].</code></p>\n\n<p>You can reschedule <strong>at most </strong>one meeting by moving its start time while maintaining the <strong>same duration</strong>, such that the meetings remain non-overlapping, to <strong>maximize</strong> the <strong>longest</strong> <em>continuous period of free time</em> during the event.</p>\n\n<p>Return the <strong>maximum</strong> amount of free time possible after rearranging the meetings.</p>\n\n<p><strong>Note</strong> that the meetings can <strong>not</strong> be rescheduled to a time outside the event and they should remain non-overlapping.</p>\n\n<p><strong>Note:</strong> <em>In this version</em>, it is <strong>valid</strong> for the relative ordering of the meetings to change after rescheduling one meeting.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">eventTime = 5, startTime = [1,3], endTime = [2,5]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/12/22/example0_rescheduled.png\" style=\"width: 375px; height: 123px;\" /></p>\n\n<p>Reschedule the meeting at <code>[1, 2]</code> to <code>[2, 3]</code>, leaving no meetings during the time <code>[0, 2]</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">eventTime = 10, startTime = [0,7,9], endTime = [1,8,10]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">7</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/12/22/rescheduled_example0.png\" style=\"width: 375px; height: 125px;\" /></p>\n\n<p>Reschedule the meeting at <code>[0, 1]</code> to <code>[8, 9]</code>, leaving no meetings during the time <code>[0, 7]</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">eventTime = 10, startTime = [0,3,7,9], endTime = [1,4,8,10]</span></p>\n\n<p><strong>Output:</strong> 6</p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2025/01/28/image3.png\" style=\"width: 375px; height: 125px;\" /></strong></p>\n\n<p>Reschedule the meeting at <code>[3, 4]</code> to <code>[8, 9]</code>, leaving no meetings during the time <code>[1, 7]</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 4:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">eventTime = 5, startTime = [0,1,2,3,4], endTime = [1,2,3,4,5]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There is no time during the event not occupied by meetings.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= eventTime &lt;= 10<sup>9</sup></code></li>\n\t<li><code>n == startTime.length == endTime.length</code></li>\n\t<li><code>2 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= startTime[i] &lt; endTime[i] &lt;= eventTime</code></li>\n\t<li><code>endTime[i] &lt;= startTime[i + 1]</code> where <code>i</code> lies in the range <code>[0, n - 2]</code>.</li>\n</ul>\n",
+  "hints": [
+    "If we reschedule a meeting earlier or later, we need to find a gap of length at least <code>endTime[i] - startTime[i]</code>. Try maintaining the gaps in some sorted data structure."
+  ],
+  "metaData": "{\n  \"name\": \"maxFreeTime\",\n  \"params\": [\n    {\n      \"name\": \"eventTime\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"startTime\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"endTime\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"84.4K\", \"totalSubmission\": \"139.9K\", \"totalAcceptedRaw\": 84447, \"totalSubmissionRaw\": 139884, \"acRate\": \"60.4%\"}",
+  "likes": 467,
+  "dislikes": 26,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "5\n[1,3]\n[2,5]",
+    "10\n[0,7,9]\n[1,8,10]",
+    "10\n[0,3,7,9]\n[1,4,8,10]",
+    "5\n[0,1,2,3,4]\n[1,2,3,4,5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxFreeTime(int eventTime, vector<int>& startTime, vector<int>& endTime) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxFreeTime(int eventTime, int[] startTime, int[] endTime) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxFreeTime(self, eventTime: int, startTime: List[int], endTime: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxFreeTime(self, eventTime, startTime, endTime):\n        \"\"\"\n        :type eventTime: int\n        :type startTime: List[int]\n        :type endTime: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} eventTime\n * @param {number[]} startTime\n * @param {number[]} endTime\n * @return {number}\n */\nvar maxFreeTime = function(eventTime, startTime, endTime) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxFreeTime(eventTime: number, startTime: number[], endTime: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxFreeTime(int eventTime, int[] startTime, int[] endTime) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxFreeTime(int eventTime, int* startTime, int startTimeSize, int* endTime, int endTimeSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxFreeTime(eventTime int, startTime []int, endTime []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxFreeTime(eventTime: Int, startTime: IntArray, endTime: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxFreeTime(_ eventTime: Int, _ startTime: [Int], _ endTime: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_free_time(event_time: i32, start_time: Vec<i32>, end_time: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} event_time\n# @param {Integer[]} start_time\n# @param {Integer[]} end_time\n# @return {Integer}\ndef max_free_time(event_time, start_time, end_time)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $eventTime\n     * @param Integer[] $startTime\n     * @param Integer[] $endTime\n     * @return Integer\n     */\n    function maxFreeTime($eventTime, $startTime, $endTime) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxFreeTime(int eventTime, List<int> startTime, List<int> endTime) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxFreeTime(eventTime: Int, startTime: Array[Int], endTime: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_free_time(event_time :: integer, start_time :: [integer], end_time :: [integer]) :: integer\n  def max_free_time(event_time, start_time, end_time) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_free_time(EventTime :: integer(), StartTime :: [integer()], EndTime :: [integer()]) -> integer().\nmax_free_time(EventTime, StartTime, EndTime) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-free-time eventTime startTime endTime)\n  (-> exact-integer? (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2793",
+    "content": "### Approach 1: Greedy\n\n#### Intuition\n\nAssume the current meeting to be shifted is $i$. There are two optimal ways to translate the meeting:\n\n1. If meeting $i$ can be moved to an available time slot, and this slot is not adjacent to the two available time slots on either side of meeting $i$, then shifting it can create a new available time slot, with a duration equal to the sum of the durations of meeting $i$ and the two adjacent available slots on either side.\n\n2. Otherwise, moving meeting $i$ simply merges the two adjacent free time periods on both sides.\n\nAs we can see that maximum free time that can be obtained after rearranging the meetings is the maximum value of the new available time periods resulting from shifting a meeting.\n\nWe use $q[i]$ to record whether meeting $i$ satisfies the condition for the first case. We first traverse the meetings from left to right, maintaining the maximum duration $t_1$ of any non-adjacent free time slot to the left of the current meeting $i$. If $t_1 \\ge \\textit{endTime}[i] - \\textit{startTime}[i]$, then there is a free time slot on the left of meeting $i$ that satisfies case 1, so we record $q[i] = \\text{true}$. Similarly, we traverse from right to left to check whether the right side also satisfies the condition.\n\nThen, for each meeting $i$, we define $\\textit{left}_i$ as the end time of the previous meeting and $\\textit{right}_i$ as the start time of the next meeting. Based on the value of $q[i]$, we determine which case applies:\n\n- Case 1: The new available time slot has a duration of $\\textit{right}_i - \\textit{left}_i$\n\n- Case 2: The new available time slot has a duration of $\\textit{right}_i - \\textit{left}_i - (\\textit{endTime}[i] - \\textit{startTime}[i])$\n\nFinally, return the maximum of all computed durations.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/kuFoXyCu/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"kuFoXyCu\"></iframe>\n\n#### Complexity analysis\n\nLet $n$ be the number of all meetings.\n\n- Time complexity: $O(n)$.\n  \n  We need to go through all the meetings.\n\n- Space complexity: $O(n)$.\n  \n  A array is needed to record all the meeting situations.\n\n\n### Approach 2: Greedy + Optimization\n\n#### Intuition\n\nIn Approach 1, we used an array `q[i]` to determine whether meeting $i$ satisfied the condition for an optimal shift. However, if we calculate the result for both cases directly while enumerating meeting $i$, we can eliminate the need for the `q` array altogether. The specific process is as follows:\n\n- We iterate over each meeting and first calculate the duration of the new free time slot if we were to merge the adjacent free slots on both sides of the meeting. This corresponds to Case 2 in the previous approach.\n\n- Then, we perform a left-to-right traversal, maintaining a variable $t_1$ to store the maximum duration of any non-adjacent free slot to the left of the current meeting. If the duration of the current meeting is less than or equal to $t_1$, it means the meeting can be shifted into that earlier free slot. We then compute the new available time obtained after this shift (Case 1).\n\n- Similarly, we perform a right-to-left traversal, using $t_2$ to track the maximum duration of non-adjacent free slots on the right. If the current meeting's duration is less than or equal to $t_2$, then it can be shifted into that slot, and we calculate the resulting new available time (Case 1 from the right side).\n\nIn the end, we return the maximum duration among all the computed available time slots.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/RpydYrHc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RpydYrHc\"></iframe>\n\n#### Complexity analysis\n\nLet $n$ be the number of all meetings.\n\n- Time complexity: $O(n)$.\n  \n  We need to go through all the meetings.\n\n- Space complexity: $O(1)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

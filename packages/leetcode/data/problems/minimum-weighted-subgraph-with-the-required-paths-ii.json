@@ -1,0 +1,145 @@
+{
+  "questionId": "3853",
+  "questionFrontendId": "3553",
+  "title": "Minimum Weighted Subgraph With the Required Paths II",
+  "titleSlug": "minimum-weighted-subgraph-with-the-required-paths-ii",
+  "difficulty": "Hard",
+  "content": "<p>You are given an <strong>undirected weighted</strong> tree with <code data-end=\"51\" data-start=\"48\">n</code> nodes, numbered from <code data-end=\"75\" data-start=\"72\">0</code> to <code data-end=\"86\" data-start=\"79\">n - 1</code>. It is represented by a 2D integer array <code data-end=\"129\" data-start=\"122\">edges</code> of length <code data-end=\"147\" data-start=\"140\">n - 1</code>, where <code data-end=\"185\" data-start=\"160\">edges[i] = [u<sub>i</sub>, v<sub>i</sub>, w<sub>i</sub>]</code> indicates that there is an edge between nodes <code data-end=\"236\" data-start=\"232\">u<sub>i</sub></code> and <code data-end=\"245\" data-start=\"241\">v<sub>i</sub></code> with weight <code data-end=\"262\" data-start=\"258\">w<sub>i</sub></code>.​</p>\n\n<p>Additionally, you are given a 2D integer array <code data-end=\"56\" data-start=\"47\">queries</code>, where <code data-end=\"105\" data-start=\"69\">queries[j] = [src1<sub>j</sub>, src2<sub>j</sub>, dest<sub>j</sub>]</code>.</p>\n\n<p>Return an array <code data-end=\"24\" data-start=\"16\">answer</code> of length equal to <code data-end=\"60\" data-start=\"44\">queries.length</code>, where <code data-end=\"79\" data-start=\"68\">answer[j]</code> is the <strong>minimum total weight</strong> of a subtree such that it is possible to reach <code data-end=\"174\" data-start=\"167\">dest<sub>j</sub></code> from both <code data-end=\"192\" data-start=\"185\">src1<sub>j</sub></code> and <code data-end=\"204\" data-start=\"197\">src2<sub>j</sub></code> using edges in this subtree.</p>\n\n<p>A <strong data-end=\"2287\" data-start=\"2276\">subtree</strong> here is any connected subset of nodes and edges of the original tree forming a valid tree.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">edges = [[0,1,2],[1,2,3],[1,3,5],[1,4,4],[2,5,6]], queries = [[2,3,4],[0,2,5]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[12,11]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The blue edges represent one of the subtrees that yield the optimal answer.</p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2025/04/02/tree1-4.jpg\" style=\"width: 531px; height: 322px;\" /></p>\n\n<ul>\n\t<li data-end=\"118\" data-start=\"0\">\n\t<p data-end=\"118\" data-start=\"2\"><code>answer[0]</code>: The total weight of the selected subtree that ensures a path from <code>src1 = 2</code> and <code>src2 = 3</code> to <code>dest = 4</code> is <code>3 + 5 + 4 = 12</code>.</p>\n\t</li>\n\t<li data-end=\"235\" data-start=\"119\">\n\t<p data-end=\"235\" data-start=\"121\"><code>answer[1]</code>: The total weight of the selected subtree that ensures a path from <code>src1 = 0</code> and <code>src2 = 2</code> to <code>dest = 5</code> is <code>2 + 3 + 6 = 11</code>.</p>\n\t</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">edges = [[1,0,8],[0,2,7]], queries = [[0,1,2]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[15]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2025/04/02/tree1-5.jpg\" style=\"width: 270px; height: 80px;\" /></p>\n\n<ul>\n\t<li><code>answer[0]</code>: The total weight of the selected subtree that ensures a path from <code>src1 = 0</code> and <code>src2 = 1</code> to <code>dest = 2</code> is <code>8 + 7 = 15</code>.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li data-end=\"36\" data-start=\"20\"><code>3 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li data-end=\"62\" data-start=\"39\"><code>edges.length == n - 1</code></li>\n\t<li data-end=\"87\" data-start=\"65\"><code>edges[i].length == 3</code></li>\n\t<li data-end=\"107\" data-start=\"90\"><code>0 &lt;= u<sub>i</sub>, v<sub>i</sub> &lt; n</code></li>\n\t<li data-end=\"127\" data-start=\"110\"><code>1 &lt;= w<sub>i</sub> &lt;= 10<sup>4</sup></code></li>\n\t<li data-end=\"159\" data-start=\"130\"><code>1 &lt;= queries.length &lt;= 10<sup>5</sup></code></li>\n\t<li data-end=\"186\" data-start=\"162\"><code>queries[j].length == 3</code></li>\n\t<li data-end=\"219\" data-start=\"189\"><code>0 &lt;= src1<sub>j</sub>, src2<sub>j</sub>, dest<sub>j</sub> &lt; n</code></li>\n\t<li><code>src1<sub>j</sub></code>, <code>src2<sub>j</sub></code>, and <code>dest<sub>j</sub></code> are pairwise distinct.</li>\n\t<li>The input is generated such that <code>edges</code> represents a valid tree.</li>\n</ul>\n",
+  "hints": [
+    "Binary lifting",
+    "Find the lowest common ancestor (LCA) of any two nodes using binary lifting",
+    "For any node <code>x</code>, let <code>f(x)</code> be the distance from the root to <code>x</code>. Then for two nodes <code>x</code> and <code>y</code>:<code>d(x, y) = f(x) + f(y) - 2 * f(LCA(x, y))</code>",
+    "For three nodes <code>a</code>, <code>b</code> and <code>c</code>, the minimum total weight of the subtree connecting all three is:<code>(d(a, b) + d(b, c) + d(c, a)) / 2</code>, where <code>d(x, y)</code> is the distance between nodes <code>x</code> and <code>y</code>"
+  ],
+  "metaData": "{\n  \"name\": \"minimumWeight\",\n  \"params\": [\n    {\n      \"name\": \"edges\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"queries\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"4.6K\", \"totalSubmission\": \"9.2K\", \"totalAcceptedRaw\": 4587, \"totalSubmissionRaw\": 9212, \"acRate\": \"49.8%\"}",
+  "likes": 52,
+  "dislikes": 4,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[0,1,2],[1,2,3],[1,3,5],[1,4,4],[2,5,6]]\n[[2,3,4],[0,2,5]]",
+    "[[1,0,8],[0,2,7]]\n[[0,1,2]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> minimumWeight(vector<vector<int>>& edges, vector<vector<int>>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] minimumWeight(int[][] edges, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumWeight(self, edges: List[List[int]], queries: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumWeight(self, edges, queries):\n        \"\"\"\n        :type edges: List[List[int]]\n        :type queries: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} edges\n * @param {number[][]} queries\n * @return {number[]}\n */\nvar minimumWeight = function(edges, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumWeight(edges: number[][], queries: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] MinimumWeight(int[][] edges, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* minimumWeight(int** edges, int edgesSize, int* edgesColSize, int** queries, int queriesSize, int* queriesColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumWeight(edges [][]int, queries [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumWeight(edges: Array<IntArray>, queries: Array<IntArray>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumWeight(_ edges: [[Int]], _ queries: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_weight(edges: Vec<Vec<i32>>, queries: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} edges\n# @param {Integer[][]} queries\n# @return {Integer[]}\ndef minimum_weight(edges, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $edges\n     * @param Integer[][] $queries\n     * @return Integer[]\n     */\n    function minimumWeight($edges, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> minimumWeight(List<List<int>> edges, List<List<int>> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumWeight(edges: Array[Array[Int]], queries: Array[Array[Int]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_weight(edges :: [[integer]], queries :: [[integer]]) :: [integer]\n  def minimum_weight(edges, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_weight(Edges :: [[integer()]], Queries :: [[integer()]]) -> [integer()].\nminimum_weight(Edges, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-weight edges queries)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

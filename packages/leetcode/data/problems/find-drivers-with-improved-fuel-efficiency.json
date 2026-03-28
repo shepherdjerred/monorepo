@@ -1,0 +1,53 @@
+{
+  "questionId": "3942",
+  "questionFrontendId": "3601",
+  "title": "Find Drivers with Improved Fuel Efficiency",
+  "titleSlug": "find-drivers-with-improved-fuel-efficiency",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>drivers</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| driver_id   | int     |\n| driver_name | varchar |\n+-------------+---------+\ndriver_id is the unique identifier for this table.\nEach row contains information about a driver.\n</pre>\n\n<p>Table: <code>trips</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| trip_id       | int     |\n| driver_id     | int     |\n| trip_date     | date    |\n| distance_km   | decimal |\n| fuel_consumed | decimal |\n+---------------+---------+\ntrip_id is the unique identifier for this table.\nEach row represents a trip made by a driver, including the distance traveled and fuel consumed for that trip.\n</pre>\n\n<p>Write a solution to find drivers whose <strong>fuel efficiency has improved</strong> by <strong>comparing</strong> their average fuel efficiency in the<strong> first half</strong> of the year with the <strong>second half</strong> of the year.</p>\n\n<ul>\n\t<li>Calculate <strong>fuel efficiency</strong> as <code>distance_km / fuel_consumed</code> for <strong>each</strong> trip</li>\n\t<li><strong>First half</strong>: January to June, <strong>Second half</strong>: July to December</li>\n\t<li>Only include drivers who have trips in <strong>both halves</strong> of the year</li>\n\t<li>Calculate the <strong>efficiency improvement</strong> as (<code>second_half_avg - first_half_avg</code>)</li>\n\t<li><strong>Round </strong>all<strong> </strong>results<strong> </strong>to<strong> <code>2</code> </strong>decimal<strong> </strong>places</li>\n</ul>\n\n<p>Return <em>the result table ordered by efficiency improvement in <strong>descending</strong> order, then by driver name in <strong>ascending</strong> order</em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>drivers table:</p>\n\n<pre class=\"example-io\">\n+-----------+---------------+\n| driver_id | driver_name   |\n+-----------+---------------+\n| 1         | Alice Johnson |\n| 2         | Bob Smith     |\n| 3         | Carol Davis   |\n| 4         | David Wilson  |\n| 5         | Emma Brown    |\n+-----------+---------------+\n</pre>\n\n<p>trips table:</p>\n\n<pre class=\"example-io\">\n+---------+-----------+------------+-------------+---------------+\n| trip_id | driver_id | trip_date  | distance_km | fuel_consumed |\n+---------+-----------+------------+-------------+---------------+\n| 1       | 1         | 2023-02-15 | 120.5       | 10.2          |\n| 2       | 1         | 2023-03-20 | 200.0       | 16.5          |\n| 3       | 1         | 2023-08-10 | 150.0       | 11.0          |\n| 4       | 1         | 2023-09-25 | 180.0       | 12.5          |\n| 5       | 2         | 2023-01-10 | 100.0       | 9.0           |\n| 6       | 2         | 2023-04-15 | 250.0       | 22.0          |\n| 7       | 2         | 2023-10-05 | 200.0       | 15.0          |\n| 8       | 3         | 2023-03-12 | 80.0        | 8.5           |\n| 9       | 3         | 2023-05-18 | 90.0        | 9.2           |\n| 10      | 4         | 2023-07-22 | 160.0       | 12.8          |\n| 11      | 4         | 2023-11-30 | 140.0       | 11.0          |\n| 12      | 5         | 2023-02-28 | 110.0       | 11.5          |\n+---------+-----------+------------+-------------+---------------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+-----------+---------------+------------------+-------------------+------------------------+\n| driver_id | driver_name   | first_half_avg   | second_half_avg   | efficiency_improvement |\n+-----------+---------------+------------------+-------------------+------------------------+\n| 2         | Bob Smith     | 11.24            | 13.33             | 2.10                   |\n| 1         | Alice Johnson | 11.97            | 14.02             | 2.05                   |\n+-----------+---------------+------------------+-------------------+------------------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>Alice Johnson (driver_id = 1):</strong>\n\n\t<ul>\n\t\t<li>First half trips (Jan-Jun): Feb 15 (120.5/10.2 = 11.81), Mar 20 (200.0/16.5 = 12.12)</li>\n\t\t<li>First half average efficiency: (11.81 + 12.12) / 2 = 11.97</li>\n\t\t<li>Second half trips (Jul-Dec): Aug 10 (150.0/11.0 = 13.64), Sep 25 (180.0/12.5 = 14.40)</li>\n\t\t<li>Second half average efficiency: (13.64 + 14.40) / 2 = 14.02</li>\n\t\t<li>Efficiency improvement: 14.02 - 11.97 = 2.05</li>\n\t</ul>\n\t</li>\n\t<li><strong>Bob Smith (driver_id = 2):</strong>\n\t<ul>\n\t\t<li>First half trips: Jan 10 (100.0/9.0 = 11.11), Apr 15 (250.0/22.0 = 11.36)</li>\n\t\t<li>First half average efficiency: (11.11 + 11.36) / 2 = 11.24</li>\n\t\t<li>Second half trips: Oct 5 (200.0/15.0 = 13.33)</li>\n\t\t<li>Second half average efficiency: 13.33</li>\n\t\t<li>Efficiency improvement: 13.33 - 11.24 = 2.10 (rounded to 2 decimal places)</li>\n\t</ul>\n\t</li>\n\t<li><strong>Drivers not included:</strong>\n\t<ul>\n\t\t<li>Carol Davis (driver_id = 3): Only has trips in first half (Mar, May)</li>\n\t\t<li>David Wilson (driver_id = 4): Only has trips in second half (Jul, Nov)</li>\n\t\t<li>Emma Brown (driver_id = 5): Only has trips in first half (Feb)</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>The output table is ordered by efficiency improvement in descending order then by name in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE drivers (\\n    driver_id INT,\\n    driver_name VARCHAR(255)\\n)\", \"CREATE TABLE trips (\\n    trip_id INT,\\n    driver_id INT,\\n    trip_date DATE,\\n    distance_km DECIMAL(8, 2),\\n    fuel_consumed DECIMAL(6, 2)\\n)\"], \"mssql\": [\"CREATE TABLE drivers (\\n    driver_id INT,\\n    driver_name VARCHAR(255)\\n)\", \"CREATE TABLE trips (\\n    trip_id INT,\\n    driver_id INT,\\n    trip_date DATE,\\n    distance_km DECIMAL(8, 2),\\n    fuel_consumed DECIMAL(6, 2)\\n)\"], \"oraclesql\": [\"CREATE TABLE drivers (\\n    driver_id NUMBER,\\n    driver_name VARCHAR2(255)\\n)\", \"CREATE TABLE trips (\\n    trip_id NUMBER,\\n    driver_id NUMBER,\\n    trip_date DATE,\\n    distance_km NUMBER(8, 2),\\n    fuel_consumed NUMBER(6, 2)\\n)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"find_improved_efficiency_drivers\", \"postgresql\": [\"CREATE TABLE drivers (\\n    driver_id INTEGER,\\n    driver_name VARCHAR(255)\\n);\\n\", \"CREATE TABLE trips (\\n    trip_id INTEGER,\\n    driver_id INTEGER,\\n    trip_date DATE,\\n    distance_km NUMERIC(8, 2),\\n    fuel_consumed NUMERIC(6, 2)\\n);\\n\"], \"pythondata\": [\"drivers = pd.DataFrame({\\n    'driver_id': pd.Series(dtype='int'),\\n    'driver_name': pd.Series(dtype='str')\\n})\", \"trips = pd.DataFrame({\\n    'trip_id': pd.Series(dtype='int'),\\n    'driver_id': pd.Series(dtype='int'),\\n    'trip_date': pd.Series(dtype='datetime64[ns]'),\\n    'distance_km': pd.Series(dtype='float'),\\n    'fuel_consumed': pd.Series(dtype='float')\\n})\"], \"database_schema\": {\"drivers\": {\"driver_id\": \"INT\", \"driver_name\": \"VARCHAR(255)\"}, \"trips\": {\"trip_id\": \"INT\", \"driver_id\": \"INT\", \"trip_date\": \"DATE\", \"distance_km\": \"DECIMAL(8, 2)\", \"fuel_consumed\": \"DECIMAL(6, 2)\"}}}",
+  "stats": "{\"totalAccepted\": \"9.3K\", \"totalSubmission\": \"20.2K\", \"totalAcceptedRaw\": 9334, \"totalSubmissionRaw\": 20170, \"acRate\": \"46.3%\"}",
+  "likes": 39,
+  "dislikes": 6,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"drivers\":[\"driver_id\",\"driver_name\"],\"trips\":[\"trip_id\",\"driver_id\",\"trip_date\",\"distance_km\",\"fuel_consumed\"]},\"rows\":{\"drivers\":[[1,\"Alice Johnson\"],[2,\"Bob Smith\"],[3,\"Carol Davis\"],[4,\"David Wilson\"],[5,\"Emma Brown\"]],\"trips\":[[1,1,\"2023-02-15\",120.5,10.2],[2,1,\"2023-03-20\",200.0,16.5],[3,1,\"2023-08-10\",150.0,11.0],[4,1,\"2023-09-25\",180.0,12.5],[5,2,\"2023-01-10\",100.0,9.0],[6,2,\"2023-04-15\",250.0,22.0],[7,2,\"2023-10-05\",200.0,15.0],[8,3,\"2023-03-12\",80.0,8.5],[9,3,\"2023-05-18\",90.0,9.2],[10,4,\"2023-07-22\",160.0,12.8],[11,4,\"2023-11-30\",140.0,11.0],[12,5,\"2023-02-28\",110.0,11.5]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_improved_efficiency_drivers(drivers: pd.DataFrame, trips: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

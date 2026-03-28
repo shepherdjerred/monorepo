@@ -1,0 +1,135 @@
+{
+  "questionId": "3605",
+  "questionFrontendId": "3314",
+  "title": "Construct the Minimum Bitwise Array I",
+  "titleSlug": "construct-the-minimum-bitwise-array-i",
+  "difficulty": "Easy",
+  "content": "<p>You are given an array <code>nums</code> consisting of <code>n</code> <span data-keyword=\"prime-number\">prime</span> integers.</p>\n\n<p>You need to construct an array <code>ans</code> of length <code>n</code>, such that, for each index <code>i</code>, the bitwise <code>OR</code> of <code>ans[i]</code> and <code>ans[i] + 1</code> is equal to <code>nums[i]</code>, i.e. <code>ans[i] OR (ans[i] + 1) == nums[i]</code>.</p>\n\n<p>Additionally, you must <strong>minimize</strong> each value of <code>ans[i]</code> in the resulting array.</p>\n\n<p>If it is <em>not possible</em> to find such a value for <code>ans[i]</code> that satisfies the <strong>condition</strong>, then set <code>ans[i] = -1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [2,3,5,7]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[-1,1,4,3]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>For <code>i = 0</code>, as there is no value for <code>ans[0]</code> that satisfies <code>ans[0] OR (ans[0] + 1) = 2</code>, so <code>ans[0] = -1</code>.</li>\n\t<li>For <code>i = 1</code>, the smallest <code>ans[1]</code> that satisfies <code>ans[1] OR (ans[1] + 1) = 3</code> is <code>1</code>, because <code>1 OR (1 + 1) = 3</code>.</li>\n\t<li>For <code>i = 2</code>, the smallest <code>ans[2]</code> that satisfies <code>ans[2] OR (ans[2] + 1) = 5</code> is <code>4</code>, because <code>4 OR (4 + 1) = 5</code>.</li>\n\t<li>For <code>i = 3</code>, the smallest <code>ans[3]</code> that satisfies <code>ans[3] OR (ans[3] + 1) = 7</code> is <code>3</code>, because <code>3 OR (3 + 1) = 7</code>.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [11,13,31]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[9,12,15]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>For <code>i = 0</code>, the smallest <code>ans[0]</code> that satisfies <code>ans[0] OR (ans[0] + 1) = 11</code> is <code>9</code>, because <code>9 OR (9 + 1) = 11</code>.</li>\n\t<li>For <code>i = 1</code>, the smallest <code>ans[1]</code> that satisfies <code>ans[1] OR (ans[1] + 1) = 13</code> is <code>12</code>, because <code>12 OR (12 + 1) = 13</code>.</li>\n\t<li>For <code>i = 2</code>, the smallest <code>ans[2]</code> that satisfies <code>ans[2] OR (ans[2] + 1) = 31</code> is <code>15</code>, because <code>15 OR (15 + 1) = 31</code>.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 100</code></li>\n\t<li><code>2 &lt;= nums[i] &lt;= 1000</code></li>\n\t<li><code>nums[i]</code> is a prime number.</li>\n</ul>\n",
+  "hints": [
+    "The constraints are small, allowing you to iterate over all potential values for <code>ans[i]</code> directly."
+  ],
+  "metaData": "{\n  \"name\": \"minBitwiseArray\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"list<integer>\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"136.2K\", \"totalSubmission\": \"159.8K\", \"totalAcceptedRaw\": 136237, \"totalSubmissionRaw\": 159776, \"acRate\": \"85.3%\"}",
+  "likes": 416,
+  "dislikes": 52,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,3,5,7]",
+    "[11,13,31]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"aon\", \"name\": \"Aon\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> minBitwiseArray(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] minBitwiseArray(List<Integer> nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minBitwiseArray(self, nums: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minBitwiseArray(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number[]}\n */\nvar minBitwiseArray = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minBitwiseArray(nums: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] MinBitwiseArray(IList<int> nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* minBitwiseArray(int* nums, int numsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minBitwiseArray(nums []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minBitwiseArray(nums: List<Int>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minBitwiseArray(_ nums: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_bitwise_array(nums: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer[]}\ndef min_bitwise_array(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer[]\n     */\n    function minBitwiseArray($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> minBitwiseArray(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minBitwiseArray(nums: List[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_bitwise_array(nums :: [integer]) :: [integer]\n  def min_bitwise_array(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_bitwise_array(Nums :: [integer()]) -> [integer()].\nmin_bitwise_array(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-bitwise-array nums)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2909",
+    "content": "### Approach 1: Brute Force\n\n#### Intuition\n\nSince the data size is small, for each prime number in $\\textit{nums}$, we traverse from $1$ to $\\textit{nums}[i] - 1$ to find the first number that satisfies the problem requirements. If no such number is found, the answer is set to $-1$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/o9iodiJY/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"o9iodiJY\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array $\\textit{nums}$, and let $m$ be the maximum value in the array.\n\n- Time complexity: $O(mn)$.\n\n- Space complexity: $O(1)$.\n\n---\n\n### Approach 2: Bitwise Operation\n\n#### Intuition\n\nFor each $x$ in $\\textit{nums}$, we want to find the smallest $\\textit{ans}$ such that\n$\\textit{ans} \\mid (\\textit{ans} + 1) = x$.\n\nObserving $\\textit{ans} + 1$, it is evident that this operation flips the first $0$ bit from the least significant bit toward the most significant bit to $1$, and sets all lower bits that were previously $1$ to $0$. As a result, $\\textit{ans} \\mid (\\textit{ans} + 1)$ effectively changes the first $0$ bit in $\\textit{ans}$, scanning from the least significant bit upward, to $1$.\n\nThis implies that for any $1$ bit that appears before the first $0$ bit (from least significant to most significant) in the binary representation of $x$, changing that $1$ to $0$ will produce a valid $\\textit{ans}$ such that\n$\\textit{ans} \\mid (\\textit{ans} + 1) = x$.\n\nSince the problem asks for the smallest $\\textit{ans}$, we only need to locate the position $\\textit{pos}$ of the first $0$ bit in $x$ and set the $1$ bit at position $\\textit{pos} - 1$ to $0$.\n\nThe implementation works as follows. We use $d$ to track the current bit position. While the current bit in $x$ is $1$, we update $\\textit{res}$ to $x - d$, which flips that bit to $0$. We then shift $d$ left by one bit and continue. When a $0$ bit is encountered, no smaller valid $\\textit{ans}$ can be formed, and the loop terminates.\n\nThe answer is $-1$ only when $x = 2$, because $2$ is a prime number whose binary representation contains no $1$ bit before the least significant $0$, making it impossible to construct a valid answer.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/K3t2U4Ez/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"K3t2U4Ez\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array $\\textit{nums}$, and let $m$ be the maximum value in the array.\n\n- Time complexity: $O(n \\log m)$.\n\n- Space complexity: $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

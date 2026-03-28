@@ -1,0 +1,141 @@
+{
+  "questionId": "3819",
+  "questionFrontendId": "3531",
+  "title": "Count Covered Buildings",
+  "titleSlug": "count-covered-buildings",
+  "difficulty": "Medium",
+  "content": "<p>You are given a positive integer <code>n</code>, representing an <code>n x n</code> city. You are also given a 2D grid <code>buildings</code>, where <code>buildings[i] = [x, y]</code> denotes a <strong>unique</strong> building located at coordinates <code>[x, y]</code>.</p>\n\n<p>A building is <strong>covered</strong> if there is at least one building in all <strong>four</strong> directions: left, right, above, and below.</p>\n\n<p>Return the number of <strong>covered</strong> buildings.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><img src=\"https://assets.leetcode.com/uploads/2025/03/04/telegram-cloud-photo-size-5-6212982906394101085-m.jpg\" style=\"width: 200px; height: 204px;\" /></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 3, buildings = [[1,2],[2,2],[3,2],[2,1],[2,3]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Only building <code>[2,2]</code> is covered as it has at least one building:\n\n\t<ul>\n\t\t<li>above (<code>[1,2]</code>)</li>\n\t\t<li>below (<code>[3,2]</code>)</li>\n\t\t<li>left (<code>[2,1]</code>)</li>\n\t\t<li>right (<code>[2,3]</code>)</li>\n\t</ul>\n\t</li>\n\t<li>Thus, the count of covered buildings is 1.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><img src=\"https://assets.leetcode.com/uploads/2025/03/04/telegram-cloud-photo-size-5-6212982906394101086-m.jpg\" style=\"width: 200px; height: 204px;\" /></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 3, buildings = [[1,1],[1,2],[2,1],[2,2]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>No building has at least one building in all four directions.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<p><img src=\"https://assets.leetcode.com/uploads/2025/03/16/telegram-cloud-photo-size-5-6248862251436067566-x.jpg\" style=\"width: 202px; height: 205px;\" /></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 5, buildings = [[1,3],[3,2],[3,3],[3,5],[5,3]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Only building <code>[3,3]</code> is covered as it has at least one building:\n\n\t<ul>\n\t\t<li>above (<code>[1,3]</code>)</li>\n\t\t<li>below (<code>[5,3]</code>)</li>\n\t\t<li>left (<code>[3,2]</code>)</li>\n\t\t<li>right (<code>[3,5]</code>)</li>\n\t</ul>\n\t</li>\n\t<li>Thus, the count of covered buildings is 1.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= buildings.length &lt;= 10<sup>5</sup> </code></li>\n\t<li><code>buildings[i] = [x, y]</code></li>\n\t<li><code>1 &lt;= x, y &lt;= n</code></li>\n\t<li>All coordinates of <code>buildings</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Group buildings with the same x or y value together, and sort each group.",
+    "In each sorted list, the buildings that are not at the first or last positions are covered in that direction."
+  ],
+  "metaData": "{\n  \"name\": \"countCoveredBuildings\",\n  \"params\": [\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"buildings\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"103.8K\", \"totalSubmission\": \"176.6K\", \"totalAcceptedRaw\": 103795, \"totalSubmissionRaw\": 176600, \"acRate\": \"58.8%\"}",
+  "likes": 442,
+  "dislikes": 28,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "3\n[[1,2],[2,2],[3,2],[2,1],[2,3]]",
+    "3\n[[1,1],[1,2],[2,1],[2,2]]",
+    "5\n[[1,3],[3,2],[3,3],[3,5],[5,3]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countCoveredBuildings(int n, vector<vector<int>>& buildings) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countCoveredBuildings(int n, int[][] buildings) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countCoveredBuildings(self, n: int, buildings: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countCoveredBuildings(self, n, buildings):\n        \"\"\"\n        :type n: int\n        :type buildings: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} buildings\n * @return {number}\n */\nvar countCoveredBuildings = function(n, buildings) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countCoveredBuildings(n: number, buildings: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountCoveredBuildings(int n, int[][] buildings) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countCoveredBuildings(int n, int** buildings, int buildingsSize, int* buildingsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countCoveredBuildings(n int, buildings [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countCoveredBuildings(n: Int, buildings: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countCoveredBuildings(_ n: Int, _ buildings: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_covered_buildings(n: i32, buildings: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} buildings\n# @return {Integer}\ndef count_covered_buildings(n, buildings)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $buildings\n     * @return Integer\n     */\n    function countCoveredBuildings($n, $buildings) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countCoveredBuildings(int n, List<List<int>> buildings) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countCoveredBuildings(n: Int, buildings: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_covered_buildings(n :: integer, buildings :: [[integer]]) :: integer\n  def count_covered_buildings(n, buildings) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_covered_buildings(N :: integer(), Buildings :: [[integer()]]) -> integer().\ncount_covered_buildings(N, Buildings) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-covered-buildings n buildings)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2890",
+    "content": "### Approach: Simulation\n\n#### Intuition\n\nAccording to the problem statement, we are given a two-dimensional array `buildings` and need to count how many buildings are **covered**. A building is considered **covered** if there is at least one other coordinate in each of the four directions: left, right, up, and down. If we treat the scattered coordinates as forming an area, we are essentially counting how many of them are not located on the **edges** of that area.\n\nAll coordinates lie within an `n × n` grid, and each coordinate `(x, y)` satisfies\n`1 ≤ x ≤ n` and `1 ≤ y ≤ n`. This allows us to determine which coordinates lie on the **edges** by examining whether `x` or `y` is equal to `1` or `n` within their respective rows and columns.\n\n+ If a coordinate is the leftmost in its row, there is no coordinate to its left because all coordinates are unique; similarly, if it is the rightmost, there is no coordinate to its right.\n\n+ If a coordinate is the topmost in its column, there is no coordinate above it; if it is the bottommost, there is no coordinate below it.\n\n+ If a coordinate is neither the leftmost nor rightmost in its row, and also neither the topmost nor bottommost in its column, then it has neighbors in all four directions and is therefore covered.\n\nBased on this observation, the computation proceeds as follows:\n\n+ Traverse all building coordinates and record, for each row, the minimum and maximum `x` values, and for each column, the minimum and maximum `y` values.\n\n+ For a coordinate `(x, y)`, if `x` lies strictly between the row's minimum and maximum, and `y` lies strictly between the column's minimum and maximum, then the coordinate is covered and we increment the answer.\n\nThe final result is the value of `ans`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/E26VZtsL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"E26VZtsL\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the length of `buildings` and $n$ be the given grid size.\n\n- Time complexity: $O(m)$.\n  \n  Only two passes over the array are required.\n\n- Space complexity: $O(n)$.\n  \n  We store the minimum and maximum values for each of the `n` rows and `n` columns.\n  \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

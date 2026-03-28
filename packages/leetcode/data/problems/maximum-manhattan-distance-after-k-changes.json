@@ -1,0 +1,144 @@
+{
+  "questionId": "3754",
+  "questionFrontendId": "3443",
+  "title": "Maximum Manhattan Distance After K Changes",
+  "titleSlug": "maximum-manhattan-distance-after-k-changes",
+  "difficulty": "Medium",
+  "content": "<p>You are given a string <code>s</code> consisting of the characters <code>&#39;N&#39;</code>, <code>&#39;S&#39;</code>, <code>&#39;E&#39;</code>, and <code>&#39;W&#39;</code>, where <code>s[i]</code> indicates movements in an infinite grid:</p>\n\n<ul>\n\t<li><code>&#39;N&#39;</code> : Move north by 1 unit.</li>\n\t<li><code>&#39;S&#39;</code> : Move south by 1 unit.</li>\n\t<li><code>&#39;E&#39;</code> : Move east by 1 unit.</li>\n\t<li><code>&#39;W&#39;</code> : Move west by 1 unit.</li>\n</ul>\n\n<p>Initially, you are at the origin <code>(0, 0)</code>. You can change <strong>at most</strong> <code>k</code> characters to any of the four directions.</p>\n\n<p>Find the <strong>maximum</strong> <strong>Manhattan distance</strong> from the origin that can be achieved <strong>at any time</strong> while performing the movements <strong>in order</strong>.</p>\nThe <strong>Manhattan Distance</strong> between two cells <code>(x<sub>i</sub>, y<sub>i</sub>)</code> and <code>(x<sub>j</sub>, y<sub>j</sub>)</code> is <code>|x<sub>i</sub> - x<sub>j</sub>| + |y<sub>i</sub> - y<sub>j</sub>|</code>.\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;NWSE&quot;, k = 1</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Change <code>s[2]</code> from <code>&#39;S&#39;</code> to <code>&#39;N&#39;</code>. The string <code>s</code> becomes <code>&quot;NWNE&quot;</code>.</p>\n\n<table style=\"border: 1px solid black;\">\n\t<thead>\n\t\t<tr>\n\t\t\t<th style=\"border: 1px solid black;\">Movement</th>\n\t\t\t<th style=\"border: 1px solid black;\">Position (x, y)</th>\n\t\t\t<th style=\"border: 1px solid black;\">Manhattan Distance</th>\n\t\t\t<th style=\"border: 1px solid black;\">Maximum</th>\n\t\t</tr>\n\t</thead>\n\t<tbody>\n\t\t<tr>\n\t\t\t<td style=\"border: 1px solid black;\">s[0] == &#39;N&#39;</td>\n\t\t\t<td style=\"border: 1px solid black;\">(0, 1)</td>\n\t\t\t<td style=\"border: 1px solid black;\">0 + 1 = 1</td>\n\t\t\t<td style=\"border: 1px solid black;\">1</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"border: 1px solid black;\">s[1] == &#39;W&#39;</td>\n\t\t\t<td style=\"border: 1px solid black;\">(-1, 1)</td>\n\t\t\t<td style=\"border: 1px solid black;\">1 + 1 = 2</td>\n\t\t\t<td style=\"border: 1px solid black;\">2</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"border: 1px solid black;\">s[2] == &#39;N&#39;</td>\n\t\t\t<td style=\"border: 1px solid black;\">(-1, 2)</td>\n\t\t\t<td style=\"border: 1px solid black;\">1 + 2 = 3</td>\n\t\t\t<td style=\"border: 1px solid black;\">3</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"border: 1px solid black;\">s[3] == &#39;E&#39;</td>\n\t\t\t<td style=\"border: 1px solid black;\">(0, 2)</td>\n\t\t\t<td style=\"border: 1px solid black;\">0 + 2 = 2</td>\n\t\t\t<td style=\"border: 1px solid black;\">3</td>\n\t\t</tr>\n\t</tbody>\n</table>\n\n<p>The maximum Manhattan distance from the origin that can be achieved is 3. Hence, 3 is the output.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;NSWWEW&quot;, k = 3</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">6</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Change <code>s[1]</code> from <code>&#39;S&#39;</code> to <code>&#39;N&#39;</code>, and <code>s[4]</code> from <code>&#39;E&#39;</code> to <code>&#39;W&#39;</code>. The string <code>s</code> becomes <code>&quot;NNWWWW&quot;</code>.</p>\n\n<p>The maximum Manhattan distance from the origin that can be achieved is 6. Hence, 6 is the output.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= k &lt;= s.length</code></li>\n\t<li><code>s</code> consists of only <code>&#39;N&#39;</code>, <code>&#39;S&#39;</code>, <code>&#39;E&#39;</code>, and <code>&#39;W&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "We can brute force all the possible directions (NE, NW, SE, SW).",
+    "Change up to <code>k</code> characters to maximize the distance in the chosen direction."
+  ],
+  "metaData": "{\n  \"name\": \"maxDistance\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"100.9K\", \"totalSubmission\": \"186.3K\", \"totalAcceptedRaw\": 100925, \"totalSubmissionRaw\": 186303, \"acRate\": \"54.2%\"}",
+  "likes": 604,
+  "dislikes": 69,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"As Far from Land as Possible\", \"titleSlug\": \"as-far-from-land-as-possible\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"NWSE\"\n1",
+    "\"NSWWEW\"\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxDistance(string s, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxDistance(String s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxDistance(self, s: str, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxDistance(self, s, k):\n        \"\"\"\n        :type s: str\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} k\n * @return {number}\n */\nvar maxDistance = function(s, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxDistance(s: string, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxDistance(string s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxDistance(char* s, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxDistance(s string, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxDistance(s: String, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxDistance(_ s: String, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_distance(s: String, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} k\n# @return {Integer}\ndef max_distance(s, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $k\n     * @return Integer\n     */\n    function maxDistance($s, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxDistance(String s, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxDistance(s: String, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_distance(s :: String.t, k :: integer) :: integer\n  def max_distance(s, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_distance(S :: unicode:unicode_binary(), K :: integer()) -> integer().\nmax_distance(S, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-distance s k)\n  (-> string? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2778",
+    "content": "### Approach 1: Step-by-step Solution\n\n#### Intuition\n\nFor any given string, we can calculate the Manhattan distance using the formula:\n\n$$\n|\\textit{sum}_N - \\textit{sum}_S| + |\\textit{sum}_E - \\textit{sum}_W|\n$$\n\nHere, $\\textit{sum}_N$, $\\textit{sum}_S$, $\\textit{sum}_E$, and $\\textit{sum}_W$ respectively represent the number of occurrences of $\\text{'N'}$, $\\text{'S'}$, $\\text{'E'}$, $\\text{'W'}$ in the string.\n\nWhen we try to modify the letters in the string, there are three possible cases:\n\n1. Modifying the letters that appear less frequently (but are not zero) in either the horizontal or vertical direction increases the Manhattan distance by 2.\n2. Modifying the letters that appear more frequently in either direction decreases the Manhattan distance by 2.\n3. If no modifications are made, the Manhattan distance remains unchanged.\n\nIt's easy to see that only the first case causes an increase in the Manhattan distance. Therefore, we divide the modification process into two steps:\n\n- Step 1: Modify the letters with fewer occurrences in the vertical direction. If the number of such letters exceeds $k$, then modify only $k$ of them, and set the remaining modification count to $t = 0$. If the number of such letters is less than or equal to $k$, then modify all of them and set the remaining modification count to $t$.\n\n- Step 2: Modify the letters with fewer occurrences in the horizontal direction. If the number of such letters exceeds $t$, then modify only $t$ of them; otherwise, modify all of them.\n\nSince the question asks for the maximum Manhattan distance from the origin at any moment during the execution of all movement operations in order, these steps must be carried out during a traversal of the string, and we must track and return the maximum value encountered.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/WeLKBMGN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WeLKBMGN\"></iframe>\n\n#### Complexity analysis\n\nLet $n$ be the length of the string.\n\n- Time complexity: $O(n)$.\n  \n  We need to traverse the string only once.\n\n- Space complexity: $O(1)$.\n  \n  We need only a few additional variables.\n\n### Approach 2: Overall Solution\n\n#### Intuition\n\nFrom the analysis in Approach 1, we can observe that the optimal strategy is to modify the less frequent letters in both directions whenever possible.\n\nTherefore, if we treat the less frequent letters in both the vertical and horizontal directions as a single group, we can reason as follows:\n- If the total number of such letters is greater than $k$, then modifying any $k$ of them increases the Manhattan distance by $2 \\times k$.\n- If the total number is less than or equal to $k$, then all the less frequent letters in both directions will be modified, and no further modifications are necessary. In this case, the Manhattan distance becomes equal to the length of the string.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/K74A22c8/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"K74A22c8\"></iframe>\n\n#### Complexity analysis\n\nLet $n$ be the length of the string.\n\n- Time complexity: $O(n)$.\n  \n  We only need to traverse the string once.\n\n- Space complexity: $O(1)$.\n  \n  We only need a few additional variables.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

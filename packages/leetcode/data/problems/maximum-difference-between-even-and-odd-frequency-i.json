@@ -1,0 +1,139 @@
+{
+  "questionId": "3753",
+  "questionFrontendId": "3442",
+  "title": "Maximum Difference Between Even and Odd Frequency I",
+  "titleSlug": "maximum-difference-between-even-and-odd-frequency-i",
+  "difficulty": "Easy",
+  "content": "<p>You are given a string <code>s</code> consisting of lowercase English letters.</p>\n\n<p>Your task is to find the <strong>maximum</strong> difference <code>diff = freq(a<sub>1</sub>) - freq(a<sub>2</sub>)</code> between the frequency of characters <code>a<sub>1</sub></code> and <code>a<sub>2</sub></code> in the string such that:</p>\n\n<ul>\n\t<li><code>a<sub>1</sub></code> has an <strong>odd frequency</strong> in the string.</li>\n\t<li><code>a<sub>2</sub></code> has an <strong>even frequency</strong> in the string.</li>\n</ul>\n\n<p>Return this <strong>maximum</strong> difference.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;aaaaabbc&quot;</span></p>\n\n<p><strong>Output:</strong> 3</p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>The character <code>&#39;a&#39;</code> has an <strong>odd frequency</strong> of <code><font face=\"monospace\">5</font></code><font face=\"monospace\">,</font> and <code>&#39;b&#39;</code> has an <strong>even frequency</strong> of <code><font face=\"monospace\">2</font></code>.</li>\n\t<li>The maximum difference is <code>5 - 2 = 3</code>.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;abcabcab&quot;</span></p>\n\n<p><strong>Output:</strong> 1</p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>The character <code>&#39;a&#39;</code> has an <strong>odd frequency</strong> of <code><font face=\"monospace\">3</font></code><font face=\"monospace\">,</font> and <code>&#39;c&#39;</code> has an <strong>even frequency</strong> of <font face=\"monospace\">2</font>.</li>\n\t<li>The maximum difference is <code>3 - 2 = 1</code>.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= s.length &lt;= 100</code></li>\n\t<li><code>s</code> consists only of lowercase English letters.</li>\n\t<li><code>s</code> contains at least one character with an odd frequency and one with an even frequency.</li>\n</ul>\n",
+  "hints": [
+    "Use a frequency map to identify the maximum odd and minimum even frequencies. Then, calculate their difference."
+  ],
+  "metaData": "{\n  \"name\": \"maxDifference\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"181.1K\", \"totalSubmission\": \"298.2K\", \"totalAcceptedRaw\": 181119, \"totalSubmissionRaw\": 298236, \"acRate\": \"60.7%\"}",
+  "likes": 395,
+  "dislikes": 71,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"aaaaabbc\"",
+    "\"abcabcab\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxDifference(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxDifference(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxDifference(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxDifference(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar maxDifference = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxDifference(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxDifference(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxDifference(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxDifference(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxDifference(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxDifference(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_difference(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef max_difference(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function maxDifference($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxDifference(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxDifference(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_difference(s :: String.t) :: integer\n  def max_difference(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_difference(S :: unicode:unicode_binary()) -> integer().\nmax_difference(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-difference s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2769",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Count The Frequency Of Each Character\n\n#### Intuition\n\nWe use a hash map to count the number of occurrences of each character in the string $s$. In each key-value pair of the hash map, the key represents a character, and the value represents the number of times that character appears.\n\nAfter the statistics are completed, we traverse the values in the hash map to find the largest odd number $\\textit{maxOdd}$ and the smallest even number $\\textit{minEven}$. The final answer is $\\textit{maxOdd} - \\textit{minEven}$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Zz3eC6Sz/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"Zz3eC6Sz\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string $s$, and $|\\Sigma|$ the size of its character set. Since $s$ contains only lowercase letters, $|\\Sigma| = 26$.\n\n- Time complexity: $O(n)$.\n\n- Space complexity: $O(|\\Sigma|)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}
