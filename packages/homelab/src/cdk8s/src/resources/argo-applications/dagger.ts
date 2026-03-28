@@ -1,7 +1,9 @@
 import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import {
+  IntOrString,
   KubeJob,
+  KubeService,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { Namespace } from "cdk8s-plus-31";
@@ -95,6 +97,33 @@ zfs get sync,logbias,atime "$DATASET"`,
     },
   });
 
+  // ClusterIP Service so CI pods can reach the engine via TCP.
+  // The Helm chart does not create a Service; we manage one ourselves.
+  new KubeService(chart, "dagger-engine-service", {
+    metadata: {
+      name: "dagger-engine",
+      namespace: "dagger",
+      annotations: {
+        "ignore-check.kube-linter.io/dangling-service":
+          "Pods are managed by Dagger Helm chart",
+      },
+    },
+    spec: {
+      type: "ClusterIP",
+      selector: {
+        name: "dagger-dagger-helm-engine",
+      },
+      ports: [
+        {
+          name: "dagger",
+          port: 8080,
+          targetPort: IntOrString.fromNumber(8080),
+          protocol: "TCP",
+        },
+      ],
+    },
+  });
+
   return new Application(chart, "dagger-app", {
     metadata: {
       name: "dagger",
@@ -110,6 +139,7 @@ zfs get sync,logbias,atime "$DATASET"`,
           valuesObject: {
             engine: {
               kind: "StatefulSet",
+              port: 8080,
               configJson: JSON.stringify({
                 gc: {
                   maxUsedSpace: "600GB",
