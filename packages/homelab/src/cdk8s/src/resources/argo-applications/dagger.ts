@@ -263,11 +263,11 @@ echo "Done."`,
               port: 8080,
               resources: {
                 requests: {
-                  cpu: "2",
-                  memory: "4Gi",
+                  cpu: "8",
+                  memory: "24Gi",
                 },
                 limits: {
-                  memory: "8Gi",
+                  memory: "50Gi",
                 },
               },
               configJson: JSON.stringify({
