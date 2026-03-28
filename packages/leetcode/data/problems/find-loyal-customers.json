@@ -1,0 +1,48 @@
+{
+  "questionId": "4025",
+  "questionFrontendId": "3657",
+  "title": "Find Loyal Customers",
+  "titleSlug": "find-loyal-customers",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>customer_transactions</code></p>\n\n<pre>\n+------------------+---------+\n| Column Name      | Type    | \n+------------------+---------+\n| transaction_id   | int     |\n| customer_id      | int     |\n| transaction_date | date    |\n| amount           | decimal |\n| transaction_type | varchar |\n+------------------+---------+\ntransaction_id is the unique identifier for this table.\ntransaction_type can be either &#39;purchase&#39; or &#39;refund&#39;.\n</pre>\n\n<p>Write a solution to find <strong>loyal customers</strong>. A customer is considered <strong>loyal</strong> if they meet ALL the following criteria:</p>\n\n<ul>\n\t<li>Made <strong>at least</strong>&nbsp;<code><font face=\"monospace\">3</font></code>&nbsp;purchase transactions.</li>\n\t<li>Have been active for <strong>at least</strong> <code>30</code> days.</li>\n\t<li>Their <strong>refund rate</strong> is less than <code>20%</code> .</li>\n</ul>\n\n<p><em>Refund rate</em> is the proportion of transactions that are refunds, calculated as the number of refund transactions divided by the total number of transactions (purchases plus refunds).</p>\n\n<p>Return <em>the result table&nbsp;ordered by</em> <code>customer_id</code> <em>in <strong>ascending</strong> order</em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>customer_transactions table:</p>\n\n<pre class=\"example-io\">\n+----------------+-------------+------------------+--------+------------------+\n| transaction_id | customer_id | transaction_date | amount | transaction_type |\n+----------------+-------------+------------------+--------+------------------+\n| 1              | 101         | 2024-01-05       | 150.00 | purchase         |\n| 2              | 101         | 2024-01-15       | 200.00 | purchase         |\n| 3              | 101         | 2024-02-10       | 180.00 | purchase         |\n| 4              | 101         | 2024-02-20       | 250.00 | purchase         |\n| 5              | 102         | 2024-01-10       | 100.00 | purchase         |\n| 6              | 102         | 2024-01-12       | 120.00 | purchase         |\n| 7              | 102         | 2024-01-15       | 80.00  | refund           |\n| 8              | 102         | 2024-01-18       | 90.00  | refund           |\n| 9              | 102         | 2024-02-15       | 130.00 | purchase         |\n| 10             | 103         | 2024-01-01       | 500.00 | purchase         |\n| 11             | 103         | 2024-01-02       | 450.00 | purchase         |\n| 12             | 103         | 2024-01-03       | 400.00 | purchase         |\n| 13             | 104         | 2024-01-01       | 200.00 | purchase         |\n| 14             | 104         | 2024-02-01       | 250.00 | purchase         |\n| 15             | 104         | 2024-02-15       | 300.00 | purchase         |\n| 16             | 104         | 2024-03-01       | 350.00 | purchase         |\n| 17             | 104         | 2024-03-10       | 280.00 | purchase         |\n| 18             | 104         | 2024-03-15       | 100.00 | refund           |\n+----------------+-------------+------------------+--------+------------------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+-------------+\n| customer_id |\n+-------------+\n| 101         |\n| 104         |\n+-------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>Customer 101</strong>:\n\n\t<ul>\n\t\t<li>Purchase transactions: 4 (IDs: 1, 2, 3, 4)&nbsp;</li>\n\t\t<li>Refund transactions: 0</li>\n\t\t<li>Refund rate: 0/4 = 0% (less than 20%)&nbsp;</li>\n\t\t<li>Active period: Jan 5 to Feb 20 = 46 days (at least 30 days)&nbsp;</li>\n\t\t<li>Qualifies as loyal&nbsp;</li>\n\t</ul>\n\t</li>\n\t<li><strong>Customer 102</strong>:\n\t<ul>\n\t\t<li>Purchase transactions: 3 (IDs: 5, 6, 9)&nbsp;</li>\n\t\t<li>Refund transactions: 2 (IDs: 7, 8)</li>\n\t\t<li>Refund rate: 2/5 = 40% (exceeds 20%)&nbsp;</li>\n\t\t<li>Not loyal&nbsp;</li>\n\t</ul>\n\t</li>\n\t<li><strong>Customer 103</strong>:\n\t<ul>\n\t\t<li>Purchase transactions: 3 (IDs: 10, 11, 12)&nbsp;</li>\n\t\t<li>Refund transactions: 0</li>\n\t\t<li>Refund rate: 0/3 = 0% (less than 20%)&nbsp;</li>\n\t\t<li>Active period: Jan 1 to Jan 3 = 2 days (less than 30 days)&nbsp;</li>\n\t\t<li>Not loyal&nbsp;</li>\n\t</ul>\n\t</li>\n\t<li><strong>Customer 104</strong>:\n\t<ul>\n\t\t<li>Purchase transactions: 5 (IDs: 13, 14, 15, 16, 17)&nbsp;</li>\n\t\t<li>Refund transactions: 1 (ID: 18)</li>\n\t\t<li>Refund rate: 1/6 = 16.67% (less than 20%)&nbsp;</li>\n\t\t<li>Active period: Jan 1 to Mar 15 = 73 days (at least 30 days)&nbsp;</li>\n\t\t<li>Qualifies as loyal&nbsp;</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>The result table is ordered by customer_id in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE if not exists customer_transactions (\\n    transaction_id INT,\\n    customer_id INT,\\n    transaction_date DATE,\\n    amount DECIMAL(10,2),\\n    transaction_type VARCHAR(20)\\n)\"], \"mssql\": [\"CREATE TABLE customer_transactions (\\n    transaction_id INT,\\n    customer_id INT,\\n    transaction_date DATE,\\n    amount DECIMAL(10,2),\\n    transaction_type VARCHAR(20)\\n)\"], \"oraclesql\": [\"CREATE TABLE customer_transactions (\\n    transaction_id NUMBER,\\n    customer_id NUMBER,\\n    transaction_date DATE,\\n    amount NUMBER(10,2),\\n    transaction_type VARCHAR2(20)\\n)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"find_loyal_customers\", \"postgresql\": [\"CREATE TABLE IF NOT EXISTS customer_transactions (\\n    transaction_id SERIAL PRIMARY KEY,\\n    customer_id INT NOT NULL,\\n    transaction_date DATE NOT NULL,\\n    amount NUMERIC(10,2) NOT NULL,\\n    transaction_type VARCHAR(20) NOT NULL\\n);\"], \"pythondata\": [\"customer_transactions = pd.DataFrame({\\n    \\\"transaction_id\\\": pd.Series(dtype=\\\"int\\\"),\\n    \\\"customer_id\\\": pd.Series(dtype=\\\"int\\\"),\\n    \\\"transaction_date\\\": pd.Series(dtype=\\\"datetime64[ns]\\\"),\\n    \\\"amount\\\": pd.Series(dtype=\\\"float\\\"),\\n    \\\"transaction_type\\\": pd.Series(dtype=\\\"string\\\")\\n})\"], \"database_schema\": {\"customer_transactions\": {\"transaction_id\": \"INT\", \"customer_id\": \"INT\", \"transaction_date\": \"DATE\", \"amount\": \"DECIMAL(10, 2)\", \"transaction_type\": \"VARCHAR(20)\"}}}",
+  "stats": "{\"totalAccepted\": \"9.8K\", \"totalSubmission\": \"16.2K\", \"totalAcceptedRaw\": 9819, \"totalSubmissionRaw\": 16221, \"acRate\": \"60.5%\"}",
+  "likes": 44,
+  "dislikes": 1,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"customer_transactions\":[\"transaction_id\",\"customer_id\",\"transaction_date\",\"amount\",\"transaction_type\"]},\"rows\":{\"customer_transactions\":[[1,101,\"2024-01-05\",150.00,\"purchase\"],[2,101,\"2024-01-15\",200.00,\"purchase\"],[3,101,\"2024-02-10\",180.00,\"purchase\"],[4,101,\"2024-02-20\",250.00,\"purchase\"],[5,102,\"2024-01-10\",100.00,\"purchase\"],[6,102,\"2024-01-12\",120.00,\"purchase\"],[7,102,\"2024-01-15\",80.00,\"refund\"],[8,102,\"2024-01-18\",90.00,\"refund\"],[9,102,\"2024-02-15\",130.00,\"purchase\"],[10,103,\"2024-01-01\",500.00,\"purchase\"],[11,103,\"2024-01-02\",450.00,\"purchase\"],[12,103,\"2024-01-03\",400.00,\"purchase\"],[13,104,\"2024-01-01\",200.00,\"purchase\"],[14,104,\"2024-02-01\",250.00,\"purchase\"],[15,104,\"2024-02-15\",300.00,\"purchase\"],[16,104,\"2024-03-01\",350.00,\"purchase\"],[17,104,\"2024-03-10\",280.00,\"purchase\"],[18,104,\"2024-03-15\",100.00,\"refund\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_loyal_customers(customer_transactions: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

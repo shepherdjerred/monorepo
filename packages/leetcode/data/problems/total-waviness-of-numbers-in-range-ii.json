@@ -1,0 +1,132 @@
+{
+  "questionId": "4128",
+  "questionFrontendId": "3753",
+  "title": "Total Waviness of Numbers in Range II",
+  "titleSlug": "total-waviness-of-numbers-in-range-ii",
+  "difficulty": "Hard",
+  "content": "<p>You are given two integers <code>num1</code> and <code>num2</code> representing an <strong>inclusive</strong> range <code>[num1, num2]</code>.</p>\n\n<p>The <strong>waviness</strong> of a number is defined as the total count of its <strong>peaks</strong> and <strong>valleys</strong>:</p>\n\n<ul>\n\t<li>A digit is a <strong>peak</strong> if it is <strong>strictly greater</strong> than both of its immediate neighbors.</li>\n\t<li>A digit is a <strong>valley</strong> if it is <strong>strictly less</strong> than both of its immediate neighbors.</li>\n\t<li>The first and last digits of a number <strong>cannot</strong> be peaks or valleys.</li>\n\t<li>Any number with fewer than 3 digits has a waviness of 0.</li>\n</ul>\nReturn the total sum of waviness for all numbers in the range <code>[num1, num2]</code>.\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">num1 = 120, num2 = 130</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>In the range <code>[120, 130]</code>:</p>\n\n<ul>\n\t<li><code>120</code>: middle digit 2 is a peak, waviness = 1.</li>\n\t<li><code>121</code>: middle digit 2 is a peak, waviness = 1.</li>\n\t<li><code>130</code>: middle digit 3 is a peak, waviness = 1.</li>\n\t<li>All other numbers in the range have a waviness of 0.</li>\n</ul>\n\n<p>Thus, total waviness is <code>1 + 1 + 1 = 3</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">num1 = 198, num2 = 202</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>In the range <code>[198, 202]</code>:</p>\n\n<ul>\n\t<li><code>198</code>: middle digit 9 is a peak, waviness = 1.</li>\n\t<li><code>201</code>: middle digit 0 is a valley, waviness = 1.</li>\n\t<li><code>202</code>: middle digit 0 is a valley, waviness = 1.</li>\n\t<li>All other numbers in the range have a waviness of 0.</li>\n</ul>\n\n<p>Thus, total waviness is <code>1 + 1 + 1 = 3</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">num1 = 4848, num2 = 4848</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Number <code>4848</code>: the second digit 8 is a peak, and the third digit 4 is a valley, giving a waviness of 2.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= num1 &lt;= num2 &lt;= 10<sup>15</sup></code>​​​​​​​</li>\n</ul>\n",
+  "hints": [
+    "Use digit dynamic programming",
+    "Build a digit-DP state <code>(position, tight, lastDigit, secondLastDigit)</code>"
+  ],
+  "metaData": "{\n  \"name\": \"totalWaviness\",\n  \"params\": [\n    {\n      \"name\": \"num1\",\n      \"type\": \"long\"\n    },\n    {\n      \"type\": \"long\",\n      \"name\": \"num2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"3.9K\", \"totalSubmission\": \"15.4K\", \"totalAcceptedRaw\": 3928, \"totalSubmissionRaw\": 15405, \"acRate\": \"25.5%\"}",
+  "likes": 38,
+  "dislikes": 2,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "120\n130",
+    "198\n202",
+    "4848\n4848"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long totalWaviness(long long num1, long long num2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long totalWaviness(long num1, long num2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def totalWaviness(self, num1: int, num2: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def totalWaviness(self, num1, num2):\n        \"\"\"\n        :type num1: int\n        :type num2: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} num1\n * @param {number} num2\n * @return {number}\n */\nvar totalWaviness = function(num1, num2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function totalWaviness(num1: number, num2: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long TotalWaviness(long num1, long num2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long totalWaviness(long long num1, long long num2) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func totalWaviness(num1 int64, num2 int64) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun totalWaviness(num1: Long, num2: Long): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func totalWaviness(_ num1: Int, _ num2: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn total_waviness(num1: i64, num2: i64) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num1\n# @param {Integer} num2\n# @return {Integer}\ndef total_waviness(num1, num2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $num1\n     * @param Integer $num2\n     * @return Integer\n     */\n    function totalWaviness($num1, $num2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int totalWaviness(int num1, int num2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def totalWaviness(num1: Long, num2: Long): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec total_waviness(num1 :: integer, num2 :: integer) :: integer\n  def total_waviness(num1, num2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec total_waviness(Num1 :: integer(), Num2 :: integer()) -> integer().\ntotal_waviness(Num1, Num2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (total-waviness num1 num2)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

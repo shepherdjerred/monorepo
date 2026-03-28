@@ -1,0 +1,149 @@
+{
+  "questionId": "4035",
+  "questionFrontendId": "3710",
+  "title": "Maximum Partition Factor",
+  "titleSlug": "maximum-partition-factor",
+  "difficulty": "Hard",
+  "content": "<p>You are given a 2D integer array <code>points</code>, where <code>points[i] = [x<sub>i</sub>, y<sub>i</sub>]</code> represents the coordinates of the <code><font>i<sup>th</sup></font></code> point on the Cartesian plane.</p>\n\n<p>The <strong>Manhattan distance</strong> between two points <code>points[i] = [x<sub>i</sub>, y<sub>i</sub>]</code> and <code>points[j] = [x<sub>j</sub>, y<sub>j</sub>]</code> is <code>|x<sub>i</sub> - x<sub>j</sub>| + |y<sub>i</sub> - y<sub>j</sub>|</code>.</p>\n\n<p>Split the <code>n</code> points into <strong>exactly two non-empty</strong> groups. The <strong>partition factor</strong> of a split is the <strong>minimum</strong> Manhattan distance among all unordered pairs of points that lie in the same group.</p>\n\n<p>Return the <strong>maximum</strong> possible <strong>partition factor</strong> over all valid splits.</p>\n\n<p>Note: A group of size 1 contributes no intra-group pairs. When <code>n = 2</code> (both groups size 1), there are no intra-group pairs, so define the partition factor as 0.</p>\n\n<p>&nbsp;</p>\n<p><strong>Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span>points = [[0,0],[0,2],[2,0],[2,2]]</span></p>\n\n<p><strong>Output:</strong> <span>4</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>We split the points into two groups: <code>{[0, 0], [2, 2]}</code> and <code>{[0, 2], [2, 0]}</code>.</p>\n\n<ul>\n\t<li>\n\t<p>In the first group, the only pair has Manhattan distance <code>|0 - 2| + |0 - 2| = 4</code>.</p>\n\t</li>\n\t<li>\n\t<p>In the second group, the only pair also has Manhattan distance <code>|0 - 2| + |2 - 0| = 4</code>.</p>\n\t</li>\n</ul>\n\n<p>The partition factor of this split is <code>min(4, 4) = 4</code>, which is maximal.</p>\n</div>\n\n<p><strong>Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span>points = [[0,0],[0,1],[10,0]]</span></p>\n\n<p><strong>Output:</strong> <span>11</span></p>\n\n<p><strong>Explanation:​​​​​​​</strong></p>\n\n<p>We split the points into two groups: <code>{[0, 1], [10, 0]}</code> and <code>{[0, 0]}</code>.</p>\n\n<ul>\n\t<li>\n\t<p>In the first group, the only pair has Manhattan distance <code>|0 - 10| + |1 - 0| = 11</code>.</p>\n\t</li>\n\t<li>\n\t<p>The second group is a singleton, so it contributes no pairs.</p>\n\t</li>\n</ul>\n\n<p>The partition factor of this split is <code>11</code>, which is maximal.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= points.length &lt;= 500</code></li>\n\t<li><code>points[i] = [x<sub>i</sub>, y<sub>i</sub>]</code></li>\n\t<li><code>-10<sup>8</sup> &lt;= x<sub>i</sub>, y<sub>i</sub> &lt;= 10<sup>8</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use binary search",
+    "Binary-search the partition factor <code>D</code> to maximize it",
+    "For a candidate <code>D</code>, add an edge between points <code>i</code> and <code>j</code> iff <code>Manhattan(i,j) < D</code> (they must be in different groups)",
+    "Check whether the resulting graph is bipartite"
+  ],
+  "metaData": "{\n  \"name\": \"maxPartitionFactor\",\n  \"params\": [\n    {\n      \"name\": \"points\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"6.6K\", \"totalSubmission\": \"21.3K\", \"totalAcceptedRaw\": 6629, \"totalSubmissionRaw\": 21269, \"acRate\": \"31.2%\"}",
+  "likes": 78,
+  "dislikes": 7,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[0,0],[0,2],[2,0],[2,2]]",
+    "[[0,0],[0,1],[10,0]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxPartitionFactor(vector<vector<int>>& points) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxPartitionFactor(int[][] points) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxPartitionFactor(self, points: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxPartitionFactor(self, points):\n        \"\"\"\n        :type points: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} points\n * @return {number}\n */\nvar maxPartitionFactor = function(points) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxPartitionFactor(points: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxPartitionFactor(int[][] points) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxPartitionFactor(int** points, int pointsSize, int* pointsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxPartitionFactor(points [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxPartitionFactor(points: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxPartitionFactor(_ points: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_partition_factor(points: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} points\n# @return {Integer}\ndef max_partition_factor(points)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $points\n     * @return Integer\n     */\n    function maxPartitionFactor($points) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxPartitionFactor(List<List<int>> points) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxPartitionFactor(points: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_partition_factor(points :: [[integer]]) :: integer\n  def max_partition_factor(points) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_partition_factor(Points :: [[integer()]]) -> integer().\nmax_partition_factor(Points) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-partition-factor points)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

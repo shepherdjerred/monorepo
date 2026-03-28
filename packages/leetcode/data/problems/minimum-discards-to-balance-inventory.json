@@ -1,0 +1,145 @@
+{
+  "questionId": "3953",
+  "questionFrontendId": "3679",
+  "title": " Minimum Discards to Balance Inventory",
+  "titleSlug": "minimum-discards-to-balance-inventory",
+  "difficulty": "Medium",
+  "content": "<p>You are given two integers <code>w</code> and <code>m</code>, and an integer array <code>arrivals</code>, where <code>arrivals[i]</code> is the type of item arriving on day <code>i</code> (days are <strong>1-indexed</strong>).</p>\n\n<p>Items are managed according to the following rules:</p>\n\n<ul>\n\t<li>Each arrival may be <strong>kept</strong> or <strong>discarded</strong>; an item may only be discarded on its arrival day.</li>\n\t<li>For each day <code>i</code>, consider the window of days <code>[max(1, i - w + 1), i]</code> (the <code>w</code> most recent days up to day <code>i</code>):\n\t<ul>\n\t\t<li>For <strong>any</strong> such window, each item type may appear <strong>at most</strong> <code>m</code> times among kept arrivals whose arrival day lies in that window.</li>\n\t\t<li>If keeping the arrival on day <code>i</code> would cause its type to appear <strong>more than</strong> <code>m</code> times in the window, that arrival <strong>must</strong> be discarded.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>Return the <strong>minimum</strong> number of arrivals to be discarded so that every <code>w</code>-day window contains at most <code>m</code> occurrences of each type.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">arrivals = [1,2,1,3,1], w = 4, m = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>On day 1, Item 1 arrives; the window contains no more than <code>m</code> occurrences of this type, so we keep it.</li>\n\t<li>On day 2, Item 2 arrives; the window of days 1 - 2 is fine.</li>\n\t<li>On day 3, Item 1 arrives, window <code>[1, 2, 1]</code> has item 1 twice, within limit.</li>\n\t<li>On day 4, Item 3 arrives, window <code>[1, 2, 1, 3]</code> has item 1 twice, allowed.</li>\n\t<li>On day 5, Item 1 arrives, window <code>[2, 1, 3, 1]</code> has item 1 twice, still valid.</li>\n</ul>\n\n<p>There are no discarded items, so return 0.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">arrivals = [1,2,3,3,3,4], w = 3, m = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>On day 1, Item 1 arrives. We keep it.</li>\n\t<li>On day 2, Item 2 arrives, window <code>[1, 2]</code> is fine.</li>\n\t<li>On day 3, Item 3 arrives, window <code>[1, 2, 3]</code> has item 3 once.</li>\n\t<li>On day 4, Item 3 arrives, window <code>[2, 3, 3]</code> has item 3 twice, allowed.</li>\n\t<li>On day 5, Item 3 arrives, window <code>[3, 3, 3]</code> has item 3 three times, exceeds limit, so the arrival must be discarded.</li>\n\t<li>On day 6, Item 4 arrives, window <code>[3, 4]</code> is fine.</li>\n</ul>\n\n<p>Item 3 on day 5 is discarded, and this is the minimum number of arrivals to discard, so return 1.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arrivals.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= arrivals[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= w &lt;= arrivals.length</code></li>\n\t<li><code>1 &lt;= m &lt;= w</code></li>\n</ul>\n",
+  "hints": [
+    "Use a sliding window of up to <code>w</code> days with two pointers <code>left</code> and <code>right</code> to represent the current interval.",
+    "Maintain a hash map <code>cnt</code> from item type to its current count in the window. When you advance <code>right</code> to day <code>i</code>, do <code>cnt[arrivals[i]]++</code>.",
+    "If the window size exceeds <code>w</code> (i.e. <code>right - left + 1 > w</code>), shrink it by doing <code>cnt[arrivals[left]]--</code> and then <code>left++</code>.",
+    "After each increment, check if <code>cnt[arrivals[right]] > m</code>. If so, we must discard the current arrival."
+  ],
+  "metaData": "{\n  \"name\": \"minArrivalsToDiscard\",\n  \"params\": [\n    {\n      \"name\": \"arrivals\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"w\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"m\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"19.7K\", \"totalSubmission\": \"56.5K\", \"totalAcceptedRaw\": 19692, \"totalSubmissionRaw\": 56460, \"acRate\": \"34.9%\"}",
+  "likes": 80,
+  "dislikes": 17,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,2,1,3,1]\n4\n2",
+    "[1,2,3,3,3,4]\n3\n2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minArrivalsToDiscard(vector<int>& arrivals, int w, int m) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minArrivalsToDiscard(int[] arrivals, int w, int m) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minArrivalsToDiscard(self, arrivals: List[int], w: int, m: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minArrivalsToDiscard(self, arrivals, w, m):\n        \"\"\"\n        :type arrivals: List[int]\n        :type w: int\n        :type m: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arrivals\n * @param {number} w\n * @param {number} m\n * @return {number}\n */\nvar minArrivalsToDiscard = function(arrivals, w, m) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minArrivalsToDiscard(arrivals: number[], w: number, m: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinArrivalsToDiscard(int[] arrivals, int w, int m) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minArrivalsToDiscard(int* arrivals, int arrivalsSize, int w, int m) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minArrivalsToDiscard(arrivals []int, w int, m int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minArrivalsToDiscard(arrivals: IntArray, w: Int, m: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minArrivalsToDiscard(_ arrivals: [Int], _ w: Int, _ m: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_arrivals_to_discard(arrivals: Vec<i32>, w: i32, m: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arrivals\n# @param {Integer} w\n# @param {Integer} m\n# @return {Integer}\ndef min_arrivals_to_discard(arrivals, w, m)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arrivals\n     * @param Integer $w\n     * @param Integer $m\n     * @return Integer\n     */\n    function minArrivalsToDiscard($arrivals, $w, $m) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minArrivalsToDiscard(List<int> arrivals, int w, int m) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minArrivalsToDiscard(arrivals: Array[Int], w: Int, m: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_arrivals_to_discard(arrivals :: [integer], w :: integer, m :: integer) :: integer\n  def min_arrivals_to_discard(arrivals, w, m) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_arrivals_to_discard(Arrivals :: [integer()], W :: integer(), M :: integer()) -> integer().\nmin_arrivals_to_discard(Arrivals, W, M) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-arrivals-to-discard arrivals w m)\n  (-> (listof exact-integer?) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

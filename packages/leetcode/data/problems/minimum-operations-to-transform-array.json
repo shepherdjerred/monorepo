@@ -1,0 +1,135 @@
+{
+  "questionId": "4042",
+  "questionFrontendId": "3724",
+  "title": "Minimum Operations to Transform Array",
+  "titleSlug": "minimum-operations-to-transform-array",
+  "difficulty": "Medium",
+  "content": "<p data-end=\"180\" data-start=\"93\">You are given two integer arrays <code>nums1</code> of length <code>n</code> and <code>nums2</code> of length <code>n + 1</code>.</p>\n\n<p>You want to transform <code>nums1</code> into <code>nums2</code> using the <strong>minimum</strong> number of operations.</p>\n\n<p>You may perform the following operations <strong>any</strong> number of times, each time choosing an index <code>i</code>:</p>\n\n<ul>\n\t<li><strong>Increase</strong> <code>nums1[i]</code> by 1.</li>\n\t<li><strong>Decrease</strong> <code>nums1[i]</code> by 1.</li>\n\t<li><strong>Append</strong> <code>nums1[i]</code> to the <strong>end</strong> of the array.</li>\n</ul>\n\n<p>Return the <strong>minimum</strong> number of operations required to transform <code>nums1</code> into <code>nums2</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums1 = [2,8], nums2 = [1,7,3]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">4</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<table style=\"border: 1px solid black;\">\n\t<thead>\n\t\t<tr>\n\t\t\t<th align=\"center\" style=\"border: 1px solid black;\">Step</th>\n\t\t\t<th align=\"center\" style=\"border: 1px solid black;\"><code>i</code></th>\n\t\t\t<th align=\"center\" style=\"border: 1px solid black;\">Operation</th>\n\t\t\t<th align=\"center\" style=\"border: 1px solid black;\"><code>nums1[i]</code></th>\n\t\t\t<th align=\"center\" style=\"border: 1px solid black;\">Updated <code>nums1</code></th>\n\t\t</tr>\n\t</thead>\n\t<tbody>\n\t\t<tr>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">1</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">0</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Append</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">-</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">[2, 8, 2]</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">2</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">0</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Decrement</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Decreases to 1</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">[1, 8, 2]</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">3</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">1</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Decrement</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Decreases to 7</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">[1, 7, 2]</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">4</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">2</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Increment</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Increases to 3</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">[1, 7, 3]</td>\n\t\t</tr>\n\t</tbody>\n</table>\n\n<p>Thus, after 4 operations <code>nums1</code> is transformed into <code>nums2</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums1 = [1,3,6], nums2 = [2,4,5,3]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">4</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<table style=\"border: 1px solid black;\">\n\t<thead>\n\t\t<tr>\n\t\t\t<th align=\"center\" style=\"border: 1px solid black;\">Step</th>\n\t\t\t<th align=\"center\" style=\"border: 1px solid black;\"><code>i</code></th>\n\t\t\t<th align=\"center\" style=\"border: 1px solid black;\">Operation</th>\n\t\t\t<th align=\"center\" style=\"border: 1px solid black;\"><code>nums1[i]</code></th>\n\t\t\t<th align=\"center\" style=\"border: 1px solid black;\">Updated <code>nums1</code></th>\n\t\t</tr>\n\t</thead>\n\t<tbody>\n\t\t<tr>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">1</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">1</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Append</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">-</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">[1, 3, 6, 3]</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">2</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">0</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Increment</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Increases to 2</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">[2, 3, 6, 3]</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">3</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">1</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Increment</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Increases to 4</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">[2, 4, 6, 3]</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">4</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">2</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Decrement</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Decreases to 5</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">[2, 4, 5, 3]</td>\n\t\t</tr>\n\t</tbody>\n</table>\n\n<p>Thus, after 4 operations <code>nums1</code> is transformed into <code>nums2</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums1 = [2], nums2 = [3,4]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<table style=\"border: 1px solid black;\">\n\t<thead>\n\t\t<tr>\n\t\t\t<th align=\"center\" style=\"border: 1px solid black;\">Step</th>\n\t\t\t<th align=\"center\" style=\"border: 1px solid black;\"><code>i</code></th>\n\t\t\t<th align=\"center\" style=\"border: 1px solid black;\">Operation</th>\n\t\t\t<th align=\"center\" style=\"border: 1px solid black;\"><code>nums1[i]</code></th>\n\t\t\t<th align=\"center\" style=\"border: 1px solid black;\">Updated <code>nums1</code></th>\n\t\t</tr>\n\t</thead>\n\t<tbody>\n\t\t<tr>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">1</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">0</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Increment</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Increases to 3</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">[3]</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">2</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">0</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Append</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">-</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">[3, 3]</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">3</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">1</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Increment</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">Increases to 4</td>\n\t\t\t<td align=\"center\" style=\"border: 1px solid black;\">[3, 4]</td>\n\t\t</tr>\n\t</tbody>\n</table>\n\n<p>Thus, after 3 operations <code>nums1</code> is transformed into <code>nums2</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n == nums1.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>nums2.length == n + 1</code></li>\n\t<li><code>1 &lt;= nums1[i], nums2[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Notice that <code>nums2</code> has exactly one extra element compared to <code>nums1</code>. That extra element must be produced by an append operation.",
+    "Suppose we choose index <code>j</code> in <code>nums1</code> to append. Then <code>nums1[j]</code> must eventually become both <code>nums2[j]</code> and <code>nums2.back()</code>.",
+    "The cost for index <code>j</code> is: adjust <code>nums1[j]</code> so that one copy matches <code>nums2[j]</code> and the appended copy matches <code>nums2.back()</code>.",
+    "For each <code>j</code>, compute this adjustment cost, add the cost of transforming all other positions, and take the minimum.",
+    "Use prefix sums."
+  ],
+  "metaData": "{\n  \"name\": \"minOperations\",\n  \"params\": [\n    {\n      \"name\": \"nums1\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"nums2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"14.1K\", \"totalSubmission\": \"35.6K\", \"totalAcceptedRaw\": 14109, \"totalSubmissionRaw\": 35638, \"acRate\": \"39.6%\"}",
+  "likes": 87,
+  "dislikes": 7,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,8]\n[1,7,3]",
+    "[1,3,6]\n[2,4,5,3]",
+    "[2]\n[3,4]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long minOperations(vector<int>& nums1, vector<int>& nums2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long minOperations(int[] nums1, int[] nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minOperations(self, nums1: List[int], nums2: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minOperations(self, nums1, nums2):\n        \"\"\"\n        :type nums1: List[int]\n        :type nums2: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums1\n * @param {number[]} nums2\n * @return {number}\n */\nvar minOperations = function(nums1, nums2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minOperations(nums1: number[], nums2: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MinOperations(int[] nums1, int[] nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long minOperations(int* nums1, int nums1Size, int* nums2, int nums2Size) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minOperations(nums1 []int, nums2 []int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minOperations(nums1: IntArray, nums2: IntArray): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minOperations(_ nums1: [Int], _ nums2: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_operations(nums1: Vec<i32>, nums2: Vec<i32>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums1\n# @param {Integer[]} nums2\n# @return {Integer}\ndef min_operations(nums1, nums2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums1\n     * @param Integer[] $nums2\n     * @return Integer\n     */\n    function minOperations($nums1, $nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minOperations(List<int> nums1, List<int> nums2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minOperations(nums1: Array[Int], nums2: Array[Int]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_operations(nums1 :: [integer], nums2 :: [integer]) :: integer\n  def min_operations(nums1, nums2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_operations(Nums1 :: [integer()], Nums2 :: [integer()]) -> integer().\nmin_operations(Nums1, Nums2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-operations nums1 nums2)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

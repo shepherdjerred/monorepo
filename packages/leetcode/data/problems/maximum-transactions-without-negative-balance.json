@@ -1,0 +1,138 @@
+{
+  "questionId": "4081",
+  "questionFrontendId": "3711",
+  "title": "Maximum Transactions Without Negative Balance",
+  "titleSlug": "maximum-transactions-without-negative-balance",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>transactions</code>, where <code>transactions[i]</code> represents the amount of the <code>i<sup>th</sup></code> transaction:</p>\n\n<ul>\n\t<li>A positive value means money is <strong>received</strong>.</li>\n\t<li>A negative value means money is <strong>sent</strong>.</li>\n</ul>\n\n<p>The account starts with a balance of 0, and the balance <strong>must never become negative</strong>. Transactions must be considered in the given order, but you are allowed to skip some transactions.</p>\n\n<p>Return an integer denoting the <strong>maximum number of transactions</strong> that can be performed without the balance ever going negative.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">transactions = [2,-5,3,-1,-2]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">4</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>One optimal sequence is <code>[2, 3, -1, -2]</code>, balance: <code>0 &rarr; 2 &rarr; 5 &rarr; 4 &rarr; 2</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">transactions = [-1,-2,-3]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>All transactions are negative. Including any would make the balance negative.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">transactions = [3,-2,3,-2,1,-1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">6</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>All transactions can be taken in order, balance: <code>0 &rarr; 3 &rarr; 1 &rarr; 4 &rarr; 2 &rarr; 3 &rarr; 2</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= transactions.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= transactions[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Scan the list left to right, keeping a running <code>balance</code> and a container <code>accepted</code> that tracks the sizes of negative transactions you have taken.",
+    "Always take nonnegative transactions; they increase <code>balance</code> and the total count.",
+    "If a negative <code>t</code> can be paid (<code>balance + t >= 0</code>), accept it and record its absolute value in <code>accepted</code>.",
+    "If a negative would make the balance go below zero, but you previously accepted a larger negative, replace that larger one with the current smaller one (restore balance, swap in the smaller): this trade increases the number of transactions you can keep."
+  ],
+  "metaData": "{\n  \"name\": \"maxTransactions\",\n  \"params\": [\n    {\n      \"name\": \"transactions\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"639\", \"totalSubmission\": \"1.4K\", \"totalAcceptedRaw\": 639, \"totalSubmissionRaw\": 1386, \"acRate\": \"46.1%\"}",
+  "likes": 9,
+  "dislikes": 1,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Make the Prefix Sum Non-negative\", \"titleSlug\": \"make-the-prefix-sum-non-negative\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,-5,3,-1,-2]",
+    "[-1,-2,-3]",
+    "[3,-2,3,-2,1,-1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxTransactions(vector<int>& transactions) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxTransactions(int[] transactions) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxTransactions(self, transactions: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxTransactions(self, transactions):\n        \"\"\"\n        :type transactions: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} transactions\n * @return {number}\n */\nvar maxTransactions = function(transactions) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxTransactions(transactions: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxTransactions(int[] transactions) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxTransactions(int* transactions, int transactionsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxTransactions(transactions []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxTransactions(transactions: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxTransactions(_ transactions: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_transactions(transactions: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} transactions\n# @return {Integer}\ndef max_transactions(transactions)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $transactions\n     * @return Integer\n     */\n    function maxTransactions($transactions) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxTransactions(List<int> transactions) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxTransactions(transactions: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_transactions(transactions :: [integer]) :: integer\n  def max_transactions(transactions) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_transactions(Transactions :: [integer()]) -> integer().\nmax_transactions(Transactions) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-transactions transactions)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

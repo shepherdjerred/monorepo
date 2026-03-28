@@ -1,0 +1,48 @@
+{
+  "questionId": "4169",
+  "questionFrontendId": "3764",
+  "title": "Most Common Course Pairs",
+  "titleSlug": "most-common-course-pairs",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>course_completions</code></p>\n\n<pre>\n+-------------------+---------+\n| Column Name       | Type    | \n+-------------------+---------+\n| user_id           | int     |\n| course_id         | int     |\n| course_name       | varchar |\n| completion_date   | date    |\n| course_rating     | int     |\n+-------------------+---------+\n(user_id, course_id) is the combination of columns with unique values for this table.\nEach row represents a completed course by a user with their rating (1-5 scale).\n</pre>\n\n<p>Write a solution to identify <strong>skill mastery pathways</strong> by analyzing course completion sequences among top-performing students:</p>\n\n<ul>\n\t<li>Consider only <strong>top-performing students</strong> (those who completed <strong>at least </strong><code>5</code><strong> courses</strong> with an <strong>average rating of </strong><code>4</code><strong> or higher</strong>).</li>\n\t<li>For each top performer, identify the <strong>sequence of courses</strong> they completed in chronological order.</li>\n\t<li>Find all <strong>consecutive course pairs</strong> (<code>Course A &rarr; Course B</code>) taken by these students.</li>\n\t<li>Return the <strong>pair frequency</strong>, identifying which course transitions are most common among high achievers.</li>\n</ul>\n\n<p>Return <em>the result table ordered by</em> <em>pair frequency in <strong>descending</strong> order</em>&nbsp;<em>and then by first course name and second course name in <strong>ascending</strong> order</em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>course_completions table:</p>\n\n<pre class=\"example-io\">\n+---------+-----------+------------------+-----------------+---------------+\n| user_id | course_id | course_name      | completion_date | course_rating |\n+---------+-----------+------------------+-----------------+---------------+\n| 1       | 101       | Python Basics    | 2024-01-05      | 5             |\n| 1       | 102       | SQL Fundamentals | 2024-02-10      | 4             |\n| 1       | 103       | JavaScript       | 2024-03-15      | 5             |\n| 1       | 104       | React Basics     | 2024-04-20      | 4             |\n| 1       | 105       | Node.js          | 2024-05-25      | 5             |\n| 1       | 106       | Docker           | 2024-06-30      | 4             |\n| 2       | 101       | Python Basics    | 2024-01-08      | 4             |\n| 2       | 104       | React Basics     | 2024-02-14      | 5             |\n| 2       | 105       | Node.js          | 2024-03-20      | 4             |\n| 2       | 106       | Docker           | 2024-04-25      | 5             |\n| 2       | 107       | AWS Fundamentals | 2024-05-30      | 4             |\n| 3       | 101       | Python Basics    | 2024-01-10      | 3             |\n| 3       | 102       | SQL Fundamentals | 2024-02-12      | 3             |\n| 3       | 103       | JavaScript       | 2024-03-18      | 3             |\n| 3       | 104       | React Basics     | 2024-04-22      | 2             |\n| 3       | 105       | Node.js          | 2024-05-28      | 3             |\n| 4       | 101       | Python Basics    | 2024-01-12      | 5             |\n| 4       | 108       | Data Science     | 2024-02-16      | 5             |\n| 4       | 109       | Machine Learning | 2024-03-22      | 5             |\n+---------+-----------+------------------+-----------------+---------------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+------------------+------------------+------------------+\n| first_course     | second_course    | transition_count |\n+------------------+------------------+------------------+\n| Node.js          | Docker           | 2                |\n| React Basics     | Node.js          | 2                |\n| Docker           | AWS Fundamentals | 1                |\n| JavaScript       | React Basics     | 1                |\n| Python Basics    | React Basics     | 1                |\n| Python Basics    | SQL Fundamentals | 1                |\n| SQL Fundamentals | JavaScript       | 1                |\n+------------------+------------------+------------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>User 1</strong>: Completed 6 courses with average rating 4.5 (qualifies as top performer)</li>\n\t<li><strong>User 2</strong>: Completed 5 courses with average rating 4.4 (qualifies as top performer)</li>\n\t<li><strong>User 3</strong>: Completed 5 courses but average rating is 2.8 (does not qualify)</li>\n\t<li><strong>User 4</strong>: Completed only 3 courses (does not qualify)</li>\n\t<li><strong>Course Pairs Among Top Performers</strong>:\n\t<ul>\n\t\t<li>User 1: Python Basics &rarr; SQL Fundamentals &rarr; JavaScript &rarr; React Basics &rarr; Node.js &rarr; Docker</li>\n\t\t<li>User 2: Python Basics &rarr; React Basics &rarr; Node.js &rarr; Docker &rarr; AWS Fundamentals</li>\n\t\t<li>Most common transitions: Node.js &rarr; Docker (2 times), React Basics &rarr; Node.js (2 times)</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>Results are ordered by transition_count in descending order, then by first_course in ascending order, and then by second_course in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE course_completions (\\n    user_id INT,\\n    course_id INT,\\n    course_name VARCHAR(100),\\n    completion_date DATE,\\n    course_rating INT\\n)\"], \"mssql\": [\"CREATE TABLE course_completions (\\n    user_id INT,\\n    course_id INT,\\n    course_name VARCHAR(100),\\n    completion_date DATE,\\n    course_rating INT\\n)\"], \"oraclesql\": [\"CREATE TABLE course_completions (\\n    user_id NUMBER,\\n    course_id NUMBER,\\n    course_name VARCHAR2(100),\\n    completion_date DATE,\\n    course_rating NUMBER\\n)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"pythondata\": [\"course_completions = pd.DataFrame({\\n    \\\"user_id\\\": pd.Series(dtype=\\\"int\\\"),\\n    \\\"course_id\\\": pd.Series(dtype=\\\"int\\\"),\\n    \\\"course_name\\\": pd.Series(dtype=\\\"string\\\"),           # corresponds to SQL VARCHAR\\n    \\\"completion_date\\\": pd.Series(dtype=\\\"datetime64[ns]\\\"),  # corresponds to SQL DATE\\n    \\\"course_rating\\\": pd.Series(dtype=\\\"Int64\\\")           # corresponds to SQL INT (nullable)\\n})\"], \"postgresql\": [\"CREATE TABLE if not exists course_completions (\\n    user_id INT,\\n    course_id INT,\\n    course_name VARCHAR(100),\\n    completion_date DATE,\\n    course_rating INT\\n)\"], \"manual\": true, \"database_schema\": {\"course_completions\": {\"user_id\": \"INT\", \"course_id\": \"INT\", \"course_name\": \"VARCHAR(100)\", \"completion_date\": \"DATE\", \"course_rating\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"3.1K\", \"totalSubmission\": \"6.2K\", \"totalAcceptedRaw\": 3110, \"totalSubmissionRaw\": 6157, \"acRate\": \"50.5%\"}",
+  "likes": 28,
+  "dislikes": 1,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"course_completions\":[\"user_id\",\"course_id\",\"course_name\",\"completion_date\",\"course_rating\"]},\"rows\":{\"course_completions\":[[1,101,\"Python Basics\",\"2024-01-05\",5],[1,102,\"SQL Fundamentals\",\"2024-02-10\",4],[1,103,\"JavaScript\",\"2024-03-15\",5],[1,104,\"React Basics\",\"2024-04-20\",4],[1,105,\"Node.js\",\"2024-05-25\",5],[1,106,\"Docker\",\"2024-06-30\",4],[2,101,\"Python Basics\",\"2024-01-08\",4],[2,104,\"React Basics\",\"2024-02-14\",5],[2,105,\"Node.js\",\"2024-03-20\",4],[2,106,\"Docker\",\"2024-04-25\",5],[2,107,\"AWS Fundamentals\",\"2024-05-30\",4],[3,101,\"Python Basics\",\"2024-01-10\",3],[3,102,\"SQL Fundamentals\",\"2024-02-12\",3],[3,103,\"JavaScript\",\"2024-03-18\",3],[3,104,\"React Basics\",\"2024-04-22\",2],[3,105,\"Node.js\",\"2024-05-28\",3],[4,101,\"Python Basics\",\"2024-01-12\",5],[4,108,\"Data Science\",\"2024-02-16\",5],[4,109,\"Machine Learning\",\"2024-03-22\",5]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef topLearnerCourseTransitions(course_completions: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

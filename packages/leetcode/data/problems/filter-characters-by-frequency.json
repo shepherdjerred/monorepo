@@ -1,0 +1,134 @@
+{
+  "questionId": "4017",
+  "questionFrontendId": "3662",
+  "title": "Filter Characters by Frequency",
+  "titleSlug": "filter-characters-by-frequency",
+  "difficulty": "Easy",
+  "content": "<p>You are given a string <code>s</code> consisting of lowercase English letters and an integer <code>k</code>.</p>\n\n<p>Your task is to construct a new string that contains only those characters from <code>s</code> which appear <strong>fewer</strong> than <code>k</code> times in the entire string. The order of characters in the new string must be the <strong>same</strong> as their <strong>order</strong> in <code>s</code>.</p>\n\n<p>Return the resulting string. If no characters qualify, return an empty string.</p>\n\n<p>Note: <strong>Every occurrence</strong> of a character that occurs fewer than <code>k</code> times is kept.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;aadbbcccca&quot;, k = 3</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;dbb&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Character frequencies in <code>s</code>:</p>\n\n<ul>\n\t<li><code>&#39;a&#39;</code> appears 3 times</li>\n\t<li><code>&#39;d&#39;</code> appears 1 time</li>\n\t<li><code>&#39;b&#39;</code> appears 2 times</li>\n\t<li><code>&#39;c&#39;</code> appears 4 times</li>\n</ul>\n\n<p>Only <code>&#39;d&#39;</code> and <code>&#39;b&#39;</code> appear fewer than 3 times. Preserving their order, the result is <code>&quot;dbb&quot;</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;xyz&quot;, k = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;xyz&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>All characters (<code>&#39;x&#39;</code>, <code>&#39;y&#39;</code>, <code>&#39;z&#39;</code>) appear exactly once, which is fewer than 2. Thus the whole string is returned.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 100</code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n\t<li><code>1 &lt;= k &lt;= s.length</code></li>\n</ul>\n",
+  "hints": [
+    "Count the frequency of each character using a 26-entry array or a frequency map, then iterate through the string and append each character whose frequency is less than <code>k</code> to the result."
+  ],
+  "metaData": "{\n  \"name\": \"filterCharacters\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1.4K\", \"totalSubmission\": \"1.6K\", \"totalAcceptedRaw\": 1371, \"totalSubmissionRaw\": 1577, \"acRate\": \"86.9%\"}",
+  "likes": 9,
+  "dislikes": 0,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"aadbbcccca\"\n3",
+    "\"xyz\"\n2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string filterCharacters(string s, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String filterCharacters(String s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def filterCharacters(self, s: str, k: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def filterCharacters(self, s, k):\n        \"\"\"\n        :type s: str\n        :type k: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} k\n * @return {string}\n */\nvar filterCharacters = function(s, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function filterCharacters(s: string, k: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string FilterCharacters(string s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* filterCharacters(char* s, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func filterCharacters(s string, k int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun filterCharacters(s: String, k: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func filterCharacters(_ s: String, _ k: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn filter_characters(s: String, k: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} k\n# @return {String}\ndef filter_characters(s, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $k\n     * @return String\n     */\n    function filterCharacters($s, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String filterCharacters(String s, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def filterCharacters(s: String, k: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec filter_characters(s :: String.t, k :: integer) :: String.t\n  def filter_characters(s, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec filter_characters(S :: unicode:unicode_binary(), K :: integer()) -> unicode:unicode_binary().\nfilter_characters(S, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (filter-characters s k)\n  (-> string? exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": null
+}

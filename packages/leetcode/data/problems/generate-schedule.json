@@ -1,0 +1,138 @@
+{
+  "questionId": "3991",
+  "questionFrontendId": "3680",
+  "title": "Generate Schedule",
+  "titleSlug": "generate-schedule",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>n</code> representing <code>n</code> teams. You are asked to generate a schedule such that:</p>\n\n<ul>\n\t<li>Each team plays every other team <strong>exactly twice</strong>: once at home and once away.</li>\n\t<li>There is <strong>exactly one</strong> match per day; the schedule is a list of <strong>consecutive</strong> days and <code>schedule[i]</code> is the match on day <code>i</code>.</li>\n\t<li>No team plays on <strong>consecutive</strong> days.</li>\n</ul>\n\n<p>Return a 2D integer array <code>schedule</code>, where <code>schedule[i][0]</code> represents the home team and <code>schedule[i][1]</code> represents the away team. If multiple schedules meet the conditions, return <strong>any</strong> one of them.</p>\n\n<p>If no schedule exists that meets the conditions, return an empty array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 3</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>​​​​​​​Since each team plays every other team exactly twice, a total of 6 matches need to be played: <code>[0,1],[0,2],[1,2],[1,0],[2,0],[2,1]</code>.</p>\n\n<p>It&#39;s not possible to create a schedule without at least one team playing consecutive days.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 5</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[[0,1],[2,3],[0,4],[1,2],[3,4],[0,2],[1,3],[2,4],[0,3],[1,4],[2,0],[3,1],[4,0],[2,1],[4,3],[1,0],[3,2],[4,1],[3,0],[4,2]]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Since each team plays every other team exactly twice, a total of 20 matches need to be played.</p>\n\n<p>The output shows one of the schedules that meet the conditions. No team plays on consecutive days.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 50</code>​​​​​​​</li>\n</ul>\n",
+  "hints": [
+    "The problem can be solved greedily or using randomization.",
+    "Try pairing teams greedily while ensuring neither team played on the previous day.",
+    "Keep track of how many games each team still has to play.",
+    "Among teams that didn't play the previous day, match a pair whose combined remaining games is highest.",
+    "If a greedy choice leads to a dead end, try a different match order."
+  ],
+  "metaData": "{\n  \"name\": \"generateSchedule\",\n  \"params\": [\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"4.6K\", \"totalSubmission\": \"19.2K\", \"totalAcceptedRaw\": 4644, \"totalSubmissionRaw\": 19208, \"acRate\": \"24.2%\"}",
+  "likes": 49,
+  "dislikes": 25,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Task Scheduler\", \"titleSlug\": \"task-scheduler\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3",
+    "5"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> generateSchedule(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] generateSchedule(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def generateSchedule(self, n: int) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def generateSchedule(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number[][]}\n */\nvar generateSchedule = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function generateSchedule(n: number): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] GenerateSchedule(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** generateSchedule(int n, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func generateSchedule(n int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun generateSchedule(n: Int): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func generateSchedule(_ n: Int) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn generate_schedule(n: i32) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer[][]}\ndef generate_schedule(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer[][]\n     */\n    function generateSchedule($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> generateSchedule(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def generateSchedule(n: Int): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec generate_schedule(n :: integer) :: [[integer]]\n  def generate_schedule(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec generate_schedule(N :: integer()) -> [[integer()]].\ngenerate_schedule(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (generate-schedule n)\n  (-> exact-integer? (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": null
+}

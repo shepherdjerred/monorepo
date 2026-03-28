@@ -1,0 +1,152 @@
+{
+  "questionId": "4047",
+  "questionFrontendId": "3721",
+  "title": "Longest Balanced Subarray II",
+  "titleSlug": "longest-balanced-subarray-ii",
+  "difficulty": "Hard",
+  "content": "<p>You are given an integer array <code>nums</code>.</p>\n\n<p>A <strong><span data-keyword=\"subarray-nonempty\">subarray</span></strong> is called <strong>balanced</strong> if the number of <strong>distinct even</strong> numbers in the subarray is equal to the number of <strong>distinct odd</strong> numbers.</p>\n\n<p>Return the length of the <strong>longest</strong> balanced subarray.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [2,5,4,3]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">4</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>The longest balanced subarray is <code>[2, 5, 4, 3]</code>.</li>\n\t<li>It has 2 distinct even numbers <code>[2, 4]</code> and 2 distinct odd numbers <code>[5, 3]</code>. Thus, the answer is 4.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [3,2,2,5,4]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">5</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>The longest balanced subarray is <code>[3, 2, 2, 5, 4]</code>.</li>\n\t<li>It has 2 distinct even numbers <code>[2, 4]</code> and 2 distinct odd numbers <code>[3, 5]</code>. Thus, the answer is 5.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,2,3,2]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>The longest balanced subarray is <code>[2, 3, 2]</code>.</li>\n\t<li>It has 1 distinct even number <code>[2]</code> and 1 distinct odd number <code>[3]</code>. Thus, the answer is 3.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Store the first (or all) occurrences for each value in <code>pos[val]</code>.",
+    "Build a lazy segment tree over start indices <code>l in [0..n-1]</code> that supports range add and can tell if any index has value <code>0</code> (keep <code>mn</code>/<code>mx</code>).",
+    "Use <code>sign = +1</code> for odd values and <code>sign = -1</code> for even values.",
+    "Initialize by adding each value's contribution with <code>update(p, n-1, sign)</code> where <code>p</code> is its current first occurrence.",
+    "Slide left <code>l</code>: pop <code>pos[nums[l]]</code>, let <code>next</code> = next occurrence or <code>n</code>, do <code>update(0, next-1, -sign)</code>, then query for any <code>r >= l</code> with value <code>0</code> and update <code>ans = max(ans, r-l+1)</code>."
+  ],
+  "metaData": "{\n  \"name\": \"longestBalanced\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"59.8K\", \"totalSubmission\": \"177.1K\", \"totalAcceptedRaw\": 59750, \"totalSubmissionRaw\": 177069, \"acRate\": \"33.7%\"}",
+  "likes": 342,
+  "dislikes": 65,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,5,4,3]",
+    "[3,2,2,5,4]",
+    "[1,2,3,2]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int longestBalanced(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int longestBalanced(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestBalanced(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestBalanced(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar longestBalanced = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestBalanced(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LongestBalanced(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int longestBalanced(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestBalanced(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestBalanced(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestBalanced(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_balanced(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef longest_balanced(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function longestBalanced($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int longestBalanced(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestBalanced(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_balanced(nums :: [integer]) :: integer\n  def longest_balanced(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_balanced(Nums :: [integer()]) -> integer().\nlongest_balanced(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-balanced nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2925",
+    "content": "### Approach: Prefix Sum + Segment Tree\n\n#### Intuition\n\nThe key idea is to convert the notion of \"distinct types of odd elements\" and \"distinct types of even elements\" from the problem statement into a numerical form that can be efficiently processed by a data structure. Specifically, for each distinct value, we assign a contribution of `-1` (if odd) or `+1` (if even) at its **first occurrence** only. Subsequent occurrences of the same value do not add to the prefix sum, since they do not introduce a new distinct element. Under this transformation, a subarray is **balanced** if and only if the prefix sum difference across it is `0`, meaning the number of distinct even values equals the number of distinct odd values within that range.\n\nAfter this transformation, the array becomes a difference array consisting only of `-1` and `+1`. By computing the prefix sum array, we observe that whenever a prefix sum equals `0`, the corresponding prefix subarray is balanced. More generally, for a fixed left boundary, the right boundary of the longest balanced subarray corresponds to the **rightmost position where the prefix sum is equal to the prefix sum at the left boundary**.\n\nSince the prefix sum changes by at most `1` at each step, it satisfies a discrete version of the intermediate value theorem. This property allows us to use a segment tree to efficiently locate the **rightmost occurrence of `0`** in a given range. The search works as follows:\n\n1. Maintain both the minimum and maximum prefix sum values for each segment.\n2. Check whether `0` lies within the range `[min, max]` of the right child. If it does, recurse into the right child.\n3. Otherwise, recurse into the left child.\n\nBecause of the discrete intermediate value property, checking the minimum and maximum values is sufficient to determine whether `0` exists in a segment, allowing each query to be completed in $O(\\log n)$ time.\n\nNext, we iterate over all possible left boundaries. Let the current left boundary be index $i$, and let the current maximum length of a balanced subarray be $l$. As an optimization, we start searching for the right boundary from index $i + l$, since any shorter subarray cannot improve the current answer.\n\nThe remaining challenge is handling the removal of the contribution of the element at the previous left boundary as we move the left pointer forward.\n\nRecall that in a difference array, a nonzero value at position $i$ contributes to all prefix sums from position $i$ onward. For example, if the contribution at position $1$ is `-1`, it decreases the values of $S_1, S_2, \\dots, S_n$ by `1`. More generally, if an element appears at positions $p_1$ and $p_2$, its contribution at $p_1$ affects the interval $[p_1, p_2 - 1]$, while the contribution at $p_2$ affects the interval $[p_2, \\dots]$.\n\n$$\n[ \\dots, 0, \\underbrace{1, 1, \\dots, 1}*{\\text{contributed by the first } x},\n\\underbrace{1, 1, \\dots, 1}*{\\text{contributed by the second } x}, \\dots ]\n$$\n\nTherefore, we record all positions where each element appears using a queue. When the left boundary moves forward, we determine the interval over which the removed element contributes and subtract its effect from that interval. Since this is a range update, it can be efficiently handled using the segment tree with lazy propagation.\n\nPutting everything together, we first compute the prefix sums and record the occurrence positions of each element. Then, we iterate over all possible left boundaries, dynamically update the prefix sums using the segment tree, query the rightmost position where the prefix sum is `0`, and update the global maximum length accordingly.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TedkvSfr/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TedkvSfr\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of $\\textit{nums}$.\n\n- Time complexity: $O(n \\log n)$.\n  \n  Computing prefix sums and maintaining element positions require $O(n \\log n)$. Building the segment tree takes $O(n \\log n)$. Each iteration performs a constant number of segment tree operations and map accesses, each taking $O(\\log n)$. Therefore, the total time complexity is $O(n \\log n)$.\n\n- Time complexity: $O(n)$.\n  \n  The segment tree, prefix sum array, and auxiliary data structures together require $O(n)$ space.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

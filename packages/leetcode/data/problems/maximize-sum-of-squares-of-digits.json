@@ -1,0 +1,132 @@
+{
+  "questionId": "4084",
+  "questionFrontendId": "3723",
+  "title": "Maximize Sum of Squares of Digits",
+  "titleSlug": "maximize-sum-of-squares-of-digits",
+  "difficulty": "Medium",
+  "content": "<p>You are given two <strong>positive</strong> integers <code>num</code> and <code>sum</code>.</p>\n\n<p>A positive integer <code>n</code> is <strong>good</strong> if it satisfies both of the following:</p>\n\n<ul>\n\t<li>The number of digits in <code>n</code> is <strong>exactly</strong> <code>num</code>.</li>\n\t<li>The sum of digits in <code>n</code> is <strong>exactly</strong> <code>sum</code>.</li>\n</ul>\n\n<p>The <strong>score</strong> of a <strong>good</strong> integer <code>n</code> is the sum of the squares of digits in <code>n</code>.</p>\n\n<p>Return a <strong>string</strong> denoting the <strong>good</strong> integer <code>n</code> that achieves the <strong>maximum</strong> <strong>score</strong>. If there are multiple possible integers, return the <strong>maximum </strong>​​​​​​​one. If no such integer exists, return an empty string.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">num = 2, sum = 3</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;30&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There are 3 good integers: 12, 21, and 30.</p>\n\n<ul>\n\t<li>The score of 12 is <code>1<sup>2</sup> + 2<sup>2</sup> = 5</code>.</li>\n\t<li>The score of 21 is <code>2<sup>2</sup> + 1<sup>2</sup> = 5</code>.</li>\n\t<li>The score of 30 is <code>3<sup>2</sup> + 0<sup>2</sup> = 9</code>.</li>\n</ul>\n\n<p>The maximum score is 9, which is achieved by the good integer 30. Therefore, the answer is <code>&quot;30&quot;</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">num = 2, sum = 17</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;98&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There are 2 good integers: 89 and 98.</p>\n\n<ul>\n\t<li>The score of 89 is <code>8<sup>2</sup> + 9<sup>2</sup> = 145</code>.</li>\n\t<li>The score of 98 is <code>9<sup>2</sup> + 8<sup>2</sup> = 145</code>.</li>\n</ul>\n\n<p>The maximum score is 145. The maximum good integer that achieves this score is 98. Therefore, the answer is <code>&quot;98&quot;</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">num = 1, sum = 10</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There are no integers that have exactly 1 digit and whose digits sum to 10. Therefore, the answer is <code>&quot;&quot;</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= num &lt;= 2 * 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= sum &lt;= 2 * 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use a greedy approach.",
+    "Fill the leftmost digits with 9s first (as much as possible)."
+  ],
+  "metaData": "{\n  \"name\": \"maxSumOfSquares\",\n  \"params\": [\n    {\n      \"name\": \"num\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"sum\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"23K\", \"totalSubmission\": \"38.9K\", \"totalAcceptedRaw\": 22971, \"totalSubmissionRaw\": 38934, \"acRate\": \"59.0%\"}",
+  "likes": 62,
+  "dislikes": 2,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "2\n3",
+    "2\n17",
+    "1\n10"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string maxSumOfSquares(int num, int sum) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String maxSumOfSquares(int num, int sum) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxSumOfSquares(self, num: int, sum: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxSumOfSquares(self, num, sum):\n        \"\"\"\n        :type num: int\n        :type sum: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} num\n * @param {number} sum\n * @return {string}\n */\nvar maxSumOfSquares = function(num, sum) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxSumOfSquares(num: number, sum: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string MaxSumOfSquares(int num, int sum) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* maxSumOfSquares(int num, int sum) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxSumOfSquares(num int, sum int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxSumOfSquares(num: Int, sum: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxSumOfSquares(_ num: Int, _ sum: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_sum_of_squares(num: i32, sum: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num\n# @param {Integer} sum\n# @return {String}\ndef max_sum_of_squares(num, sum)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $num\n     * @param Integer $sum\n     * @return String\n     */\n    function maxSumOfSquares($num, $sum) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String maxSumOfSquares(int num, int sum) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxSumOfSquares(num: Int, sum: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_sum_of_squares(num :: integer, sum :: integer) :: String.t\n  def max_sum_of_squares(num, sum) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_sum_of_squares(Num :: integer(), Sum :: integer()) -> unicode:unicode_binary().\nmax_sum_of_squares(Num, Sum) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-sum-of-squares num sum)\n  (-> exact-integer? exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": null
+}
