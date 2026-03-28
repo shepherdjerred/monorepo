@@ -1,0 +1,132 @@
+{
+  "questionId": "3450",
+  "questionFrontendId": "3178",
+  "title": "Find the Child Who Has the Ball After K Seconds",
+  "titleSlug": "find-the-child-who-has-the-ball-after-k-seconds",
+  "difficulty": "Easy",
+  "content": "<p>You are given two <strong>positive</strong> integers <code>n</code> and <code>k</code>. There are <code>n</code> children numbered from <code>0</code> to <code>n - 1</code> standing in a queue <em>in order</em> from left to right.</p>\n\n<p>Initially, child 0 holds a ball and the direction of passing the ball is towards the right direction. After each second, the child holding the ball passes it to the child next to them. Once the ball reaches <strong>either</strong> end of the line, i.e. child 0 or child <code>n - 1</code>, the direction of passing is <strong>reversed</strong>.</p>\n\n<p>Return the number of the child who receives the ball after <code>k</code> seconds.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 3, k = 5</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<table>\n\t<tbody>\n\t\t<tr>\n\t\t\t<th>Time elapsed</th>\n\t\t\t<th>Children</th>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><code>0</code></td>\n\t\t\t<td><code>[<u>0</u>, 1, 2]</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><code>1</code></td>\n\t\t\t<td><code>[0, <u>1</u>, 2]</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><code>2</code></td>\n\t\t\t<td><code>[0, 1, <u>2</u>]</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><code>3</code></td>\n\t\t\t<td><code>[0, <u>1</u>, 2]</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><code>4</code></td>\n\t\t\t<td><code>[<u>0</u>, 1, 2]</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><code>5</code></td>\n\t\t\t<td><code>[0, <u>1</u>, 2]</code></td>\n\t\t</tr>\n\t</tbody>\n</table>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 5, k = 6</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<table>\n\t<tbody>\n\t\t<tr>\n\t\t\t<th>Time elapsed</th>\n\t\t\t<th>Children</th>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><code>0</code></td>\n\t\t\t<td><code>[<u>0</u>, 1, 2, 3, 4]</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><code>1</code></td>\n\t\t\t<td><code>[0, <u>1</u>, 2, 3, 4]</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><code>2</code></td>\n\t\t\t<td><code>[0, 1, <u>2</u>, 3, 4]</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><code>3</code></td>\n\t\t\t<td><code>[0, 1, 2, <u>3</u>, 4]</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><code>4</code></td>\n\t\t\t<td><code>[0, 1, 2, 3, <u>4</u>]</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><code>5</code></td>\n\t\t\t<td><code>[0, 1, 2, <u>3</u>, 4]</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><code>6</code></td>\n\t\t\t<td><code>[0, 1, <u>2</u>, 3, 4]</code></td>\n\t\t</tr>\n\t</tbody>\n</table>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 4, k = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<table>\n\t<tbody>\n\t\t<tr>\n\t\t\t<th>Time elapsed</th>\n\t\t\t<th>Children</th>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><code>0</code></td>\n\t\t\t<td><code>[<u>0</u>, 1, 2, 3]</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><code>1</code></td>\n\t\t\t<td><code>[0, <u>1</u>, 2, 3]</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><code>2</code></td>\n\t\t\t<td><code>[0, 1, <u>2</u>, 3]</code></td>\n\t\t</tr>\n\t</tbody>\n</table>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 50</code></li>\n\t<li><code>1 &lt;= k &lt;= 50</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Note:</strong> This question is the same as <a href=\"https://leetcode.com/problems/pass-the-pillow/description/\" target=\"_blank\"> 2582: Pass the Pillow.</a></p>\n",
+  "hints": [
+    "The ball will go back to child 0 after <code>2 * (n - 1)</code> seconds and everything is the same as time 0.",
+    "So the answer for <code>k</code> is the same as the answer for <code>k % (2 * (n - 1))</code>."
+  ],
+  "metaData": "{\n  \"name\": \"numberOfChild\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"59.3K\", \"totalSubmission\": \"95.6K\", \"totalAcceptedRaw\": 59275, \"totalSubmissionRaw\": 95557, \"acRate\": \"62.0%\"}",
+  "likes": 181,
+  "dislikes": 11,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find the Losers of the Circular Game\", \"titleSlug\": \"find-the-losers-of-the-circular-game\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3\n5",
+    "5\n6",
+    "4\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"agoda\", \"name\": \"Agoda\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numberOfChild(int n, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numberOfChild(int n, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfChild(self, n: int, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfChild(self, n, k):\n        \"\"\"\n        :type n: int\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} k\n * @return {number}\n */\nvar numberOfChild = function(n, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfChild(n: number, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumberOfChild(int n, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numberOfChild(int n, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfChild(n int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfChild(n: Int, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfChild(_ n: Int, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_child(n: i32, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} k\n# @return {Integer}\ndef number_of_child(n, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $k\n     * @return Integer\n     */\n    function numberOfChild($n, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numberOfChild(int n, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfChild(n: Int, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_child(n :: integer, k :: integer) :: integer\n  def number_of_child(n, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_child(N :: integer(), K :: integer()) -> integer().\nnumber_of_child(N, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-child n k)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

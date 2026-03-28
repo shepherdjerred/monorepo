@@ -1,0 +1,140 @@
+{
+  "questionId": "3242",
+  "questionFrontendId": "3005",
+  "title": "Count Elements With Maximum Frequency",
+  "titleSlug": "count-elements-with-maximum-frequency",
+  "difficulty": "Easy",
+  "content": "<p>You are given an array <code>nums</code> consisting of <strong>positive</strong> integers.</p>\n\n<p>Return <em>the <strong>total frequencies</strong> of elements in</em><em> </em><code>nums</code>&nbsp;<em>such that those elements all have the <strong>maximum</strong> frequency</em>.</p>\n\n<p>The <strong>frequency</strong> of an element is the number of occurrences of that element in the array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,2,3,1,4]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The elements 1 and 2 have a frequency of 2 which is the maximum frequency in the array.\nSo the number of elements in the array with maximum frequency is 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4,5]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> All elements of the array have a frequency of 1 which is the maximum.\nSo the number of elements in the array with maximum frequency is 5.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Find frequencies of all elements of the array.",
+    "Find the elements that have the maximum frequencies and count their total occurrences."
+  ],
+  "metaData": "{\n  \"name\": \"maxFrequencyElements\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"419.5K\", \"totalSubmission\": \"525.4K\", \"totalAcceptedRaw\": 419509, \"totalSubmissionRaw\": 525447, \"acRate\": \"79.8%\"}",
+  "likes": 1089,
+  "dislikes": 97,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Frequency of an Element After Performing Operations I\", \"titleSlug\": \"maximum-frequency-of-an-element-after-performing-operations-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Frequency of an Element After Performing Operations II\", \"titleSlug\": \"maximum-frequency-of-an-element-after-performing-operations-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Difference Between Even and Odd Frequency II\", \"titleSlug\": \"maximum-difference-between-even-and-odd-frequency-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,2,3,1,4]",
+    "[1,2,3,4,5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"capgemini\", \"name\": \"Capgemini\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"cred\", \"name\": \"CRED\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxFrequencyElements(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxFrequencyElements(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxFrequencyElements(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxFrequencyElements(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar maxFrequencyElements = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxFrequencyElements(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxFrequencyElements(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxFrequencyElements(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxFrequencyElements(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxFrequencyElements(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxFrequencyElements(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_frequency_elements(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef max_frequency_elements(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function maxFrequencyElements($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxFrequencyElements(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxFrequencyElements(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_frequency_elements(nums :: [integer]) :: integer\n  def max_frequency_elements(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_frequency_elements(Nums :: [integer()]) -> integer().\nmax_frequency_elements(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-frequency-elements nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2250",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an array, `nums`, of positive integers.\n\n> The **frequency** of an element is the number of occurrences of that element in the array.\n\nTo solve the problem, we need to determine the element with the maximum frequency. Then, we need to find the sum of the number of occurrences of all elements that have the maximum frequency.\n\nWe can break this problem down into three main steps:\n\n1. Find the frequency of each element in `nums`.\n2. Determine the maximum frequency.\n3. Calculate the total frequencies of elements with the maximum frequency.\n\n---\n\n### Approach 1: Count Frequency and Max Frequency\n\n#### Intuition\n\n##### 1. Find the frequency of each element in `nums`.\n\nThe frequency of an element is the count of occurrences of that element. We can find the frequency of each element in `nums` by counting the number of occurrences of each element. We can create a map `frequencies` to store the frequency of each element. The key is the element, and the value is its frequency. To calculate the frequencies, we iterate through `nums`, incrementing the frequency of each number in `nums` by `1`.\n\n##### 2. Determine the maximum frequency.\n\nTo find the maximum frequency, we iterate over `frequencies`, comparing each frequency to `maxFrequency` and updating `maxFrequency` each time we find a larger frequency.\n\n##### 3. Calculate the total frequencies of elements with the maximum frequency.\n\nTo find total frequencies, we can count the number of elements that have the maximum frequency. We can store the running count in the variable `frequencyOfMaxFrequency`.\n\nTo find `frequencyOfMaxFrequency`, we iterate over `frequencies`, incrementing `frequencyOfMaxFrequency` by `1` for all elements with the frequency `maxFrequency`.\n\nWe multiply `frequencyOfMaxFrequency` by `maxFrequency` to calculate the total frequencies of elements with the maximum frequency.\n\n###### Example:\n\n> **Input:** nums = [1, 2, 2, 3, 1, 4]\n>\n> **Step 1**   \n> Frequency Map: \n> | Element   | 1 | 2 | 3 | 4 |\n> | --------- | - | - | - | - |\n> | Frequency | 2 | 2 | 1 | 1 |\n>\n> **Step 2**   \n> `maxFrequency = 2`\n>\n> **Step 3**   \n> `frequencyOfMaxFrequency = 2`  \n> `frequencyOfMaxFrequency * maxFrequency = 2 * 2 = 4`\n\n#### Algorithm\n\n1. Initialize a map `frequencies` to store the frequency of each element. The key is the element, and the value is its frequency.\n2. For each number in `nums`:\n    1. Increment its frequency by `1` for each occurrence.\n3. Initialize a variable `maxFrequency` to `0`.\n4. For each `frequency` in `frequencies`:\n    1. Calculate the maximum between the `frequency` and `maxFrequency`, updating `maxFrequency` when we find a larger frequency.\n5. Initialize a variable `frequencyOfMaxFrequency` to `0`.\n6. For each frequency in `frequencies`:\n    1. If `frequency` equals `maxFrequency`:\n        1. Increment `frequencyOfMaxFrequency` by `1`.\n7. Return `frequencyOfMaxFrequency * maxFrequency`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/h6Jbtdmx/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"h6Jbtdmx\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `nums`.\n\n* Time complexity: $$O(n)$$\n\n    Calculating the frequency of each element in `nums` takes $O(n)$.\n\n    Finding the maximum frequency takes $O(e)$ where $e$ is the number of distinct elements in `nums`. At worst, there can be $n$ distinct elements, so this step takes $O(n)$.\n\n    Calculating total frequencies takes $O(e)$ where $e$ is the number of distinct elements in `nums`. At worst, there can be $n$ distinct elements, so this step takes $O(n)$.\n\n    The total time complexity will be $O(3n)$, which we can simplify to $O(n)$.\n\n\n* Space complexity: $$O(n)$$\n\n    We use a few variables and the map `frequencies`, which is size $O(e)$ where $e$ is the number of distinct elements in `nums`. At worst, there can be $n$ distinct elements, so the space complexity is $O(n)$.\n\n---\n\n### Approach 2: Sort Frequencies and Sum Max Frequencies\n\n#### Intuition\n\n##### 1. Find the frequency of each element in `nums`.\n\nWe can find the frequency of each element in `nums` by counting the number of occurrences of each element. An alternative to using a map is an array `frequencies` to store the frequency of each element. The frequency of an element is stored at `frequency[element - 1]`. \n\nSince the array is zero-indexed, the frequency of `1` is stored at `frequencies[0]`, the frequency of `2` is stored at `frequencies[1]`, and the frequency of `100` is stored at `frequencies[99]`. We will initialize `frequencies` to size `100`, because the maximum element in nums is guaranteed to be between `1` and `100` inclusive according to the constraints. To calculate the frequencies, we iterate through `nums`, incrementing the frequency of the current element by `1`. \n\n**Note:**\n\nUsing an array for frequency counting has a constant time complexity for both insertion and retrieval operations, which can be faster than the average case time complexity of hashmap operations. However, this advantage comes with a trade-off—arrays are only suitable when the range of values is relatively small and can be mapped directly to array indices.\n\nIf your input values can be negative or have a very large range, using a hashmap might be a more flexible and efficient option. Hashmaps generally have an average-case time complexity of $O(1)$ for insertion and retrieval operations, but they may have a higher constant factor compared to array operations.\n\n##### 2. Determine the maximum frequency.\n\nTo find the maximum frequency, we sort `frequencies`, which will group all of the elements occurring `maxFrequency` times towards the end of the array. \n\nThe last index of `frequencies` contains the element with the maximum frequency.\n\n**Note:** Once `frequencies` have been sorted, the index of a particular element no longer corresponds to the frequency of that element. The array essentially becomes an array of frequencies. The final answer only concerns frequencies and not the values of the elements, so this does not cause an issue.\n\n##### 3. Calculate the total frequencies of elements with the maximum frequency.\n\nTo find `totalFrequencies`, we iterate over `frequencies`, starting with the last index. We traverse over frequencies from right to left, adding the frequency of all elements with the frequency `maxFrequency` to `totalFrequencies`. Once we reach a frequency less than `maxFrequency`, we return `totalFrequencies`; no other elements will have `maxFrequency`, since the frequencies are sorted.\n\n##### Example:\n\n> **Input:** nums = [1, 2, 2, 3, 1, 4]\n>\n> **Step 1**   \n> Frequency Array:\n> | Index     | 0 | 1 | 2 | 3 | 4 | 5 | 6 | ... |  99 |\n> | --------- | - | - | - | - | - | - | - | --- | --- |\n> | Element   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | ... | 100 |\n> | Frequency | 2 | 2 | 1 | 1 | 0 | 0 | 0 | ... |  0  |\n>\n> **Step 2**   \n> Frequency Array Sorted:\n> | Frequency | 0 | 0 | 0 | ... | 0 | 1 | 1 | 2 | 2 |\n> | --------- | - | - | - | --- | - | - | - | - | - |\n>\n> `totalFrequencies = 2` // Initialized to the maximum frequency\n>\n> **Step 3**   \n> `totalFrequencies = 2 + 2 = 4`\n\n#### Algorithm\n\n1. Initialize an array `frequencies` of size `100` to store the frequency of each element. The frequency of an element is stored at `frequency[element - 1]`\n2. For each number in `nums`:\n    1. Increment its frequency by `1` for each occurrence.\n3. Sort `frequencies`. \n4. Initialize a variable `maxFreqIndex` to the last index of `frequencies`, where the maximum frequency is stored.\n5. Initialize a variable `totalFrequencies` to `frequencies[maxFreqIndex]`, which is the maximum frequency.\n6. Iterate through `frequencies`, starting from `maxFreqIndex`and traversing right to left. While `frequency` equals `maxFrequency`:\n    1. Add `frequency` to `totalFrequencies`.\n    2. Decrement `maxFreqIndex` by `1`.\n7. When we break from the loop, return `totalFrequencies`, because if the current frequency isn't the max frequency, none of the following will be either, since the array is sorted.       \n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/GvAFYwyj/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"GvAFYwyj\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `nums`. Let $m$ be the maximum value in `nums`.\n\n* Time complexity: $$O(n + m \\log m)$$\n\n    Calculating the frequency of each element in `nums` takes $O(n)$.\n\n    `frequencies` is of size $m$, so sorting `frequencies` takes $O(m \\log m)$. \n\n    Calculating total frequencies takes $O(m)$ in the worst case when each element occurs the same number of times.\n\n    The total time complexity will be $O(n + m \\log m + m)$, which we can simplify to $O(n + m \\log m)$.\n\n\n* Space complexity: $$O(m)$$\n\n    We use a few variables and the array `frequencies`, which is size $O(m)$\n\n    Note that some extra space is used when we sort `frequencies` in place. The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the `sort` method sorts a list using the Tim Sort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(m)$ additional space. Additionally, Tim Sort is designed to be a stable algorithm.\n    - In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log m)$ for sorting an array.\n    - In C++, the sort() function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log m )$.\n\n    The dominating term is $O(m)$.\n\n---\n\n### Approach 3: One-Pass Sum Max Frequencies\n\n#### Intuition\n\nThe above approaches both iterate through `nums` once and through an array or map `frequencies` at least once. \n\n> Is it possible to solve this problem in just one pass?\n\n##### 1. Find the frequency of each element in `nums`.\n\nWe must iterate through `nums` to determine the frequency of each element. In this approach, saving the frequencies in an additional data structure, an array or map `frequencies` is still useful.\n\n##### 2. Determine the maximum frequency.\n\n> Can we determine the maximum frequency during the same pass as finding the frequencies of the elements? \n\nWe just need to update `maxFrequency` each time we find a frequency that is larger than the current `maxFrequency`.\n\n##### 3. Calculate the total frequencies of elements with the maximum frequency.\n\n> Can we calculate the total frequencies during the same pass as finding the frequencies of the elements?\n\n> What if we discover an element with the same frequency as the maximum frequency?\n\nEach time we find an element with a frequency that equals the max frequency, we can add the frequency of that element to `totalFrequency`.\n\n> What if we discover a higher-frequency element? \n\nWe will update `maxFrequency` as stated above. We can also re-set `totalFrequencies` to the element's frequency, because when we discover a new `maxFrequency`, there is only one element so far with that frequency, and all previous elements with the previous `maxFrequency` are no longer relevant. \n\nAfter iterating through `nums` once, we will have calculated `totalFrequencies` accurately and can return.\n\nThe algorithm is visualized below:\n\n!?!../Documents/3005/3005_slideshow.json:960,540!?!\n\n\n#### Algorithm\n\n1. Initialize a map `frequencies` to store the frequency of each element. The key is the element, and the value is its frequency.\n2. Initialize a variable `maxFrequency` to `0`.\n3. Initialize a variable `totalFrequencies` to `0`.\n4. For each number in `nums`:\n    1. Increment its frequency by `1` for each occurrence.\n    2. Initialize a variable `frequency` storing the current element's frequency.\n    3. If `frequency` is greater than `maxFrequency`:\n        1. Update `maxFrequency` with `frequency`.\n        2. Set `totalFrequencies` to `frequency`. This will reset the sum to the current highest frequency since any previous highest frequencies are no longer the max.\n    4. Else if `frequency` equals `maxFrequency`:\n        1. Add `frequency` to `totalFrequencies`.\n5. Return `totalFrequencies`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/6txG2r4t/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6txG2r4t\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `nums`.\n\n* Time complexity: $$O(n)$$\n\n    We iterate over `nums` once and perform $O(1)$ work with each operation, so the time complexity is $O(n)$.\n\n\n\n* Space complexity: $$O(n)$$\n\n    We use a few variables and the map `frequencies`, which is size $O(e)$ where $e$ is the number of distinct elements in `nums`. At worst, there can be $n$ distinct elements, so the space complexity is $O(n)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

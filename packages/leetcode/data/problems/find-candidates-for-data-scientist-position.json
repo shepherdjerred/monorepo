@@ -1,0 +1,53 @@
+{
+  "questionId": "3256",
+  "questionFrontendId": "3051",
+  "title": "Find Candidates for Data Scientist Position",
+  "titleSlug": "find-candidates-for-data-scientist-position",
+  "difficulty": "Easy",
+  "content": "<p>Table: <font face=\"monospace\"><code>Candidates</code></font></p>\n\n<pre>\n+--------------+---------+ \n| Column Name  | Type    | \n+--------------+---------+ \n| candidate_id | int     | \n| skill        | varchar |\n+--------------+---------+\n(candidate_id, skill) is the primary key (columns with unique values) for this table.\nEach row includes candidate_id and skill.\n</pre>\n\n<p>Write a query to find the <strong>candidates</strong> best suited for a Data Scientist position. The candidate must be proficient in <strong>Python</strong>, <strong>Tableau</strong>, and <strong>PostgreSQL</strong>.</p>\n\n<p>Return <em>the result table ordered by </em><code>candidate_id</code> <em>in <strong>ascending order</strong></em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nCandidates table:\n+---------------+--------------+\n| candidate_id  | skill        | \n+---------------+--------------+\n| 123           | Python       |\n| 234           | R            | \n| 123           | Tableau      | \n| 123           | PostgreSQL   | \n| 234           | PowerBI      | \n| 234           | SQL Server   | \n| 147           | Python       | \n| 147           | Tableau      | \n| 147           | Java         |\n| 147           | PostgreSQL   |\n| 256           | Tableau      |\n| 102           | DataAnalysis |\n+---------------+--------------+\n<strong>Output:</strong> \n+--------------+\n| candidate_id |  \n+--------------+\n| 123          |  \n| 147          | \n+--------------+\n<strong>Explanation:</strong> \n- Candidates 123 and 147 possess the necessary skills in Python, Tableau, and PostgreSQL for the data scientist position.\n- Candidates 234 and 102 do not possess any of the required skills for this position.\n- Candidate 256 has proficiency in Tableau but is missing skills in Python and PostgreSQL.\nThe output table is sorted by candidate_id in ascending order.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Candidates (candidate_id int, skill varchar(30))\"], \"mssql\": [\"Create table Candidates (candidate_id int, skill varchar(30))\"], \"oraclesql\": [\"Create table Candidates (candidate_id int, skill varchar(30))\"], \"database\": true, \"name\": \"find_candidates\", \"pythondata\": [\"Candidates = pd.DataFrame([], columns=['candidate_id', 'skill']).astype({'candidate_id':'Int64', 'skill':'object'})\\n\"], \"postgresql\": [\"Create table If Not Exists Candidates (candidate_id int, skill varchar(30))\\n\"], \"database_schema\": {\"Candidates\": {\"candidate_id\": \"INT\", \"skill\": \"VARCHAR(30)\"}}}",
+  "stats": "{\"totalAccepted\": \"5.5K\", \"totalSubmission\": \"7.3K\", \"totalAcceptedRaw\": 5498, \"totalSubmissionRaw\": 7326, \"acRate\": \"75.0%\"}",
+  "likes": 15,
+  "dislikes": 0,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Candidates\":[\"candidate_id\",\"skill\"]},\"rows\":{\"Candidates\":[[123,\"Python\"],[234,\"R\"],[123,\"Tableau\"],[123,\"PostgreSQL\"],[234,\"PowerBI\"],[234,\"SQL Server\"],[147,\"Python\"],[147,\"Tableau\"],[147,\"Java\"],[147,\"PostgreSQL\"],[256,\"Tableau\"],[102,\"DataAnalysis\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"hashedin\", \"name\": \"HashedIn\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_candidates(candidates: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

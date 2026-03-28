@@ -1,0 +1,139 @@
+{
+  "questionId": "2905",
+  "questionFrontendId": "2791",
+  "title": "Count Paths That Can Form a Palindrome in a Tree",
+  "titleSlug": "count-paths-that-can-form-a-palindrome-in-a-tree",
+  "difficulty": "Hard",
+  "content": "<p>You are given a <strong>tree</strong> (i.e. a connected, undirected graph that has no cycles) <strong>rooted</strong> at node <code>0</code> consisting of <code>n</code> nodes numbered from <code>0</code> to <code>n - 1</code>. The tree is represented by a <strong>0-indexed</strong> array <code>parent</code> of size <code>n</code>, where <code>parent[i]</code> is the parent of node <code>i</code>. Since node <code>0</code> is the root, <code>parent[0] == -1</code>.</p>\n\n<p>You are also given a string <code>s</code> of length <code>n</code>, where <code>s[i]</code> is the character assigned to the edge between <code>i</code> and <code>parent[i]</code>. <code>s[0]</code> can be ignored.</p>\n\n<p>Return <em>the number of pairs of nodes </em><code>(u, v)</code><em> such that </em><code>u &lt; v</code><em> and the characters assigned to edges on the path from </em><code>u</code><em> to </em><code>v</code><em> can be <strong>rearranged</strong> to form a <strong>palindrome</strong></em>.</p>\n\n<p>A string is a <strong>palindrome</strong> when it reads the same backwards as forwards.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/07/15/treedrawio-8drawio.png\" style=\"width: 281px; height: 181px;\" /></p>\n\n<pre>\n<strong>Input:</strong> parent = [-1,0,0,1,1,2], s = &quot;acaabc&quot;\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> The valid pairs are:\n- All the pairs (0,1), (0,2), (1,3), (1,4) and (2,5) result in one character which is always a palindrome.\n- The pair (2,3) result in the string &quot;aca&quot; which is a palindrome.\n- The pair (1,5) result in the string &quot;cac&quot; which is a palindrome.\n- The pair (3,5) result in the string &quot;acac&quot; which can be rearranged into the palindrome &quot;acca&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> parent = [-1,0,0,0,0], s = &quot;aaaaa&quot;\n<strong>Output:</strong> 10\n<strong>Explanation:</strong> Any pair of nodes (u,v) where u &lt; v is valid.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == parent.length == s.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= parent[i] &lt;= n - 1</code> for all <code>i &gt;= 1</code></li>\n\t<li><code>parent[0] == -1</code></li>\n\t<li><code>parent</code> represents a valid tree.</li>\n\t<li><code>s</code> consists of only lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "A string is a palindrome if the number of characters with an odd frequency is either 0 or 1.",
+    "Let mask[v] be a mask of 26 bits that represent the parity of each character in the alphabet on the path from node 0 to v. How can you use this array to solve the problem?"
+  ],
+  "metaData": "{\n  \"name\": \"countPalindromePaths\",\n  \"params\": [\n    {\n      \"name\": \"parent\",\n      \"type\": \"list<integer>\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"s\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"13.2K\", \"totalSubmission\": \"25.8K\", \"totalAcceptedRaw\": 13179, \"totalSubmissionRaw\": 25800, \"acRate\": \"51.1%\"}",
+  "likes": 453,
+  "dislikes": 19,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Valid Paths in a Tree\", \"titleSlug\": \"count-valid-paths-in-a-tree\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[-1,0,0,1,1,2]\n\"acaabc\"",
+    "[-1,0,0,0,0]\n\"aaaaa\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 14, \"slug\": \"uber\", \"name\": \"Uber\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"weride\", \"name\": \"WeRide\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"thoughtspot\", \"name\": \"thoughtspot\"}]}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long countPalindromePaths(vector<int>& parent, string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long countPalindromePaths(List<Integer> parent, String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countPalindromePaths(self, parent: List[int], s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countPalindromePaths(self, parent, s):\n        \"\"\"\n        :type parent: List[int]\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} parent\n * @param {string} s\n * @return {number}\n */\nvar countPalindromePaths = function(parent, s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countPalindromePaths(parent: number[], s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long CountPalindromePaths(IList<int> parent, string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long countPalindromePaths(int* parent, int parentSize, char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countPalindromePaths(parent []int, s string) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countPalindromePaths(parent: List<Int>, s: String): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countPalindromePaths(_ parent: [Int], _ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_palindrome_paths(parent: Vec<i32>, s: String) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} parent\n# @param {String} s\n# @return {Integer}\ndef count_palindrome_paths(parent, s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $parent\n     * @param String $s\n     * @return Integer\n     */\n    function countPalindromePaths($parent, $s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countPalindromePaths(List<int> parent, String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countPalindromePaths(parent: List[Int], s: String): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_palindrome_paths(parent :: [integer], s :: String.t) :: integer\n  def count_palindrome_paths(parent, s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_palindrome_paths(Parent :: [integer()], S :: unicode:unicode_binary()) -> integer().\ncount_palindrome_paths(Parent, S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-palindrome-paths parent s)\n  (-> (listof exact-integer?) string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

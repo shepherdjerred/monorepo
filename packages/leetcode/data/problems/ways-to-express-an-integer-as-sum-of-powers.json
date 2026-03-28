@@ -1,0 +1,132 @@
+{
+  "questionId": "2882",
+  "questionFrontendId": "2787",
+  "title": "Ways to Express an Integer as Sum of Powers",
+  "titleSlug": "ways-to-express-an-integer-as-sum-of-powers",
+  "difficulty": "Medium",
+  "content": "<p>Given two <strong>positive</strong> integers <code>n</code> and <code>x</code>.</p>\n\n<p>Return <em>the number of ways </em><code>n</code><em> can be expressed as the sum of the </em><code>x<sup>th</sup></code><em> power of <strong>unique</strong> positive integers, in other words, the number of sets of unique integers </em><code>[n<sub>1</sub>, n<sub>2</sub>, ..., n<sub>k</sub>]</code><em> where </em><code>n = n<sub>1</sub><sup>x</sup> + n<sub>2</sub><sup>x</sup> + ... + n<sub>k</sub><sup>x</sup></code><em>.</em></p>\n\n<p>Since the result can be very large, return it modulo <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>For example, if <code>n = 160</code> and <code>x = 3</code>, one way to express <code>n</code> is <code>n = 2<sup>3</sup> + 3<sup>3</sup> + 5<sup>3</sup></code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 10, x = 2\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> We can express n as the following: n = 3<sup>2</sup> + 1<sup>2</sup> = 10.\nIt can be shown that it is the only way to express 10 as the sum of the 2<sup>nd</sup> power of unique integers.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 4, x = 1\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> We can express n in the following ways:\n- n = 4<sup>1</sup> = 4.\n- n = 3<sup>1</sup> + 1<sup>1</sup> = 4.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 300</code></li>\n\t<li><code>1 &lt;= x &lt;= 5</code></li>\n</ul>\n",
+  "hints": [
+    "You can use dynamic programming, where dp[k][j] represents the number of ways to express k as the sum of the x-th power of unique positive integers such that the biggest possible number we use is j.",
+    "To calculate dp[k][j], you can iterate over the numbers smaller than j and try to use each one as a power of x to make our sum k."
+  ],
+  "metaData": "{\n  \"name\": \"numberOfWays\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"x\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"118.6K\", \"totalSubmission\": \"237.9K\", \"totalAcceptedRaw\": 118582, \"totalSubmissionRaw\": 237873, \"acRate\": \"49.9%\"}",
+  "likes": 844,
+  "dislikes": 41,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Perfect Squares\", \"titleSlug\": \"perfect-squares\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Combination Sum IV\", \"titleSlug\": \"combination-sum-iv\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Target Sum\", \"titleSlug\": \"target-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "10\n2",
+    "4\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numberOfWays(int n, int x) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numberOfWays(int n, int x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfWays(self, n: int, x: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfWays(self, n, x):\n        \"\"\"\n        :type n: int\n        :type x: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} x\n * @return {number}\n */\nvar numberOfWays = function(n, x) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfWays(n: number, x: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumberOfWays(int n, int x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numberOfWays(int n, int x) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfWays(n int, x int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfWays(n: Int, x: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfWays(_ n: Int, _ x: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_ways(n: i32, x: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} x\n# @return {Integer}\ndef number_of_ways(n, x)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $x\n     * @return Integer\n     */\n    function numberOfWays($n, $x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numberOfWays(int n, int x) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfWays(n: Int, x: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_ways(n :: integer, x :: integer) :: integer\n  def number_of_ways(n, x) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_ways(N :: integer(), X :: integer()) -> integer().\nnumber_of_ways(N, X) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-ways n x)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2812",
+    "content": "### Approach: Dynamic Programming\n\n#### Intuition\n\nGiven a number $n$, the task is to return the number of sets of distinct integers $[n_1, n_2, \\cdots, n_k]$ such that:\n\n$$\nn = n_1^x + n_2^x + \\cdots + n_k^x.\n$$\n\nWe can think of $n$ as the capacity of a backpack, and the values $[1^x, 2^x, 3^x, \\cdots]$ as items. The essence of the problem is a 0-1 knapsack problem. We define $\\textit{dp}[i][j]$ as the number of ways to choose distinct integers from the first $i$ integers such that the sum of their $x$-th powers is $j$.\n\nStarting from $1$, we enumerate all integers. Suppose the current enumerated number is $i$ and the target sum is $j$. Then we consider two cases:\n- Case 1: Do not select $i$\n\nThis is equivalent to selecting a subset from the first $i - 1$ numbers whose $x$-th powers sum to $j$. So,\n  $$\n  \\textit{dp}[i][j] = \\textit{dp}[i - 1][j].\n  $$\n\n- Case 2: Select $i$\n\nThe $x$-th power of $i$ is $i^x$. This is only valid if $i^x \\le j$. In this case, we must select distinct numbers from the first $i - 1$ numbers such that their $x$-th powers sum to $j - i^x$. We then add $i^x$ to reach $j$. So,\n  $$\n  \\textit{dp}[i][j] = \\textit{dp}[i - 1][j - i^x].\n  $$\nPutting both cases together, the state transition formula becomes:\n\n- If $j < i^x$, then\n  $$\n  \\textit{dp}[i][j] = \\textit{dp}[i - 1][j].\n  $$\n \n- If $j \\geq i^x$, then\n  $$\n  \\textit{dp}[i][j] = \\textit{dp}[i - 1][j] + \\textit{dp}[i - 1][j - i^x].\n  $$\n\nTo compute the result, we iterate over all $i$ from $1$ to $n$, and for each $i$, we iterate $j$ from $0$ to $n$, filling in each subproblem $\\textit{dp}[i][j]$ using the above recurrence. The final answer is $\\textit{dp}[n][n]$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/kqTMVEMj/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"kqTMVEMj\"></iframe>\n\n**Space Optimization**\n\nAccording to the knapsack principle, the space complexity can be optimized by reducing the dimensionality of the DP array. Let $\\textit{dp}[j]$ represent the number of combinations of distinct integers whose $x$-th powers sum up to $j$. To compute this efficiently, we iterate over $j$ in reverse order (from $n$ down to $0$) to avoid overcounting combinations that reuse the same number.\n\nWhen considering whether to include the number $i$, the update rules are as follows:\n\n- If $j < i^x$, then $\\textit{dp}[j]$ remains unchanged because $i^x$ is too large to contribute to the current sum.\n- If $j \\geq i^x$, then we update:\n  $$\n  \\textit{dp}[j] = \\textit{dp}[j] + \\textit{dp}[j - i^x].\n  $$\n\nThis reflects the idea that any way to form the sum $j - i^x$ can be extended by adding $i^x$ to reach $j$.\n\nAfter processing all valid $i$ values, the final answer is given by $\\textit{dp}[n]$.\n\n<iframe src=\"https://leetcode.com/playground/W49C26wY/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"W49C26wY\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ and $x$ be the given numbers.\n\n- Time complexity: $O(n\\sqrt[x]{n})$. \n  \n  We traverse $i$ from small to large. Since $i^x$ must not exceed $n$, the maximum value of $i$ is at most $\\sqrt[x]{n}$. The dynamic programming needs to compute at most $n\\sqrt[x]{n}$ substates, and the time to compute each substate is $O(1)$. Therefore, the total time complexity is $O(n\\sqrt[x]{n})$.\n\n- Space complexity: $O(n)$.\n  \n  After space optimization, we only need to store $n$ states, which requires $O(n)$ space.\n  \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

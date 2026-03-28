@@ -1,0 +1,53 @@
+{
+  "questionId": "3539",
+  "questionFrontendId": "3230",
+  "title": "Customer Purchasing Behavior Analysis",
+  "titleSlug": "customer-purchasing-behavior-analysis",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Transactions</code></p>\n\n<pre>\n+------------------+---------+\n| Column Name      | Type    |\n+------------------+---------+\n| transaction_id   | int     |\n| customer_id      | int     |\n| product_id       | int     |\n| transaction_date | date    |\n| amount           | decimal |\n+------------------+---------+\ntransaction_id is the unique identifier for this table.\nEach row of this table contains information about a transaction, including the customer ID, product ID, date, and amount spent.\n</pre>\n\n<p>Table: <code>Products</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| product_id  | int     |\n| category    | varchar |\n| price       | decimal |\n+-------------+---------+\nproduct_id is the unique identifier for this table.\nEach row of this table contains information about a product, including its category and price.\n</pre>\n\n<p>Write a solution to analyze customer purchasing behavior. For <strong>each customer</strong>, calculate:</p>\n\n<ul>\n\t<li>The total amount spent.</li>\n\t<li>The number of transactions.</li>\n\t<li>The number of <strong>unique</strong> product categories purchased.</li>\n\t<li>The average amount spent.&nbsp;</li>\n\t<li>The <strong>most frequently</strong> purchased product category&nbsp;(if there is a tie, choose the one with the most recent transaction).</li>\n\t<li>A <strong>loyalty score</strong>&nbsp;defined as: (Number of transactions * 10) + (Total amount spent / 100).</li>\n</ul>\n\n<p>Round <code>total_amount</code>, <code>avg_transaction_amount</code>, and <code>loyalty_score</code> to <code>2</code> decimal places.</p>\n\n<p>Return <em>the result table ordered by</em> <code>loyalty_score</code> <em>in <strong>descending</strong> order</em>, <em>then by </em><code>customer_id</code><em> in <strong>ascending</strong> order</em>.</p>\n\n<p>The query result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p><code>Transactions</code> table:</p>\n\n<pre class=\"example-io\">\n+----------------+-------------+------------+------------------+--------+\n| transaction_id | customer_id | product_id | transaction_date | amount |\n+----------------+-------------+------------+------------------+--------+\n| 1              | 101         | 1          | 2023-01-01       | 100.00 |\n| 2              | 101         | 2          | 2023-01-15       | 150.00 |\n| 3              | 102         | 1          | 2023-01-01       | 100.00 |\n| 4              | 102         | 3          | 2023-01-22       | 200.00 |\n| 5              | 101         | 3          | 2023-02-10       | 200.00 |\n+----------------+-------------+------------+------------------+--------+\n</pre>\n\n<p><code>Products</code> table:</p>\n\n<pre class=\"example-io\">\n+------------+----------+--------+\n| product_id | category | price  |\n+------------+----------+--------+\n| 1          | A        | 100.00 |\n| 2          | B        | 150.00 |\n| 3          | C        | 200.00 |\n+------------+----------+--------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+-------------+--------------+-------------------+-------------------+------------------------+--------------+---------------+\n| customer_id | total_amount | transaction_count | unique_categories | avg_transaction_amount | top_category | loyalty_score |\n+-------------+--------------+-------------------+-------------------+------------------------+--------------+---------------+\n| 101         | 450.00       | 3                 | 3                 | 150.00                 | C            | 34.50         |\n| 102         | 300.00       | 2                 | 2                 | 150.00                 | C            | 23.00         |\n+-------------+--------------+-------------------+-------------------+------------------------+--------------+---------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>For customer 101:\n\t<ul>\n\t\t<li>Total amount spent: 100.00 + 150.00 + 200.00 = 450.00</li>\n\t\t<li>Number of transactions: 3</li>\n\t\t<li>Unique categories: A, B, C (3 categories)</li>\n\t\t<li>Average transaction amount: 450.00 / 3 = 150.00</li>\n\t\t<li>Top category: C (Customer 101 made 1 purchase each in categories A, B, and C. Since the count is the same for all categories, we choose the most recent transaction, which is category C on 2023-02-10)</li>\n\t\t<li>Loyalty score: (3 * 10) + (450.00 / 100) = 34.50</li>\n\t</ul>\n\t</li>\n\t<li>For customer 102:\n\t<ul>\n\t\t<li>Total amount spent: 100.00 + 200.00 = 300.00</li>\n\t\t<li>Number of transactions: 2</li>\n\t\t<li>Unique categories: A, C (2 categories)</li>\n\t\t<li>Average transaction amount: 300.00 / 2 = 150.00</li>\n\t\t<li>Top category: C (Customer 102 made 1 purchase each in categories A and C. Since the count is the same for both categories, we choose the most recent transaction, which is category C on 2023-01-22)</li>\n\t\t<li>Loyalty score: (2 * 10) + (300.00 / 100) = 23.00</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p><strong>Note:</strong> The output is ordered by loyalty_score in descending order, then by customer_id in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE if not exists Transactions (\\n    transaction_id INT,\\n    customer_id INT,\\n    product_id INT,\\n    transaction_date DATE,\\n    amount DECIMAL(10, 2)\\n)\", \"CREATE TABLE if not exists Products (\\n    product_id INT ,\\n    category VARCHAR(255),\\n    price DECIMAL(10, 2)\\n)\\n\"], \"mssql\": [\"CREATE TABLE Transactions (\\n    transaction_id INT ,\\n    customer_id INT,\\n    product_id INT,\\n    transaction_date DATE,\\n    amount DECIMAL(10, 2)\\n)\\n\", \"\\nCREATE TABLE Products (\\n    product_id INT ,\\n    category VARCHAR(255),\\n    price DECIMAL(10, 2)\\n)\"], \"oraclesql\": [\"CREATE TABLE Transactions (\\n    transaction_id NUMBER ,\\n    customer_id NUMBER,\\n    product_id NUMBER,\\n    transaction_date DATE,\\n    amount NUMBER(10, 2)\\n)\", \"CREATE TABLE Products (\\n    product_id NUMBER ,\\n    category VARCHAR2(255),\\n    price NUMBER(10, 2)\\n)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"analyze_customer_behavior\", \"postgresql\": [\"CREATE TABLE IF NOT EXISTS Transactions (\\n    transaction_id INTEGER,\\n    customer_id INTEGER,\\n    product_id INTEGER,\\n    transaction_date DATE,\\n    amount NUMERIC(10, 2)\\n);\\n\", \"CREATE TABLE IF NOT EXISTS Products (\\n    product_id INTEGER,\\n    category VARCHAR(255),\\n    price NUMERIC(10, 2)\\n);\\n\"], \"pythondata\": [\"Transactions = pd.DataFrame(columns=['transaction_id', 'customer_id', 'product_id', 'transaction_date', 'amount']).astype({'transaction_id': 'int', 'customer_id': 'int', 'product_id': 'int', 'transaction_date': 'datetime64[ns]', 'amount': 'float'})\", \"Products = pd.DataFrame(columns=['product_id', 'category', 'price']).astype({'product_id': 'int', 'category': 'str', 'price': 'float'})\"], \"database_schema\": {\"Transactions\": {\"transaction_id\": \"INT\", \"customer_id\": \"INT\", \"product_id\": \"INT\", \"transaction_date\": \"DATE\", \"amount\": \"DECIMAL(10, 2)\"}, \"Products\": {\"product_id\": \"INT\", \"category\": \"VARCHAR(255)\", \"price\": \"DECIMAL(10, 2)\"}}}",
+  "stats": "{\"totalAccepted\": \"2.9K\", \"totalSubmission\": \"7.9K\", \"totalAcceptedRaw\": 2895, \"totalSubmissionRaw\": 7920, \"acRate\": \"36.6%\"}",
+  "likes": 9,
+  "dislikes": 4,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Transactions\":[\"transaction_id\",\"customer_id\",\"product_id\",\"transaction_date\",\"amount\"],\"Products\":[\"product_id\",\"category\",\"price\"]},\"rows\":{\"Transactions\":[[1,101,1,\"2023-01-01\",100.00],[2,101,2,\"2023-01-15\",150.00],[3,102,1,\"2023-01-01\",100.00],[4,102,3,\"2023-01-22\",200.00],[5,101,3,\"2023-02-10\",200.00]],\"Products\":[[1,\"A\",100.00],[2,\"B\",150.00],[3,\"C\",200.00]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef analyze_customer_behavior(transactions: pd.DataFrame, products: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

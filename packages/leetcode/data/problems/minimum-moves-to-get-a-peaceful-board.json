@@ -1,0 +1,147 @@
+{
+  "questionId": "3504",
+  "questionFrontendId": "3189",
+  "title": "Minimum Moves to Get a Peaceful Board",
+  "titleSlug": "minimum-moves-to-get-a-peaceful-board",
+  "difficulty": "Medium",
+  "content": "<p>Given a 2D array <code>rooks</code> of length <code>n</code>, where <code>rooks[i] = [x<sub>i</sub>, y<sub>i</sub>]</code> indicates the position of a rook on an <code>n x n</code> chess board. Your task is to move the rooks <strong>1 cell </strong>at a time vertically or horizontally (to an <em>adjacent</em> cell) such that the board becomes <strong>peaceful</strong>.</p>\n\n<p>A board is <strong>peaceful</strong> if there is <strong>exactly</strong> one rook in each row and each column.</p>\n\n<p>Return the <strong>minimum</strong> number of moves required to get a <em>peaceful board</em>.</p>\n\n<p><strong>Note</strong> that <strong>at no point</strong> can there be two rooks in the same cell.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">rooks = [[0,0],[1,0],[1,1]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/06/17/ex1-edited.gif\" style=\"width: 150px; height: 150px;\" /></div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">rooks = [[0,0],[0,1],[0,2],[0,3]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">6</span></p>\n\n<p><strong>Explanation:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/06/17/ex2-edited.gif\" style=\"width: 200px; height: 200px;\" /></div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n == rooks.length &lt;= 500</code></li>\n\t<li><code>0 &lt;= x<sub>i</sub>, y<sub>i</sub> &lt;= n - 1</code></li>\n\t<li>The input is generated such that there are no 2 rooks in the same cell.</li>\n</ul>\n",
+  "hints": [
+    "Think of a greedy method.",
+    "First, distribute the rooks in individual rows.",
+    "You can do this by sorting all rooks by their rows. Then assign the first one to the first row, the second one to the second row, and so on.",
+    "After you've distributed rooks across all rows, now do the same for columns.",
+    "Sort rooks by their columns and then assign the first one to the first column and so on."
+  ],
+  "metaData": "{\n  \"name\": \"minMoves\",\n  \"params\": [\n    {\n      \"name\": \"rooks\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"4.8K\", \"totalSubmission\": \"6.3K\", \"totalAcceptedRaw\": 4787, \"totalSubmissionRaw\": 6309, \"acRate\": \"75.9%\"}",
+  "likes": 61,
+  "dislikes": 13,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Transform to Chessboard\", \"titleSlug\": \"transform-to-chessboard\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Most Stones Removed with Same Row or Column\", \"titleSlug\": \"most-stones-removed-with-same-row-or-column\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,0],[1,0],[1,1]]",
+    "[[0,0],[0,1],[0,2],[0,3]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Counting Sort",
+      "slug": "counting-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minMoves(vector<vector<int>>& rooks) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minMoves(int[][] rooks) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minMoves(self, rooks: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minMoves(self, rooks):\n        \"\"\"\n        :type rooks: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} rooks\n * @return {number}\n */\nvar minMoves = function(rooks) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minMoves(rooks: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinMoves(int[][] rooks) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minMoves(int** rooks, int rooksSize, int* rooksColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minMoves(rooks [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minMoves(rooks: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minMoves(_ rooks: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_moves(rooks: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} rooks\n# @return {Integer}\ndef min_moves(rooks)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $rooks\n     * @return Integer\n     */\n    function minMoves($rooks) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minMoves(List<List<int>> rooks) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minMoves(rooks: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_moves(rooks :: [[integer]]) :: integer\n  def min_moves(rooks) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_moves(Rooks :: [[integer()]]) -> integer().\nmin_moves(Rooks) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-moves rooks)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2405",
+    "content": "## Solution\n\n---\n\n### Approach 1: Sorting\n\n#### Overview\n\nWe are given a 2D board of size $N \\times N$ with $N$ rooks placed on it. A rook can move to any of the four adjacent cells horizontally or vertically in one move. Our goal is to return the minimum moves required so that each row and column of the board has exactly one rook. Initially and during the moves, there can only be at most one rook in each cell.\n\n#### Intuition\n\nTo simplify the problem, let's first consider only the row constraint: each row must have exactly one rook without any constraints on the columns. There may be cases where some rows have no rooks while others have multiple rooks. The optimal way to distribute the rooks across the rows is to move a rook to an empty row that is closest, minimizing the number of moves.\n\nWe can achieve this by sorting the rooks by their row number in ascending order. Then, we iterate over the rows from $0$ to $N - 1$. Because the rooks are sorted by row number, placing the rook at index 0 in the sorted list onto row 0 requires the minimum moves. Similarly, we place the rook at index 1 onto row 1, and so on. The difference between the current row index and the row number of the rook at the current index in the sorted list gives the moves required for each rook. Summing these differences gives the total moves needed to ensure each row has exactly one rook.\n\nNext, we extend this solution to meet the column constraint as well. After arranging the rooks so that each row has exactly one, we need to ensure that each column also has exactly one rook. We do this by sorting the rooks by their column numbers. Then, we iterate over the columns from $0$ to $N - 1$, and for each column, we calculate the moves required to place the rook at index `i` in the sorted list onto column `i`.\n\nBy iterating over the rows and columns independently and summing the required moves for each, we achieve the minimum total moves required to arrange the rooks such that each row and column has exactly one rook.\n\n![fig](../Figures/3189/3189A.png)\n\n#### Algorithm\n\n1. Initialize the variable `minMoves` to `0`.\n2. Sort the list of `rooks` in ascending order of their row number.\n3. Iterate over the rows from `0` to `N - 1` and for each row `i` add the moves required to keep a rook in this row as `abs(i - rooks[i][0])`\n4. Sort the list `rooks` in ascending order of their column number.\n5. Iterate over the column from `0` to `N - 1` and for each column `i` add the moves required to keep a rook in this column as `abs(i - rooks[i][1])`\n6. Return `minMoves`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/UScC6cMD/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"UScC6cMD\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the number of rows and columns in the board given, it's also the number of coordinates given in the list `rooks`.\n\n* Time complexity: $O(N \\times \\log N)$.\n\n  We are sorting the list `rooks` twice, and then iterate over the rows and columns from `0` to `N - 1`. Hence, the total time complexity is equal to $O(N \\log N)$.\n\n* Space complexity: $O(\\log⁡⁡ N)$ or $O(N)$.\n\n  No extra space is needed apart from a few variables. However, some space is required for sorting.\n\n  The space complexity of the sorting algorithm depends on the implementation of each programming language.\n\n  For instance, in Java, the `Arrays.sort()` for primitives is implemented as a variant of the quicksort algorithm whose space complexity is $O(\\log⁡⁡ N)$.\n  In C++ `sort()` function provided by STL is a hybrid of Quick Sort, Heap Sort, and Insertion Sort and has a worst-case space complexity of $O(\\log⁡⁡ N)$.\n  In Python, the sort method sorts a list using the Tim Sort algorithm which is a combination of Merge Sort and Insertion Sort and uses $O(N)$ additional space. Thus, the inbuilt `sort()` function might add up to $O(\\log⁡⁡ N)$ or $O(N)$ to the space complexity.\n\n---\n\n### Approach 2: Counting Sort\n\n#### Intuition\n\nInstead of sorting the rooks according to their rows and columns, we can count the number of rooks in each row and column. This approach is similar to counting sort, where we count the number of instances for each possible value. Here, the values are row and column numbers from `0` to `N - 1`, and the count represents the number of rooks in that row or column.\n\nFirst, we store these counts in two lists: `row` for rows and `col` for columns. We then calculate the number of moves required to ensure each row has exactly one rook and similarly for each column.\n\nFor the row constraint, we need each row to contain one rook. If a row has more than one rook, the excess rooks need to be moved. Conversely, if a row has no rooks, a rook needs to be moved to that row. The difference between the count of rooks in a row and one indicates the moves required for that row. As we iterate through the rows, we accumulate the difference between the previous row and the current row to determine the total moves needed.\n\nSimilarly, for the column constraint, we iterate over the columns to count the number of moves required to ensure each column has exactly one rook. The difference between the count of rooks in a column and one indicates the necessary moves. As we move to the next column, we add the difference between the previous column and the current column to get the total number of moves needed.\n\nBy maintaining and updating these counts iteratively, we efficiently compute the minimum number of moves required to position one rook in each row and column.\n\n\n#### Algorithm\n\n\n1. Initialize the variable `minMoves` to `0`.\n2. Initialize two lists `row` and `col` of size $N$ with values as `0`.\n3. Iterate over the list `rooks` and store the count of rooks corresponding to their row and column number.\n4. Initialize two variables `rowMinMoves` and `colMinMoves` to `0`.\n5. Iterate over the rows/columns from `0` to `N - 1` and for each `i`, add the rows moves required as `row[i] - 1` and column moves required as `col[i] - 1` to `rowMinMoves` and `colMinMoves` respectively.\n6. Return `minMoves`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PFKv9ZDj/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"PFKv9ZDj\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the number of rows and columns in the board given, it's also the number of coordinates given in the list `rooks`.\n\n* Time complexity: $O(N)$.\n\n  We iterate over the rooks rows and columns from `0` to `N - 1` twice, first to store the rooks count and then to find the number of moves. Hence, the total time complexity is equal to $O(N)$.\n\n* Space complexity: $O(N)$.\n\n  We need two lists `row` and `col` to keep the count of rooks on each row and column respectively. Hence, the total space complexity is equal to $O(N)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

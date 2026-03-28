@@ -1,0 +1,130 @@
+{
+  "questionId": "3370",
+  "questionFrontendId": "3064",
+  "title": "Guess the Number Using Bitwise Questions I",
+  "titleSlug": "guess-the-number-using-bitwise-questions-i",
+  "difficulty": "Medium",
+  "content": "<p>There is a number <code>n</code> that you have to find.</p>\n\n<p>There is also a pre-defined API <code>int commonSetBits(int num)</code>, which returns the number of bits where both <code>n</code> and <code>num</code> are <code>1</code> in that position of their binary representation. In other words, it returns the number of <span data-keyword=\"set-bit\">set bits</span> in <code>n &amp; num</code>, where <code>&amp;</code> is the bitwise <code>AND</code> operator.</p>\n\n<p>Return <em>the number</em> <code>n</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1: </strong></p>\n\n<div class=\"example-block\" style=\"border-color: var(--border-tertiary); border-left-width: 2px; color: var(--text-secondary); font-size: .875rem; margin-bottom: 1rem; margin-top: 1rem; overflow: visible; padding-left: 1rem;\">\n<p><strong>Input: </strong> <span class=\"example-io\" style=\"font-family: Menlo,sans-serif; font-size: 0.85rem;\"> n = 31 </span></p>\n\n<p><strong>Output: </strong> <span class=\"example-io\" style=\"font-family: Menlo,sans-serif; font-size: 0.85rem;\"> 31 </span></p>\n\n<p><strong>Explanation: </strong> It can be proven that it&#39;s possible to find <code>31</code> using the provided API.</p>\n</div>\n\n<p><strong class=\"example\">Example 2: </strong></p>\n\n<div class=\"example-block\" style=\"border-color: var(--border-tertiary); border-left-width: 2px; color: var(--text-secondary); font-size: .875rem; margin-bottom: 1rem; margin-top: 1rem; overflow: visible; padding-left: 1rem;\">\n<p><strong>Input: </strong> <span class=\"example-io\" style=\"font-family: Menlo,sans-serif; font-size: 0.85rem;\"> n = 33 </span></p>\n\n<p><strong>Output: </strong> <span class=\"example-io\" style=\"font-family: Menlo,sans-serif; font-size: 0.85rem;\"> 33 </span></p>\n\n<p><strong>Explanation: </strong> It can be proven that it&#39;s possible to find <code>33</code> using the provided API.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 2<sup>30</sup> - 1</code></li>\n\t<li><code>0 &lt;= num &lt;= 2<sup>30</sup> - 1</code></li>\n\t<li>If you ask for some <code>num</code> out of the given range, the output wouldn&#39;t be reliable.</li>\n</ul>\n",
+  "hints": [
+    "Ask <code>2<sup>i</sup></code> for <code>0 <= i < 30</code>.",
+    "If the result is greater than zero for some <code>i</code>, this bit is a set bit in <code>n</code>."
+  ],
+  "metaData": "{\n  \"name\": \"guessNumber\",\n  \"params\": [\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true,\n  \"manual\": true,\n  \"typescriptCustomType\": \"function commonSetBits(num: number): number {\\n    let x = num & __pick__;\\n    let count = 0;\\n    while (x > 0) {\\n        count += x & 1;\\n        x >>= 1;\\n    }\\n    return count;\\n}\"\n}",
+  "stats": "{\"totalAccepted\": \"2.3K\", \"totalSubmission\": \"2.6K\", \"totalAcceptedRaw\": 2319, \"totalSubmissionRaw\": 2606, \"acRate\": \"89.0%\"}",
+  "likes": 12,
+  "dislikes": 11,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "31"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Interactive",
+      "slug": "interactive"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/** \n * Definition of commonSetBits API.\n * int commonSetBits(int num);\n */\n\nclass Solution {\npublic:\n    int findNumber() {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/** \n * Definition of commonSetBits API (defined in the parent class Problem).\n * int commonSetBits(int num);\n */\n\npublic class Solution extends Problem {\n    public int findNumber() {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition of commonSetBits API.\n# def commonSetBits(num: int) -> int:\n\nclass Solution:\n    def findNumber(self) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition of commonSetBits API.\n# def commonSetBits(num):\n#     \"\"\"\n#     :type num: int\n#     :rtype: int\n#     \"\"\"\n\nclass Solution(object):\n    def findNumber(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/** \n * Definition of commonSetBits API.\n * @param {number} num\n * @return {integer}\n * var commonSetBits = function(num) {}\n */\n\n/**\n * @return {number}\n */\nvar findNumber = function() {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/** \n * Definition of commonSetBits API.\n * var commonSetBits = function(num: number): number {}\n */\n\nfunction findNumber(): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/** \n * Definition of commonSetBits API (defined in the parent class Problem).\n * int CommonSetBits(int num);\n */\n\npublic class Solution : Problem {\n    public int FindNumber() {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/** \n * Definition of commonSetBits API.\n * int commonSetBits(int num);\n */\n\nint findNumber(){\n\t\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/** \n * Definition of commonSetBits API.\n * func commonSetBits(num int) int;\n */\n\nfunc findNumber() int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/** \n * Definition of commonSetBits API (defined in the parent class Problem).\n * fun commonSetBits(num: Int): Int {}\n */\n\nclass Solution : Problem() {\n    fun findNumber(): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/** \n * Definition of commonSetBits API (defined in the parent class Problem)\n * func commonSetBits(_ num: Int) -> Int \n */\n\nclass Solution : Problem {\n    func findNumber() -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "/** \n * Definition of commonSetBits API.\n * unsafe fn common_set_bits(num: i32) -> i32 {}\n */\n\nimpl Solution {\n    unsafe fn find_number() -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition of commonSetBits API.\n# @param {Integer} num\n# @return {Integer}\n# def common_set_bits(num)\n\ndef find_number()\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/** \n * Definition of commonSetBits API (defined in the parent class Problem).\n * @param Integer $num\n * @return Integer\n * public function commonSetBits($num) : Integer\n */\n\nclass Solution extends Problem {\n    /**\n     * @return Integer\n     */\n    function findNumber() {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition of commonSetBits API.\n * int commonSetBits(int num);\n */\n\nclass Solution {\n  int findNumber() {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/** \n * Definition of commonSetBits API (defined in the parent class Problem)\n * def commonSetBits(num: Int): Int = {}\n */\n\nclass Solution extends Problem {\n    def findNumber(): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition of commonSetBits API.\n# common_set_bits = fn\n#   num :: integer -> integer\n# end\n# Note that due to the limitations of the language, common_set_bits is passed to you as an anonymous function.\n# To call it, you should use the dot notation. e.g., common_set_bits.(x)\n\ndefmodule Solution do\n  @spec find_number(common_set_bits :: (integer -> integer)) :: integer\n  def find_number(common_set_bits) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition of commonSetBits API.\n%% -spec common_set_bits(Num :: integer()) -> integer().\n%% common_set_bits(Num) ->\n%%   .\n\n-spec find_number() -> integer().\nfind_number() ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": ";; Definition of commonSetBits API.\n#|\n(define/contract (common-set-bits num)\n  (-> exact-integer? exact-integer?)      \n  )\n|#\n\n(define/contract (find-number)\n  (-> exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

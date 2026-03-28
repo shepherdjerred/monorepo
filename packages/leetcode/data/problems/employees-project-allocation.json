@@ -1,0 +1,53 @@
+{
+  "questionId": "3357",
+  "questionFrontendId": "3057",
+  "title": "Employees Project Allocation",
+  "titleSlug": "employees-project-allocation",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Project</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| project_id  | int     |\n| employee_id | int     |\n| workload    | int     |\n+-------------+---------+\nemployee_id is the primary key (column with unique values) of this table.\nemployee_id is a foreign key (reference column) to <code>Employee</code> table.\nEach row of this table indicates that the employee with employee_id is working on the project with project_id and the workload of the project.\n</pre>\n\n<p>Table: <code>Employees</code></p>\n\n<pre>\n+------------------+---------+\n| Column Name      | Type    |\n+------------------+---------+\n| employee_id      | int     |\n| name             | varchar |\n| team             | varchar |\n+------------------+---------+\nemployee_id is the primary key (column with unique values) of this table.\nEach row of this table contains information about one employee.\n</pre>\n\n<p>Write a solution to find the <strong>employees</strong> who are allocated to projects with a <strong>workload that exceeds the average</strong> workload of all employees for <strong>their respective teams</strong></p>\n\n<p>Return t<em>he result table ordered by</em> <code>employee_id</code>, <code>project_id</code> <em>in <strong>ascending</strong> order.</em></p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong>Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nProject table:\n+-------------+-------------+----------+\n| project_id  | employee_id | workload |\n+-------------+-------------+----------+\n| 1           | 1           |  45      |\n| 1           | 2           |  90      | \n| 2           | 3           |  12      |\n| 2           | 4           |  68      |\n+-------------+-------------+----------+\nEmployees table:\n+-------------+--------+------+\n| employee_id | name   | team |\n+-------------+--------+------+\n| 1           | Khaled | A    |\n| 2           | Ali    | B    |\n| 3           | John   | B    |\n| 4           | Doe    | A    |\n+-------------+--------+------+\n<strong>Output:</strong> \n+-------------+------------+---------------+------------------+\n| employee_id | project_id | employee_name | project_workload |\n+-------------+------------+---------------+------------------+  \n| 2           | 1          | Ali           | 90               | \n| 4           | 2          | Doe           | 68               | \n+-------------+------------+---------------+------------------+\n<strong>Explanation:</strong> \n- Employee with ID 1 has a project workload of 45 and belongs to Team A, where the average workload is 56.50. Since his project workload does not exceed the team&#39;s average workload, he will be excluded.\n- Employee with ID 2 has a project workload of 90 and belongs to Team B, where the average workload is 51.00. Since his project workload does exceed the team&#39;s average workload, he will be included.\n- Employee with ID 3 has a project workload of 12 and belongs to Team B, where the average workload is 51.00. Since his project workload does not exceed the team&#39;s average workload, he will be excluded.\n- Employee with ID 4 has a project workload of 68 and belongs to Team A, where the average workload is 56.50. Since his project workload does exceed the team&#39;s average workload, he will be included.\nResult table orderd by employee_id, project_id in ascending order.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Project (project_id int, employee_id int, workload int)\", \"Create table If Not Exists Employees (employee_id int, name varchar(20), team varchar(20))\"], \"mssql\": [\"Create table Project (project_id int, employee_id int, workload int)\", \"Create table Employees (employee_id int, name varchar(20), team varchar(20))\"], \"oraclesql\": [\"Create table Project (project_id int, employee_id int, workload int)\", \"Create table Employees (employee_id int, name varchar(20), team varchar(20))\"], \"database\": true, \"name\": \"employees_with_above_avg_workload\", \"pythondata\": [\"Project = pd.DataFrame([], columns=['project_id', 'employee_id', 'workload']).astype({'project_id':'Int64', 'employee_id':'Int64', 'workload':'Int64'})\\n\", \"Employees = pd.DataFrame([], columns=['employee_id', 'name', 'team']).astype({'employee_id':'Int64', 'name':'object', 'team':'object'})\"], \"postgresql\": [\"CREATE TABLE Project (\\n    project_id int,\\n    employee_id int,\\n    workload int\\n);\", \"CREATE TABLE Employees (\\n    employee_id int,\\n    name varchar(20),\\n    team varchar(20)\\n);\"], \"database_schema\": {\"Project\": {\"project_id\": \"INT\", \"employee_id\": \"INT\", \"workload\": \"INT\"}, \"Employees\": {\"employee_id\": \"INT\", \"name\": \"VARCHAR(20)\", \"team\": \"VARCHAR(20)\"}}}",
+  "stats": "{\"totalAccepted\": \"2.5K\", \"totalSubmission\": \"3.6K\", \"totalAcceptedRaw\": 2452, \"totalSubmissionRaw\": 3631, \"acRate\": \"67.5%\"}",
+  "likes": 5,
+  "dislikes": 4,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Project\":[\"project_id\",\"employee_id\",\"workload\"],\"Employees\":[\"employee_id\",\"name\",\"team\"]},\"rows\":{\"Project\":[[1,1,45],[1,2,90],[2,3,12],[2,4,68]],\"Employees\":[[1,\"Khaled\",\"A\"],[2,\"Ali\",\"B\"],[3,\"John\",\"B\"],[4,\"Doe\",\"A\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef employees_with_above_avg_workload(project: pd.DataFrame, employees: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

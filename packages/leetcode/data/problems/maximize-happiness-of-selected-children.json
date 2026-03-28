@@ -1,0 +1,142 @@
+{
+  "questionId": "3351",
+  "questionFrontendId": "3075",
+  "title": "Maximize Happiness of Selected Children",
+  "titleSlug": "maximize-happiness-of-selected-children",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array <code>happiness</code> of length <code>n</code>, and a <strong>positive</strong> integer <code>k</code>.</p>\n\n<p>There are <code>n</code> children standing in a queue, where the <code>i<sup>th</sup></code> child has <strong>happiness value</strong> <code>happiness[i]</code>. You want to select <code>k</code> children from these <code>n</code> children in <code>k</code> turns.</p>\n\n<p>In each turn, when you select a child, the <strong>happiness value</strong> of all the children that have <strong>not</strong> been selected till now decreases by <code>1</code>. Note that the happiness value <strong>cannot</strong> become negative and gets decremented <strong>only</strong> if it is positive.</p>\n\n<p>Return <em>the <strong>maximum</strong> sum of the happiness values of the selected children you can achieve by selecting </em><code>k</code> <em>children</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> happiness = [1,2,3], k = 2\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> We can pick 2 children in the following way:\n- Pick the child with the happiness value == 3. The happiness value of the remaining children becomes [0,1].\n- Pick the child with the happiness value == 1. The happiness value of the remaining child becomes [0]. Note that the happiness value cannot become less than 0.\nThe sum of the happiness values of the selected children is 3 + 1 = 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> happiness = [1,1,1,1], k = 2\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> We can pick 2 children in the following way:\n- Pick any child with the happiness value == 1. The happiness value of the remaining children becomes [0,0,0].\n- Pick the child with the happiness value == 0. The happiness value of the remaining child becomes [0,0].\nThe sum of the happiness values of the selected children is 1 + 0 = 1.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> happiness = [2,3,4,5], k = 1\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> We can pick 1 child in the following way:\n- Pick the child with the happiness value == 5. The happiness value of the remaining children becomes [1,2,3].\nThe sum of the happiness values of the selected children is 5.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n == happiness.length &lt;= 2 * 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= happiness[i] &lt;= 10<sup>8</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= n</code></li>\n</ul>\n",
+  "hints": [
+    "Since all the unselected numbers are decreasing at the same rate, we should greedily select <code>k</code> largest values.",
+    "The <code>i<sup>th</code> largest number (<code>i = 1, 2, 3,…k</code>) should decrease by <code>(i - 1)</code> when it is picked.",
+    "Add <code>0</code> if the decreased value is negative."
+  ],
+  "metaData": "{\n  \"name\": \"maximumHappinessSum\",\n  \"params\": [\n    {\n      \"name\": \"happiness\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"286.9K\", \"totalSubmission\": \"489K\", \"totalAcceptedRaw\": 286919, \"totalSubmissionRaw\": 488980, \"acRate\": \"58.7%\"}",
+  "likes": 942,
+  "dislikes": 100,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Candies Allocated to K Children\", \"titleSlug\": \"maximum-candies-allocated-to-k-children\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3]\n2",
+    "[1,1,1,1]\n2",
+    "[2,3,4,5]\n1"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long maximumHappinessSum(vector<int>& happiness, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long maximumHappinessSum(int[] happiness, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumHappinessSum(self, happiness: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumHappinessSum(self, happiness, k):\n        \"\"\"\n        :type happiness: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} happiness\n * @param {number} k\n * @return {number}\n */\nvar maximumHappinessSum = function(happiness, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumHappinessSum(happiness: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MaximumHappinessSum(int[] happiness, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long maximumHappinessSum(int* happiness, int happinessSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumHappinessSum(happiness []int, k int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumHappinessSum(happiness: IntArray, k: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumHappinessSum(_ happiness: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_happiness_sum(happiness: Vec<i32>, k: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} happiness\n# @param {Integer} k\n# @return {Integer}\ndef maximum_happiness_sum(happiness, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $happiness\n     * @param Integer $k\n     * @return Integer\n     */\n    function maximumHappinessSum($happiness, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumHappinessSum(List<int> happiness, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumHappinessSum(happiness: Array[Int], k: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_happiness_sum(happiness :: [integer], k :: integer) :: integer\n  def maximum_happiness_sum(happiness, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_happiness_sum(Happiness :: [integer()], K :: integer()) -> integer().\nmaximum_happiness_sum(Happiness, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-happiness-sum happiness k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2294",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an array `happiness` that represents the happiness scores of `n` children when they are selected at a given turn. Each time a child is selected from the array, the happiness scores of all the other children, not selected, will decrease by one. Our objective is to determine the maximum total achieved happiness if we select `k` children.\n\n**Key Observations:**\n1. Once a child's happiness value reaches zero, it remains at zero and no longer decreases with further selections, preventing any negative adjustments to the overall happiness sum.\n2. Each selection reduces the happiness of the remaining children by one, which means that early decisions significantly affect the potential maximum happiness that can be achieved with later selections.\n    \n---\n\n### Approach 1: Sort + Greedy \n\n#### Intuition\n\nThe goal is to maximize the sum of happiness of the selected children. A possible approach seems to be selecting the children with the highest happiness values at each turn.\n\nThis is because the happiness values of the children who are not selected in a given turn will decrease. This means that the longer a child remains unselected, the lower their happiness value will become.\n\nConsidering the decreasing nature of the happiness of unselected children, it makes sense to prioritize selecting the children with the higher happiness values first. This way, we can \"lock in\" the larger happiness scores before they start to diminish.\n\nSelecting the children with the highest happiness values at each turn is intuitive because it allows us to maximize the sum of happiness in the short term. By selecting the \"biggest\" values first, we can ensure that we're capturing the maximum possible happiness from the available options.\n\nConsidering these factors, we can adopt a greedy approach that selects the `k` children with the highest happiness values from the given array.\n\nTo ensure that this greedy approach provides the optimal solution, we can reason as follows: Let's assume that for a given optimal solution `optimalSelection`, the selection made for the `i`th turn (let's call this value `selectedValue`) is not the `i`th largest happiness score in the array (let's call this value `nextLargest`). If we were to swap `selectedValue` with `nextLargest`, we would achieve a higher total happiness score, as `nextLargest` is greater than `selectedValue` by definition. This means that the greedy approach of selecting the top `k` happiness scores from the happiness array results in the maximum sum of happiness.\n\n\nLet's consider another example where the happiness values are `[4, 3, 6, 9, 1, 5, 8, 7, 2]` and `k = 3`. The slideshow below illustrates that at each turn, the highest unpicked happiness value is chosen and added to the total happiness score, and the rest of the unpicked values are decremented by one (the lower limit is set to zero).\n\n!?!../Documents/3075/slideshow.json:960,540!?!\n\n\n#### Algorithm\n\n1. Sort `happiness` in descending order. \n2. Initialize variable `turns = 0` to represent the number of selection rounds passed.\n3. Initialize variable `totalHappinessSum = 0` to accumulate the total sum of happiness achieved. \n4. For the `i`th selection round (`0 <= i < k`, zero indexed): \n    - Pick the `i`th biggest happiness score, subtract it from `turns` and add it to `totalHappinessSum` if the result of the subtraction is bigger than zero. \n    - Increment `turns` by one. \n5. Return `totalHappinessSum`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/QDDjMi62/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QDDjMi62\"></iframe>\n\n#### Complexity Analysis\n\nGiven $n$ as the length of `happiness`,\n\n- Time complexity: $O(n \\cdot \\log n)$\n\n    Sorting the happiness array requires $O(n \\cdot \\log n)$ time.\n    \n    Iterating through the first `k` elements of the sorted array takes $O(k)$ time.\n    \n    Inside the loop, the `max()` function and addition operations take constant time.\n    \n    Overall, the time complexity of the solution is dominated by the sorting step, making the time complexity $O(n \\cdot \\log n)$.\n    \n- Space complexity: $O(n)$\n\n    In Python, the sort method sorts a list using the Timesort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(n)$ additional space.\n    \n    In C++, the sort() function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of  $O(\\log n)$.\n    \n    In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O(\\log n )$ for sorting two arrays. We also convert the array into an Integer array which has an additional space complexity of $O(n)$.\n    \n    As the dominating term is $O(n)$, the overall space complexity is $O(n)$.\n\n---\n\n### Approach 2: Max Heap / Priority Queue + Greedy \n\n#### Intuition\n\nSince in our problem we need the largest element available at each turn to maximize the total happiness, the choice of data structure becomes crucial. The max heap data structure is particularly well suited for this purpose. By organizing all the happiness scores into a max heap, we ensure that the largest element is always at the top, making it efficiently accessible. This property aligns perfectly with our greedy algorithm's strategy of selecting the highest happiness value available at each turn.\n\nFirst, we create a max heap using all the values from the `happiness` array. Then, for each of the `k` turns, we remove the maximum value from the heap. After that, we adjust this value by subtracting the number of turns that have already been completed. This adjustment accounts for the decrease in happiness of the children who haven't been selected yet. Finally, we add this adjusted value to our total happiness so far.\n\nWhile it retains its greedy nature by selecting the largest happiness values at each step, the use of the heap data structure significantly improves efficiency compared to sorting the `happiness` array.\n\nLet's illustrate this approach using the happiness values `[4, 7, 3, 8, 1, 5]` with `k = 2`. Initially, we build a max heap using these happiness values. Then, in each turn, we pop the largest element from the max heap and include it in the `totalHappinessSum`. It's important to subtract the number of turns that have passed so far from the current largest element before adding it to the `totalHappinessSum`.\n\n\n!?!../Documents/3075/slideshow2.json:960,540!?!\n\n> Note: Instead of using a max heap, we can use a min heap with a fixed size `k` to find and maintain the `k` largest elements of a given array.\n>\n> A min heap operates the same way as the max heap with the sole difference that the min heap maintains the smallest element at the top instead of the largest element. \n> \n> Fixing the min heap's size to be `k`, and popping elements from the heap as soon as the size exceeds `k` ensures that by the end we have the `k` largest elements of the array stored in the min heap. \n> \n> This method is more efficient because it avoids storing the entire `happiness` array in the heap data structure. Thus, a min heap with a fixed size `k` achieves the same outcome as a max heap with reduced space complexity.\n>\n> For more in-depth discussion regarding finding the `k`th largest element of a given array you can refer to the editorial of [215. Kth Largest Element in an Array](https://leetcode.com/problems/kth-largest-element-in-an-array/editorial/).\n\n#### Algorithm\n\n1. Declare a max heap `pq`.\n2. Initialize variable `turns = 0` to represent the number of selection rounds passed.\n3. Initialize variable `totalHappinessSum = 0` to accumulate the total sum of happiness achieved. \n4. Push all the elements of the `happiness` into `pq`. \n5. For the `i`th selection round (`0 <= i < k`, zero indexed): \n    - Pick the `i`th biggest happiness score by querying the top element stored in `pq`, subtract it from `turns` and add it to `totalHappinessSum` if the result of the subtraction is bigger than zero. \n    - Pop the maximum value stored in `pq`. \n    - Increment `turns` by one. \n6. Return `totalHappinessSum`. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/XseFW7Kn/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XseFW7Kn\"></iframe>\n\n#### Complexity Analysis\n\nGiven $n$ as the length of `happiness`, and noting that insertion and deletion for the `priority_queue` data structure takes $O(\\log n)$ time,\n\n* Time complexity: $O(n \\cdot \\log n + k \\cdot \\log n)$ (C++ and Java) or $O(n + k \\cdot \\log n)$ (Python3)\n\n    C++ and Java: Building the priority queue `pq` involves pushing all elements from the `happiness` array, which takes $O(n \\cdot \\log n)$ time. \n\n    Python3: Building the priority queue `pq` using `heapify()` takes $O(n)$ time. \n\n    Iterating through the first `k` elements of `pq` takes $O(k \\cdot \\log n)$ time. In each iteration, a `pop()` operation (deletion) is performed, which takes $O(\\log n)$ time.\n\n    Therefore, the overall time complexity of the solution is $O(n \\cdot \\log n + k \\cdot \\log n)$ for C++ and Java, and $O(n + k \\cdot \\log n)$ for Python3. Since both terms depend on the number of elements in `happiness` and the value of `k`, no term can be neglected.\n\n* Space complexity: $O(n)$\n\n    The space complexity is primarily determined by `pq`, which stores all elements of `happiness`, making its space complexity $O(n)$.\n\n    Additionally, there are constant space variables used such as `totalHappinessSum`, `turns`, `i`, and a temporary variable for iterating over `happiness`.\n\n    Therefore, the overall space complexity of the solution is $O(n)$, with `pq` dominating the space usage.\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "questionId": "3074",
+  "questionFrontendId": "2880",
+  "title": "Select Data",
+  "titleSlug": "select-data",
+  "difficulty": "Easy",
+  "content": "<pre>\nDataFrame students\n+-------------+--------+\n| Column Name | Type   |\n+-------------+--------+\n| student_id  | int    |\n| name        | object |\n| age         | int    |\n+-------------+--------+\n\n</pre>\n\n<p>Write a solution to select the name and age of the student with <code>student_id = 101</code>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<pre>\n<strong>Example 1:\nInput:</strong>\n+------------+---------+-----+\n| student_id | name    | age |\n+------------+---------+-----+\n| 101        | Ulysses | 13  |\n| 53         | William | 10  |\n| 128        | Henry   | 6   |\n| 3          | Henry   | 11  |\n+------------+---------+-----+\n<strong>Output:</strong>\n+---------+-----+\n| name    | age | \n+---------+-----+\n| Ulysses | 13  |\n+---------+-----+\n<strong>Explanation:\n</strong>Student Ulysses has student_id = 101, we select the name and age.</pre>\n",
+  "hints": [
+    "Consider applying both row and column filtering to select the desired data."
+  ],
+  "metaData": "{\n  \"pythondata\": [\n    \"students = pd.DataFrame([], columns=['student_id', 'name', 'age']).astype({'student_id':'Int64', 'name':'object', 'age':'Int64'})\"\n  ],\n  \"database\": true,\n  \"name\": \"selectData\",\n  \"languages\": [\n    \"pythondata\"\n  ]\n}",
+  "stats": "{\"totalAccepted\": \"164.9K\", \"totalSubmission\": \"209.7K\", \"totalAcceptedRaw\": 164922, \"totalSubmissionRaw\": 209708, \"acRate\": \"78.6%\"}",
+  "likes": 136,
+  "dislikes": 8,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"students\":[\"student_id\",\"name\",\"age\"]},\"rows\":{\"students\":[[101,\"Ulysses\",13],[53,\"William\",10],[128,\"Henry\",6],[3,\"Henry\",11]]}}"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [],
+  "codeSnippets": [
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef selectData(students: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2107",
+    "content": "[TOC]\n\n## Solution\n--- \n### Overview\n\nThis problem provides us with a pandas DataFrame and requires us to return data about one of the records in the DataFrame.\n\n**Key Concepts**:\n\n1. **DataFrame:** a 2D table-like structure, similar to a spreadsheet or SQL table. Each row represents an individual record and each column represents a different attribute. It is size-mutable designed to handle a mix of different types of data. \n2. **`loc` attribute:** one of the primary ways to select data from a DataFrame. It is label-based, which means you have to specify the name of the rows or columns to select data. `loc` is label-based.\n3. **boolean mask:** a series of True/False values used to filter or select elements from another data structure, such as a list, array, or DataFrame, based on a certain condition.\n\n### Intuition\n\nThe `students` DataFrame has three columns:\n\n1. `student_id` (type: int) - a unique identifier for the student.\n2. `name` (type: object, which is generally a string in pandas) - the student's name.\n3. `age` (type: int) - the student's age.\n\nIn this problem, we must create a function that accepts a DataFrame as an argument and returns a DataFrame with the required information. \n  \nInside our function, we will use the `loc` function to select the row where `student_id` is `101` and return the value from the `name` and `age` columns. \n\nTo do this, we must provide `loc` with two arguments. \n\n```python\nstudents.loc[students['student_id'] == 101, ['name', 'age']]\n```\n\n**Visualization of `loc` function**\n\n![fig](../Figures/3318/3318-1.png)\n\nWhen you pass this DataFrame to the function:\n\n<table>\n  <tr>\n    <th>student_id</th>\n    <th>name</th>\n    <th>age</th>\n  </tr>\n  <tr>\n    <td>101</td>\n    <td>Ulysses</td>\n    <td>13</td>\n  </tr>\n  <tr>\n    <td>53</td>\n    <td>William</td>\n    <td>10</td>\n  </tr>\n  <tr>\n    <td>128</td>\n    <td>Henry</td>\n    <td>6</td>\n  </tr>\n  <tr>\n    <td>3</td>\n    <td>Henry</td>\n    <td>11</td>\n  </tr>\n</table>\n<br>\n\nIt will return:\n\n<table>\n  <tr>\n    <th>name</th>\n    <th>age</th>\n  </tr>\n  <tr>\n    <td>Ulysses</td>\n    <td>13</td>\n  </tr>\n</table>\n<br>\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/RApVgkDh/shared\" frameBorder=\"0\" width=\"100%\" height=\"123\" name=\"RApVgkDh\"></iframe>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

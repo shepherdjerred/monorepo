@@ -1,0 +1,133 @@
+{
+  "questionId": "2921",
+  "questionFrontendId": "2801",
+  "title": "Count Stepping Numbers in Range",
+  "titleSlug": "count-stepping-numbers-in-range",
+  "difficulty": "Hard",
+  "content": "<p>Given two positive integers <code>low</code> and <code>high</code> represented as strings, find the count of <strong>stepping numbers</strong> in the inclusive range <code>[low, high]</code>.</p>\n\n<p>A <strong>stepping number</strong> is an integer such that all of its adjacent digits have an absolute difference of <strong>exactly</strong> <code>1</code>.</p>\n\n<p>Return <em>an integer denoting the count of stepping numbers in the inclusive range</em> <code>[low, high]</code><em>. </em></p>\n\n<p>Since the answer may be very large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p><strong>Note:</strong> A stepping number should not have a leading zero.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> low = &quot;1&quot;, high = &quot;11&quot;\n<strong>Output:</strong> 10\n<strong>Explanation: </strong>The stepping numbers in the range [1,11] are 1, 2, 3, 4, 5, 6, 7, 8, 9 and 10. There are a total of 10 stepping numbers in the range. Hence, the output is 10.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> low = &quot;90&quot;, high = &quot;101&quot;\n<strong>Output:</strong> 2\n<strong>Explanation: </strong>The stepping numbers in the range [90,101] are 98 and 101. There are a total of 2 stepping numbers in the range. Hence, the output is 2. </pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= int(low) &lt;= int(high) &lt; 10<sup>100</sup></code></li>\n\t<li><code>1 &lt;= low.length, high.length &lt;= 100</code></li>\n\t<li><code>low</code> and <code>high</code> consist of only digits.</li>\n\t<li><code>low</code> and <code>high</code> don&#39;t have any leading zeros.</li>\n</ul>\n",
+  "hints": [
+    "Calculate the number of stepping numbers in the range [1, high] and subtract the number of stepping numbers in the range [1, low - 1].",
+    "The main problem is calculating the number of stepping numbers in the range [1, x].",
+    "First, calculate the number of stepping numbers shorter than x in length, which can be done using dynamic programming. (dp[i][j] is the number of i-digit stepping numbers ending with digit j).",
+    "Finally, calculate the number of stepping numbers that have the same length as x similarly. However, this time we need to maintain whether the prefix (in string) is smaller than or equal to x in the DP state."
+  ],
+  "metaData": "{\n  \"name\": \"countSteppingNumbers\",\n  \"params\": [\n    {\n      \"name\": \"low\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"high\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"10.9K\", \"totalSubmission\": \"39K\", \"totalAcceptedRaw\": 10923, \"totalSubmissionRaw\": 39008, \"acRate\": \"28.0%\"}",
+  "likes": 359,
+  "dislikes": 11,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Stepping Numbers\", \"titleSlug\": \"stepping-numbers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"1\"\n\"11\"",
+    "\"90\"\n\"101\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countSteppingNumbers(string low, string high) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countSteppingNumbers(String low, String high) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countSteppingNumbers(self, low: str, high: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countSteppingNumbers(self, low, high):\n        \"\"\"\n        :type low: str\n        :type high: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} low\n * @param {string} high\n * @return {number}\n */\nvar countSteppingNumbers = function(low, high) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countSteppingNumbers(low: string, high: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountSteppingNumbers(string low, string high) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countSteppingNumbers(char* low, char* high) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countSteppingNumbers(low string, high string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countSteppingNumbers(low: String, high: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countSteppingNumbers(_ low: String, _ high: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_stepping_numbers(low: String, high: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} low\n# @param {String} high\n# @return {Integer}\ndef count_stepping_numbers(low, high)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $low\n     * @param String $high\n     * @return Integer\n     */\n    function countSteppingNumbers($low, $high) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countSteppingNumbers(String low, String high) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countSteppingNumbers(low: String, high: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_stepping_numbers(low :: String.t, high :: String.t) :: integer\n  def count_stepping_numbers(low, high) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_stepping_numbers(Low :: unicode:unicode_binary(), High :: unicode:unicode_binary()) -> integer().\ncount_stepping_numbers(Low, High) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-stepping-numbers low high)\n  (-> string? string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

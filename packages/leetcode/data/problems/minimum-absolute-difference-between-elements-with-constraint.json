@@ -1,0 +1,139 @@
+{
+  "questionId": "3000",
+  "questionFrontendId": "2817",
+  "title": "Minimum Absolute Difference Between Elements With Constraint",
+  "titleSlug": "minimum-absolute-difference-between-elements-with-constraint",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>nums</code> and an integer <code>x</code>.</p>\n\n<p>Find the <strong>minimum absolute difference</strong> between two elements in the array that are at least <code>x</code> indices apart.</p>\n\n<p>In other words, find two indices <code>i</code> and <code>j</code> such that <code>abs(i - j) &gt;= x</code> and <code>abs(nums[i] - nums[j])</code> is minimized.</p>\n\n<p>Return<em> an integer denoting the <strong>minimum</strong> absolute difference between two elements that are at least</em> <code>x</code> <em>indices apart</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [4,3,2,4], x = 2\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> We can select nums[0] = 4 and nums[3] = 4. \nThey are at least 2 indices apart, and their absolute difference is the minimum, 0. \nIt can be shown that 0 is the optimal answer.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,3,2,10,15], x = 1\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> We can select nums[1] = 3 and nums[2] = 2.\nThey are at least 1 index apart, and their absolute difference is the minimum, 1.\nIt can be shown that 1 is the optimal answer.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4], x = 3\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We can select nums[0] = 1 and nums[3] = 4.\nThey are at least 3 indices apart, and their absolute difference is the minimum, 3.\nIt can be shown that 3 is the optimal answer.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>0 &lt;= x &lt; nums.length</code></li>\n</ul>\n",
+  "hints": [
+    "<div class=\"_1l1MA\">Let's only consider the cases where <code>i < j</code>, as the problem is symmetric.</div>",
+    "<div class=\"_1l1MA\">For an index <code>j</code>, we are interested in an index <code>i</code> in the range <code>[0, j - x]</code> that minimizes <code>abs(nums[i] - nums[j])</code>.</div>",
+    "<div class=\"_1l1MA\">For every index <code>j</code>, while going from left to right, add <code>nums[j - x]</code> to a set (C++ set, Java TreeSet, and Python sorted set).</div>",
+    "<div class=\"_1l1MA\">After inserting <code>nums[j - x]</code>, we can calculate the closest value to <code>nums[j]</code> in the set using binary search and store the absolute difference. In C++, we can achieve this by using lower_bound and/or upper_bound.</div>",
+    "<div class=\"_1l1MA\">Calculate the minimum absolute difference among all indices.</div>"
+  ],
+  "metaData": "{\n  \"name\": \"minAbsoluteDifference\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"list<integer>\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"x\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"41K\", \"totalSubmission\": \"109.7K\", \"totalAcceptedRaw\": 41034, \"totalSubmissionRaw\": 109730, \"acRate\": \"37.4%\"}",
+  "likes": 771,
+  "dislikes": 78,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"K-diff Pairs in an Array\", \"titleSlug\": \"k-diff-pairs-in-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find All K-Distant Indices in an Array\", \"titleSlug\": \"find-all-k-distant-indices-in-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find Indices With Index and Value Difference I\", \"titleSlug\": \"find-indices-with-index-and-value-difference-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find Indices With Index and Value Difference II\", \"titleSlug\": \"find-indices-with-index-and-value-difference-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,3,2,4]\n2",
+    "[5,3,2,10,15]\n1",
+    "[1,2,3,4]\n3"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"capital-one\", \"name\": \"Capital One\"}], \"six_months\": [{\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 4, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 2, \"slug\": \"sig\", \"name\": \"SIG\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minAbsoluteDifference(vector<int>& nums, int x) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minAbsoluteDifference(List<Integer> nums, int x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minAbsoluteDifference(self, nums: List[int], x: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minAbsoluteDifference(self, nums, x):\n        \"\"\"\n        :type nums: List[int]\n        :type x: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} x\n * @return {number}\n */\nvar minAbsoluteDifference = function(nums, x) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minAbsoluteDifference(nums: number[], x: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinAbsoluteDifference(IList<int> nums, int x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minAbsoluteDifference(int* nums, int numsSize, int x) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minAbsoluteDifference(nums []int, x int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minAbsoluteDifference(nums: List<Int>, x: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minAbsoluteDifference(_ nums: [Int], _ x: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_absolute_difference(nums: Vec<i32>, x: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} x\n# @return {Integer}\ndef min_absolute_difference(nums, x)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $x\n     * @return Integer\n     */\n    function minAbsoluteDifference($nums, $x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minAbsoluteDifference(List<int> nums, int x) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minAbsoluteDifference(nums: List[Int], x: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_absolute_difference(nums :: [integer], x :: integer) :: integer\n  def min_absolute_difference(nums, x) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_absolute_difference(Nums :: [integer()], X :: integer()) -> integer().\nmin_absolute_difference(Nums, X) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-absolute-difference nums x)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,53 @@
+{
+  "questionId": "3530",
+  "questionFrontendId": "3220",
+  "title": "Odd and Even Transactions",
+  "titleSlug": "odd-and-even-transactions",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>transactions</code></p>\n\n<pre>\n+------------------+------+\n| Column Name      | Type | \n+------------------+------+\n| transaction_id   | int  |\n| amount           | int  |\n| transaction_date | date |\n+------------------+------+\nThe transactions_id column uniquely identifies each row in this table.\nEach row of this table contains the transaction id, amount and transaction date.\n</pre>\n\n<p>Write a solution to find the <strong>sum of amounts</strong> for <strong>odd</strong> and <strong>even</strong> transactions for each day. If there are no odd or even transactions for a specific date, display as <code>0</code>.</p>\n\n<p>Return <em>the result table ordered by</em> <code>transaction_date</code> <em>in <strong>ascending</strong> order</em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p><code>transactions</code> table:</p>\n\n<pre class=\"example-io\">\n+----------------+--------+------------------+\n| transaction_id | amount | transaction_date |\n+----------------+--------+------------------+\n| 1              | 150    | 2024-07-01       |\n| 2              | 200    | 2024-07-01       |\n| 3              | 75     | 2024-07-01       |\n| 4              | 300    | 2024-07-02       |\n| 5              | 50     | 2024-07-02       |\n| 6              | 120    | 2024-07-03       |\n+----------------+--------+------------------+\n  </pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+------------------+---------+----------+\n| transaction_date | odd_sum | even_sum |\n+------------------+---------+----------+\n| 2024-07-01       | 75      | 350      |\n| 2024-07-02       | 0       | 350      |\n| 2024-07-03       | 0       | 120      |\n+------------------+---------+----------+\n  </pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>For transaction dates:\n\t<ul>\n\t\t<li>2024-07-01:\n\t\t<ul>\n\t\t\t<li>Sum of amounts for odd transactions: 75</li>\n\t\t\t<li>Sum of amounts for even transactions: 150 + 200 = 350</li>\n\t\t</ul>\n\t\t</li>\n\t\t<li>2024-07-02:\n\t\t<ul>\n\t\t\t<li>Sum of amounts for odd transactions: 0</li>\n\t\t\t<li>Sum of amounts for even transactions: 300 + 50 = 350</li>\n\t\t</ul>\n\t\t</li>\n\t\t<li>2024-07-03:\n\t\t<ul>\n\t\t\t<li>Sum of amounts for odd transactions: 0</li>\n\t\t\t<li>Sum of amounts for even transactions: 120</li>\n\t\t</ul>\n\t\t</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p><strong>Note:</strong> The output table is ordered by <code>transaction_date</code> in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table if not exists transactions ( transaction_id int, amount int, transaction_date date)\"], \"mssql\": [\"Create table transactions ( transaction_id int, amount int, transaction_date date)\"], \"oraclesql\": [\"Create table  transactions ( transaction_id int, amount int, transaction_date date)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"sum_daily_odd_even\", \"postgresql\": [\"CREATE TABLE IF NOT EXISTS transactions (\\n  transaction_id int,\\n  amount int,\\n  transaction_date date\\n);\\n\"], \"pythondata\": [\"transactions = pd.DataFrame(\\n    columns=[\\\"transaction_id\\\", \\\"amount\\\", \\\"transaction_date\\\"],\\n    dtype={\\n        \\\"transaction_id\\\": \\\"int\\\",\\n        \\\"amount\\\": \\\"int\\\",\\n        \\\"transaction_date\\\": \\\"datetime64[ns]\\\",\\n    },\\n)\\n\"], \"database_schema\": {\"transactions\": {\"transaction_id\": \"INT\", \"amount\": \"INT\", \"transaction_date\": \"DATE\"}}}",
+  "stats": "{\"totalAccepted\": \"34.5K\", \"totalSubmission\": \"50.7K\", \"totalAcceptedRaw\": 34511, \"totalSubmissionRaw\": 50658, \"acRate\": \"68.1%\"}",
+  "likes": 71,
+  "dislikes": 38,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"transactions\":[\"transaction_id\",\"amount\",\"transaction_date\"]},\"rows\":{\"transactions\":[[1,150,\"2024-07-01\"],[2,200,\"2024-07-01\"],[3,75,\"2024-07-01\"],[4,300,\"2024-07-02\"],[5,50,\"2024-07-02\"],[6,120,\"2024-07-03\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef sum_daily_odd_even(transactions: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

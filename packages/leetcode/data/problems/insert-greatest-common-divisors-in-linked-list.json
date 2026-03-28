@@ -1,0 +1,137 @@
+{
+  "questionId": "2903",
+  "questionFrontendId": "2807",
+  "title": "Insert Greatest Common Divisors in Linked List",
+  "titleSlug": "insert-greatest-common-divisors-in-linked-list",
+  "difficulty": "Medium",
+  "content": "<p>Given the head of a linked list <code>head</code>, in which each node contains an integer value.</p>\n\n<p>Between every pair of adjacent nodes, insert a new node with a value equal to the <strong>greatest common divisor</strong> of them.</p>\n\n<p>Return <em>the linked list after insertion</em>.</p>\n\n<p>The <strong>greatest common divisor</strong> of two numbers is the largest positive integer that evenly divides both numbers.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/07/18/ex1_copy.png\" style=\"width: 641px; height: 181px;\" />\n<pre>\n<strong>Input:</strong> head = [18,6,10,3]\n<strong>Output:</strong> [18,6,6,2,10,1,3]\n<strong>Explanation:</strong> The 1<sup>st</sup> diagram denotes the initial linked list and the 2<sup>nd</sup> diagram denotes the linked list after inserting the new nodes (nodes in blue are the inserted nodes).\n- We insert the greatest common divisor of 18 and 6 = 6 between the 1<sup>st</sup> and the 2<sup>nd</sup> nodes.\n- We insert the greatest common divisor of 6 and 10 = 2 between the 2<sup>nd</sup> and the 3<sup>rd</sup> nodes.\n- We insert the greatest common divisor of 10 and 3 = 1 between the 3<sup>rd</sup> and the 4<sup>th</sup> nodes.\nThere are no more adjacent nodes, so we return the linked list.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/07/18/ex2_copy1.png\" style=\"width: 51px; height: 191px;\" />\n<pre>\n<strong>Input:</strong> head = [7]\n<strong>Output:</strong> [7]\n<strong>Explanation:</strong> The 1<sup>st</sup> diagram denotes the initial linked list and the 2<sup>nd</sup> diagram denotes the linked list after inserting the new nodes.\nThere are no pairs of adjacent nodes, so we return the initial linked list.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the list is in the range <code>[1, 5000]</code>.</li>\n\t<li><code>1 &lt;= Node.val &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"insertGreatestCommonDivisors\",\n  \"params\": [\n    {\n      \"name\": \"head\",\n      \"type\": \"ListNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"ListNode\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"293.2K\", \"totalSubmission\": \"320.7K\", \"totalAcceptedRaw\": 293236, \"totalSubmissionRaw\": 320733, \"acRate\": \"91.4%\"}",
+  "likes": 1139,
+  "dislikes": 36,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Reverse Linked List\", \"titleSlug\": \"reverse-linked-list\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[18,6,10,3]",
+    "[7]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Number Theory",
+      "slug": "number-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    ListNode* insertGreatestCommonDivisors(ListNode* head) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public ListNode insertGreatestCommonDivisors(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def insertGreatestCommonDivisors(self, head: Optional[ListNode]) -> Optional[ListNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def insertGreatestCommonDivisors(self, head):\n        \"\"\"\n        :type head: Optional[ListNode]\n        :rtype: Optional[ListNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} head\n * @return {ListNode}\n */\nvar insertGreatestCommonDivisors = function(head) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction insertGreatestCommonDivisors(head: ListNode | null): ListNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public ListNode InsertGreatestCommonDivisors(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\nstruct ListNode* insertGreatestCommonDivisors(struct ListNode* head) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc insertGreatestCommonDivisors(head *ListNode) *ListNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun insertGreatestCommonDivisors(head: ListNode?): ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func insertGreatestCommonDivisors(_ head: ListNode?) -> ListNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn insert_greatest_common_divisors(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {ListNode} head\n# @return {ListNode}\ndef insert_greatest_common_divisors(head)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $head\n     * @return ListNode\n     */\n    function insertGreatestCommonDivisors($head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *   int val;\n *   ListNode? next;\n *   ListNode([this.val = 0, this.next]);\n * }\n */\nclass Solution {\n  ListNode? insertGreatestCommonDivisors(ListNode? head) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def insertGreatestCommonDivisors(head: ListNode): ListNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for singly-linked list.\n#\n# defmodule ListNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           next: ListNode.t() | nil\n#         }\n#   defstruct val: 0, next: nil\n# end\n\ndefmodule Solution do\n  @spec insert_greatest_common_divisors(head :: ListNode.t | nil) :: ListNode.t | nil\n  def insert_greatest_common_divisors(head) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for singly-linked list.\n%%\n%% -record(list_node, {val = 0 :: integer(),\n%%                     next = null :: 'null' | #list_node{}}).\n\n-spec insert_greatest_common_divisors(Head :: #list_node{} | null) -> #list_node{} | null.\ninsert_greatest_common_divisors(Head) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n(define/contract (insert-greatest-common-divisors head)\n  (-> (or/c list-node? #f) (or/c list-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2428",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Simulation\n\n#### Intuition\n\nTo calculate the greatest common divisor (GCD) of every pair of adjacent nodes in a linked list, we maintain two pointers, `node1` and `node2`, initially pointing to the first and second nodes, respectively.\n\nAs we iterate through the list, we need to compute the GCD of the values stored in `node1` and `node2`. The most efficient method for finding the GCD of two numbers is the renowned [Euclidean algorithm](https://en.wikipedia.org/wiki/Euclidean_algorithm). This algorithm is based on the principle that the GCD of two numbers also divides their difference.\n\nIn simple terms, the Euclidean algorithm works by repeatedly replacing the larger number by the remainder of the division of the larger number by the smaller number, until one of the numbers becomes zero. The non-zero number at this stage is the GCD of the original pair of numbers.\n\n> Many programming languages offer built-in implementations of this algorithm, which you can utilize in your solution. For instance, Python has a built-in `math.gcd()` function, while C++ provides the `std::gcd()` function in the `<numeric>` header. If such a function is not available in your programming language, or if you prefer to implement it manually, you can write a custom GCD method using the following pseudo-code:\n\nRecursive Way:\n```\nfunction gcd(a, b)\n  if b = 0\n    return a\n  else\n    return gcd(b, a mod b)\n```\n\n\nIterative Way:\n```\nfunction gcd(a, b)\n  while b ≠ 0\n    t := b\n    b := a mod b\n    a := t\n  return a\n```\n\nAfter computing the GCD, we create a new node with the GCD value and insert it between `node1` and `node2` as follows:\n1. Set `node1`'s next pointer to the new node.\n2. Set the new node's next pointer to `node2`.\n3. Disconnect the direct link between `node1` and `node2`.\n\nNext, we move `node1` and `node2` to the next pair of nodes and continue the process.\n\nThe below slideshow demonstrates the algorithm in action:\n\n!?!../Documents/2807/slideshow.json:1452,768!?!\n\n#### Algorithm\n\nMain method `insertGreatestCommonDivisors`:\n\n- If the list contains only one node (`head.next` is `null`), return the `head` as no insertion is needed.\n- Initialize `ListNode` variables `node1` and `node2` to `head` and `head.next` respectively, to traverse the linked list.\n- While `node2` is not `null`:\n  - Calculate the GCD's of the values in `node1` and `node2`.\n  - Create a new `ListNode` `gcdNode` with the calculated GCD value.\n  - Update `node1.next` to `gcdNode`.\n  - Update `gcdNode.next` to `node2`.\n  - Set `node1` to `node2` and `node2` to `node2.next`, respectively. This essentially moves `node1` and `node2` to the next pair of nodes in the list.\n- Return the modified `head` of the list as our answer.\n\nHelper method `calculateGCD(a, b)`:\n\n- While `b` is greater than `0`:\n  - Set a variable `temp` to `b`.\n  - Set `b` to `a%b` and `a` to `temp`, respectively.\n- Return `a`.\n\n> Note: We have used a custom method to calculate the GCD for completeness. In an interview, clarify with your interviewer if built-in GCD methods are acceptable.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/J4QeV4y6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"J4QeV4y6\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the linked list.\n\n- Time complexity: $O(n \\cdot \\log(\\min(a,b)))$\n\n    The algorithm traverses the list, visiting each node exactly once. This takes linear time.\n\n    The GCD is calculated using the Euclidean algorithm, which has a time complexity of $O(\\log(\\min(a, b)))$, where $a$ and $b$ are numbers whose GCD is being calculated.\n\n    Thus, the overall time complexity of the algorithm is $O(n \\cdot \\log(\\min(a,b)))$.\n\n- Space complexity: $O(1)$\n\n    The iterative implementation of the GCD method has a space complexity of $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

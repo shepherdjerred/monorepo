@@ -1,0 +1,127 @@
+{
+  "questionId": "2995",
+  "questionFrontendId": "2782",
+  "title": "Number of Unique Categories",
+  "titleSlug": "number-of-unique-categories",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>n</code> and an object <code>categoryHandler</code> of class <code>CategoryHandler</code>.</p>\n\n<p>There are <code>n&nbsp;</code>elements, numbered from <code>0</code> to <code>n - 1</code>. Each element has a category, and your task is to find the number of unique categories.</p>\n\n<p>The class <code>CategoryHandler</code> contains the following function, which may help you:</p>\n\n<ul>\n\t<li><code>boolean haveSameCategory(integer a, integer b)</code>: Returns <code>true</code> if <code>a</code> and <code>b</code> are in the same category and <code>false</code> otherwise. Also, if either <code>a</code> or <code>b</code> is not a valid number (i.e. it&#39;s greater than or equal to <code>n</code>or less than <code>0</code>), it returns <code>false</code>.</li>\n</ul>\n\n<p>Return <em>the number of unique categories.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 6, categoryHandler = [1,1,2,2,3,3]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> There are 6 elements in this example. The first two elements belong to category 1, the second two belong to category 2, and the last two elements belong to category 3. So there are 3 unique categories.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 5, categoryHandler = [1,2,3,4,5]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> There are 5 elements in this example. Each element belongs to a unique category. So there are 5 unique categories.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, categoryHandler = [1,1,1]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> There are 3 elements in this example. All of them belong to one category. So there is only 1 unique category.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "It can be proven that all pairs should be asked from the helper function.",
+    "Iterate from the first element. For each element `i`, ask the helper function `i` with all `j < i`.",
+    "If there is some `j < i` that `i` and `j` belong to the same group, go to next `i`. Otherwise, add one to the current number of groups."
+  ],
+  "metaData": "{\n  \"name\": \"numberOfCategories\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"categoryHandler\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true,\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"c\",\n    \"csharp\",\n    \"javascript\",\n    \"ruby\",\n    \"swift\",\n    \"golang\",\n    \"python3\",\n    \"scala\",\n    \"kotlin\",\n    \"rust\",\n    \"php\",\n    \"typescript\",\n    \"dart\"\n  ],\n\"typescriptCustomType\" : \"class CategoryHandler {\\n    #categories: number[];\\n    constructor(categories: number[]) {\\n        this.#categories = categories;\\n    }\\n\\n    haveSameCategory(a: number, b: number): boolean {\\n        if (a >= this.#categories.length || b >= this.#categories.length || a < 0 || b < 0) {\\n            return false;\\n        }\\n        return this.#categories[a] === this.#categories[b];\\n    }\\n}\\n\"\n   \n}",
+  "stats": "{\"totalAccepted\": \"3.5K\", \"totalSubmission\": \"4.2K\", \"totalAcceptedRaw\": 3514, \"totalSubmissionRaw\": 4194, \"acRate\": \"83.8%\"}",
+  "likes": 35,
+  "dislikes": 4,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "6\n[1,1,2,2,3,3]",
+    "5\n[1,2,3,4,5]",
+    "3\n[1,1,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Interactive",
+      "slug": "interactive"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a category handler.\n * class CategoryHandler {\n * public:\n *     CategoryHandler(vector<int> categories);\n *     bool haveSameCategory(int a, int b);\n * };\n */\nclass Solution {\npublic:\n    int numberOfCategories(int n, CategoryHandler* categoryHandler) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a category handler.\n * class CategoryHandler {\n *     public CategoryHandler(int[] categories);\n *     public boolean haveSameCategory(int a, int b);\n * };\n */\nclass Solution {\n\tpublic int numberOfCategories(int n, CategoryHandler categoryHandler) {\n    \t\n\t}\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a category handler.\n# class CategoryHandler:\n#     def haveSameCategory(self, a: int, b: int) -> bool:\n#         pass\nclass Solution:\n    def numberOfCategories(self, n: int, categoryHandler: Optional['CategoryHandler']) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a category handler.\n# class CategoryHandler:\n#     def haveSameCategory(self, a, b):\n#         pass\nclass Solution(object):\n    def numberOfCategories(self, n, categoryHandler):\n        \"\"\"\n        :type n: int\n        :type categoryHandler: CategoryHandler\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a category handler.\n * class CategoryHandler {\n *     @param {number[]} categories\n *     constructor(categories);\n * \n *     @param {number} a\n *     @param {number} b\n *     @return {boolean}\n *     haveSameCategory(a, b);\n * }\n */\n/**\n * @param {number} n\n * @param {CategoryHandler} categoryHandler\n * @return {number}\n */\nvar numberOfCategories = function(n, categoryHandler) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a category handler.\n * class CategoryHandler {\n *     constructor(categories: number[]);\n *     public haveSameCategory(a: number, b: number): boolean;\n * }\n */\nfunction numberOfCategories(n: number, categoryHandler: CategoryHandler): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a category handler.\n * class CategoryHandler {\n *     public CategoryHandler(int[] categories);\n *     public bool HaveSameCategory(int a, int b);\n * }\n */\npublic class Solution {\n    public int NumberOfCategories(int n, CategoryHandler categoryHandler) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a category handler.\n * \n * YOU HAVE TO PASS THE OBJECT ITSELF AS THE FIRST PARAMETER\n * \n * struct CategoryHandler {\n *     bool (*haveSameCategory)(struct CategoryHandler*, int, int);\n * };\n */\nint numberOfCategories(int n, struct CategoryHandler* categoryHandler){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a category handler.\n * type CategoryHandler interface {\n *  HaveSameCategory(int, int) bool\n * }\n */\nfunc numberOfCategories(n int, categoryHandler CategoryHandler) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Definition for a category handler.\n * class CategoryHandler(categories: IntArray) {\n *     fun haveSameCategory(a: Int, b: Int): Boolean\n * }\n */\nclass Solution {\n    fun numberOfCategories(n: Int, categoryHandler: CategoryHandler): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a category handler.\n * class CategoryHandler {\n *     init(categories: [Int]) {}\n *     func haveSameCategory(a: Int, b: Int) -> Bool {}\n * }\n */\nclass Solution {\n    func numberOfCategories(_ n: Int, _ categoryHandler: CategoryHandler) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "/**\n * Definition for a category handler.\n * impl CategoryHandler {\n *     pub fn new(categories: Vec<i32>) -> Self {}\n *     pub fn have_same_category(&self, a: i32, b: i32) -> bool {}\n * }\n */\nimpl Solution {\n    pub fn number_of_categories(n: i32, category_handler: CategoryHandler) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a category handler.\n# class CategoryHandler\n#   def initialize(categories)\n#   end\n#   def have_same_category(a, b)\n#   end\n# end\n# @param {Integer} n\n# @param {CategoryHandler} category_handler\n# @return {Integer}\ndef number_of_categories(n, category_handler)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a category handler.\n * class CategoryHandler {\n *     function __construct($categories);\n *      * @param Integer $a\n *      * @param Integer $b\n *      * @return Boolean\n *     function haveSameCategory($a, $b);\n * }\n */\nclass Solution {\n\n    /**\n     * @param Integer $n\n     * @param CategoryHandler $categoryHandler\n     * @return Integer\n     */\n    function numberOfCategories($n, $categoryHandler) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a category handler.\n * class CategoryHandler {\n *   CategoryHandler(List<int> categories);\n *   bool haveSameCategory(int a, int b);\n * }\n */\nclass Solution {\n  int numberOfCategories(int n, CategoryHandler categoryHandler) {\n\n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a category handler.\n * class CategoryHandler(categories: Array[Int]) {\n *     def haveSameCategory(a: Int, b: Int): Boolean\n * }\n */\nobject Solution {\n    def numberOfCategories(n: Int, categoryHandler: CategoryHandler): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": {
+    "id": "2033",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Depth-First Search (DFS)\n\n**Intuition**\n\nThere are $N$ elements, each associated with a category represented by a number from $0$ to $N - 1$. We don't know the category of each element. Still, we can find if two elements have the same category or not using the functional call `haveSameCategory(i, j)`, where the two integer arguments are the elements. This function returns `true` if they have the same category and return `false` otherwise. We need to return the number of unique categories.\n\nIf we assume each element to be a node and an edge between the nodes if they belong to the same category, then the number of components will equal the number of unique categories. This is because each component will represent the set of nodes with the same category and hence contribute `1` to the number of unique categories. Hence, this problem is similar to the [323 Number of Connected Components in an Undirected Graph](https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/solution/).\n\nIn this approach, we will use the Depth-First search to find the number of connected components. To use DFS, we first have to build up the adjacency list for the graph. We will iterate over every pair of the element, and for every pair `(i, j)` if the function call `haveSameCategory(i, j)` returns `true`, then we add an undirected edge between `i` and `j`. Then we will perform DFS on each node, and in each DFS traversal, when we iterated over the nodes, we mark them as visited in a boolean array `vis`. We skip the DFS if the node is already visited and increment the counter variable `components` each time we have to perform DFS.\n\n**Algorithm**\n\n1. Initialize an empty adjacency list for each $N$ node `adj`.  This list stores the undirected edges between the nodes.\n2. Iterate over each pair of nodes `(i, j)`, and for each pair, check the value of `haveSameCategory(i, j)`: if it's `true`, then add an undirected edge between `i` and `j`.\n3. Initialize a boolean list `vis` with all `false` and a variable `components` as `0`.\n4. Iterate over each node `i` and for each `i`:\n    1. If the node is not visited, i.e., `vis[i] = false`, perform DFS on the node and increment the variable `components`.\n    2. In each DFS call, mark the node as visited and iterate over the adjacent nodes in a recursive way.\n5. Return `components`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/bFAZSicD/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bFAZSicD\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the number of elements.\n\n* Time complexity: $O(N^2)$\n\n  We iterate over each pair of the elements, which will take $O(N^2)$ time. Then we perform DFS on the graph; the time complexity of DFS is $O(V + E)$, where the number of vertices $V = N$, and the number of edges $E$ can be at-max $N^2$ when all nodes belong to the same category. The time complexity of the function call `haveSameCategory()` can be assumed as $O(1)$ as it's not given in the problem statement. Therefore, the total time complexity equals $O(N^2)$.\n\n* Space complexity: $O(N^2)$\n\n  The adjacency list can take up to $O(N^2)$ space when an edge exists between each vertex. The size of the visited array `vis` is $N$. Hence, the total space complexity is equal to $O(N^2)$.\n  <br/>\n\n---\n\n### Approach 2: Disjoint-Set Union (DSU)\n\n**Intuition**\n\nWe can also use the Disjoint-Set Union data structure to find the number of components in the undirected graph. We will initialize the variable `components` to $N$, then call the function `haveSameCategory` for each pair of nodes. If the function returns `true`, then we perform the union of the nodes and decrement the variable `components`.\n\nIn the DSU structure, we will have the `root`  and `componentSize` for each node. Initially, the value of `componentSize` for each node will be `1`, denoting it as a separate component, and the value of `root` will be equal to the node itself, denoting each node as the root of itself. When we perform union, we check the `root` of the two nodes is the same or not; if not, we make the node with greater `componentSize`  as the root of the other node. This will make the root of all the nodes under the two nodes the same and hence denotes the nodes to be in the same component.\n\n**Algorithm**\n\n1. Create a class `UnionFind`; this will have the relevant data members and member functions to perform DSU operations:\n\n    1. Data member `root` stores the immediate parent of nodes in the union-find structure. Initially, each node will be its own representative.\n    2. Data member `componentSize` stores the number of nodes in the components with the node as the root node, initially the size of the component for each node is `1`\n    3. Data member `componentsCount` store the number of components in the graph. Initially, it will equal $N$ as each node is considered a separate component.\n    4. Method `findRoot()` returns the root node in the representative hierarchy.\n    5. Method `performUnion()`, returns $1$ after performing the union between the components of the two nodes that were not connected before; otherwise returns $0$.\n    6. Method `getComponentsCount()` returns `components`.\n\n2. Iterate over each pair of nodes `(i, j)`, and for each pair, call the method `haveSameCategory(i, j)`, and if it returns true, then perform union using the `performUnion` method.\n3. Return the number of components as `getComponentsCount()`.\n\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/DSwdbGn8/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DSwdbGn8\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the number of elements.\n\n* Time complexity: $O(N^2 \\cdot \\alpha (N))$.\n\n  We iterate over each pair of the elements, which consists of $O(N^2)$ steps. At each step, we call `performUnion` on the current pair, the time complexity of this call is $O(\\alpha (N))$ as we have included union by size as well as path compression; Note that $\\alpha (N)$ is the [Inverse Ackermann function](https://en.wikipedia.org/wiki/Ackermann_function#Inverse) which grows so slowly that it can be considered as $O(1)$. Therefore, the total time complexity equals $O(N^2 \\cdot \\alpha (N))$.\n\n* Space complexity: $O(N)$\n\n  The size of the `representative` and `componentSize` lists is $O(N)$. Hence the total space complexity equals $O(N)$.\n  <br/>\n\n---\n### Approach 3: Greedy\n\n**Intuition**\n\nIn the previous approach, we started with the number of components as $N$ considering each node as a separate component. Each time we found the two nodes to be under the same category, we decremented the number of components. Instead of using the union operation in the Disjoint-Set Union data structure, what we can do is simply check if a node has the same category as any previously found nodes. If it has the same category as any previously found nodes, then we will not consider this node as a separate component and can decrement the number of components.\n\nIn this approach, we will iterate over each node, and for each one, we iterate over the nodes on its left (nodes we've visited). If any of them has the same category as this node, we decrement the total number of components by 1. Note that we will have to break once we have found out that a node has the same category as another one since we only care if that node should be counted as a separate component.\n\n!?!../Documents/2782_Number_of_Unique_Categories.json:960,720!?! <br>\n\n**Algorithm**\n\n1. Initialize the variable `components` to $N$.\n2. Iterate over the elements `i` from `0` to `N - 1`, and for each element, iterate over the elements `j` on the left of `i` from `i - 1` to `0`. If the value of `haveSameCategory(i, j)` is `true`, then we decrement the value of `components` and break the inner loop.\n3. Return `components`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/EuveTppe/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"EuveTppe\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the number of elements.\n\n* Time complexity: $O(N^2)$.\n\n  We iterate over each pair of the elements, which consists of $O(N^2)$ function calls. The time complexity of the function call `haveSameCategory()` can be assumed as $O(1)$ as it's not given in the problem statement. Therefore, the total time complexity equals $O(N^2)$.\n\n* Space complexity: $O(1)$\n\n  No extra space is required apart from the variable `components`. Hence the total space complexity is constant.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

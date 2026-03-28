@@ -1,0 +1,48 @@
+{
+  "questionId": "3205",
+  "questionFrontendId": "2922",
+  "title": "Market Analysis III",
+  "titleSlug": "market-analysis-iii",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Users</code></p>\n\n<pre>\n+----------------+---------+\n| Column Name    | Type    |\n+----------------+---------+\n| seller_id      | int     |\n| join_date      | date    |\n| favorite_brand | varchar |\n+----------------+---------+\nseller_id is column of unique values for this table.\nThis table contains seller id, join date, and favorite brand of sellers.\n</pre>\n\n<p>Table: <code>Items</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| item_id       | int     |\n| item_brand    | varchar |\n+---------------+---------+\nitem_id is the column of unique values for this table.\nThis table contains item id and item brand.</pre>\n\n<p>Table: <code>Orders</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| order_id      | int     |\n| order_date    | date    |\n| item_id       | int     |\n| seller_id     | int     |\n+---------------+---------+\norder_id is the column of unique values for this table.\nitem_id is a foreign key to the Items table.\nseller_id is a foreign key to the Users table.\nThis table contains order id, order date, item id and seller id.</pre>\n\n<p>Write a solution to find the <strong>top seller</strong> who has sold the highest number of<strong> unique</strong> items with a <strong>different</strong> brand than their favorite brand. If there are multiple sellers with the same highest count, return all of them.</p>\n\n<p>Return <em>the result table ordered by</em> <code>seller_id</code> <em>in <strong>ascending</strong> order.</em></p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nUsers table:\n+-----------+------------+----------------+\n| seller_id | join_date  | favorite_brand |\n+-----------+------------+----------------+\n| 1         | 2019-01-01 | Lenovo         |\n| 2         | 2019-02-09 | Samsung        |\n| 3         | 2019-01-19 | LG             |\n+-----------+------------+----------------+\nOrders table:\n+----------+------------+---------+-----------+\n| order_id | order_date | item_id | seller_id |\n+----------+------------+---------+-----------+\n| 1        | 2019-08-01 | 4       | 2         |\n| 2        | 2019-08-02 | 2       | 3         |\n| 3        | 2019-08-03 | 3       | 3         |\n| 4        | 2019-08-04 | 1       | 2         |\n| 5        | 2019-08-04 | 4       | 2         |\n+----------+------------+---------+-----------+\nItems table:\n+---------+------------+\n| item_id | item_brand |\n+---------+------------+\n| 1       | Samsung    |\n| 2       | Lenovo     |\n| 3       | LG         |\n| 4       | HP         |\n+---------+------------+\n<strong>Output:</strong> \n+-----------+-----------+\n| seller_id | num_items |\n+-----------+-----------+\n| 2         | 1         |\n| 3         | 1         |\n+-----------+-----------+\n<strong>Explanation:</strong> \n- The user with seller_id 2 has sold three items, but only two of them are not marked as a favorite. We will include a unique count of 1 because both of these items are identical.\n- The user with seller_id 3 has sold two items, but only one of them is not marked as a favorite. We will include just that non-favorite item in our count.\nSince seller_ids 2 and 3 have the same count of one item each, they both will be displayed in the output.</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Users (seller_id int, join_date date, favorite_brand varchar(10))\", \"Create table If Not Exists Orders (order_id int, order_date date, item_id int, seller_id int)\", \"Create table If Not Exists Items (item_id int, item_brand varchar(10))\"], \"mssql\": [\"Create table Users (seller_id int, join_date date, favorite_brand varchar(10))\", \"Create table Orders (order_id int, order_date date, item_id int, seller_id int)\", \"Create table Items (item_id int, item_brand varchar(10))\"], \"oraclesql\": [\"Create table Users (seller_id int, join_date date, favorite_brand varchar(10))\", \"Create table Orders (order_id int, order_date date, item_id int, seller_id int)\", \"Create table Items (item_id int, item_brand varchar(10))\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"find_top_seller\", \"postgresql\": [\"Create table If Not Exists Users (seller_id int, join_date date, favorite_brand varchar(10))\", \"Create table If Not Exists Orders (order_id int, order_date date, item_id int, seller_id int)\", \"Create table If Not Exists Items (item_id int, item_brand varchar(10))\"], \"pythondata\": [\"Users = pd.DataFrame(columns=[\\\"seller_id\\\", \\\"join_date\\\", \\\"favorite_brand\\\"]).astype({\\\"seller_id\\\": \\\"int\\\", \\\"join_date\\\": \\\"datetime64[ns]\\\", \\\"favorite_brand\\\": \\\"str\\\"})\\n\", \"Orders = pd.DataFrame(columns=[\\\"order_id\\\", \\\"order_date\\\", \\\"item_id\\\", \\\"seller_id\\\"]).astype({\\\"order_id\\\": \\\"int\\\", \\\"order_date\\\": \\\"datetime64[ns]\\\", \\\"item_id\\\": \\\"int\\\", \\\"seller_id\\\": \\\"int\\\"})\\n\", \"Items = pd.DataFrame(columns=[\\\"item_id\\\", \\\"item_brand\\\"]).astype({\\\"item_id\\\": \\\"int\\\", \\\"item_brand\\\": \\\"str\\\"})\\n\"], \"database_schema\": {\"Users\": {\"seller_id\": \"INT\", \"join_date\": \"DATE\", \"favorite_brand\": \"VARCHAR(10)\"}, \"Orders\": {\"order_id\": \"INT\", \"order_date\": \"DATE\", \"item_id\": \"INT\", \"seller_id\": \"INT\"}, \"Items\": {\"item_id\": \"INT\", \"item_brand\": \"VARCHAR(10)\"}}}",
+  "stats": "{\"totalAccepted\": \"4.1K\", \"totalSubmission\": \"9.7K\", \"totalAcceptedRaw\": 4061, \"totalSubmissionRaw\": 9690, \"acRate\": \"41.9%\"}",
+  "likes": 20,
+  "dislikes": 6,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Users\": [\"seller_id\", \"join_date\", \"favorite_brand\"],\"Orders\":[\"order_id\",\"order_date\",\"item_id\",\"seller_id\"],\"Items\":[\"item_id\",\"item_brand\"]},\"rows\":{\"Users\":[[1,\"2019-01-01\",\"Lenovo\"],[2,\"2019-02-09\",\"Samsung\"],[3,\"2019-01-19\",\"LG\"]],\"Orders\":[[1,\"2019-08-01\",4,2],[2,\"2019-08-02\",2,3],[3,\"2019-08-03\",3,3],[4,\"2019-08-04\",1,2],[5,\"2019-08-04\",4,2]],\"Items\":[[1,\"Samsung\"],[2,\"Lenovo\"],[3,\"LG\"],[4,\"HP\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    }
+  ],
+  "solution": null
+}

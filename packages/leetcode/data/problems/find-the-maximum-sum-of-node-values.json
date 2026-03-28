@@ -1,0 +1,155 @@
+{
+  "questionId": "3307",
+  "questionFrontendId": "3068",
+  "title": "Find the Maximum Sum of Node Values",
+  "titleSlug": "find-the-maximum-sum-of-node-values",
+  "difficulty": "Hard",
+  "content": "<p>There exists an <strong>undirected</strong> tree with <code>n</code> nodes numbered <code>0</code> to <code>n - 1</code>. You are given a <strong>0-indexed</strong> 2D integer array <code>edges</code> of length <code>n - 1</code>, where <code>edges[i] = [u<sub>i</sub>, v<sub>i</sub>]</code> indicates that there is an edge between nodes <code>u<sub>i</sub></code> and <code>v<sub>i</sub></code> in the tree. You are also given a <strong>positive</strong> integer <code>k</code>, and a <strong>0-indexed</strong> array of <strong>non-negative</strong> integers <code>nums</code> of length <code>n</code>, where <code>nums[i]</code> represents the <strong>value</strong> of the node numbered <code>i</code>.</p>\n\n<p>Alice wants the sum of values of tree nodes to be <strong>maximum</strong>, for which Alice can perform the following operation <strong>any</strong> number of times (<strong>including zero</strong>) on the tree:</p>\n\n<ul>\n\t<li>Choose any edge <code>[u, v]</code> connecting the nodes <code>u</code> and <code>v</code>, and update their values as follows:\n\n\t<ul>\n\t\t<li><code>nums[u] = nums[u] XOR k</code></li>\n\t\t<li><code>nums[v] = nums[v] XOR k</code></li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>Return <em>the <strong>maximum</strong> possible <strong>sum</strong> of the <strong>values</strong> Alice can achieve by performing the operation <strong>any</strong> number of times</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/11/09/screenshot-2023-11-10-012513.png\" style=\"width: 300px; height: 277px;padding: 10px; background: #fff; border-radius: .5rem;\" />\n<pre>\n<strong>Input:</strong> nums = [1,2,1], k = 3, edges = [[0,1],[0,2]]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> Alice can achieve the maximum sum of 6 using a single operation:\n- Choose the edge [0,2]. nums[0] and nums[2] become: 1 XOR 3 = 2, and the array nums becomes: [1,2,1] -&gt; [2,2,2].\nThe total sum of values is 2 + 2 + 2 = 6.\nIt can be shown that 6 is the maximum achievable sum of values.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/01/09/screenshot-2024-01-09-220017.png\" style=\"padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; width: 300px; height: 239px;\" />\n<pre>\n<strong>Input:</strong> nums = [2,3], k = 7, edges = [[0,1]]\n<strong>Output:</strong> 9\n<strong>Explanation:</strong> Alice can achieve the maximum sum of 9 using a single operation:\n- Choose the edge [0,1]. nums[0] becomes: 2 XOR 7 = 5 and nums[1] become: 3 XOR 7 = 4, and the array nums becomes: [2,3] -&gt; [5,4].\nThe total sum of values is 5 + 4 = 9.\nIt can be shown that 9 is the maximum achievable sum of values.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/11/09/screenshot-2023-11-10-012641.png\" style=\"width: 600px; height: 233px;padding: 10px; background: #fff; border-radius: .5rem;\" />\n<pre>\n<strong>Input:</strong> nums = [7,7,7,7,7,7], k = 3, edges = [[0,1],[0,2],[0,3],[0,4],[0,5]]\n<strong>Output:</strong> 42\n<strong>Explanation:</strong> The maximum achievable sum is 42 which can be achieved by Alice performing no operations.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n == nums.length &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>9</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>edges.length == n - 1</code></li>\n\t<li><code>edges[i].length == 2</code></li>\n\t<li><code>0 &lt;= edges[i][0], edges[i][1] &lt;= n - 1</code></li>\n\t<li>The input is generated such that <code>edges</code> represent&nbsp;a valid tree.</li>\n</ul>\n",
+  "hints": [
+    "Select any node as the root.",
+    "Let <code>dp[x][c]</code> be the maximum sum we can get for the subtree rooted at node <code>x</code>, where <code>c</code> is a boolean representing whether the edge between node <code>x</code> and its parent (if any) is selected or not.",
+    "<code>dp[x][c] = max(sum(dp[y][cy]) + v(nums[x], sum(cy) + c))</code>\r\nwhere <code>cy</code> is <code>0</code> or <code>1</code>. \r\nWhen <code>sum(cy) + c</code> is odd, <code>v(nums[x], sum(cy) + c) = nums[x] XOR k</code>. \r\nWhen <code>sum(cy) + c</code> is even, <code>v(nums[x], sum(cy) + c) = nums[x]</code>.",
+    "There’s also an easier solution - does the parity of the number of elements where <code>nums[i] XOR k > nums[i]</code> help?"
+  ],
+  "metaData": "{\n  \"name\": \"maximumValueSum\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"138.5K\", \"totalSubmission\": \"199.3K\", \"totalAcceptedRaw\": 138515, \"totalSubmissionRaw\": 199350, \"acRate\": \"69.5%\"}",
+  "likes": 922,
+  "dislikes": 133,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Score After Applying Operations on a Tree\", \"titleSlug\": \"maximum-score-after-applying-operations-on-a-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Number of Coins to Place in Tree Nodes\", \"titleSlug\": \"find-number-of-coins-to-place-in-tree-nodes\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,1]\n3\n[[0,1],[0,2]]",
+    "[2,3]\n7\n[[0,1]]",
+    "[7,7,7,7,7,7]\n3\n[[0,1],[0,2],[0,3],[0,4],[0,5]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"blackrock\", \"name\": \"BlackRock\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"deutsche-bank\", \"name\": \"Deutsche Bank\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long maximumValueSum(vector<int>& nums, int k, vector<vector<int>>& edges) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long maximumValueSum(int[] nums, int k, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumValueSum(self, nums: List[int], k: int, edges: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumValueSum(self, nums, k, edges):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :type edges: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @param {number[][]} edges\n * @return {number}\n */\nvar maximumValueSum = function(nums, k, edges) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumValueSum(nums: number[], k: number, edges: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MaximumValueSum(int[] nums, int k, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long maximumValueSum(int* nums, int numsSize, int k, int** edges, int edgesSize, int* edgesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumValueSum(nums []int, k int, edges [][]int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumValueSum(nums: IntArray, k: Int, edges: Array<IntArray>): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumValueSum(_ nums: [Int], _ k: Int, _ edges: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_value_sum(nums: Vec<i32>, k: i32, edges: Vec<Vec<i32>>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @param {Integer[][]} edges\n# @return {Integer}\ndef maximum_value_sum(nums, k, edges)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @param Integer[][] $edges\n     * @return Integer\n     */\n    function maximumValueSum($nums, $k, $edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumValueSum(List<int> nums, int k, List<List<int>> edges) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumValueSum(nums: Array[Int], k: Int, edges: Array[Array[Int]]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_value_sum(nums :: [integer], k :: integer, edges :: [[integer]]) :: integer\n  def maximum_value_sum(nums, k, edges) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_value_sum(Nums :: [integer()], K :: integer(), Edges :: [[integer()]]) -> integer().\nmaximum_value_sum(Nums, K, Edges) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-value-sum nums k edges)\n  (-> (listof exact-integer?) exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2292",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe aim to maximize the sum of values of all nodes in an undirected tree by performing a specific operation. \nThe operation allows us to replace the values of any two **adjacent** nodes with their XOR values, with a given integer `k`.\n\n**Key Observations:**\n1. Alice can perform an operation on any edge `[u, v]` by XOR-ing the values of nodes `u` and `v` with a positive integer `k`.\n2. Alice wants to maximize the sum of the values of the tree nodes. This means she aims to maximize the total value represented by the sum of individual node values after performing the specified operations.\n3. Alice can perform the operation any number of times (including zero) on the tree. This implies she can selectively choose edges and perform the XOR operation to maximize the sum of node values.\n\n> **Note:** The XOR (exclusive OR) operator compares corresponding bits of two operands and returns 1 if the bits are different and 0 if they are the same. For instance, in binary $1010 XOR 1100 = 0110$ indicating that the second and third bits differ while the first and fourth bits are the same.\n> Bitwise XOR operation is commutative and associative. That means $a XOR b XOR b = a$, and $a XOR b = b XOR a$. Hence, the order of applying XOR operations doesn't matter.\n> XORing a number with itself ($a XOR a$) results in $0$. Therefore, performing the XOR operation twice on the same number yields the original number.\n---\n\n### Approach 1: Top-Down Dynamic Programming - Memoization\n\n#### Intuition\n\nLet's assume we want to replace the values of any two arbitrary nodes `U` and `V` with their XOR values, where `U` and `V` are not adjacent. Since, the tree is connected, undirected, and acyclic, there always exists a path between `U` and `V`. Let's assume the length of this path is `L` and $P =\\{P_1, P_2, P_3...P_{L-1}\\}$ denotes the set of nodes on this path, following the order in which they appear on the path from `U` to `V`. Below is a diagram for better understanding:\n\n![image.png](../Figures/3068/3068_path.png)\n\nNow, let's operate on every edge from `U` to `V`. Since, there are exactly `L` edges between both the nodes, we will be performing `L` operations in total.\n\nThe value of each node after these `L` operations will change as shown below:\n\n![image.png](../Figures/3068/3068_path_xor.png)\n\nSince the XOR operation obeys the properties of commutativity and identity, $A\\; XOR\\; B\\; XOR\\; B = A$ for any two integers `A` and `B`. Therefore, the values of all nodes in the set `P` will remain unchanged. However, for the nodes `U` and `V`, their value will be replaced with the XOR value with `k`.\n\nSo, for any two non-adjacent nodes `U` and `V` in the tree we can replace their values with the XOR values as if they were connected by an edge. Let's call this operation as \"effective operation\" for simplicity. \n\nAfter performing a sequence of effective operations on some pairs of nodes, exactly `m` nodes in the tree have their value replaced with the XOR value (where `m <= n` and `n` denotes the number of nodes in the tree). It can be observed that the value of `m` will always be `even` because \"effective operation\" is performed on a pair of nodes.\n\nNow, the brute force approach is based on recursion. During recursion, it's crucial to incorporate both: the node's value with XOR operation (XORing with `k`) and without XOR operation while traversing the tree. We try to maximize the total sum of the values, where the operation is performed on an **even** number of nodes.\n\nLet's adapt our recursive solution based on these insights:\n\n* The base case occurs when we have traversed through all the nodes of the tree. If the number of nodes on which we have performed the operation is even, we return 0. Otherwise, we return `INT_MIN` (minimum integer value).\n  \n* We also need to include the parity of the number of elements on which the operation has been performed as a parameter in the recursive solution. If the number of operated elements is even, it is a valid assignment.\n\n> Parity of a number refers to whether it contains an odd or even number of 1-bits.\n* The two choices that we have here for every node are to perform an operation on it or not. The recursive calls for each case can be explained as:\n\n  * If we perform the operation on the node at the position `index`, then the value of this node would be modified to `nums[index] XOR k`. Since we are operating on a node, the parity of the total number of elements on which the XOR operation has been performed will be flipped. Therefore, even parity flips to odd, and vice versa. To obtain the answer for this case, we will store the sum of `nums[index] XOR k` and the subsequent recursive function call for the next node at `index+1` and the flipped parity (denoted by `isEven XOR 1`).\n  \n  * If we do not perform the operation on the node at the position `index`, then the value of this node would remain the same. The parity of the total number of elements on which the operation is performed will remain the same. To obtain the answer for this case, we will store the sum of `nums[index]` and the subsequent recursive function call for the next node at `index+1` and the given parity.\n  \n* Since we want to maximize the sum of all nodes, we will return the maximum value of both the cases discussed above.\n\nThe recursive approach will result in Time Limit Exceeded (TLE) issues due to the exponential nature of possibilities.\n\nTo tackle this issue, we'll use dynamic programming (DP) with a two-dimensional table.\n\nThe DP table caches the results of subproblems, with rows representing different indices of the nodes given by `index` and columns representing the parity of the number of operated nodes denoted by `isEven`(`0` indicates `odd`, `1` indicates `even` parity). Each cell stores an integer denoting the maximum possible sum of all the nodes up to `index` and where the parity of the number of operated nodes is `isEven`.\n\nBy caching the calculated states in the dp table, we can avoid recalculating the result for the same combination of index and parity. When encountering a state that has already been computed and stored in the dp table, instead of recursively exploring further, we can directly retrieve the cached result, significantly reducing the time complexity of the algorithm.\n\n#### Algorithm\n\n##### Main Function: `maximumValueSum(nums, k, edges)`\n1. Initialize a 2D memoization array `memo` with all values set to `-1`.\n2. Call the helper function `maxSumOfNodes` with the initial parameters:\n   - `index = 0`\n   - `isEven = 1` (start with an odd number of elements)\n   - `nums = the input array`\n   - `k = the given XOR value`\n   - `memo = the initialized memoization array`\n3. Return the result from the `maxSumOfNodes` function.\n\n##### Recursive Function: `maxSumOfNodes(index, isEven, nums, k, memo)`\n1. If the `index` is equal to the size of the `nums` array, return:\n   - If `isEven` is 1, return 0 (no operation performed on an odd number of elements).\n   - Else, return `INT_MIN`.\n2. If the result for the current `index` and `isEven` is already memoized, return the memoized value.\n3. Calculate the maximum sum of nodes in two cases:\n   - `noXorDone`: No XOR operation is performed on the current element.\n     - The sum is the current element value `nums[index]` plus the maximum sum of the remaining elements.\n   - `xorDone`: The XOR operation is performed on the current element.\n     - The sum is the current element value `nums[index] ^ k` plus the maximum sum of the remaining elements with `isEven` flipped.\n4. Memoize the maximum of `noXorDone` and `xorDone`, and return the result.\n  \n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/MjK438hW/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"MjK438hW\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the tree.\n\n- Time complexity: $O(n)$\n\n    The time complexity of the `maxSumOfNodes` function can be analyzed by considering the number of unique subproblems that need to be solved. There are at most $n \\cdot 2$ unique subproblems, indexed by `index` and `isEven` values, because the number of possible values for `index` is `n` and `isEven` is `2` (parity). \n    \n    Here, each subproblem is computed only once (due to memoization). So, the time complexity is bounded by the number of unique subproblems. \n    \n    Therefore, the time complexity can be stated as $O(n)$.\n\n- Space complexity: $O(n)$\n\n    The space complexity of the algorithm is primarily determined by two factors: the auxiliary space used for memoization and the recursion stack space. The memoization table, denoted as `memo`, consumes $O(n)$ space due to its size being proportional to the length of the input node list. \n    \n    Additionally, the recursion stack space can grow up to $O(n)$ in the worst case, constrained by the length of the input node list, as each recursive call may add a frame to the stack. \n    \n    Therefore, the overall space complexity is the sum of these two components, resulting in $O(n) + O(n)$, which simplifies to $O(n)$.\n\n---\n\n### Approach 2: Bottom-up Dynamic Programming (Tabulation)\n\n#### Intuition\n\nTabulation is a dynamic programming technique that involves systematically iterating through all possible combinations of changing parameters. Since tabulation operates iteratively, rather than recursively, it does not require overhead for the recursive stack space, making it more efficient than memoization. We have two variables that change as we progress through the node values: the current index we're considering and the parity of even elements. To thoroughly explore the combinations, we use two nested loops to iterate through these variables.\n\nFirst, let's establish the base case:\n\n```cpp\nif (index == nums.size()) { \n    return isEven == 1 ? 0 : INT_MIN;\n} \n```\n\nWe represent this base case in our tabulation matrix as `dp[nums.size()][1] = 0` and `dp[nums.size()][0] = INT_MIN`. This indicates that if the parity of the number of operations after iterating the array is odd, then it is an invalid assignment.\n\nOur ultimate goal is to determine the maximum sum of all node values after performing the operation on an even number of nodes, and this information will be stored in `dp[0][1]`. To accomplish this, we traverse through every combination of index and parity using the two nested loops. The outer loop iterates over the index, while the inner loop makes the choice of parity (1 for even and 0 for odd).\n\nThroughout this traversal, we evaluate each state and update our tabulation matrix accordingly. Upon completing the traversal of the entire array, the value of `dp[0][1]` represents the maximum node value sum possible after performing all operations.\n\n#### Algorithm\n\n1. Initialize a 2D dynamic programming array `dp` with dimensions `(n + 1) x 2`, where `n` is the size of the `nums` array.\n2. Initialize the base case values:\n   - `dp[n][1] = 0` (no operation performed on an odd number of elements)\n   - `dp[n][0] = INT_MIN`\n3. Iterate through the `nums` array in reverse order (from `n - 1` to `0`):\n   - For each index `index` and each parity state `isEven` (0 or 1):\n     - Calculate the maximum value sum in two cases:\n       - `performOperation`: Perform the XOR operation on the current element.\n         - The sum is `dp[index + 1][isEven ^ 1] + (nums[index] ^ k)`.\n       - `dontPerformOperation`: Don't perform the XOR operation on the current element.\n         - The sum is `dp[index + 1][isEven] + nums[index]`.\n     - Update `dp[index][isEven]` with the maximum of `performOperation` and `dontPerformOperation`.\n4. Return the value stored in `dp[0][1]`, which represents the maximum value sum when starting with an odd number of elements.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/XJHwTEAH/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"XJHwTEAH\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of elements in the node value list.\n\n* Time complexity: $O(n)$\n\n    We iterate through a nested loop where the total number of iterations is given by $n \\cdot 2$. Inside the nested loops, we perform constant time operations. Therefore, time complexity is given by $O(n)$.\n\n* Space complexity: $O(n)$\n\n    Since we create a new `dp` matrix of size $n \\cdot 2$, the total additional space becomes $n \\cdot 2$. So, the net space complexity is $O(n)$.\n\n---\n\n### Approach 3: Greedy (Sorting based approach)\n\n#### Intuition\n\nIf the operation is performed on a node indexed at `U`, the new value of the node would become `nums[U] XOR k`. For every node, the net change in its value after performing the operation is given by `netChange[U] = nums[U] XOR k - nums[U]`.\n\nIf this net change is greater than zero, it will increase the total sum of all node values. Otherwise, it would decrease it.\n\nLet's assume we want to perform the \"effective operation\" on a pair of nodes that would provide the greatest increment to the node sum. Observe that choosing the nodes with the greatest positive `netChange` values will provide the greatest increment to node sum.\n\nFor all nodes, we can calculate their net change values using the formula discussed above. On sorting these values in **decreasing** order, we can pick the values in pairs from the start of the sorted `netChange` array with a positive sum. \n\nIf the sum of a pair is positive, then it will increase the value of the total node sum when the operation is performed on this pair.\n\n#### Algorithm\n\n1. Initialise the `netChange` array of size `n` and an integer `nodeSum` that stores the current sum of `nums`. Here, `n` is the size of the `nums` array.\n2. Iterate through the `nums` array (from `0` to `n-1`):\n   - For each index, store the value of `netChange` using the idea discussed in intuition. \n3. Sort the array `netChange` in decreasing order.\n4. Iterate through the `netChange` array (from `0` to `n-1`, stepsize = `2`):\n   - If we can not create a pair of adjacent elements, break the iteration.\n   - If the sum of a pair of adjacent elements is positive then add this sum to `nodeSum`.\n5. After iterating through all `netChange` elements, return `nodeSum` as the maximum possible sum of nodes after performing the operations.\n\n!?!../Documents/3068/slideshow1.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/AZRH2HNw/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"AZRH2HNw\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of elements in the node value list.\n\n* Time complexity: $O(n \\cdot \\log n)$\n\n    Other than the `sort` invocation, we perform simple linear operations on the list, so the runtime is dominated by the $O(n \\cdot \\log n)$ complexity of sorting.\n\n* Space complexity: $O(n)$\n\n    Since we create a new `netChange` array of size `n` and sort it, the additional space becomes $O(n)$ for `netChange` array and $O(log n)$ or $O(n)$ for sorting it (depending on the sorting algorithm used). So, the net space complexity is $O(n)$.\n\n---\n\n### Approach 4: Greedy (Finding local maxima and minima)\n\n#### Intuition\n\nRecall that \"effective operation\" allows us to pick any two nodes and perform an operation on it. Let's assume for two nodes, the `netChange` values are positive. If we pick both these nodes as a pair to perform \"effective operation\", the node sum value will be increased. So, we can observe that if the number of elements with positive `netChange` values is even, then all of them can be included in the final sum to maximize it. \n\nIf the number of elements with positive `netChange` values is **odd**, then let's assume that `positiveMinimum` denotes the **minimum positive** value and `negativeMaximum` denotes the **maximum non-positive** value in the `netChange` array. It is clear that both these values will occur as a pair in the `netChange` array.\n\nNow, there can be two cases for the same:-\n\n1. If the sum of `positiveMinimum` and `negativeMaximum` is greater than zero, then the node value sum will be increased by including this pair. So, we include both elements.\n  \n2. If the sum of `positiveMinimum` and `negativeMaximum` is less than or equal to zero, then the node value sum will be decreased or have no change on including this pair. So, we exclude this pair.\n\nTherefore, we don't need the `netChange` array from the previous approach. We calculate `positiveMinimum` and `negativeMaximum` values which is enough to calculate the maximum node value sum possible for the array.\n\n#### Algorithm\n\n1. Initialize integers `positiveMinimum` and `negativeMaximum` with `INT_MAX` and `INT_MIN` respectively. Also, initialize `count` and `sum` with `0`.\n2. Iterate through the `nums` array (from `0` to `n - 1`): \n    - Add the unchanged node values to `sum`. \n    - Calculate the value of `netChange` for the current node.\n      - If `netChange` is positive, assign the minimum of `netChange` and `positiveMinimum` to `positiveMinimum`. Add `netChange` to the `sum` and increment the `count` by 1.\n      - If `netChange` is non-positive, assign the maximum of `netChange` and `negativeMaximum` to `negativeMaximum`.\n3. If the `count` of number values with positive `netChange` is even, we return the current `sum` as the maximum node value sum possible.\n4. If the `count` is odd, we can either subtract `positiveMinimum` or add `negativeMaximum` to make the `count` even. The maximum of both these cases is returned as the maximum node value sum.\n\n!?!../Documents/3068/slideshow2.json:960,540!?!\n\n#### Implementation\n<iframe src=\"https://leetcode.com/playground/TYWD9cDY/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TYWD9cDY\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of elements in the node value list.\n\n* Time complexity: $O(n)$\n\n    We perform a single pass linear scan on the list which takes $O(n)$ time. All other operations are performed in constant time. This makes the net time complexity as $O(n)$.\n\n* Space complexity: $O(1)$\n\n    We do not allocate any additional auxiliary memory proportional to the size of the given node list. Therefore, overall space complexity is given by $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

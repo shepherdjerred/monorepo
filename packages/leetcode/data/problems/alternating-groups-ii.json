@@ -1,0 +1,137 @@
+{
+  "questionId": "3483",
+  "questionFrontendId": "3208",
+  "title": "Alternating Groups II",
+  "titleSlug": "alternating-groups-ii",
+  "difficulty": "Medium",
+  "content": "<p>There is a circle of red and blue tiles. You are given an array of integers <code>colors</code> and an integer <code>k</code>. The color of tile <code>i</code> is represented by <code>colors[i]</code>:</p>\n\n<ul>\n\t<li><code>colors[i] == 0</code> means that tile <code>i</code> is <strong>red</strong>.</li>\n\t<li><code>colors[i] == 1</code> means that tile <code>i</code> is <strong>blue</strong>.</li>\n</ul>\n\n<p>An <strong>alternating</strong> group is every <code>k</code> contiguous tiles in the circle with <strong>alternating</strong> colors (each tile in the group except the first and last one has a different color from its <strong>left</strong> and <strong>right</strong> tiles).</p>\n\n<p>Return the number of <strong>alternating</strong> groups.</p>\n\n<p><strong>Note</strong> that since <code>colors</code> represents a <strong>circle</strong>, the <strong>first</strong> and the <strong>last</strong> tiles are considered to be next to each other.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">colors = [0,1,0,1,0], k = 3</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><strong><img alt=\"\" data-darkreader-inline-bgcolor=\"\" data-darkreader-inline-bgimage=\"\" src=\"https://assets.leetcode.com/uploads/2024/06/19/screenshot-2024-05-28-183519.png\" style=\"width: 150px; height: 150px; padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor: #181a1b;\" /></strong></p>\n\n<p>Alternating groups:</p>\n\n<p><img alt=\"\" data-darkreader-inline-bgcolor=\"\" data-darkreader-inline-bgimage=\"\" src=\"https://assets.leetcode.com/uploads/2024/05/28/screenshot-2024-05-28-182448.png\" style=\"width: 150px; height: 150px; padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor: #181a1b;\" /><img alt=\"\" data-darkreader-inline-bgcolor=\"\" data-darkreader-inline-bgimage=\"\" src=\"https://assets.leetcode.com/uploads/2024/05/28/screenshot-2024-05-28-182844.png\" style=\"width: 150px; height: 150px; padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor: #181a1b;\" /><img alt=\"\" data-darkreader-inline-bgcolor=\"\" data-darkreader-inline-bgimage=\"\" src=\"https://assets.leetcode.com/uploads/2024/05/28/screenshot-2024-05-28-183057.png\" style=\"width: 150px; height: 150px; padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor: #181a1b;\" /></p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">colors = [0,1,0,0,1,0,1], k = 6</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><strong><img alt=\"\" data-darkreader-inline-bgcolor=\"\" data-darkreader-inline-bgimage=\"\" src=\"https://assets.leetcode.com/uploads/2024/06/19/screenshot-2024-05-28-183907.png\" style=\"width: 150px; height: 150px; padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor: #181a1b;\" /></strong></p>\n\n<p>Alternating groups:</p>\n\n<p><img alt=\"\" data-darkreader-inline-bgcolor=\"\" data-darkreader-inline-bgimage=\"\" src=\"https://assets.leetcode.com/uploads/2024/06/19/screenshot-2024-05-28-184128.png\" style=\"width: 150px; height: 150px; padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor: #181a1b;\" /><img alt=\"\" data-darkreader-inline-bgcolor=\"\" data-darkreader-inline-bgimage=\"\" src=\"https://assets.leetcode.com/uploads/2024/06/19/screenshot-2024-05-28-184240.png\" style=\"width: 150px; height: 150px; padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor: #181a1b;\" /></p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">colors = [1,1,0,1], k = 4</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" data-darkreader-inline-bgcolor=\"\" data-darkreader-inline-bgimage=\"\" src=\"https://assets.leetcode.com/uploads/2024/06/19/screenshot-2024-05-28-184516.png\" style=\"width: 150px; height: 150px; padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor: #181a1b;\" /></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= colors.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= colors[i] &lt;= 1</code></li>\n\t<li><code>3 &lt;= k &lt;= colors.length</code></li>\n</ul>\n",
+  "hints": [
+    "Try to find a tile that has the same color as its next tile (if it exists).",
+    "Then try to find maximal alternating groups by starting a single for loop from that tile."
+  ],
+  "metaData": "{\n  \"name\": \"numberOfAlternatingGroups\",\n  \"params\": [\n    {\n      \"name\": \"colors\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"159.6K\", \"totalSubmission\": \"266.2K\", \"totalAcceptedRaw\": 159612, \"totalSubmissionRaw\": 266248, \"acRate\": \"59.9%\"}",
+  "likes": 764,
+  "dislikes": 74,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[0,1,0,1,0]\n3",
+    "[0,1,0,0,1,0,1]\n6",
+    "[1,1,0,1]\n4"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"samsara\", \"name\": \"Samsara\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numberOfAlternatingGroups(vector<int>& colors, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numberOfAlternatingGroups(int[] colors, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfAlternatingGroups(self, colors: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfAlternatingGroups(self, colors, k):\n        \"\"\"\n        :type colors: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} colors\n * @param {number} k\n * @return {number}\n */\nvar numberOfAlternatingGroups = function(colors, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfAlternatingGroups(colors: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumberOfAlternatingGroups(int[] colors, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numberOfAlternatingGroups(int* colors, int colorsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfAlternatingGroups(colors []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfAlternatingGroups(colors: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfAlternatingGroups(_ colors: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_alternating_groups(colors: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} colors\n# @param {Integer} k\n# @return {Integer}\ndef number_of_alternating_groups(colors, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $colors\n     * @param Integer $k\n     * @return Integer\n     */\n    function numberOfAlternatingGroups($colors, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numberOfAlternatingGroups(List<int> colors, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfAlternatingGroups(colors: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_alternating_groups(colors :: [integer], k :: integer) :: integer\n  def number_of_alternating_groups(colors, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_alternating_groups(Colors :: [integer()], K :: integer()) -> integer().\nnumber_of_alternating_groups(Colors, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-alternating-groups colors k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2696",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a circular arrangement of tiles, represented by an array called `colors`. Each tile’s color is either `0` or `1`. We are also given an integer `k`.\n\nOur task is to count how many sequences of `k` tiles in a row are *alternating*—this means that no two tiles next to each other have the same color. Since the tiles are arranged in a circle, sequences can wrap around from the end back to the beginning.\n\nLet's break down an example with `colors = [0, 1, 1, 0, 1]` and `k = 3`:\n\n-   Starting from the first tile, `[0, 1]` alternates, but adding the third tile (`1`) breaks the pattern. For the same reason, starting from the second tile won't give us any valid sequence, so we skip it.\n-   Moving forward, starting from the third tile, the last three tiles `[1, 0, 1]` form a valid alternating sequence.\n-   Since the tiles form a circle, we can wrap around the array. This gives us two more valid sequences: `[0, 1, 0]`, `[1, 0, 1]`. \n\nIn total, we find `3` alternating sequences of length `k = 3` at indices: `[2, 3, 4]`, `[3, 4, 0]`, and `[4, 0, 1]`.\n\nTo better understand the problem, you can try an easier version first: [Alternating Groups I](https://leetcode.com/problems/alternating-groups-i/description/), where `k` is fixed.\n\n---\n\n### Approach 1: Expanding the Array & Sliding Window\n\n#### Intuition\n\nThe main challenge in this problem is handling the circular arrangement of tiles. If we process the array as it is, we would constantly have to deal with wrapping around, which makes direct calculations tricky. Instead of struggling with this complexity, we can transform the problem into a linear one while keeping all relevant information intact.\n\nTo see how, let’s consider the last possible sequence that wraps around the circle. It starts at the end of the array and continues with the first `k - 1` elements at the beginning. Instead of explicitly handling this circular behavior, we can \"unroll\" the array by appending its first `k - 1` elements to the end. This effectively stretches the circular array into a linear one. Now, we no longer need to worry about wrapping around — the problem reduces to counting subarrays (or windows!) of length `k` that alternate in color.\n\nA naive approach would be to check every possible subarray of length `k` in the extended array. However, this brute-force method uses nested loops, resulting in a time complexity of $O(n^2)$ or even $O(n^3)$—far too slow for large inputs.\n\nA key insight is that once a sequence fails to maintain the alternating pattern at a certain index, any longer sequence containing that point is also invalid. This means we don’t need to check every possible starting position separately - we can slide over the array and discard invalid sequences as soon as we encounter a mismatch. \n\nThis is where the Sliding Window technique comes in. Instead of restarting our search at every index, we maintain a moving window of size `k`, adjusting it as we go. The moment we detect a mismatch, we move the window forward without unnecessary checks, making the solution much more efficient. Since each tile is processed at most once, the time complexity is reduced to $O(n)$, making this approach suitable for larger inputs.\n\n#### Algorithm\n\n-   Append the first `k - 1` elements of `colors` to the end of the array.\n-   Initialize:\n    -   `length` to the size of the new extended array.\n    -   `result` to `0`.\n    -   `left` to `0` and `right` to `1` - these are the bounds of the sliding window.\n-   While `right` is less than `length`, meaning that we have more subarrays to check:\n    -   If the pattern breaks, i.e. `colors[right] == colors[right - 1]`:\n        -   Reset window from the current position, by setting `left = right`.\n        -   Increment `right` by `1`.\n    -   Otherwise, the sequence can be extended. \n        -   Increment `right` by `1`.\n        -   If we haven't reached the desired length, i.e., `right - left < k`, continue to the next element.\n        -    Else:\n            -   Record a valid sequence by incrementing `result` by `1`.\n            -   Shrink the window from the left (`left++`), to continue searching for sequences of the same size.\n-   Return `result`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/FNqVHuBY/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FNqVHuBY\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `colors` array.\n\n-   Time complexity: $O(n + k)$\n\n    Making the circular array linear involves iterating over the first $k - 1$ elements and appending them to the end of the array, which takes $O(k)$ time. Next, we use the Sliding Window Technique to count the number of alternating sequences. We do this by looping through the extended array once with two pointers, `left` and `right`. Since we only go through the array once, the time complexity for this part is $O(n + k)$. As a result, the overall time complexity of the algorithm is $O(n + k)$.\n\n-   Space complexity: $O(k)$\n\n    We extend the input array by $k - 1$ elements, which contribute $O(k)$ to the algorithm's space complexity. Apart from that, we only use a fixed number of variables (`left`, `right`, `result`, etc.), which take up constant space. Therefore, the auxiliary space complexity is dominated by the extension of the `colors` array and is equal to $O(k)$.\n\n    > In Java, we create a new array of size $n + k$, called `extendedColors`, since Java arrays have a fixed size. Therefore, the space complexity of this implementation is $O(n + k)$.\n    \n---\n\n### Approach 2: Two Passes\n\n#### Intuition\n\nThe main insight in this approach is that we don’t need to explicitly track the exact start and end of each valid window. Instead, we only need to maintain a simple count of how many consecutive elements follow the alternating pattern. If a mismatch occurs, we reset this count to `1`, since any sequence extending beyond this mismatch is automatically invalid. Every time this count reaches at least `k`, we know we have found a valid alternating sequence of length `k`, so we increment our result.\n\nIf the array were purely linear, we could just traverse it once and count valid sequences. However, because the array wraps around, we need to ensure that we don’t miss any sequences that start near the end and continue at the beginning. \n\nTo deal with this, we break our solution into two separate passes. The first pass scans the array normally and counts valid alternating sequences as if the array were linear. Then, to account for sequences that might wrap around, we perform a second pass over just the first `k - 1` elements. The key detail here is that during this second pass, we **don’t reset the count** - we continue from where we left off in the first pass. This way, if a valid sequence spans the boundary, we still detect it correctly. \n\nOne important optimization is that if we ever encounter a mismatch during the second pass, we can immediately stop checking further. Since we are only working with the first `k - 1` elements, any remaining portion will be too short to form a valid sequence, making additional checks unnecessary.\n \n#### Algorithm\n\n-   Initialize:\n    -  `length` to the size of the `colors` array.\n    -  `result` to `0`.\n    -  `alternatingElementsCount` to `1`, accounting for the first element of the array.\n    -   `lastColor` to `colors[0]`.\n-   Loop with `index` from `1` to `length - 1`:\n    -   If `colors[index] == lastColor`, a mismatch is found:\n        -   Reset sequence length, i.e. set `alternatingElementsCount` to `1`.\n        -   Update `lastColor` to `colors[index]` and continue to the next element.\n    -   Otherwise, `colors[index] != lastColor`, so the sequence can be extended:\n    -   Increment `alternatingElementsCount` by `1`.\n    -   If `alternatingElementsCount` is greater than or equal to `k`, increment `result` by `1`.\n    -   Update `lastColor` to `colors[index]`.\n-   Loop with `index` from `0` to `k - 1`, wrapping around to the beginning of the array:\n    -   If `colors[index] == lastColor`, a mismatch is found:\n        -   Since there are fewer than `k` elements remaining, no additional alternating sequences can be found: break.\n    -   Increment `alternatingElementsCount` by `1`.\n    -   If `alternatingElementsCount` is greater than or equal to `k`, increment `result` by `1`.\n    -   Update `lastColor` to `colors[index]`.\n-   Return `result`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7gb5iN6W/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7gb5iN6W\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `colors` array.\n\n-   Time complexity: $O(n + k)$\n    The first loop runs for $n - 1$ iterations, and the second loop runs for $k - 1$ iterations. In both loops, we perform only constant-time operations on each iteration, such as variable increments and checks. Since the loops are sequential and independent, the total time complexity of the algorithm is $O(n + k)$.\n-   Space complexity: $O(1)$\n    We only a fixed number of variables (`alternatingElementsCount`, `lastColor`, `result`) that occupy constant space. Therefore, the total space complexity of the algorithm is $O(1)$.\n    \n---\n\n### Approach 3: One Pass\n\n#### Intuition\n\nInstead of handling the circular nature of the array separately, we can integrate it directly into a single loop. The key idea is to iterate beyond the array’s length while using the modulo operator (`index % n`) to wrap around seamlessly. This means that when we reach the end of the array, we automatically restart from the beginning without needing an explicit second pass or an extended array.  \n\nFor example, when we reach the `n-th` iteration, we check `arr[0]` because `n % n = 0`. On the `(n + 1)-th` iteration, we check `arr[1]` since `(n + 1) % n = 1`, and so on. This trick allows us to scan the entire array in a way that naturally accounts for sequences that cross the boundary.  \n\nThe logic for counting valid alternating sequences remains the same as in previous approaches: we maintain a counter that tracks how many consecutive elements alternate in color. If we encounter a mismatch, we reset the count to `1`. Each time the count reaches `k`, we confirm a valid sequence and update our result.  \n\nThe only special consideration is that while wrapping around, we only need to check the first `k - 1` elements because any valid sequence that extends beyond this point must have already been counted.\n\n#### Algorithm\n\n-   Initialize:\n    -  `length` to the size of the `colors` array.\n    -  `result` to `0`.\n    -  `alternatingElementsCount` to `1`, accounting for the first element of the array.\n    -   `lastColor` to `colors[0]`.\n-   Loop with `i` from `1` to `length + k - 1` to wrap around to the first `k - 1` elements:\n    -   Set `index` to `i % length`.\n    -   If `colors[index] == lastColor`, the pattern breaks:\n        -   Reset the sequence length, i.e. set `alternatingElementsCount` to `1`.\n        -   Update `lastColor` to `colors[index]` and continue to the next element.\n    -   Otherwise, `colors[index] != lastColor`, so the sequence can be extended:\n    -   Increment `alternatingElementsCount` by `1`.\n    -   If `alternatingElementsCount` is greater than or equal to `k`, increment `result` by `1`.\n    -   Update `lastColor` to `colors[index]`.\n-   Return `result`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/VfetMWob/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VfetMWob\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `colors` array.\n\n-   Time complexity: $O(n + k)$\n\n    We run a loop for $n + k - 1$ iterations, performing constant-time operations (such as modular division, variable increments, and array accesses) on each iteration. Thus, the time complexity of the algorithm is $O(n + k)$.\n\n-   Space complexity: $O(1)$\n\n    We only use a fixed number of variables (`result`, `lastColor`, `alternatingElementsCount`), which do not increase with the input size. As a result, the algorithm has a constant time complexity of $O(1)$.\n    \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

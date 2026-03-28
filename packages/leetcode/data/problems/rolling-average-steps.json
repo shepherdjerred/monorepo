@@ -1,0 +1,53 @@
+{
+  "questionId": "3156",
+  "questionFrontendId": "2854",
+  "title": "Rolling Average Steps",
+  "titleSlug": "rolling-average-steps",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code><font face=\"monospace\">Steps</font></code></p>\n\n<pre>\n+-------------+------+ \n| Column Name | Type | \n+-------------+------+ \n| user_id     | int  | \n| steps_count | int  |\n| steps_date  | date |\n+-------------+------+\n(user_id, steps_date) is the primary key for this table.\nEach row of this table contains user_id, steps_count, and steps_date.\n</pre>\n\n<p>Write a solution to calculate <code>3-day</code> <strong>rolling averages</strong> of steps for each user.</p>\n\n<p>We calculate the <code>n-day</code> <strong>rolling average</strong> this way:</p>\n\n<ul>\n\t<li>For each day, we calculate the average of <code>n</code> consecutive days of step counts ending on that day if available, otherwise, <code>n-day</code> rolling average is not defined for it.</li>\n</ul>\n\n<p>Output the <code>user_id</code>, <code>steps_date</code>, and rolling average. Round the rolling average to <strong>two decimal places</strong>.</p>\n\n<p>Return<em> the result table ordered by </em><code>user_id</code><em>, </em><code>steps_date</code><em> in <strong>ascending</strong> order.</em></p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nSteps table:\n+---------+-------------+------------+\n| user_id | steps_count | steps_date |\n+---------+-------------+------------+\n| 1       | 687         | 2021-09-02 |\n| 1       | 395         | 2021-09-04 |\n| 1       | 499         | 2021-09-05 |\n| 1       | 712         | 2021-09-06 |\n| 1       | 576         | 2021-09-07 |\n| 2       | 153         | 2021-09-06 |\n| 2       | 171         | 2021-09-07 |\n| 2       | 530         | 2021-09-08 |\n| 3       | 945         | 2021-09-04 |\n| 3       | 120         | 2021-09-07 |\n| 3       | 557         | 2021-09-08 |\n| 3       | 840         | 2021-09-09 |\n| 3       | 627         | 2021-09-10 |\n| 5       | 382         | 2021-09-05 |\n| 6       | 480         | 2021-09-01 |\n| 6       | 191         | 2021-09-02 |\n| 6       | 303         | 2021-09-05 |\n+---------+-------------+------------+\n<strong>Output:</strong> \n+---------+------------+-----------------+\n| user_id | steps_date | rolling_average | \n+---------+------------+-----------------+\n| 1       | 2021-09-06 | 535.33          | \n| 1       | 2021-09-07 | 595.67          | \n| 2       | 2021-09-08 | 284.67          |\n| 3       | 2021-09-09 | 505.67          |\n| 3       | 2021-09-10 | 674.67          |    \n+---------+------------+-----------------+\n<strong>Explanation:</strong> \n- For user id 1, the step counts for the three consecutive days up to 2021-09-06 are available. Consequently, the rolling average for this particular date is computed as (395 + 499 + 712) / 3 = 535.33.\n- For user id 1, the step counts for the three consecutive days up to 2021-09-07 are available. Consequently, the rolling average for this particular date is computed as (499 + 712 + 576) / 3 = 595.67.\n- For user id 2, the step counts for the three consecutive days up to 2021-09-08 are available. Consequently, the rolling average for this particular date is computed as (153 + 171 + 530) / 3 = 284.67.\n- For user id 3, the step counts for the three consecutive days up to 2021-09-09 are available. Consequently, the rolling average for this particular date is computed as (120 + 557 + 840) / 3 = 505.67.\n- For user id 3, the step counts for the three consecutive days up to 2021-09-10 are available. Consequently, the rolling average for this particular date is computed as (557 + 840 + 627) / 3 = 674.67.\n- For user id 4 and 5, the calculation of the rolling average is not viable as there is insufficient data for the consecutive three days. Output table ordered by user_id and steps_date in ascending order.</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table if not exists Steps(user_id int, steps_count int, steps_date date)\"], \"mssql\": [\"Create table Steps(user_id int, steps_count int, steps_date date)\"], \"oraclesql\": [\"Create table Steps(user_id int, steps_count int, steps_date date)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"rolling_average\", \"pythondata\": [\"Steps = pd.DataFrame([], columns=['user_id', 'steps_count', 'steps_date']).astype({'user_id':'Int64', 'steps_count':'Int64', 'steps_date':'datetime64[ns]'})\"], \"postgresql\": [\"Create table if not exists Steps(user_id int, steps_count int, steps_date date)\"], \"database_schema\": {\"Steps\": {\"user_id\": \"INT\", \"steps_count\": \"INT\", \"steps_date\": \"DATE\"}}}",
+  "stats": "{\"totalAccepted\": \"5.4K\", \"totalSubmission\": \"7.8K\", \"totalAcceptedRaw\": 5379, \"totalSubmissionRaw\": 7795, \"acRate\": \"69.0%\"}",
+  "likes": 29,
+  "dislikes": 3,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Steps\": [\"user_id\", \"steps_count\", \"steps_date\"]}, \"rows\": {\"Steps\": [[1,687,\"2021-09-02\"],[1,395,\"2021-09-04\"],[1,499,\"2021-09-05\"],[1,712,\"2021-09-06\"],[1,576,\"2021-09-07\"],[2,153,\"2021-09-06\"],[2,171,\"2021-09-07\"],[2,530,\"2021-09-08\"],[3,945,\"2021-09-04\"],[3,120,\"2021-09-07\"],[3,557,\"2021-09-08\"],[3,840,\"2021-09-09\"],[3,627,\"2021-09-10\"],[5,382,\"2021-09-05\"],[6,480,\"2021-09-01\"],[6,191,\"2021-09-02\"],[6,303,\"2021-09-05\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef rolling_average(steps: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

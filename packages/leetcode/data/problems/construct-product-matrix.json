@@ -1,0 +1,140 @@
+{
+  "questionId": "3031",
+  "questionFrontendId": "2906",
+  "title": "Construct Product Matrix",
+  "titleSlug": "construct-product-matrix",
+  "difficulty": "Medium",
+  "content": "<p>Given a <strong>0-indexed</strong> 2D integer matrix <code><font face=\"monospace\">grid</font></code><font face=\"monospace\"> </font>of size <code>n * m</code>, we define a <strong>0-indexed</strong> 2D matrix <code>p</code> of size <code>n * m</code> as the <strong>product</strong> matrix of <code>grid</code> if the following condition is met:</p>\n\n<ul>\n\t<li>Each element <code>p[i][j]</code> is calculated as the product of all elements in <code>grid</code> except for the element <code>grid[i][j]</code>. This product is then taken modulo <code><font face=\"monospace\">12345</font></code>.</li>\n</ul>\n\n<p>Return <em>the product matrix of</em> <code><font face=\"monospace\">grid</font></code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[1,2],[3,4]]\n<strong>Output:</strong> [[24,12],[8,6]]\n<strong>Explanation:</strong> p[0][0] = grid[0][1] * grid[1][0] * grid[1][1] = 2 * 3 * 4 = 24\np[0][1] = grid[0][0] * grid[1][0] * grid[1][1] = 1 * 3 * 4 = 12\np[1][0] = grid[0][0] * grid[0][1] * grid[1][1] = 1 * 2 * 4 = 8\np[1][1] = grid[0][0] * grid[0][1] * grid[1][0] = 1 * 2 * 3 = 6\nSo the answer is [[24,12],[8,6]].</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[12345],[2],[1]]\n<strong>Output:</strong> [[2],[0],[0]]\n<strong>Explanation:</strong> p[0][0] = grid[0][1] * grid[0][2] = 2 * 1 = 2.\np[0][1] = grid[0][0] * grid[0][2] = 12345 * 1 = 12345. 12345 % 12345 = 0. So p[0][1] = 0.\np[0][2] = grid[0][0] * grid[0][1] = 12345 * 2 = 24690. 24690 % 12345 = 0. So p[0][2] = 0.\nSo the answer is [[2],[0],[0]].</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n == grid.length&nbsp;&lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= m == grid[i].length&nbsp;&lt;= 10<sup>5</sup></code></li>\n\t<li><code>2 &lt;= n * m &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= grid[i][j] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Try to solve this without using the <code>'/'</code> (division operation).",
+    "Create two 2D arrays for <b>suffix</b> and <b>prefix</b> product, and use them to find the product for each position."
+  ],
+  "metaData": "{\n  \"name\": \"constructProductMatrix\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  },\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"c\",\n    \"csharp\",\n    \"javascript\",\n    \"ruby\",\n    \"swift\",\n    \"golang\",\n    \"python3\",\n    \"scala\",\n    \"kotlin\",\n    \"rust\",\n    \"php\",\n    \"typescript\",\n    \"racket\",\n    \"erlang\",\n    \"elixir\",\n    \"dart\"\n  ]\n}",
+  "stats": "{\"totalAccepted\": \"101.5K\", \"totalSubmission\": \"196.2K\", \"totalAcceptedRaw\": 101470, \"totalSubmissionRaw\": 196154, \"acRate\": \"51.7%\"}",
+  "likes": 588,
+  "dislikes": 49,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Product of Array Except Self\", \"titleSlug\": \"product-of-array-except-self\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,2],[3,4]]",
+    "[[12345],[2],[1]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> constructProductMatrix(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] constructProductMatrix(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def constructProductMatrix(self, grid: List[List[int]]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def constructProductMatrix(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number[][]}\n */\nvar constructProductMatrix = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function constructProductMatrix(grid: number[][]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] ConstructProductMatrix(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** constructProductMatrix(int** grid, int gridSize, int* gridColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func constructProductMatrix(grid [][]int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun constructProductMatrix(grid: Array<IntArray>): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func constructProductMatrix(_ grid: [[Int]]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn construct_product_matrix(grid: Vec<Vec<i32>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer[][]}\ndef construct_product_matrix(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer[][]\n     */\n    function constructProductMatrix($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> constructProductMatrix(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def constructProductMatrix(grid: Array[Array[Int]]): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec construct_product_matrix(grid :: [[integer]]) :: [[integer]]\n  def construct_product_matrix(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec construct_product_matrix(Grid :: [[integer()]]) -> [[integer()]].\nconstruct_product_matrix(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (construct-product-matrix grid)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2938",
+    "content": "### Approach: Suffix Product\n\n#### Intuition\n\nThe product matrix $p$ of the matrix $\\textit{grid}$ is defined as follows:\n\n+ Each element $p[i][j]$ is equal to the product of all elements in the matrix except $\\textit{grid}[i][j]$, taken modulo $12345$.\n\nIf the matrix were one-dimensional, this problem would reduce to \"[238. Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/)\". Using the same idea, we can treat the two-dimensional matrix as a flattened array and compute the product of elements to the left and right of each position separately.\n\nThis allows us to compute, for each position, a **prefix product** and a **suffix product**, whose product gives the desired result.\n\nThe computation of each element $p[i][j]$ proceeds as follows:\n\n* First, compute the **suffix product**, which is the product of all elements after $\\textit{grid}[i][j]$ up to $\\textit{grid}[n - 1][m - 1]$. Denote this as $\\textit{suffix}[i][j]$. We can compute this by traversing the matrix in reverse order starting from $\\textit{grid}[n - 1][m - 1]$.\n\n* Next, compute the **prefix product**, which is the product of all elements before $\\textit{grid}[i][j]$, starting from $\\textit{grid}[0][0]$. Denote this as $\\textit{prefix}[i][j]$. This can be computed by traversing the matrix in forward order.\n\nThus, we have:\n\n$$\np[i][j] = \\textit{prefix}[i][j] \\cdot \\textit{suffix}[i][j]\n$$\n\nTo optimize space, we do not explicitly store both arrays. Instead:\n\n* During the reverse traversal, we store the suffix product directly in $p[i][j]$.\n* During the forward traversal, we maintain a running prefix product in a variable $\\textit{prefix}$ and multiply it with $p[i][j]$ to obtain the final result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/aVYURiKo/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"aVYURiKo\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ and $m$ be the number of rows and columns of the matrix, respectively.\n\n- Time complexity: $O(nm)$.\n  \n  We traverse the entire matrix twice, so the total time complexity is $O(nm)$.\n\n- Space complexity: $O(1)$.\n  \n  No additional space is used apart from the output matrix.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

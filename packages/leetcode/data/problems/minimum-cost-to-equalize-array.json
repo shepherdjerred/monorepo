@@ -1,0 +1,139 @@
+{
+  "questionId": "3402",
+  "questionFrontendId": "3139",
+  "title": "Minimum Cost to Equalize Array",
+  "titleSlug": "minimum-cost-to-equalize-array",
+  "difficulty": "Hard",
+  "content": "<p>You are given an integer array <code>nums</code> and two integers <code>cost1</code> and <code>cost2</code>. You are allowed to perform <strong>either</strong> of the following operations <strong>any</strong> number of times:</p>\n\n<ul>\n\t<li>Choose an index <code>i</code> from <code>nums</code> and <strong>increase</strong> <code>nums[i]</code> by <code>1</code> for a cost of <code>cost1</code>.</li>\n\t<li>Choose two <strong>different</strong> indices <code>i</code>, <code>j</code>, from <code>nums</code> and <strong>increase</strong> <code>nums[i]</code> and <code>nums[j]</code> by <code>1</code> for a cost of <code>cost2</code>.</li>\n</ul>\n\n<p>Return the <strong>minimum</strong> <strong>cost</strong> required to make all elements in the array <strong>equal</strong><em>. </em></p>\n\n<p>Since the answer may be very large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [4,1], cost1 = 5, cost2 = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">15</span></p>\n\n<p><strong>Explanation: </strong></p>\n\n<p>The following operations can be performed to make the values equal:</p>\n\n<ul>\n\t<li>Increase <code>nums[1]</code> by 1 for a cost of 5. <code>nums</code> becomes <code>[4,2]</code>.</li>\n\t<li>Increase <code>nums[1]</code> by 1 for a cost of 5. <code>nums</code> becomes <code>[4,3]</code>.</li>\n\t<li>Increase <code>nums[1]</code> by 1 for a cost of 5. <code>nums</code> becomes <code>[4,4]</code>.</li>\n</ul>\n\n<p>The total cost is 15.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [2,3,3,3,5], cost1 = 2, cost2 = 1</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">6</span></p>\n\n<p><strong>Explanation: </strong></p>\n\n<p>The following operations can be performed to make the values equal:</p>\n\n<ul>\n\t<li>Increase <code>nums[0]</code> and <code>nums[1]</code> by 1 for a cost of 1. <code>nums</code> becomes <code>[3,4,3,3,5]</code>.</li>\n\t<li>Increase <code>nums[0]</code> and <code>nums[2]</code> by 1 for a cost of 1. <code>nums</code> becomes <code>[4,4,4,3,5]</code>.</li>\n\t<li>Increase <code>nums[0]</code> and <code>nums[3]</code> by 1 for a cost of 1. <code>nums</code> becomes <code>[5,4,4,4,5]</code>.</li>\n\t<li>Increase <code>nums[1]</code> and <code>nums[2]</code> by 1 for a cost of 1. <code>nums</code> becomes <code>[5,5,5,4,5]</code>.</li>\n\t<li>Increase <code>nums[3]</code> by 1 for a cost of 2. <code>nums</code> becomes <code>[5,5,5,5,5]</code>.</li>\n</ul>\n\n<p>The total cost is 6.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [3,5,3], cost1 = 1, cost2 = 3</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">4</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The following operations can be performed to make the values equal:</p>\n\n<ul>\n\t<li>Increase <code>nums[0]</code> by 1 for a cost of 1. <code>nums</code> becomes <code>[4,5,3]</code>.</li>\n\t<li>Increase <code>nums[0]</code> by 1 for a cost of 1. <code>nums</code> becomes <code>[5,5,3]</code>.</li>\n\t<li>Increase <code>nums[2]</code> by 1 for a cost of 1. <code>nums</code> becomes <code>[5,5,4]</code>.</li>\n\t<li>Increase <code>nums[2]</code> by 1 for a cost of 1. <code>nums</code> becomes <code>[5,5,5]</code>.</li>\n</ul>\n\n<p>The total cost is 4.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>6</sup></code></li>\n\t<li><code>1 &lt;= cost1 &lt;= 10<sup>6</sup></code></li>\n\t<li><code>1 &lt;= cost2 &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "How can you determine the minimum cost if you know the maximum value in the array once all values are made equal?",
+    "If <code>cost2 > cost1 * 2</code>, we should just use <code>cost1</code> to change all the values to the maximum one.",
+    "Otherwise, it's optimal to choose the smallest two values and use <code>cost2</code> to increase both of them.",
+    "Since the maximum value is known, calculate the required increases to equalize all values, instead of naively simulating the operations.",
+    "There are not a lot of candidates for the maximum; we can try all of them and choose which uses the minimum number of operations."
+  ],
+  "metaData": "{\n  \"name\": \"minCostToEqualizeArray\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"cost1\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"cost2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"6.4K\", \"totalSubmission\": \"34.1K\", \"totalAcceptedRaw\": 6398, \"totalSubmissionRaw\": 34091, \"acRate\": \"18.8%\"}",
+  "likes": 149,
+  "dislikes": 24,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[4,1]\n5\n2",
+    "[2,3,3,3,5]\n2\n1",
+    "[3,5,3]\n1\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minCostToEqualizeArray(vector<int>& nums, int cost1, int cost2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minCostToEqualizeArray(int[] nums, int cost1, int cost2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minCostToEqualizeArray(self, nums: List[int], cost1: int, cost2: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minCostToEqualizeArray(self, nums, cost1, cost2):\n        \"\"\"\n        :type nums: List[int]\n        :type cost1: int\n        :type cost2: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} cost1\n * @param {number} cost2\n * @return {number}\n */\nvar minCostToEqualizeArray = function(nums, cost1, cost2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minCostToEqualizeArray(nums: number[], cost1: number, cost2: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinCostToEqualizeArray(int[] nums, int cost1, int cost2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minCostToEqualizeArray(int* nums, int numsSize, int cost1, int cost2) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minCostToEqualizeArray(nums []int, cost1 int, cost2 int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minCostToEqualizeArray(nums: IntArray, cost1: Int, cost2: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minCostToEqualizeArray(_ nums: [Int], _ cost1: Int, _ cost2: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_cost_to_equalize_array(nums: Vec<i32>, cost1: i32, cost2: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} cost1\n# @param {Integer} cost2\n# @return {Integer}\ndef min_cost_to_equalize_array(nums, cost1, cost2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $cost1\n     * @param Integer $cost2\n     * @return Integer\n     */\n    function minCostToEqualizeArray($nums, $cost1, $cost2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minCostToEqualizeArray(List<int> nums, int cost1, int cost2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minCostToEqualizeArray(nums: Array[Int], cost1: Int, cost2: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_cost_to_equalize_array(nums :: [integer], cost1 :: integer, cost2 :: integer) :: integer\n  def min_cost_to_equalize_array(nums, cost1, cost2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_cost_to_equalize_array(Nums :: [integer()], Cost1 :: integer(), Cost2 :: integer()) -> integer().\nmin_cost_to_equalize_array(Nums, Cost1, Cost2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-cost-to-equalize-array nums cost1 cost2)\n  (-> (listof exact-integer?) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

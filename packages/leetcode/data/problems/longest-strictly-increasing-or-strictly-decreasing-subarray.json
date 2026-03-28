@@ -1,0 +1,130 @@
+{
+  "questionId": "3372",
+  "questionFrontendId": "3105",
+  "title": "Longest Strictly Increasing or Strictly Decreasing Subarray",
+  "titleSlug": "longest-strictly-increasing-or-strictly-decreasing-subarray",
+  "difficulty": "Easy",
+  "content": "<p>You are given an array of integers <code>nums</code>. Return <em>the length of the <strong>longest</strong> <span data-keyword=\"subarray-nonempty\">subarray</span> of </em><code>nums</code><em> which is either <strong><span data-keyword=\"strictly-increasing-array\">strictly increasing</span></strong> or <strong><span data-keyword=\"strictly-decreasing-array\">strictly decreasing</span></strong></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,4,3,3,2]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The strictly increasing subarrays of <code>nums</code> are <code>[1]</code>, <code>[2]</code>, <code>[3]</code>, <code>[3]</code>, <code>[4]</code>, and <code>[1,4]</code>.</p>\n\n<p>The strictly decreasing subarrays of <code>nums</code> are <code>[1]</code>, <code>[2]</code>, <code>[3]</code>, <code>[3]</code>, <code>[4]</code>, <code>[3,2]</code>, and <code>[4,3]</code>.</p>\n\n<p>Hence, we return <code>2</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [3,3,3,3]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The strictly increasing subarrays of <code>nums</code> are <code>[3]</code>, <code>[3]</code>, <code>[3]</code>, and <code>[3]</code>.</p>\n\n<p>The strictly decreasing subarrays of <code>nums</code> are <code>[3]</code>, <code>[3]</code>, <code>[3]</code>, and <code>[3]</code>.</p>\n\n<p>Hence, we return <code>1</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [3,2,1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The strictly increasing subarrays of <code>nums</code> are <code>[3]</code>, <code>[2]</code>, and <code>[1]</code>.</p>\n\n<p>The strictly decreasing subarrays of <code>nums</code> are <code>[3]</code>, <code>[2]</code>, <code>[1]</code>, <code>[3,2]</code>, <code>[2,1]</code>, and <code>[3,2,1]</code>.</p>\n\n<p>Hence, we return <code>3</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 50</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 50</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"longestMonotonicSubarray\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"217.8K\", \"totalSubmission\": \"335.4K\", \"totalAcceptedRaw\": 217783, \"totalSubmissionRaw\": 335392, \"acRate\": \"64.9%\"}",
+  "likes": 664,
+  "dislikes": 33,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,4,3,3,2]",
+    "[3,3,3,3]",
+    "[3,2,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"larsen-toubro\", \"name\": \"Larsen & Toubro\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int longestMonotonicSubarray(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int longestMonotonicSubarray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestMonotonicSubarray(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestMonotonicSubarray(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar longestMonotonicSubarray = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestMonotonicSubarray(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LongestMonotonicSubarray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int longestMonotonicSubarray(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestMonotonicSubarray(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestMonotonicSubarray(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestMonotonicSubarray(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_monotonic_subarray(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef longest_monotonic_subarray(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function longestMonotonicSubarray($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int longestMonotonicSubarray(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestMonotonicSubarray(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_monotonic_subarray(nums :: [integer]) :: integer\n  def longest_monotonic_subarray(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_monotonic_subarray(Nums :: [integer()]) -> integer().\nlongest_monotonic_subarray(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-monotonic-subarray nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2668",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nGiven an array of integers `nums`, we need to find the length of its longest subarray that is either strictly increasing or strictly decreasing.\n\nA subarray is a continuous sequence of elements from the original array. For example, in the array `[1, 2, 3, 4, 5]`, valid subarrays include `[2, 3]`, `[1]`, and `[3, 4, 5]`. Note that `[1, 2, 4]` is not a subarray but rather a subsequence, as its elements are not continuous in the original array.\n\nIn a strictly increasing subarray, each element must be greater than the previous element. Similarly, in a strictly decreasing subarray, each element must be less than the previous element.\n    \n> Note: A subsequence is a set of numbers from an array that are in the same order as they appear in the array, but not necessarily in adjacent positions. \n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nSince the problem constraints are very small (`nums.length <= 50`), a brute force approach is feasible here. We examine all possible subarrays of `nums`, check if they are increasing, and track the length of the longest increasing one. Then, we repeat the process for decreasing subarrays. The maximum length found among these two is our answer.\n\nWe start by iterating through the array, treating each element as the starting point of a subarray. For each starting point, we run an inner loop that continues as long as the current element is greater than the previous one, indicating an increasing sequence. Once this condition fails, we exit the loop. Throughout the process, we track the length of the longest increasing subarray found so far in a variable called `maxLength`.\n\nAfter completing the search for increasing subarrays, we repeat the same logic, but this time we check for strictly decreasing subarrays. Again, we update `maxLength` whenever we find a longer decreasing subarray.\n\nOnce both loops are finished, `maxLength` will contain the length of the longest subarray that is either strictly increasing or strictly decreasing. This value can then be returned as the final result.\n\n#### Algorithm\n\n- Initialize a variable `maxLength` to `0` to track the length of the longest monotonic subarray.\n- For finding the longest increasing subarray:\n  - Iterate through each position in the array as a potential starting point.\n  - Initialize a variable `currLength` to `1` for each starting position.\n  - From the start position, iterate through subsequent elements:\n     - If the current element is greater than the previous element, increment `currLength` by 1.\n     - If the current element is not greater than the previous element, break the inner loop.\n  - Update `maxLength` to be the largest of itself and the current `currLength`.\n- For finding the longest decreasing subarray, follow the same steps as above, but increment `currLength` if the current element is less than the previous element.\n- Return the final value of `maxLength`, which represents the length of the longest strictly increasing or strictly decreasing subarray found.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4vDyFrMj/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4vDyFrMj\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array.\n\n- Time complexity: $O(n^2)$\n\n    The solution uses two nested loops to find both increasing and decreasing sequences. For each starting position in the outer loop (which runs $n$ times), the inner loop can potentially examine all remaining elements (up to $n$ elements). This gives us $O(n^2)$ operations for finding increasing sequences. The same process is repeated for finding decreasing sequences, resulting in another $O(n^2)$ operations. Therefore, the total time complexity is $O(n^2)$.\n\n- Space complexity: $O(1)$\n\n    The solution only uses a constant amount of space to store the variables `maxLength` and `currLength`. No additional data structures are created, and the space used does not grow with the input size. Therefore, the space complexity is constant, or $O(1)$.  \n\n---\n\n### Approach 2: Single Iteration\n\n#### Intuition\n\nIn our previous approach, we did a lot of repetitive work. In both the loops, we iterate over the array and compare adjacent elements. The only difference was the type of subarray we were counting. This suggests that the two loops can likely be combined into a single loop. Also, when we break from the inner loop after exploring a subarray, we again iterate over almost the same subarray in the next iteration, when the starting element shifts by one to the left. We can make this process more efficient by completing the exploration in a single iteration.\n\nWe iterate over `nums` and along with `maxLength`, we'll now maintain two variables `incLength` and `decLength`. These will track the length of the increasing and decreasing subarrays ending at the current element we are iterating over. Here’s how we handle each element during the iteration:\n1. Current element $>$ Previous element: This means the current element can extend an increasing subarray. So, we increment `incLength` by `1`. At the same time, we reset `decLength` to `1`, since the longest decreasing subarray ending at this element is the element itself.\n2. Current element $<$ Previous element: Now, the current element can extend a decreasing subarray. We increment `decLength` by `1` and reset `incLength` to `1`.\n3. Current element $=$ Previous element: Since we are looking for strictly increasing or decreasing subarrays, neither `incLength` nor `decLength` can increase in this case. We reset both to `1`.\n\nAt each step, we update `maxLength` with the larger of `incLength` or `decLength`. Once the loop finishes, `maxLength` will hold the length of the longest strictly increasing or decreasing subarray. We then return `maxLength` as the final answer.\n\nThe slideshow below demonstrates this algorithm in action:\n\n!?!../Documents/3105/slideshow.json:1042,542!?!\n\n#### Algorithm\n\n- Initialize variables:\n  - `incLength` to `1` to track the current length of an increasing sequence.\n  - `decLength` to `1` to track the current length of a decreasing sequence.\n  - `maxLength` to `1` to store the length of the longest monotonic subarray found.\n- Iterate through the array from the first element to the second-to-last element:\n  - Compare each element with its next element.\n  - If the next element is greater than the current element:\n    - Increment `incLength` by `1` to extend the increasing sequence.\n    - Reset `decLength` to `1` as the decreasing sequence breaks.\n  - If the next element is less than the current element:\n    - Increment `decLength` by `1` to extend the decreasing sequence.\n    - Reset `incLength` to `1` as the increasing sequence breaks.\n  - If the next element equals the current element:\n    - Reset both `incLength` and `decLength` to `1` as both sequences break.\n  - Update `maxLength` to be the larger among itself, `incLength`, and `decLength`.\n- Return the final value of `maxLength`, which represents the length of the longest strictly monotonic subarray.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Q2CTk6AV/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Q2CTk6AV\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array `nums`.\n\n- Time complexity: $O(n)$  \n  \n    The algorithm iterates through the array exactly once using a single loop, comparing adjacent elements to determine whether the sequence is increasing or decreasing. Each comparison and update operation is performed in constant time. Therefore, the overall time complexity is $O(n)$.\n\n- Space complexity: $O(1)$  \n  \n    The algorithm uses a constant amount of additional space, with variables `incLength`, `decLength`, and `maxLength` to track the lengths of the sequences and the largest length encountered. No extra data structures are used, so the space complexity is $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

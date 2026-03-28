@@ -1,0 +1,53 @@
+{
+  "questionId": "3488",
+  "questionFrontendId": "3182",
+  "title": "Find Top Scoring Students",
+  "titleSlug": "find-top-scoring-students",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>students</code></p>\n\n<pre>\n+-------------+----------+\n| Column Name | Type     | \n+-------------+----------+\n| student_id  | int      |\n| name        | varchar  |\n| major       | varchar  |\n+-------------+----------+\nstudent_id is the primary key (combination of columns with unique values) for this table.\nEach row of this table contains the student ID, student name, and their major.\n</pre>\n\n<p>Table: <code>courses</code></p>\n\n<pre>\n+-------------+----------+\n| Column Name | Type     | \n+-------------+----------+\n| course_id   | int      |\n| name        | varchar  |\n| credits     | int      |\n| major       | varchar  |\n+-------------+----------+\ncourse_id is the primary key (combination of columns with unique values) for this table.\nEach row of this table contains the course ID, course name, the number of credits for the course, and the major it belongs to.\n</pre>\n\n<p>Table: <code>enrollments</code></p>\n\n<pre>\n+-------------+----------+\n| Column Name | Type     | \n+-------------+----------+\n| student_id  | int      |\n| course_id   | int      |\n| semester    | varchar  |\n| grade       | varchar  |\n+-------------+----------+\n(student_id, course_id, semester) is the primary key (combination of columns with unique values) for this table.\nEach row of this table contains the student ID, course ID, semester, and grade received.\n</pre>\n\n<p>Write a solution to find the students who have <strong>taken</strong> <strong>all courses</strong> offered in their <code>major</code> and have achieved a <strong>grade of A</strong> <strong>in all these courses</strong>.</p>\n\n<p>Return <em>the result table ordered by</em> <code>student_id</code> <em>in <strong>ascending</strong> order</em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>students table:</p>\n\n<pre class=\"example-io\">\n+------------+------------------+------------------+\n| student_id | name             | major            |\n+------------+------------------+------------------+\n| 1          | Alice            | Computer Science |\n| 2          | Bob              | Computer Science |\n| 3          | Charlie          | Mathematics      |\n| 4          | David            | Mathematics      |\n+------------+------------------+------------------+\n</pre>\n\n<p>courses table:</p>\n\n<pre class=\"example-io\">\n+-----------+-----------------+---------+------------------+\n| course_id | name            | credits | major            |\n+-----------+-----------------+---------+------------------+\n| 101       | Algorithms      | 3       | Computer Science |\n| 102       | Data Structures | 3       | Computer Science |\n| 103       | Calculus        | 4       | Mathematics      |\n| 104       | Linear Algebra  | 4       | Mathematics      |\n+-----------+-----------------+---------+------------------+\n</pre>\n\n<p>enrollments table:</p>\n\n<pre class=\"example-io\">\n+------------+-----------+----------+-------+\n| student_id | course_id | semester | grade |\n+------------+-----------+----------+-------+\n| 1          | 101       | Fall 2023| A     |\n| 1          | 102       | Fall 2023| A     |\n| 2          | 101       | Fall 2023| B     |\n| 2          | 102       | Fall 2023| A     |\n| 3          | 103       | Fall 2023| A     |\n| 3          | 104       | Fall 2023| A     |\n| 4          | 103       | Fall 2023| A     |\n| 4          | 104       | Fall 2023| B     |\n+------------+-----------+----------+-------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+------------+\n| student_id |\n+------------+\n| 1          |\n| 3          |\n+------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Alice (student_id 1) is a Computer Science major and has taken both &quot;Algorithms&quot; and &quot;Data Structures&quot;, receiving an &#39;A&#39; in both.</li>\n\t<li>Bob (student_id 2) is a Computer Science major but did not receive an &#39;A&#39; in all required courses.</li>\n\t<li>Charlie (student_id 3) is a Mathematics major and has taken both &quot;Calculus&quot; and &quot;Linear Algebra&quot;, receiving an &#39;A&#39; in both.</li>\n\t<li>David (student_id 4) is a Mathematics major but did not receive an &#39;A&#39; in all required courses.</li>\n</ul>\n\n<p><b>Note:</b> Output table is ordered by student_id in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE if not exists students (\\n    student_id INT ,\\n    name VARCHAR(255),\\n    major VARCHAR(255)\\n)\", \"CREATE TABLE  if not exists courses (\\n    course_id INT ,\\n    name VARCHAR(255),\\n    credits INT,\\n    major VARCHAR(255)\\n)\\n\", \"CREATE TABLE  if not exists enrollments (\\n    student_id INT,\\n    course_id INT,\\n    semester VARCHAR(255),\\n    grade VARCHAR(10)\\n\\n);\"], \"mssql\": [\"CREATE TABLE students (\\n    student_id INT ,\\n    name VARCHAR(255),\\n    major VARCHAR(255)\\n)\", \"CREATE TABLE  courses (\\n    course_id INT ,\\n    name VARCHAR(255),\\n    credits INT,\\n    major VARCHAR(255)\\n)\\n\", \"CREATE TABLE  enrollments (\\n    student_id INT,\\n    course_id INT,\\n    semester VARCHAR(255),\\n    grade VARCHAR(10)\\n\\n);\"], \"oraclesql\": [\"CREATE TABLE students (\\n    student_id NUMBER ,\\n    name VARCHAR2(255),\\n    major VARCHAR2(255)\\n)\", \"CREATE TABLE courses (\\n    course_id NUMBER,\\n    name VARCHAR2(255),\\n    credits NUMBER,\\n    major VARCHAR2(255)\\n)\", \"CREATE TABLE enrollments (\\n    student_id NUMBER,\\n    course_id NUMBER,\\n    semester VARCHAR2(255),\\n    grade VARCHAR2(10) \\n    \\n)\"], \"database\": true, \"name\": \"find_top_scoring_students\", \"pythondata\": [\"enrollments = pd.DataFrame([], columns=['student_id', 'course_id', 'semester', 'grade']).astype({\\n    'student_id': 'Int64',  # Nullable integer type\\n    'course_id': 'Int64',   # Nullable integer type\\n    'semester': 'object',   # Object type for arbitrary strings\\n    'grade': 'object'       # Object type for arbitrary strings\\n})\", \"students = pd.DataFrame([], columns=['student_id', 'name', 'major']).astype({\\n    'student_id': 'Int64',  # Nullable integer type\\n    'name': 'object',       # Object type for arbitrary strings, equivalent to VARCHAR\\n    'major': 'object'       # Object type for arbitrary strings, equivalent to VARCHAR\\n})\", \"courses = pd.DataFrame([], columns=['course_id', 'name', 'credits', 'major']).astype({\\n    'course_id': 'Int64',  # Nullable integer type\\n    'name': 'object',      # Object type for arbitrary strings, equivalent to VARCHAR\\n    'credits': 'Int64',    # Nullable integer type\\n    'major': 'object'      # Object type for arbitrary strings, equivalent to VARCHAR\\n})\"], \"postgresql\": [\"CREATE TABLE IF NOT EXISTS students (\\n    student_id INT,\\n    name VARCHAR(255),\\n    major VARCHAR(255)\\n);\\n\", \"CREATE TABLE IF NOT EXISTS courses (\\n    course_id INT,\\n    name VARCHAR(255),\\n    credits INT,\\n    major VARCHAR(255)\\n);\\n\", \"CREATE TABLE IF NOT EXISTS enrollments (\\n    student_id INT,\\n    course_id INT,\\n    semester VARCHAR(255),\\n    grade VARCHAR(10)\\n);\\n\"], \"database_schema\": {\"students\": {\"student_id\": \"INT\", \"name\": \"VARCHAR(255)\", \"major\": \"VARCHAR(255)\"}, \"courses\": {\"course_id\": \"INT\", \"name\": \"VARCHAR(255)\", \"credits\": \"INT\", \"major\": \"VARCHAR(255)\"}, \"enrollments\": {\"student_id\": \"INT\", \"course_id\": \"INT\", \"semester\": \"VARCHAR(255)\", \"grade\": \"VARCHAR(10)\"}}}",
+  "stats": "{\"totalAccepted\": \"3K\", \"totalSubmission\": \"5.9K\", \"totalAcceptedRaw\": 2960, \"totalSubmissionRaw\": 5947, \"acRate\": \"49.8%\"}",
+  "likes": 15,
+  "dislikes": 3,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"students\":[\"student_id\",\"name\",\"major\"],\"courses\":[\"course_id\",\"name\",\"credits\",\"major\"],\"enrollments\":[\"student_id\",\"course_id\",\"semester\",\"grade\"]},\"rows\":{\"students\":[[1,\"Alice\",\"Computer Science\"],[2,\"Bob\",\"Computer Science\"],[3,\"Charlie\",\"Mathematics\"],[4,\"David\",\"Mathematics\"]],\"courses\":[[101,\"Algorithms\",3,\"Computer Science\"],[102,\"Data Structures\",3,\"Computer Science\"],[103,\"Calculus\",4,\"Mathematics\"],[104,\"Linear Algebra\",4,\"Mathematics\"]],\"enrollments\":[[1,101,\"Fall 2023\",\"A\"],[1,102,\"Fall 2023\",\"A\"],[2,101,\"Fall 2023\",\"B\"],[2,102,\"Fall 2023\",\"A\"],[3,103,\"Fall 2023\",\"A\"],[3,104,\"Fall 2023\",\"A\"],[4,103,\"Fall 2023\",\"A\"],[4,104,\"Fall 2023\",\"B\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_top_scoring_students(enrollments: pd.DataFrame, students: pd.DataFrame, courses: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

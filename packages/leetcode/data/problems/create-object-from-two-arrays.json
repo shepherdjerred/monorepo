@@ -1,0 +1,40 @@
+{
+  "questionId": "2861",
+  "questionFrontendId": "2794",
+  "title": "Create Object from Two Arrays",
+  "titleSlug": "create-object-from-two-arrays",
+  "difficulty": "Easy",
+  "content": "<p>Given two arrays <code>keysArr</code> and <code>valuesArr</code>, return a new object <code>obj</code>. Each key-value pair in&nbsp;<code>obj</code>&nbsp;should come from&nbsp;<code>keysArr[i]</code>&nbsp;and&nbsp;<code>valuesArr[i]</code>.</p>\n\n<p>If a duplicate key exists at a previous index, that key-value should be excluded. In other words, only the first key should be added to the object.</p>\n\n<p>If the key is not a string, it should be converted into a string by calling <code>String()</code>&nbsp;on it.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> keysArr = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;], valuesArr = [1, 2, 3]\n<strong>Output:</strong> {&quot;a&quot;: 1, &quot;b&quot;: 2, &quot;c&quot;: 3}\n<strong>Explanation:</strong> The keys &quot;a&quot;, &quot;b&quot;, and &quot;c&quot; are paired with the values 1, 2, and 3 respectively.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> keysArr = [&quot;1&quot;, 1, false], valuesArr = [4, 5, 6]\n<strong>Output:</strong> {&quot;1&quot;: 4, &quot;false&quot;: 6}\n<strong>Explanation:</strong> First, all the elements in keysArr are converted into strings. We can see there are two occurrences of &quot;1&quot;. The value associated with the first occurrence of &quot;1&quot; is used: 4.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> keysArr = [], valuesArr = []\n<strong>Output:</strong> {}\n<strong>Explanation:</strong> There are no keys so an empty object is returned.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>keysArr</code> and <code>valuesArr</code> are valid JSON arrays</li>\n\t<li><code>2 &lt;= JSON.stringify(keysArr).length,&nbsp;JSON.stringify(valuesArr).length &lt;= 5 * 10<sup>5</sup></code></li>\n\t<li><code>keysArr.length === valuesArr.length</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"createObject\",\n  \"params\": [\n    {\n      \"name\": \"keysArr\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"valuesArr\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"languages\": [\n    \"javascript\",\n    \"typescript\"\n  ],\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"1.8K\", \"totalSubmission\": \"2.7K\", \"totalAcceptedRaw\": 1761, \"totalSubmissionRaw\": 2739, \"acRate\": \"64.3%\"}",
+  "likes": 11,
+  "dislikes": 3,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"a\",\"b\",\"c\"]\n[1,2,3]",
+    "[1,\"1\",false]\n[4,5,6]",
+    "[]\n[]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [],
+  "codeSnippets": [
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {Array} keysArr\n * @param {Array} valuesArr\n * @return {Object}\n */\nvar createObject = function(keysArr, valuesArr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "type JSONValue = null | boolean | number | string | JSONValue[] | { [key: string]: JSONValue };\n\nfunction createObject(keysArr: JSONValue[], valuesArr: JSONValue[]): Record<string, JSONValue> {\n    \n};"
+    }
+  ],
+  "solution": {
+    "id": "2087",
+    "content": "[TOC]\n\n\n## Overview:\nWe are given with two arrays, `keysArr` and `valuesArr`. Our main task is to create a new object `obj` where each key-value pair in `obj` should be formed from the corresponding elements in `keysArr` and `valuesArr`. However, if a duplicate key has been encountered at a previous index, the key-value pair corresponding to that key should be excluded from `obj`.\nFor those new to JavaScript, this article might be useful to uderstand [Objects](https://leetcode.com/problems/differences-between-two-objects/editorial/).\n\n---\n\n## Approach 1: Using loop\n\n### Intuition:\nWe can iterate through the `keysArr` and `valuesArr` arrays using a loop. For each key-value pair, we'll check whether the `key` already exists in the object `obj`. If it doesn't, we will add the `key` and its corresponding value to the object.\n\n### Algorithm:\n1. Initialize an empty object `obj`.\n2. Loop through the `keysArr` and `valuesArr` arrays simultaneously using the forEach loop.\n3. For each iteration:\n    * Check if the `key` already exists in the `obj` using the key in `obj` condition.\n    * If the `key` does not exist, add the key-value pair to the `obj`.\n4. Finally return the `obj`.\n\n> Note: For typescript we need to convert non-string keys to strings. As in javscript we don't check for a string type because keys are automatically converted into strings when using obj[key].\n\n### Implementation:\n\n<iframe src=\"https://leetcode.com/playground/PKkdrRvg/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"PKkdrRvg\"></iframe>\n\n\n### Complexity Analysis:\n\n* **Time complexity:** The `forEach` loop iterates through each element in the `keysArr` and `valuesArr` arrays, resulting in a time complexity of $O(n)$, where `n` is the length of the arrays.\n\n* **Space complexity:** The space complexity is $O(k)$, where `k` is the number of unique keys in the `keysArr` that are added to the `obj` object.\n\n---\n\n## Approach 2: Using built-in method hasOwnProperty() \n\n### Intuition:\nWe can use the `hasOwnProperty()` method to check whether an object `O` has a specific property `x`. This method returns true if the property exists directly on the object and is not inherited from the prototype chain.\n\n### Algorithm:\n1. Initialize an empty object `obj`.\n2. Loop through the `keysArr`.\n3. For each `key` in the `keysArr`, use the `hasOwnProperty()` method to check if the object `obj` has the key.\n4. If the `key` is not present, add the key-value pair to the object `obj`.\n5. Finally return the `obj`\n\n### Implementation:\n\n<iframe src=\"https://leetcode.com/playground/QuH7XVns/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"QuH7XVns\"></iframe>\n\n\n### Complexity Analysis:\n\n* **Time complexity:** The loop iterates through each element in the `keysArr` and `valuesArr` arrays, resulting in a time complexity of $O(n)$, where `n` is the length of the arrays.\n\n* **Space complexity:** The space complexity is $O(k)$, where `k` is the number of unique keys in the `keysArr` that are added to the object `obj`.\n\n---\n\n## Interview Tips:\n\n* What are some pitfalls you might encounter when dealing with non-string keys in JavaScript objects?\n    * Non-string keys might lead to unexpected behavior, especially when using the `hasOwnProperty()` method. JavaScript automatically converts non-string keys to strings when they are used as property names. This can lead to issues if you're not aware of the automatic conversion.\n\n* Could you explain the difference between shallow and deep copying of objects in JavaScript?\n    * Shallow copying creates a new object and copies the top-level properties from the original object. Deep copying, on the other hand, recursively copies all properties, including nested objects and arrays. In this problem, shallow copying is sufficient because keys and values are at the top level, but deep copying could be relevant if the values are complex data structures.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

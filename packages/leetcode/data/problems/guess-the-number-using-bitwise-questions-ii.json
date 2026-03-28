@@ -1,0 +1,133 @@
+{
+  "questionId": "3401",
+  "questionFrontendId": "3094",
+  "title": "Guess the Number Using Bitwise Questions II",
+  "titleSlug": "guess-the-number-using-bitwise-questions-ii",
+  "difficulty": "Medium",
+  "content": "<p>There is a number <code>n</code> between <code>0</code> and <code>2<sup>30</sup> - 1</code> (both inclusive) that you have to find.</p>\n\n<p>There is a pre-defined API <code>int commonBits(int num)</code> that helps you with your mission. But here is the challenge, every time you call this function, <code>n</code> changes in some way. But keep in mind, that you have to find the <strong>initial value of </strong><code>n</code>.</p>\n\n<p><code>commonBits(int num)</code> acts as follows:</p>\n\n<ul>\n\t<li>Calculate <code>count</code> which is the number of bits where both <code>n</code> and <code>num</code> have the same value in that position of their binary representation.</li>\n\t<li><code>n = n XOR num</code></li>\n\t<li>Return <code>count</code>.</li>\n</ul>\n\n<p>Return <em>the number</em> <code>n</code>.</p>\n\n<p><strong>Note:</strong> In this world, all numbers are between <code>0</code> and <code>2<sup>30</sup> - 1</code> (both inclusive), thus for counting common bits, we see only the first 30 bits of those numbers.</p>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= n &lt;= 2<sup>30</sup> - 1</code></li>\n\t<li><code>0 &lt;= num &lt;= 2<sup>30</sup> - 1</code></li>\n\t<li>If you ask for some <code>num</code> out of the given range, the output wouldn&#39;t be reliable.</li>\n</ul>\n",
+  "hints": [
+    "Ask the number 0 and save the result in <code>base</code>.",
+    "Ask <code>2<sup>i</sup></code> for <code>0 <= i < 30</code>.",
+    "If the result is greater than <code>base</code> for some <code>i</code>, then this bit is a set bit in <code>n</code>.",
+    "What can be done to revert the effect of the <code>XOR</code>.",
+    "Doing <code>XOR</code> again with the same number reverts the effect."
+  ],
+  "metaData": "{\n  \"name\": \"foobar\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true,\n  \"typescriptCustomType\": \"function commonBits(num: number): number {\\n    let x = num ^ __pick__ ^ 1073741823;\\n    let count = 0;\\n    while (x > 0) {\\n        count += x & 1;\\n        x >>= 1;\\n    }\\n    __pick__ ^= num;\\n    return count;\\n}\"\n}",
+  "stats": "{\"totalAccepted\": \"1.1K\", \"totalSubmission\": \"1.3K\", \"totalAcceptedRaw\": 1065, \"totalSubmissionRaw\": 1282, \"acRate\": \"83.1%\"}",
+  "likes": 15,
+  "dislikes": 4,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "31"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Interactive",
+      "slug": "interactive"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/** \n * Definition of commonBits API.\n * int commonBits(int num);\n */\n\nclass Solution {\npublic:\n    int findNumber() {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/** \n * Definition of commonBits API (defined in the parent class Problem).\n * int commonBits(int num);\n */\n\npublic class Solution extends Problem {\n    public int findNumber() {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition of commonBits API.\n# def commonBits(num: int) -> int:\n\nclass Solution:\n    def findNumber(self) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition of commonBits API.\n# def commonBits(num):\n#     \"\"\"\n#     :type num: int\n#     :rtype: int\n#     \"\"\"\n\nclass Solution(object):\n    def findNumber(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/** \n * Definition of commonBits API.\n * @param {number} num\n * @return {integer}\n * var commonBits = function(num) {}\n */\n\n/**\n * @return {number}\n */\nvar findNumber = function() {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/** \n * Definition of commonBits API.\n * var commonBits = function(num: number): number {}\n */\n\nfunction findNumber(): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/** \n * Definition of commonBits API (defined in the parent class Problem).\n * int CommonBits(int num);\n */\n\npublic class Solution : Problem {\n    public int FindNumber() {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/** \n * Definition of commonBits API.\n * int commonBits(int num);\n */\n\nint findNumber(){\n\t\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/** \n * Definition of commonBits API.\n * func commonBits(num int) int;\n */\n\nfunc findNumber() int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/** \n * Definition of commonBits API (defined in the parent class Problem).\n * fun commonBits(num: Int): Int {}\n */\n\nclass Solution : Problem() {\n    fun findNumber(): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/** \n * Definition of commonBits API (defined in the parent class Problem)\n * func commonBits(_ num: Int) -> Int \n */\n\nclass Solution : Problem {\n    func findNumber() -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "/** \n * Definition of commonBits API.\n * unsafe fn common_bits(num: i32) -> i32 {}\n */\n\nimpl Solution {\n    unsafe fn find_number() -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition of commonBits API.\n# @param {Integer} num\n# @return {Integer}\n# def common_bits(num)\n\ndef find_number()\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/** \n * Definition of commonBits API (defined in the parent class Problem).\n * @param Integer $num\n * @return Integer\n * public function commonBits($num) : Integer\n */\n\nclass Solution extends Problem {\n    /**\n     * @return Integer\n     */\n    function findNumber() {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition of commonBits API.\n * int commonBits(int num);\n */\n\nclass Solution {\n  int findNumber() {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/** \n * Definition of commonBits API (defined in the parent class Problem)\n * def commonBits(num: Int): Int = {}\n */\n\nclass Solution extends Problem {\n    def findNumber(): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition of commonBits API.\n# common_bits = fn\n#   num :: integer -> integer\n# end\n# Note that due to the limitations of the language, common_bits is passed to you as an anonymous function.\n# To call it, you should use the dot notation. e.g., common_bits.(x)\n\ndefmodule Solution do\n  @spec find_number(common_bits :: (integer -> integer)) :: integer\n  def find_number(common_bits) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition of commonBits API.\n%% -spec common_bits(Num :: integer()) -> integer().\n%% common_bits(Num) ->\n%%   .\n\n-spec find_number() -> integer().\nfind_number() ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": ";; Definition of commonBits API.\n#|\n(define/contract (common-bits num)\n  (-> exact-integer? exact-integer?)      \n  )\n|#\n\n(define/contract (find-number)\n  (-> exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,147 @@
+{
+  "questionId": "3112",
+  "questionFrontendId": "2867",
+  "title": "Count Valid Paths in a Tree",
+  "titleSlug": "count-valid-paths-in-a-tree",
+  "difficulty": "Hard",
+  "content": "<p>There is an undirected tree with <code>n</code> nodes labeled from <code>1</code> to <code>n</code>. You are given the integer <code>n</code> and a 2D integer array <code>edges</code> of length <code>n - 1</code>, where <code>edges[i] = [u<sub>i</sub>, v<sub>i</sub>]</code> indicates that there is an edge between nodes <code>u<sub>i</sub></code> and <code>v<sub>i</sub></code> in the tree.</p>\n\n<p>Return <em>the <strong>number of valid paths</strong> in the tree</em>.</p>\n\n<p>A path <code>(a, b)</code> is <strong>valid</strong> if there exists <strong>exactly one</strong> prime number among the node labels in the path from <code>a</code> to <code>b</code>.</p>\n\n<p><strong>Note</strong> that:</p>\n\n<ul>\n\t<li>The path <code>(a, b)</code> is a sequence of <strong>distinct</strong> nodes starting with node <code>a</code> and ending with node <code>b</code> such that every two adjacent nodes in the sequence share an edge in the tree.</li>\n\t<li>Path <code>(a, b)</code> and path <code>(b, a)</code> are considered the <strong>same</strong> and counted only <strong>once</strong>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/08/27/example1.png\" style=\"width: 440px; height: 357px;\" />\n<pre>\n<strong>Input:</strong> n = 5, edges = [[1,2],[1,3],[2,4],[2,5]]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The pairs with exactly one prime number on the path between them are: \n- (1, 2) since the path from 1 to 2 contains prime number 2. \n- (1, 3) since the path from 1 to 3 contains prime number 3.\n- (1, 4) since the path from 1 to 4 contains prime number 2.\n- (2, 4) since the path from 2 to 4 contains prime number 2.\nIt can be shown that there are only 4 valid paths.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/08/27/example2.png\" style=\"width: 488px; height: 384px;\" />\n<pre>\n<strong>Input:</strong> n = 6, edges = [[1,2],[1,3],[2,4],[3,5],[3,6]]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> The pairs with exactly one prime number on the path between them are: \n- (1, 2) since the path from 1 to 2 contains prime number 2.\n- (1, 3) since the path from 1 to 3 contains prime number 3.\n- (1, 4) since the path from 1 to 4 contains prime number 2.\n- (1, 6) since the path from 1 to 6 contains prime number 3.\n- (2, 4) since the path from 2 to 4 contains prime number 2.\n- (3, 6) since the path from 3 to 6 contains prime number 3.\nIt can be shown that there are only 6 valid paths.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>edges.length == n - 1</code></li>\n\t<li><code>edges[i].length == 2</code></li>\n\t<li><code>1 &lt;= u<sub>i</sub>, v<sub>i</sub> &lt;= n</code></li>\n\t<li>The input is generated such that <code>edges</code> represent a valid tree.</li>\n</ul>\n",
+  "hints": [
+    "Use the sieve of Eratosthenes to find all prime numbers in the range <code>[1, n]</code>.****",
+    "Root the tree at any node.",
+    "Let <code>dp[i][0] = the number of vertical paths starting from i containing no prime nodes </code>, and <code>dp[i][1] = the number of vertical paths starting from i containing one prime node </code>.",
+    "If <code>i</code> is not prime, <code>dp[i][0] = sum(dp[child][0]) + 1</code>, and <code>dp[i][1] = sum(dp[child][1])</code> for each <code>child</code> of <code>i</code> in the rooted tree.",
+    "If <code>i</code> is prime, <code>dp[i][0] = 0</code>, and <code>dp[i][1] = sum(dp[child][0]) + 1</code> for each <code>child</code> of <code>i</code> in the rooted tree.",
+    "For each node <code>i</code>, and using the computed <code>dp</code> matrix, count the number of unordered pairs <code>(a,b)</code> such that <code>lca(a,b) = i</code>, and there exists exactly one prime number on the path from <code>a</code> to <code>b</code>."
+  ],
+  "metaData": "{\n  \"name\": \"countPaths\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"9.7K\", \"totalSubmission\": \"26.8K\", \"totalAcceptedRaw\": 9675, \"totalSubmissionRaw\": 26839, \"acRate\": \"36.0%\"}",
+  "likes": 286,
+  "dislikes": 9,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Paths That Can Form a Palindrome in a Tree\", \"titleSlug\": \"count-paths-that-can-form-a-palindrome-in-a-tree\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "5\n[[1,2],[1,3],[2,4],[2,5]]",
+    "6\n[[1,2],[1,3],[2,4],[3,5],[3,6]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"gameskraft\", \"name\": \"Gameskraft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Number Theory",
+      "slug": "number-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long countPaths(int n, vector<vector<int>>& edges) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long countPaths(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countPaths(self, n: int, edges: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countPaths(self, n, edges):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @return {number}\n */\nvar countPaths = function(n, edges) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countPaths(n: number, edges: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long CountPaths(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long countPaths(int n, int** edges, int edgesSize, int* edgesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countPaths(n int, edges [][]int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countPaths(n: Int, edges: Array<IntArray>): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countPaths(_ n: Int, _ edges: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_paths(n: i32, edges: Vec<Vec<i32>>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @return {Integer}\ndef count_paths(n, edges)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @return Integer\n     */\n    function countPaths($n, $edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countPaths(int n, List<List<int>> edges) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countPaths(n: Int, edges: Array[Array[Int]]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_paths(n :: integer, edges :: [[integer]]) :: integer\n  def count_paths(n, edges) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_paths(N :: integer(), Edges :: [[integer()]]) -> integer().\ncount_paths(N, Edges) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-paths n edges)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

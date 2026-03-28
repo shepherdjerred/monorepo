@@ -1,0 +1,53 @@
+{
+  "questionId": "3285",
+  "questionFrontendId": "2988",
+  "title": "Manager of the Largest Department",
+  "titleSlug": "manager-of-the-largest-department",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Employees</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| emp_id      | int     |\n| emp_name    | varchar |\n| dep_id      | int     |\n| position    | varchar |\n+-------------+---------+\nemp_id is column of unique values for this table.\nThis table contains emp_id, emp_name, dep_id, and position.\n</pre>\n\n<p>Write a solution to find the <strong>name</strong> of the <strong>manager</strong> from the <strong>largest department</strong>. There may be multiple largest departments when the number of employees in those departments is the same.</p>\n\n<p>Return <em>the result table sorted by </em><code>dep_id</code><em> in <strong>ascending</strong> order</em><em>.</em></p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nEmployees table:\n+--------+----------+--------+---------------+\n| emp_id | emp_name | dep_id | position      | \n+--------+----------+--------+---------------+\n| 156    | Michael  | 107    | Manager       |\n| 112    | Lucas    | 107    | Consultant    |    \n| 8      | Isabella | 101    | Manager       | \n| 160    | Joseph   | 100    | Manager       | \n| 80     | Aiden    | 100    | Engineer      | \n| 190    | Skylar   | 100    | Freelancer    | \n| 196    | Stella   | 101    | Coordinator   |\n| 167    | Audrey   | 100    | Consultant    |\n| 97     | Nathan   | 101    | Supervisor    |\n| 128    | Ian      | 101    | Administrator |\n| 81     | Ethan    | 107    | Administrator |\n+--------+----------+--------+---------------+\n<strong>Output</strong>\n+--------------+--------+\n| manager_name | dep_id | \n+--------------+--------+\n| Joseph       | 100    | \n| Isabella     | 101    | \n+--------------+--------+\n<strong>Explanation</strong>\n- Departments with IDs 100 and 101 each has a total of 4 employees, while department 107 has 3 employees. Since both departments 100 and 101 have an equal number of employees, their respective managers will be included.\nOutput table is ordered by dep_id in ascending order.\n\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table if not exists Employees ( emp_id int, emp_name varchar(50), dep_id int, position varchar(30))\"], \"mssql\": [\"Create table  Employees ( emp_id int, emp_name varchar(50), dep_id int, position varchar(30))\"], \"oraclesql\": [\"Create table  Employees ( emp_id int, emp_name varchar(50), dep_id int, position varchar(30))\"], \"database\": true, \"name\": \"find_manager\", \"postgresql\": [\"CREATE TABLE Employees (\\n  emp_id INT PRIMARY KEY,\\n  emp_name VARCHAR(50),\\n  dep_id INT,\\n  position VARCHAR(30)\\n);\\n\"], \"pythondata\": [\"Employees = pd.DataFrame([], columns=['emp_id', 'emp_name', 'dep_id', 'position']).astype({\\n    'emp_id': 'Int64', \\n    'emp_name': 'object', \\n    'dep_id': 'Int64', \\n    'position': 'object'\\n})\"], \"database_schema\": {\"Employees\": {\"emp_id\": \"INT\", \"emp_name\": \"VARCHAR(50)\", \"dep_id\": \"INT\", \"position\": \"VARCHAR(30)\"}}}",
+  "stats": "{\"totalAccepted\": \"4.6K\", \"totalSubmission\": \"5.6K\", \"totalAcceptedRaw\": 4567, \"totalSubmissionRaw\": 5645, \"acRate\": \"80.9%\"}",
+  "likes": 8,
+  "dislikes": 1,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Employees\":[\"emp_id\",\"emp_name\",\"dep_id\",\"position\"]},\"rows\":{\"Employees\":[[156,\"Michael\",107,\"Manager\"],[112,\"Lucas\",107,\"Consultant\"],[8,\"Isabella\",101,\"Manager\"],[160,\"Joseph\",100,\"Manager\"],[80,\"Aiden\",100,\"Engineer\"],[190,\"Skylar\",100,\"Freelancer\"],[196,\"Stella\",101,\"Coordinator\"],[167,\"Audrey\",100,\"Consultant\"],[97,\"Nathan\",101,\"Supervisor\"],[128,\"Ian\",101,\"Administrator\"],[81,\"Ethan\",107,\"Administrator\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"dassault-sysetmes\", \"name\": \"Dassault Sys\\u00e8tmes\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_manager(employees: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

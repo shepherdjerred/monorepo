@@ -1,0 +1,58 @@
+{
+  "questionId": "3258",
+  "questionFrontendId": "3053",
+  "title": "Classifying Triangles by Lengths",
+  "titleSlug": "classifying-triangles-by-lengths",
+  "difficulty": "Easy",
+  "content": "<p>Table: <font face=\"monospace\"><code>Triangles</code></font></p>\n\n<pre>\n+-------------+------+ \n| Column Name | Type | \n+-------------+------+ \n| A           | int  | \n| B           | int  |\n| C           | int  |\n+-------------+------+\n(A, B, C) is the primary key for this table.\nEach row include the lengths of each of a triangle&#39;s three sides.\n</pre>\n\n<p>Write a query to find the type of <strong>triangle</strong>. Output one of the following for each row:</p>\n\n<ul>\n\t<li><strong>Equilateral</strong>: It&#39;s a triangle with <code>3</code> sides of equal length.</li>\n\t<li><strong>Isosceles</strong>: It&#39;s a triangle with <code>2</code> sides of equal length.</li>\n\t<li><strong>Scalene</strong>: It&#39;s a triangle with <code>3</code> sides of differing lengths.</li>\n\t<li><strong>Not A Triangle: </strong>The given values of <code>A</code>, <code>B</code>, and <code>C</code> don&#39;t form a triangle.</li>\n</ul>\n\n<p>Return <em>the result table in <strong>any order</strong></em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nTriangles table:\n+----+----+----+\n| A  | B  | C  |\n+----+----+----+\n| 20 | 20 | 23 |\n| 20 | 20 | 20 |\n| 20 | 21 | 22 |\n| 13 | 14 | 30 |\n+----+----+----+\n<strong>Output:</strong> \n+----------------+\n| triangle_type  | \n+----------------+\n| Isosceles      | \n| Equilateral    |\n| Scalene        |\n| Not A Triangle |\n+----------------+\n<strong>Explanation:</strong> \n- Values in the first row from an Isosceles triangle, because A = B.\n- Values in the second row from an Equilateral triangle, because A = B = C.\n- Values in the third row from an Scalene triangle, because A != B != C.\n- Values in the fourth row cannot form a triangle, because the combined value of sides A and B is not larger than that of side C.</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Triangles (A int, B int, C int)\"], \"mssql\": [\"Create table Triangles (A int, B int, C int)\"], \"oraclesql\": [\"Create table Triangles (A int, B int, C int)\"], \"database\": true, \"name\": \"type_of_triangle\", \"pythondata\": [\"Triangles = pd.DataFrame([], columns=['A', 'B', 'C']).astype({'A':'Int64', 'B':'Int64', 'C':'Int64'})\\n\"], \"postgresql\": [\"Create table If Not Exists Triangles (A int, B int, C int)\\n\"], \"database_schema\": {\"Triangles\": {\"A\": \"INT\", \"B\": \"INT\", \"C\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"3.9K\", \"totalSubmission\": \"7.7K\", \"totalAcceptedRaw\": 3912, \"totalSubmissionRaw\": 7654, \"acRate\": \"51.1%\"}",
+  "likes": 9,
+  "dislikes": 1,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Triangles\":[\"A\",\"B\",\"C\"]},\"rows\":{\"Triangles\":[[20,20,23],[20,20,20],[20,21,22],[13,14,30]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"aon\", \"name\": \"Aon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef type_of_triangle(triangles: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2288",
+    "content": "[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Approach: Utilizing `loc`\n\nThis approach systematically evaluates and categorizes the types of triangles based on the lengths of their sides, starting with a default assumption (`Scalene`), then adjusting based on more specific conditions (`Equilateral`, `Isosceles`), and finally applying the triangle inequality theorem to filter out non-triangles.\n\n**Visualization of Approach:**\n\n![fig](../Figures/3053/3053-1.png)\n\n#### Intuition\n\nLet's review the intuition behind each step given the following input DataFrames:\n\nTriangles DataFrame (`triangles`):\n\n| A  | B  | C  |\n| -- | -- | -- |\n| 20 | 20 | 23 |\n| 20 | 20 | 20 |\n| 20 | 21 | 22 |\n| 13 | 14 | 30 |\n<br>\n\n1. **Initial Setup with 'Scalene'**:\n\n- This step initializes a new column in the DataFrame called `triangle_type` and sets its value to `'Scalene'` for all rows. \n- It assumes all triangles are `Scalene` by default, which means all three sides have different lengths.\n\n   ```python\n   triangles['triangle_type'] = 'Scalene'\n   ```\n\n| A  | B  | C  | triangle_type |\n|----|----|----|---------------|\n| 20 | 20 | 23 | Scalene       |\n| 20 | 20 | 20 | Scalene       |\n| 20 | 21 | 22 | Scalene       |\n| 13 | 14 | 30 | Scalene       |\n<br>\n\n2. **Find Equilateral Triangles**:\n\n- This step updates the `triangle_type` to `'Equilateral'` for rows where all three sides (`A`, `B`, `C`) are equal. \n- It uses `.loc[]` to locate and assign values based on the condition provided.\n\n   ```python\n   triangles.loc[\n       (triangles[\"A\"] == triangles[\"B\"]) & (triangles[\"A\"] == triangles[\"C\"]),\n       \"triangle_type\",\n   ] = \"Equilateral\"\n   ```\n\n| A  | B  | C  | triangle_type |\n|----|----|----|---------------|\n| 20 | 20 | 23 | Scalene       |\n| 20 | 20 | 20 | Equilateral   |\n| 20 | 21 | 22 | Scalene       |\n| 13 | 14 | 30 | Scalene       |\n<br>\n\n3. **Find Isosceles Triangles**:\n\n- This step updates the `triangle_type` to `'Isosceles'` for rows where any two sides are equal, and the triangle is not already marked as `Equilateral`. \n- It covers the cases where exactly two sides of the triangle are equal, making it an `Isosceles` triangle.\n\n   ```python\n   triangles.loc[\n       (\n           (triangles[\"A\"] == triangles[\"B\"])\n           | (triangles[\"A\"] == triangles[\"C\"])\n           | (triangles[\"C\"] == triangles[\"B\"])\n       )\n       & (triangles[\"triangle_type\"] != \"Equilateral\"),\n       \"triangle_type\",\n   ] = \"Isosceles\"\n   ```\n\n| A  | B  | C  | triangle_type |\n|----|----|----|---------------|\n| 20 | 20 | 23 | Isosceles     |\n| 20 | 20 | 20 | Equilateral   |\n| 20 | 21 | 22 | Scalene       |\n| 13 | 14 | 30 | Scalene       |\n<br>\n\n4. **Find 'Not A Triangle'**:\n\n- This step sets the `triangle_type` to `'Not A Triangle'` for rows that do not satisfy the triangle inequality theorem. \n- According to the triangle inequality theorem, for any three lengths to form a triangle, the sum of the lengths of any two sides must be greater than the length of the remaining side. \n- This condition checks if any side is greater than or equal to the sum of the other two sides, and if so, indicates that these values cannot form a triangle.\n\n   ```python\n   triangles.loc[\n       (triangles[\"A\"] >= triangles[\"B\"] + triangles[\"C\"])\n       | (triangles[\"B\"] >= triangles[\"A\"] + triangles[\"C\"])\n       | (triangles[\"C\"] >= triangles[\"B\"] + triangles[\"A\"]),\n       \"triangle_type\",\n   ] = \"Not A Triangle\"\n   ```\n\n| A  | B  | C  | triangle_type  |\n|----|----|----|--------------- |\n| 20 | 20 | 23 | Isosceles      |\n| 20 | 20 | 20 | Equilateral    |\n| 20 | 21 | 22 | Scalene        |\n| 13 | 14 | 30 | Not A Triangle |\n<br>\n\n5. **Return Statement**:\n\n- Finally, the last step is to return a DataFrame containing only the `triangle_type` column, showing the categorization for each set of sides provided in the input DataFrame.\n\n   ```python\n   return triangles[['triangle_type']]\n   ```\n\n| triangle_type  |\n|----------------|\n| Isosceles      |\n| Equilateral    |\n| Scalene        |\n| Not A Triangle |\n<br>\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4psZLXVb/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4psZLXVb\"></iframe>\n\n---\n\n## Database\n\n### Approach: Utilizing `CASE` \n\nThis approach uses `CASE` statements to categorize each row into the type of triangle it represents based on the lengths of its sides. The key points to remember when categorizing triangles are:\n\n- **Equilateral Triangle**: All three sides are of equal length.\n- **Isosceles Triangle**: Exactly two sides are of equal length.\n- **Scalene Triangle**: All three sides are of different lengths.\n- **Not A Triangle**: The sum of the lengths of any two sides must be greater than the length of the third side. This is known as the triangle inequality theorem.\n\n#### Intuition\n\nLet's break down the SQL query step by step and explain the intuition behind each part:\n\n- The `CASE` statement is used to evaluate the conditions for each triangle type.\n- The first condition checks the triangle inequality theorem to determine if the given sides can form a triangle. If any side is greater than or equal to the sum of the other two, it is not a valid triangle.\n- If all sides are equal, it categorizes the triangle as `Equilateral`.\n- If any two sides are equal, it categorizes it as `Isosceles`.\n- If none of the above conditions are met, the triangle is categorized as `Scalene`.\n- The result is selected from the `Triangles` table based on these conditions.\n\n\n#### Implementation\n\n```mysql []\nSELECT\n  CASE\n    WHEN A + B <= C OR A + C <= B OR B + C <= A THEN 'Not A Triangle'\n    WHEN A = B AND B = C THEN 'Equilateral'\n    WHEN A = B OR A = C OR B = C THEN 'Isosceles'\n    ELSE 'Scalene'\n  END AS triangle_type\nFROM Triangles;\n```",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

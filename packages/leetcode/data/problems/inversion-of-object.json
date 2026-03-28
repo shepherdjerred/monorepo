@@ -1,0 +1,35 @@
+{
+  "questionId": "2925",
+  "questionFrontendId": "2822",
+  "title": "Inversion of Object",
+  "titleSlug": "inversion-of-object",
+  "difficulty": "Easy",
+  "content": "<p>Given an object or an array&nbsp;<code>obj</code>, return an inverted object or array&nbsp;<code>invertedObj</code>.</p>\n\n<p>The <code>invertedObj</code> should have the keys of <code>obj</code> as values and the values of <code>obj</code> as keys.&nbsp;The indices of array&nbsp;should be treated as keys.</p>\n\n<p>The function should handle duplicates, meaning that if there are multiple keys in <code>obj</code> with the same value, the <code>invertedObj</code> should map the value to an array containing all corresponding keys.</p>\n\n<p>It is guaranteed that the values in <code>obj</code> are only strings.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> obj = {&quot;a&quot;: &quot;1&quot;, &quot;b&quot;: &quot;2&quot;, &quot;c&quot;: &quot;3&quot;, &quot;d&quot;: &quot;4&quot;}\n<strong>Output:</strong> invertedObj = {&quot;1&quot;: &quot;a&quot;, &quot;2&quot;: &quot;b&quot;, &quot;3&quot;: &quot;c&quot;, &quot;4&quot;: &quot;d&quot;}\n<strong>Explanation:</strong> The keys from obj become the values in invertedObj, and the values from obj become the keys in invertedObj.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> obj = {&quot;a&quot;: &quot;1&quot;, &quot;b&quot;: &quot;2&quot;, &quot;c&quot;: &quot;2&quot;, &quot;d&quot;: &quot;4&quot;}\n<strong>Output:</strong> invertedObj = {&quot;1&quot;: &quot;a&quot;, &quot;2&quot;: [&quot;b&quot;, &quot;c&quot;], &quot;4&quot;: &quot;d&quot;}\n<strong>Explanation:</strong> There are two keys in&nbsp;obj&nbsp;with the same value, the&nbsp;invertedObj mapped the value to an array containing all corresponding keys.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> obj = [&quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;]\n<strong>Output:</strong> invertedObj = {&quot;1&quot;: &quot;0&quot;, &quot;2&quot;: &quot;1&quot;, &quot;3&quot;: &quot;2&quot;, &quot;4&quot;: &quot;3&quot;}\n<strong>Explanation:</strong> Arrays are also objects therefore array has changed to an object and the keys (indices) from obj become the values in invertedObj, and the values from obj become the keys in invertedObj.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>obj</code> is a valid JSON object or array</li>\n\t<li><code>typeof obj[key] === &quot;string&quot;</code></li>\n\t<li><code>2 &lt;= JSON.stringify(obj).length &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"invertObject\",\n  \"params\": [\n    {\n      \"name\": \"obj\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"languages\": [\n    \"typescript\",\n    \"javascript\"\n  ],\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"1.5K\", \"totalSubmission\": \"2.4K\", \"totalAcceptedRaw\": 1489, \"totalSubmissionRaw\": 2421, \"acRate\": \"61.5%\"}",
+  "likes": 17,
+  "dislikes": 1,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"a\": \"1\",\"b\": \"2\",\"c\": \"3\",\"d\": \"4\" }",
+    "{\"a\": \"1\",\"b\": \"2\",\"c\": \"2\",\"d\": \"4\" }",
+    "[\"1\",\"2\",\"3\",\"4\"]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [],
+  "codeSnippets": [
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {Object|Array} obj\n * @return {Object}\n */\nvar invertObject = function(obj) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "type JSONValue = null | boolean | number | string | JSONValue[] | { [key: string]: JSONValue };\ntype Obj = Record<string, JSONValue> | Array<JSONValue>\n\nfunction invertObject(obj: Obj): Record<string, JSONValue> {\n    \n};"
+    }
+  ],
+  "solution": null
+}

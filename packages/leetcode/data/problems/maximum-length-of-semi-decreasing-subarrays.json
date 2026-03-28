@@ -1,0 +1,144 @@
+{
+  "questionId": "3158",
+  "questionFrontendId": "2863",
+  "title": "Maximum Length of Semi-Decreasing Subarrays",
+  "titleSlug": "maximum-length-of-semi-decreasing-subarrays",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code>.</p>\n\n<p>Return <em>the length of the <strong>longest semi-decreasing</strong> subarray of </em><code>nums</code><em>, and </em><code>0</code><em> if there are no such subarrays.</em></p>\n\n<ul>\n\t<li>A <b>subarray</b> is a contiguous non-empty sequence of elements within an array.</li>\n\t<li>A non-empty array is <strong>semi-decreasing</strong> if its first element is <strong>strictly greater</strong> than its last element.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [7,6,5,4,3,2,1,6,10,11]\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> Take the subarray [7,6,5,4,3,2,1,6].\nThe first element is 7 and the last one is 6 so the condition is met.\nHence, the answer would be the length of the subarray or 8.\nIt can be shown that there aren&#39;t any subarrays with the given condition with a length greater than 8.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [57,55,50,60,61,58,63,59,64,60,63]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> Take the subarray [61,58,63,59,64,60].\nThe first element is 61 and the last one is 60 so the condition is met.\nHence, the answer would be the length of the subarray or 6.\nIt can be shown that there aren&#39;t any subarrays with the given condition with a length greater than 6.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> Since there are no semi-decreasing subarrays in the given array, the answer is 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "First, solve the problem assuming <code>nums</code> contains distinct values.",
+    "Make a new array with each element being the pair <code>(nums[i], i)</code> for every <code>i</code> and call it <code>num_ind</code>.",
+    "Sort <code>num_ind</code> in decreasing order.",
+    "Iterate over <code>num_ind</code> and store a variable that represents the minimum index (i.e. min of <code>num_ind[i].second</code>) that has been iterated until now. Call it <code>min_index</code>",
+    "Now if you are currently on pair <code>(nums[x], x)</code>, then <code>ans = max(ans, min_index - x)</code>.",
+    "Now try to remove the first assumption."
+  ],
+  "metaData": "{\n  \"name\": \"maxSubarrayLength\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"14.4K\", \"totalSubmission\": \"20.6K\", \"totalAcceptedRaw\": 14400, \"totalSubmissionRaw\": 20551, \"acRate\": \"70.1%\"}",
+  "likes": 137,
+  "dislikes": 17,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[7,6,5,4,3,2,1,6,10,11]",
+    "[57,55,50,60,61,58,63,59,64,60,63]",
+    "[1,2,3,4]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Monotonic Stack",
+      "slug": "monotonic-stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxSubarrayLength(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxSubarrayLength(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxSubarrayLength(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxSubarrayLength(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar maxSubarrayLength = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxSubarrayLength(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxSubarrayLength(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxSubarrayLength(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxSubarrayLength(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxSubarrayLength(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxSubarrayLength(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_subarray_length(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef max_subarray_length(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function maxSubarrayLength($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxSubarrayLength(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxSubarrayLength(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_subarray_length(nums :: [integer]) :: integer\n  def max_subarray_length(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_subarray_length(Nums :: [integer()]) -> integer().\nmax_subarray_length(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-subarray-length nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

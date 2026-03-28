@@ -1,0 +1,58 @@
+{
+  "questionId": "3097",
+  "questionFrontendId": "2837",
+  "title": "Total Traveled Distance",
+  "titleSlug": "total-traveled-distance",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code><font face=\"monospace\">Users</font></code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| user_id     | int     |\n| name        | varchar |\n+-------------+---------+\n<code>user_id</code> is the column with unique values for this table.\nEach row of this table contains user id and name.\n</pre>\n\n<p>Table: <code>Rides</code></p>\n\n<pre>\n+--------------+------+\n| Column Name  | Type |\n+--------------+------+\n| ride_id      | int  |\n| user_id      | int  | \n| distance     | int  |\n+--------------+------+\nride_id is the column of unique values for this table.\nEach row of this table contains ride id, user id, and traveled distance.\n</pre>\n\n<p>Write a solution to calculate the <code>distance</code> traveled by <strong>each user</strong>. If there is a user&nbsp;who hasn&#39;t completed any rides, then their <code>distance</code> should be considered&nbsp;as <code>0</code>. Output the <code>user_id</code>, <code>name</code> and total traveled <code>distance</code>.</p>\n\n<p>Return<em> the result table ordered by </em><code>user_id</code><em> in <strong>ascending</strong> order.</em></p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nUsers table:\n+---------+---------+\n| user_id | name    |\n+---------+---------+\n| 17      | Addison |\n| 14      | Ethan   |\n| 4       | Michael |\n| 2       | Avery   |\n| 10      | Eleanor |\n+---------+---------+\nRides table:\n+---------+---------+----------+\n| ride_id | user_id | distance |\n+---------+---------+----------+\n| 72      | 17      | 160      |\n| 42      | 14      | 161      |\n| 45      | 4       | 59       |\n| 32      | 2       | 197      |\n| 15      | 4       | 357      |\n| 56      | 2       | 196      |\n| 10      | 14      | 25       |\n+---------+---------+----------+\n<strong>Output:</strong> \n+---------+---------+-------------------+\n| user_id | name    | traveled distance |\n+---------+---------+-------------------+\n| 2       | Avery   | 393               |\n| 4       | Michael | 416               |\n| 10      | Eleanor | 0                 |\n| 14      | Ethan   | 186               |\n| 17      | Addison | 160               |\n+---------+---------+-------------------+\n<strong>Explanation:</strong> \n-  User id 2 completed two journeys of 197 and 196, resulting in a combined travel distance of 393.\n-  User id 4 completed two journeys of 59 and 357, resulting in a combined travel distance of 416.\n-  User id 14 completed two journeys of 161 and 25, resulting in a combined travel distance of 186.\n-  User id 16 completed only one journey of 160.\n-  User id 10 did not complete any journeys, thus the total travel distance remains at 0.\nReturning the table orderd by user_id in ascending order.</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table if not exists Users(user_id int, name varchar(30))\", \"Create table if not exists Rides(ride_id int,user_id int, distance int)\"], \"mssql\": [\"Create table Users(user_id int, name varchar(30))\", \"Create table Rides(ride_id int,user_id int, distance int)\"], \"oraclesql\": [\"Create table Users(user_id int, name varchar(30))\", \"Create table Rides(ride_id int,user_id int, distance int)\"], \"database\": true, \"name\": \"get_total_distance\", \"pythondata\": [\"Users = pd.DataFrame([], columns=['user_id', 'name']).astype({'user_id':'Int64', 'name':'object'})\", \"Rides = pd.DataFrame([], columns=['ride_id', 'user_id', 'distance']).astype({'ride_id':'Int64', 'user_id':'Int64', 'distance':'Int64'})\"], \"postgresql\": [\"Create table if not exists Users(user_id int, name varchar(30))\", \"Create table if not exists Rides(ride_id int,user_id int, distance int)\"], \"database_schema\": {\"Users\": {\"user_id\": \"INT\", \"name\": \"VARCHAR(30)\"}, \"Rides\": {\"ride_id\": \"INT\", \"user_id\": \"INT\", \"distance\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"5.7K\", \"totalSubmission\": \"7.5K\", \"totalAcceptedRaw\": 5725, \"totalSubmissionRaw\": 7457, \"acRate\": \"76.8%\"}",
+  "likes": 18,
+  "dislikes": 4,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Users\":[\"user_id\",\"name\"],\"Rides\":[\"ride_id\",\"user_id\",\"distance\"]},\"rows\":{\"Users\":[[17,\"Addison\"],[14,\"Ethan\"],[4,\"Michael\"],[2,\"Avery\"],[10,\"Eleanor\"]],\"Rides\":[[72,17,160],[42,14,161],[45,4,59],[32,2,197],[15,4,357],[56,2,196],[10,14,25]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef get_total_distance(users: pd.DataFrame, rides: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2222",
+    "content": "​\n<!-- Don't delete this -->\n[TOC]\n​\n# Solution\n​\n---\n​\n## pandas\n\n<!-- h3 for approaches -->\n### Approach: Using left merge and fillna()\n\n<!-- h4 for sections -->\n#### Algorithm\n\n<!-- Describe your approach to solving the problem. -->\nFor this approach, we will first get the aggregate sum of distance traveled for each `user_id`, and then `merge` to the DataFrame `users` to append their names. Since not all users in the DataFrame `users` might have traveled, we want to make sure it is a `left merge` so all users will be included in the final output. \n\nWe can start by calculating the total distance traveled by each user. Since one user can have more than one ride, we want to group the `distance` at the `user_id` level and calculate the total using the function `sum()`. \n\n\n```python\ntotal_distance = rides.groupby('user_id', as_index=False).distance.sum()\n```\n\nFrom this step, we acquired the total distance traveled for the users who have rides recorded in the DataFrame `rides`. \n\n| user_id | distance |\n| ------- | -------- |\n| 2       | 393      |\n| 4       | 416      |\n| 14      | 186      |\n| 17      | 160      |\n\nIn the next step, we want to combine the total distance traveled with user names. Since not all users might have traveled, we need to perform a `left merge` here to make sure every user existing in the DataFrame `users` will be included in the final result. Since they have no record in the DataFrame `total_distance` that we created, we also want to apply the function `fillna()` to set the otherwise null values to 0 for these users. To get the final output, we also need to sort the results by `user_id` using the function `sort_values()`, and update the column name from `distance` to `traveled distance`. \n\n```python\ndf = users.merge(total_distance, on='user_id', how='left').fillna(0).sort_values('user_id').rename(columns={'distance': 'traveled distance'})\n```\n\n<!-- h4 for sections -->\n#### Implementation\n​<iframe src=\"https://leetcode.com/playground/ihrEuHFD/shared\" frameBorder=\"0\" width=\"100%\" height=\"208\" name=\"ihrEuHFD\"></iframe>\n<!-- an empty line to separate approaches -->\n----\n​\n​\n## Database\n\n<!-- h3 for approaches -->\n### Approach: Using LEFT JOIN AND IFNULL()\n\n<!-- h4 for sections -->\n#### Algorithm\n\n<!-- Describe your approach to solving the problem. -->\nSince both user's name (`name`) and total distance traveled (`distance`) are needed for the final out and they are stored in two separate tables, we need to `JOIN` the two tables together using the shared column `user_id`. It has to be a `LEFT JOIN` because not all users have completed a ride, and we want to put the table `Users` on the left to include the `user_id` for every user in the final output. To get the total distance traveled, we apply the function `SUM()` to the column `distance`, and `GROUP BY` the aggregate total at the user level (`user_id` and `name`) so each user will have one total distance traveled. For the users that have no rides recorded, we set their total distance traveled to 0 using the function `IFNULL()`. Lastly, we renamed the column of the calculation to `traveled distance` as requested by the final output. \n\n<!-- h4 for sections -->\n#### Implementation\n\n```mysql []\nSELECT u.user_id, \n       u.name,\n       IFNULL(SUM(distance), 0) AS 'traveled distance'\nFROM Users AS u\nLEFT JOIN Rides AS r\nON u.user_id = r.user_id\nGROUP BY user_id, name\nORDER BY user_id \n```\n​\n<!-- an empty line to separate approaches -->\n\n\n----",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

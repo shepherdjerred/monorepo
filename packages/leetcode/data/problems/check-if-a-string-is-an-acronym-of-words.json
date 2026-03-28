@@ -1,0 +1,131 @@
+{
+  "questionId": "2977",
+  "questionFrontendId": "2828",
+  "title": "Check if a String Is an Acronym of Words",
+  "titleSlug": "check-if-a-string-is-an-acronym-of-words",
+  "difficulty": "Easy",
+  "content": "<p>Given an array of strings <code>words</code> and a string <code>s</code>, determine if <code>s</code> is an <strong>acronym</strong> of words.</p>\n\n<p>The string <code>s</code> is considered an acronym of <code>words</code> if it can be formed by concatenating the <strong>first</strong> character of each string in <code>words</code> <strong>in order</strong>. For example, <code>&quot;ab&quot;</code> can be formed from <code>[&quot;apple&quot;, &quot;banana&quot;]</code>, but it can&#39;t be formed from <code>[&quot;bear&quot;, &quot;aardvark&quot;]</code>.</p>\n\n<p>Return <code>true</code><em> if </em><code>s</code><em> is an acronym of </em><code>words</code><em>, and </em><code>false</code><em> otherwise. </em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;alice&quot;,&quot;bob&quot;,&quot;charlie&quot;], s = &quot;abc&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The first character in the words &quot;alice&quot;, &quot;bob&quot;, and &quot;charlie&quot; are &#39;a&#39;, &#39;b&#39;, and &#39;c&#39;, respectively. Hence, s = &quot;abc&quot; is the acronym. \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;an&quot;,&quot;apple&quot;], s = &quot;a&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> The first character in the words &quot;an&quot; and &quot;apple&quot; are &#39;a&#39; and &#39;a&#39;, respectively. \nThe acronym formed by concatenating these characters is &quot;aa&quot;. \nHence, s = &quot;a&quot; is not the acronym.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;never&quot;,&quot;gonna&quot;,&quot;give&quot;,&quot;up&quot;,&quot;on&quot;,&quot;you&quot;], s = &quot;ngguoy&quot;\n<strong>Output:</strong> true\n<strong>Explanation: </strong>By concatenating the first character of the words in the array, we get the string &quot;ngguoy&quot;. \nHence, s = &quot;ngguoy&quot; is the acronym.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= words[i].length &lt;= 10</code></li>\n\t<li><code>1 &lt;= s.length &lt;= 100</code></li>\n\t<li><code>words[i]</code> and <code>s</code> consist of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "<div class=\"_1l1MA\">Concatenate the first characters of the strings in <code>words</code>, and compare the resulting concatenation to <code>s</code>.</div>"
+  ],
+  "metaData": "{\n  \"name\": \"isAcronym\",\n  \"params\": [\n    {\n      \"name\": \"words\",\n      \"type\": \"list<string>\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"s\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"127.8K\", \"totalSubmission\": \"154.2K\", \"totalAcceptedRaw\": 127838, \"totalSubmissionRaw\": 154168, \"acRate\": \"82.9%\"}",
+  "likes": 371,
+  "dislikes": 13,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Word Abbreviation\", \"titleSlug\": \"word-abbreviation\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"alice\",\"bob\",\"charlie\"]\n\"abc\"",
+    "[\"an\",\"apple\"]\n\"a\"",
+    "[\"never\",\"gonna\",\"give\",\"up\",\"on\",\"you\"]\n\"ngguoy\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isAcronym(vector<string>& words, string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isAcronym(List<String> words, String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isAcronym(self, words: List[str], s: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isAcronym(self, words, s):\n        \"\"\"\n        :type words: List[str]\n        :type s: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @param {string} s\n * @return {boolean}\n */\nvar isAcronym = function(words, s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isAcronym(words: string[], s: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsAcronym(IList<string> words, string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isAcronym(char** words, int wordsSize, char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isAcronym(words []string, s string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isAcronym(words: List<String>, s: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isAcronym(_ words: [String], _ s: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_acronym(words: Vec<String>, s: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @param {String} s\n# @return {Boolean}\ndef is_acronym(words, s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @param String $s\n     * @return Boolean\n     */\n    function isAcronym($words, $s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isAcronym(List<String> words, String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isAcronym(words: List[String], s: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_acronym(words :: [String.t], s :: String.t) :: boolean\n  def is_acronym(words, s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_acronym(Words :: [unicode:unicode_binary()], S :: unicode:unicode_binary()) -> boolean().\nis_acronym(Words, S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-acronym words s)\n  (-> (listof string?) string? boolean?)\n  )"
+    }
+  ],
+  "solution": null
+}

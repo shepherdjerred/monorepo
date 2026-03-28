@@ -1,0 +1,142 @@
+{
+  "questionId": "3380",
+  "questionFrontendId": "3097",
+  "title": "Shortest Subarray With OR at Least K II",
+  "titleSlug": "shortest-subarray-with-or-at-least-k-ii",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array <code>nums</code> of <strong>non-negative</strong> integers and an integer <code>k</code>.</p>\n\n<p>An array is called <strong>special</strong> if the bitwise <code>OR</code> of all of its elements is <strong>at least</strong> <code>k</code>.</p>\n\n<p>Return <em>the length of the <strong>shortest</strong> <strong>special</strong> <strong>non-empty</strong> <span data-keyword=\"subarray-nonempty\">subarray</span> of</em> <code>nums</code>, <em>or return</em> <code>-1</code> <em>if no special subarray exists</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,2,3], k = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The subarray <code>[3]</code> has <code>OR</code> value of <code>3</code>. Hence, we return <code>1</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [2,1,8], k = 10</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The subarray <code>[2,1,8]</code> has <code>OR</code> value of <code>11</code>. Hence, we return <code>3</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,2], k = 0</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The subarray <code>[1]</code> has <code>OR</code> value of <code>1</code>. Hence, we return <code>1</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 2 * 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>0 &lt;= k &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "For each <code>nums[i]</code>, we can maintain each subarray’s bitwise <code>OR</code> result ending with it.",
+    "The property of bitwise <code>OR</code> is that it never unsets any bits and only sets new bits",
+    "So the number of different results for each <code>nums[i]</code> is at most the number of bits 32."
+  ],
+  "metaData": "{\n  \"name\": \"minimumSubarrayLength\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"99.3K\", \"totalSubmission\": \"197.8K\", \"totalAcceptedRaw\": 99340, \"totalSubmissionRaw\": 197769, \"acRate\": \"50.2%\"}",
+  "likes": 760,
+  "dislikes": 73,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Size Subarray Sum Equals k\", \"titleSlug\": \"maximum-size-subarray-sum-equals-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Shortest Subarray with Sum at Least K\", \"titleSlug\": \"shortest-subarray-with-sum-at-least-k\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3]\n2",
+    "[2,1,8]\n10",
+    "[1,2]\n0"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"mitsogo\", \"name\": \"Mitsogo\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumSubarrayLength(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumSubarrayLength(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumSubarrayLength(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumSubarrayLength(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar minimumSubarrayLength = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumSubarrayLength(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumSubarrayLength(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumSubarrayLength(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumSubarrayLength(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumSubarrayLength(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumSubarrayLength(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_subarray_length(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef minimum_subarray_length(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function minimumSubarrayLength($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumSubarrayLength(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumSubarrayLength(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_subarray_length(nums :: [integer], k :: integer) :: integer\n  def minimum_subarray_length(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_subarray_length(Nums :: [integer()], K :: integer()) -> integer().\nminimum_subarray_length(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-subarray-length nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2560",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Binary Search\n\n#### Intuition\n\nThe OR operation has a unique property: the result is always greater than or equal to its operands. When we perform the OR operation on a series of numbers, each intermediate result will be greater than or equal to all previous results. This means that if we take two different lengths of subarrays, say $l_1$ and $l_2$, and their highest OR values are $o_1$ and $o_2$ respectively, then $o_2$ will always be greater than or equal to $o_1$ when $l_2$ is greater than or equal to $l_1$.\n\nThis property indicates that the highest OR values of subarray lengths, when arranged from 1 to `n`, form a non-decreasing sequence. This insight lets us use binary search in our solution.\n\nTo find the smallest subarray length that meets our requirement (an OR value greater than or equal to `k`), we can perform a binary search on the possible lengths of subarrays. If we find that no subarray of a certain length satisfies the criteria, we can disregard all shorter lengths because they won’t work either. On the other hand, if we find a valid length, we’ll store it in a variable called `minLength` and keep searching for potentially shorter valid lengths. At the end of our search, the final value of `minLength` will be our answer.\n\nNow, how do we check if a subarray of a given length has an OR value that meets or exceeds `k`? We could loop through the array and check all subarrays of that length. However, repeatedly calculating the OR value for each subarray would take too much time, resulting in quadratic complexity. Instead, we want to achieve this in linear time.\n\nWhen you OR multiple numbers together, a bit in the result will be 1 if any of the numbers have a 1 in that position. To efficiently track this, we can use a 32-bit array where each position corresponds to a bit and stores the count of set bits from the numbers being OR'd. This approach allows us to easily remove a number from our calculation by simply subtracting its set bit counts from the array.\n\nSo, to determine the OR value of a subarray, we’ll use a bit array called `bitCounts` along with a helper method named `updateBitCounts`. We’ll slide a fixed-size window of the given length across the array, adding and removing elements as the window moves using the `updateBitCounts` method. If we find that the OR value of any window is greater than or equal to `k`, we know that length is valid. Our goal is to find the smallest valid window length, which will be our final answer.\n\n#### Algorithm\n\n- Initialize variables `left` to 1 and `right` to the array length to establish binary search boundaries.\n- Initialize `minLength` to -1 to track the shortest valid subarray length.\n- Execute binary search while `left` is less than or equal to `right`:\n  - Calculate the midpoint as `left + (right - left) / 2`.\n  - If a valid subarray of length `mid` exists:\n    - Update `minLength` to current `mid`.\n    - Set `right` to `mid - 1` to search for a smaller length.\n  - Otherwise:\n    - Set `left` to `mid + 1` to search for a larger length.\n- Return `minLength` as the final result.\n\nHelper Method `hasValidSubarray`:\n- Initialize an array `bitCounts` of size 32 filled with zeros to track set bits at each position.\n- Implement sliding window approach from index 0 to array length:\n  - Add bits of the current number at `right` to `bitCounts`.\n  - If the window size exceeds the desired length:\n    - Remove bits of the leftmost number from `bitCounts`.\n  - If the current window has reached the desired size and its OR value exceeds the target:\n    - Return true as valid subarray found.\n- Return false if no valid subarray is found.\n\nHelper Method `updateBitCounts(bitCounts, number, delta)`:\n- For each bit position from 0 to 31:\n  - Check if the bit is set using right shift and AND operation.\n  - If bit is set, update the count at that position by delta.\n\nHelper Method `convertBitCountsToNumber(bitCounts)`:\n- Initialize `number` to 0 to store the final result.\n- For each bit position from 0 to 31:\n  - If the count at the current position is non-zero:\n    - Set the corresponding bit in `number` using OR operation.\n- Return the final computed `number`.\n\n#### Implementation\n\n> Note: While this is a valid approach and makes an excellent interview starting point, the Python3 implementation exceeds time limits on large test cases.\n\n<iframe src=\"https://leetcode.com/playground/3qyZqtFJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3qyZqtFJ\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `nums` array.\n\n- Time complexity: $O(n \\cdot \\log n)$\n\n    The algorithm performs a binary search on possible subarray lengths from $1$ to $n$, which takes $O(\\log n)$ iterations. For each iteration, the algorithm calls `hasValidSubarray` which uses a fixed-length sliding window to examine each position in the array once. For each position it performs two operations: `updateBitCounts` and `convertBitCountsToNumber`, each taking $O(32) = O(1)$ time as they iterate through fixed $32$ bit positions. So, `hasValidSubarray` takes $O(n)$ time.\n\n    Thus, the overall time complexity of the algorithm is $O(n \\cdot \\log n)$.\n\n- Space complexity: $O(1)$\n\n    The algorithm uses a fixed-size array `bitCounts` of size $32$ to store the count of set bits at each position and a few other variables for binary search and tracking results. Therefore, the total space complexity is $O(1)$.  \n\n---\n\n### Approach 2: Sliding Window\n\n#### Intuition\n\nIn our previous method, we used binary search to adjust the size of the window to find the smallest possible window size. However, we can simplify things by using a variable-size sliding window instead, which eliminates the $\\log n$ factor from our time complexity.\n\nWe’ll iterate through the `nums` array and add each element to our window one by one. After adding an element, we’ll check if the current OR value of the subarray meets or exceeds the target value `k`. If it does, we’ll keep track of the current size of the window in a variable called `minLength`.\n\nNext, we’ll try to shrink the window from the start by removing elements one at a time. Each time we remove an element, we reduce the window size and update `minLength` accordingly. We keep doing this until the OR value of the window drops below `k`, at which point we stop removing elements and continue with the next element in the array.\n\nOnce we finish looping through the array, `minLength` will contain the length of the smallest valid subarray that meets the condition. We can then return this value as our answer.\n\nThe algorithm is visualized in the slideshow below:\n\n!?!../Documents/3097/slideshow.json:874,672!?!\n\n#### Algorithm\n\n- Initialize:\n  - a variable `minLength` to maximum possible integer value to track the shortest valid subarray length.\n  - two pointers `windowStart` and `windowEnd` to 0 to implement a sliding window.\n  - an array `bitCounts` of size 32 filled with zeros to keep track of set bits at each position.\n- Start expanding the window while `windowEnd` is less than the array length:\n  - Add the bits of current number at `windowEnd` to `bitCounts` by calling `updateBitCounts`.\n  - While the window contains a valid subarray (OR of numbers $\\geq$ k) and `windowStart` $\\leq$ `windowEnd`:\n    - Update `minLength` to minimum of current `minLength` and current window size.\n    - Remove the bits of number at `windowStart` from `bitCounts`.\n    - Increment `windowStart` to shrink window from left.\n  - Increment `windowEnd` to expand window from right.\n- Return -1 if no valid subarray found (`minLength` still maximum), else return `minLength`.\n\nHelper method `updateBitCounts(bitCounts, number, delta)`:\n- For each bit position from 0 to 31:\n  - Check if bit is set in given number using right shift and AND operation.\n  - If bit is set, increment/decrement count at that position by delta.\n\nHelper method `convertBitCountsToNumber(bitCounts)`:\n- Initialize `result` to 0.\n- For each bit position from 0 to 31:\n  - If count at current position is non-zero, set corresponding bit in `result` using OR operation.\n- Return the final `result`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/FwSqivKm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"FwSqivKm\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the `nums` array.\n\n* Time complexity: $O(n)$\n\n    The outer loop runs over the length of the input array. For each iteration, we perform two operations: the first operation updates the bit counts, and the second operation checks if the current window is valid by converting bit counts to numbers. Both these take $O(32) = O(1)$ time. \n    \n    The inner while loop can run at most $n$ times across all iterations of the outer loop, as `windowStart` can only be incremented $n$ times in total. \n    \n    Thus, the total time complexity of our algorithm is $O(n)$. \n\n* Space complexity: $O(1)$\n\n    The algorithm uses a fixed-size array `bitCounts` of size $32$ to store the count of set bits at each position. Besides this, it uses only a few integer variables (`minLength`, `windowStart`, `windowEnd`) for tracking the window and result.\n\n    Therefore, the total space complexity is $O(1)$ as it uses constant extra space independent of input size.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

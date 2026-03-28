@@ -1,0 +1,35 @@
+{
+  "questionId": "3062",
+  "questionFrontendId": "2877",
+  "title": "Create a DataFrame from List",
+  "titleSlug": "create-a-dataframe-from-list",
+  "difficulty": "Easy",
+  "content": "<p>Write a solution to <strong>create</strong> a DataFrame from a 2D list called <code>student_data</code>. This 2D list contains the IDs and ages of some students.</p>\n\n<p>The DataFrame should have two columns, <code>student_id</code> and <code>age</code>, and be in the same order as the original 2D list.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:\n</strong>student_data:<strong>\n</strong><code>[\n  [1, 15],\n  [2, 11],\n  [3, 11],\n  [4, 20]\n]</code>\n<strong>Output:</strong>\n+------------+-----+\n| student_id | age |\n+------------+-----+\n| 1          | 15  |\n| 2          | 11  |\n| 3          | 11  |\n| 4          | 20  |\n+------------+-----+\n<strong>Explanation:</strong>\nA DataFrame was created on top of student_data, with two columns named <code>student_id</code> and <code>age</code>.\n</pre>\n",
+  "hints": [
+    "Consider using a built-in function in pandas library and specifying the column names within it."
+  ],
+  "metaData": "{\n  \"name\": \"create_a_dataframe\",\n  \"params\": [\n    {\n      \"name\": \"student_data\",\n      \"type\": \"list<list<integer>>\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"DataFrame\"\n  },\n  \"data\": true,\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"249.4K\", \"totalSubmission\": \"307.7K\", \"totalAcceptedRaw\": 249437, \"totalSubmissionRaw\": 307669, \"acRate\": \"81.1%\"}",
+  "likes": 291,
+  "dislikes": 12,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,15],[2,11],[3,11],[4,20]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 60, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 22, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 16, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 13, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 9, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [],
+  "codeSnippets": [
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef createDataframe(student_data: List[List[int]]) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2099",
+    "content": "[TOC]\n\n## Solution\n--- \n### Overview\n\nA DataFrame is a powerful and convenient data structure provided by the pandas library. It is a 2D table-like structure, similar to a spreadsheet or SQL table. Each row represents an individual record and each column represents a different attribute. \n\nIn this solution, we aim to convert a 2D list into a pandas DataFrame. This is a common application of the pandas library for when we have raw data in list format and want to convert it to a more structured, labeled format for easier analysis. \n\n**Key Concepts**:\n - **2D List**: A list of lists where each inner list represents a row of data.\n - **DataFrame**: A 2-dimensional labeled data structure in pandas.\n\n### Intuition\nLet's explore step by step how to create a DataFrame with the tools provided by the pandas library.\n\n1. **Importing pandas**:\n   ```python\n   import pandas as pd\n   ```\n   This line imports the pandas library and gives it an alias name `pd`. The pandas library provides fast, flexible, and expressive data structures designed to work with structured (tabular, multidimensional, potentially heterogeneous) data.\n\n2. **Function Definition**:\n   ```python\n   def createDataframe(student_data: List[List[int]]) -> pd.DataFrame:\n   ```\n   This line defines a function named `createDataframe` that takes in a 2D list `student_data` as an argument and returns a DataFrame.\n\n3. **Using `pd.DataFrame()`**:\n\n   `pd.DataFrame(student_data)` will allow us to transform our 2D list into a DataFrame. \n\n   The diagram below offers a visual representation of the `pd.DataFrame()` function in action:\n\n   ![fig](../Figures/3306/3306-1.png)\n\n   You can see that the resultant DataFrame has headers labeled as `0` and `1`. This is because all DataFrames are labeled and will create headers by default using integers starting from `0`. \n\n   We can set custom column names using the `columns` parameter. First, we create a list of our column names in the order that they will be displayed on the DataFrame. Then, we will provide the list as a parameter when we call the `pd.DataFrame()` function. \n\n   `column_names = [\"student_id\", \"age\"]`\n\n   `pd.DataFrame(student_data, columns=column_names)`\n\n   The subsequent diagram demonstrates the impact of the `columns` parameter:\n\n   ![fig](../Figures/3306/3306-2.png)\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/UtQ83XFe/shared\" frameBorder=\"0\" width=\"100%\" height=\"157\" name=\"UtQ83XFe\"></iframe>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

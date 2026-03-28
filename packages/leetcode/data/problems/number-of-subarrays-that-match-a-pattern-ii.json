@@ -1,0 +1,140 @@
+{
+  "questionId": "3290",
+  "questionFrontendId": "3036",
+  "title": "Number of Subarrays That Match a Pattern II",
+  "titleSlug": "number-of-subarrays-that-match-a-pattern-ii",
+  "difficulty": "Hard",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>nums</code> of size <code>n</code>, and a <strong>0-indexed</strong> integer array <code>pattern</code> of size <code>m</code> consisting of integers <code>-1</code>, <code>0</code>, and <code>1</code>.</p>\n\n<p>A <span data-keyword=\"subarray\">subarray</span> <code>nums[i..j]</code> of size <code>m + 1</code> is said to match the <code>pattern</code> if the following conditions hold for each element <code>pattern[k]</code>:</p>\n\n<ul>\n\t<li><code>nums[i + k + 1] &gt; nums[i + k]</code> if <code>pattern[k] == 1</code>.</li>\n\t<li><code>nums[i + k + 1] == nums[i + k]</code> if <code>pattern[k] == 0</code>.</li>\n\t<li><code>nums[i + k + 1] &lt; nums[i + k]</code> if <code>pattern[k] == -1</code>.</li>\n</ul>\n\n<p>Return <em>the<strong> count</strong> of subarrays in</em> <code>nums</code> <em>that match the</em> <code>pattern</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4,5,6], pattern = [1,1]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The pattern [1,1] indicates that we are looking for strictly increasing subarrays of size 3. In the array nums, the subarrays [1,2,3], [2,3,4], [3,4,5], and [4,5,6] match this pattern.\nHence, there are 4 subarrays in nums that match the pattern.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,4,4,1,3,5,5,3], pattern = [1,0,-1]\n<strong>Output:</strong> 2\n<strong>Explanation: </strong>Here, the pattern [1,0,-1] indicates that we are looking for a sequence where the first number is smaller than the second, the second is equal to the third, and the third is greater than the fourth. In the array nums, the subarrays [1,4,4,1], and [3,5,5,3] match this pattern.\nHence, there are 2 subarrays in nums that match the pattern.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n == nums.length &lt;= 10<sup>6</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= m == pattern.length &lt; n</code></li>\n\t<li><code>-1 &lt;= pattern[i] &lt;= 1</code></li>\n</ul>\n",
+  "hints": [
+    "Create a second array <code>nums2</code> such that <code>nums2[i] = 1</code> if <code>nums[i + 1] > nums[i]</code>, <code>nums2[i] = 0</code> if <code>nums[i + 1] == nums[i]</code>, and <code>nums2[i] = -1</code> if <code>nums[i + 1] < nums[i]</code>.",
+    "The problem becomes: “Count the number of subarrays in <code>nums2</code> that are equal to <code>pattern</code>.",
+    "Use Knuth-Morris-Pratt or Z-Function algorithms."
+  ],
+  "metaData": "{\n  \"name\": \"countMatchingSubarrays\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"pattern\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"14K\", \"totalSubmission\": \"41.9K\", \"totalAcceptedRaw\": 14028, \"totalSubmissionRaw\": 41920, \"acRate\": \"33.5%\"}",
+  "likes": 170,
+  "dislikes": 6,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Match Substring After Replacement\", \"titleSlug\": \"match-substring-after-replacement\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5,6]\n[1,1]",
+    "[1,4,4,1,3,5,5,3]\n[1,0,-1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"thoughtworks\", \"name\": \"ThoughtWorks\"}, {\"timesEncountered\": 2, \"slug\": \"autodesk\", \"name\": \"Autodesk\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Rolling Hash",
+      "slug": "rolling-hash"
+    },
+    {
+      "name": "String Matching",
+      "slug": "string-matching"
+    },
+    {
+      "name": "Hash Function",
+      "slug": "hash-function"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countMatchingSubarrays(vector<int>& nums, vector<int>& pattern) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countMatchingSubarrays(int[] nums, int[] pattern) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countMatchingSubarrays(self, nums: List[int], pattern: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countMatchingSubarrays(self, nums, pattern):\n        \"\"\"\n        :type nums: List[int]\n        :type pattern: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number[]} pattern\n * @return {number}\n */\nvar countMatchingSubarrays = function(nums, pattern) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countMatchingSubarrays(nums: number[], pattern: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountMatchingSubarrays(int[] nums, int[] pattern) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countMatchingSubarrays(int* nums, int numsSize, int* pattern, int patternSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countMatchingSubarrays(nums []int, pattern []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countMatchingSubarrays(nums: IntArray, pattern: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countMatchingSubarrays(_ nums: [Int], _ pattern: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_matching_subarrays(nums: Vec<i32>, pattern: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer[]} pattern\n# @return {Integer}\ndef count_matching_subarrays(nums, pattern)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer[] $pattern\n     * @return Integer\n     */\n    function countMatchingSubarrays($nums, $pattern) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countMatchingSubarrays(List<int> nums, List<int> pattern) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countMatchingSubarrays(nums: Array[Int], pattern: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_matching_subarrays(nums :: [integer], pattern :: [integer]) :: integer\n  def count_matching_subarrays(nums, pattern) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_matching_subarrays(Nums :: [integer()], Pattern :: [integer()]) -> integer().\ncount_matching_subarrays(Nums, Pattern) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-matching-subarrays nums pattern)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,132 @@
+{
+  "questionId": "3172",
+  "questionFrontendId": "2894",
+  "title": "Divisible and Non-divisible Sums Difference",
+  "titleSlug": "divisible-and-non-divisible-sums-difference",
+  "difficulty": "Easy",
+  "content": "<p>You are given positive integers <code>n</code> and <code>m</code>.</p>\n\n<p>Define two integers as follows:</p>\n\n<ul>\n\t<li><code>num1</code>: The sum of all integers in the range <code>[1, n]</code> (both <strong>inclusive</strong>) that are <strong>not divisible</strong> by <code>m</code>.</li>\n\t<li><code>num2</code>: The sum of all integers in the range <code>[1, n]</code> (both <strong>inclusive</strong>) that are <strong>divisible</strong> by <code>m</code>.</li>\n</ul>\n\n<p>Return <em>the integer</em> <code>num1 - num2</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 10, m = 3\n<strong>Output:</strong> 19\n<strong>Explanation:</strong> In the given example:\n- Integers in the range [1, 10] that are not divisible by 3 are [1,2,4,5,7,8,10], num1 is the sum of those integers = 37.\n- Integers in the range [1, 10] that are divisible by 3 are [3,6,9], num2 is the sum of those integers = 18.\nWe return 37 - 18 = 19 as the answer.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 5, m = 6\n<strong>Output:</strong> 15\n<strong>Explanation:</strong> In the given example:\n- Integers in the range [1, 5] that are not divisible by 6 are [1,2,3,4,5], num1 is the sum of those integers = 15.\n- Integers in the range [1, 5] that are divisible by 6 are [], num2 is the sum of those integers = 0.\nWe return 15 - 0 = 15 as the answer.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 5, m = 1\n<strong>Output:</strong> -15\n<strong>Explanation:</strong> In the given example:\n- Integers in the range [1, 5] that are not divisible by 1 are [], num1 is the sum of those integers = 0.\n- Integers in the range [1, 5] that are divisible by 1 are [1,2,3,4,5], num2 is the sum of those integers = 15.\nWe return 0 - 15 = -15 as the answer.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n, m &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "With arithmetic progression we know that the sum of integers in the range <code>[1, n]</code> is <code>n * (n + 1) / 2 </code>."
+  ],
+  "metaData": "{\n  \"name\": \"differenceOfSums\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"m\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"321.6K\", \"totalSubmission\": \"353.3K\", \"totalAcceptedRaw\": 321613, \"totalSubmissionRaw\": 353271, \"acRate\": \"91.0%\"}",
+  "likes": 672,
+  "dislikes": 37,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "10\n3",
+    "5\n6",
+    "5\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int differenceOfSums(int n, int m) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int differenceOfSums(int n, int m) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def differenceOfSums(self, n: int, m: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def differenceOfSums(self, n, m):\n        \"\"\"\n        :type n: int\n        :type m: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} m\n * @return {number}\n */\nvar differenceOfSums = function(n, m) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function differenceOfSums(n: number, m: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int DifferenceOfSums(int n, int m) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int differenceOfSums(int n, int m) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func differenceOfSums(n int, m int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun differenceOfSums(n: Int, m: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func differenceOfSums(_ n: Int, _ m: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn difference_of_sums(n: i32, m: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} m\n# @return {Integer}\ndef difference_of_sums(n, m)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $m\n     * @return Integer\n     */\n    function differenceOfSums($n, $m) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int differenceOfSums(int n, int m) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def differenceOfSums(n: Int, m: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec difference_of_sums(n :: integer, m :: integer) :: integer\n  def difference_of_sums(n, m) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec difference_of_sums(N :: integer(), M :: integer()) -> integer().\ndifference_of_sums(N, M) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (difference-of-sums n m)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2762",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Traversal\n\n#### Intuition\n\nConsider the interval $[1, n]$. \n\n- Let $\\textit{num}_1$ be the sum of the integers in this range that aren’t divisible by `m`.\n- Let $\\textit{num}_2$ be the sum of those that are divisible by `m`.\n\nTo capture their combined effect, we introduce a running total called ans.\n\nAs we walk through each integer `x` from 1 to `n`:\n\n1. If `x` isn’t divisible by `m`, we add it to ans.\n2. If `x` is divisible by `m`, we subtract it from ans.\n\nWhen the traversal ends, the value stored in ans is exactly the result the problem asks for.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/JbN5EzyK/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"JbN5EzyK\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the given integer.\n\n- Time complexity: $O(n)$.\n  \n  We traverse all numbers from 1 to n.\n\n- Space complexity: $O(1)$.\n  \n  Only one integer variable $\\textit{ans}$ was used.\n\n### Approach 2: Mathematical Derivation\n\n#### Intuition\n\nFirst, focus on the numbers that are divisible by `m`.\nThe *k-th* such number is *k × m*, so their sum is\n\n$$\n\\text{num}_2\n  = m + 2m + \\dots + k m\n  = (1 + 2 + \\dots + k)\\,m\n  = \\frac{k(k+1)}{2}\\,m,\n$$ -------------- ( 1 )\n\nwhere\n\n$$\nk=\\bigl\\lfloor\\tfrac{n}{m}\\bigr\\rfloor\n$$ \n\nis the count of multiples of `m` up to `n`.\n\n\nNext, look at the numbers **not** divisible by `m`.\nTheir sum is simply the total of the first `n` integers minus $\\text{num}_2$:\n\n$$\n\\text{num}_1\n  = (1 + 2 + \\dots + n) - \\text{num}_2\n  = \\frac{n(n+1)}{2} - \\text{num}_2.\n$$  --------------- ( 2 )\n\n\nPutting the two pieces together, the quantity the problem asks for is\n\n$$\n\\text{num}_1 - \\text{num}_2\n  = \\left[\\frac{n(n+1)}{2} - \\text{num}_2\\right] - \\text{num}_2\n  = \\frac{n(n+1)}{2} - 2\\,\\text{num}_2.\n$$\n\nFinally, substitute the closed form of $\\text{num}_2$:\n\n$$\n\\boxed{\\text{num}_1 - \\text{num}_2\n       = \\frac{n(n+1)}{2} \\;-\\; k(k+1)\\,m.}\n$$\n\nThis single formula lets us compute the desired result directly, without any iteration.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/QyuaZPEa/shared\" frameBorder=\"0\" width=\"100%\" height=\"174\" name=\"QyuaZPEa\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(1)$.\n\n- Space complexity: $O(1)$.\n  \n  Only one integer variable $\\textit{k}$ was used.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

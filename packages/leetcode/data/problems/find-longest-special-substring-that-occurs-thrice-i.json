@@ -1,0 +1,149 @@
+{
+  "questionId": "3267",
+  "questionFrontendId": "2981",
+  "title": "Find Longest Special Substring That Occurs Thrice I",
+  "titleSlug": "find-longest-special-substring-that-occurs-thrice-i",
+  "difficulty": "Medium",
+  "content": "<p>You are given a string <code>s</code> that consists of lowercase English letters.</p>\n\n<p>A string is called <strong>special</strong> if it is made up of only a single character. For example, the string <code>&quot;abc&quot;</code> is not special, whereas the strings <code>&quot;ddd&quot;</code>, <code>&quot;zz&quot;</code>, and <code>&quot;f&quot;</code> are special.</p>\n\n<p>Return <em>the length of the <strong>longest special substring</strong> of </em><code>s</code> <em>which occurs <strong>at least thrice</strong></em>, <em>or </em><code>-1</code><em> if no special substring occurs at least thrice</em>.</p>\n\n<p>A <strong>substring</strong> is a contiguous <strong>non-empty</strong> sequence of characters within a string.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aaaa&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The longest special substring which occurs thrice is &quot;aa&quot;: substrings &quot;<u><strong>aa</strong></u>aa&quot;, &quot;a<u><strong>aa</strong></u>a&quot;, and &quot;aa<u><strong>aa</strong></u>&quot;.\nIt can be shown that the maximum length achievable is 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abcdef&quot;\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> There exists no special substring which occurs at least thrice. Hence return -1.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abcaba&quot;\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The longest special substring which occurs thrice is &quot;a&quot;: substrings &quot;<u><strong>a</strong></u>bcaba&quot;, &quot;abc<u><strong>a</strong></u>ba&quot;, and &quot;abcab<u><strong>a</strong></u>&quot;.\nIt can be shown that the maximum length achievable is 1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= s.length &lt;= 50</code></li>\n\t<li><code>s</code> consists of only lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "The constraints are small.",
+    "Brute force checking all substrings."
+  ],
+  "metaData": "{\n  \"name\": \"maximumLength\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"131.5K\", \"totalSubmission\": \"212.6K\", \"totalAcceptedRaw\": 131477, \"totalSubmissionRaw\": 212550, \"acRate\": \"61.9%\"}",
+  "likes": 732,
+  "dislikes": 75,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Substring Without Repeating Characters\", \"titleSlug\": \"longest-substring-without-repeating-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Substring with At Least K Repeating Characters\", \"titleSlug\": \"longest-substring-with-at-least-k-repeating-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"aaaa\"",
+    "\"abcdef\"",
+    "\"abcaba\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 20, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumLength(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumLength(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumLength(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumLength(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar maximumLength = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumLength(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumLength(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumLength(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumLength(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumLength(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumLength(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_length(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef maximum_length(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function maximumLength($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumLength(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumLength(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_length(s :: String.t) :: integer\n  def maximum_length(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_length(S :: unicode:unicode_binary()) -> integer().\nmaximum_length(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-length s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2610",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe are given a string `s` consisting of lowercase letters. Our task is to return the length of the longest substring of `s` that has at least 3 of the same letters - we'll call this a special substring. If no such special substring exists, we should return -1.\n\n> A substring is a contiguous, non-empty sequence of characters within a string.\n\nThe length of the string `s` can be at most 50. Therefore, we can use brute force techniques to solve this problem. After solving this one, you might want to try the [harder version](https://leetcode.com/problems/find-longest-special-substring-that-occurs-thrice-ii/description/) of the problem.\n\n---\n\n### Approach 1: Brute-Force Approach\n\n#### Intuition   \n\nA logical approach would be to generate all substrings of the string `s` and check if each substring is special or not.\n\nTo generate all substrings, we can use two loop pointers: `start` and `end`. The `start` pointer indicates the starting index of the substring, and the `end` pointer indicates the ending index. We will loop through all possible values of `start` and `end` where `end` is greater than `start`. For each `start` and `end` grouping, we will extract the substring and store it in a string (say `currString`).\n\nSince appending a character to the end of a list or string takes constant time, we can avoid using another loop to generate the substring. Instead, we will add the character at the `end` index to `currString`. While doing this, we can check if the newly added character maintains the \"special\" property. If the newly added character is not equal to the previous character, we can stop processing this substring further.\n\nFor every valid substring, we will increment its frequency in a map, where the substring is the key and its frequency is the value. After processing all substrings, we can find the longest substring in the map that has a frequency of at least three and return its length as the result.\n\n![fig](../Figures/2981/image1.png)\n\n#### Algorithm\n\n1. Create a map `count` to store the frequency of all substrings.\n2. Iterate over the string `s` using two nested loops:\n    - Outer loop with index `start` from 0 to the length of the string:\n        - Create a string `currString` to store the substrings.\n        - Inner loop with index `end` starting from `start` to the length of the string:\n            - If the current substring is empty or the last character matches the current character, append the character to `currString` and increment its frequency in `count`.\n            - If the current character does not match the last character, stop processing this substring.\n3. Initialize a variable `ans` to store the length of the longest substring with a frequency of at least 3.\n4. Iterate over the map `count`:\n    - For each substring, if its frequency is at least 3 and its length is greater than `ans`, update `ans` with the length of the substring.\n5. If no substring with the required frequency is found, return -1. Otherwise, return `ans`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/K9YykFH9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"K9YykFH9\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string `s`.\n\n- Time Complexity: $O(n^3)$\n\n    The algorithm generates all substrings of the input string `s` using two nested loops. The outer loop runs `n` times. For each iteration of the outer loop, the inner loop iterates `n - i` times, where `i` is the index of the outer loop. This means the total number of iterations is the sum of the first `n` natural numbers, which equals $n \\cdot (n+1) / 2$. Therefore, the time complexity for generating all substrings is $O(n^2)$.\n\n    For each substring, the algorithm checks and updates the frequency in a map, which takes $O(size)$ time, where `size` denotes the length of the substring added in the map. \n    \n    Therefore, the overall time complexity of the algorithm is given by O(n^3). \n\n- Space complexity: $O(n^2)$\n\n    The algorithm uses a temporary string, `currString`, to store substrings. The size of `currString` varies, but in the worst case, it can hold the entire string, contributing $O(n)$ additional space. Since the string `currString` is initialized `n` times, the total space is given by $O(n^2)$.\n\n    The algorithm uses a map to store all unique substrings and their frequencies. In the worst case, such as when all characters in the string are identical, the total number of substrings can go up to $n \\cdot (n+1) / 2$. Additionally, each substring requires space proportional to its length, leading to an overall space requirement of $O(n^2)$ in the worst case. \n    \n    Therefore, the total space complexity of the algorithm is $O(n^2)$.\n\n---\n\n### Approach 2: Optimized Hashing \n\n#### Intuition   \n\nIn the previous approach, we stored substrings in a map with their frequency. Since all special substrings consist of equal characters, we can optimize by storing them as a pair `{char character, int substringLength}`.\n\nThis optimization improves the algorithm because adding a string to the map takes `O(substringLength)` time. By storing `{character, substringLength}` as a pair, which behaves like an array of length 2, insertion into the map now takes constant time.\n\nAfter populating the map with these pairs, we find the maximum `substringLength` value for any pair with a frequency of at least 3 and return it as the result.\n\n> Note: A frequency array can also be used in this scenario. It is a good choice as it provides an efficient way to count and track occurrences, particularly when the range of values is limited.\n\n#### Algorithm\n\n1. Create a map `count` of type `map<pair<char, int>, int>` to store the frequency of substrings, where each key is a pair of a character and the substring length, and the value is its frequency.\n2. Use an outer loop with index `start` from `0` to the length of the string (`s.length()`):\n   - Initialize `substringLength` to `0` to track the length of the current substring of repeated characters.\n   - Store the current character `character = s[start]`.\n3. Use an inner loop with index `end` starting from `start` and iterating to the end of the string (`s.length()`):\n   - If the character `s[end]` matches `character`:\n     - Increment `substringLength`.\n     - Update the frequency of the pair `{character, substringLength}` in the `count` map.\n   - If the character `s[end]` does not match `c`, break the loop.\n4. Initialize a variable `ans` to `-1`.\n5. Iterate over the entries in the `count` map:\n   - For each entry, check if its frequency is at least 3 and its substring length is greater than `ans`. If both conditions are true, update `ans` with the length of the substring.\n6. Return `ans`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/RTh9x9yB/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RTh9x9yB\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string `s`.\n\n- Time Complexity: $O(n^2)$\n\n    The algorithm generates all substrings of the input string `s` using two nested loops. The outer loop runs `n` times. For each iteration of the outer loop, the inner loop iterates `n - end` times, where `end` is the index of the outer loop. This means the total number of iterations is the sum of the first `n` natural numbers, which equals $n \\cdot (n+1) / 2$. Therefore, the time complexity for generating all substrings is $O(n^2)$.\n\n    For each substring, the algorithm checks and updates the frequency of the pair in a map, which takes $O(1)$ time. \n    \n    Therefore, the overall time complexity of the algorithm is given by O(n^2). \n\n- Space complexity: $O(n^2)$\n\n    The algorithm uses a map to store all unique substrings and their frequencies. In the worst case, such as when all characters in the string are identical, the total number of substrings can go up to $n \\cdot (n+1) / 2$. \n    \n    Additionally, each substring requires space proportional to its length, leading to an overall space requirement of $O(n^2)$ in the worst case. \n    \n    Therefore, the total space complexity of the algorithm is $O(n^2)$.\n\n---\n\n### Further Thoughts: \n\nThis problem has solutions with time complexities of $O(n^3)$ and $O(n^2)$, but there is an even more efficient solution that runs in $O(n)$ time.\n\nThe single pass solution will be the focus of the second part of this [problem](https://leetcode.com/problems/find-longest-special-substring-that-occurs-thrice-ii/), which is designed almost the same but with tighter constraints to encourage further optimization. We now recommend attempting to solve the second part using the single pass approach.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

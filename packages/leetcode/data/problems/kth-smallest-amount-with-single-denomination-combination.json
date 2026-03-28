@@ -1,0 +1,147 @@
+{
+  "questionId": "3375",
+  "questionFrontendId": "3116",
+  "title": "Kth Smallest Amount With Single Denomination Combination",
+  "titleSlug": "kth-smallest-amount-with-single-denomination-combination",
+  "difficulty": "Hard",
+  "content": "<p>You are given an integer array <code>coins</code> representing coins of different denominations and an integer <code>k</code>.</p>\n\n<p>You have an infinite number of coins of each denomination. However, you are <strong>not allowed</strong> to combine coins of different denominations.</p>\n\n<p>Return the <code>k<sup>th</sup></code> <strong>smallest</strong> amount that can be made using these coins.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\" style=\"\n    border-color: var(--border-tertiary);\n    border-left-width: 2px;\n    color: var(--text-secondary);\n    font-size: .875rem;\n    margin-bottom: 1rem;\n    margin-top: 1rem;\n    overflow: visible;\n    padding-left: 1rem;\n\">\n<p><strong>Input:</strong> <span class=\"example-io\" style=\"\n    font-family: Menlo,sans-serif;\n    font-size: 0.85rem;\n\">coins = [3,6,9], k = 3</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\" style=\"\n    font-family: Menlo,sans-serif;\n    font-size: 0.85rem;\n\"> 9</span></p>\n\n<p><strong>Explanation:</strong> The given coins can make the following amounts:<br />\nCoin 3 produces multiples of 3: 3, 6, 9, 12, 15, etc.<br />\nCoin 6 produces multiples of 6: 6, 12, 18, 24, etc.<br />\nCoin 9 produces multiples of 9: 9, 18, 27, 36, etc.<br />\nAll of the coins combined produce: 3, 6, <u><strong>9</strong></u>, 12, 15, etc.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\" style=\"\n    border-color: var(--border-tertiary);\n    border-left-width: 2px;\n    color: var(--text-secondary);\n    font-size: .875rem;\n    margin-bottom: 1rem;\n    margin-top: 1rem;\n    overflow: visible;\n    padding-left: 1rem;\n\">\n<p><strong>Input:</strong><span class=\"example-io\" style=\"\n    font-family: Menlo,sans-serif;\n    font-size: 0.85rem;\n\"> coins = [5,2], k = 7</span></p>\n\n<p><strong>Output:</strong><span class=\"example-io\" style=\"\n    font-family: Menlo,sans-serif;\n    font-size: 0.85rem;\n\"> 12 </span></p>\n\n<p><strong>Explanation:</strong> The given coins can make the following amounts:<br />\nCoin 5 produces multiples of 5: 5, 10, 15, 20, etc.<br />\nCoin 2 produces multiples of 2: 2, 4, 6, 8, 10, 12, etc.<br />\nAll of the coins combined produce: 2, 4, 5, 6, 8, 10, <u><strong>12</strong></u>, 14, 15, etc.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= coins.length &lt;= 15</code></li>\n\t<li><code>1 &lt;= coins[i] &lt;= 25</code></li>\n\t<li><code>1 &lt;= k &lt;= 2 * 10<sup>9</sup></code></li>\n\t<li><code>coins</code> contains pairwise distinct integers.</li>\n</ul>\n",
+  "hints": [
+    "Binary search the answer <code>x</code>.",
+    "Use the inclusion-exclusion principle to count the number of distinct amounts that can be made up to <code>x</code>."
+  ],
+  "metaData": "{\n  \"name\": \"findKthSmallest\",\n  \"params\": [\n    {\n      \"name\": \"coins\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"11.7K\", \"totalSubmission\": \"58.5K\", \"totalAcceptedRaw\": 11717, \"totalSubmissionRaw\": 58500, \"acRate\": \"20.0%\"}",
+  "likes": 252,
+  "dislikes": 19,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Kth Smallest Number in Multiplication Table\", \"titleSlug\": \"kth-smallest-number-in-multiplication-table\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Number of Possible Ways for an Event\", \"titleSlug\": \"find-the-number-of-possible-ways-for-an-event\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,6,9]\n3",
+    "[5,2]\n7"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Combinatorics",
+      "slug": "combinatorics"
+    },
+    {
+      "name": "Number Theory",
+      "slug": "number-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long findKthSmallest(vector<int>& coins, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long findKthSmallest(int[] coins, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findKthSmallest(self, coins: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findKthSmallest(self, coins, k):\n        \"\"\"\n        :type coins: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} coins\n * @param {number} k\n * @return {number}\n */\nvar findKthSmallest = function(coins, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findKthSmallest(coins: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long FindKthSmallest(int[] coins, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long findKthSmallest(int* coins, int coinsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findKthSmallest(coins []int, k int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findKthSmallest(coins: IntArray, k: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findKthSmallest(_ coins: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_kth_smallest(coins: Vec<i32>, k: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} coins\n# @param {Integer} k\n# @return {Integer}\ndef find_kth_smallest(coins, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $coins\n     * @param Integer $k\n     * @return Integer\n     */\n    function findKthSmallest($coins, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findKthSmallest(List<int> coins, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findKthSmallest(coins: Array[Int], k: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_kth_smallest(coins :: [integer], k :: integer) :: integer\n  def find_kth_smallest(coins, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_kth_smallest(Coins :: [integer()], K :: integer()) -> integer().\nfind_kth_smallest(Coins, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-kth-smallest coins k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

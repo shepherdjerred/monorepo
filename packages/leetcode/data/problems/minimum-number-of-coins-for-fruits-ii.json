@@ -1,0 +1,148 @@
+{
+  "questionId": "3268",
+  "questionFrontendId": "2969",
+  "title": "Minimum Number of Coins for Fruits II",
+  "titleSlug": "minimum-number-of-coins-for-fruits-ii",
+  "difficulty": "Hard",
+  "content": "<p>You are at a fruit market with different types of exotic fruits on display.</p>\n\n<p>You are given a <strong>1-indexed</strong> array <code>prices</code>, where <code>prices[i]</code> denotes the number of coins needed to purchase the <code>i<sup>th</sup></code> fruit.</p>\n\n<p>The fruit market has the following offer:</p>\n\n<ul>\n\t<li>If you purchase the <code>i<sup>th</sup></code> fruit at <code>prices[i]</code> coins, you can get the next <code>i</code> fruits for free.</li>\n</ul>\n\n<p><strong>Note</strong> that even if you <strong>can</strong> take fruit <code>j</code> for free, you can still purchase it for <code>prices[j]</code> coins to receive a new offer.</p>\n\n<p>Return <em>the <strong>minimum</strong> number of coins needed to acquire all the fruits</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> prices = [3,1,2]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> You can acquire the fruits as follows:\n- Purchase the 1<sup>st</sup> fruit with 3 coins, and you are allowed to take the 2<sup>nd</sup> fruit for free.\n- Purchase the 2<sup>nd</sup> fruit with 1 coin, and you are allowed to take the 3<sup>rd</sup> fruit for free.\n- Take the 3<sup>rd</sup> fruit for free.\nNote that even though you were allowed to take the 2<sup>nd</sup> fruit for free, you purchased it because it is more optimal.\nIt can be proven that 4 is the minimum number of coins needed to acquire all the fruits.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> prices = [1,10,1,1]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> You can acquire the fruits as follows:\n- Purchase the 1<sup>st</sup> fruit with 1 coin, and you are allowed to take the 2<sup>nd</sup> fruit for free.\n- Take the 2<sup>nd</sup> fruit for free.\n- Purchase the 3<sup>rd</sup> fruit for 1 coin, and you are allowed to take the 4<sup>th</sup> fruit for free.\n- Take the 4<sup>t</sup><sup>h</sup> fruit for free.\nIt can be proven that 2 is the minimum number of coins needed to acquire all the fruits.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= prices.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= prices[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Use DP + Fenwick tree.",
+    "There is another creative solution using multiset instead of Fenwick.",
+    "Imagine we want to calculate <code>dp[i]</code> which is the answer to the problem for the first <code>i</code> fruits.",
+    "If we buy <code>l<sup>th</sup></code> fruit from the set of indices: <code>[(i + 1) / 2, (i + 1) / 2 + 1, (i + 1) / 2 + 2, ..., i - 1]</code>, then we can get fruits <code>l + 1, l + 2, ..., i</code> for free.",
+    "We just need to get all the first <code>l - 1</code> fruits as well and the minimum price for that, is <code>dp[l - 1]</code>.",
+    "So at the index <code>i</code>, we are looking for such an index <code>l</code> that <code>dp[l - 1] + prices[l]</code> is as minimum as possible.",
+    "We can store these values in a multiset and update the values in it."
+  ],
+  "metaData": "{\n  \"name\": \"minimumCoins\",\n  \"params\": [\n    {\n      \"name\": \"prices\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"980\", \"totalSubmission\": \"2.1K\", \"totalAcceptedRaw\": 980, \"totalSubmissionRaw\": 2072, \"acRate\": \"47.3%\"}",
+  "likes": 21,
+  "dislikes": 0,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[3,1,2]",
+    "[1,10,1,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Monotonic Queue",
+      "slug": "monotonic-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumCoins(vector<int>& prices) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumCoins(int[] prices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumCoins(self, prices: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumCoins(self, prices):\n        \"\"\"\n        :type prices: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} prices\n * @return {number}\n */\nvar minimumCoins = function(prices) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumCoins(prices: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumCoins(int[] prices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumCoins(int* prices, int pricesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumCoins(prices []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumCoins(prices: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumCoins(_ prices: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_coins(prices: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} prices\n# @return {Integer}\ndef minimum_coins(prices)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $prices\n     * @return Integer\n     */\n    function minimumCoins($prices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumCoins(List<int> prices) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumCoins(prices: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_coins(prices :: [integer]) :: integer\n  def minimum_coins(prices) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_coins(Prices :: [integer()]) -> integer().\nminimum_coins(Prices) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-coins prices)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,53 @@
+{
+  "questionId": "3549",
+  "questionFrontendId": "3236",
+  "title": "CEO Subordinate Hierarchy",
+  "titleSlug": "ceo-subordinate-hierarchy",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Employees</code></p>\n\n<pre>\n+---------------+---------+\n| Column Name   | Type    |\n+---------------+---------+\n| employee_id   | int     |\n| employee_name | varchar |\n| manager_id    | int     |\n| salary        | int     |\n+---------------+---------+\nemployee_id is the unique identifier for this table.\nmanager_id is the employee_id of the employee&#39;s manager. The CEO has a NULL manager_id.\n</pre>\n\n<p>Write a solution to find subordinates of the CEO (both <strong>direct</strong> and <strong>indirect</strong>), along with their <strong>level in the hierarchy</strong> and their <strong>salary difference</strong> from the CEO.</p>\n\n<p>The result should have the following columns:</p>\n\n<p>The query result format is in the following example.</p>\n\n<ul>\n\t<li><code>subordinate_id</code>: The employee_id of the subordinate</li>\n\t<li><code>subordinate_name</code>: The name of the subordinate</li>\n\t<li><code>hierarchy_level</code>: The level of the subordinate in the hierarchy (<code>1</code> for <strong>direct</strong> reports, <code>2</code> for <strong>their direct</strong> reports, and <strong>so on</strong>)</li>\n\t<li><code>salary_difference</code>: The difference between the subordinate&#39;s salary and the CEO&#39;s salary</li>\n</ul>\n\n<p>Return <em>the result table ordered by</em> <code>hierarchy_level</code> <em><strong>ascending</strong></em>, <em>and then by</em> <code>subordinate_id</code> <em><strong>ascending</strong></em>.</p>\n\n<p>The query result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p><code>Employees</code> table:</p>\n\n<pre class=\"example-io\">\n+-------------+----------------+------------+---------+\n| employee_id | employee_name  | manager_id | salary  |\n+-------------+----------------+------------+---------+\n| 1           | Alice          | NULL       | 150000  |\n| 2           | Bob            | 1          | 120000  |\n| 3           | Charlie        | 1          | 110000  |\n| 4           | David          | 2          | 105000  |\n| 5           | Eve            | 2          | 100000  |\n| 6           | Frank          | 3          | 95000   |\n| 7           | Grace          | 3          | 98000   |\n| 8           | Helen          | 5          | 90000   |\n+-------------+----------------+------------+---------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+----------------+------------------+------------------+-------------------+\n| subordinate_id | subordinate_name | hierarchy_level  | salary_difference |\n+----------------+------------------+------------------+-------------------+\n| 2              | Bob              | 1                | -30000            |\n| 3              | Charlie          | 1                | -40000            |\n| 4              | David            | 2                | -45000            |\n| 5              | Eve              | 2                | -50000            |\n| 6              | Frank            | 2                | -55000            |\n| 7              | Grace            | 2                | -52000            |\n| 8              | Helen            | 3                | -60000            |\n+----------------+------------------+------------------+-------------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Bob and Charlie are direct subordinates of Alice (CEO) and thus have a hierarchy_level of 1.</li>\n\t<li>David and Eve report to Bob, while Frank and Grace report to Charlie, making them second-level subordinates (hierarchy_level 2).</li>\n\t<li>Helen reports to Eve, making Helen a third-level subordinate (hierarchy_level 3).</li>\n\t<li>Salary differences are calculated relative to Alice&#39;s salary of 150000.</li>\n\t<li>The result is ordered by hierarchy_level ascending, and then by subordinate_id ascending.</li>\n</ul>\n\n<p><strong>Note:</strong> The output is ordered first by hierarchy_level in ascending order, then by subordinate_id in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table if not exists employees(employee_id int, employee_name varchar(100), manager_id int, salary int)\"], \"mssql\": [\"Create table employees(employee_id int, employee_name varchar(100), manager_id int, salary int)\"], \"oraclesql\": [\"Create table employees(employee_id NUMBER, employee_name varchar2(100), manager_id NUMBER, salary NUMBER)\"], \"database\": true, \"name\": \"find_subordinates\", \"manual\": false, \"postgresql\": [\"CREATE TABLE IF NOT EXISTS employees (\\n    employee_id INT,\\n    employee_name VARCHAR(100),\\n    manager_id INT,\\n    salary INT\\n);\\n\"], \"pythondata\": [\"Employees = pd.DataFrame(columns=['employee_id', 'employee_name', 'manager_id', 'salary']).astype({\\n    'employee_id': pd.Int64Dtype(),\\n    'employee_name': 'str',\\n    'manager_id': pd.Int64Dtype(),\\n    'salary': pd.Int64Dtype()\\n})\"], \"database_schema\": {\"employees\": {\"employee_id\": \"INT\", \"employee_name\": \"VARCHAR(100)\", \"manager_id\": \"INT\", \"salary\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"1.5K\", \"totalSubmission\": \"2.2K\", \"totalAcceptedRaw\": 1506, \"totalSubmissionRaw\": 2177, \"acRate\": \"69.2%\"}",
+  "likes": 6,
+  "dislikes": 0,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Employees\":[\"employee_id\",\"employee_name\",\"manager_id\",\"salary\"]},\"rows\":{\"Employees\":[[1,\"Alice\",null,150000],[2,\"Bob\",1,120000],[3,\"Charlie\",1,110000],[4,\"David\",2,105000],[5,\"Eve\",2,100000],[6,\"Frank\",3,95000],[7,\"Grace\",3,98000],[8,\"Helen\",5,90000]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_subordinates(employees: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

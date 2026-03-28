@@ -1,0 +1,143 @@
+{
+  "questionId": "3516",
+  "questionFrontendId": "3242",
+  "title": "Design Neighbor Sum Service",
+  "titleSlug": "design-neighbor-sum-service",
+  "difficulty": "Easy",
+  "content": "<p>You are given a <code>n x n</code> 2D array <code>grid</code> containing <strong>distinct</strong> elements in the range <code>[0, n<sup>2</sup> - 1]</code>.</p>\n\n<p>Implement the <code>NeighborSum</code> class:</p>\n\n<ul>\n\t<li><code>NeighborSum(int [][]grid)</code> initializes the object.</li>\n\t<li><code>int adjacentSum(int value)</code> returns the <strong>sum</strong> of elements which are adjacent neighbors of <code>value</code>, that is either to the top, left, right, or bottom of <code>value</code> in <code>grid</code>.</li>\n\t<li><code>int diagonalSum(int value)</code> returns the <strong>sum</strong> of elements which are diagonal neighbors of <code>value</code>, that is either to the top-left, top-right, bottom-left, or bottom-right of <code>value</code> in <code>grid</code>.</li>\n</ul>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/06/24/design.png\" style=\"width: 400px; height: 248px;\" /></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>[&quot;NeighborSum&quot;, &quot;adjacentSum&quot;, &quot;adjacentSum&quot;, &quot;diagonalSum&quot;, &quot;diagonalSum&quot;]</p>\n\n<p>[[[[0, 1, 2], [3, 4, 5], [6, 7, 8]]], [1], [4], [4], [8]]</p>\n\n<p><strong>Output:</strong> [null, 6, 16, 16, 4]</p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><strong class=\"example\"><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/06/24/designexample0.png\" style=\"width: 250px; height: 249px;\" /></strong></p>\n\n<ul>\n\t<li>The adjacent neighbors of 1 are 0, 2, and 4.</li>\n\t<li>The adjacent neighbors of 4 are 1, 3, 5, and 7.</li>\n\t<li>The diagonal neighbors of 4 are 0, 2, 6, and 8.</li>\n\t<li>The diagonal neighbor of 8 is 4.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>[&quot;NeighborSum&quot;, &quot;adjacentSum&quot;, &quot;diagonalSum&quot;]</p>\n\n<p>[[[[1, 2, 0, 3], [4, 7, 15, 6], [8, 9, 10, 11], [12, 13, 14, 5]]], [15], [9]]</p>\n\n<p><strong>Output:</strong> [null, 23, 45]</p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><strong class=\"example\"><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/06/24/designexample2.png\" style=\"width: 300px; height: 300px;\" /></strong></p>\n\n<ul>\n\t<li>The adjacent neighbors of 15 are 0, 10, 7, and 6.</li>\n\t<li>The diagonal neighbors of 9 are 4, 12, 14, and 15.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= n == grid.length == grid[0].length &lt;= 10</code></li>\n\t<li><code>0 &lt;= grid[i][j] &lt;= n<sup>2</sup> - 1</code></li>\n\t<li>All <code>grid[i][j]</code> are distinct.</li>\n\t<li><code>value</code> in <code>adjacentSum</code> and <code>diagonalSum</code> will be in the range <code>[0, n<sup>2</sup> - 1]</code>.</li>\n\t<li>At most <code>2 * n<sup>2</sup></code> calls will be made to <code>adjacentSum</code> and <code>diagonalSum</code>.</li>\n</ul>\n",
+  "hints": [
+    "Find the cell <code>(i, j)</code> in which the element is present.",
+    "You can store the coordinates for each value."
+  ],
+  "metaData": "{\n  \"classname\": \"NeighborSum\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer[][]\",\n        \"name\": \"grid\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"value\"\n        }\n      ],\n      \"name\": \"adjacentSum\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"value\"\n        }\n      ],\n      \"name\": \"diagonalSum\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"46.3K\", \"totalSubmission\": \"60.5K\", \"totalAcceptedRaw\": 46265, \"totalSubmissionRaw\": 60518, \"acRate\": \"76.4%\"}",
+  "likes": 117,
+  "dislikes": 19,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Matrix Block Sum\", \"titleSlug\": \"matrix-block-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Array With Elements Not Equal to Average of Neighbors\", \"titleSlug\": \"array-with-elements-not-equal-to-average-of-neighbors\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"NeighborSum\",\"adjacentSum\",\"adjacentSum\",\"diagonalSum\",\"diagonalSum\"]\n[[[[0,1,2],[3,4,5],[6,7,8]]],[1],[4],[4],[8]]",
+    "[\"NeighborSum\",\"adjacentSum\",\"diagonalSum\"]\n[[[[1,2,0,3],[4,7,15,6],[8,9,10,11],[12,13,14,5]]],[15],[9]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class NeighborSum {\npublic:\n    NeighborSum(vector<vector<int>>& grid) {\n        \n    }\n    \n    int adjacentSum(int value) {\n        \n    }\n    \n    int diagonalSum(int value) {\n        \n    }\n};\n\n/**\n * Your NeighborSum object will be instantiated and called as such:\n * NeighborSum* obj = new NeighborSum(grid);\n * int param_1 = obj->adjacentSum(value);\n * int param_2 = obj->diagonalSum(value);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class NeighborSum {\n\n    public NeighborSum(int[][] grid) {\n        \n    }\n    \n    public int adjacentSum(int value) {\n        \n    }\n    \n    public int diagonalSum(int value) {\n        \n    }\n}\n\n/**\n * Your NeighborSum object will be instantiated and called as such:\n * NeighborSum obj = new NeighborSum(grid);\n * int param_1 = obj.adjacentSum(value);\n * int param_2 = obj.diagonalSum(value);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class NeighborSum:\n\n    def __init__(self, grid: List[List[int]]):\n        \n\n    def adjacentSum(self, value: int) -> int:\n        \n\n    def diagonalSum(self, value: int) -> int:\n        \n\n\n# Your NeighborSum object will be instantiated and called as such:\n# obj = NeighborSum(grid)\n# param_1 = obj.adjacentSum(value)\n# param_2 = obj.diagonalSum(value)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class NeighborSum(object):\n\n    def __init__(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        \"\"\"\n        \n\n    def adjacentSum(self, value):\n        \"\"\"\n        :type value: int\n        :rtype: int\n        \"\"\"\n        \n\n    def diagonalSum(self, value):\n        \"\"\"\n        :type value: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your NeighborSum object will be instantiated and called as such:\n# obj = NeighborSum(grid)\n# param_1 = obj.adjacentSum(value)\n# param_2 = obj.diagonalSum(value)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n */\nvar NeighborSum = function(grid) {\n    \n};\n\n/** \n * @param {number} value\n * @return {number}\n */\nNeighborSum.prototype.adjacentSum = function(value) {\n    \n};\n\n/** \n * @param {number} value\n * @return {number}\n */\nNeighborSum.prototype.diagonalSum = function(value) {\n    \n};\n\n/** \n * Your NeighborSum object will be instantiated and called as such:\n * var obj = new NeighborSum(grid)\n * var param_1 = obj.adjacentSum(value)\n * var param_2 = obj.diagonalSum(value)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class NeighborSum {\n    constructor(grid: number[][]) {\n        \n    }\n\n    adjacentSum(value: number): number {\n        \n    }\n\n    diagonalSum(value: number): number {\n        \n    }\n}\n\n/**\n * Your NeighborSum object will be instantiated and called as such:\n * var obj = new NeighborSum(grid)\n * var param_1 = obj.adjacentSum(value)\n * var param_2 = obj.diagonalSum(value)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class NeighborSum {\n\n    public NeighborSum(int[][] grid) {\n        \n    }\n    \n    public int AdjacentSum(int value) {\n        \n    }\n    \n    public int DiagonalSum(int value) {\n        \n    }\n}\n\n/**\n * Your NeighborSum object will be instantiated and called as such:\n * NeighborSum obj = new NeighborSum(grid);\n * int param_1 = obj.AdjacentSum(value);\n * int param_2 = obj.DiagonalSum(value);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} NeighborSum;\n\n\nNeighborSum* neighborSumCreate(int** grid, int gridSize, int* gridColSize) {\n    \n}\n\nint neighborSumAdjacentSum(NeighborSum* obj, int value) {\n    \n}\n\nint neighborSumDiagonalSum(NeighborSum* obj, int value) {\n    \n}\n\nvoid neighborSumFree(NeighborSum* obj) {\n    \n}\n\n/**\n * Your NeighborSum struct will be instantiated and called as such:\n * NeighborSum* obj = neighborSumCreate(grid, gridSize, gridColSize);\n * int param_1 = neighborSumAdjacentSum(obj, value);\n \n * int param_2 = neighborSumDiagonalSum(obj, value);\n \n * neighborSumFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type NeighborSum struct {\n    \n}\n\n\nfunc Constructor(grid [][]int) NeighborSum {\n    \n}\n\n\nfunc (this *NeighborSum) AdjacentSum(value int) int {\n    \n}\n\n\nfunc (this *NeighborSum) DiagonalSum(value int) int {\n    \n}\n\n\n/**\n * Your NeighborSum object will be instantiated and called as such:\n * obj := Constructor(grid);\n * param_1 := obj.AdjacentSum(value);\n * param_2 := obj.DiagonalSum(value);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class NeighborSum(grid: Array<IntArray>) {\n\n    fun adjacentSum(value: Int): Int {\n        \n    }\n\n    fun diagonalSum(value: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your NeighborSum object will be instantiated and called as such:\n * var obj = NeighborSum(grid)\n * var param_1 = obj.adjacentSum(value)\n * var param_2 = obj.diagonalSum(value)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass NeighborSum {\n\n    init(_ grid: [[Int]]) {\n        \n    }\n    \n    func adjacentSum(_ value: Int) -> Int {\n        \n    }\n    \n    func diagonalSum(_ value: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your NeighborSum object will be instantiated and called as such:\n * let obj = NeighborSum(grid)\n * let ret_1: Int = obj.adjacentSum(value)\n * let ret_2: Int = obj.diagonalSum(value)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct NeighborSum {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl NeighborSum {\n\n    fn new(grid: Vec<Vec<i32>>) -> Self {\n        \n    }\n    \n    fn adjacent_sum(&self, value: i32) -> i32 {\n        \n    }\n    \n    fn diagonal_sum(&self, value: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your NeighborSum object will be instantiated and called as such:\n * let obj = NeighborSum::new(grid);\n * let ret_1: i32 = obj.adjacent_sum(value);\n * let ret_2: i32 = obj.diagonal_sum(value);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class NeighborSum\n\n=begin\n    :type grid: Integer[][]\n=end\n    def initialize(grid)\n        \n    end\n\n\n=begin\n    :type value: Integer\n    :rtype: Integer\n=end\n    def adjacent_sum(value)\n        \n    end\n\n\n=begin\n    :type value: Integer\n    :rtype: Integer\n=end\n    def diagonal_sum(value)\n        \n    end\n\n\nend\n\n# Your NeighborSum object will be instantiated and called as such:\n# obj = NeighborSum.new(grid)\n# param_1 = obj.adjacent_sum(value)\n# param_2 = obj.diagonal_sum(value)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class NeighborSum {\n    /**\n     * @param Integer[][] $grid\n     */\n    function __construct($grid) {\n        \n    }\n  \n    /**\n     * @param Integer $value\n     * @return Integer\n     */\n    function adjacentSum($value) {\n        \n    }\n  \n    /**\n     * @param Integer $value\n     * @return Integer\n     */\n    function diagonalSum($value) {\n        \n    }\n}\n\n/**\n * Your NeighborSum object will be instantiated and called as such:\n * $obj = NeighborSum($grid);\n * $ret_1 = $obj->adjacentSum($value);\n * $ret_2 = $obj->diagonalSum($value);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class NeighborSum {\n\n  NeighborSum(List<List<int>> grid) {\n    \n  }\n  \n  int adjacentSum(int value) {\n    \n  }\n  \n  int diagonalSum(int value) {\n    \n  }\n}\n\n/**\n * Your NeighborSum object will be instantiated and called as such:\n * NeighborSum obj = NeighborSum(grid);\n * int param1 = obj.adjacentSum(value);\n * int param2 = obj.diagonalSum(value);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class NeighborSum(_grid: Array[Array[Int]]) {\n\n    def adjacentSum(value: Int): Int = {\n        \n    }\n\n    def diagonalSum(value: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your NeighborSum object will be instantiated and called as such:\n * val obj = new NeighborSum(grid)\n * val param_1 = obj.adjacentSum(value)\n * val param_2 = obj.diagonalSum(value)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule NeighborSum do\n  @spec init_(grid :: [[integer]]) :: any\n  def init_(grid) do\n    \n  end\n\n  @spec adjacent_sum(value :: integer) :: integer\n  def adjacent_sum(value) do\n    \n  end\n\n  @spec diagonal_sum(value :: integer) :: integer\n  def diagonal_sum(value) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# NeighborSum.init_(grid)\n# param_1 = NeighborSum.adjacent_sum(value)\n# param_2 = NeighborSum.diagonal_sum(value)\n\n# NeighborSum.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec neighbor_sum_init_(Grid :: [[integer()]]) -> any().\nneighbor_sum_init_(Grid) ->\n  .\n\n-spec neighbor_sum_adjacent_sum(Value :: integer()) -> integer().\nneighbor_sum_adjacent_sum(Value) ->\n  .\n\n-spec neighbor_sum_diagonal_sum(Value :: integer()) -> integer().\nneighbor_sum_diagonal_sum(Value) ->\n  .\n\n\n%% Your functions will be called as such:\n%% neighbor_sum_init_(Grid),\n%% Param_1 = neighbor_sum_adjacent_sum(Value),\n%% Param_2 = neighbor_sum_diagonal_sum(Value),\n\n%% neighbor_sum_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define neighbor-sum%\n  (class object%\n    (super-new)\n    \n    ; grid : (listof (listof exact-integer?))\n    (init-field\n      grid)\n    \n    ; adjacent-sum : exact-integer? -> exact-integer?\n    (define/public (adjacent-sum value)\n      )\n    ; diagonal-sum : exact-integer? -> exact-integer?\n    (define/public (diagonal-sum value)\n      )))\n\n;; Your neighbor-sum% object will be instantiated and called as such:\n;; (define obj (new neighbor-sum% [grid grid]))\n;; (define param_1 (send obj adjacent-sum value))\n;; (define param_2 (send obj diagonal-sum value))"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,53 @@
+{
+  "questionId": "3409",
+  "questionFrontendId": "3103",
+  "title": "Find Trending Hashtags II ",
+  "titleSlug": "find-trending-hashtags-ii",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Tweets</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| user_id     | int     |\n| tweet_id    | int     |\n| tweet_date  | date    |\n| tweet       | varchar |\n+-------------+---------+\ntweet_id is the primary key (column with unique values) for this table.\nEach row of this table contains user_id, tweet_id, tweet_date and tweet.\nIt is guaranteed that all tweet_date are valid dates in February 2024.\n\n</pre>\n\n<p>Write a solution to find the <strong>top</strong> <code>3</code> trending <strong>hashtags</strong> in <strong>February</strong> <code>2024</code>. Every tweet may contain <strong>several</strong> <strong>hashtags</strong>.</p>\n\n<p>Return <em>the result table ordered by count of hashtag, hashtag in </em><strong>descending</strong><em> order.</em></p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>Tweets table:</p>\n\n<pre class=\"example-io\">\n+---------+----------+------------------------------------------------------------+------------+\n| user_id | tweet_id | tweet                                                      | tweet_date |\n+---------+----------+------------------------------------------------------------+------------+\n| 135     | 13       | Enjoying a great start to the day. #HappyDay #MorningVibes | 2024-02-01 |\n| 136     | 14       | Another #HappyDay with good vibes! #FeelGood               | 2024-02-03 |\n| 137     | 15       | Productivity peaks! #WorkLife #ProductiveDay               | 2024-02-04 |\n| 138     | 16       | Exploring new tech frontiers. #TechLife #Innovation        | 2024-02-04 |\n| 139     | 17       | Gratitude for today&#39;s moments. #HappyDay #Thankful         | 2024-02-05 |\n| 140     | 18       | Innovation drives us. #TechLife #FutureTech                | 2024-02-07 |\n| 141     | 19       | Connecting with nature&#39;s serenity. #Nature #Peaceful       | 2024-02-09 |\n+---------+----------+------------------------------------------------------------+------------+\n </pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+-----------+-------+\n| hashtag   | count |\n+-----------+-------+\n| #HappyDay | 3     |\n| #TechLife | 2     |\n| #WorkLife | 1     |\n+-----------+-------+\n\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>#HappyDay:</strong> Appeared in tweet IDs 13, 14, and 17, with a total count of 3 mentions.</li>\n\t<li><strong>#TechLife:</strong> Appeared in tweet IDs 16 and 18, with a total count of 2 mentions.</li>\n\t<li><strong>#WorkLife:</strong> Appeared in tweet ID 15, with a total count of 1 mention.</li>\n</ul>\n\n<p><b>Note:</b> Output table is sorted in descending order by count and hashtag respectively.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Tweets (user_id int, tweet_id int,  tweet_date date, tweet varchar(100))\"], \"mssql\": [\"Create table Tweets (user_id int, tweet_id int,  tweet_date date, tweet varchar(100))\"], \"oraclesql\": [\"Create table Tweets (user_id int, tweet_id int,  tweet_date date, tweet varchar(100))\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"find_trending_hashtags\", \"postgresql\": [\"CREATE TABLE Tweets (\\n    user_id INT,\\n    tweet_id INT,\\n    tweet_date DATE,\\n    tweet VARCHAR(100)\\n);\\n\"], \"pythondata\": [\"Tweets = pd.DataFrame([], columns=['user_id', 'tweet_id', 'tweet_date', 'tweet']).astype({'user_id':'Int64', 'tweet_id':'Int64', 'tweet_date':'datetime64[ns]', 'tweet':'object'})\\n\"], \"database_schema\": {\"Tweets\": {\"user_id\": \"INT\", \"tweet_id\": \"INT\", \"tweet_date\": \"DATE\", \"tweet\": \"VARCHAR(100)\"}}}",
+  "stats": "{\"totalAccepted\": \"1.6K\", \"totalSubmission\": \"2.4K\", \"totalAcceptedRaw\": 1604, \"totalSubmissionRaw\": 2411, \"acRate\": \"66.5%\"}",
+  "likes": 11,
+  "dislikes": 2,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Tweets\":[\"user_id\",\"tweet_id\",\"tweet\",\"tweet_date\"]},\"rows\":{\"Tweets\":[[135,13,\"Enjoying a great start to the day. #HappyDay #MorningVibes\",\"2024-02-01\"],[136,14,\"Another #HappyDay with good vibes! #FeelGood\",\"2024-02-03\"],[137,15,\"Productivity peaks! #WorkLife #ProductiveDay\",\"2024-02-04\"],[138,16,\"Exploring new tech frontiers. #TechLife #Innovation\",\"2024-02-04\"],[139,17,\"Gratitude for today's moments. #HappyDay #Thankful\",\"2024-02-05\"],[140,18,\"Innovation drives us. #TechLife #FutureTech\",\"2024-02-07\"],[141,19,\"Connecting with nature's serenity. #Nature #Peaceful\",\"2024-02-09\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_trending_hashtags(tweets: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,53 @@
+{
+  "questionId": "3257",
+  "questionFrontendId": "3052",
+  "title": "Maximize Items",
+  "titleSlug": "maximize-items",
+  "difficulty": "Hard",
+  "content": "<p>Table: <font face=\"monospace\"><code>Inventory</code></font></p>\n\n<pre>\n+----------------+---------+ \n| Column Name    | Type    | \n+----------------+---------+ \n| item_id        | int     | \n| item_type      | varchar |\n| item_category  | varchar |\n| square_footage | decimal |\n+----------------+---------+\nitem_id is the column of unique values for this table.\nEach row includes item id, item type, item category and sqaure footage.\n</pre>\n\n<p>Leetcode warehouse wants to maximize the number of items it can stock in a <code>500,000</code> square feet warehouse. It wants to stock as many <strong>prime</strong> items as possible, and afterwards use the <strong>remaining</strong> square footage to stock the most number of <strong>non-prime</strong> items.</p>\n\n<p>Write a solution to find the number of <strong>prime</strong> and <strong>non-prime</strong> items that can be <strong>stored</strong> in the <code>500,000</code> square feet warehouse. Output the item type with <code>prime_eligible</code> followed by <code>not_prime</code> and the maximum number of items that can be stocked.</p>\n\n<p><strong>Note:</strong></p>\n\n<ul>\n\t<li>Item <strong>count</strong> must be a whole number (integer).</li>\n\t<li>If the count for the <strong>not_prime</strong> category is <code>0</code>, you should <strong>output</strong> <code>0</code> for that particular category.</li>\n</ul>\n\n<p>Return <em>the result table ordered by item count in <strong>descending order</strong></em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nInventory table:\n+---------+----------------+---------------+----------------+\n| item_id | item_type      | item_category | square_footage | \n+---------+----------------+---------------+----------------+\n| 1374    | prime_eligible | Watches       | 68.00          | \n| 4245    | not_prime      | Art           | 26.40          | \n| 5743    | prime_eligible | Software      | 325.00         | \n| 8543    | not_prime      | Clothing      | 64.50          |  \n| 2556    | not_prime      | Shoes         | 15.00          |\n| 2452    | prime_eligible | Scientific    | 85.00          |\n| 3255    | not_prime      | Furniture     | 22.60          | \n| 1672    | prime_eligible | Beauty        | 8.50           |  \n| 4256    | prime_eligible | Furniture     | 55.50          |\n| 6325    | prime_eligible | Food          | 13.20          | \n+---------+----------------+---------------+----------------+\n<strong>Output:</strong> \n+----------------+-------------+\n| item_type      | item_count  | \n+----------------+-------------+\n| prime_eligible | 5400        | \n| not_prime      | 8           | \n+----------------+-------------+\n<strong>Explanation:</strong> \n- The prime-eligible category comprises a total of 6 items, amounting to a combined square footage of 555.20 (68 + 325 + 85 + 8.50 + 55.50 + 13.20). It is possible to store 900 combinations of these 6 items, totaling 5400 items and occupying 499,680 square footage.\n- In the not_prime category, there are a total of 4 items with a combined square footage of 128.50. After deducting the storage used by prime-eligible items (500,000 - 499,680 = 320), there is room for 2 combinations of non-prime items, accommodating a total of 8 non-prime items within the available 320 square footage.\nOutput table is ordered by item count in descending order.</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Inventory ( item_id int, item_type varchar(50), item_category varchar(50), square_footage decimal(10,2))\"], \"mssql\": [\"Create table  Inventory ( item_id int, item_type varchar(50), item_category varchar(50), square_footage decimal(10,2))\"], \"oraclesql\": [\"Create table Inventory ( item_id int, item_type varchar(50), item_category varchar(50), square_footage decimal(10,2))\"], \"database\": true, \"name\": \"maximize_items\", \"pythondata\": [\"Inventory = pd.DataFrame([], columns=['item_id', 'item_type', 'item_category', 'square_footage']).astype({'item_id':'Int64', 'item_type':'object', 'item_category':'object', 'square_footage':'Float64'})\\n\"], \"postgresql\": [\"Create table If Not Exists Inventory ( item_id int, item_type varchar(50), item_category varchar(50), square_footage decimal(10,2))\\n\"], \"database_schema\": {\"Inventory\": {\"item_id\": \"INT\", \"item_type\": \"VARCHAR(50)\", \"item_category\": \"VARCHAR(50)\", \"square_footage\": \"DECIMAL(10, 2)\"}}}",
+  "stats": "{\"totalAccepted\": \"2K\", \"totalSubmission\": \"2.7K\", \"totalAcceptedRaw\": 2040, \"totalSubmissionRaw\": 2744, \"acRate\": \"74.3%\"}",
+  "likes": 7,
+  "dislikes": 12,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Inventory\":[\"item_id\",\"item_type\",\"item_category\",\"square_footage\"]},\"rows\":{\"Inventory\":[[1374,\"prime_eligible\",\"Watches\",68.00],[4245,\"not_prime\",\"Art\",26.40],[5743,\"prime_eligible\",\"Software\",325.00],[8543,\"not_prime\",\"Clothing\",64.50],[2556,\"not_prime\",\"Shoes\",15.00],[2452,\"prime_eligible\",\"Scientific\",85.00],[3255,\"not_prime\",\"Furniture\",22.60],[1672,\"prime_eligible\",\"Beauty\",8.50],[4256,\"prime_eligible\",\"Furniture\",55.50],[6325,\"prime_eligible\",\"Food\",13.20]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"hashedin\", \"name\": \"HashedIn\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef maximize_items(inventory: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

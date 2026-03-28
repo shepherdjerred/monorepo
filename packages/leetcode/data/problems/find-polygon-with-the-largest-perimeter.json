@@ -1,0 +1,146 @@
+{
+  "questionId": "3262",
+  "questionFrontendId": "2971",
+  "title": "Find Polygon With the Largest Perimeter",
+  "titleSlug": "find-polygon-with-the-largest-perimeter",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array of <strong>positive</strong> integers <code>nums</code> of length <code>n</code>.</p>\n\n<p>A <strong>polygon</strong> is a closed plane figure that has at least <code>3</code> sides. The <strong>longest side</strong> of a polygon is <strong>smaller</strong> than the sum of its other sides.</p>\n\n<p>Conversely, if you have <code>k</code> (<code>k &gt;= 3</code>) <strong>positive</strong> real numbers <code>a<sub>1</sub></code>, <code>a<sub>2</sub></code>, <code>a<sub>3</sub></code>, ..., <code>a<sub>k</sub></code> where <code>a<sub>1</sub> &lt;= a<sub>2</sub> &lt;= a<sub>3</sub> &lt;= ... &lt;= a<sub>k</sub></code> <strong>and</strong> <code>a<sub>1</sub> + a<sub>2</sub> + a<sub>3</sub> + ... + a<sub>k-1</sub> &gt; a<sub>k</sub></code>, then there <strong>always</strong> exists a polygon with <code>k</code> sides whose lengths are <code>a<sub>1</sub></code>, <code>a<sub>2</sub></code>, <code>a<sub>3</sub></code>, ..., <code>a<sub>k</sub></code>.</p>\n\n<p>The <strong>perimeter</strong> of a polygon is the sum of lengths of its sides.</p>\n\n<p>Return <em>the <strong>largest</strong> possible <strong>perimeter</strong> of a <strong>polygon</strong> whose sides can be formed from</em> <code>nums</code>, <em>or</em> <code>-1</code> <em>if it is not possible to create a polygon</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,5,5]\n<strong>Output:</strong> 15\n<strong>Explanation:</strong> The only possible polygon that can be made from nums has 3 sides: 5, 5, and 5. The perimeter is 5 + 5 + 5 = 15.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,12,1,2,5,50,3]\n<strong>Output:</strong> 12\n<strong>Explanation:</strong> The polygon with the largest perimeter which can be made from nums has 5 sides: 1, 1, 2, 3, and 5. The perimeter is 1 + 1 + 2 + 3 + 5 = 12.\nWe cannot have a polygon with either 12 or 50 as the longest side because it is not possible to include 2 or more smaller sides that have a greater sum than either of them.\nIt can be shown that the largest possible perimeter is 12.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,5,50]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> There is no possible way to form a polygon from nums, as a polygon has at least 3 sides and 50 &gt; 5 + 5.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Sort the array.",
+    "Use greedy algorithm. If we select an edge as the longest side, it is always better to pick up all the edges with length no longer than this longest edge.",
+    "Note that the number of edges should not be less than 3."
+  ],
+  "metaData": "{\n  \"name\": \"largestPerimeter\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"145.5K\", \"totalSubmission\": \"222.1K\", \"totalAcceptedRaw\": 145503, \"totalSubmissionRaw\": 222083, \"acRate\": \"65.5%\"}",
+  "likes": 837,
+  "dislikes": 71,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"3Sum Smaller\", \"titleSlug\": \"3sum-smaller\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Valid Triangle Number\", \"titleSlug\": \"valid-triangle-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,5,5]",
+    "[1,12,1,2,5,50,3]",
+    "[5,5,50]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"airtel\", \"name\": \"Airtel\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long largestPerimeter(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long largestPerimeter(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def largestPerimeter(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def largestPerimeter(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar largestPerimeter = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function largestPerimeter(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long LargestPerimeter(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long largestPerimeter(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func largestPerimeter(nums []int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun largestPerimeter(nums: IntArray): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func largestPerimeter(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn largest_perimeter(nums: Vec<i32>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef largest_perimeter(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function largestPerimeter($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int largestPerimeter(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def largestPerimeter(nums: Array[Int]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec largest_perimeter(nums :: [integer]) :: integer\n  def largest_perimeter(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec largest_perimeter(Nums :: [integer()]) -> integer().\nlargest_perimeter(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (largest-perimeter nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2231",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nThe problem involves finding the largest possible perimeter of a polygon that can be formed using a given array of positive integers, where each integer represents the length of a side of the polygon. The conditions for forming a valid polygon are that it must be a closed plane figure with at least 3 sides, and the length of the longest side must be smaller than the sum of the lengths of the other sides.\n\nIn real-life scenarios, this problem can be related to optimization challenges in fields such as manufacturing or construction. For example, in manufacturing, where materials are limited, the problem can be interpreted as finding the most efficient way to use available resources to create a closed structure with a maximal perimeter. The problem highlights the importance of understanding geometric constraints and optimizing resource utilization.\n\n---\n\n### Approach: Sorting\n\n#### Intuition\n\nThe problem revolves around the construction of polygons from a given array of positive integers. The aim is to determine the largest possible perimeter of a polygon that can be formed using elements from the array and to return -1 if it is not feasible to create a polygon. A polygon, in this context, is defined as a closed plane figure with **at least three sides**, where the length of the longest side is less than the sum of the remaining sides.\n\nTo approach this problem intuitively, let's consider the nature of polygons and their side lengths. According to the problem description, a valid polygon consists of sides where the **longest side** is **smaller** than the sum of its other sides. \n\n> Conversely, if you have `k (k >= 3)` positive real numbers `a1, a2, a3, ..., ak` where `a1 <= a2 <= a3 <= ... <= ak` and `a1 + a2 + a3 + ... + ak-1 > ak`, then there always exists a polygon with `k` sides whose lengths are `a1, a2, a3, ..., ak`.\n\nThis concept provides a key insight into how we might construct a valid polygon from the given array of positive integers. The requirement that the largest side must be smaller than the sum of the remaining sides suggests the need to establish an order among the side lengths. In other words, the challenge is to find a systematic way to consider side lengths such that the largest one is positioned last, allowing us to check if it is smaller than the sum of the others.\n\nWe can begin by sorting the array, which allows us to consider the elements in ascending order, facilitating a systematic examination of possible side lengths. The sorting operation ensures that we iterate through the array in increasing order of side lengths, so we encounter smaller sides first and the longest side last, which is useful because the longest side should be smaller than the sum of the others.\n\nNow, as we traverse the sorted array, we need to maintain a running sum of the previously encountered elements. This sum represents the cumulative length of the sides that we have already considered. As we move through the array, we evaluate each element in relation to the sum of the previously encountered elements.\n\nThe pivotal insight of this algorithm is that if the current element is smaller than the sum of the previous elements, we can form a valid polygon because adding the current element to the sum satisfies the condition that the longest side is smaller than the sum of the others.\n\nTherefore, the algorithm keeps track of the maximum possible perimeter by updating the answer whenever a valid combination of sides is found. This ensures that we always have the largest perimeter encountered so far.\n\nTo handle cases where a valid combination of sides to form a polygon is not found, the algorithm initializes the variable `ans` to -1. The algorithm ensures that if no valid combination is encountered during the iteration through the sorted array, the value of `ans` remains unchanged. Consequently, upon completion of the loop, the algorithm returns -1, indicating the absence of a feasible polygon with the given array of positive integers.\n\nBased on our current intuition, we can formulate the following solution:\n\n```\nlong long largestPerimeter(vector<int>& nums) {\n    sort(nums.begin(), nums.end());\n    long long previousElementsSum = 0;\n    long long ans = -1;\n    for (int i = 0; i < nums.size(); i++) {\n        if (i >= 2 && nums[i] < previousElementsSum) {\n            ans = nums[i] + previousElementsSum;\n        }\n        previousElementsSum += nums[i];\n    }\n    return ans;\n}\n```\n\nThe additional check (`i >= 2`) before updating `ans` to `nums[i]+ previousElementsSum` ensures that the polygon under consideration has at least three sides. A closer examination reveals that this condition is, in fact, unnecessary. \n\nThe absence of a need to include an additional check for `i >= 2` in the for loop can be comprehensively understood by considering the initialization of `previous_elements_sum` and the inherent properties of the sorted array. \n\n1. On the first iteration, when `i = 0`, the initial value of `previous_elements_sum` is set to 0, and the subsequent comparison `num < previous_elements_sum` evaluates to false, as `num` is a positive integer. Consequently, the code block within the if statement is bypassed during this iteration.\n\n2. Moving to the second iteration, `i = 1`, the value of `previous_elements_sum` assumes the first element of the sorted array (`nums[0]`). Given that the array is sorted in ascending order, `previous_elements_sum` is inherently less than or equal to the current element under consideration (`num`), which is `nums[1]`. As a result, the condition `num < previous_elements_sum` remains false during this iteration as well, and the loop proceeds without executing the code block within the if statement.\n\nThe sorting of the array and the careful initialization of `previous_elements_sum` ensure that the condition `num < previous_elements_sum` is systematically false for the initial iterations of the loop (when `i < 2`). Therefore, the absence of an extra check for `i >= 2` is justified, as the logic inherently accounts for the starting points of the loop, streamlining the code without sacrificing correctness.\n\n!?!../Documents/2971/2971-1.json:960,540!?!\n\n#### Algorithm\n\n1. Sort the input array `nums` in ascending order.\n2. Initialize variables `previous_elements_sum` to 0 and `ans` to -1.\n3. Iterate through each element `num` in the sorted array `nums`.\n4. Check if the current element `num` is less than the sum of previous elements. If true, we have encountered a valid combination of sides.\n5. If the current `num` is a valid side, update `ans` to the sum of the current `num` and `previous_elements_sum`.\n6. Update `previous_elements_sum` by adding the current element `num`.\n7. After iterating through all elements, the method returns the largest possible perimeter stored in `ans`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/W2VmDkwJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"W2VmDkwJ\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the length of `nums`.\n\n* Time complexity: $O(N\\cdot logN)$. Sorting `nums` incurs a time complexity of $O(N\\cdot logN)$. Iterating over `nums` incurs a time complexity of $O(N)$ which can be ignored since $O(N\\cdot logN)$ is the dominating term. \n\n* Space complexity: $O(N)$ or $O(\\log N)$. Some extra space is used when we sort an array of size $N$ in place. The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the `sort` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $$O(N)$$.\n    - In C++, the sort() function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $$O(\\log N)$$.\n    - In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $$O(\\log N)$$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

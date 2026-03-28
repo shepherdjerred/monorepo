@@ -1,0 +1,133 @@
+{
+  "questionId": "3213",
+  "questionFrontendId": "2962",
+  "title": "Count Subarrays Where Max Element Appears at Least K Times",
+  "titleSlug": "count-subarrays-where-max-element-appears-at-least-k-times",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code> and a <strong>positive</strong> integer <code>k</code>.</p>\n\n<p>Return <em>the number of subarrays where the <strong>maximum</strong> element of </em><code>nums</code><em> appears <strong>at least</strong> </em><code>k</code><em> times in that subarray.</em></p>\n\n<p>A <strong>subarray</strong> is a contiguous sequence of elements within an array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,3,2,3,3], k = 2\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> The subarrays that contain the element 3 at least 2 times are: [1,3,2,3], [1,3,2,3,3], [3,2,3], [3,2,3,3], [2,3,3] and [3,3].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,4,2,1], k = 3\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> No subarray contains the element 4 at least 3 times.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>6</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"countSubarrays\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"258.6K\", \"totalSubmission\": \"414.3K\", \"totalAcceptedRaw\": 258570, \"totalSubmissionRaw\": 414300, \"acRate\": \"62.4%\"}",
+  "likes": 1712,
+  "dislikes": 81,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find the Number of Subarrays Where Boundary Elements Are Maximum\", \"titleSlug\": \"find-the-number-of-subarrays-where-boundary-elements-are-maximum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,2,3,3]\n2",
+    "[1,4,2,1]\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long countSubarrays(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long countSubarrays(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countSubarrays(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countSubarrays(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar countSubarrays = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countSubarrays(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long CountSubarrays(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long countSubarrays(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countSubarrays(nums []int, k int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countSubarrays(nums: IntArray, k: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countSubarrays(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_subarrays(nums: Vec<i32>, k: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef count_subarrays(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function countSubarrays($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countSubarrays(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countSubarrays(nums: Array[Int], k: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_subarrays(nums :: [integer], k :: integer) :: integer\n  def count_subarrays(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_subarrays(Nums :: [integer()], K :: integer()) -> integer().\ncount_subarrays(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-subarrays nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2273",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nThe problem involves analyzing an integer array `nums` to count the number of subarrays in which the maximum element of `nums` appears at least `k` times, where `k` is given as an input.\n\n> A **subarray** is a contiguous sequence of elements within an array.\n\nAlgorithmically, solving this problem involves traversing the array and tracking the frequency of the maximum element in a dynamic range. The algorithm should efficiently update the frequency as it progresses through the array.\n\nThis problem is similar to scenarios where we need to find the frequency of occurrence of a particular event or condition within a given time frame or sequence. \n- For instance in financial data analysis, one might be interested in identifying periods where a stock's price reaches its maximum value at least a certain number of times within a given timeframe. This can provide insights into potential trends or patterns.\n- Similarly, in network traffic analysis, identifying subintervals where the network experiences maximum data transfer rates beyond a certain threshold can be crucial for optimizing network performance or identifying potential issues.\n\n---\n\n### Approach 1: Sliding Window\n\n#### Intuition\n\nSince we are concerned with contiguous sequences and the frequency of a specific element, the sliding window algorithm emerges as a potentially effective approach. The sliding window algorithm is useful when handling contiguous segments within an array.\n\n> A sliding window is maintained by two indices, one of which indicates the start of the window, and the other the end of the window.\n\nAs we traverse the array, we should maintain the frequency of the maximum element within the window. Whenever we encounter the maximum element, we increment the frequency. The objective is to count the windows where this frequency is greater than or equal to the given threshold, `k`.\n\nTo achieve this objective, whenever the frequency of the maximum element in the window is greater than `k`, we initiate a process to shrink the window. This involves adjusting the starting point of the window (let's track this by index variable `start`) until the frequency of the maximum element in the window is exactly `k` to identify subarrays that have the maximum element appear at least `k` times.\n\nThe index variable `start` accounts for multiple starting positions for valid subarrays (where the frequency of the maximum is at least `k`) at the current ending position (let's track this by index variable `end`). By adding `start` to the answer, we ensure that we account for all valid subarrays ending at the current index `end`. This is because of the fact that for a given ending position `end`, there exist `start + 1` possible starting positions, each contributing to a valid subarray.\n\nAs we traverse the array and execute these steps, we accumulate the count of valid subarrays. The final result is the total count of such subarrays.\n\n!?!../Documents/2962-re/2962-1.json:3000,1687!?!\n\n#### Algorithm\n\n1. **Initialization:**\n   - Initialize variables `max_element`, `ans`, `start`, and `max_elements_in_window`.\n   - `max_element` stores the maximum element in the given array `nums`.\n   - `ans` will be the final count of subarrays meeting the condition.\n   - `start` is a pointer for the start of the window.\n   - `max_elements_in_window` stores the frequency of the `max_element` within the current window.\n\n2. **Iterating through the array:**\n   - Iterate through each element in the array using a `for` loop with index `end` ranging from 0 to the length of `nums`.\n\n3. **Counting frequency of `max_element` in the current window:**\n   - Check if the current element `nums[i]` is equal to `max_element`.\n   - If true, increment `max_elements_in_window` as it represents the frequency of `max_element` in the current window.\n\n4. **Sliding window to meet the condition:**\n   - Use a `while` loop to shrink the window (`start` pointer) until `max_elements_in_window` is equal to `k`.\n   - Inside the `while` loop, decrement `max_elements_in_window` if the element at the window's start (`nums[start]`) is equal to `max_element`.\n   - Increment `start` to move the window to the right.\n\n5. **Counting subarrays:**\n   - Add `start` to the `ans` variable. This is done inside the `for` loop, so it accumulates the count of subarrays meeting the condition.\n\n6. **Returning the result:**\n   - After the loop completes, return the final count stored in the `ans` variable.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/JVxZachH/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"JVxZachH\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the length of `nums`.\n\n* Time complexity: $O(N)$.\n  - Finding the maximum element in `nums` requires linear traversal of the array, taking $O(N)$ computational time.\n  - The outer `for` loop iterates through each element in the array exactly once, as indicated by the range from $0$ to $N - 1$.\n  - Inside this loop, the `while` loop with the `start` pointer performs a sliding window operation. However, note that the `start` pointer is increased, and `max_elements_in_window` is decreased within this loop. The `start` pointer is never decreased after it is increased in the while loop. Hence, once an element is processed in the `while` loop, it will not be revisited. Therefore, each element is processed at most twice: once during the outer loop and at most once during the `while` loop.\n  - In the worst case, the `while` loop could iterate through the entire length of the array during its lifetime. However, since each element is processed at most twice, the total number of iterations across all elements is linear, making the time complexity of the algorithm $O(N)$.\n\n* Space complexity: $O(1)$. The space complexity is $O(1)$ as the algorithm uses a constant amount of extra space regardless of the size of the input array.\n\n---\n\n### Approach 2: Track Indexes of Max Element\n\n#### Intuition\n\nIn the previous approach, the variable `start` was used to monitor potential starting positions corresponding to a given ending position within the array `nums`. We can also observe that for each valid subarray that began at an index `r` that contains a max element and ended at some index `p`, all subarrays starting at any index before `r` and ending at `p` are also valid subarrays. Upon examining the code, we can see that after the `while` loop completes, `start` consistently points to the index following the index containing a `max_element`. With this understanding, we can store all indexes where a `max_element` is found in an array. If there are more than `k` maximum elements within the array at any given point, we can identify the index of the `max_element` that appeared `k` maximum elements ago.\n\n```\nFor example:\n\nnums = [1,3,2,3,3], k = 2\nmax_element = 3\nindexes_of_max_elements = [1, 3, 4]\n\n-------------------\nFor the index 3,\n       ↓\n[1,3,2,3,3]\nindex of the max element that appeared k maximum elements ago is  1\n   ⌄   ↓\n[1,3,2,3,3]\nAdd one to the index to find the number of possible starting positions:\n1 + 1 = 2.\nThis indicates that the possible starting positions for the ending\nposition 3 are [0, 1].\n\n-------------------\nFor the index 4,\n         ↓\n[1,3,2,3,3]\nthe index of the max element that appeared k maximum elements ago is 3\n       ⌄ ↓\n[1,3,2,3,3]\nAdd one to the index to find the number of possible starting positions:\n1 + 3 = 4.\nThis indicates that the possible starting positions for the ending\nposition 4 are [0, 1, 2, 3].\n\n```\n\nTherefore, for any `index` where we've observed more than `k` maximum elements, the number of potential starting positions equals 1 plus the index where we encountered the `max_element` `k` maximum elements ago.\n\n#### Algorithm\n\n1. **Initialization:**\n   - Initialize variables `max_element`, `indexes_of_max_elements`, and `ans`.\n   - `max_element` stores the maximum element in the given array `nums`.\n   - `indexes_of_max_elements` is a list that stores the indexes of occurrences of the maximum element.\n   - `ans` will be the final count of subarrays meeting the condition.\n\n2. **Iterating through the array:**\n   - Iterate through each element in the array along with its index.\n\n3. **Finding indexes of maximum element:**\n   - Check if the current element is equal to `max_element`.\n   - If true, append the index of the current element to the `indexes_of_max_elements` list.\n\n4. **Counting frequency of maximum element:**\n   - Calculate the frequency of occurrences of the maximum element by finding the length of the `indexes_of_max_elements` list.\n\n5. **Checking condition for subarrays:**\n   - Check if the frequency of the maximum element is greater than or equal to `k`.\n   - If true, increment `ans` by the index of the `(len(indexes_of_max_elements) - k)`-th occurrence of the maximum element plus 1.\n   - This step counts the number of subarrays ending at the current index where the maximum element appears at least `k` times.\n\n6. **Returning the result:**\n   - After iterating through all elements, return the final count stored in the `ans` variable, which represents the total count of subarrays meeting the given condition.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/CmxXQesu/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"CmxXQesu\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the length of `nums`.\n\n* Time complexity: $O(N)$. Initializing `max_element` incurs a time complexity of $O(N)$ since each element of `nums` is checked. The `for` loop used to count subarrays also incurs a time complexity of $O(N)$.\n\n* Space complexity: $O(N)$. In the worst case all the elements in `nums` are equal to `max_element`. In this case, the final length of `indexes_of_max_elements` will be `N`. Hence, the worst-case space complexity is $O(N)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

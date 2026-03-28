@@ -1,0 +1,58 @@
+{
+  "questionId": "3365",
+  "questionFrontendId": "3059",
+  "title": "Find All Unique Email Domains",
+  "titleSlug": "find-all-unique-email-domains",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Emails</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| id          | int     |\n| email       | varchar |\n+-------------+---------+\nid is the primary key (column with unique values) for this table.\nEach row of this table contains an email. The emails will not contain uppercase letters.\n</pre>\n\n<p>Write a solution to find all <strong>unique email domains</strong> and count the number of <strong>individuals</strong> associated with each domain. <strong>Consider only</strong> those domains that <strong>end</strong> with <strong>.com</strong>.</p>\n\n<p>Return <em>the result table orderd by email domains in </em><strong>ascending</strong><em> order</em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nEmails table:\n+-----+-----------------------+\n| id  | email                 |\n+-----+-----------------------+\n| 336 | hwkiy@test.edu        |\n| 489 | adcmaf@outlook.com    |\n| 449 | vrzmwyum@yahoo.com    |\n| 95  | tof@test.edu          |\n| 320 | jxhbagkpm@example.org |\n| 411 | zxcf@outlook.com      |\n+----+------------------------+\n<strong>Output:</strong> \n+--------------+-------+\n| email_domain | count |\n+--------------+-------+\n| outlook.com  | 2     |\n| yahoo.com    | 1     |  \n+--------------+-------+\n<strong>Explanation:</strong> \n- The valid domains ending with &quot;.com&quot; are only &quot;outlook.com&quot; and &quot;yahoo.com&quot;, with respective counts of 2 and 1.\nOutput table is ordered by email_domains in ascending order.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Emails (id int, email varchar(255))\"], \"mssql\": [\"Create table Emails (id int, email varchar(255))\"], \"oraclesql\": [\"Create table Emails (id int, email varchar(255))\"], \"database\": true, \"name\": \"find_unique_email_domains\", \"postgresql\": [\"CREATE TABLE Emails (\\n    id INT,\\n    email VARCHAR(255)\\n);\"], \"pythondata\": [\"Emails = pd.DataFrame([], columns=['id', 'email']).astype({'id':'Int64', 'email':'object'})\\n\"], \"database_schema\": {\"Emails\": {\"id\": \"INT\", \"email\": \"VARCHAR(255)\"}}}",
+  "stats": "{\"totalAccepted\": \"4.2K\", \"totalSubmission\": \"6K\", \"totalAcceptedRaw\": 4224, \"totalSubmissionRaw\": 6044, \"acRate\": \"69.9%\"}",
+  "likes": 13,
+  "dislikes": 8,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Emails\":[\"id\",\"email\"]},\"rows\":{\"Emails\":[[336,\"hwkiy@test.edu\"],[489,\"adcmaf@outlook.com\"],[449,\"vrzmwyum@yahoo.com\"],[95,\"tof@test.edu\"],[320,\"jxhbagkpm@example.org\"],[411,\"zxcf@outlook.com\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_unique_email_domains(emails: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2282",
+    "content": "[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Approach: Regex Filtering\n\nThe algorithm is designed to analyze a dataset of email addresses by focusing on those that end with \".com\". It performs a series of steps to first filter out relevant email addresses, then extract their domain names, and subsequently count how many unique identifiers (IDs) are associated with each domain. \n\n**Visualization of Approach:**\n\n![fig](../Figures/3059/3059-1.png)\n\n#### Intuition\n\nLet's review the intuition behind each step given the following input DataFrames:\n\nEmails DataFrame (`emails`):\n\n| id  | email                 |\n| --- | --------------------- |\n| 336 | hwkiy@test.edu        |\n| 489 | adcmaf@outlook.com    |\n| 449 | vrzmwyum@yahoo.com    |\n| 95  | tof@test.edu          |\n| 320 | jxhbagkpm@example.org |\n| 411 | zxcf@outlook.com      |\n<br>\n\n1. **Filtering `.com` Emails**: \nThe algorithm starts by selecting rows from the `emails` DataFrame where the email addresses end with \".com\". This is done using the `emails[emails['email'].str.endswith('.com')]` condition. The goal is to narrow down the analysis to a specific subset of email addresses.\n\n```python\nemails[emails[\"email\"].str.endswith(\".com\")]\n```\n\n| id  | email               |\n| --- | ------------------- |\n| 489 | adcmaf@outlook.com  |\n| 449 | vrzmwyum@yahoo.com  |\n| 411 | zxcf@outlook.com    |\n<br>\n\n2. **Extracting Domains**: \nNext, it extracts the domain part of each email address using a regular expression pattern in the `assign` method. The pattern `@([^@]+)$` captures the text after the '@' character until the end of the string, which corresponds to the domain of the email address. This extraction is assigned to a new column in the DataFrame called `email_domain`.\n\n```python\nemails[emails[\"email\"].str.endswith(\".com\")].assign(\n    email_domain=lambda df: df[\"email\"].str.extract(\"@([^@]+)$\")\n)\n```\n\n| id  | email               | email_domain |\n| --- | ------------------- | ------------ |\n| 489 | adcmaf@outlook.com  | outlook.com  |\n| 449 | vrzmwyum@yahoo.com  | yahoo.com    |\n| 411 | zxcf@outlook.com    | outlook.com  |\n<br>\n\n3. **Counting Unique IDs by Domain**: \nAfter extracting the domains, the algorithm groups the DataFrame by these domains using `groupby('email_domain')`. For each domain group, it then counts the number of unique IDs (`'id'`). This step is critical for understanding how many distinct entities (as represented by unique IDs) are associated with each email domain.\n\n```python\nemails[emails[\"email\"].str.endswith(\".com\")].assign(\n    email_domain=lambda df: df[\"email\"].str.extract(\"@([^@]+)$\")\n).groupby(\"email_domain\")[\"id\"].nunique()\n```\n\n| email_domain | id |\n| ------------ | -- |\n| outlook.com  | 2  |\n| yahoo.com    | 1  |\n<br>\n\n4. **Creating a Summary DataFrame**: \nThe counting step produces a Series with the counts of unique IDs for each domain. This Series is then turned back into a DataFrame using `reset_index(name='count')`, which also names the column of counts as `'count'`. This step essentially structures the results into a tabular format that clearly shows each domain and the number of unique IDs associated with it.\n\n```python\nemails[emails[\"email\"].str.endswith(\".com\")].assign(\n    email_domain=lambda df: df[\"email\"].str.extract(\"@([^@]+)$\")\n).groupby(\"email_domain\")[\"id\"].nunique().reset_index(name=\"count\")\n```\n\n| email_domain | count |\n| ------------ | ----- |\n| outlook.com  | 2     |\n| yahoo.com    | 1     |\n<br>\n\n\n5. **Sorting Results**: \nFinally, the results are sorted by the domain names in ascending order (`sort_values(by='email_domain', ascending=True)`).\n\n```python\nemails[emails[\"email\"].str.endswith(\".com\")].assign(\n    email_domain=lambda df: df[\"email\"].str.extract(\"@([^@]+)$\")\n).groupby(\"email_domain\")[\"id\"].nunique().reset_index(name=\"count\").sort_values(\n    by=\"email_domain\", ascending=True\n)\n```\n\n| email_domain | count |\n|--------------|-------|\n| outlook.com  | 2     |\n| yahoo.com    | 1     |\n<br>\n\n\n#### Implementation\n\nBy chaining the operations from the intuition section, the code becomes more readable and eliminates the need for intermediate variables, making the code cleaner and potentially faster by reducing the number of assignments and temporary variables.\n\n<iframe src=\"https://leetcode.com/playground/52dwshF5/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"52dwshF5\"></iframe>\n\n---\n\n## Database\n\n### Approach: Filter Utilizing `LIKE`\n\nThis SQL query provides a high-level analysis of email domain distribution within a dataset, focusing specifically on \".com\" domains. It filters email addresses to include only those ending with \".com\", then extracts and isolates the domain portion of each email. By counting the unique identifiers (IDs) associated with each domain, the query identifies the number of distinct entities linked to every \".com\" domain present in the data. The results are then grouped by domain and sorted in ascending order to offer a clear, organized view of domain popularity and usage. \n\n#### Intuition\n\nLet's break down the SQL query step by step and explain the intuition behind each part:\n\n1. **Extracting Domains**:\nThe `SUBSTRING_INDEX(email, '@', -1)` function is used to extract the domain part of the email address. This function splits the email string at the '@' symbol and returns everything after it (i.e., the domain). This extraction is pivotal for grouping the data by domain, as the analysis aims to understand domain-based distribution.\n\n2. **Counting Unique IDs**: \nThe `COUNT(DISTINCT id)` part counts the number of unique IDs associated with each domain. Counting distinct IDs ensures that each ID is only counted once per domain, providing a clear picture of how many unique entities are represented within each domain.\n\n3. **Filtering `.com` Emails**: \nThe `WHERE` clause (`email LIKE '%.com'`) filters the dataset to consider only those email addresses that end with \".com\". This specificity is crucial because it narrows down the analysis to a particular category of email domains, which are among the most common and thus likely of particular interest.\n\n4. **Grouping by Domain**: \nThe `GROUP BY email_domain` clause groups the results by the extracted domains. This is essential for the count to apply separately to each domain, enabling the analysis to quantify the unique IDs per domain rather than giving a single overall count.\n\n5. **Sorting Results**: \nFinally, the `ORDER BY email_domain asc` clause sorts the resulting list of domains in ascending order. This sorting makes the output easier to read and analyze, allowing for quick identification of specific domains or comparison between the counts of unique IDs across domains.\n\n\n#### Implementation\n\n\n```mysql []\nSELECT \n  SUBSTRING_INDEX(email, '@', -1) AS email_domain, \n  COUNT(DISTINCT id) AS count \nFROM \n  Emails \nWHERE \n  email LIKE '%.com' \nGROUP BY \n  email_domain \nORDER BY \n  email_domain asc;\n\n```",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

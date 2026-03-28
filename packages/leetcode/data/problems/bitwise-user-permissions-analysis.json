@@ -1,0 +1,53 @@
+{
+  "questionId": "3512",
+  "questionFrontendId": "3204",
+  "title": "Bitwise User Permissions Analysis",
+  "titleSlug": "bitwise-user-permissions-analysis",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>user_permissions</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| user_id     | int     |\n| permissions | int     |\n+-------------+---------+\nuser_id is the primary key.\nEach row of this table contains the user ID and their permissions encoded as an integer.\n</pre>\n\n<p>Consider that each bit in the <code>permissions</code> integer represents a different access level or feature that a user has.</p>\n\n<p>Write a solution to calculate the following:</p>\n\n<ul>\n\t<li>common_perms: The access level granted to <strong>all users</strong>. This is computed using a <strong>bitwise AND</strong> operation on the <code>permissions</code> column.</li>\n\t<li>any_perms: The access level granted to <strong>any user</strong>. This is computed using a <strong>bitwise OR</strong> operation on the <code>permissions</code> column.</li>\n</ul>\n\n<p>Return <em>the result table in <strong>any</strong> order</em>.</p>\n\n<p>The result format is shown in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>user_permissions table:</p>\n\n<pre class=\"example-io\">\n+---------+-------------+\n| user_id | permissions |\n+---------+-------------+\n| 1       | 5           |\n| 2       | 12          |\n| 3       | 7           |\n| 4       | 3           |\n+---------+-------------+\n </pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+-------------+--------------+\n| common_perms | any_perms   |\n+--------------+-------------+\n| 0            | 15          |\n+--------------+-------------+\n    </pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>common_perms:</strong> Represents the bitwise AND result of all permissions:\n\n\t<ul>\n\t\t<li>For user 1 (5): 5 (binary 0101)</li>\n\t\t<li>For user 2 (12): 12 (binary 1100)</li>\n\t\t<li>For user 3 (7): 7 (binary 0111)</li>\n\t\t<li>For user 4 (3): 3 (binary 0011)</li>\n\t\t<li>Bitwise AND: 5 &amp; 12 &amp; 7 &amp; 3 = 0 (binary 0000)</li>\n\t</ul>\n\t</li>\n\t<li><strong>any_perms:</strong> Represents the bitwise OR result of all permissions:\n\t<ul>\n\t\t<li>Bitwise OR: 5 | 12 | 7 | 3 = 15 (binary 1111)</li>\n\t</ul>\n\t</li>\n</ul>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table if not exists user_permissions(user_id int, permissions int)\"], \"mssql\": [\"Create table user_permissions(user_id int, permissions int)\"], \"oraclesql\": [\"Create table user_permissions(user_id NUMBER, permissions NUMBER)\"], \"database\": true, \"name\": \"analyze_permissions\", \"postgresql\": [\"CREATE TABLE IF NOT EXISTS user_permissions (\\n    user_id int,\\n    permissions int\\n);\\n\"], \"pythondata\": [\"user_permissions = pd.DataFrame({\\n    'user_id': pd.Series(dtype='int'),\\n    'permissions': pd.Series(dtype='int')\\n})\"], \"database_schema\": {\"user_permissions\": {\"user_id\": \"INT\", \"permissions\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"2.1K\", \"totalSubmission\": \"2.2K\", \"totalAcceptedRaw\": 2077, \"totalSubmissionRaw\": 2233, \"acRate\": \"93.0%\"}",
+  "likes": 9,
+  "dislikes": 3,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"user_permissions\":[\"user_id\",\"permissions\"]},\"rows\":{\"user_permissions\":[[1,5],[2,12],[3,7],[4,3]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef analyze_permissions(user_permissions: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,144 @@
+{
+  "questionId": "3419",
+  "questionFrontendId": "3143",
+  "title": "Maximum Points Inside the Square",
+  "titleSlug": "maximum-points-inside-the-square",
+  "difficulty": "Medium",
+  "content": "<p>You are given a 2D<strong> </strong>array <code>points</code> and a string <code>s</code> where, <code>points[i]</code> represents the coordinates of point <code>i</code>, and <code>s[i]</code> represents the <strong>tag</strong> of point <code>i</code>.</p>\n\n<p>A <strong>valid</strong> square is a square centered at the origin <code>(0, 0)</code>, has edges parallel to the axes, and <strong>does not</strong> contain two points with the same tag.</p>\n\n<p>Return the <strong>maximum</strong> number of points contained in a <strong>valid</strong> square.</p>\n\n<p>Note:</p>\n\n<ul>\n\t<li>A point is considered to be inside the square if it lies on or within the square&#39;s boundaries.</li>\n\t<li>The side length of the square can be zero.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/03/29/3708-tc1.png\" style=\"width: 303px; height: 303px;\" /></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">points = [[2,2],[-1,-2],[-4,4],[-3,1],[3,-3]], s = &quot;abdca&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The square of side length 4 covers two points <code>points[0]</code> and <code>points[1]</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/03/29/3708-tc2.png\" style=\"width: 302px; height: 302px;\" /></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">points = [[1,1],[-2,-2],[-2,2]], s = &quot;abb&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The square of side length 2 covers one point, which is <code>points[0]</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">points = [[1,1],[-1,-1],[2,-2]], s = &quot;ccd&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>It&#39;s impossible to make any valid squares centered at the origin such that it covers only one point among <code>points[0]</code> and <code>points[1]</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length, points.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>points[i].length == 2</code></li>\n\t<li><code>-10<sup>9</sup> &lt;= points[i][0], points[i][1] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>s.length == points.length</code></li>\n\t<li><code>points</code> consists of distinct coordinates.</li>\n\t<li><code>s</code> consists only of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "The smallest edge length of a square to include point <code>(x, y)</code> is <code>max(abs(x), abs(y)) * 2</code>.",
+    "Sort the points by <code>max(abs(x), abs(y))</code> and try each edge length, check the included point tags."
+  ],
+  "metaData": "{\n  \"name\": \"maxPointsInsideSquare\",\n  \"params\": [\n    {\n      \"name\": \"points\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"s\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"21.2K\", \"totalSubmission\": \"54K\", \"totalAcceptedRaw\": 21220, \"totalSubmissionRaw\": 54040, \"acRate\": \"39.3%\"}",
+  "likes": 172,
+  "dislikes": 24,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximize the Distance Between Points on a Square\", \"titleSlug\": \"maximize-the-distance-between-points-on-a-square\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[2,2],[-1,-2],[-4,4],[-3,1],[3,-3]]\n\"abdca\"",
+    "[[1,1],[-2,-2],[-2,2]]\n\"abb\"",
+    "[[1,1],[-1,-1],[2,-2]]\n\"ccd\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"hashedin\", \"name\": \"HashedIn\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxPointsInsideSquare(vector<vector<int>>& points, string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxPointsInsideSquare(int[][] points, String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxPointsInsideSquare(self, points: List[List[int]], s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxPointsInsideSquare(self, points, s):\n        \"\"\"\n        :type points: List[List[int]]\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} points\n * @param {string} s\n * @return {number}\n */\nvar maxPointsInsideSquare = function(points, s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxPointsInsideSquare(points: number[][], s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxPointsInsideSquare(int[][] points, string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxPointsInsideSquare(int** points, int pointsSize, int* pointsColSize, char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxPointsInsideSquare(points [][]int, s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxPointsInsideSquare(points: Array<IntArray>, s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxPointsInsideSquare(_ points: [[Int]], _ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_points_inside_square(points: Vec<Vec<i32>>, s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} points\n# @param {String} s\n# @return {Integer}\ndef max_points_inside_square(points, s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $points\n     * @param String $s\n     * @return Integer\n     */\n    function maxPointsInsideSquare($points, $s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxPointsInsideSquare(List<List<int>> points, String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxPointsInsideSquare(points: Array[Array[Int]], s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_points_inside_square(points :: [[integer]], s :: String.t) :: integer\n  def max_points_inside_square(points, s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_points_inside_square(Points :: [[integer()]], S :: unicode:unicode_binary()) -> integer().\nmax_points_inside_square(Points, S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-points-inside-square points s)\n  (-> (listof (listof exact-integer?)) string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

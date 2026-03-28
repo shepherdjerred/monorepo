@@ -1,0 +1,136 @@
+{
+  "questionId": "3527",
+  "questionFrontendId": "3245",
+  "title": "Alternating Groups III",
+  "titleSlug": "alternating-groups-iii",
+  "difficulty": "Hard",
+  "content": "<p>There are some red and blue tiles arranged circularly. You are given an array of integers <code>colors</code> and a 2D integers array <code>queries</code>.</p>\n\n<p>The color of tile <code>i</code> is represented by <code>colors[i]</code>:</p>\n\n<ul>\n\t<li><code>colors[i] == 0</code> means that tile <code>i</code> is <strong>red</strong>.</li>\n\t<li><code>colors[i] == 1</code> means that tile <code>i</code> is <strong>blue</strong>.</li>\n</ul>\n\n<p>An <strong>alternating</strong> group is a contiguous subset of tiles in the circle with <strong>alternating</strong> colors (each tile in the group except the first and last one has a different color from its <b>adjacent</b> tiles in the group).</p>\n\n<p>You have to process queries of two types:</p>\n\n<ul>\n\t<li><code>queries[i] = [1, size<sub>i</sub>]</code>, determine the count of <strong>alternating</strong> groups with size <code>size<sub>i</sub></code>.</li>\n\t<li><code>queries[i] = [2, index<sub>i</sub>, color<sub>i</sub>]</code>, change <code>colors[index<sub>i</sub>]</code> to <code>color<font face=\"monospace\"><sub>i</sub></font></code>.</li>\n</ul>\n\n<p>Return an array <code>answer</code> containing the results of the queries of the first type <em>in order</em>.</p>\n\n<p><strong>Note</strong> that since <code>colors</code> represents a <strong>circle</strong>, the <strong>first</strong> and the <strong>last</strong> tiles are considered to be next to each other.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">colors = [0,1,1,0,1], queries = [[2,1,0],[1,4]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[2]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><strong class=\"example\"><img alt=\"\" data-darkreader-inline-bgcolor=\"\" data-darkreader-inline-bgimage=\"\" src=\"https://assets.leetcode.com/uploads/2024/06/03/screenshot-from-2024-06-03-20-14-44.png\" style=\"width: 150px; height: 150px; padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor: #181a1b;\" /></strong></p>\n\n<p>First query:</p>\n\n<p>Change <code>colors[1]</code> to 0.</p>\n\n<p><img alt=\"\" data-darkreader-inline-bgcolor=\"\" data-darkreader-inline-bgimage=\"\" src=\"https://assets.leetcode.com/uploads/2024/06/03/screenshot-from-2024-06-03-20-20-25.png\" style=\"width: 150px; height: 150px; padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor: #181a1b;\" /></p>\n\n<p>Second query:</p>\n\n<p>Count of the alternating groups with size 4:</p>\n\n<p><img alt=\"\" data-darkreader-inline-bgcolor=\"\" data-darkreader-inline-bgimage=\"\" src=\"https://assets.leetcode.com/uploads/2024/06/03/screenshot-from-2024-06-03-20-25-02-2.png\" style=\"width: 150px; height: 150px; padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor: #181a1b;\" /><img alt=\"\" data-darkreader-inline-bgcolor=\"\" data-darkreader-inline-bgimage=\"\" src=\"https://assets.leetcode.com/uploads/2024/06/03/screenshot-from-2024-06-03-20-24-12.png\" style=\"width: 150px; height: 150px; padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor: #181a1b;\" /></p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">colors = [0,0,1,0,1,1], queries = [[1,3],[2,3,0],[1,5]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[2,0]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><img alt=\"\" data-darkreader-inline-bgcolor=\"\" data-darkreader-inline-bgimage=\"\" src=\"https://assets.leetcode.com/uploads/2024/06/03/screenshot-from-2024-06-03-20-35-50.png\" style=\"width: 150px; height: 150px; padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor: #181a1b;\" /></p>\n\n<p>First query:</p>\n\n<p>Count of the alternating groups with size 3:</p>\n\n<p><img alt=\"\" data-darkreader-inline-bgcolor=\"\" data-darkreader-inline-bgimage=\"\" src=\"https://assets.leetcode.com/uploads/2024/06/03/screenshot-from-2024-06-03-20-37-13.png\" style=\"width: 150px; height: 150px; padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor: #181a1b;\" /><img alt=\"\" data-darkreader-inline-bgcolor=\"\" data-darkreader-inline-bgimage=\"\" src=\"https://assets.leetcode.com/uploads/2024/06/03/screenshot-from-2024-06-03-20-36-40.png\" style=\"width: 150px; height: 150px; padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor: #181a1b;\" /></p>\n\n<p>Second query: <code>colors</code> will not change.</p>\n\n<p>Third query: There is no alternating group with size 5.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>4 &lt;= colors.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= colors[i] &lt;= 1</code></li>\n\t<li><code>1 &lt;= queries.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>queries[i][0] == 1</code> or <code>queries[i][0] == 2</code></li>\n\t<li>For all <code>i</code> that:\n\t<ul>\n\t\t<li><code>queries[i][0] == 1</code>: <code>queries[i].length == 2</code>, <code>3 &lt;= queries[i][1] &lt;= colors.length - 1</code></li>\n\t\t<li><code>queries[i][0] == 2</code>: <code>queries[i].length == 3</code>, <code>0 &lt;= queries[i][1] &lt;= colors.length - 1</code>, <code>0 &lt;= queries[i][2] &lt;= 1</code></li>\n\t</ul>\n\t</li>\n</ul>\n",
+  "hints": [
+    "Try using a segment tree to store the maximal alternating groups.",
+    "Store the sizes of these maximal alternating groups in another data structure.",
+    "Find the count of the alternating groups of size <code>k</code> with having the count of maximal alternating groups with size greater than or equal to <code>k</code> and the sum of their sizes."
+  ],
+  "metaData": "{\n  \"name\": \"numberOfAlternatingGroups\",\n  \"params\": [\n    {\n      \"name\": \"colors\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"queries\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"2.9K\", \"totalSubmission\": \"15.1K\", \"totalAcceptedRaw\": 2867, \"totalSubmissionRaw\": 15077, \"acRate\": \"19.0%\"}",
+  "likes": 61,
+  "dislikes": 10,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[0,1,1,0,1]\n[[2,1,0],[1,4]]",
+    "[0,0,1,0,1,1]\n[[1,3],[2,3,0],[1,5]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Indexed Tree",
+      "slug": "binary-indexed-tree"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> numberOfAlternatingGroups(vector<int>& colors, vector<vector<int>>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> numberOfAlternatingGroups(int[] colors, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfAlternatingGroups(self, colors: List[int], queries: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfAlternatingGroups(self, colors, queries):\n        \"\"\"\n        :type colors: List[int]\n        :type queries: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} colors\n * @param {number[][]} queries\n * @return {number[]}\n */\nvar numberOfAlternatingGroups = function(colors, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfAlternatingGroups(colors: number[], queries: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> NumberOfAlternatingGroups(int[] colors, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* numberOfAlternatingGroups(int* colors, int colorsSize, int** queries, int queriesSize, int* queriesColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfAlternatingGroups(colors []int, queries [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfAlternatingGroups(colors: IntArray, queries: Array<IntArray>): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfAlternatingGroups(_ colors: [Int], _ queries: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_alternating_groups(colors: Vec<i32>, queries: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} colors\n# @param {Integer[][]} queries\n# @return {Integer[]}\ndef number_of_alternating_groups(colors, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $colors\n     * @param Integer[][] $queries\n     * @return Integer[]\n     */\n    function numberOfAlternatingGroups($colors, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> numberOfAlternatingGroups(List<int> colors, List<List<int>> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfAlternatingGroups(colors: Array[Int], queries: Array[Array[Int]]): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_alternating_groups(colors :: [integer], queries :: [[integer]]) :: [integer]\n  def number_of_alternating_groups(colors, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_alternating_groups(Colors :: [integer()], Queries :: [[integer()]]) -> [integer()].\nnumber_of_alternating_groups(Colors, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-alternating-groups colors queries)\n  (-> (listof exact-integer?) (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

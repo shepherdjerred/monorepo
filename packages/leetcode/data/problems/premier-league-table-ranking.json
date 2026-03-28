@@ -1,0 +1,53 @@
+{
+  "questionId": "3554",
+  "questionFrontendId": "3246",
+  "title": "Premier League Table Ranking",
+  "titleSlug": "premier-league-table-ranking",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>TeamStats</code></p>\n\n<pre>\n+------------------+---------+\n| Column Name      | Type    |\n+------------------+---------+\n| team_id          | int     |\n| team_name        | varchar |\n| matches_played   | int     |\n| wins             | int     |\n| draws            | int     |\n| losses           | int     |\n+------------------+---------+\nteam_id is the unique key for this table.\nThis table contains team id, team name, matches_played, wins, draws, and losses.\n</pre>\n\n<p>Write a solution to calculate the <strong>points</strong> and <strong>rank</strong> for each team in the league. Points are calculated as follows:</p>\n\n<ul>\n\t<li><code>3</code> points for a <strong>win</strong></li>\n\t<li><code>1</code> point for a <strong>draw</strong></li>\n\t<li><code>0</code> points for a <strong>loss</strong></li>\n</ul>\n\n<p><strong>Note:</strong>&nbsp;Teams with the same points must be assigned the same rank.</p>\n\n<p>Return <em>the result table ordered by</em> <code>points</code>&nbsp;<em>in&nbsp;<strong>descending</strong>,<strong>&nbsp;</strong>and then by</em> <code>team_name</code> <em>in <strong>ascending </strong>order.</em></p>\n\n<p>The query result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p><code>TeamStats</code> table:</p>\n\n<pre class=\"example-io\">\n+---------+-----------------+----------------+------+-------+--------+\n| team_id | team_name       | matches_played | wins | draws | losses |\n+---------+-----------------+----------------+------+-------+--------+\n| 1       | Manchester City | 10             | 6    | 2     | 2      |\n| 2       | Liverpool       | 10             | 6    | 2     | 2      |\n| 3       | Chelsea         | 10             | 5    | 3     | 2      |\n| 4       | Arsenal         | 10             | 4    | 4     | 2      |\n| 5       | Tottenham       | 10             | 3    | 5     | 2      |\n+---------+-----------------+----------------+------+-------+--------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+---------+-----------------+--------+----------+\n| team_id | team_name       | points | position |\n+---------+-----------------+--------+----------+\n| 2       | Liverpool       | 20     | 1        |\n| 1       | Manchester City | 20     | 1        |\n| 3       | Chelsea         | 18     | 3        |\n| 4       | Arsenal         | 16     | 4        |\n| 5       | Tottenham       | 14     | 5        |\n+---------+-----------------+--------+----------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Manchester City and Liverpool both have 20 points (6 wins * 3 points + 2 draws * 1 point), so they share position 1.</li>\n\t<li>Chelsea has 18 points (5 wins * 3 points + 3 draws * 1 point) and is position 3rd.</li>\n\t<li>Arsenal has 16 points (4 wins * 3 points + 4 draws * 1 point) and is position 4th.</li>\n\t<li>Tottenham has 14 points (3 wins * 3 points + 5 draws * 1 point) and is position 5th.</li>\n</ul>\n\n<p>The output table is ordered by points in descending order, then by team_name in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table if not exists TeamStats( team_id int, team_name varchar(100),matches_played int, wins int,draws int,losses int)\"], \"mssql\": [\"Create table  TeamStats( team_id int, team_name varchar(100),matches_played int, wins int,draws int,losses int)\"], \"oraclesql\": [\"Create table  TeamStats( team_id NUMBER, team_name varchar2(100),matches_played NUMBER, wins NUMBER,draws NUMBER,losses NUMBER)\"], \"database\": true, \"name\": \"calculate_team_standings\", \"postgresql\": [\"CREATE TABLE IF NOT EXISTS TeamStats (\\n    team_id INT,\\n    team_name VARCHAR(100),\\n    matches_played INT,\\n    wins INT,\\n    draws INT,\\n    losses INT\\n);\\n\"], \"pythondata\": [\"TeamStats = pd.DataFrame(data, columns=[\\\"team_id\\\", \\\"team_name\\\", \\\"matches_played\\\", \\\"wins\\\", \\\"draws\\\", \\\"losses\\\"]).astype({\\\"team_id\\\": \\\"int\\\", \\\"team_name\\\": \\\"string\\\", \\\"matches_played\\\": \\\"int\\\", \\\"wins\\\": \\\"int\\\", \\\"draws\\\": \\\"int\\\", \\\"losses\\\": \\\"int\\\"})\\n\"], \"database_schema\": {\"TeamStats\": {\"team_id\": \"INT\", \"team_name\": \"VARCHAR(100)\", \"matches_played\": \"INT\", \"wins\": \"INT\", \"draws\": \"INT\", \"losses\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"3.6K\", \"totalSubmission\": \"4.7K\", \"totalAcceptedRaw\": 3650, \"totalSubmissionRaw\": 4657, \"acRate\": \"78.4%\"}",
+  "likes": 12,
+  "dislikes": 0,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"TeamStats\":[\"team_id\",\"team_name\",\"matches_played\",\"wins\",\"draws\",\"losses\"]},\"rows\":{\"TeamStats\":[[1,\"Manchester City\",10,6,2,2],[2,\"Liverpool\",10,6,2,2],[3,\"Chelsea\",10,5,3,2],[4,\"Arsenal\",10,4,4,2],[5,\"Tottenham\",10,3,5,2]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef calculate_team_standings(team_stats: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,158 @@
+{
+  "questionId": "3181",
+  "questionFrontendId": "2940",
+  "title": "Find Building Where Alice and Bob Can Meet",
+  "titleSlug": "find-building-where-alice-and-bob-can-meet",
+  "difficulty": "Hard",
+  "content": "<p>You are given a <strong>0-indexed</strong> array <code>heights</code> of positive integers, where <code>heights[i]</code> represents the height of the <code>i<sup>th</sup></code> building.</p>\n\n<p>If a person is in building <code>i</code>, they can move to any other building <code>j</code> if and only if <code>i &lt; j</code> and <code>heights[i] &lt; heights[j]</code>.</p>\n\n<p>You are also given another array <code>queries</code> where <code>queries[i] = [a<sub>i</sub>, b<sub>i</sub>]</code>. On the <code>i<sup>th</sup></code> query, Alice is in building <code>a<sub>i</sub></code> while Bob is in building <code>b<sub>i</sub></code>.</p>\n\n<p>Return <em>an array</em> <code>ans</code> <em>where</em> <code>ans[i]</code> <em>is <strong>the index of the leftmost building</strong> where Alice and Bob can meet on the</em> <code>i<sup>th</sup></code> <em>query</em>. <em>If Alice and Bob cannot move to a common building on query</em> <code>i</code>, <em>set</em> <code>ans[i]</code> <em>to</em> <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> heights = [6,4,8,5,2,7], queries = [[0,1],[0,3],[2,4],[3,4],[2,2]]\n<strong>Output:</strong> [2,5,-1,5,2]\n<strong>Explanation:</strong> In the first query, Alice and Bob can move to building 2 since heights[0] &lt; heights[2] and heights[1] &lt; heights[2]. \nIn the second query, Alice and Bob can move to building 5 since heights[0] &lt; heights[5] and heights[3] &lt; heights[5]. \nIn the third query, Alice cannot meet Bob since Alice cannot move to any other building.\nIn the fourth query, Alice and Bob can move to building 5 since heights[3] &lt; heights[5] and heights[4] &lt; heights[5].\nIn the fifth query, Alice and Bob are already in the same building.  \nFor ans[i] != -1, It can be shown that ans[i] is the leftmost building where Alice and Bob can meet.\nFor ans[i] == -1, It can be shown that there is no building where Alice and Bob can meet.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> heights = [5,3,8,2,6,1,4,6], queries = [[0,7],[3,5],[5,2],[3,0],[1,6]]\n<strong>Output:</strong> [7,6,-1,4,6]\n<strong>Explanation:</strong> In the first query, Alice can directly move to Bob&#39;s building since heights[0] &lt; heights[7].\nIn the second query, Alice and Bob can move to building 6 since heights[3] &lt; heights[6] and heights[5] &lt; heights[6].\nIn the third query, Alice cannot meet Bob since Bob cannot move to any other building.\nIn the fourth query, Alice and Bob can move to building 4 since heights[3] &lt; heights[4] and heights[0] &lt; heights[4].\nIn the fifth query, Alice can directly move to Bob&#39;s building since heights[1] &lt; heights[6].\nFor ans[i] != -1, It can be shown that ans[i] is the leftmost building where Alice and Bob can meet.\nFor ans[i] == -1, It can be shown that there is no building where Alice and Bob can meet.\n\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= heights.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= heights[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= queries.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>queries[i] = [a<sub>i</sub>, b<sub>i</sub>]</code></li>\n\t<li><code>0 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt;= heights.length - 1</code></li>\n</ul>\n",
+  "hints": [
+    "For each query <code>[x, y]</code>, if <code>x > y</code>, swap <code>x</code> and <code>y</code>. Now, we can assume that <code>x <= y</code>.",
+    "For each query <code>[x, y]</code>, if <code>x == y</code> or <code>heights[x] < heights[y]</code>, then the answer is <code>y</code> since <code>x ≤ y</code>.",
+    "Otherwise, we need to find the smallest index <code>t</code> such that <code>y < t</code> and <code>heights[x] < heights[t]</code>. Note that <code>heights[y] <= heights[x]</code>, so <code>heights[x] < heights[t]</code> is a sufficient condition.",
+    "To find index <code>t</code> for each query, sort the queries in descending order of <code>y</code>. Iterate over the queries while maintaining a monotonic stack which we can binary search over to find index <code>t</code>."
+  ],
+  "metaData": "{\n  \"name\": \"leftmostBuildingQueries\",\n  \"params\": [\n    {\n      \"name\": \"heights\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"queries\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"76.1K\", \"totalSubmission\": \"145.5K\", \"totalAcceptedRaw\": 76068, \"totalSubmissionRaw\": 145479, \"acRate\": \"52.3%\"}",
+  "likes": 852,
+  "dislikes": 58,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Visible People in a Queue\", \"titleSlug\": \"number-of-visible-people-in-a-queue\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Furthest Building You Can Reach\", \"titleSlug\": \"furthest-building-you-can-reach\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[6,4,8,5,2,7]\n[[0,1],[0,3],[2,4],[3,4],[2,2]]",
+    "[5,3,8,2,6,1,4,6]\n[[0,7],[3,5],[5,2],[3,0],[1,6]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Binary Indexed Tree",
+      "slug": "binary-indexed-tree"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Monotonic Stack",
+      "slug": "monotonic-stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> leftmostBuildingQueries(vector<int>& heights, vector<vector<int>>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] leftmostBuildingQueries(int[] heights, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def leftmostBuildingQueries(self, heights: List[int], queries: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def leftmostBuildingQueries(self, heights, queries):\n        \"\"\"\n        :type heights: List[int]\n        :type queries: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} heights\n * @param {number[][]} queries\n * @return {number[]}\n */\nvar leftmostBuildingQueries = function(heights, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function leftmostBuildingQueries(heights: number[], queries: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] LeftmostBuildingQueries(int[] heights, int[][] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* leftmostBuildingQueries(int* heights, int heightsSize, int** queries, int queriesSize, int* queriesColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func leftmostBuildingQueries(heights []int, queries [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun leftmostBuildingQueries(heights: IntArray, queries: Array<IntArray>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func leftmostBuildingQueries(_ heights: [Int], _ queries: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn leftmost_building_queries(heights: Vec<i32>, queries: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} heights\n# @param {Integer[][]} queries\n# @return {Integer[]}\ndef leftmost_building_queries(heights, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $heights\n     * @param Integer[][] $queries\n     * @return Integer[]\n     */\n    function leftmostBuildingQueries($heights, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> leftmostBuildingQueries(List<int> heights, List<List<int>> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def leftmostBuildingQueries(heights: Array[Int], queries: Array[Array[Int]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec leftmost_building_queries(heights :: [integer], queries :: [[integer]]) :: [integer]\n  def leftmost_building_queries(heights, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec leftmost_building_queries(Heights :: [integer()], Queries :: [[integer()]]) -> [integer()].\nleftmost_building_queries(Heights, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (leftmost-building-queries heights queries)\n  (-> (listof exact-integer?) (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2627",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe are given an integer array `heights` and an array of pairs `queries`, where each pair is of the form $[a_i, b_i]$, representing the positions of Alice and Bob at indices `i` and `j`, respectively. For each query, the task is to find the closest value to the right in the `heights` array that is greater than the `heights` at both the given positions.\n\nIn other words, given indices `i` and `j`, we need to find the first value in the `heights` array that is greater than the values at `heights[i]` and `heights[j]`. If no such value exists, return -1. \n\n---\n\n### Approach 1: Monotonic Stack\n\n#### Intuition   \n\nLet’s start by breaking down the problem into simpler terms. Suppose `queries` only contained single integer indices. The goal would then be to find, for each index, the first building to the right in the `heights` array that is taller than the building at that index. Instead of scanning the array repeatedly for each query, we can preprocess the `heights` array to store this \"next taller building\" information in advance.\n\nThe key insight here is that for each building, the next taller building to its right depends only on the heights of the buildings that come after it. Using a monotonic stack, we can compute this efficiently. By traversing the `heights` array from right to left, we maintain a stack of indices in decreasing order of heights. For the current building, any shorter or equal buildings already in the stack cannot be the answer, so we remove them. If the stack is not empty, the top element gives the position of the next taller building. If the stack is empty, it means no taller building exists to the right, so we store `-1`. This preprocessing step allows us to handle single queries in constant time. For a better understanding of this idea, you can refer to [Next Greater Element - II](https://leetcode.com/problems/next-greater-element-ii/), which applies a similar technique.\n\nNow, let’s extend this idea to handle queries that are pairs of values. In this scenario, the task is to find the first height to the right in the `heights` array that is greater than both values in each pair. Here the key realization is that the answer for a pair depends on the larger of the two values since a building must be taller than both. This simplifies the problem by reducing it to a comparison with a single threshold for each query.\n\nWhile traversing the `heights` array, we use a monotonic stack to maintain all elements greater than the current height, with the nearest greater height at the top of the stack. When processing a query, the stack already contains all elements greater than the current height. \n\nFor each query pair, we use binary search on the stack to quickly find the first element greater than the larger value in the pair. This ensures that each query is processed in $O(\\log n)$ time.\n\n#### Algorithm\n\nMain function - `leftmostBuildingQueries(heights, queries)`\n\n1. Create a list `newQueries` where each index stores the list of queries that require this index as the maximum index of the query pair. Each query is stored as a pair containing the required height (`heights[a]`) and the query index.  \n2. Initialize a monotonic stack `monoStack` to keep track of building heights and their indices in decreasing order of height while iterating from right to left in the `heights` array.  \n3. Initialize an array `result` to store the answers for each query, with all elements initially set to `-1`.  \n4. Iterate over the `queries`:  \n   - For each query, extract the two indices `a` and `b`.  \n   - If `a > b`, swap the indices to ensure `a <= b`.  \n   - If `heights[b] > heights[a]` or `a == b`, set `result[currQuery] = b`.  \n   - Otherwise, add the query to `newQueries[b]` with its required height (`heights[a]`) and the query index.  \n5. Iterate over the indices of the `heights` array from right to left:  \n   - For each query stored at the current index in `newQueries`, use binary search on the `monoStack` to find the first building with a height greater than the query's required height. If such a building exists, set the result for the query to the index of this building.  \n   - Remove all elements from the top of the `monoStack` where the height is less than or equal to the current height, as they are no longer relevant.  \n   - Push the current height and index onto the `monoStack`.  \n6. Return the `result` array.\n\nHelper Binary Search function - `search(height, monoStack)`\n\n1. Initialize two pointers `left = 0` and `right = size of monoStack - 1`. Set a variable `ans = -1` to store the search result.  \n2. Perform a binary search:\n   - Calculate `mid = (left + right) / 2`.  \n   - If the height at `monoStack[mid]` is greater than the required height:  \n     - Update `ans = max(ans, mid)` and set `left = mid + 1`. \n   - Otherwise, set `right = mid - 1`. \n3. Return `ans`, which will be the index of the first building with a height greater than the required height. If no such building exists, `ans` remains `-1`.  \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/AFfMGimL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"AFfMGimL\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the array `heights` and $q$ be the number of queries in the `queries` array.\n\n- Time Complexity: $O(q \\cdot \\log n + n)$\n\n    The algorithm  processes each query using binary search on the monotonic stack, which takes $O(\\log n)$ per query. With $q$ queries, the total query processing time is $O(q \\cdot \\log n)$. Apart from this, we also iterate through the `heights` and `queries` arrays, that takes $O(n)$ and $O(q)$ time, respectively.\n\n    Therefore, the overall time complexity is $O(q \\cdot \\log n + n)$.\n\n- Space Complexity: $O(n + q)$\n\n    The algorithm uses a monotonic stack to store building indices, requiring $O(n)$ space. It also stores queries in the `newQueries` array and results in the `result` array, each taking $O(q)$ space.\n\n    Therefore, the total space complexity is $O(n + q)$.\n\n---\n\n### Approach 2: Priority Queue\n\n#### Intuition   \n\nIn the previous approach, we calculated the answer using a monotonic stack. Each query asks for the closest index to the right with a value greater than both elements in the query pair. Instead of processing each query one at a time, we can optimize by checking, for each index in the `heights` array, if it can serve as the answer for any query.\n\nTo do this efficiently, we can iterate through the `heights` array from left to right. For each index, we look for query pairs where both indices are smaller than the current index, and both values in the pair are smaller than the value at the current index. To make this process faster, we prioritize assigning answers to the smallest query pairs first.\n\nBy maintaining the query pairs sorted based on their maximum value and index up to the current position, we can process them more efficiently.\n\nTo implement this idea, we process the `heights` array while managing the queries by storing them in a 2D array of arrays, where each subarray holds the queries for the corresponding building.\n\nWe begin by sorting and mapping the queries to track the index and values that we need. Using a priority queue, we store queries based on their maximum value and index. This helps us quickly retrieve the smallest index for processing.\n\nAs we move through the `heights` array, we pop the queries from the queue. For each query, if the current index is greater than both indices of the query, we assign the current index as the answer and store it. We also check if new queries, whose maximum index matches the current one, should be added to the queue for future processing.\n\nThis allows us to handle queries without reprocessing them repeatedly.\n\n#### Algorithm\n\n- Initialize `storeQueries` as a 2D array of arrays to store queries for each building.\n- Initialize `maxIndex` as a priority queue to track the queries that need to be answered based on building heights.\n- Initialize `result` as an array of `-1` to store the answers for each query.\n\n- Loop through each query:\n  - For each query `(a, b)`:\n    - If the height of building `a` is less than building `b` and `a` is smaller than `b`, set `result[currQuery]` to `b` (building `b` is the answer).\n    - If the height of building `a` is greater than building `b` and `a` is greater than `b`, set `result[currQuery]` to `a` (building `a` is the answer).\n    - If `a` is equal to `b`, set `result[currQuery]` to `a` (both are the same building).\n    - Otherwise, store the query in `storeQueries[max(a, b)]` for future processing.\n\n- Loop through each building index `index`:\n  - While the priority queue `maxIndex` has elements and the minimum value in `maxIndex` is smaller than the current building height:\n    - Set the corresponding query's result in `result` and pop the element from `maxIndex` (this query is answered).\n  - Push new queries from `storeQueries[index]` into `maxIndex`, sorting them by height.\n\n- Return the `result` array containing the answers to all queries.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/gobEvzsi/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"gobEvzsi\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the array `heights` and $q$ be the number of queries in the `queries` array.\n\n- Time Complexity: $O(q \\cdot \\log q + n)$\n\n    The algorithm first iterates over the `queries` array to map the maximum indices and heights in `storeQueries`, taking $O(q)$ time. It then processes each index in the `heights` array, updating results via a priority queue. Insertion and deletion operations in the priority queue take $O(\\log q)$ each, with at most $q$ queries processed. For each index, the algorithm checks and pushes relevant queries from `storeQueries`, resulting in an overall $O(n)$ time for all iterations.\n\n    Thus, the overall time complexity is $O(q \\cdot \\log q + n)$.\n\n- Space Complexity: $O(n + q)$\n\n    The algorithm uses a array `storeQueries` to store query mappings, which requires $O(n)$ space, as each element corresponds to an index in `heights`. Additionally, a priority queue `maxIndex` is used to handle queries, which at most can store $O(q)$ elements. The `result` array also requires $O(q)$ space to store the answers.\n\n    Therefore, the total space complexity is $O(n + q)$.\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

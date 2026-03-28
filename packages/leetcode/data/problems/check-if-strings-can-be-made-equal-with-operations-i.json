@@ -1,0 +1,127 @@
+{
+  "questionId": "2999",
+  "questionFrontendId": "2839",
+  "title": "Check if Strings Can be Made Equal With Operations I",
+  "titleSlug": "check-if-strings-can-be-made-equal-with-operations-i",
+  "difficulty": "Easy",
+  "content": "<p>You are given two strings <code>s1</code> and <code>s2</code>, both of length <code>4</code>, consisting of <strong>lowercase</strong> English letters.</p>\n\n<p>You can apply the following operation on any of the two strings <strong>any</strong> number of times:</p>\n\n<ul>\n\t<li>Choose any two indices <code>i</code> and <code>j</code> such that <code>j - i = 2</code>, then <strong>swap</strong> the two characters at those indices in the string.</li>\n</ul>\n\n<p>Return <code>true</code><em> if you can make the strings </em><code>s1</code><em> and </em><code>s2</code><em> equal, and </em><code>false</code><em> otherwise</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s1 = &quot;abcd&quot;, s2 = &quot;cdab&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> We can do the following operations on s1:\n- Choose the indices i = 0, j = 2. The resulting string is s1 = &quot;cbad&quot;.\n- Choose the indices i = 1, j = 3. The resulting string is s1 = &quot;cdab&quot; = s2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s1 = &quot;abcd&quot;, s2 = &quot;dacb&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> It is not possible to make the two strings equal.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>s1.length == s2.length == 4</code></li>\n\t<li><code>s1</code> and <code>s2</code> consist only of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "<div class=\"_1l1MA\">Since the strings are very small you can try a brute-force approach.</div>",
+    "<div class=\"_1l1MA\">There are only <code>2</code> different swaps that are possible in a string.</div>"
+  ],
+  "metaData": "{\n  \"name\": \"canBeEqual\",\n  \"params\": [\n    {\n      \"name\": \"s1\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"s2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"45.1K\", \"totalSubmission\": \"94.2K\", \"totalAcceptedRaw\": 45079, \"totalSubmissionRaw\": 94239, \"acRate\": \"47.8%\"}",
+  "likes": 201,
+  "dislikes": 31,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"abcd\"\n\"cdab\"",
+    "\"abcd\"\n\"dacb\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"citrix\", \"name\": \"Citrix\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool canBeEqual(string s1, string s2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean canBeEqual(String s1, String s2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def canBeEqual(self, s1: str, s2: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def canBeEqual(self, s1, s2):\n        \"\"\"\n        :type s1: str\n        :type s2: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s1\n * @param {string} s2\n * @return {boolean}\n */\nvar canBeEqual = function(s1, s2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function canBeEqual(s1: string, s2: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CanBeEqual(string s1, string s2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool canBeEqual(char* s1, char* s2) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func canBeEqual(s1 string, s2 string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun canBeEqual(s1: String, s2: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func canBeEqual(_ s1: String, _ s2: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn can_be_equal(s1: String, s2: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s1\n# @param {String} s2\n# @return {Boolean}\ndef can_be_equal(s1, s2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s1\n     * @param String $s2\n     * @return Boolean\n     */\n    function canBeEqual($s1, $s2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool canBeEqual(String s1, String s2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def canBeEqual(s1: String, s2: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec can_be_equal(s1 :: String.t, s2 :: String.t) :: boolean\n  def can_be_equal(s1, s2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec can_be_equal(S1 :: unicode:unicode_binary(), S2 :: unicode:unicode_binary()) -> boolean().\ncan_be_equal(S1, S2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (can-be-equal s1 s2)\n  (-> string? string? boolean?)\n  )"
+    }
+  ],
+  "solution": null
+}

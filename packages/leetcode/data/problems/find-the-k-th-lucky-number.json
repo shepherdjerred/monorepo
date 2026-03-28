@@ -1,0 +1,144 @@
+{
+  "questionId": "3030",
+  "questionFrontendId": "2802",
+  "title": "Find The K-th Lucky Number",
+  "titleSlug": "find-the-k-th-lucky-number",
+  "difficulty": "Medium",
+  "content": "<p>We know that <code>4</code> and <code>7</code> are <strong>lucky</strong> digits. Also, a number is called <strong>lucky</strong>&nbsp;if it contains <strong>only</strong> lucky digits.</p>\n\n<p>You are given an integer <code>k</code>, return<em> the </em><code>k<sup>th</sup></code><em>&nbsp;lucky number represented as a <strong>string</strong>.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> k = 4\n<strong>Output:</strong> &quot;47&quot;\n<strong>Explanation:</strong> The first lucky number is 4, the second one is 7, the third one is 44 and the fourth one is 47.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> k = 10\n<strong>Output:</strong> &quot;477&quot;\n<strong>Explanation:</strong> Here are lucky numbers sorted in increasing order:\n4, 7, 44, 47, 74, 77, 444, 447, 474, 477. So the 10<sup>th</sup> lucky number is 477.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> k = 1000\n<strong>Output:</strong> &quot;777747447&quot;\n<strong>Explanation:</strong> It can be shown that the 1000<sup>th</sup> lucky number is 777747447.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "<div class=\"_1l1MA\">The number of lucky numbers with <strong>exactly</strong> <code>n</code> digits is equal to <code>2<sup>n</sup></code>.</div>",
+    "<div class=\"_1l1MA\">We can obtain how many digits the <code>k<sup>th</sup></code> lucky number has.</div>",
+    "<div class=\"_1l1MA\">Imagine we know that <code>k<sup>th</sup></code> lucky number has <code>c</code> digits. Then calculate how many numbers with <code>c</code> digits exist before the <code>k<sup>th</sup></code> lucky number.</div>",
+    "<div class=\"_1l1MA\">Imagine the number from the previous hint is <code>x</code>. Now look at the binary representation of <code>x</code> and add some leading zero to make its length equal to <code>c</code>.</div>",
+    "<div class=\"_1l1MA\">Replace <code>0</code> and <code>1</code> with <code>4</code> and <code>7</code> in the number you've obtained from the previous hint.</div>"
+  ],
+  "metaData": "{\n  \"name\": \"kthLuckyNumber\",\n  \"params\": [\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"6.3K\", \"totalSubmission\": \"8.3K\", \"totalAcceptedRaw\": 6309, \"totalSubmissionRaw\": 8291, \"acRate\": \"76.1%\"}",
+  "likes": 64,
+  "dislikes": 15,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "4",
+    "10",
+    "1000"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string kthLuckyNumber(int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String kthLuckyNumber(int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def kthLuckyNumber(self, k: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def kthLuckyNumber(self, k):\n        \"\"\"\n        :type k: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} k\n * @return {string}\n */\nvar kthLuckyNumber = function(k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function kthLuckyNumber(k: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string KthLuckyNumber(int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* kthLuckyNumber(int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func kthLuckyNumber(k int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun kthLuckyNumber(k: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func kthLuckyNumber(_ k: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn kth_lucky_number(k: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} k\n# @return {String}\ndef kth_lucky_number(k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $k\n     * @return String\n     */\n    function kthLuckyNumber($k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String kthLuckyNumber(int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def kthLuckyNumber(k: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec kth_lucky_number(k :: integer) :: String.t\n  def kth_lucky_number(k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec kth_lucky_number(K :: integer()) -> unicode:unicode_binary().\nkth_lucky_number(K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (kth-lucky-number k)\n  (-> exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2325",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Count Digits \n\n#### Intuition\n\nThe brute force solution is to generate all of the lucky numbers up to `k` and then return the <code class=\"\">k<sup>th</sup></code> one.\n\nLet's start by generating the first few lucky numbers.\n\n| k | Number |\n|:-:|:------:|\n| 1 |   4    |\n| 2 |   7    |\n| 3 |   44   |\n| 4 |   47   |\n| 5 |   74   |\n| 6 |   77   |\n\nDouble-digit lucky numbers are created by prepending a `4` or a `7` to the left of the first two lucky numbers. Prepend means to add something at the beginning of another thing.\n\nThis process is inefficient for generating large lucky numbers because we generate many lucky numbers that we do not need. Can we identify a pattern to find the <code class=\"\">k<sup>th</sup></code> lucky number without generating all the previous lucky numbers?\n\nThere are two double-digit lucky numbers for each of the two single-digit lucky numbers, for a total of four double-digit lucky numbers. \n\nWe can identify a relationship between the number of digits of a lucky number and the number of lucky numbers with that many digits. Let's assume that we have the list of lucky numbers with ${c - 1}$ digits. We can generate the list of lucky numbers with ${c}$ digits by appending a `\"4\"` or `\"7\"` to the left side of each lucky number in that list. \n\nWe know there are two lucky numbers that have a single digit. Additionally, we generate two lucky numbers with ${c}$ digits for each lucky number with ${c - 1}$ digits. Therefore, there are $2^c$ lucky numbers with $c$ digits. \n\nLet's develop a strategy for finding the <code class=\"\">p<sup>th</sup></code> lucky number with `c` digits. We'll start with `c = 3`.\n\nThe values `4` and `7` are simply placeholders and can be replaced with any other digits. If we were to replace the digits of the lucky numbers listed in the table with `0` and `1`, they would represent binary numbers.\n\nWith this insight, we can examine the binary representation of lucky numbers to find patterns that help us solve the problem. Let's replace `4` with `0` and `7` with `1` to create the patterns shown below. We'll compare this with the binary representation of `p`.\n\n| p | Number |Replace 4-> 0 & 7->1  | Binary Representation of p |\n|:-:|:------:|:--------------------:|:--------------------------:|\n| 1 |   444  |         000          |            001             |\n| 2 |   447  |         001          |            010             |\n| 3 |   474  |         010          |            011             |\n| 4 |   477  |         011          |            010             |\n| 5 |   744  |         100          |            101             | \n| 6 |   747  |         101          |            110             |\n| 7 |   774  |         110          |            111             |\n| 8 |   777  |         111          |           1000             |\n\nBy analyzing the table, we can see that the <code class=\"\">p<sup>th</sup></code> lucky number with three digits follows the same pattern as `p - 1` represented in binary. This happens because, as we mentioned, `\"4\"` and `\"7\"` can be replaced with any other symbols. The lucky numbers are 1-indexed, and binary numbers are 0-indexed, which is why we need to subtract `1` from `p`.\n\nFor example, when `p = 7`, `7 -1 = 6`. Six is `110` in binary. We replace the digits to get `\"774\"` as the <code class=\"\">7<sup>th</sup></code> lucky number with three digits.\n\nThere are `6` lucky numbers with three digits that are less than the <code class=\"\">7<sup>th</sup></code> lucky number, `\"774\"`. `p - 1` represents the number of lucky numbers with `c` digits that are less than the <code class=\"\">p<sup>th</sup></code> lucky number. \n\nTo determine the <code class=\"\">p<sup>th</sup></code> lucky number with `c` digits, we set `x` equal to `p - 1`. We convert `x` to its binary representation, then replace each `0` with `4` and each `1` with `7`. If the resulting number has fewer than `c` digits, we prepend `4`s to the left until it reaches the desired length.\n\n**Example:** c = 3, p = 7\n\n```\nx = p - 1\nx = 6 (110) in binary\npthLuckyNum = 774\n```\n\nLet's break down the original problem of finding the <code class=\"\">k<sup>th</sup></code> lucky number into smaller subproblems for which we already have solutions.\n\nIf the <code class=\"\">k<sup>th</sup></code> lucky number has `c` digits, the key is to find `x`, where `x` is the number of lucky numbers with `c` digits that are less than the <code class=\"\">k<sup>th</sup></code> lucky number.\n\nWe will use `c` to store the number of digits in the <code class=\"\">k<sup>th</sup></code> lucky number, and `numCount` to store the number of lucky numbers that have `c` or fewer digits.\n\nWe start by calculating `c` and `numCount`. For each digit in `k`, we add `1` to `c` and add $2^\\text{c}$ to `numCount`. $2^\\text{c}$ is the number of lucky numbers with `c` digits. \n\n**Example:** k = 13, lucky num = 774\n\n```\nc = 3 \nnumCount = 2^1 + 2^2 + 2^3 = 14\n```\n\nWe can calculate `x` by subtracting the number of lucky numbers with fewer than `c` digits from `k - 1`.\n\nThe equation for `x` is : `x = k - 1 - (num_count - 2^c)`\n\n`(num_count - 2^c)` is the number of lucky numbers with fewer than `c` digits. `numCount` is the number of lucky numbers that have `c` or fewer digits, so we subtract $2^c$ from `numCount` because $2^c$ represents the total number of lucky numbers with exactly `c` digits.\n\n```\nx = k - 1 - (num_count - 2^c)\nx = 13 - 1 - (14 - 8)\nx = 6\n```\n\nNext, we add the digits to the result string. We traverse the binary representation of `x` from the least to the most significant digit (right to left). If the current bit in `x` is `0`, we prepend `\"4\"` to the left of the result. Otherwise, the current bit in `x` is `1`, so we prepend `\"7\"` to the result.\n\n```\nx = 6 (110) in binary\nkthLuckyNum = 774\n```\n\n#### Algorithm\n\n1. Initialize the following variables:\n    - `c` to `0`. Stores the number of digits in the <code class=\"\">k<sup>th</sup></code> lucky number.\n    - `numCount` to `0`. Stores the number of lucky numbers with `c` or fewer digits.\n2. Calculate the number of digits in the <code class=\"\">k<sup>th</sup></code> lucky number. While `numCount` is less than `k`:\n    - Increment `c` by `1`.\n    - Add the number of lucky numbers with `c` digits ($2^c$) to `numCount`.\n3. Calculate `x`, the number of lucky numbers with `c` digits before the <code class=\"\">k<sup>th</sup></code> number. Subtract the number of lucky numbers with exactly `c` digits, $2^c$, from `numCount` to find the number of lucky numbers with less than `c` digits, then subtract this value from `k - 1`.\n4. Initialize `kthLuckyNum` as an empty string.\n5. Build the result string using the binary representation of `x`. `0` corresponds to `\"4\"` and `1` corresponds to `\"7\"`. For each `digit`:\n    - If the least significant bit of `x` is `1`, set `digit` to `\"7\"`.\n    - Otherwise, the least significant bit is `0`, so set `digit` to `\"4\"`.\n    - Preppend `digit` to the left of `kthLuckyNum`.\n    - Divide `x` by `2` using integer division to move the next bit to the least significant bit position.\n6. Return the `kthLuckyNum`.\n\nThe algorithm is visualized below:\n\n!?!../Documents/2802/2802_slideshow.json:570,380!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/aJHQcvWo/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"aJHQcvWo\"></iframe>\n\n#### Complexity Analysis\n\nLet $k$ be the given `k`.\n\n* Time complexity: $O((\\log k)^2)$\n\n    The binary representation of the `kthLuckyNum` has $\\log (k + 1)$ digits, rounded down to the nearest integer. We can represent this as $O(\\log k)$.\n    \n    The loops to calculate the number of digits in the <code class=\"\">k<sup>th</sup></code> lucky number and build the result using `x` each iterate once for each digit, $\\log (k + 1)$ times. Prepending a character to the left of a string takes, at worst $O(n)$, where $n$ is the length of the string.\n\n    Therefore, the overall space complexity is $O(\\log k + (\\log k)^2)$, which we can simplify to $O((\\log k)^2)$.\n\n\n* Space complexity: $O(1)$ (Python3 & C++) or $O(\\log k)$ (Java)\n\n    In the C++ and Python3 implementations, `kthLuckyNum` is only used to store the output, so it does not count toward the space complexity. We use a few variables to calculate the result, but no data structures that grow with input size, so the space complexity is constant, i.e. $O(1)$.\n\n    The Java implementation uses a string builder for `kthLuckyNum`, which requires $O(\\log k)$ auxiliary space.\n\n---\n\n### Approach 2: Bit Manipulation\n\n#### Intuition\n\nThe previous approach used binary numbers, which means we may be able to develop a more efficient approach using bit manipulation.\n\nLet's examine the relationship between the binary string corresponding to the <code class=\"\">k<sup>th</sup></code> lucky number and the binary representation of `k`. \n\n| k | Number | Replace 4-> 0 & 7->1 | Binary Representation of k |\n|:-:|:------:|:--------------------:|:--------------------------:|\n| 1 |   4    |          0           |              1             |\n| 2 |   7    |          1           |              10            |\n| 3 |   44   |          00          |              11            |\n| 4 |   47   |          01          |              100           |\n| 5 |   74   |          10          |              101           |\n| 6 |   77   |          11          |             110            |\n| 7 |   444  |         000          |              111           |\n| 8 |   447  |         001          |              1000          |\n| 9 |   474  |         010          |            1001            |\n| 10|   477  |         011          |              1010          |\n| 11|   744  |         100          |            1011            |\n| 12|   747  |         101          |              1100          |\n| 13|   774  |         110          |              1101          |\n| 14|   777  |         111          |              1110          |\n| 15|  4444  |         0000         |              1111          |\n| 16|  4447  |         0001         |             10000          |\n\nObserving the pattern in the table reveals the following: to find the <code class=\"\">k<sup>th</sup></code> lucky number, we increment `k` by one, convert the result to its binary representation, drop the most significant bit, and then replace `0`s with `4`s and `1`s with `7`s. \n\nFor example, if `k = 5`, incrementing by one gives `6`, which in binary is `110`. Dropping the most significant bit gives `10`, and replacing the `0`s with `4`s and `1`s with `7`s results in the lucky number `\"74\"`.\n\nWe can construct the result from the binary number in a similar manner to the previous method. This process continues as long as `k` is greater than `1`, which allows us to skip the last bit position.\n\nBy skipping the last bit position, we effectively reduce the count by excluding lucky numbers that have fewer digits than the <code class=\"\">k<sup>th</sup></code> lucky number. This method works similarly to the previous approach.\n\n#### Algorithm\n\n1. Set `k` to `k + 1`.\n2. Initialize `kthLuckyNum` as an empty string.\n3. Build the result string using the binary representation of `k`. `0` corresponds to `\"4\"` and `1` corresponds to `\"7\"`. For each `digit`:\n    - If the least significant bit of `k` is `1`, prepend `\"7\"` to the left of `kthLuckyNum`.\n    - Otherwise, the least significant bit is `0`, prepend `\"4\"` to `kthLuckyNum`.\n    - Shift `k` by `1` so the next bit moves to the least significant bit position.\n4. Return the `kthLuckyNum`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DsfYR7eB/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"DsfYR7eB\"></iframe>\n\n#### Complexity Analysis\n\nLet $k$ be the given `k`.\n\n* Time complexity: $O((\\log k)^2)$\n\n    The binary representation of the `kthLuckyNum` has $\\log (k + 1)$ digits, rounded down to the nearest integer. We can represent this as $O(\\log k)$. \n    \n    The loop runs once for each digit in the `kthLuckyNum`. Prepending a character to the left of a string takes at worst $O(n)$ where $n$ is the length of the string. Therefore, the space complexity is $O((\\log k)^2)$.\n\n\n* Space complexity: $O(1)$ (Python3 & C++) or $O(\\log k)$ (Java)\n\n    In the C++ and Python3 implementations, `kthLuckyNum` is only used to store the output, so it does not count toward the space complexity. We use a few variables to calculate the result, but no data structures that grow with input size, so the space complexity is constant, i.e. $O(1)$.\n\n    The Java implementation uses a string builder for `kthLuckyNum`, which requires $O(\\log k)$ auxiliary space.\n\n---\n\n### Approach 3: Optimized Bit Manipulation\n\n#### Intuition\n\nThe previous approaches build the <code class=\"\">k<sup>th</sup></code> lucky number as a string by prepending each character to the left. This may require resizing the string, which results in an inefficient time complexity.\n\nIn Java and Python, strings are immutable, which means they cannot be changed after they are created. \n\nWe can optimize the string-building process by creating a mutable binary representation of `k + 1`, excluding the most significant `1` and any bits to the left of it.\n\nThen, we can replace `0` with `4` and `1` with `7` to obtain the <code class=\"\">k<sup>th</sup></code> lucky number in logarithmic time.\n\n#### Algorithm\n\n1. Set `k` to `k + 1`.\n2. Create a mutable binary representation of `k` up to the most significant `1`.\n3. Build the result string using the binary representation of `k`. Replace with `0` with `'4'` and `1` with `'7'`.\n4. Return the `kthLuckyNum`.\n\n#### Implementation\n\n> Note: Strings are mutable in C++. Therefore, instead of creating a mutable binary representation of `k,` we calculate the number of digits the <code class=\"\">k<sup>th</sup></code> lucky number has using `log2(k)` and initialize `kthLuckyNum` to that size. This helps limit the complexity because the method for converting a number to a binary string in C++, `bitset<32>(k).to_string()`, uses a fixed amount of space and time.\n\n<iframe src=\"https://leetcode.com/playground/i9xx37rb/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"i9xx37rb\"></iframe>\n\n#### Complexity Analysis\n\nLet $k$ be the given `k`.\n\n* Time complexity: $O(\\log k)$\n\n    The binary representation of the `kthLuckyNum` has $\\log (k + 1)$ digits, rounded down to the nearest integer. We can represent this as $O(\\log k)$.\n    \n    Creating the mutable binary representation of `k` up to the most significant `1` takes $O(\\log k)$. The loop runs once for each digit in the `kthLuckyNum`. $O(1)$ work is performed inside the loop. Therefore, the time complexity is $O(\\log k)$.\n\n\n* Space complexity: $O(\\log k)$ (Java and Python3) or $O(1)$ (C++)\n\n    Storing the binary representation of `k` up to the most significant `1` requires $O(\\log k)$ space.\n    \n    The Java implementation also uses a char array of size $O(\\log k)$.\n\n    The C++ implementation doesn't store the binary representation of `k`. `kthLuckyNum` is only used to store the output, so it does not count toward the space complexity. This implementation only requires constant, i.e. $O(1)$ space.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

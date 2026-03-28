@@ -1,0 +1,140 @@
+{
+  "questionId": "3493",
+  "questionFrontendId": "3228",
+  "title": "Maximum Number of Operations to Move Ones to the End",
+  "titleSlug": "maximum-number-of-operations-to-move-ones-to-the-end",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <span data-keyword=\"binary-string\">binary string</span> <code>s</code>.</p>\n\n<p>You can perform the following operation on the string <strong>any</strong> number of times:</p>\n\n<ul>\n\t<li>Choose <strong>any</strong> index <code>i</code> from the string where <code>i + 1 &lt; s.length</code> such that <code>s[i] == &#39;1&#39;</code> and <code>s[i + 1] == &#39;0&#39;</code>.</li>\n\t<li>Move the character <code>s[i]</code> to the <strong>right</strong> until it reaches the end of the string or another <code>&#39;1&#39;</code>. For example, for <code>s = &quot;010010&quot;</code>, if we choose <code>i = 1</code>, the resulting string will be <code>s = &quot;0<strong><u>001</u></strong>10&quot;</code>.</li>\n</ul>\n\n<p>Return the <strong>maximum</strong> number of operations that you can perform.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;1001101&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">4</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>We can perform the following operations:</p>\n\n<ul>\n\t<li>Choose index <code>i = 0</code>. The resulting string is <code>s = &quot;<u><strong>001</strong></u>1101&quot;</code>.</li>\n\t<li>Choose index <code>i = 4</code>. The resulting string is <code>s = &quot;0011<u><strong>01</strong></u>1&quot;</code>.</li>\n\t<li>Choose index <code>i = 3</code>. The resulting string is <code>s = &quot;001<strong><u>01</u></strong>11&quot;</code>.</li>\n\t<li>Choose index <code>i = 2</code>. The resulting string is <code>s = &quot;00<strong><u>01</u></strong>111&quot;</code>.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;00111&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s[i]</code> is either <code>&#39;0&#39;</code> or <code>&#39;1&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "It is optimal to perform the operation on the lowest index possible each time.",
+    "Traverse the string from left to right and perform the operation every time it is possible."
+  ],
+  "metaData": "{\n  \"name\": \"maxOperations\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"123.9K\", \"totalSubmission\": \"184.5K\", \"totalAcceptedRaw\": 123882, \"totalSubmissionRaw\": 184486, \"acRate\": \"67.1%\"}",
+  "likes": 531,
+  "dislikes": 38,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"1001101\"",
+    "\"00111\""
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxOperations(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxOperations(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxOperations(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxOperations(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar maxOperations = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxOperations(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxOperations(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxOperations(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxOperations(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxOperations(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxOperations(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_operations(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef max_operations(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function maxOperations($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxOperations(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxOperations(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_operations(s :: String.t) :: integer\n  def max_operations(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_operations(S :: unicode:unicode_binary()) -> integer().\nmax_operations(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-operations s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2873",
+    "content": "### Approach: Greedy + Counting\n\n#### Intuition\n\nThe problem asks us to calculate the maximum number of operations required to move all $1$s to the end of the string. We can start by selecting a $1$ whose next character is $0$, then move this $1$ to the right until it is blocked by another $1$ or reaches the end of the string.\n\nEach $1$ maintains its relative position, so its final position in the string is determined. The more times a $1$ gets blocked during movement, the greater its contribution to the total number of operations.\n\nIf we perform the operations on each $1$ from right to left, each $1$ would need at most one operation to reach its final position, meaning no $1$ would be blocked. Therefore, to maximize the number of operations, we should perform them greedily from left to right, allowing each $1$ to be blocked more often and thus increasing the total count.\n\nThe algorithm logic is as follows:\n\n- Traverse the string $s$ from left to right. For each segment of consecutive $0$s, add the count of $1$s that appear before the first $0$ in this segment to the answer, since all those previous $1$s contribute one operation each.\n\n- If the current character is $1$, increment the counter `countOne` by 1, indicating that there is one more $1$ that can potentially be blocked later.\n\n- After completing the traversal, return the final answer.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/MHd2K6go/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"MHd2K6go\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(n)$.\n  \n  We traverse the string once.\n\n- Space complexity: $O(1)$.\n  \n  Only a few additional variables are used.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

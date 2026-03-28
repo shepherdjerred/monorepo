@@ -1,0 +1,139 @@
+{
+  "questionId": "3216",
+  "questionFrontendId": "2927",
+  "title": "Distribute Candies Among Children III",
+  "titleSlug": "distribute-candies-among-children-iii",
+  "difficulty": "Hard",
+  "content": "<p>You are given two positive integers <code>n</code> and <code>limit</code>.</p>\n\n<p>Return <em>the <strong>total number</strong> of ways to distribute </em><code>n</code> <em>candies among </em><code>3</code><em> children such that no child gets more than </em><code>limit</code><em> candies.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 5, limit = 2\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> There are 3 ways to distribute 5 candies such that no child gets more than 2 candies: (1, 2, 2), (2, 1, 2) and (2, 2, 1).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, limit = 3\n<strong>Output:</strong> 10\n<strong>Explanation:</strong> There are 10 ways to distribute 3 candies such that no child gets more than 3 candies: (0, 0, 3), (0, 1, 2), (0, 2, 1), (0, 3, 0), (1, 0, 2), (1, 1, 1), (1, 2, 0), (2, 0, 1), (2, 1, 0) and (3, 0, 0).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>8</sup></code></li>\n\t<li><code>1 &lt;= limit &lt;= 10<sup>8</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Try to solve the problem using combinatorics.",
+    "If the limit didn’t exist, the problem would be distributing <code>n</code> candies between <code>3</code> children.",
+    "The answer to the above problem would be <code>C(n + 2, 2)</code>.",
+    "Now try to combine this with the Inclusion-exclusion principle.",
+    "Apart from the above solution, there are other mathematical solutions that you can think of."
+  ],
+  "metaData": "{\n  \"name\": \"distributeCandies\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"limit\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"3K\", \"totalSubmission\": \"5.3K\", \"totalAcceptedRaw\": 3021, \"totalSubmissionRaw\": 5276, \"acRate\": \"57.3%\"}",
+  "likes": 25,
+  "dislikes": 7,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "5\n2",
+    "3\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"rubrik\", \"name\": \"Rubrik\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Combinatorics",
+      "slug": "combinatorics"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long distributeCandies(int n, int limit) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long distributeCandies(int n, int limit) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def distributeCandies(self, n: int, limit: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def distributeCandies(self, n, limit):\n        \"\"\"\n        :type n: int\n        :type limit: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} limit\n * @return {number}\n */\nvar distributeCandies = function(n, limit) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function distributeCandies(n: number, limit: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long DistributeCandies(int n, int limit) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long distributeCandies(int n, int limit) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func distributeCandies(n int, limit int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun distributeCandies(n: Int, limit: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func distributeCandies(_ n: Int, _ limit: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn distribute_candies(n: i32, limit: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} limit\n# @return {Integer}\ndef distribute_candies(n, limit)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $limit\n     * @return Integer\n     */\n    function distributeCandies($n, $limit) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int distributeCandies(int n, int limit) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def distributeCandies(n: Int, limit: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec distribute_candies(n :: integer, limit :: integer) :: integer\n  def distribute_candies(n, limit) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec distribute_candies(N :: integer(), Limit :: integer()) -> integer().\ndistribute_candies(N, Limit) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (distribute-candies n limit)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2765",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach: Inclusion-Exclusion Principle\n\n#### Intuition\n\nWe can use the idea of conventional counting by subtracting invalid cases from all possible cases. Using the principle of inclusion-exclusion in combinatorial mathematics, we start by counting all possible combinations, then subtract the number of cases where at least one child receives more than $\\textit{limit}$ candies. However, this subtraction causes overcounting for cases where at least two children receive more than $\\textit{limit}$ candies, so we add those cases back. Similarly, when adding those cases back, the cases where all three children receive more than $\\textit{limit}$ candies are overcounted again, so we subtract those once more.\n\nSince children are allowed to receive zero candies, we can transform the problem into inserting two dividers into $n+3$ candies to distribute them among three children. There are $n+2$ gaps between candies where the dividers can be placed, so the total number of cases is $C_{n+2}^2$, where $C$ represents the number of combinations.\n\nTo count cases where at least one child receives more than $\\textit{limit}$ candies, we first give $\\textit{limit} + 1$ candies to any one child. Then we distribute the remaining $n - (\\textit{limit} + 1)$ candies among the three children. The number of such cases is $C_3^1 \\times C_{n-(\\textit{limit}+1)+2}^2$.\n\nFor cases where at least two children receive more than $\\textit{limit}$ candies, we first give $\\textit{limit} + 1$ candies to any two children, then distribute the remaining $n - 2 \\times (\\textit{limit} + 1)$ candies among the three children. The number of such cases is $C_3^2 \\times C_{n - 2(\\textit{limit} + 1) + 2}^2$.\n\nFor cases where all three children receive more than $\\textit{limit}$ candies, we first give $\\textit{limit} + 1$ candies to each child, then distribute the remaining $n - 3 \\times (\\textit{limit} + 1)$ candies among the three children. The number of such cases is $C_{n - 3(\\textit{limit} + 1) + 2}^2$.\n\nThus, the final number of valid cases is:\n\n$$\nC_{n+2}^2 - C_3^1 \\times C_{n-(\\textit{limit}+1)+2}^2 + C_3^2 \\times C_{n - 2(\\textit{limit}+1) + 2}^2 - C_{n - 3(\\textit{limit}+1) + 2}^2\n$$\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/i7tjnUwQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"i7tjnUwQ\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(1)$.\n\n  The result can be calculated directly.\n\n- Space complexity: $O(1)$.\n\n  Only a few additional variables are needed.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

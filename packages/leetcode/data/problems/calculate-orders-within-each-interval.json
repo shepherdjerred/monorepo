@@ -1,0 +1,48 @@
+{
+  "questionId": "3160",
+  "questionFrontendId": "2893",
+  "title": "Calculate Orders Within Each Interval",
+  "titleSlug": "calculate-orders-within-each-interval",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code><font face=\"monospace\">Orders</font></code></p>\n\n<pre>\n+-------------+------+ \n| Column Name | Type | \n+-------------+------+ \n| minute      | int  | \n| order_count | int  |\n+-------------+------+\nminute is the primary key for this table.\nEach row of this table contains the minute and number of orders received during that specific minute. The total number of rows will be a multiple of 6.\n</pre>\n\n<p>Write a query to calculate <strong>total</strong> <strong>orders</strong><b> </b>within each <strong>interval</strong>. Each interval is defined as a combination of <code>6</code> minutes.</p>\n\n<ul>\n\t<li>Minutes <code>1</code> to <code>6</code> fall within interval <code>1</code>, while minutes <code>7</code> to <code>12</code> belong to interval <code>2</code>, and so forth.</li>\n</ul>\n\n<p>Return<em> the result table ordered by <strong>interval_no</strong> in <strong>ascending</strong> order.</em></p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nOrders table:\n+--------+-------------+\n| minute | order_count | \n+--------+-------------+\n| 1      | 0           |\n| 2      | 2           | \n| 3      | 4           | \n| 4      | 6           | \n| 5      | 1           | \n| 6      | 4           | \n| 7      | 1           | \n| 8      | 2           | \n| 9      | 4           | \n| 10     | 1           | \n| 11     | 4           | \n| 12     | 6           | \n+--------+-------------+\n<strong>Output:</strong> \n+-------------+--------------+\n| interval_no | total_orders | \n+-------------+--------------+\n| 1           | 17           | \n| 2           | 18           |    \n+-------------+--------------+\n<strong>Explanation:</strong> \n- Interval number 1 comprises minutes from 1 to 6. The total orders in these six minutes are (0 + 2 + 4 + 6 + 1 + 4) = 17.\n- Interval number 2 comprises minutes from 7 to 12. The total orders in these six minutes are (1 + 2 + 4 + 1 + 4 + 6) = 18.\nReturning table orderd by interval_no in ascending order.</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table if not exists Orders(minute int, order_count int)\"], \"mssql\": [\"Create table Orders(minute int, order_count int)\"], \"oraclesql\": [\"Create table Orders(minute int, order_count int)\"], \"database\": true, \"name\": \"calculate_runs\", \"languages\": [\"mysql\", \"mssql\", \"oraclesql\", \"pythondata\"], \"pythondata\": [\"Orders = pd.DataFrame([], columns=['minute', 'order_count']).astype({'minute':'Int64', 'order_count':'Int64'})\"], \"database_schema\": {\"Orders\": {\"minute\": \"INT\", \"order_count\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"4.2K\", \"totalSubmission\": \"6.3K\", \"totalAcceptedRaw\": 4208, \"totalSubmissionRaw\": 6259, \"acRate\": \"67.2%\"}",
+  "likes": 23,
+  "dislikes": 3,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Orders\": [\"minute\", \"order_count\"]}, \"rows\": {\"Orders\":[[1,0],[2,2],[3,4],[4,6],[5,1],[6,4],[7,1],[8,2],[9,4],[10,1],[11,4],[12,6]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef calculate_runs(orders: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,141 @@
+{
+  "questionId": "3225",
+  "questionFrontendId": "2958",
+  "title": "Length of Longest Subarray With at Most K Frequency",
+  "titleSlug": "length-of-longest-subarray-with-at-most-k-frequency",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code> and an integer <code>k</code>.</p>\n\n<p>The <strong>frequency</strong> of an element <code>x</code> is the number of times it occurs in an array.</p>\n\n<p>An array is called <strong>good</strong> if the frequency of each element in this array is <strong>less than or equal</strong> to <code>k</code>.</p>\n\n<p>Return <em>the length of the <strong>longest</strong> <strong>good</strong> subarray of</em> <code>nums</code><em>.</em></p>\n\n<p>A <strong>subarray</strong> is a contiguous non-empty sequence of elements within an array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,1,2,3,1,2], k = 2\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> The longest possible good subarray is [1,2,3,1,2,3] since the values 1, 2, and 3 occur at most twice in this subarray. Note that the subarrays [2,3,1,2,3,1] and [3,1,2,3,1,2] are also good.\nIt can be shown that there are no good subarrays with length more than 6.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,1,2,1,2,1,2], k = 1\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The longest possible good subarray is [1,2] since the values 1 and 2 occur at most once in this subarray. Note that the subarray [2,1] is also good.\nIt can be shown that there are no good subarrays with length more than 2.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,5,5,5,5,5,5], k = 4\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The longest possible good subarray is [5,5,5,5] since the value 5 occurs 4 times in this subarray.\nIt can be shown that there are no good subarrays with length more than 4.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= nums.length</code></li>\n</ul>\n",
+  "hints": [
+    "For each index <code>i</code>, find the rightmost index <code>j >= i</code> such that the frequency of each element in the subarray <code>[i, j]</code> is at most <code>k</code>.",
+    "We can use 2 pointers / sliding window to achieve it."
+  ],
+  "metaData": "{\n  \"name\": \"maxSubarrayLength\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"190.9K\", \"totalSubmission\": \"338K\", \"totalAcceptedRaw\": 190910, \"totalSubmissionRaw\": 337981, \"acRate\": \"56.5%\"}",
+  "likes": 1184,
+  "dislikes": 37,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Substring with At Least K Repeating Characters\", \"titleSlug\": \"longest-substring-with-at-least-k-repeating-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,1,2,3,1,2]\n2",
+    "[1,2,1,2,1,2,1,2]\n1",
+    "[5,5,5,5,5,5,5]\n4"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"makemytrip\", \"name\": \"MakeMyTrip\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxSubarrayLength(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxSubarrayLength(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxSubarrayLength(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxSubarrayLength(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar maxSubarrayLength = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxSubarrayLength(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxSubarrayLength(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxSubarrayLength(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxSubarrayLength(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxSubarrayLength(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxSubarrayLength(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_subarray_length(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef max_subarray_length(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function maxSubarrayLength($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxSubarrayLength(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxSubarrayLength(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_subarray_length(nums :: [integer], k :: integer) :: integer\n  def max_subarray_length(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_subarray_length(Nums :: [integer()], K :: integer()) -> integer().\nmax_subarray_length(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-subarray-length nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2253",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThe given problem involves working with an integer array `nums` and an integer `k`. The task is to find the length of the longest subarray, referred to as a \"good\" subarray, where the frequency of each element in the subarray is less than or equal to `k`. In other words, we are looking for a contiguous sequence of elements in the array where the count of each distinct element does not exceed the given threshold `k`.\n\nApplications of this problem are scenarios where you need to analyze data with certain constraints on the frequency of elements. For example, in network traffic analysis, one might be interested in finding the longest sequence of time intervals where the frequency of certain events does not exceed a specified threshold. This problem can be relevant in various domains where analyzing and controlling the frequency of occurrences is crucial for meaningful insights or operations.\n\n---\n\n### Approach 1: Counting and Sliding Window\n\n#### Intuition\n\nIn approaching the given problem, the key objective is to find the length of the longest contiguous subarray, termed as \"good,\" based on the constraint that the frequency of each element within this subarray should be less than or equal to a given value, denoted as `k`. The solution lies in understanding the nature of the array and devising a strategy to efficiently identify and track the eligible subarrays.\n\nA crucial insight is recognizing that the goodness of a subarray is intricately tied to the frequency distribution of its elements. To efficiently capture this information, a mechanism is needed to monitor the frequency of each encountered element during the traversal of the array.\n\nGiven the need to find the longest good subarray, an intuitive approach is to utilize a sliding window technique. This involves defining two pointers, which dynamically adjust their positions based on the evolving conditions of the array. The sliding window allows us to efficiently maintain the goodness of the subarray by adjusting its size dynamically as we iterate over `nums`.\n\nNow, let's delve into the loop structure. The loop will iterate through each element of the array, updating the frequency of each encountered element. This counter is pivotal, as it stores the essential information about the array's composition.\n\nWithin this loop, there is a conditional check to ensure that the frequency of the current element does not violate the given constraint `k`. If, at any point, the frequency surpasses `k`, it indicates a breach of the goodness condition. To rectify this, a second pointer is used to shrink the window from the left, effectively reducing the frequency of elements until the goodness condition is restored.\n\nThe decision to check `frequency[nums[end]] > k` in the while loop is grounded in the fact that `frequency[nums[end]]` has already been updated within the `for` loop. This means that only the frequency of the current element (`nums[end]`) **could** be greater than `k` and thus is being assessed for compliance with the goodness condition. This sequence in the code ensures that the check is precise, targeting the specific element causing the potential violation.\n\nThroughout this process, the length of the current subarray meeting the goodness criteria is continuously updated. The maximum length encountered so far is stored as the final answer.\n\n!?!../Documents/2958/2958_Length_of_Longest_Subarray_With_at_Most_K_Frequency.json:3000,1687!?!\n\n#### Algorithm\n\n1. Initialize variables `ans` and `start`. Variable `ans` will store the length of the longest good subarray, and `start` will be used to track the start of the current subarray.\n2. Create an unordered map named `frequency` to keep track of the frequency of elements in the array.\n3. Iterate through the elements of the input array `nums` using a for loop with index `end`.\n4. Increment the frequency count of the current element `nums[end]` in the `frequency` dictionary.\n5. Enter a while loop to handle the condition where the frequency of the current element `nums[end]` exceeds the given threshold `k`. In this loop:\n   - Move the start of the subarray (`start`) one position forward.\n   - Decrement the frequency count of the element at index `start` (start of the current subarray) in the `frequency` dictionary.\n   - Repeat this process until the frequency of `nums[end]` in the current subarray becomes less than or equal to `k`.\n6. Update the length of the longest good subarray (`ans`) by taking the maximum of its current value and the difference between the current index `end` and the start index `start`.\n7. Continue the loop until all elements in the array are processed.\n8. Return the final value of `ans` as the length of the longest good subarray.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/b5P64fnm/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"b5P64fnm\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the length of `nums`.\n\n* Time complexity: $O(N)$. \n  - The outer loop iterates through each element in the array exactly once, as indicated by the range from 0 to the length of `nums` in the `for` loop.\n  - Inside this loop, the `while` loop with the `start` pointer performs a sliding window operation. However, note that the `start` pointer is increased and `frequency[nums[start]]` is decreased within this loop. The `start` pointer is never decreased after it is increased in the while loop. Hence, once an element is processed in the `while` loop, it will not be revisited. Therefore, each element is processed at most twice: once during the outer loop and at most once during the `while` loop.\n  - In the worst case, the `while` loop could iterate through the entire length of the array during its lifetime. However, since each element is processed at most twice, the total number of iterations across all elements is linear, making the time complexity of the algorithm $O(N)$.\n\n* Space complexity: $O(N)$. The data structure used to store `frequency` incurs a space complexity of $O(N)$, since in the worst case the array `nums` can have all unique elements.\n\n---\n\n### Approach 2: Counting and Sliding Window without Nested Loops\n\n#### Intuition\n\nWe have already discussed using sliding window and counting to solve this problem. Now let's develop an approach without nested loops.\n\nFirstly, we initialize two pointers, one marking the `start` and the other marking the `end` of the window. As we iterate through the array, we gradually expand the window by moving the `end` pointer forward. At each step, we update a data structure to keep track of the frequency of elements within the current window. We also maintain an integer that signifies the count of characters with a frequency greater than `k`\n\nNow, here's the crucial insight for this approach: we never shrink the size of the window. Instead, we only expand or move it. Why? Because we aim to find the longest good subarray, meaning once we've encountered a good subarray, we want to keep exploring larger subarrays to maximize the length.\n\nAs we process the array, we expand the window by adding the next element; we update the frequency of this element, then we check if its frequency would become `k + 1`. Why do we do this? If the frequency of the current element were to exceed `k`, it means we're introducing a \"bad\" element into the window because the frequency of all elements must be less than or equal to `k`. If the frequency of the current element is equal to `k + 1`, we must increment the count of characters with a frequency greater than `k`.\n\nIf we detect a breach in the \"goodness\" condition (count of characters with a frequency greater than `k` > 0), we move the window from the `start`. As we process new elements, the same size window is slid, instead of expanded, with each iteration, until the window meets the \"goodness\" condition again. If the frequency of the element at `start` is equal to `k` after decrementing its frequency, we decrement the count of characters with a frequency greater than `k`.  When this count is zero, we can continue as we did before we found a \"bad\" element, expanding the window with each new element. This process ensures that the size of our current window is equal to the largest \"good\" subarray encountered so far. \n\nIt's worth noting that since we don't decrease the size of the window, this doesn't guarantee that all explored subarrays of the current size are good. However, it does indicate that we've encountered at least one good subarray of that size in the past. And since our goal is to find the length of the longest good subarray, this information suffices.\n\n#### Algorithm\n\n**Algorithm: Longest Good Subarray**\n\n1. Initialize variables `n` to store the length of the input array `nums`, `frequency` as a Counter to keep track of the frequency of elements, `start` to mark the start index of the subarray, and `chars_with_freq_over_k` to count the number of elements with frequency exceeding `k`.\n2. Iterate through the array `nums` using a sliding window approach, with `start` and `end` pointers to define the current subarray.\n3. Increment the frequency of the element at index `end` in the `frequency` Counter.\n4. If the frequency of the element at index `end` becomes equal to `k + 1`, increment `chars_with_freq_over_k` to track the count of elements exceeding frequency `k`.\n5. If there are elements with frequency exceeding `k`:\n    - Decrement the frequency of the element at index `start` in the `frequency` counter as it moves out of the current window.\n    - If the frequency of the element at index `start` becomes equal to `k`, decrement `chars_with_freq_over_k` as it no longer exceeds frequency `k`.\n    - Increment the `start` pointer to move the window forward.\n6. Continue the process until the entire array is traversed.\n7. Return the length of the longest good subarray, which is calculated by subtracting the `start` index from the total length of the array.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/FcLVQMMa/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"FcLVQMMa\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the length of `nums`.\n\n* Time complexity: $O(N)$. We perform one pass over the given array `nums`. This incurs a time complexity of $O(N)$.\n\n* Space complexity: $O(N)$. The data structure used to store `frequency` incurs a space complexity of $O(N)$ since, in the worst case, the array `nums` can have all unique elements.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

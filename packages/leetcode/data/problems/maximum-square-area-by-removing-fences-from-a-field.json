@@ -1,0 +1,141 @@
+{
+  "questionId": "3250",
+  "questionFrontendId": "2975",
+  "title": "Maximum Square Area by Removing Fences From a Field",
+  "titleSlug": "maximum-square-area-by-removing-fences-from-a-field",
+  "difficulty": "Medium",
+  "content": "<p>There is a large <code>(m - 1) x (n - 1)</code> rectangular field with corners at <code>(1, 1)</code> and <code>(m, n)</code> containing some horizontal and vertical fences given in arrays <code>hFences</code> and <code>vFences</code> respectively.</p>\n\n<p>Horizontal fences are from the coordinates <code>(hFences[i], 1)</code> to <code>(hFences[i], n)</code> and vertical fences are from the coordinates <code>(1, vFences[i])</code> to <code>(m, vFences[i])</code>.</p>\n\n<p>Return <em>the <strong>maximum</strong> area of a <strong>square</strong> field that can be formed by <strong>removing</strong> some fences (<strong>possibly none</strong>) or </em><code>-1</code> <em>if it is impossible to make a square field</em>.</p>\n\n<p>Since the answer may be large, return it <strong>modulo</strong> <code>10<sup>9 </sup>+ 7</code>.</p>\n\n<p><strong>Note: </strong>The field is surrounded by two horizontal fences from the coordinates <code>(1, 1)</code> to <code>(1, n)</code> and <code>(m, 1)</code> to <code>(m, n)</code> and two vertical fences from the coordinates <code>(1, 1)</code> to <code>(m, 1)</code> and <code>(1, n)</code> to <code>(m, n)</code>. These fences <strong>cannot</strong> be removed.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/11/05/screenshot-from-2023-11-05-22-40-25.png\" /></p>\n\n<pre>\n<strong>Input:</strong> m = 4, n = 3, hFences = [2,3], vFences = [2]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> Removing the horizontal fence at 2 and the vertical fence at 2 will give a square field of area 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/11/22/maxsquareareaexample1.png\" style=\"width: 285px; height: 242px;\" /></p>\n\n<pre>\n<strong>Input:</strong> m = 6, n = 7, hFences = [2], vFences = [4]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> It can be proved that there is no way to create a square field by removing fences.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= m, n &lt;= 10<sup>9</sup></code></li>\n\t<li><code><font face=\"monospace\">1 &lt;= hF</font>ences<font face=\"monospace\">.length, vFences.length &lt;= 600</font></code></li>\n\t<li><code><font face=\"monospace\">1 &lt; hFences[i] &lt; m</font></code></li>\n\t<li><code><font face=\"monospace\">1 &lt; vFences[i] &lt; n</font></code></li>\n\t<li><code><font face=\"monospace\">hFences</font></code><font face=\"monospace\"> and </font><code><font face=\"monospace\">vFences</font></code><font face=\"monospace\"> are unique.</font></li>\n</ul>\n",
+  "hints": [
+    "Put <code>1</code> and <code>m</code> into <code>hFences</code>. The differences of any two values in the new <code>hFences</code> can be a horizontal edge of a rectangle.",
+    "Similarly put <code>1</code> and <code>n</code> into <code>vFences</code>. The differences of any two values in the new <code>vFences</code> can be a vertical edge of a rectangle.",
+    "Our goal is to find the maximum common value in both parts."
+  ],
+  "metaData": "{\n  \"name\": \"maximizeSquareArea\",\n  \"params\": [\n    {\n      \"name\": \"m\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"hFences\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"vFences\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"97.5K\", \"totalSubmission\": \"197.2K\", \"totalAcceptedRaw\": 97516, \"totalSubmissionRaw\": 197222, \"acRate\": \"49.4%\"}",
+  "likes": 454,
+  "dislikes": 162,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximize Area of Square Hole in Grid\", \"titleSlug\": \"maximize-area-of-square-hole-in-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "4\n3\n[2,3]\n[2]",
+    "6\n7\n[2]\n[4]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximizeSquareArea(int m, int n, vector<int>& hFences, vector<int>& vFences) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximizeSquareArea(int m, int n, int[] hFences, int[] vFences) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximizeSquareArea(self, m: int, n: int, hFences: List[int], vFences: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximizeSquareArea(self, m, n, hFences, vFences):\n        \"\"\"\n        :type m: int\n        :type n: int\n        :type hFences: List[int]\n        :type vFences: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} m\n * @param {number} n\n * @param {number[]} hFences\n * @param {number[]} vFences\n * @return {number}\n */\nvar maximizeSquareArea = function(m, n, hFences, vFences) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximizeSquareArea(m: number, n: number, hFences: number[], vFences: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximizeSquareArea(int m, int n, int[] hFences, int[] vFences) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximizeSquareArea(int m, int n, int* hFences, int hFencesSize, int* vFences, int vFencesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximizeSquareArea(m int, n int, hFences []int, vFences []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximizeSquareArea(m: Int, n: Int, hFences: IntArray, vFences: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximizeSquareArea(_ m: Int, _ n: Int, _ hFences: [Int], _ vFences: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximize_square_area(m: i32, n: i32, h_fences: Vec<i32>, v_fences: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} m\n# @param {Integer} n\n# @param {Integer[]} h_fences\n# @param {Integer[]} v_fences\n# @return {Integer}\ndef maximize_square_area(m, n, h_fences, v_fences)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $m\n     * @param Integer $n\n     * @param Integer[] $hFences\n     * @param Integer[] $vFences\n     * @return Integer\n     */\n    function maximizeSquareArea($m, $n, $hFences, $vFences) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximizeSquareArea(int m, int n, List<int> hFences, List<int> vFences) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximizeSquareArea(m: Int, n: Int, hFences: Array[Int], vFences: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximize_square_area(m :: integer, n :: integer, h_fences :: [integer], v_fences :: [integer]) :: integer\n  def maximize_square_area(m, n, h_fences, v_fences) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximize_square_area(M :: integer(), N :: integer(), HFences :: [integer()], VFences :: [integer()]) -> integer().\nmaximize_square_area(M, N, HFences, VFences) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximize-square-area m n hFences vFences)\n  (-> exact-integer? exact-integer? (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2904",
+    "content": "### Approach: Enumeration\n\n#### Intuition\n\nWe are asked to find the maximum area of a square field that can be formed by removing some fences. We can independently determine all possible square side lengths in the horizontal and vertical directions, obtain two sets of candidate lengths, and then find the maximum value in their intersection. The square of this maximum value is the answer. If the intersection of these two sets is empty, the answer is $-1$.\n\nSpecifically, by computing the distance between every pair of fences in the horizontal and vertical directions, we obtain all possible side lengths that can be formed by removing the fence segments between them. Any length that appears in both directions can serve as the side length of a square.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LhwDxndm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LhwDxndm\"></iframe>\n\n#### Complexity Analysis\n\nLet $h$ be the size of $\\textit{hFences}$ and $v$ be the size of $\\textit{vFences}$.\n\n- Time complexity: $O(h^2 + v^2)$.\n  \n  Enumerating all distances between pairs of horizontal fences takes $O(h^2)$ time, and doing the same for vertical fences takes $O(v^2)$ time. Iterating over one set and checking membership in the other takes linear time relative to the number of generated distances and does not change the overall complexity.\n\n- Space complexity: $O(h^2 + v^2)$.\n\n  In the worst case, all pairwise distances are distinct, so the sets storing possible side lengths require $O(h^2)$ and $O(v^2)$ space.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

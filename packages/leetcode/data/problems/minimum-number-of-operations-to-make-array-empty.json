@@ -1,0 +1,141 @@
+{
+  "questionId": "3094",
+  "questionFrontendId": "2870",
+  "title": "Minimum Number of Operations to Make Array Empty",
+  "titleSlug": "minimum-number-of-operations-to-make-array-empty",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> array <code>nums</code> consisting of positive integers.</p>\n\n<p>There are two types of operations that you can apply on the array <strong>any</strong> number of times:</p>\n\n<ul>\n\t<li>Choose <strong>two</strong> elements with <strong>equal</strong> values and <strong>delete</strong> them from the array.</li>\n\t<li>Choose <strong>three</strong> elements with <strong>equal</strong> values and <strong>delete</strong> them from the array.</li>\n</ul>\n\n<p>Return <em>the <strong>minimum</strong> number of operations required to make the array empty, or </em><code>-1</code><em> if it is not possible</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,3,3,2,2,4,2,3,4]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> We can apply the following operations to make the array empty:\n- Apply the first operation on the elements at indices 0 and 3. The resulting array is nums = [3,3,2,4,2,3,4].\n- Apply the first operation on the elements at indices 2 and 4. The resulting array is nums = [3,3,4,3,4].\n- Apply the second operation on the elements at indices 0, 1, and 3. The resulting array is nums = [4,4].\n- Apply the first operation on the elements at indices 0 and 1. The resulting array is nums = [].\nIt can be shown that we cannot make the array empty in less than 4 operations.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,1,2,2,3,3]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> It is impossible to empty the array.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>6</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Note:</strong> This question is the same as <a href=\"https://leetcode.com/problems/minimum-rounds-to-complete-all-tasks/description/\" target=\"_blank\">2244: Minimum Rounds to Complete All Tasks.</a></p>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"minOperations\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"198.4K\", \"totalSubmission\": \"319.5K\", \"totalAcceptedRaw\": 198367, \"totalSubmissionRaw\": 319488, \"acRate\": \"62.1%\"}",
+  "likes": 1443,
+  "dislikes": 70,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,3,3,2,2,4,2,3,4]",
+    "[2,1,2,2,3,3]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minOperations(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minOperations(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minOperations(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minOperations(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar minOperations = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minOperations(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinOperations(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minOperations(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minOperations(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minOperations(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minOperations(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_operations(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef min_operations(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function minOperations($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minOperations(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minOperations(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_operations(nums :: [integer]) :: integer\n  def min_operations(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_operations(Nums :: [integer()]) -> integer().\nmin_operations(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-operations nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2220",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nThis problem revolves around manipulating a given array of positive integers with two distinct operations: the removal of two elements with equal values or three elements with equal values. The objective is to find the minimum number of operations required to empty the array entirely. If achieving an empty array is not possible, the function should return -1. The challenge lies in strategically applying these operations to minimize their overall count. In essence, the problem serves as a computational exercise, testing one's algorithmic proficiency and logical reasoning in optimizing array manipulation operations.\n\n### Approach: Counting\n\n\n#### Intuition\n\nThe given problem introduces us to an array, `nums`, composed of positive integers, and presents two distinct operations that can be applied repeatedly: the removal of two elements with equal values or the removal of three elements with equal values. The ultimate objective is to ascertain the minimum number of operations required to empty the array entirely. However, if such a scenario proves impossible, the function is expected to return -1.\n\nSince we can only remove elements that are equal each time, we must find the frequency `count` of each element. To get the count of each element, we could create a counter `counter` to tally the occurrences of each unique element in the array. This step is crucial for understanding the composition of the array and determining the frequencies of each element. We can use a variable `ans` initialized to zero, to serve as the accumulator for the total number of operations required to make the array empty.\n\nThe first critical insight arises when considering elements with a count of 1 in the array. We must return `-1` immediately in such cases, as the removal of elements requires pairs or triplets, and a solitary element cannot satisfy this criterion.\n\nTo make sure we empty the array in the minimum number of operations, we need to make sure we are removing the maximum possible elements in each operation. That means we need to remove triplets whenever possible. Triplets get priority over pairs. This is shown in the following slides.\n\n!?!../Documents/2870/Minimum_Number_of_Operations_to_Make_Array_Empty.json:3000,1687!?!\n\nThe first conclusion that we can draw is that whenever the count of an element is a **multiple of 3**, it will take us `count / 3` operations to remove the elements of that kind from the array.\n\nExample: 3, 6, 9, 12,...\n\n```\n* count = 3\n    3 - 3 = 0\n    operations required = 1\n* count = 6\n    6 - 3 - 3  = 0\n    operations required = 2\n* count = 9\n    9 - 3 - 3 - 3  = 0\n    operations required = 3\n* count = 12\n    12 - 3 - 3 - 3 - 3  = 0\n    operations required = 4\n```\n\nNow, let's consider the scenario when the count of an element is **one** more than a multiple of 3.\n\nExample: 4, 7, 10, 13,...\n\nIn such instances, we can eliminate two pairs, thereby making the count divisible by 3. Following this adjustment, we can proceed to remove the remaining numbers in triplets. \n\n```\n* count = 4\n    4 - 2 - 2 = 0 -> eliminate two pairs\n    operations required = 2\n* count = 7\n    7 - 2 - 2 = 3 -> eliminate two pairs\n    3 - 3 = 0 -> eliminate remaining triplets\n    operations required = 3\n* count = 10\n    10 - 2 - 2 = 6 -> eliminate two pairs\n    6 - 3 - 3 = 0 -> eliminate remaining triplets\n    operations required = 4\n* count = 13\n    13 - 2 - 2 = 9 -> eliminate two pairs\n    9 - 3 - 3 - 3 = 0 -> eliminate remaining triplets\n    operations required = 5\n```\n\nNow, let's consider the scenario when the count of an element is **two** more than a multiple of 3.\n\nExample: 5, 8, 11, 14,...\n\nIn such instances, we can eliminate one pair, thereby making the count divisible by 3. Following this adjustment, we can proceed to remove the remaining numbers in triplets.\n\n```\n* count = 5\n    5 - 2 = 3 -> eliminate one pair\n    3 - 3 = 0 -> eliminate remaining triplets\n    operations required = 2\n* count = 8\n    8 - 2 = 6 -> eliminate one pair\n    6 - 3 - 3 = 0 -> eliminate remaining triplets\n    operations required = 3\n* count = 11\n    11 - 2 = 9 -> eliminate one pair\n    9 - 3 - 3 - 3 = 0 -> eliminate remaining triplets\n    operations required = 4\n* count = 14\n    14 - 2 = 12 -> eliminate one pair\n    12 - 3 - 3 - 3 - 3 = 0 -> eliminate remaining triplets\n    operations required = 5\n```\n\nNow, that we have the optimal technique to remove elements from the array. Let's look at the pattern that has formed.\n\n|   Count  | Operations required to remove elements |\n| ---------|----------------------------------------|\n| 1 | return -1 |\n| 2 | 1 |\n| 3 | 1 |\n| 4 | 2 |\n| 5 | 2 |\n| 6 | 2 |\n| 7 | 3 |\n| 8 | 3 |\n| 9 | 3 |\n| 10 | 4 |\n| 11 | 4 |\n| 12 | 4 |\n\nFrom the information presented in this table, we can deduce that the number of operations needed to remove a total of `count` elements of a given kind is represented by the expression `ceil(count / 3)`, where the `ceil` method rounds up the decimal result of `count / 3`. Except in the scenario where the count of the element is 1, making it impossible to remove elements of that kind, in which case we should return -1.\n\nOnce we have determined the number of operations needed to remove each type of element, we can aggregate these values and return the result as `ans`.\n\n#### Algorithm\n\n1. Create a hashmap object named `counter` to count the occurrences of each element in the given array `nums`. Initialize a variable `ans = 0` to keep track of the minimum number of operations required.\n2. For each value `c` in the counter's values:\n    - Check if `c` is equal to 1. If yes, return -1, as it is not possible to perform the required operations on a single element.\n    - Else increment the answer `ans` by the ceiling division of `c` by 3.\n3. After iterating through all counts in the Counter, return the final value of `ans` as the minimum number of operations required to empty the array.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/BtBQFcD5/shared\" frameBorder=\"0\" width=\"100%\" height=\"344\" name=\"BtBQFcD5\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of elements in nums.\n\n* Time complexity: $O(N)$. Iterating over `nums` to count each number will incur a time complexity of $O(N)$. The subsequent loop iterating over `counter` will also incur a time complexity of $O(N)$ since there could be at most $N$ unique elements in the hash map.\n\n* Space complexity: $O(N)$. `counter` will incur a space complexity of $O(N)$ since there could be at most $N$ elements stored in the hash map in the worst-case scenario.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

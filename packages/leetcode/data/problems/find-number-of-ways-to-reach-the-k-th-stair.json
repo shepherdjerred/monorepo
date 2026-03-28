@@ -1,0 +1,144 @@
+{
+  "questionId": "3414",
+  "questionFrontendId": "3154",
+  "title": "Find Number of Ways to Reach the K-th Stair",
+  "titleSlug": "find-number-of-ways-to-reach-the-k-th-stair",
+  "difficulty": "Hard",
+  "content": "<p>You are given a <strong>non-negative</strong> integer <code>k</code>. There exists a staircase with an infinite number of stairs, with the <strong>lowest</strong> stair numbered 0.</p>\n\n<p>Alice has an integer <code>jump</code>, with an initial value of 0. She starts on stair 1 and wants to reach stair <code>k</code> using <strong>any</strong> number of <strong>operations</strong>. If she is on stair <code>i</code>, in one <strong>operation</strong> she can:</p>\n\n<ul>\n\t<li>Go down to stair <code>i - 1</code>. This operation <strong>cannot</strong> be used consecutively or on stair 0.</li>\n\t<li>Go up to stair <code>i + 2<sup>jump</sup></code>. And then, <code>jump</code> becomes <code>jump + 1</code>.</li>\n</ul>\n\n<p>Return the <em>total</em> number of ways Alice can reach stair <code>k</code>.</p>\n\n<p><strong>Note</strong> that it is possible that Alice reaches the stair <code>k</code>, and performs some operations to reach the stair <code>k</code> again.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">k = 0</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The 2 possible ways of reaching stair 0 are:</p>\n\n<ul>\n\t<li>Alice starts at stair 1.\n\t<ul>\n\t\t<li>Using an operation of the first type, she goes down 1 stair to reach stair 0.</li>\n\t</ul>\n\t</li>\n\t<li>Alice starts at stair 1.\n\t<ul>\n\t\t<li>Using an operation of the first type, she goes down 1 stair to reach stair 0.</li>\n\t\t<li>Using an operation of the second type, she goes up 2<sup>0</sup> stairs to reach stair 1.</li>\n\t\t<li>Using an operation of the first type, she goes down 1 stair to reach stair 0.</li>\n\t</ul>\n\t</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">k = 1</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">4</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The 4 possible ways of reaching stair 1 are:</p>\n\n<ul>\n\t<li>Alice starts at stair 1. Alice is at stair 1.</li>\n\t<li>Alice starts at stair 1.\n\t<ul>\n\t\t<li>Using an operation of the first type, she goes down 1 stair to reach stair 0.</li>\n\t\t<li>Using an operation of the second type, she goes up 2<sup>0</sup> stairs to reach stair 1.</li>\n\t</ul>\n\t</li>\n\t<li>Alice starts at stair 1.\n\t<ul>\n\t\t<li>Using an operation of the second type, she goes up 2<sup>0</sup> stairs to reach stair 2.</li>\n\t\t<li>Using an operation of the first type, she goes down 1 stair to reach stair 1.</li>\n\t</ul>\n\t</li>\n\t<li>Alice starts at stair 1.\n\t<ul>\n\t\t<li>Using an operation of the first type, she goes down 1 stair to reach stair 0.</li>\n\t\t<li>Using an operation of the second type, she goes up 2<sup>0</sup> stairs to reach stair 1.</li>\n\t\t<li>Using an operation of the first type, she goes down 1 stair to reach stair 0.</li>\n\t\t<li>Using an operation of the second type, she goes up 2<sup>1</sup> stairs to reach stair 2.</li>\n\t\t<li>Using an operation of the first type, she goes down 1 stair to reach stair 1.</li>\n\t</ul>\n\t</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= k &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "On using <code>x</code> operations of the second type and <code>y</code> operations of the first type, the stair <code>2<sup>x</sup> - y</code> is reached.",
+    "Since first operations cannot be consecutive, there are exactly <code>x + 1</code> positions (before and after each power of 2) to perform the second operation.",
+    "Using combinatorics, we have <sup>x + 1</sup>C<sub>y</sub> number of ways to select the positions of second operations."
+  ],
+  "metaData": "{\n  \"name\": \"waysToReachStair\",\n  \"params\": [\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"15.7K\", \"totalSubmission\": \"41.7K\", \"totalAcceptedRaw\": 15651, \"totalSubmissionRaw\": 41656, \"acRate\": \"37.6%\"}",
+  "likes": 196,
+  "dislikes": 12,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Climbing Stairs\", \"titleSlug\": \"climbing-stairs\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Min Cost Climbing Stairs\", \"titleSlug\": \"min-cost-climbing-stairs\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "0",
+    "1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Memoization",
+      "slug": "memoization"
+    },
+    {
+      "name": "Combinatorics",
+      "slug": "combinatorics"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int waysToReachStair(int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int waysToReachStair(int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def waysToReachStair(self, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def waysToReachStair(self, k):\n        \"\"\"\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} k\n * @return {number}\n */\nvar waysToReachStair = function(k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function waysToReachStair(k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int WaysToReachStair(int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int waysToReachStair(int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func waysToReachStair(k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun waysToReachStair(k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func waysToReachStair(_ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn ways_to_reach_stair(k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} k\n# @return {Integer}\ndef ways_to_reach_stair(k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $k\n     * @return Integer\n     */\n    function waysToReachStair($k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int waysToReachStair(int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def waysToReachStair(k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec ways_to_reach_stair(k :: integer) :: integer\n  def ways_to_reach_stair(k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec ways_to_reach_stair(K :: integer()) -> integer().\nways_to_reach_stair(K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (ways-to-reach-stair k)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

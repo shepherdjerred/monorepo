@@ -1,0 +1,148 @@
+{
+  "questionId": "3179",
+  "questionFrontendId": "2920",
+  "title": "Maximum Points After Collecting Coins From All Nodes",
+  "titleSlug": "maximum-points-after-collecting-coins-from-all-nodes",
+  "difficulty": "Hard",
+  "content": "<p>There exists an undirected tree rooted at node <code>0</code> with <code>n</code> nodes labeled from <code>0</code> to <code>n - 1</code>. You are given a 2D <strong>integer</strong> array <code>edges</code> of length <code>n - 1</code>, where <code>edges[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> indicates that there is an edge between nodes <code>a<sub>i</sub></code> and <code>b<sub>i</sub></code> in the tree. You are also given a <strong>0-indexed</strong> array <code>coins</code> of size <code>n</code> where <code>coins[i]</code> indicates the number of coins in the vertex <code>i</code>, and an integer <code>k</code>.</p>\n\n<p>Starting from the root, you have to collect all the coins such that the coins at a node can only be collected if the coins of its ancestors have been already collected.</p>\n\n<p>Coins at <code>node<sub>i</sub></code> can be collected in one of the following ways:</p>\n\n<ul>\n\t<li>Collect all the coins, but you will get <code>coins[i] - k</code> points. If <code>coins[i] - k</code> is negative then you will lose <code>abs(coins[i] - k)</code> points.</li>\n\t<li>Collect all the coins, but you will get <code>floor(coins[i] / 2)</code> points. If this way is used, then for all the <code>node<sub>j</sub></code> present in the subtree of <code>node<sub>i</sub></code>, <code>coins[j]</code> will get reduced to <code>floor(coins[j] / 2)</code>.</li>\n</ul>\n\n<p>Return <em>the <strong>maximum points</strong> you can get after collecting the coins from <strong>all</strong> the tree nodes.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/09/18/ex1-copy.png\" style=\"width: 60px; height: 316px; padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem;\" />\n<pre>\n<strong>Input:</strong> edges = [[0,1],[1,2],[2,3]], coins = [10,10,3,3], k = 5\n<strong>Output:</strong> 11                        \n<strong>Explanation:</strong> \nCollect all the coins from node 0 using the first way. Total points = 10 - 5 = 5.\nCollect all the coins from node 1 using the first way. Total points = 5 + (10 - 5) = 10.\nCollect all the coins from node 2 using the second way so coins left at node 3 will be floor(3 / 2) = 1. Total points = 10 + floor(3 / 2) = 11.\nCollect all the coins from node 3 using the second way. Total points = 11 + floor(1 / 2) = 11.\nIt can be shown that the maximum points we can get after collecting coins from all the nodes is 11. \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<strong class=\"example\"> <img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/09/18/ex2.png\" style=\"width: 140px; height: 147px; padding: 10px; background: #fff; border-radius: .5rem;\" /></strong>\n\n<pre>\n<strong>Input:</strong> edges = [[0,1],[0,2]], coins = [8,4,4], k = 0\n<strong>Output:</strong> 16\n<strong>Explanation:</strong> \nCoins will be collected from all the nodes using the first way. Therefore, total points = (8 - 0) + (4 - 0) + (4 - 0) = 16.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == coins.length</code></li>\n\t<li><code>2 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code><font face=\"monospace\">0 &lt;= coins[i] &lt;= 10<sup>4</sup></font></code></li>\n\t<li><code>edges.length == n - 1</code></li>\n\t<li><code><font face=\"monospace\">0 &lt;= edges[i][0], edges[i][1] &lt; n</font></code></li>\n\t<li><code><font face=\"monospace\">0 &lt;= k &lt;= 10<sup>4</sup></font></code></li>\n</ul>\n",
+  "hints": [
+    "Let <code>dp[x][t]</code> be the maximum points we can get from the subtree rooted at node <code>x</code> and the second operation has been used <code>t</code> times in its ancestors.",
+    "Note that the value of each <code>node <= 10<sup>4</sup></code>, so when <code>t >= 14</code> <code>dp[x][t]</code> is always <code>0</code>.",
+    "General equation will be: <code>dp[x][t] = max((coins[x] >> t) - k + sigma(dp[y][t]), (coins[x] >> (t + 1)) + sigma(dp[y][t + 1]))</code> where nodes denoted by <code>y</code> in the sigma, are the direct children of node <code>x</code>."
+  ],
+  "metaData": "{\n  \"name\": \"maximumPoints\",\n  \"params\": [\n    {\n      \"name\": \"edges\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"coins\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"11.1K\", \"totalSubmission\": \"30.4K\", \"totalAcceptedRaw\": 11068, \"totalSubmissionRaw\": 30387, \"acRate\": \"36.4%\"}",
+  "likes": 241,
+  "dislikes": 19,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[0,1],[1,2],[2,3]]\n[10,10,3,3]\n5",
+    "[[0,1],[0,2]]\n[8,4,4]\n0"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Memoization",
+      "slug": "memoization"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumPoints(vector<vector<int>>& edges, vector<int>& coins, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumPoints(int[][] edges, int[] coins, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumPoints(self, edges: List[List[int]], coins: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumPoints(self, edges, coins, k):\n        \"\"\"\n        :type edges: List[List[int]]\n        :type coins: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} edges\n * @param {number[]} coins\n * @param {number} k\n * @return {number}\n */\nvar maximumPoints = function(edges, coins, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumPoints(edges: number[][], coins: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumPoints(int[][] edges, int[] coins, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumPoints(int** edges, int edgesSize, int* edgesColSize, int* coins, int coinsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumPoints(edges [][]int, coins []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumPoints(edges: Array<IntArray>, coins: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumPoints(_ edges: [[Int]], _ coins: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_points(edges: Vec<Vec<i32>>, coins: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} edges\n# @param {Integer[]} coins\n# @param {Integer} k\n# @return {Integer}\ndef maximum_points(edges, coins, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $edges\n     * @param Integer[] $coins\n     * @param Integer $k\n     * @return Integer\n     */\n    function maximumPoints($edges, $coins, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumPoints(List<List<int>> edges, List<int> coins, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumPoints(edges: Array[Array[Int]], coins: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_points(edges :: [[integer]], coins :: [integer], k :: integer) :: integer\n  def maximum_points(edges, coins, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_points(Edges :: [[integer()]], Coins :: [integer()], K :: integer()) -> integer().\nmaximum_points(Edges, Coins, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-points edges coins k)\n  (-> (listof (listof exact-integer?)) (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

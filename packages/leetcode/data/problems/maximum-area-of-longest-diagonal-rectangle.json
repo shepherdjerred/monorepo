@@ -1,0 +1,131 @@
+{
+  "questionId": "3251",
+  "questionFrontendId": "3000",
+  "title": "Maximum Area of Longest Diagonal Rectangle",
+  "titleSlug": "maximum-area-of-longest-diagonal-rectangle",
+  "difficulty": "Easy",
+  "content": "<p>You are given a 2D <strong>0-indexed </strong>integer array <code>dimensions</code>.</p>\n\n<p>For all indices <code>i</code>, <code>0 &lt;= i &lt; dimensions.length</code>, <code>dimensions[i][0]</code> represents the length and <code>dimensions[i][1]</code> represents the width of the rectangle<span style=\"font-size: 13.3333px;\"> <code>i</code></span>.</p>\n\n<p>Return <em>the <strong>area</strong> of the rectangle having the <strong>longest</strong> diagonal. If there are multiple rectangles with the longest diagonal, return the area of the rectangle having the <strong>maximum</strong> area.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> dimensions = [[9,3],[8,6]]\n<strong>Output:</strong> 48\n<strong>Explanation:</strong> \nFor index = 0, length = 9 and width = 3. Diagonal length = sqrt(9 * 9 + 3 * 3) = sqrt(90) &asymp;<!-- notionvc: 882cf44c-3b17-428e-9c65-9940810216f1 --> 9.487.\nFor index = 1, length = 8 and width = 6. Diagonal length = sqrt(8 * 8 + 6 * 6) = sqrt(100) = 10.\nSo, the rectangle at index 1 has a greater diagonal length therefore we return area = 8 * 6 = 48.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> dimensions = [[3,4],[4,3]]\n<strong>Output:</strong> 12\n<strong>Explanation:</strong> Length of diagonal is the same for both which is 5, so maximum area = 12.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= dimensions.length &lt;= 100</code></li>\n\t<li><code><font face=\"monospace\">dimensions[i].length == 2</font></code></li>\n\t<li><code><font face=\"monospace\">1 &lt;= dimensions[i][0], dimensions[i][1] &lt;= 100</font></code></li>\n</ul>\n",
+  "hints": [
+    "Diagonal of rectangle is <code>sqrt(length<sup>2</sup> + width<sup>2</sup>)</code>."
+  ],
+  "metaData": "{\n  \"name\": \"areaOfMaxDiagonal\",\n  \"params\": [\n    {\n      \"name\": \"dimensions\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"186.1K\", \"totalSubmission\": \"405.5K\", \"totalAcceptedRaw\": 186053, \"totalSubmissionRaw\": 405492, \"acRate\": \"45.9%\"}",
+  "likes": 500,
+  "dislikes": 42,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[9,3],[8,6]]",
+    "[[3,4],[4,3]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int areaOfMaxDiagonal(vector<vector<int>>& dimensions) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int areaOfMaxDiagonal(int[][] dimensions) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def areaOfMaxDiagonal(self, dimensions: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def areaOfMaxDiagonal(self, dimensions):\n        \"\"\"\n        :type dimensions: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} dimensions\n * @return {number}\n */\nvar areaOfMaxDiagonal = function(dimensions) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function areaOfMaxDiagonal(dimensions: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int AreaOfMaxDiagonal(int[][] dimensions) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int areaOfMaxDiagonal(int** dimensions, int dimensionsSize, int* dimensionsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func areaOfMaxDiagonal(dimensions [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun areaOfMaxDiagonal(dimensions: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func areaOfMaxDiagonal(_ dimensions: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn area_of_max_diagonal(dimensions: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} dimensions\n# @return {Integer}\ndef area_of_max_diagonal(dimensions)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $dimensions\n     * @return Integer\n     */\n    function areaOfMaxDiagonal($dimensions) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int areaOfMaxDiagonal(List<List<int>> dimensions) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def areaOfMaxDiagonal(dimensions: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec area_of_max_diagonal(dimensions :: [[integer]]) :: integer\n  def area_of_max_diagonal(dimensions) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec area_of_max_diagonal(Dimensions :: [[integer()]]) -> integer().\narea_of_max_diagonal(Dimensions) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (area-of-max-diagonal dimensions)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2817",
+    "content": "### Approach: Enumeration\n\n#### Intuition\n\nWe traverse all rectangles:\n- Using the Pythagorean theorem, we calculate the square of the diagonal of the rectangle, denoted as $\\textit{diaSq}$.\n- Using the formula for the area of a rectangle, we calculate its area, denoted as $\\textit{area}$.\n\nWe then compare the diagonal lengths:\n- If the diagonal square is equal to the current largest diagonal square, we compare the area values and update the maximum area.\n- If the diagonal square is greater than the current largest diagonal square, we update both the largest diagonal square and the maximum area.\n\nFinally, we return the maximum area value.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/QsjYSgC2/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"QsjYSgC2\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array.\n\n- Time complexity: $O(n)$.\n\n- Space complexity: $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

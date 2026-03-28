@@ -1,0 +1,35 @@
+{
+  "questionId": "3069",
+  "questionFrontendId": "2886",
+  "title": "Change Data Type",
+  "titleSlug": "change-data-type",
+  "difficulty": "Easy",
+  "content": "<pre>\nDataFrame <code>students</code>\n+-------------+--------+\n| Column Name | Type   |\n+-------------+--------+\n| student_id  | int    |\n| name        | object |\n| age         | int    |\n| grade       | float  |\n+-------------+--------+\n</pre>\n\n<p>Write a solution to correct the errors:</p>\n\n<p>The <code>grade</code> column is stored as floats,&nbsp;convert it to integers.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<pre>\n<strong class=\"example\">Example 1:</strong>\n<strong>Input:\n</strong>DataFrame students:\n+------------+------+-----+-------+\n| student_id | name | age | grade |\n+------------+------+-----+-------+\n| 1          | Ava  | 6   | 73.0  |\n| 2          | Kate | 15  | 87.0  |\n+------------+------+-----+-------+\n<strong>Output:\n</strong>+------------+------+-----+-------+\n| student_id | name | age | grade |\n+------------+------+-----+-------+\n| 1          | Ava  | 6   | 73    |\n| 2          | Kate | 15  | 87    |\n+------------+------+-----+-------+\n<strong>Explanation:</strong> \nThe data types of the column grade is converted to int.</pre>\n",
+  "hints": [
+    "Consider using a build-in function in pandas library with a dictionary to convert the datatype of columns as specified."
+  ],
+  "metaData": "{\n  \"pythondata\": [\n    \"students = pd.DataFrame([], columns=['student_id', 'name', 'age', 'grade']).astype({'student_id':'Int64', 'name':'object', 'age':'Int64', 'grade':'Float64'})\"\n  ],\n  \"database\": true,\n  \"name\": \"changeDatatype\",\n  \"languages\": [\n    \"pythondata\"\n  ]\n}",
+  "stats": "{\"totalAccepted\": \"120.9K\", \"totalSubmission\": \"138.4K\", \"totalAcceptedRaw\": 120947, \"totalSubmissionRaw\": 138363, \"acRate\": \"87.4%\"}",
+  "likes": 88,
+  "dislikes": 9,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"students\":[\"student_id\",\"name\",\"age\",\"grade\"]},\"rows\":{\"students\":[[1,\"Ava\",6,73.0],[2,\"Kate\",15,87.0]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [],
+  "codeSnippets": [
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef changeDatatype(students: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2111",
+    "content": "[TOC]\n\n## Solution\n--- \n### Overview\n\nIn this problem, we have a DataFrame named `students` that contains student data. However, the grades are stored as floats instead of integers. The goal is to change the grade type from floats to integers.\n\n**Key Concepts**:\n\n1. **DataFrame:** a 2D table-like structure, similar to a spreadsheet or SQL table. Each row represents an individual record and each column represents a different attribute. It is size-mutable and designed to handle a mix of different types of data. \n2. **`astype` Function:** The `astype` function is used to cast a pandas object to a specified dtype (data type). `astype` can be used to cast a pandas object to any dtype. The `astype` function does not modify the original DataFrame in place. Instead, it returns a new DataFrame with the specified data type changes. If you want to reflect changes in the original DataFrame, you need to reassign the result back to it or use the `copy` parameter accordingly. The function’s syntax is:\n\n```python\nDataFrame.astype(dtype, copy=True, errors='raise')\n```\n\nWhere:\n\n- `dtype`: It's a data type, or dict of column name -> data type. \n- `copy`: By default, astype always returns a newly allocated object. If `copy` is set to `False`, a new object will only be created if the old object cannot be casted to the required type.\n- `errors`: Controls the raising of exceptions on invalid data for the provided dtype. By default, `raise` is set which means exceptions will be raised.\n\nSo in our case we want to cast the `grade` column from float to int and we can do so with the following line:\n```python\nstudents = students.astype({'grade': int})\n```\n\n### Intuition\n\n**Visualization of `astype` function**\n\n![fig](../Figures/3313/3313-1.png)\n\nIn the provided solution:\n```python\nstudents = students.astype({'grade': int})\n```\nThis line is casting the `grade` column from float to int.\n\nLet’s go step by step through the provided solution:\n\n1. **Importing pandas**:\n   ```python\n   import pandas as pd\n   ```\n   This line imports the pandas library and gives it an alias name `pd`. The pandas library provides fast, flexible, and expressive data structures designed to work with structured (tabular, multidimensional, potentially heterogeneous) data.\n\n2. **Function Definition**:\n   ```python\n   def changeDatatype(students: pd.DataFrame) -> pd.DataFrame:\n   ```\n   This line defines a function named `changeDatatype` that takes in a DataFrame `students` as an argument and returns a DataFrame.\n\n3. **Changing Data Type of a Column**:\n   ```python\n   students = students.astype({'grade': int})\n   ```\n   This line of code is the heart of the solution. It changes the data type of the `grade` column to integer using the `astype` function. The `{'grade': int}` is a dictionary where the key is the column name and the value is the desired data type.\n\n4. **Return Statement**:\n   ```python\n   return students\n   ```\n   This line returns the modified DataFrame.\n\n**Using the Solution**\n\nWhen you pass this DataFrame to the function:\n\n<table>\n  <tr>\n    <th>student_id</th>\n    <th>name</th>\n    <th>age</th>\n    <th>grade</th>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>Ava</td>\n    <td>6</td>\n    <td>73.0</td>\n  </tr>\n  <tr>\n    <td>2</td>\n    <td>Kate</td>\n    <td>15</td>\n    <td>87.0</td>\n  </tr>\n</table>\n<br>\n\nIt will return:\n\n<table>\n  <tr>\n    <th>student_id</th>\n    <th>name</th>\n    <th>age</th>\n    <th>grade</th>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>Ava</td>\n    <td>6</td>\n    <td>73</td>\n  </tr>\n  <tr>\n    <td>2</td>\n    <td>Kate</td>\n    <td>15</td>\n    <td>87</td>\n  </tr>\n</table>\n<br>\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KmEJXfKS/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"KmEJXfKS\"></iframe>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "questionId": "3455",
+  "questionFrontendId": "3223",
+  "title": "Minimum Length of String After Operations",
+  "titleSlug": "minimum-length-of-string-after-operations",
+  "difficulty": "Medium",
+  "content": "<p>You are given a string <code>s</code>.</p>\n\n<p>You can perform the following process on <code>s</code> <strong>any</strong> number of times:</p>\n\n<ul>\n\t<li>Choose an index <code>i</code> in the string such that there is <strong>at least</strong> one character to the left of index <code>i</code> that is equal to <code>s[i]</code>, and <strong>at least</strong> one character to the right that is also equal to <code>s[i]</code>.</li>\n\t<li>Delete the <strong>closest</strong> occurrence of <code>s[i]</code> located to the <strong>left</strong> of <code>i</code>.</li>\n\t<li>Delete the <strong>closest</strong> occurrence of <code>s[i]</code> located to the <strong>right</strong> of <code>i</code>.</li>\n</ul>\n\n<p>Return the <strong>minimum</strong> length of the final string <code>s</code> that you can achieve.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;abaacbcbb&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">5</span></p>\n\n<p><strong>Explanation:</strong><br />\nWe do the following operations:</p>\n\n<ul>\n\t<li>Choose index 2, then remove the characters at indices 0 and 3. The resulting string is <code>s = &quot;bacbcbb&quot;</code>.</li>\n\t<li>Choose index 3, then remove the characters at indices 0 and 5. The resulting string is <code>s = &quot;acbcb&quot;</code>.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;aa&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong><br />\nWe cannot perform any operations, so we return the length of the original string.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 2 * 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists only of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Only the frequency of each character matters in finding the final answer.",
+    "If a character occurs less than 3 times, we cannot perform any process with it.",
+    "Suppose there is a character that occurs at least 3 times in the string, we can repeatedly delete two of these characters until there are at most 2 occurrences left of it."
+  ],
+  "metaData": "{\n  \"name\": \"minimumLength\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"194.6K\", \"totalSubmission\": \"259.4K\", \"totalAcceptedRaw\": 194641, \"totalSubmissionRaw\": 259381, \"acRate\": \"75.0%\"}",
+  "likes": 727,
+  "dislikes": 54,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"abaacbcbb\"",
+    "\"aa\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumLength(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumLength(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumLength(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumLength(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar minimumLength = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumLength(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumLength(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumLength(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumLength(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumLength(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumLength(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_length(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef minimum_length(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function minimumLength($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumLength(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumLength(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_length(s :: String.t) :: integer\n  def minimum_length(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_length(S :: unicode:unicode_binary()) -> integer().\nminimum_length(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-length s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2646",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe are given a string `s`. The goal is to repeatedly perform the following operation until it is no longer possible:  \n\n1. Choose an index `i` such that:\n   - There is at least one character equal to `s[i]` to its left.\n   - There is at least one character equal to `s[i]` to its right.\n2. Once such an index is found, the following characters are removed:\n   - The closest matching character to the left of index `i`.\n   - The closest matching character to the right of index `i`.\n\nWe need to find the smallest possible length of the string after applying this operation repeatedly.\n\n---\n\n### Approach 1: Using Hash Map\n\n#### Intuition   \n\nTo approach this problem, we need to consider how often each character appears in the string. The goal is to figure out how many characters need to be removed to minimize the string, based on how many times each character occurs:\n\n- If a character appears an odd number of times, we can keep exactly one instance of it, and remove the rest.\n- If a character appears an even number of times, we can keep two instances of it—one on the left side and one on the right side, ensuring a valid operation.\n\nFor example, let's consider the case where we have 5 `'a'` characters. Since 5 is odd, we'll end up with exactly one `'a'`. We can remove the first and third `'a'` characters because they are closest to the second `'a'`. After that, we are left with three `'a'` characters, and we repeat the process of removing pairs. In the end, only one `'a'` remains. This is because each pair cancels out, leaving the extra character.\n\nNow, let's look at the case with 4 `'a'` characters. Since 4 is even, we first remove the first and third `'a'` characters, which are closest to the second `'a'`. We're left with 2 `'a'` characters, but for comparisons, we need three characters: one as the reference pivot and two indices, one on the left and one on the right, to remove. So, we stop here in the even case.\n\nThe entire intuition can be summarized with the help of the image below.\n\n![odd_even_cancellation](../Figures/3223/odd_even_cancellation.png)\n\n#### Algorithm\n\n- Count the frequency of each character in the string:\n  - Initialize a frequency map (`charFrequencyMap`).\n  - For each character in the string `s`, increment its frequency in the map.\n\n- Calculate the number of characters to delete:\n  - Initialize `deleteCount` to 0.\n  - For each character's frequency in the map:\n    - If the frequency is odd, add `frequency - 1` to `deleteCount` (remove all but one).\n    - If the frequency is even, add `frequency - 2` to `deleteCount` (remove all but two).\n\n- Return the smallest length of the string after deletions:\n  - Subtract `deleteCount` from the original string length.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/RfodwSkT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RfodwSkT\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the string `s`, and let `k` be the size of the character set.\n\n- Time Complexity: $O(n)$\n\n    The first loop iterates over each character in the string `s`, which takes $O(n)$ time. This is because inserting or updating elements in an map has an average time complexity of $O(1)$ per operation. The second loop iterates over the `charFrequencyMap`, which has at most $k$ unique characters. This loop takes $O(k)$ time. Since $k$ is typically much smaller than $n$ (e.g., $k = 26$ for lowercase letters), the overall time complexity is dominated by the first loop, resulting in $O(n)$.\n\n- Space complexity: $O(1)$ or $O(k)$\n\n    The space used by the `charFrequencyMap` depends on the size of the character set $k$. In our case, $k$ is fixed (e.g., 26 for lowercase letters), so the space complexity is $O(1)$. Alternatively, it can also be expressed as $O(k)$.\n\n---\n\n### Approach 2: Using Frequency Array\n\n#### Intuition\n\nIn the previous approach, we used a hash map to count how often each character appears in the string. Hash maps are flexible and can handle cases where the characters are not limited to a specific set. However, they come with some downsides.\n\nA hash map uses a dynamic data structure, which requires extra memory to store keys and values. This leads to higher space usage compared to an array. Additionally, the process of hashing (calculating a unique code for each character) takes time. While hash map operations like insertion and lookup are generally fast (on average, they take $O(1)$ time), they can sometimes be slower due to *hashing collisions* (when two keys produce the same hash) and memory allocation.\n\nIn this problem, we only need to deal with lowercase English letters (`'a'` to `'z'`). Since there are only 26 possible characters, we can use a *fixed-size array* of size 26 to count character frequencies. \n\nTo achieve this, we use a simple hashing operation to map each character to a position in a frequency array. In ASCII, each lowercase letter can be represented as the value of `'a'` plus its index in the alphabet. By subtracting the ASCII value of `'a'` from any character, we get a unique integer between 0 and 25, which corresponds to its position in the frequency array.\n\nThis approach is more efficient for this specific case because of two reasons. \n\n1. Better Runtime: When we access an element in an array, it’s always a constant time operation. On the other hand, hash maps are $O(1)$ on average, but they can occasionally slow down because of the hashing process or when collisions happen.\n2. Space Efficiency: An array of size 26 uses a fixed, small chunk of memory. Unlike hash maps, arrays don’t need additional structures like hash buckets or key-value pairs, so they’re much more memory-efficient.\n\nApart from using this array, the key idea remains the same as the previous approach:\n- If a character appears an odd number of times, we keep one instance.\n- If a character appears an even number of times, we keep two instances.\n\n#### Algorithm\n\n- Initialize a `charFrequency` array of size `26` to store the count of occurrences for each character in the string.\n- Initialize `totalLength` to 0, which will hold the final result.\n\n- Iterate through each character `currentChar` in string `s`:\n  - Increment the corresponding index (`currentChar` - `'a'`) in `charFrequency` based on `currentChar`.\n\n- Calculate the total length of characters that will remain:\n  - Iterate through each `frequency` in `charFrequency`:\n    - If `frequency` is 0, skip the character (it doesn't appear in the string).\n    - If `frequency` is even, add 2 to `totalLength`.\n    - If `frequency` is odd, add 1 to `totalLength`.\n\n- Return `totalLength`, the smallest length of the string after deletions.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/nsp3q2LR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nsp3q2LR\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the string `s`, and let `k` be the size of the character set.\n\n- Time complexity: $O(n)$\n\n    The first loop iterates over each character in the string `s`, which takes $O(n)$ time. The second loop iterates over the `charFrequency` array, which has a size of $k$. This loop runs in $O(k)$ time. Since $k$ is typically a constant, the second loop is often considered $O(1)$. However, in the general case, the time complexity is $O(n + k)$. For most practical purposes, $k$ is small compared to $n$, so the overall time complexity is dominated by $O(n)$. \n\n- Space complexity: $O(1)$ or $O(k)$\n\n    The space used by the `charFrequency` depends on the size of the character set $k$. In our case, $k$ is fixed (e.g., 26 for lowercase letters), so the space complexity is $O(1)$. Alternatively, it can also be expressed as $O(k)$.\n\n---\n\n### Approach 3: Using Bitwise\n\n#### Intuition\n\nThe ability to remove characters hinges on their occurrences. Specifically, characters that appear an even number of times can be fully removed by pairing them up, while characters with an odd number of occurrences will leave one unpaired character behind.\n\nThis means that the specific frequency of each character is irrelevant as long as we know if it contributes an odd or even number of times. Thus, we can collapse the space required to track character occurrences from a full array of 26 integers (one for each letter) to just a few integers.\n\nTo achieve this, we use three integers:\n1. `present`: This keeps track of which letters are present in the string, using bits to represent each letter. If a letter is present, the corresponding bit is set to `1`.\n2. `parity`: This tracks the parity (odd or even occurrences) of each character in the string. If a character has an odd number of occurrences, its corresponding bit is set to `1`.\n3. `placevalue`: This variable is used to isolate the position of each letter in the bit representation.\n\nAs we iterate through the string, for each character, we update `present` by setting the corresponding bit to indicate its presence. We also update `parity` by toggling the bit to track whether the character's occurrences are odd or even.\n\nAfter processing the string, `present` shows which characters are in the string, and `parity` shows whether their occurrences are odd or even. To determine the remaining characters after pairing, we examine both masks. If a character has an odd number of occurrences, it contributes to the final string length, while characters with even occurrences can be fully removed. This continues until all characters have been checked.\n \n#### Algorithm\n\n- Initialize `present` to `0`, `parity` to `0`, and `placevalue` for bit manipulation.\n\n- Iterate through the string `s`:\n  - For each character, calculate the bit position corresponding to the character by shifting `1` to the left by `(s[k] - 'a')`.\n  - Set the corresponding bit in the `present` bitmask using the bitwise OR operation (`present |= placevalue`).\n  - Toggle the corresponding bit in the `parity` bitmask using the bitwise XOR operation (`parity ^= placevalue`).\n\n- Initialize `totalLength` to `0`, which will store the result.\n\n- Process the `present` bitmask to calculate the minimum length:\n  - While there are still set bits in `present`:\n    - Clear the least significant bit in `present` using `placevalue = present & (present - 1)`.\n    - Check if the corresponding bit in `parity` is set:\n      - If the bit is set in `parity`, it indicates an odd occurrence of that character, so add `1` to `totalLength`.\n      - Otherwise, add `2` to `totalLength`.\n    - Update `present` to remove the least significant bit (using `present = placevalue`).\n\n- Return `totalLength`, the smallest length of the string after deletions.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/8tDNEWC2/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"8tDNEWC2\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the string `s`.\n\n- Time complexit: $O(n)$\n  \n    The first loop iterates through the string `s` once, performing bitwise operations for each character. Since there are $n$ characters, this loop runs in $O(n)$ time.\n   \n    The second loop processes the `present` bitmask. The number of iterations in this loop is equal to the number of unique characters in the string, which is at most 26 (since there are 26 lowercase English letters). Therefore, this loop runs in $O(1)$ time.\n\n    Thus, the overall time complexity is dominated by the first loop, which is $O(n)$.\n\n- Space complexi: $O(1)$\n  \n    The space used by the variables `present`, `parity`, `placeValue`, and `count` is constant, as they are simple integers. The algorithm does not use any additional data structures that grow with the input size.\n\n    Therefore, the space complexity is $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

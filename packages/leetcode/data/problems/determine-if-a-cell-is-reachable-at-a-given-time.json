@@ -1,0 +1,133 @@
+{
+  "questionId": "3056",
+  "questionFrontendId": "2849",
+  "title": "Determine if a Cell Is Reachable at a Given Time",
+  "titleSlug": "determine-if-a-cell-is-reachable-at-a-given-time",
+  "difficulty": "Medium",
+  "content": "<p>You are given four integers <code>sx</code>, <code>sy</code>, <code>fx</code>, <code>fy</code>, and a <strong>non-negative</strong> integer <code>t</code>.</p>\n\n<p>In an infinite 2D grid, you start at the cell <code>(sx, sy)</code>. Each second, you <strong>must</strong> move to any of its adjacent cells.</p>\n\n<p>Return <code>true</code> <em>if you can reach cell </em><code>(fx, fy)</code> <em>after<strong> exactly</strong></em> <code>t</code> <strong><em>seconds</em></strong>, <em>or</em> <code>false</code> <em>otherwise</em>.</p>\n\n<p>A cell&#39;s <strong>adjacent cells</strong> are the 8 cells around it that share at least one corner with it. You can visit the same cell several times.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/08/05/example2.svg\" style=\"width: 443px; height: 243px;\" />\n<pre>\n<strong>Input:</strong> sx = 2, sy = 4, fx = 7, fy = 7, t = 6\n<strong>Output:</strong> true\n<strong>Explanation:</strong> Starting at cell (2, 4), we can reach cell (7, 7) in exactly 6 seconds by going through the cells depicted in the picture above. \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/08/05/example1.svg\" style=\"width: 383px; height: 202px;\" />\n<pre>\n<strong>Input:</strong> sx = 3, sy = 1, fx = 7, fy = 3, t = 3\n<strong>Output:</strong> false\n<strong>Explanation:</strong> Starting at cell (3, 1), it takes at least 4 seconds to reach cell (7, 3) by going through the cells depicted in the picture above. Hence, we cannot reach cell (7, 3) at the third second.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= sx, sy, fx, fy &lt;= 10<sup>9</sup></code></li>\n\t<li><code>0 &lt;= t &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Minimum time to reach the cell should be less than or equal to given time.",
+    "The answer is true if <code>t</code> is greater or equal than the Chebyshev distance from <code>(sx, sy)</code> to <code>(fx, fy)</code>. However, there is one more edge case to be considered.",
+    "The answer is false If <code>sx == fx</code> and <code>sy == fy</code>"
+  ],
+  "metaData": "{\n  \"name\": \"isReachableAtTime\",\n  \"params\": [\n    {\n      \"name\": \"sx\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"sy\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"fx\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"fy\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"t\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"110.2K\", \"totalSubmission\": \"296.5K\", \"totalAcceptedRaw\": 110158, \"totalSubmissionRaw\": 296520, \"acRate\": \"37.2%\"}",
+  "likes": 841,
+  "dislikes": 770,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Reaching Points\", \"titleSlug\": \"reaching-points\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2\n4\n7\n7\n6",
+    "3\n1\n7\n3\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"github\", \"name\": \"Github\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool isReachableAtTime(int sx, int sy, int fx, int fy, int t) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean isReachableAtTime(int sx, int sy, int fx, int fy, int t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def isReachableAtTime(self, sx: int, sy: int, fx: int, fy: int, t: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def isReachableAtTime(self, sx, sy, fx, fy, t):\n        \"\"\"\n        :type sx: int\n        :type sy: int\n        :type fx: int\n        :type fy: int\n        :type t: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} sx\n * @param {number} sy\n * @param {number} fx\n * @param {number} fy\n * @param {number} t\n * @return {boolean}\n */\nvar isReachableAtTime = function(sx, sy, fx, fy, t) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function isReachableAtTime(sx: number, sy: number, fx: number, fy: number, t: number): boolean {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool IsReachableAtTime(int sx, int sy, int fx, int fy, int t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool isReachableAtTime(int sx, int sy, int fx, int fy, int t){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func isReachableAtTime(sx int, sy int, fx int, fy int, t int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun isReachableAtTime(sx: Int, sy: Int, fx: Int, fy: Int, t: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func isReachableAtTime(_ sx: Int, _ sy: Int, _ fx: Int, _ fy: Int, _ t: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn is_reachable_at_time(sx: i32, sy: i32, fx: i32, fy: i32, t: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} sx\n# @param {Integer} sy\n# @param {Integer} fx\n# @param {Integer} fy\n# @param {Integer} t\n# @return {Boolean}\ndef is_reachable_at_time(sx, sy, fx, fy, t)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $sx\n     * @param Integer $sy\n     * @param Integer $fx\n     * @param Integer $fy\n     * @param Integer $t\n     * @return Boolean\n     */\n    function isReachableAtTime($sx, $sy, $fx, $fy, $t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool isReachableAtTime(int sx, int sy, int fx, int fy, int t) {\n\n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def isReachableAtTime(sx: Int, sy: Int, fx: Int, fy: Int, t: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec is_reachable_at_time(sx :: integer, sy :: integer, fx :: integer, fy :: integer, t :: integer) :: boolean\n  def is_reachable_at_time(sx, sy, fx, fy, t) do\n\n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec is_reachable_at_time(Sx :: integer(), Sy :: integer(), Fx :: integer(), Fy :: integer(), T :: integer()) -> boolean().\nis_reachable_at_time(Sx, Sy, Fx, Fy, T) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (is-reachable-at-time sx sy fx fy t)\n  (-> exact-integer? exact-integer? exact-integer? exact-integer? exact-integer? boolean?)\n\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2161",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nImagine navigating an infinite 2D grid, where you start at a point `(sx, sy)` and need to reach a different point `(fx, fy)` at exactly `t` seconds. Your movement involves transitioning to any of the 8 adjacent cells each second, and you're allowed to revisit the same cell during your journey. The challenge is to determine whether it's feasible to reach your destination at the specific time, considering these constraints.\n\n### Approach: Math\n\n#### Intuition\n\nLet's first think about the minimum time required to move from the starting point to the destination.\n\n![lengthwidth](../Figures/2849/lengthwidth.png)\n\nAs we can see from the graph, the minimum time to move from the starting point to the destination is `max(height, width)`, where `height` is the maximum absolute difference between the `x` coordinates, and `width` is the maximum absolute difference between the `y` coordinates of the `start` and `end` points. Since we are allowed to move through diagonally adjacent cells, let's assume the horizontal distance `width` is greater than the vertical distance `height`. When moving horizontally, we can choose to take exactly `height` diagonal steps within those `width` horizontal steps. This way, while covering `width` horizontal cells, we can also cover `height` vertical cells simultaneously.\n\nFor the purpose of this explanation let's define a variable `min_time` which denotes the minimum time to move from the starting point to the destination. Mathematically, as shown earlier `min_time = max(height, width)`. Let's define another variable `min_path` that denotes the path(s) we must follow to to reach the destination in `min_time`.\n\nNow let's think about the relationship between `min_time` and `t`. As a reminder, `t` is the time we need to reach the destination. \n\nThere can be 3 cases:\n\n1. `min_time > t`: In this case we will never be able to reach the destination.\n2. `min_time = t`: In this case we will be able reach the destination by following the `min_path`.\n3. `min_time < t`: Let's discuss this case with some examples.\n\nLet's think through the cases where `min_time < t`. `t - min_time` can have the values in the range `[1, infinity)`.\n\n* If `t - min_time = 1`: We can move along the `min_path` and before reaching the destination move to a cell adjacent to the destination in order to spend 1 second of time. Then from this adjacent cell, we move to the destination. Hence, reaching the destination when `t - min_time = 1` is possible.\n\n![extrasecond](../Figures/2849/extrasecond.png)\n\n* If `t - min_time = 2`: We can move along the `min_path` and before reaching the destination, we can move to any adjacent cell to spend 1 second of time, then move back to spend another 1 second of time. This way, we spend an additional 2 seconds and move to the destination to reach at the time `t`. Hence, reaching the destination when `t - min_time = 2` is possible.\n\nFor any other value of `t - min_time > 2`, we can always repeatedly move back and forth between two adjacent cells to consume these seconds (by 2 each time) until there are either 1 or 2 seconds remaining. This way, we can reduce the problem to the two cases we have already solved.\n\n!?!../Documents/2849/Determine_if_a_Cell_Is_Reachable_at_a_Given_Time.json:3000,1687!?!\n\nAs we can see in the slides, whenever `t` is greater than the minimum time required to move from the starting point to the destination, we can successfully move from `start` to `end`. We can conclude that if `t` is greater than or equal to the minimum time required to move from the starting point to the destination, we can successfully move from `start` to `end` in given time `t`.\n\n**Edge Case**: Let's think through the cases when `start` and `end` are the same cell.\n\nIf `start` and `end` are the same cell `min_time` will be 0. That is, you don't need to move anywhere to reach the destination.\n\n* If `t = 0`: Don't move anywhere, you are already at the destination hence reaching the destination in 0 seconds is possible.\n* If `t = 1`: You move to a cell adjacent to `start` and realize that you have already spent all the time you had. You can not move back to the `end` cell because that would increment the time by one and you will reach the destination in 2 seconds. *Hence it is impossible to reach the destination when start and end refer to the same cell and `t = 1`.*\n* If `t = 2`: You move to a cell adjacent to `start` and spend one second. Then you move back to the `end` cell, now you have spent a total of 2 seconds. Hence reaching the destination in 2 seconds is possible.\n* If `t = 3`: You move to a cell adjacent to `start` and spend one second. You again move to a cell adjacent to start to spend one second. Then you move back to the `end` cell, now you have spent a total of 3 seconds. Hence reaching the destination in 3 seconds is possible.\n\nSimilarly, for larger values of `t` we should be able to move to the destination when `start` and `end` refer to the same cell.\nWe can conclude that if `start` and `end` refer to the same cell we can successfully move from `start` to `end` in given time `t` if `t != 1`.\n\n\n#### Algorithm\n\n1. Calculate the width and height differences between the starting point `(sx, sy)` and the destination `(fx, fy)` using the `abs` function.\n2. Check if both the width and height differences are equal to zero, which implies that the starting point is the same as the destination. Additionally, check if the target time `t` is equal to 1. If both conditions are met, return `False`.\n3. Calculate the maximum of the width and height differences using the `max` function. This maximum represents the minimum time required to move from the starting point to the destination.\n4. Compare the target time `t` with the maximum distance (either width or height). If the target time is greater than or equal to the maximum distance, return `True`. Otherwise, return `False`.\n\n#### Implementation\n\n\n<iframe src=\"https://leetcode.com/playground/W2u9rvcA/shared\" frameBorder=\"0\" width=\"100%\" height=\"242\" name=\"W2u9rvcA\"></iframe>\n\n#### Complexity Analysis\n\n* Time complexity: $O(1)$. Since all the operations in the code take constant time and do not depend on the size of the grid or the input values, the overall time complexity of the code is $O(1)$, which is constant time complexity.\n\n* Space complexity: $O(1)$. This solution to this problem uses a fixed amount of additional space.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

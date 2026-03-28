@@ -1,0 +1,136 @@
+{
+  "questionId": "2884",
+  "questionFrontendId": "2781",
+  "title": "Length of the Longest Valid Substring",
+  "titleSlug": "length-of-the-longest-valid-substring",
+  "difficulty": "Hard",
+  "content": "<p>You are given a string <code>word</code> and an array of strings <code>forbidden</code>.</p>\n\n<p>A string is called <strong>valid</strong> if none of its substrings are present in <code>forbidden</code>.</p>\n\n<p>Return <em>the length of the <strong>longest valid substring</strong> of the string </em><code>word</code>.</p>\n\n<p>A <strong>substring</strong> is a contiguous sequence of characters in a string, possibly empty.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> word = &quot;cbaaaabc&quot;, forbidden = [&quot;aaa&quot;,&quot;cb&quot;]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> There are 11 valid substrings in word: &quot;c&quot;, &quot;b&quot;, &quot;a&quot;, &quot;ba&quot;, &quot;aa&quot;, &quot;bc&quot;, &quot;baa&quot;, &quot;aab&quot;, &quot;ab&quot;, &quot;abc&quot; and &quot;aabc&quot;. The length of the longest valid substring is 4. \nIt can be shown that all other substrings contain either &quot;aaa&quot; or &quot;cb&quot; as a substring. </pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> word = &quot;leetcode&quot;, forbidden = [&quot;de&quot;,&quot;le&quot;,&quot;e&quot;]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> There are 11 valid substrings in word: &quot;l&quot;, &quot;t&quot;, &quot;c&quot;, &quot;o&quot;, &quot;d&quot;, &quot;tc&quot;, &quot;co&quot;, &quot;od&quot;, &quot;tco&quot;, &quot;cod&quot;, and &quot;tcod&quot;. The length of the longest valid substring is 4.\nIt can be shown that all other substrings contain either &quot;de&quot;, &quot;le&quot;, or &quot;e&quot; as a substring. \n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= word.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>word</code> consists only of lowercase English letters.</li>\n\t<li><code>1 &lt;= forbidden.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= forbidden[i].length &lt;= 10</code></li>\n\t<li><code>forbidden[i]</code> consists only of lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"longestValidSubstring\",\n  \"params\": [\n    {\n      \"name\": \"word\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"list<string>\",\n      \"name\": \"forbidden\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"38.4K\", \"totalSubmission\": \"100.5K\", \"totalAcceptedRaw\": 38431, \"totalSubmissionRaw\": 100454, \"acRate\": \"38.3%\"}",
+  "likes": 615,
+  "dislikes": 32,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"cbaaaabc\"\n[\"aaa\",\"cb\"]",
+    "\"leetcode\"\n[\"de\",\"le\",\"e\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int longestValidSubstring(string word, vector<string>& forbidden) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int longestValidSubstring(String word, List<String> forbidden) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestValidSubstring(self, word: str, forbidden: List[str]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestValidSubstring(self, word, forbidden):\n        \"\"\"\n        :type word: str\n        :type forbidden: List[str]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} word\n * @param {string[]} forbidden\n * @return {number}\n */\nvar longestValidSubstring = function(word, forbidden) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestValidSubstring(word: string, forbidden: string[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LongestValidSubstring(string word, IList<string> forbidden) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int longestValidSubstring(char* word, char** forbidden, int forbiddenSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestValidSubstring(word string, forbidden []string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestValidSubstring(word: String, forbidden: List<String>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestValidSubstring(_ word: String, _ forbidden: [String]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_valid_substring(word: String, forbidden: Vec<String>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} word\n# @param {String[]} forbidden\n# @return {Integer}\ndef longest_valid_substring(word, forbidden)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $word\n     * @param String[] $forbidden\n     * @return Integer\n     */\n    function longestValidSubstring($word, $forbidden) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int longestValidSubstring(String word, List<String> forbidden) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestValidSubstring(word: String, forbidden: List[String]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_valid_substring(word :: String.t, forbidden :: [String.t]) :: integer\n  def longest_valid_substring(word, forbidden) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_valid_substring(Word :: unicode:unicode_binary(), Forbidden :: [unicode:unicode_binary()]) -> integer().\nlongest_valid_substring(Word, Forbidden) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-valid-substring word forbidden)\n  (-> string? (listof string?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

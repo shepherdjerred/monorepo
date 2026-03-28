@@ -1,0 +1,35 @@
+{
+  "questionId": "3065",
+  "questionFrontendId": "2879",
+  "title": "Display the First Three Rows",
+  "titleSlug": "display-the-first-three-rows",
+  "difficulty": "Easy",
+  "content": "<pre>\nDataFrame: <code>employees</code>\n+-------------+--------+\n| Column Name | Type   |\n+-------------+--------+\n| employee_id | int    |\n| name        | object |\n| department  | object |\n| salary      | int    |\n+-------------+--------+\n</pre>\n\n<p>Write a solution to display the <strong>first <code>3</code> </strong>rows<strong> </strong>of this DataFrame.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:\n</strong>DataFrame employees\n+-------------+-----------+-----------------------+--------+\n| employee_id | name      | department            | salary |\n+-------------+-----------+-----------------------+--------+\n| 3           | Bob       | Operations            | 48675  |\n| 90          | Alice     | Sales                 | 11096  |\n| 9           | Tatiana   | Engineering           | 33805  |\n| 60          | Annabelle | InformationTechnology | 37678  |\n| 49          | Jonathan  | HumanResources        | 23793  |\n| 43          | Khaled    | Administration        | 40454  |\n+-------------+-----------+-----------------------+--------+\n<strong>Output:</strong>\n+-------------+---------+-------------+--------+\n| employee_id | name    | department  | salary |\n+-------------+---------+-------------+--------+\n| 3           | Bob     | Operations  | 48675  |\n| 90          | Alice   | Sales       | 11096  |\n| 9           | Tatiana | Engineering | 33805  |\n+-------------+---------+-------------+--------+\n<strong>Explanation:</strong> \nOnly the first 3 rows are displayed.</pre>\n",
+  "hints": [
+    "Consider using a built-in function in pandas library to retrieve the initial rows."
+  ],
+  "metaData": "{\n  \"pythondata\": [\n    \"employees = pd.DataFrame([], columns=['employee_id', 'name', 'department', 'salary']).astype({'employee_id':'Int64', 'name':'object', 'department':'object', 'salary':'Int64'})\"\n  ],\n  \"database\": true,\n  \"name\": \"selectFirstRows\",\n  \"languages\": [\n    \"pythondata\"\n  ]\n}",
+  "stats": "{\"totalAccepted\": \"208K\", \"totalSubmission\": \"223.6K\", \"totalAcceptedRaw\": 208036, \"totalSubmissionRaw\": 223581, \"acRate\": \"93.0%\"}",
+  "likes": 123,
+  "dislikes": 25,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"employees\":[\"employee_id\",\"name\",\"department\",\"salary\"]},\"rows\":{\"employees\":[[3,\"Bob\",\"Operations\",48675],[90,\"Alice\",\"Sales\",11096],[9,\"Tatiana\",\"Engineering\",33805],[60,\"Annabelle\",\"InformationTechnology\",37678],[49,\"Jonathan\",\"HumanResources\",23793],[43,\"Khaled\",\"Administration\",40454]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": []}",
+  "topicTags": [],
+  "codeSnippets": [
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef selectFirstRows(employees: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2101",
+    "content": "[TOC]\n\n## Solution\n--- \n### Overview\nThis problem requires us to return the first 3 rows of the `employees` DataFrame. \n\n**Key Concepts:**\n\n1. **DataFrame:** a 2D table-like structure, similar to a spreadsheet or SQL table. Each row represents an individual record and each column represents a different attribute. It is size-mutable and designed to handle a mix of different types of data.\n2. **`head` method**: a method provided by the pandas library that is used on a DataFrame to return the first `n` rows. If `n` is omitted, it defaults to returning the first 5 rows. This is useful to get an overview or quick look at the beginning of large datasets.\n\n\n### Intuition\n\nLet's explore step by step how to return the first 3 rows of a DataFrame.\n\n1. **Importing pandas**:\n   \n   ```python\n   import pandas as pd\n   ```\n   This line imports the pandas library and gives it an alias name `pd`. The pandas library provides fast, flexible, and expressive data structures designed to work with structured (tabular, multidimensional, potentially heterogeneous) data.\n\n2. **Utilizing `head`:**\n   \n    Let's look at an example to see how we can use `head` to solve our problem.\n\n    Given the `employees` DataFrame as:\n\n    <table>\n        <tr>\n            <th>employee_id</th>\n            <th>name</th>\n            <th>department</th>\n            <th>salary</th>\n        </tr>\n        <tr>\n            <td>3</td>\n            <td>Bob</td>\n            <td>Operations</td>\n            <td>48675</td>\n        </tr>\n        <tr>\n            <td>90</td>\n            <td>Alice</td>\n            <td>Sales</td>\n            <td>11096</td>\n        </tr>\n        <tr>\n            <td>9</td>\n            <td>Tatiana</td>\n            <td>Engineering</td>\n            <td>33805</td>\n        </tr>\n        <tr>\n            <td>60</td>\n            <td>Annabelle</td>\n            <td>InformationTechnology</td>\n            <td>37678</td>\n        </tr>\n        <tr>\n            <td>49</td>\n            <td>Jonathan</td>\n            <td>HumanResources</td>\n            <td>23793</td>\n        </tr>\n        <tr>\n            <td>43</td>\n            <td>Khaled</td>\n            <td>Administration</td>\n            <td>40454</td>\n        </tr>\n    </table>\n    <br>\n\n    We return the `employees` DataFrame using the the `head` function with an input of 3, to indicate we want to return the first 3 rows:\n\n    ```python\n    return employees.head(3)\n    ```\n\n    The dataframe returned is then: \n    \n    <table>\n        <tr>\n            <th>employee_id</th>\n            <th>name</th>\n            <th>department</th>\n            <th>salary</th>\n        </tr>\n        <tr>\n            <td>3</td>\n            <td>Bob</td>\n            <td>Operations</td>\n            <td>48675</td>\n        </tr>\n        <tr>\n            <td>90</td>\n            <td>Alice</td>\n            <td>Sales</td>\n            <td>11096</td>\n        </tr>\n        <tr>\n            <td>9</td>\n            <td>Tatiana</td>\n            <td>Engineering</td>\n            <td>33805</td>\n        </tr>\n    </table>\n    <br>\n\n**Visualization of the `head` function applied to the `employees` DataFrame:**\n\n![fig](../Figures/3309/3309-1.png)\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/fPWFBNhE/shared\" frameBorder=\"0\" width=\"100%\" height=\"123\" name=\"fPWFBNhE\"></iframe>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

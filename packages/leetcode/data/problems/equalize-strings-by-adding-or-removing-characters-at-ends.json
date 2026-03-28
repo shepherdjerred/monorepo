@@ -1,0 +1,141 @@
+{
+  "questionId": "3441",
+  "questionFrontendId": "3135",
+  "title": "Equalize Strings by Adding or Removing Characters at Ends",
+  "titleSlug": "equalize-strings-by-adding-or-removing-characters-at-ends",
+  "difficulty": "Medium",
+  "content": "<p>Given two strings <code>initial</code> and <code>target</code>, your task is to modify <code>initial</code> by performing a series of operations to make it equal to <code>target</code>.</p>\n\n<p>In one operation, you can add or remove <strong>one character</strong> only at the <em>beginning</em> or the <em>end</em> of the string <code>initial</code>.</p>\n\n<p>Return the <strong>minimum</strong> number of operations required to <em>transform</em> <code>initial</code> into <code>target</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">initial = &quot;abcde&quot;, target = &quot;cdef&quot;</span></p>\n\n<p><strong>Output:</strong> 3</p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Remove <code>&#39;a&#39;</code> and <code>&#39;b&#39;</code> from the beginning of <code>initial</code>, then add <code>&#39;f&#39;</code> to the end.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">initial = &quot;axxy&quot;, target = &quot;yabx&quot;</span></p>\n\n<p><strong>Output:</strong> 6</p>\n\n<p><strong>Explanation:</strong></p>\n\n<table border=\"1\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<th>Operation</th>\n\t\t\t<th>Resulting String</th>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>Add <code>&#39;y&#39;</code> to the beginning</td>\n\t\t\t<td><code>&quot;yaxxy&quot;</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>Remove from end</td>\n\t\t\t<td><code>&quot;yaxx&quot;</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>Remove from end</td>\n\t\t\t<td><code>&quot;yax&quot;</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>Remove from end</td>\n\t\t\t<td><code>&quot;ya&quot;</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>Add <code>&#39;b&#39;</code> to the end</td>\n\t\t\t<td><code>&quot;yab&quot;</code></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>Add <code>&#39;x&#39;</code> to the end</td>\n\t\t\t<td><code>&quot;yabx&quot;</code></td>\n\t\t</tr>\n\t</tbody>\n</table>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">initial = &quot;xyz&quot;, target = &quot;xyz&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>No operations are needed as the strings are already equal.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= initial.length, target.length &lt;= 1000</code></li>\n\t<li><code>initial</code> and <code>target</code> consist only of lowercase English letters.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"minOperations\",\n  \"params\": [\n    {\n      \"name\": \"initial\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"target\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1.4K\", \"totalSubmission\": \"2.6K\", \"totalAcceptedRaw\": 1434, \"totalSubmissionRaw\": 2559, \"acRate\": \"56.0%\"}",
+  "likes": 16,
+  "dislikes": 2,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"abcde\"\n\"cdef\"",
+    "\"axxy\"\n\"yabx\"",
+    "\"xyz\"\n\"xyz\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Hash Function",
+      "slug": "hash-function"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minOperations(string initial, string target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minOperations(String initial, String target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minOperations(self, initial: str, target: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minOperations(self, initial, target):\n        \"\"\"\n        :type initial: str\n        :type target: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} initial\n * @param {string} target\n * @return {number}\n */\nvar minOperations = function(initial, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minOperations(initial: string, target: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinOperations(string initial, string target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minOperations(char* initial, char* target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minOperations(initial string, target string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minOperations(initial: String, target: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minOperations(_ initial: String, _ target: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_operations(initial: String, target: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} initial\n# @param {String} target\n# @return {Integer}\ndef min_operations(initial, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $initial\n     * @param String $target\n     * @return Integer\n     */\n    function minOperations($initial, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minOperations(String initial, String target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minOperations(initial: String, target: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_operations(initial :: String.t, target :: String.t) :: integer\n  def min_operations(initial, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_operations(Initial :: unicode:unicode_binary(), Target :: unicode:unicode_binary()) -> integer().\nmin_operations(Initial, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-operations initial target)\n  (-> string? string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,53 @@
+{
+  "questionId": "3287",
+  "questionFrontendId": "2990",
+  "title": "Loan Types",
+  "titleSlug": "loan-types",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Loans</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| loan_id     | int     |\n| user_id     | int     |\n| loan_type   | varchar |\n+-------------+---------+\nloan_id is column of unique values for this table.\nThis table contains loan_id, user_id, and loan_type.\n</pre>\n\n<p>Write a solution to find all <strong>distinct</strong> <code>user_id</code>&#39;s that have <strong>at least one</strong> <strong>Refinance</strong> loan type and at least one <strong>Mortgage</strong> loan type.</p>\n\n<p>Return <em>the result table ordered by </em><code>user_id</code><em> in <strong>ascending</strong> order</em><em>.</em></p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong>\nLoans table:\n+---------+---------+-----------+\n| loan_id | user_id | loan_type |\n+---------+---------+-----------+\n| 683     | 101     | Mortgage  |\n| 218     | 101     | AutoLoan  |\n| 802     | 101     | Inschool  |\n| 593     | 102     | Mortgage  |\n| 138     | 102     | Refinance |\n| 294     | 102     | Inschool  |\n| 308     | 103     | Refinance |\n| 389     | 104     | Mortgage  |\n+---------+---------+-----------+\n<strong>Output</strong>\n+---------+\n| user_id | \n+---------+\n| 102     | \n+---------+\n<strong>Explanation</strong>\n- User_id 101 has three loan types, one of which is a Mortgage. However, this user does not have any loan type categorized as Refinance, so user_id 101 won&#39;t be considered.\n- User_id 102 possesses three loan types: one for Mortgage and one for Refinance. Hence, user_id 102 will be included in the result.\n- User_id 103 has a loan type of Refinance but lacks a Mortgage loan type, so user_id 103 won&#39;t be considered.\n- User_id 104 has a Mortgage loan type but doesn&#39;t have a Refinance loan type, thus, user_id 104 won&#39;t be considered.\nOutput table is ordered by user_id in ascending order.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create Table if not Exists Loans ( loan_id int, user_id int, loan_type varchar(40))\"], \"mssql\": [\"Create Table  Loans (loan_id int, user_id int, loan_type varchar(40))\"], \"oraclesql\": [\"Create Table  Loans ( loan_id int, user_id int, loan_type varchar(40))\"], \"database\": true, \"name\": \"loan_types\", \"pythondata\": [\"Loans = pd.DataFrame([], columns=['loan_id', 'user_id', 'loan_type']).astype({'loan_id':'Int64', 'user_id':'Int64', 'loan_type':'object'})\\n\"], \"postgresql\": [\"CREATE TABLE IF NOT EXISTS Loans (\\n  loan_id INT,\\n  user_id INT,\\n  loan_type VARCHAR(40)\\n);\\n\"], \"database_schema\": {\"Loans\": {\"loan_id\": \"INT\", \"user_id\": \"INT\", \"loan_type\": \"VARCHAR(40)\"}}}",
+  "stats": "{\"totalAccepted\": \"6.1K\", \"totalSubmission\": \"9.6K\", \"totalAcceptedRaw\": 6112, \"totalSubmissionRaw\": 9560, \"acRate\": \"63.9%\"}",
+  "likes": 19,
+  "dislikes": 8,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Loans\":[\"loan_id\",\"user_id\",\"loan_type\"]},\"rows\":{\"Loans\":[[683,101,\"Mortgage\"],[218,101,\"AutoLoan\"],[802,101,\"Inschool\"],[593,102,\"Mortgage\"],[138,102,\"Refinance\"],[294,102,\"Inschool\"],[308,103,\"Refinance\"],[389,104,\"Mortgage\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef loan_types(loans: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

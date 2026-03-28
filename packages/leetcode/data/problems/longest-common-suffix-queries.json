@@ -1,0 +1,135 @@
+{
+  "questionId": "3376",
+  "questionFrontendId": "3093",
+  "title": "Longest Common Suffix Queries",
+  "titleSlug": "longest-common-suffix-queries",
+  "difficulty": "Hard",
+  "content": "<p>You are given two arrays of strings <code>wordsContainer</code> and <code>wordsQuery</code>.</p>\n\n<p>For each <code>wordsQuery[i]</code>, you need to find a string from <code>wordsContainer</code> that has the <strong>longest common suffix</strong> with <code>wordsQuery[i]</code>. If there are two or more strings in <code>wordsContainer</code> that share the longest common suffix, find the string that is the <strong>smallest</strong> in length. If there are two or more such strings that have the <strong>same</strong> smallest length, find the one that occurred <strong>earlier</strong> in <code>wordsContainer</code>.</p>\n\n<p>Return <em>an array of integers </em><code>ans</code><em>, where </em><code>ans[i]</code><em> is the index of the string in </em><code>wordsContainer</code><em> that has the <strong>longest common suffix</strong> with </em><code>wordsQuery[i]</code><em>.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">wordsContainer = [&quot;abcd&quot;,&quot;bcd&quot;,&quot;xbcd&quot;], wordsQuery = [&quot;cd&quot;,&quot;bcd&quot;,&quot;xyz&quot;]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[1,1,1]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Let&#39;s look at each <code>wordsQuery[i]</code> separately:</p>\n\n<ul>\n\t<li>For <code>wordsQuery[0] = &quot;cd&quot;</code>, strings from <code>wordsContainer</code> that share the longest common suffix <code>&quot;cd&quot;</code> are at indices 0, 1, and 2. Among these, the answer is the string at index 1 because it has the shortest length of 3.</li>\n\t<li>For <code>wordsQuery[1] = &quot;bcd&quot;</code>, strings from <code>wordsContainer</code> that share the longest common suffix <code>&quot;bcd&quot;</code> are at indices 0, 1, and 2. Among these, the answer is the string at index 1 because it has the shortest length of 3.</li>\n\t<li>For <code>wordsQuery[2] = &quot;xyz&quot;</code>, there is no string from <code>wordsContainer</code> that shares a common suffix. Hence the longest common suffix is <code>&quot;&quot;</code>, that is shared with strings at index 0, 1, and 2. Among these, the answer is the string at index 1 because it has the shortest length of 3.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">wordsContainer = [&quot;abcdefgh&quot;,&quot;poiuygh&quot;,&quot;ghghgh&quot;], wordsQuery = [&quot;gh&quot;,&quot;acbfgh&quot;,&quot;acbfegh&quot;]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[2,0,2]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Let&#39;s look at each <code>wordsQuery[i]</code> separately:</p>\n\n<ul>\n\t<li>For <code>wordsQuery[0] = &quot;gh&quot;</code>, strings from <code>wordsContainer</code> that share the longest common suffix <code>&quot;gh&quot;</code> are at indices 0, 1, and 2. Among these, the answer is the string at index 2 because it has the shortest length of 6.</li>\n\t<li>For <code>wordsQuery[1] = &quot;acbfgh&quot;</code>, only the string at index 0 shares the longest common suffix <code>&quot;fgh&quot;</code>. Hence it is the answer, even though the string at index 2 is shorter.</li>\n\t<li>For <code>wordsQuery[2] = &quot;acbfegh&quot;</code>, strings from <code>wordsContainer</code> that share the longest common suffix <code>&quot;gh&quot;</code> are at indices 0, 1, and 2. Among these, the answer is the string at index 2 because it has the shortest length of 6.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= wordsContainer.length, wordsQuery.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= wordsContainer[i].length &lt;= 5 * 10<sup>3</sup></code></li>\n\t<li><code>1 &lt;= wordsQuery[i].length &lt;= 5 * 10<sup>3</sup></code></li>\n\t<li><code>wordsContainer[i]</code> consists only of lowercase English letters.</li>\n\t<li><code>wordsQuery[i]</code> consists only of lowercase English letters.</li>\n\t<li>Sum of <code>wordsContainer[i].length</code> is at most <code>5 * 10<sup>5</sup></code>.</li>\n\t<li>Sum of <code>wordsQuery[i].length</code> is at most <code>5 * 10<sup>5</sup></code>.</li>\n</ul>\n",
+  "hints": [
+    "If we reverse the strings, the problem changes to finding the longest common prefix.",
+    "Build a Trie, each node is a letter and only saves the best word’s index in each node, based on the criteria."
+  ],
+  "metaData": "{\n  \"name\": \"stringIndices\",\n  \"params\": [\n    {\n      \"name\": \"wordsContainer\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"string[]\",\n      \"name\": \"wordsQuery\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"14.2K\", \"totalSubmission\": \"39.7K\", \"totalAcceptedRaw\": 14210, \"totalSubmissionRaw\": 39694, \"acRate\": \"35.8%\"}",
+  "likes": 192,
+  "dislikes": 21,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Common Prefix\", \"titleSlug\": \"longest-common-prefix\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Length of the Longest Common Prefix\", \"titleSlug\": \"find-the-length-of-the-longest-common-prefix\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"abcd\",\"bcd\",\"xbcd\"]\n[\"cd\",\"bcd\",\"xyz\"]",
+    "[\"abcdefgh\",\"poiuygh\",\"ghghgh\"]\n[\"gh\",\"acbfgh\",\"acbfegh\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> stringIndices(vector<string>& wordsContainer, vector<string>& wordsQuery) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] stringIndices(String[] wordsContainer, String[] wordsQuery) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def stringIndices(self, wordsContainer: List[str], wordsQuery: List[str]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def stringIndices(self, wordsContainer, wordsQuery):\n        \"\"\"\n        :type wordsContainer: List[str]\n        :type wordsQuery: List[str]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} wordsContainer\n * @param {string[]} wordsQuery\n * @return {number[]}\n */\nvar stringIndices = function(wordsContainer, wordsQuery) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function stringIndices(wordsContainer: string[], wordsQuery: string[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] StringIndices(string[] wordsContainer, string[] wordsQuery) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* stringIndices(char** wordsContainer, int wordsContainerSize, char** wordsQuery, int wordsQuerySize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func stringIndices(wordsContainer []string, wordsQuery []string) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun stringIndices(wordsContainer: Array<String>, wordsQuery: Array<String>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func stringIndices(_ wordsContainer: [String], _ wordsQuery: [String]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn string_indices(words_container: Vec<String>, words_query: Vec<String>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words_container\n# @param {String[]} words_query\n# @return {Integer[]}\ndef string_indices(words_container, words_query)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $wordsContainer\n     * @param String[] $wordsQuery\n     * @return Integer[]\n     */\n    function stringIndices($wordsContainer, $wordsQuery) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> stringIndices(List<String> wordsContainer, List<String> wordsQuery) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def stringIndices(wordsContainer: Array[String], wordsQuery: Array[String]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec string_indices(words_container :: [String.t], words_query :: [String.t]) :: [integer]\n  def string_indices(words_container, words_query) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec string_indices(WordsContainer :: [unicode:unicode_binary()], WordsQuery :: [unicode:unicode_binary()]) -> [integer()].\nstring_indices(WordsContainer, WordsQuery) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (string-indices wordsContainer wordsQuery)\n  (-> (listof string?) (listof string?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

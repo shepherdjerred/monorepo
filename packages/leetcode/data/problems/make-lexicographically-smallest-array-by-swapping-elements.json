@@ -1,0 +1,144 @@
+{
+  "questionId": "3219",
+  "questionFrontendId": "2948",
+  "title": "Make Lexicographically Smallest Array by Swapping Elements",
+  "titleSlug": "make-lexicographically-smallest-array-by-swapping-elements",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> array of <strong>positive</strong> integers <code>nums</code> and a <strong>positive</strong> integer <code>limit</code>.</p>\n\n<p>In one operation, you can choose any two indices <code>i</code> and <code>j</code> and swap <code>nums[i]</code> and <code>nums[j]</code> <strong>if</strong> <code>|nums[i] - nums[j]| &lt;= limit</code>.</p>\n\n<p>Return <em>the <strong>lexicographically smallest array</strong> that can be obtained by performing the operation any number of times</em>.</p>\n\n<p>An array <code>a</code> is lexicographically smaller than an array <code>b</code> if in the first position where <code>a</code> and <code>b</code> differ, array <code>a</code> has an element that is less than the corresponding element in <code>b</code>. For example, the array <code>[2,10,3]</code> is lexicographically smaller than the array <code>[10,2,3]</code> because they differ at index <code>0</code> and <code>2 &lt; 10</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,5,3,9,8], limit = 2\n<strong>Output:</strong> [1,3,5,8,9]\n<strong>Explanation:</strong> Apply the operation 2 times:\n- Swap nums[1] with nums[2]. The array becomes [1,3,5,9,8]\n- Swap nums[3] with nums[4]. The array becomes [1,3,5,8,9]\nWe cannot obtain a lexicographically smaller array by applying any more operations.\nNote that it may be possible to get the same result by doing different operations.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,7,6,18,2,1], limit = 3\n<strong>Output:</strong> [1,6,7,18,1,2]\n<strong>Explanation:</strong> Apply the operation 3 times:\n- Swap nums[1] with nums[2]. The array becomes [1,6,7,18,2,1]\n- Swap nums[0] with nums[4]. The array becomes [2,6,7,18,1,1]\n- Swap nums[0] with nums[5]. The array becomes [1,6,7,18,1,2]\nWe cannot obtain a lexicographically smaller array by applying any more operations.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,7,28,19,10], limit = 3\n<strong>Output:</strong> [1,7,28,19,10]\n<strong>Explanation:</strong> [1,7,28,19,10] is the lexicographically smallest array we can obtain because we cannot apply the operation on any two indices.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= limit &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Construct a virtual graph where all elements in <code>nums</code> are nodes and the pairs satisfying the condition have an edge between them.",
+    "Instead of constructing all edges, we only care about the connected components.",
+    "Can we use DSU?",
+    "Sort <code>nums</code>. Now we just need to consider if the consecutive elements have an edge to check if they belong to the same connected component. Hence, all connected components become a list of position-consecutive elements after sorting.",
+    "For each index of <code>nums</code> from <code>0</code> to <code>nums.length - 1</code> we can change it to the current minimum value we have in its connected component and remove that value from the connected component."
+  ],
+  "metaData": "{\n  \"name\": \"lexicographicallySmallestArray\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"limit\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"101.7K\", \"totalSubmission\": \"168.8K\", \"totalAcceptedRaw\": 101666, \"totalSubmissionRaw\": 168765, \"acRate\": \"60.2%\"}",
+  "likes": 972,
+  "dislikes": 79,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Smallest String With Swaps\", \"titleSlug\": \"smallest-string-with-swaps\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimize Hamming Distance After Swap Operations\", \"titleSlug\": \"minimize-hamming-distance-after-swap-operations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,5,3,9,8]\n2",
+    "[1,7,6,18,2,1]\n3",
+    "[1,7,28,19,10]\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> lexicographicallySmallestArray(vector<int>& nums, int limit) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] lexicographicallySmallestArray(int[] nums, int limit) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def lexicographicallySmallestArray(self, nums: List[int], limit: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def lexicographicallySmallestArray(self, nums, limit):\n        \"\"\"\n        :type nums: List[int]\n        :type limit: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} limit\n * @return {number[]}\n */\nvar lexicographicallySmallestArray = function(nums, limit) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function lexicographicallySmallestArray(nums: number[], limit: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] LexicographicallySmallestArray(int[] nums, int limit) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* lexicographicallySmallestArray(int* nums, int numsSize, int limit, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func lexicographicallySmallestArray(nums []int, limit int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun lexicographicallySmallestArray(nums: IntArray, limit: Int): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func lexicographicallySmallestArray(_ nums: [Int], _ limit: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn lexicographically_smallest_array(nums: Vec<i32>, limit: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} limit\n# @return {Integer[]}\ndef lexicographically_smallest_array(nums, limit)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $limit\n     * @return Integer[]\n     */\n    function lexicographicallySmallestArray($nums, $limit) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> lexicographicallySmallestArray(List<int> nums, int limit) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def lexicographicallySmallestArray(nums: Array[Int], limit: Int): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec lexicographically_smallest_array(nums :: [integer], limit :: integer) :: [integer]\n  def lexicographically_smallest_array(nums, limit) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec lexicographically_smallest_array(Nums :: [integer()], Limit :: integer()) -> [integer()].\nlexicographically_smallest_array(Nums, Limit) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (lexicographically-smallest-array nums limit)\n  (-> (listof exact-integer?) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2656",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an array `nums` in which we can swap any two elements `nums[i]` and `nums[j]` if their absolute difference is less than or equal to `limit`. We want to find the lexicographically smallest possible array we can make by applying this swap operation an unlimited number of times on `nums`.\n\nLexicographical order compares arrays element by element, starting from the leftmost index. For two arrays, the comparison stops as soon as we find an index where the elements differ:  \n- The array with the smaller element at this differing index is considered smaller.  \n- If all elements are the same up to the shorter array's length, the shorter array is considered smaller.  \n\nFor the example arrays given in the problem description, `[2,10,3]` and `[10,2,3]`, the first elements don't match: `2 < 10`, so `[2,10,3]` is lexicographically smaller. \n\nLet's look at another example: For `[1, 1, 3, 5]` and `[1, 1, 2, 7, 9]`, the first occurrence in which the elements do not match is at index 2: `2 < 3` so `[1, 1, 2, 7, 9]` is lexicographically smaller.\n\n### Approach: Sorting + Grouping\n\n#### Intuition\n\nOur goal is to perform valid swap operations on `nums` so that it is as lexicographically small as possible. After looking at the examples in the overview, we see that to make a lexicographically small array, we would like smaller values to be more towards the front, while larger values are pushed to the back. We will now investigate what sort of rearrangements are possible in order to achieve this ordering.\n\nConsider the array `[5, 3, 1]` with `limit = 2`: \n\n- `1` and `3` can be swapped because $|3 - 1| = 2 \\leq \\text{limit}$.\n- Similarly, `3` and `5` can be swapped because $|5 - 3| = 2 \\leq \\text{limit}$.\n- On the other hand, `1` and `5` cannot be swapped directly because $|5 - 1| = 4 > \\text{limit}$.\n\nEven though `1` and `5` cannot be swapped directly, we notice that they can effectively be swapped through a chain of intermediate swaps where `1` gets swapped with `3` and `3` gets swapped with `5`:\n\n![Reordering](../Figures/2948/reordering.png)\n\nIn other words, this swapping is **transitive**: If `a` can swap with `b`, and `b` can swap with `c`, then `a` can effectively be swapped with `c`. Through this transitive property, we know that all elements in the example array can be swapped with each other (because they all belong in this transitive swapping chain). Because of this, any rearrangement/permutation can also be done. For this problem, we want the elements in increasing order to achieve the smallest lexicographic value, so we know `[1, 3, 5]` is the lexicographically smallest possible array that can be made.\n\nNow that we know about this transitive property, it would be useful to see which elements in `nums` can be rearranged together like shown above. Specifically, we want to organize `nums` into groups, so that all elements in a given group can participate in this transitive chaining and can thus be reordered in our desired increasing order. \n\nTo do this, we can first sort `nums` in increasing order. We can then iterate through each `num` in `nums` and compare it to its previous element to see if their absolute difference is within `limit`. If it is, then `num` belongs in the same running group. Otherwise, the chain is broken and a new group containing `num` is created.\n\n![Sorting and grouping](../Figures/2948/sorting_and_grouping.png)\n\nTo keep track of groups, we can use a hash map `numToGroup`, where the key is the element and the value is the group number (the group number can be initialized to 0 and incremented each time a new group is created). Similarly, to keep track of the list of elements comprising each group, we can use another hash map `groupToList` where the key is the group number and the value is the sorted list of elements belonging to the group.\n\nAfter this process, we now know what group each element in `nums` belongs to, and that elements in each group can be freely rearranged:\n\n![Grouping in original input](../Figures/2948/grouping_in_original_input.png)\n\nOnce we've grouped the elements, we return to the original array. For each element, we check its group using `numToGroup` and overwrite it with the next smallest element from that group. This ensures the elements in each group are placed in ascending order, resulting in the smallest possible lexicographic arrangement.\n\n![Final output](../Figures/2948/final_output.png)\n\n#### Algorithm\n\n- Create a sorted copy of the input array `nums` called `numsSorted`.\n- Initialize variables:\n  - `currGroup` to track the current group index.\n  - `numToGroup`, a map to associate each number with its group.\n  - `groupToList`, a map to associate each group with a list of numbers that belong to it.\n\n- Sort the `numsSorted` array.\n\n- Assign the first element of `numsSorted` to group `0`:\n  - Add the element to `groupToList` under group `0`.\n\n- Iterate through the rest of `numsSorted`:\n  - If the difference between the current element and the previous one is greater than `limit`, increment `currGroup` (indicating a new group).\n  - Assign the current element to the correct group in `numToGroup`.\n  - Add the element to the corresponding list in `groupToList`.\n\n- Iterate through the original `nums` array:\n  - For each element, retrieve its group from `numToGroup`.\n  - Replace the element with the next element from its corresponding group in `groupToList`.\n\n- Return the modified `nums` array, which is now the lexicographically smallest array after applying the group-wise sorting.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TEDHLEBH/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TEDHLEBH\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the size of `nums`. \n\n- Time Complexity: $O(N \\cdot \\log N)$\n\n    Sorting `nums` takes $O(N \\cdot \\log N)$ time. Iterating through each element in `sortedNums` and updating our two maps takes $O(N)$ time. Iterating through `nums` to overwrite its values with the sorted list values in each group takes a total of $O(N)$ time. Thus, the total time complexity is $O(N \\cdot \\log N)$.\n\n- Space Complexity: $O(N + S_N) \\approx O(N)$\n\n    Both our maps have a space complexity of $N$. The space complexity used for sorting `nums` depends on the language of implementation:\n\n    In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log N)$.\n    In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O(\\log N)$.\n    In Python, the `sort()` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(N)$.\n\n    Thus, the total space complexity is $O(N + S_N) \\approx O(N)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

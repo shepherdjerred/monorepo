@@ -1,0 +1,53 @@
+{
+  "questionId": "3255",
+  "questionFrontendId": "3050",
+  "title": "Pizza Toppings Cost Analysis",
+  "titleSlug": "pizza-toppings-cost-analysis",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code><font face=\"monospace\">Toppings</font></code></p>\n\n<pre>\n+--------------+---------+ \n| Column Name  | Type    | \n+--------------+---------+ \n| topping_name | varchar | \n| cost         | decimal |\n+--------------+---------+\ntopping_name is the primary key for this table.\nEach row of this table contains topping name and the cost of the topping. \n</pre>\n\n<p>Write a solution to calculate the <strong>total cost</strong> of <strong>all possible <code>3</code>-topping</strong> pizza combinations from a given list of toppings. The total cost of toppings must be <strong>rounded</strong> to <code>2</code> <strong>decimal</strong> places.</p>\n\n<p><strong>Note:</strong></p>\n\n<ul>\n\t<li><strong>Do not</strong> include the pizzas where a topping is <strong>repeated</strong>. For example, &lsquo;Pepperoni, Pepperoni, Onion Pizza&rsquo;.</li>\n\t<li>Toppings <strong>must be</strong> listed in <strong>alphabetical order</strong>. For example, &#39;Chicken, Onions, Sausage&#39;. &#39;Onion, Sausage, Chicken&#39; is not acceptable.</li>\n</ul>\n\n<p>Return<em> the result table ordered by total cost in</em> <em><strong>descending</strong></em> <em>order and combination of toppings in <strong>ascending</strong> order.</em></p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nToppings table:\n+--------------+------+\n| topping_name | cost |\n+--------------+------+\n| Pepperoni    | 0.50 |\n| Sausage      | 0.70 |\n| Chicken      | 0.55 |\n| Extra Cheese | 0.40 |\n+--------------+------+\n<strong>Output:</strong> \n+--------------------------------+------------+\n| pizza                          | total_cost | \n+--------------------------------+------------+\n| Chicken,Pepperoni,Sausage      | 1.75       |  \n| Chicken,Extra Cheese,Sausage   | 1.65       |\n| Extra Cheese,Pepperoni,Sausage | 1.60       |\n| Chicken,Extra Cheese,Pepperoni | 1.45       | \n+--------------------------------+------------+\n<strong>Explanation:</strong> \nThere are only four different combinations possible with the three topings:\n- Chicken, Pepperoni, Sausage: Total cost is $1.75 (Chicken $0.55, Pepperoni $0.50, Sausage $0.70).\n- Chicken, Extra Cheese, Sausage: Total cost is $1.65 (Chicken $0.55, Extra Cheese $0.40, Sausage $0.70).\n- Extra Cheese, Pepperoni, Sausage: Total cost is $1.60 (Extra Cheese $0.40, Pepperoni $0.50, Sausage $0.70).\n- Chicken, Extra Cheese, Pepperoni: Total cost is $1.45 (Chicken $0.55, Extra Cheese $0.40, Pepperoni $0.50).\nOutput table is ordered by the total cost in descending order.</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table if not exists Toppings(topping_name varchar(100), cost decimal(5,2))\"], \"mssql\": [\"Create table Toppings(topping_name varchar(100), cost decimal(5,2))\"], \"oraclesql\": [\"Create table Toppings(topping_name varchar(100), cost decimal(5,2))\"], \"database\": true, \"name\": \"cost_analysis\", \"pythondata\": [\"Toppings = pd.DataFrame([], columns=['topping_name', 'cost']).astype({'topping_name':'object', 'cost':'Float64'})\\n\"], \"postgresql\": [\"Create table if not exists Toppings(topping_name varchar(100), cost decimal(5,2))\\n\"], \"database_schema\": {\"Toppings\": {\"topping_name\": \"VARCHAR(100)\", \"cost\": \"DECIMAL(5, 2)\"}}}",
+  "stats": "{\"totalAccepted\": \"3.7K\", \"totalSubmission\": \"5.4K\", \"totalAcceptedRaw\": 3743, \"totalSubmissionRaw\": 5440, \"acRate\": \"68.8%\"}",
+  "likes": 17,
+  "dislikes": 1,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Toppings\":[\"topping_name\",\"cost\"]},\"rows\":{\"Toppings\":[[\"Pepperoni\",0.50],[\"Sausage\",0.70],[\"Chicken\",0.55],[\"Extra Cheese\",0.40]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef cost_analysis(toppings: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

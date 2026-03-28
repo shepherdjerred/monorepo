@@ -1,0 +1,133 @@
+{
+  "questionId": "3174",
+  "questionFrontendId": "2914",
+  "title": "Minimum Number of Changes to Make Binary String Beautiful",
+  "titleSlug": "minimum-number-of-changes-to-make-binary-string-beautiful",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> binary string <code>s</code> having an even length.</p>\n\n<p>A string is <strong>beautiful</strong> if it&#39;s possible to partition it into one or more substrings such that:</p>\n\n<ul>\n\t<li>Each substring has an <strong>even length</strong>.</li>\n\t<li>Each substring contains <strong>only</strong> <code>1</code>&#39;s or <strong>only</strong> <code>0</code>&#39;s.</li>\n</ul>\n\n<p>You can change any character in <code>s</code> to <code>0</code> or <code>1</code>.</p>\n\n<p>Return <em>the <strong>minimum</strong> number of changes required to make the string </em><code>s</code> <em>beautiful</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;1001&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> We change s[1] to 1 and s[3] to 0 to get string &quot;1100&quot;.\nIt can be seen that the string &quot;1100&quot; is beautiful because we can partition it into &quot;11|00&quot;.\nIt can be proven that 2 is the minimum number of changes needed to make the string beautiful.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;10&quot;\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> We change s[1] to 1 to get string &quot;11&quot;.\nIt can be seen that the string &quot;11&quot; is beautiful because we can partition it into &quot;11&quot;.\nIt can be proven that 1 is the minimum number of changes needed to make the string beautiful.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;0000&quot;\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> We don&#39;t need to make any changes as the string &quot;0000&quot; is beautiful already.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> has an even length.</li>\n\t<li><code>s[i]</code> is either <code>&#39;0&#39;</code> or <code>&#39;1&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "For any valid partition, since each part consists of an even number of the same characters, we can further partition each part into lengths of exactly <code>2</code>.",
+    "After noticing the first hint, we can decompose the whole string into disjoint blocks of size <code>2</code> and find the minimum number of changes required to make those blocks beautiful."
+  ],
+  "metaData": "{\n  \"name\": \"minChanges\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"164.2K\", \"totalSubmission\": \"215K\", \"totalAcceptedRaw\": 164218, \"totalSubmissionRaw\": 214953, \"acRate\": \"76.4%\"}",
+  "likes": 683,
+  "dislikes": 117,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"1001\"",
+    "\"10\"",
+    "\"0000\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minChanges(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minChanges(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minChanges(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minChanges(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar minChanges = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minChanges(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinChanges(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minChanges(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minChanges(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minChanges(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minChanges(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_changes(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef min_changes(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function minChanges($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minChanges(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minChanges(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_changes(s :: String.t) :: integer\n  def min_changes(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_changes(S :: unicode:unicode_binary()) -> integer().\nmin_changes(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-changes s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2555",
+    "content": "[TOC]\n\n## Solution\n    \n---\n\n### Approach 1: Greedy\n\n#### Intuition\n\nOur task is to modify a string so that every consecutive occurrence of `0`s and `1`s has an even length. Since the length of the string itself is even, we can be confident that a solution exists.\n\nTo tackle this, we can loop through each character in the string while keeping track of the current sequence's length. If we reach the end of a sequence and its length is even, we can simply move on to the next sequence. \n\nIf we find that the sequence has an odd length, we will flip the last bit of that sequence to make it even. It's important to note that flipping the last bit will add an additional bit to the next sequence. So, we need to account for this when calculating the length of the upcoming sequence.\n\nThe total number of flips we have to make before we reach the end of the string is our required answer.\n</br>\n\n<details>\n<summary>A proof by contradiction of the greedy approach</summary>\n\nLet's assume there exists a better solution that requires fewer flips by flipping some bit other than the last bit in at least one odd-length sequence.\nConsider an odd-length sequence $S_1$ of length $k$, where $k$ is odd. This sequence is followed by another sequence $S_2$.\n\nLet $S_1 = {b_1, b_2, ..., b_k}$ where all bits are same (either all 0s or all 1s)\n\nLet $S_2$ starts with a different bit than $S_1$\n\nTwo possible approaches for making $S_1$ even-length:\n- Case A: Flip the last bit ($b_k$)\n- Case B: Flip any other bit ($b_i$ where $i < k$)\n\n\nAnalysis of Case A (Flipping last bit):\n\n$S_1$ becomes length ($k-1$). The flipped bit becomes part of $S_2$\n\n$\\therefore$ Cost: 1 flip.\n\n\nAnalysis of Case B (Flipping non-last bit):\n\n$S_1$ is split into two sequences of even length but a non-terminal bit of length 1 (odd) remains. To remove this, further flips are needed. \n\n$\\therefore$ Cost: More than 1 flip.\n\nTherefore, our assumption that there exists a better solution must be false.\n</details>\n\n#### Algorithm\n\n- Initialize variables: \n  - `currentChar` to the first character of the input string.\n  - `consecutiveCount` to 0 to track the count of consecutive same characters.\n  - `minChangesRequired` to 0 to store the minimum changes needed.\n- Iterate through each character in the input string:\n  - If the current character matches `currentChar`:\n    - Increment `consecutiveCount` by 1 and skip to the next iteration.\n  - If `consecutiveCount` is even:\n    - Set `consecutiveCount` to 1 to start a new sequence with the current character.\n  - If `consecutiveCount` is odd:\n    - Set `consecutiveCount` to 0.\n    - Increment `minChangesRequired` by 1 as we need to change the current character.\n  - Update `currentChar` to the current character for the next iteration.\n- Return `minChangesRequired` as the final answer.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/VpiP4nhe/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"VpiP4nhe\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input string `s`.\n\n- Time complexity: $O(n)$\n\n    The algorithm iterates through each character in `s` exactly once. At each iteration, we perform constant time operations - checking character equality, modulo operation, and incrementing counters. \n    \n    Thus, the time complexity is $O(n)$. \n\n- Space complexity: $O(1)$\n\n    The algorithm uses only three variables regardless of the input size. These do not grow with the input size.   \n\n    Thus, the space complexity of the algorithm is constant ($O(1)$).\n\n---\n\n### Approach 2: Greedy (Optimized)\n\n#### Intuition\n\nWe can make the implementation much more concise by making a key observation: any even-length sequence can be split into pairs of two characters. This is the smallest valid even sequence we can have. If we can organize the entire string into pairs where both characters are the same — either both '0's or both '1's — we'll end up with a beautiful string. This is illustrated in the diagram below:\n\n![](../Figures/2914/pairs.png)\n\nTo put this idea into practice, we’ll look at the string two characters at a time. If the two characters in each pair are the same, we can move on without any changes. If they don’t match, we know that one of the bits will need to be flipped to make them identical. \n\nWe’ll keep a counter to track how many bits we’ve flipped throughout the process. At the end, we can return this count, giving us the total number of changes needed to create a beautiful string.\n\n#### Algorithm\n\n- Initialize a variable `minChangesRequired` to 0 to track the number of changes needed.\n- Iterate through the string with step size 2 to handle pairs of characters. For each pair of adjacent characters:\n   - Compare if the characters are different. If they are:\n     - Increment `minChangesRequired` by 1.\n- Return `minChangesRequired` as the final answer.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/MqATuMqd/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"MqATuMqd\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input string `s`.\n\n* Time complexity: $O(n)$\n\n    The algorithm iterates through the input string using a step size of $2$. We examine each pair exactly once, performing $n/2$ comparisons in total. Each comparison takes constant time. \n    \n    Thus, the time complexity is $O(n)$. \n\n* Space complexity: $O(1)$\n\n    No additional space is used which scales with the input size, so the space complexity remains constant.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

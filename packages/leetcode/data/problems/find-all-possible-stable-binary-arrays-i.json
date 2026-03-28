@@ -1,0 +1,137 @@
+{
+  "questionId": "3406",
+  "questionFrontendId": "3129",
+  "title": "Find All Possible Stable Binary Arrays I",
+  "titleSlug": "find-all-possible-stable-binary-arrays-i",
+  "difficulty": "Medium",
+  "content": "<p>You are given 3 positive integers <code>zero</code>, <code>one</code>, and <code>limit</code>.</p>\n\n<p>A <span data-keyword=\"binary-array\">binary array</span> <code>arr</code> is called <strong>stable</strong> if:</p>\n\n<ul>\n\t<li>The number of occurrences of 0 in <code>arr</code> is <strong>exactly </strong><code>zero</code>.</li>\n\t<li>The number of occurrences of 1 in <code>arr</code> is <strong>exactly</strong> <code>one</code>.</li>\n\t<li>Each <span data-keyword=\"subarray-nonempty\">subarray</span> of <code>arr</code> with a size greater than <code>limit</code> must contain <strong>both </strong>0 and 1.</li>\n</ul>\n\n<p>Return the <em>total</em> number of <strong>stable</strong> binary arrays.</p>\n\n<p>Since the answer may be very large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">zero = 1, one = 1, limit = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The two possible stable binary arrays are <code>[1,0]</code> and <code>[0,1]</code>, as both arrays have a single 0 and a single 1, and no subarray has a length greater than 2.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">zero = 1, one = 2, limit = 1</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The only possible stable binary array is <code>[1,0,1]</code>.</p>\n\n<p>Note that the binary arrays <code>[1,1,0]</code> and <code>[0,1,1]</code> have subarrays of length 2 with identical elements, hence, they are not stable.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">zero = 3, one = 3, limit = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">14</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>All the possible stable binary arrays are <code>[0,0,1,0,1,1]</code>, <code>[0,0,1,1,0,1]</code>, <code>[0,1,0,0,1,1]</code>, <code>[0,1,0,1,0,1]</code>, <code>[0,1,0,1,1,0]</code>, <code>[0,1,1,0,0,1]</code>, <code>[0,1,1,0,1,0]</code>, <code>[1,0,0,1,0,1]</code>, <code>[1,0,0,1,1,0]</code>, <code>[1,0,1,0,0,1]</code>, <code>[1,0,1,0,1,0]</code>, <code>[1,0,1,1,0,0]</code>, <code>[1,1,0,0,1,0]</code>, and <code>[1,1,0,1,0,0]</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= zero, one, limit &lt;= 200</code></li>\n</ul>\n",
+  "hints": [
+    "Let <code>dp[a][b][c = 0/1][d]</code> be the number of stable arrays with exactly <code>a</code> 0s, <code>b</code> 1s and consecutive <code>d</code> value of <code>c</code>’s at the end.",
+    "Try each case by appending a 0/1 at last to get the inductions."
+  ],
+  "metaData": "{\n  \"name\": \"numberOfStableArrays\",\n  \"params\": [\n    {\n      \"name\": \"zero\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"one\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"limit\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"83.8K\", \"totalSubmission\": \"155.8K\", \"totalAcceptedRaw\": 83800, \"totalSubmissionRaw\": 155761, \"acRate\": \"53.8%\"}",
+  "likes": 496,
+  "dislikes": 182,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Contiguous Array\", \"titleSlug\": \"contiguous-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Binary Subarrays With Sum\", \"titleSlug\": \"binary-subarrays-with-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "1\n1\n2",
+    "1\n2\n1",
+    "3\n3\n2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numberOfStableArrays(int zero, int one, int limit) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numberOfStableArrays(int zero, int one, int limit) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfStableArrays(self, zero: int, one: int, limit: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfStableArrays(self, zero, one, limit):\n        \"\"\"\n        :type zero: int\n        :type one: int\n        :type limit: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} zero\n * @param {number} one\n * @param {number} limit\n * @return {number}\n */\nvar numberOfStableArrays = function(zero, one, limit) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfStableArrays(zero: number, one: number, limit: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumberOfStableArrays(int zero, int one, int limit) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numberOfStableArrays(int zero, int one, int limit) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfStableArrays(zero int, one int, limit int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfStableArrays(zero: Int, one: Int, limit: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfStableArrays(_ zero: Int, _ one: Int, _ limit: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_stable_arrays(zero: i32, one: i32, limit: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} zero\n# @param {Integer} one\n# @param {Integer} limit\n# @return {Integer}\ndef number_of_stable_arrays(zero, one, limit)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $zero\n     * @param Integer $one\n     * @param Integer $limit\n     * @return Integer\n     */\n    function numberOfStableArrays($zero, $one, $limit) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numberOfStableArrays(int zero, int one, int limit) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfStableArrays(zero: Int, one: Int, limit: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_stable_arrays(zero :: integer, one :: integer, limit :: integer) :: integer\n  def number_of_stable_arrays(zero, one, limit) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_stable_arrays(Zero :: integer(), One :: integer(), Limit :: integer()) -> integer().\nnumber_of_stable_arrays(Zero, One, Limit) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-stable-arrays zero one limit)\n  (-> exact-integer? exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2929",
+    "content": "### Approach: Dynamic Programming\n\n#### Intuition\n\nThe problem requires that every subarray of length greater than $\\textit{limit}$ in the binary array $\\textit{arr}$ contains both 0 and 1. This condition is equivalent to requiring that every subarray of length exactly $\\textit{limit} + 1$ contains both 0 and 1. The reader is encouraged to verify why these two statements are equivalent.\n\nWe need to construct the binary array $\\textit{arr}$ using exactly $\\textit{zero}$ zeros and $\\textit{one}$ ones.\n\nLet $\\textit{dp}_0[i][j]$ denote the number of valid schemes in which we have used $i$ zeros and $j$ ones, and the last placed number is $0$.\nLet $\\textit{dp}_1[i][j]$ denote the number of valid schemes in which we have used $i$ zeros and $j$ ones, and the last placed number is $1$.\n\nWe first analyze the transition for $\\textit{dp}_0[i][j]$.\n\n* When $j = 0$ and $i \\in [0, \\min(\\textit{zero}, \\textit{limit})]$, we can keep placing $0$s without violating the constraint. Thus, $\\textit{dp}_0[i][j] = 1$.\n\n* When $i = 0$, or when $j = 0$ but $i \\notin [0, \\min(\\textit{zero}, \\textit{limit})]$, no valid scheme exists. Thus, $\\textit{dp}_0[i][j] = 0$.\n\n* When $i > 0$ and $j > 0$, $\\textit{dp}_0[i][j]$ can be derived from $\\textit{dp}_0[i - 1][j]$ and $\\textit{dp}_1[i - 1][j]$:\n\n  * From $\\textit{dp}_1[i - 1][j]$: we can always append a $0$ to these schemes, since the previous number was $1$.\n\n  * From $\\textit{dp}_0[i - 1][j]$:\n    If $i \\le \\textit{limit}$, appending another $0$ does not violate the constraint.\n    If $i > \\textit{limit}$, appending $0$ may create more than $\\textit{limit}$ consecutive zeros. In this case, we must subtract the invalid schemes where the previous $\\textit{limit}$ elements were all zeros. These correspond to $\\textit{dp}_1[i - \\textit{limit} - 1][j]$.\n\nTherefore, the transition for $\\textit{dp}_0[i][j]$ is:\n\n$$\n\\textit{dp}_0[i][j] =\n\\begin{cases}\n1, & i \\in [0, \\min(\\textit{zero}, \\textit{limit})],\\ j = 0 \\\n\\textit{dp}_1[i - 1][j] + \\textit{dp}_0[i - 1][j] - \\textit{dp}_1[i - \\textit{limit} - 1][j], & i > \\textit{limit},\\ j > 0 \\\n\\textit{dp}_1[i - 1][j] + \\textit{dp}_0[i - 1][j], & i \\le \\textit{limit},\\ j > 0 \\\n0, & \\text{otherwise}\n\\end{cases}\n$$\n\nSimilarly, we derive the transition for $\\textit{dp}_1[i][j]$:\n\n$$\n\\textit{dp}_1[i][j] =\n\\begin{cases}\n1, & i = 0,\\ j \\in [0, \\min(\\textit{one}, \\textit{limit})] \\\n\\textit{dp}_0[i][j - 1] + \\textit{dp}_1[i][j - 1] - \\textit{dp}_0[i][j - \\textit{limit} - 1], & i > 0,\\ j > \\textit{limit} \\\n\\textit{dp}_0[i][j - 1] + \\textit{dp}_1[i][j - 1], & i > 0,\\ j \\le \\textit{limit} \\\n0, & \\text{otherwise}\n\\end{cases}\n$$\n\nFinally, the total number of stable binary arrays is:\n\n$$\n\\textit{dp}_0[\\textit{zero}][\\textit{one}] + \\textit{dp}_1[\\textit{zero}][\\textit{one}]\n$$\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/KVsyMNHi/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"KVsyMNHi\"></iframe>\n\n#### Complexity Analysis\n\nLet $\\textit{zero}$ and $\\textit{one}$ denote the number of zeros and ones, respectively.\n\n- Time complexity: $O(\\textit{zero} \\times \\textit{one})$.\n\n- Space complexity: $O(\\textit{zero} \\times \\textit{one})$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

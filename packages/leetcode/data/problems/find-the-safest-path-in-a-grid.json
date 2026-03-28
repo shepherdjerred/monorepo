@@ -1,0 +1,155 @@
+{
+  "questionId": "2914",
+  "questionFrontendId": "2812",
+  "title": "Find the Safest Path in a Grid",
+  "titleSlug": "find-the-safest-path-in-a-grid",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> 2D matrix <code>grid</code> of size <code>n x n</code>, where <code>(r, c)</code> represents:</p>\n\n<ul>\n\t<li>A cell containing a thief if <code>grid[r][c] = 1</code></li>\n\t<li>An empty cell if <code>grid[r][c] = 0</code></li>\n</ul>\n\n<p>You are initially positioned at cell <code>(0, 0)</code>. In one move, you can move to any adjacent cell in the grid, including cells containing thieves.</p>\n\n<p>The <strong>safeness factor</strong> of a path on the grid is defined as the <strong>minimum</strong> manhattan distance from any cell in the path to any thief in the grid.</p>\n\n<p>Return <em>the <strong>maximum safeness factor</strong> of all paths leading to cell </em><code>(n - 1, n - 1)</code><em>.</em></p>\n\n<p>An <strong>adjacent</strong> cell of cell <code>(r, c)</code>, is one of the cells <code>(r, c + 1)</code>, <code>(r, c - 1)</code>, <code>(r + 1, c)</code> and <code>(r - 1, c)</code> if it exists.</p>\n\n<p>The <strong>Manhattan distance</strong> between two cells <code>(a, b)</code> and <code>(x, y)</code> is equal to <code>|a - x| + |b - y|</code>, where <code>|val|</code> denotes the absolute value of val.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/07/02/example1.png\" style=\"width: 362px; height: 242px;\" />\n<pre>\n<strong>Input:</strong> grid = [[1,0,0],[0,0,0],[0,0,1]]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> All paths from (0, 0) to (n - 1, n - 1) go through the thieves in cells (0, 0) and (n - 1, n - 1).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/07/02/example2.png\" style=\"width: 362px; height: 242px;\" />\n<pre>\n<strong>Input:</strong> grid = [[0,0,1],[0,0,0],[0,0,0]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The path depicted in the picture above has a safeness factor of 2 since:\n- The closest cell of the path to the thief at cell (0, 2) is cell (0, 0). The distance between them is | 0 - 0 | + | 0 - 2 | = 2.\nIt can be shown that there are no other paths with a higher safeness factor.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/07/02/example3.png\" style=\"width: 362px; height: 242px;\" />\n<pre>\n<strong>Input:</strong> grid = [[0,0,0,1],[0,0,0,0],[0,0,0,0],[1,0,0,0]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The path depicted in the picture above has a safeness factor of 2 since:\n- The closest cell of the path to the thief at cell (0, 3) is cell (1, 2). The distance between them is | 0 - 1 | + | 3 - 2 | = 2.\n- The closest cell of the path to the thief at cell (3, 0) is cell (3, 2). The distance between them is | 3 - 3 | + | 0 - 2 | = 2.\nIt can be shown that there are no other paths with a higher safeness factor.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= grid.length == n &lt;= 400</code></li>\n\t<li><code>grid[i].length == n</code></li>\n\t<li><code>grid[i][j]</code> is either <code>0</code> or <code>1</code>.</li>\n\t<li>There is at least one thief in the <code>grid</code>.</li>\n</ul>\n",
+  "hints": [
+    "Consider using both BFS and binary search together.",
+    "Launch a BFS starting from all the cells containing thieves to calculate d[x][y] which is the smallest Manhattan distance from (x, y) to the nearest grid that contains thieves.",
+    "To check if the bottom-right cell of the grid can be reached through a path of safeness factor v, eliminate all cells (x, y) such that grid[x][y]  < v. if (0, 0) and (n - 1, n - 1) are still connected, there exists a path between (0, 0) and (n - 1, n - 1) of safeness factor v.",
+    "Binary search over the final safeness factor v."
+  ],
+  "metaData": "{\n  \"name\": \"maximumSafenessFactor\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"list<list<integer>>\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"113K\", \"totalSubmission\": \"232K\", \"totalAcceptedRaw\": 112974, \"totalSubmissionRaw\": 231985, \"acRate\": \"48.7%\"}",
+  "likes": 1833,
+  "dislikes": 327,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Path With Minimum Effort\", \"titleSlug\": \"path-with-minimum-effort\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,0,0],[0,0,0],[0,0,1]]",
+    "[[0,0,1],[0,0,0],[0,0,0]]",
+    "[[0,0,0,1],[0,0,0,0],[0,0,0,0],[1,0,0,0]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"intuit\", \"name\": \"Intuit\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumSafenessFactor(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumSafenessFactor(List<List<Integer>> grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumSafenessFactor(self, grid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumSafenessFactor(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number}\n */\nvar maximumSafenessFactor = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumSafenessFactor(grid: number[][]): number {\n\n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumSafenessFactor(IList<IList<int>> grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumSafenessFactor(int** grid, int gridSize, int* gridColSize){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumSafenessFactor(grid [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumSafenessFactor(grid: List<List<Int>>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumSafenessFactor(_ grid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_safeness_factor(grid: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer}\ndef maximum_safeness_factor(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer\n     */\n    function maximumSafenessFactor($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumSafenessFactor(List<List<int>> grid) {\n\n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumSafenessFactor(grid: List[List[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_safeness_factor(grid :: [[integer]]) :: integer\n  def maximum_safeness_factor(grid) do\n\n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_safeness_factor(Grid :: [[integer()]]) -> integer().\nmaximum_safeness_factor(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-safeness-factor grid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2295",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a `grid` representing a city layout where some cells contain thieves and others are empty, and we need to find the maximum safeness factor of all paths from the top-left corner to the bottom-right corner. The safeness factor of a path is defined as the minimum Manhattan distance from any cell in the path to any thief in the `grid`.\n\n**Key Observations:**\n1. Manhattan distance between two cells is the sum of the absolute differences of their row and column indices.\n2. All the cells in the `grid` contain either 0 or 1, representing empty cells and cells containing thieves respectively.\n3. You start from the top-left corner `(0, 0)` and can move to adjacent cells in any of the four directions.\n4. The maximum level of safety one can achieve while traversing from the starting point to the destination is by ensuring the least proximity to any cell containing a thief.\n\n### Approach 1: Breadth-First Search + Binary Search\n\n#### Intuition\n\nSince we need to find the safeness factor of a path from the source to the destination, the initial intuition to solve this problem is that we should first find the safeness factors of the cells in the path. The path can span across the entire `grid`, so we need to find the safeness factors for all the cells in the `grid`.\n\nOne approach to find the safeness factors of the cells would be to iterate over each cell in the `grid` and find its distance from all the thieves in the `grid`. We can then pick the smallest distance as the safeness factor for that cell.\n\nHowever, this brute force approach would have a time complexity of $O(n^4)$, which would not satisfy the constraints of the problem. Therefore, a more optimized approach is needed.\n\nTo optimize the solution, we can leverage the properties of a multi-source breadth-first Search (BFS). Instead of finding the distance of each cell from all the thieves, we can do the opposite: find the distance of all the thieves from each cell.\n\n> Note: A multi-source breadth-first search is a BFS where multiple starting nodes are explored simultaneously. This is an efficient method to find the shortest distances from any of the starting nodes to all reachable nodes in the graph. You can refer to this excellent **[problem](https://leetcode.com/problems/rotting-oranges/)** to gain some practice on multi-source BFS.\n\nThe intuition for this can be,\n- We start by adding all the thief coordinates to a queue as the initial points of exploration.\n- We then explore the neighboring cells (up, down, left, and right) from all the thieves in one iteration, like ripples spreading outwards from each thief.\n- As we visit each cell, we mark it with the minimum distance from the nearest thief. This is because the first time a cell is visited, it means that the current thief is the closest one to that cell.\n- We continue the BFS traversal until all the cells in the `grid` are marked with their corresponding safeness values.\n\nThe following slideshow demonstrates how the BFS gradually populates the `grid` with its minimum distances from a thief.\n\n!?!../Documents/2812/bfs_slideshow.json:412,291!?!\n  \nNow that we have the safeness factor of each cell, we need to find the maximum safeness factor for which a path exists from the source cell to the destination cell. This implies that for all safeness values greater than it, no path exists, and at least one path exists for all values less than it. We can visualize these safeness factors as a monotonic sequence on a number line. The values that satisfy the constraints of the problem will be a contiguous series. These will be followed by a series of values that do not satisfy the constraints. We will name this breakpoint the inflection point.\n\nThe following slideshow visualizes how we iteratively converge to the location of the inflection point using binary search.\n\n!?!../Documents/2812/bs_slideshow.json:482,160!?!\n\nDuring the binary search, to determine if a safeness value meets the problem constraints, we employ another breadth-first search (BFS) traversal on the `grid`. The traversal attempts to find a path where every cell in the path satisfies this minimum safeness value. If such a path is found, it indicates that the given safeness value is a valid solution to the problem.\n\nThus, to find the maximum safeness factor, we can use binary search to efficiently locate the inflection point in this monotonic sequence. The last \"True\" value at the inflection point will be the maximum safeness factor for which a path exists.\n\nIn summary, the final solution involves two key steps:\n1. Perform a breadth-first search to compute the safeness factor for each cell, leveraging the fact that the first time a cell is visited, it represents the minimum distance from the nearest thief.\n2. Apply binary search to find the maximum safeness factor for which a path exists from the source to the destination cell.\n   \nThis approach is more efficient than the initial brute-force solution, as it avoids the need to calculate the distance of each cell from all the thieves. Instead, it focuses on finding the distance of each cell from all the thieves, which can be done more optimally manner using BFS.\n\n#### Algorithm\n\n- Initialize `dir` to store directions for moving to neighboring cells: right, left, down, up.\n- Define `isValidCell` method to check if a given cell is valid within the `grid`.\n- Define `isValidSafeness` method to check if a path exists with a minimum safeness value.\n\n##### `isValidCell` Method\n\n1. Take the `grid`, row `i`, and column `j` as input.\n2. Get the size of the `grid`, denoted by `n`.\n3. Check if the cell at (`i`, `j`) is within the `grid` boundaries.\n4. Return `true` if the cell is valid, `false` otherwise.\n   \n##### `isValidSafeness` Method\n\n1. Take the `grid` and the minimum safeness value as input.\n   \n2. Initialize variables:\n   - `n` as the size of the `grid`.\n   - `q` as a queue of coordinates to perform the breadth-first search (BFS).\n   - `visited` as a 2-D array to mark visited cells.\n  \n3. Check if the source and destination cells satisfy the minimum safeness.\n\n4. Perform a breadth-first search (BFS) to find a valid path:\n   - Initialize a queue `q` to contain the coordinates.\n   - Add the source cell (`0`, `0`) to the queue.\n   - While the queue is not empty:\n     - Retrieve the front element `curr` from the queue.\n     - Explore neighboring cells in all directions:\n       - If the neighboring cell is valid, unvisited and has a safeness value greater than or equal to the minimum safeness value:\n         - Mark the cell as visited and push it to the queue.\n   - If a valid path is found, return `true`.\n\n5. Return `false` if no valid path is found.\n\n##### Signature function `maximumSafenessFactor`\n\n1. Initialize a queue `q` to store the positions of thieves.\n2. Mark thieves as `0` and empty cells as `-1`, and push thieves to the queue.\n   \n3. Perform BFS to calculate the safeness factor for each cell:\n   - While the queue is not empty:\n     - Retrieve the front element `curr` from the queue.\n     - Explore neighboring cells:\n       - If the neighboring cell is valid and unvisited (safeness factor = -1):\n         - Update its safeness factor and push it to the queue.\n\n4. Perform a binary search for the maximum safeness factor:\n   - Initialize `start` and `end` variables.\n   - Initialize `res` to store the maximum safeness value.\n   - Loop through the `grid` to find the maximum safeness factor and assign it to `end`.\n   - While `start` is less than or equal to `end`:\n     - Calculate `mid`.\n     - Check if a valid safeness exists for `mid` using `isValidSafeness` method.\n     - Update `res` if valid safeness is found.\n     - Update `start` or `end` based on the result of `isValidSafeness`.\n\n5. Return the maximum safeness factor `res`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3UY5NMSg/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3UY5NMSg\"></iframe>\n\n#### Complexity Analysis\n\nLet $n \\cdot n$ be the size of the matrix. \n\n* Time complexity: $O(n^2 \\cdot \\log n)$. \n  \n  The time complexity for the initial BFS is $O(n^2)$, as each cell in the $n \\cdot n$ `grid` is visited once during the traversal.\n  \n  The binary search occurs in the range [0, maximum safeness factor possible], where the maximum safeness factor possible is $2 \\cdot n$. The time complexity of the binary search is $O(\\log (2 \\cdot n))$, which is equivalent to $O(\\log n)$.\n\n  For each iteration of the binary search, a breadth-first Search is conducted to verify validity, which has a time complexity of $O(n^2)$. Thus, the total time complexity of the binary search portion is $O(n^2 \\cdot \\log n)$.\n\n  The total time complexity is the sum of the time complexities of the two parts: $O(n^2) + O(n^2 \\cdot \\log n)$. This can be simplified to $O(n^2 \\cdot \\log n)$.\n\n* Space complexity: $O(n^2)$. \n  \n  The data structure used in the algorithm is a queue, which takes linear space. Since the total number of cells in the `grid` is $n^2$, the space complexity is $O(n^2)$.\n\n### Approach 2: BFS + Greedy\n\n#### Intuition\n\nIn the previous approach, we used a binary search strategy to find the maximum safeness factor for which a path exists from the source to the destination. While this was an efficient solution, the intuition behind this approach is to directly find the optimal path from the source to the destination by leveraging Dijkstra's algorithm.\n\nSimilar to the previous approach, we first need to populate the `grid` with the safeness values for each cell. The algorithm to achieve this is the same as before, using the breadth-first Search (BFS) technique to compute the distance of each cell from the nearest thief.\n\nThe key idea here is to use Dijkstra's single source shortest path algorithm to find the optimal path from the source cell `[0, 0]` to the destination cell `[n-1, n-1]`. However, since each cell in the `grid` already contains its safeness factor, we need to modify Dijkstra's algorithm to find the path with the maximum safeness factor. In our modified Dijkstra's algorithm, we can greedily prioritize cells with a higher safeness factor to append to our path. The safeness factor of the path would be the minimum of the safeness values encountered in that path so far. Once we reach the destination cell, the safeness factor of the path would represent the required maximum safeness factor. \n\nThe modified Dijkstra's algorithm works as follows:\n- We start with the source cell `[0, 0]` in a priority queue, where the priority is based on the highest safeness factor encountered in the path so far.\n- For efficiency, cells we've explored are marked as -1 in the `grid` itself.\n- If the current cell is the destination `[n-1, n-1]`, the traversal is over, and we return the maximum safeness factor encountered so far.\n- If the current cell is not the destination, we explore the valid adjacent cells. A cell is considered valid if it is within the `grid` boundaries and not visited yet (not -1).\n- For each valid neighbor, we calculate the potential safeness factor considering the current path's safeness and the new cell's distance to thieves. The minimum of these two values becomes the new safeness for the path with the addition of the neighbor.\n- We add the valid neighbors to the priority queue, prioritizing them based on their safeness factor.\n- We continue the exploration until we reach the destination cell.\n  \nThe key advantage of this approach is that it directly finds the optimal path from the source to the destination instead of relying on a binary search to find the maximum safeness factor. By using Dijkstra's algorithm, we can ensure that we find the path with the maximum safeness factor, without the need to perform a separate binary search.\n\nAdditionally, this approach may be more intuitive for some users, as it closely resembles the problem of finding the shortest path with the maximum weight (safeness factor) on a weighted graph.\n\n#### Algorithm\n\n- Initialize `dir` to store directions for moving to neighboring cells: right, left, down, up. \n- Define the `isValidCell` method to check if a given cell is valid within the `grid`.  \n  \n1. Initialize variables:\n   - `n` as the size of the `grid`.\n   - `q` as a queue of coordinates to perform the breadth-first search (BFS).\n  \n2. Mark thieves as 0 and empty cells as -1 in the `grid`. Push thieves' coordinates to the queue.\n   \n3. Perform BFS to calculate the safeness factor for each cell:\n   - While the queue is not empty:\n     - Retrieve the front element `curr` from the queue.\n     - Explore neighboring cells:\n       - If the neighboring cell is valid and unvisited (safeness factor = -1):\n         - Update its safeness factor and push it to the queue.\n\n4. Initialize a priority queue `pq` to prioritize cells with a higher safeness factor. Push the starting cell to `pq`.\n\n5. Perform BFS to find the path with the maximum safeness factor:\n   - While the priority queue `pq` is not empty:\n     - Retrieve the top element `curr` from `pq`.\n     - If the destination is reached, return the safeness factor of the path.\n     - Explore neighboring cells:\n       - If the neighboring cell is valid and not marked as visited:\n         - Update the safeness factor for the path and mark the cell as visited.\n\n6. If no path is found, return -1.\n\n> Note: In the C++ implementation, the elements in the priority queue are stored as `[safeness, row, col]` to leverage C++'s default comparison capabilities. \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/UHkVoNQF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UHkVoNQF\"></iframe>\n\n#### Complexity Analysis\n\nLet $n \\cdot n$ be the size of the matrix.\n\n* Time Complexity: $O(n^2 \\cdot \\log (n))$\n  \n  Similar to Approach 1, the time complexity of the initial BFS is $O(n^2)$.\n\n  To find the optimal path, we use Dijkstra's single source shortest path algorithm, which has a time complexity of $O(n^2 \\cdot \\log (n))$ when implemented in a `grid` of size $n \\cdot n$.\n\n  The total time complexity is the sum of the time complexities of the two parts: $O(n^2) + O(n^2 \\cdot \\log (n))$. This can be simplified to $O(n^2 \\cdot \\log (n))$.\n\n* Space Complexity: $O(n^2)$\n  \n  The two data structures used in this approach are the queue and the priority queue, both of which have a linear space complexity. Since the maximum number of elements that can be present in the queues is $n \\cdot n$, the space complexity is $O(n^2)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

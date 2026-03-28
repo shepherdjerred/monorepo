@@ -1,0 +1,53 @@
+{
+  "questionId": "3564",
+  "questionFrontendId": "3252",
+  "title": "Premier League Table Ranking II",
+  "titleSlug": "premier-league-table-ranking-ii",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>TeamStats</code></p>\n\n<pre>\n+------------------+---------+\n| Column Name      | Type    |\n+------------------+---------+\n| team_id          | int     |\n| team_name        | varchar |\n| matches_played   | int     |\n| wins             | int     |\n| draws            | int     |\n| losses           | int     |\n+------------------+---------+\nteam_id is the unique key for this table.\nThis table contains team id, team name, matches_played, wins, draws, and losses.\n</pre>\n\n<p>Write a solution to calculate the <strong>points</strong>, <strong>position</strong>, and <strong>tier</strong> for each team in the league. Points are calculated as follows:</p>\n\n<ul>\n\t<li><code>3</code> points for a <strong>win</strong></li>\n\t<li><code>1</code> point for a <strong>draw</strong></li>\n\t<li><code>0</code> points for a <strong>loss</strong></li>\n</ul>\n\n<p><strong>Note:</strong>&nbsp;Teams with the same points must be assigned the same position.</p>\n\n<p><strong>Tier ranking:</strong></p>\n\n<ul>\n\t<li>Divide the league into <code>3</code> tiers based on points:</li>\n\t<li>Tier 1: Top <code>33%</code> of teams</li>\n\t<li>Tier 2: Middle <code>33%</code> of teams</li>\n\t<li>Tier 3: Bottom<code> 34%</code> of teams</li>\n\t<li>In case of <strong>ties</strong> at<strong> tier boundaries</strong>, place tied teams in the <strong>higher tier</strong>.</li>\n</ul>\n\n<p>Return <em>the result table </em><em>ordered by</em> <code>points</code>&nbsp;<em>in&nbsp;<strong>descending</strong>,<strong>&nbsp;</strong>and then by</em> <code>team_name</code> <em>in <strong>ascending</strong> order.</em></p>\n\n<p>The query result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p><code>TeamStats</code> table:</p>\n\n<pre class=\"example-io\">\n+---------+-------------------+----------------+------+-------+--------+\n| team_id | team_name         | matches_played | wins | draws | losses |\n+---------+-------------------+----------------+------+-------+--------+\n| 1       | Chelsea           | 22             | 13   | 2     | 7      |\n| 2       | Nottingham Forest | 27             | 6    | 6     | 15     |\n| 3       | Liverpool         | 17             | 1    | 8     | 8      |\n| 4       | Aston Villa       | 20             | 1    | 6     | 13     |\n| 5       | Fulham            | 31             | 18   | 1     | 12     |\n| 6       | Burnley           | 26             | 6    | 9     | 11     |\n| 7       | Newcastle United  | 33             | 11   | 10    | 12     |\n| 8       | Sheffield United  | 20             | 18   | 2     | 0      |\n| 9       | Luton Town        | 5              | 4    | 0     | 1      |\n| 10      | Everton           | 14             | 2    | 6     | 6      |\n+---------+-------------------+----------------+------+-------+--------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+-------------------+--------+----------+---------+\n| team_name         | points | position | tier    |\n+-------------------+--------+----------+---------+\n| Sheffield United  | 56     | 1        | Tier 1  |\n| Fulham            | 55     | 2        | Tier 1  |\n| Newcastle United  | 43     | 3        | Tier 1  |\n| Chelsea           | 41     | 4        | Tier 1  |\n| Burnley           | 27     | 5        | Tier 2  |\n| Nottingham Forest | 24     | 6        | Tier 2  |\n| Everton           | 12     | 7        | Tier 2  |\n| Luton Town        | 12     | 7        | Tier 2  |\n| Liverpool         | 11     | 9        | Tier 3  |\n| Aston Villa       | 9      | 10       | Tier 3  |\n+-------------------+--------+----------+---------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Sheffield United has 56 points (18 wins * 3 points + 2 draws * 1 point) and is in position 1.</li>\n\t<li>Fulham has 55 points (18 wins * 3 points + 1 draw * 1 point) and is in position 2.</li>\n\t<li>Newcastle United has 43 points (11 wins * 3 points + 10 draws * 1 point) and is in position 3.</li>\n\t<li>Chelsea has 41 points (13 wins * 3 points + 2 draws * 1 point) and is in position 4.</li>\n\t<li>Burnley has 27 points (6 wins * 3 points + 9 draws * 1 point) and is in position 5.</li>\n\t<li>Nottingham Forest has 24 points (6 wins * 3 points + 6 draws * 1 point) and is in position 6.</li>\n\t<li>Everton and Luton Town both have 12 points, with Everton having 2 wins * 3 points + 6 draws * 1 point, and Luton Town having 4 wins * 3 points. Both teams share position 7.</li>\n\t<li>Liverpool has 11 points (1 win * 3 points + 8 draws * 1 point) and is in position 9.</li>\n\t<li>Aston Villa has 9 points (1 win * 3 points + 6 draws * 1 point) and is in position 10.</li>\n</ul>\n\n<p><strong>Tier Calculation:</strong></p>\n\n<ul>\n\t<li><strong>Tier 1:</strong> The top 33% of teams based on points. Sheffield United, Fulham, Newcastle United, and Chelsea fall into Tier 1.</li>\n\t<li><strong>Tier 2:</strong> The middle 33% of teams. Burnley, Nottingham Forest, Everton, and Luton Town fall into Tier 2.</li>\n\t<li><strong>Tier 3:</strong> The bottom 34% of teams. Liverpool and Aston Villa fall into Tier 3.</li>\n</ul>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table if not exists TeamStats( team_id int, team_name varchar(100),matches_played int, wins int,draws int,losses int)\"], \"mssql\": [\"Create table  TeamStats( team_id int, team_name varchar(100),matches_played int, wins int,draws int,losses int)\"], \"oraclesql\": [\"Create table  TeamStats( team_id NUMBER, team_name varchar2(100),matches_played NUMBER, wins NUMBER,draws NUMBER,losses NUMBER)\"], \"postgresql\": [\"CREATE TABLE IF NOT EXISTS TeamStats (\\n    team_id INT,\\n    team_name VARCHAR(100),\\n    matches_played INT,\\n    wins INT,\\n    draws INT,\\n    losses INT\\n);\\n\"], \"pythondata\": [\"TeamStats = pd.DataFrame(data, columns=[\\\"team_id\\\", \\\"team_name\\\", \\\"matches_played\\\", \\\"wins\\\", \\\"draws\\\", \\\"losses\\\"]).astype({\\\"team_id\\\": \\\"int\\\", \\\"team_name\\\": \\\"string\\\", \\\"matches_played\\\": \\\"int\\\", \\\"wins\\\": \\\"int\\\", \\\"draws\\\": \\\"int\\\", \\\"losses\\\": \\\"int\\\"})\\n\"], \"database\": true, \"name\": \"calculate_team_tiers\", \"database_schema\": {\"TeamStats\": {\"team_id\": \"INT\", \"team_name\": \"VARCHAR(100)\", \"matches_played\": \"INT\", \"wins\": \"INT\", \"draws\": \"INT\", \"losses\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"2K\", \"totalSubmission\": \"3.6K\", \"totalAcceptedRaw\": 2010, \"totalSubmissionRaw\": 3622, \"acRate\": \"55.5%\"}",
+  "likes": 11,
+  "dislikes": 11,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"TeamStats\": [\"team_id\", \"team_name\", \"matches_played\", \"wins\", \"draws\", \"losses\"]}, \"rows\": {\"TeamStats\": [[1, \"Chelsea\", 22, 13, 2, 7], [2, \"Nottingham Forest\", 27, 6, 6, 15], [3, \"Liverpool\", 17, 1, 8, 8], [4, \"Aston Villa\", 20, 1, 6, 13], [5, \"Fulham\", 31, 18, 1, 12], [6, \"Burnley\", 26, 6, 9, 11], [7, \"Newcastle United\", 33, 11, 10, 12], [8, \"Sheffield United\", 20, 18, 2, 0], [9, \"Luton Town\", 5, 4, 0, 1], [10, \"Everton\", 14, 2, 6, 6]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef calculate_team_tiers(team_stats: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

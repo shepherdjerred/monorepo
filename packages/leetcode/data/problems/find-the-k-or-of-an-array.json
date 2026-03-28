@@ -1,0 +1,130 @@
+{
+  "questionId": "3183",
+  "questionFrontendId": "2917",
+  "title": "Find the K-or of an Array",
+  "titleSlug": "find-the-k-or-of-an-array",
+  "difficulty": "Easy",
+  "content": "<p>You are given an integer array <code>nums</code>, and an integer <code>k</code>. Let&#39;s introduce&nbsp;<strong>K-or</strong> operation by extending the standard bitwise OR. In K-or, a bit position in the result is set to <code>1</code>&nbsp;if at least <code>k</code> numbers in <code>nums</code> have a <code>1</code> in that position.</p>\n\n<p>Return <em>the K-or of</em> <code>nums</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1: </strong></p>\n\n<div class=\"example-block\" style=\"border-color: var(--border-tertiary); border-left-width: 2px; color: var(--text-secondary); font-size: .875rem; margin-bottom: 1rem; margin-top: 1rem; overflow: visible; padding-left: 1rem;\">\n<p><strong>Input:</strong><span class=\"example-io\" style=\"font-family: Menlo,sans-serif; font-size: 0.85rem;\"> nums = [7,12,9,8,9,15], k = 4 </span></p>\n\n<p><strong>Output:</strong><span class=\"example-io\" style=\"font-family: Menlo,sans-serif; font-size: 0.85rem;\"> 9 </span></p>\n\n<p><strong>Explanation: </strong></p>\n\n<p>Represent numbers in binary:</p>\n\n<table style=\"text-indent:10px; margin-bottom=20px;\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<th><b>Number</b></th>\n\t\t\t<th>Bit 3</th>\n\t\t\t<th>Bit 2</th>\n\t\t\t<th>Bit 1</th>\n\t\t\t<th>Bit 0</th>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><b>7</b></td>\n\t\t\t<td>0</td>\n\t\t\t<td>1</td>\n\t\t\t<td>1</td>\n\t\t\t<td>1</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><b>12</b></td>\n\t\t\t<td>1</td>\n\t\t\t<td>1</td>\n\t\t\t<td>0</td>\n\t\t\t<td>0</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><b>9</b></td>\n\t\t\t<td>1</td>\n\t\t\t<td>0</td>\n\t\t\t<td>0</td>\n\t\t\t<td>1</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><b>8</b></td>\n\t\t\t<td>1</td>\n\t\t\t<td>0</td>\n\t\t\t<td>0</td>\n\t\t\t<td>0</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><b>9</b></td>\n\t\t\t<td>1</td>\n\t\t\t<td>0</td>\n\t\t\t<td>0</td>\n\t\t\t<td>1</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><b>15</b></td>\n\t\t\t<td>1</td>\n\t\t\t<td>1</td>\n\t\t\t<td>1</td>\n\t\t\t<td>1</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td><b>Result = 9</b></td>\n\t\t\t<td>1</td>\n\t\t\t<td>0</td>\n\t\t\t<td>0</td>\n\t\t\t<td>1</td>\n\t\t</tr>\n\t</tbody>\n</table>\n\n<p>Bit 0 is set in 7, 9, 9, and 15. Bit 3 is set in 12, 9, 8, 9, and 15.<br />\nOnly bits 0 and 3 qualify. The result is <code>(1001)<sub>2</sub> = 9</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2: </strong></p>\n\n<div class=\"example-block\" style=\"border-color: var(--border-tertiary); border-left-width: 2px; color: var(--text-secondary); font-size: .875rem; margin-bottom: 1rem; margin-top: 1rem; overflow: visible; padding-left: 1rem;\">\n<p><strong>Input:</strong><span class=\"example-io\" style=\"font-family: Menlo,sans-serif; font-size: 0.85rem;\"> nums = [2,12,1,11,4,5], k = 6 </span></p>\n\n<p><strong>Output:</strong><span class=\"example-io\" style=\"font-family: Menlo,sans-serif; font-size: 0.85rem;\"> 0 </span></p>\n\n<p><strong>Explanation:&nbsp;</strong>No bit appears as 1 in all six array numbers, as required for K-or with <code>k = 6</code>. Thus, the result is 0.</p>\n</div>\n\n<p><strong class=\"example\">Example 3: </strong></p>\n\n<div class=\"example-block\" style=\"border-color: var(--border-tertiary); border-left-width: 2px; color: var(--text-secondary); font-size: .875rem; margin-bottom: 1rem; margin-top: 1rem; overflow: visible; padding-left: 1rem;\">\n<p><strong>Input:</strong><span class=\"example-io\" style=\"font-family: Menlo,sans-serif; font-size: 0.85rem;\"> nums = [10,8,5,9,11,6,8], k = 1 </span></p>\n\n<p><strong>Output:</strong><span class=\"example-io\" style=\"font-family: Menlo,sans-serif; font-size: 0.85rem;\"> 15 </span></p>\n\n<p><strong>Explanation: </strong> Since <code>k == 1</code>, the 1-or of the array is equal to the bitwise OR of all its elements. Hence, the answer is <code>10 OR 8 OR 5 OR 9 OR 11 OR 6 OR 8 = 15</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 50</code></li>\n\t<li><code>0 &lt;= nums[i] &lt; 2<sup>31</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= nums.length</code></li>\n</ul>\n",
+  "hints": [
+    "Fix a <code>bit</code> from the range <code>[0, 31]</code>, then count the number of elements of <code>nums</code> that have <code>bit</code> set in them.",
+    "<code>bit</code> is set in integer <code>x</code> if and only if <code>2<sup>bit</sup> AND x == 2<sup>bit</sup></code>, where <code>AND</code> is the bitwise <code>AND</code> operation."
+  ],
+  "metaData": "{\n  \"name\": \"findKOr\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"35.1K\", \"totalSubmission\": \"48.3K\", \"totalAcceptedRaw\": 35116, \"totalSubmissionRaw\": 48285, \"acRate\": \"72.7%\"}",
+  "likes": 251,
+  "dislikes": 278,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Counting Bits\", \"titleSlug\": \"counting-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Values at Indices With K Set Bits\", \"titleSlug\": \"sum-of-values-at-indices-with-k-set-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[7,12,9,8,9,15]\n4"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int findKOr(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int findKOr(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findKOr(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findKOr(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar findKOr = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findKOr(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int FindKOr(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int findKOr(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findKOr(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findKOr(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findKOr(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_k_or(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef find_k_or(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function findKOr($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findKOr(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findKOr(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_k_or(nums :: [integer], k :: integer) :: integer\n  def find_k_or(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_k_or(Nums :: [integer()], K :: integer()) -> integer().\nfind_k_or(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-k-or nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

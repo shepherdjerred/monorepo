@@ -1,0 +1,140 @@
+{
+  "questionId": "3177",
+  "questionFrontendId": "2892",
+  "title": "Minimizing Array After Replacing Pairs With Their Product",
+  "titleSlug": "minimizing-array-after-replacing-pairs-with-their-product",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code> and an integer <code>k</code>, you can perform the following operation on the array any number of times:</p>\n\n<ul>\n\t<li>Select two <strong>adjacent</strong> elements of the array like <code>x</code> and <code>y</code>, such that <code>x * y &lt;= k</code>, and replace both of them with a <strong>single element</strong> with value <code>x * y</code> (e.g. in one operation the array <code>[1, 2, 2, 3]</code> with <code>k = 5</code> can become <code>[1, 4, 3]</code> or <code>[2, 2, 3]</code>, but can&#39;t become <code>[1, 2, 6]</code>).</li>\n</ul>\n\n<p>Return <em>the <strong>minimum</strong> possible length of </em><code>nums</code><em> after any number of operations</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,3,3,7,3,5], k = 20\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We perform these operations:\n1. [<u>2,3</u>,3,7,3,5] -&gt; [<u>6</u>,3,7,3,5]\n2. [<u>6,3</u>,7,3,5] -&gt; [<u>18</u>,7,3,5]\n3. [18,7,<u>3,5</u>] -&gt; [18,7,<u>15</u>]\nIt can be shown that 3 is the minimum length possible to achieve with the given operation.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,3,3,3], k = 6\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> We can&#39;t perform any operations since the product of every two adjacent elements is greater than 6.\nHence, the answer is 4.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "If there is a zero in the array, then the answer would be <code>1</code>.",
+    "Merge all adjacent ones (since <code>1 * 1 = 1</code> and <code>k >= 1</code>).",
+    "Let <code>dp[i]</code> be the answer to the problem for the first <code>i</code> elements.",
+    "To calculate <code>dp[i]</code>, try to brute-force all indices <code>j</code> such that elements from <code>j</code> to <code>i</code> are merged together to create a new element.",
+    "For a fixed <code>i</code>, you could go backward from <code>i<sup>th</sup></code> elements and multiply them together until the product is at most <code>k</code>. Now if you are currently on index <code>j</code> and you've merged all elements from <code>j<sup>th</sup></code> element to <code>i<sup>th</sup></code> element, <code>dp[i] = min(dp[i], dp[j - 1] + 1)</code>.",
+    "The above backward moving can be done at most <code>2 * log<sub>2</sub>(k)</code> times. Since we've merged adjacent ones, every two adjacent elements have a product of at least <code>2</code>.",
+    "So the total time complexity would be <code>n * 2 * log<sub>2</sub>(k)</code>."
+  ],
+  "metaData": "{\n  \"name\": \"minArrayLength\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"1.8K\", \"totalSubmission\": \"4.4K\", \"totalAcceptedRaw\": 1804, \"totalSubmissionRaw\": 4434, \"acRate\": \"40.7%\"}",
+  "likes": 29,
+  "dislikes": 1,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,3,3,7,3,5]\n20",
+    "[3,3,3,3]\n6"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"wells-fargo\", \"name\": \"Wells Fargo\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minArrayLength(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minArrayLength(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minArrayLength(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minArrayLength(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar minArrayLength = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minArrayLength(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinArrayLength(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minArrayLength(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minArrayLength(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minArrayLength(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minArrayLength(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_array_length(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef min_array_length(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function minArrayLength($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minArrayLength(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minArrayLength(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_array_length(nums :: [integer], k :: integer) :: integer\n  def min_array_length(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_array_length(Nums :: [integer()], K :: integer()) -> integer().\nmin_array_length(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-array-length nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

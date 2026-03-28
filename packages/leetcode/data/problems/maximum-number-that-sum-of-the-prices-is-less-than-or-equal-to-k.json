@@ -1,0 +1,139 @@
+{
+  "questionId": "3240",
+  "questionFrontendId": "3007",
+  "title": "Maximum Number That Sum of the Prices Is Less Than or Equal to K",
+  "titleSlug": "maximum-number-that-sum-of-the-prices-is-less-than-or-equal-to-k",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>k</code> and an integer <code>x</code>. The price of a number&nbsp;<code>num</code> is calculated by the count of <span data-keyword=\"set-bit\">set bits</span> at positions <code>x</code>, <code>2x</code>, <code>3x</code>, etc., in its binary representation, starting from the least significant bit. The following table contains examples of how price is calculated.</p>\n\n<table border=\"1\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<th>x</th>\n\t\t\t<th>num</th>\n\t\t\t<th>Binary Representation</th>\n\t\t\t<th>Price</th>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>1</td>\n\t\t\t<td>13</td>\n\t\t\t<td><u>0</u><u>0</u><u>0</u><u>0</u><u>0</u><strong><u>1</u></strong><strong><u>1</u></strong><u>0</u><strong><u>1</u></strong></td>\n\t\t\t<td>3</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>2</td>\n\t\t\t<td>13</td>\n\t\t\t<td>0<u>0</u>0<u>0</u>0<strong><u>1</u></strong>1<u>0</u>1</td>\n\t\t\t<td>1</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>2</td>\n\t\t\t<td>233</td>\n\t\t\t<td>0<strong><u>1</u></strong>1<strong><u>1</u></strong>0<strong><u>1</u></strong>0<u>0</u>1</td>\n\t\t\t<td>3</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>3</td>\n\t\t\t<td>13</td>\n\t\t\t<td><u>0</u>00<u>0</u>01<strong><u>1</u></strong>01</td>\n\t\t\t<td>1</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>3</td>\n\t\t\t<td>362</td>\n\t\t\t<td><strong><u>1</u></strong>01<strong><u>1</u></strong>01<u>0</u>10</td>\n\t\t\t<td>2</td>\n\t\t</tr>\n\t</tbody>\n</table>\n\n<p>The&nbsp;<strong>accumulated price</strong>&nbsp;of&nbsp;<code>num</code>&nbsp;is the <b>total</b>&nbsp;price of&nbsp;numbers from <code>1</code> to <code>num</code>. <code>num</code>&nbsp;is considered&nbsp;<strong>cheap</strong>&nbsp;if its accumulated price&nbsp;is less than or equal to <code>k</code>.</p>\n\n<p>Return the <b>greatest</b>&nbsp;cheap number.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">k = 9, x = 1</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">6</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>As shown in the table below, <code>6</code> is the greatest cheap number.</p>\n\n<table border=\"1\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<th>x</th>\n\t\t\t<th>num</th>\n\t\t\t<th>Binary Representation</th>\n\t\t\t<th>Price</th>\n\t\t\t<th>Accumulated Price</th>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>1</td>\n\t\t\t<td>1</td>\n\t\t\t<td><u>0</u><u>0</u><strong><u>1</u></strong></td>\n\t\t\t<td>1</td>\n\t\t\t<td>1</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>1</td>\n\t\t\t<td>2</td>\n\t\t\t<td><u>0</u><strong><u>1</u></strong><u>0</u></td>\n\t\t\t<td>1</td>\n\t\t\t<td>2</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>1</td>\n\t\t\t<td>3</td>\n\t\t\t<td><u>0</u><strong><u>1</u></strong><strong><u>1</u></strong></td>\n\t\t\t<td>2</td>\n\t\t\t<td>4</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>1</td>\n\t\t\t<td>4</td>\n\t\t\t<td><strong><u>1</u></strong><u>0</u><u>0</u></td>\n\t\t\t<td>1</td>\n\t\t\t<td>5</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>1</td>\n\t\t\t<td>5</td>\n\t\t\t<td><strong><u>1</u></strong><u>0</u><strong><u>1</u></strong></td>\n\t\t\t<td>2</td>\n\t\t\t<td>7</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>1</td>\n\t\t\t<td>6</td>\n\t\t\t<td><strong><u>1</u></strong><strong><u>1</u></strong><u>0</u></td>\n\t\t\t<td>2</td>\n\t\t\t<td>9</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>1</td>\n\t\t\t<td>7</td>\n\t\t\t<td><strong><u>1</u></strong><strong><u>1</u></strong><strong><u>1</u></strong></td>\n\t\t\t<td>3</td>\n\t\t\t<td>12</td>\n\t\t</tr>\n\t</tbody>\n</table>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">k = 7, x = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">9</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>As shown in the table below, <code>9</code> is the greatest cheap number.</p>\n\n<table border=\"1\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<th>x</th>\n\t\t\t<th>num</th>\n\t\t\t<th>Binary Representation</th>\n\t\t\t<th>Price</th>\n\t\t\t<th>Accumulated Price</th>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>2</td>\n\t\t\t<td>1</td>\n\t\t\t<td><u>0</u>0<u>0</u>1</td>\n\t\t\t<td>0</td>\n\t\t\t<td>0</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>2</td>\n\t\t\t<td>2</td>\n\t\t\t<td><u>0</u>0<strong><u>1</u></strong>0</td>\n\t\t\t<td>1</td>\n\t\t\t<td>1</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>2</td>\n\t\t\t<td>3</td>\n\t\t\t<td><u>0</u>0<strong><u>1</u></strong>1</td>\n\t\t\t<td>1</td>\n\t\t\t<td>2</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>2</td>\n\t\t\t<td>4</td>\n\t\t\t<td><u>0</u>1<u>0</u>0</td>\n\t\t\t<td>0</td>\n\t\t\t<td>2</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>2</td>\n\t\t\t<td>5</td>\n\t\t\t<td><u>0</u>1<u>0</u>1</td>\n\t\t\t<td>0</td>\n\t\t\t<td>2</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>2</td>\n\t\t\t<td>6</td>\n\t\t\t<td><u>0</u>1<strong><u>1</u></strong>0</td>\n\t\t\t<td>1</td>\n\t\t\t<td>3</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>2</td>\n\t\t\t<td>7</td>\n\t\t\t<td><u>0</u>1<strong><u>1</u></strong>1</td>\n\t\t\t<td>1</td>\n\t\t\t<td>4</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>2</td>\n\t\t\t<td>8</td>\n\t\t\t<td><strong><u>1</u></strong>0<u>0</u>0</td>\n\t\t\t<td>1</td>\n\t\t\t<td>5</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>2</td>\n\t\t\t<td>9</td>\n\t\t\t<td><strong><u>1</u></strong>0<u>0</u>1</td>\n\t\t\t<td>1</td>\n\t\t\t<td>6</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>2</td>\n\t\t\t<td>10</td>\n\t\t\t<td><strong><u>1</u></strong>0<strong><u>1</u></strong>0</td>\n\t\t\t<td>2</td>\n\t\t\t<td>8</td>\n\t\t</tr>\n\t</tbody>\n</table>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= 10<sup>15</sup></code></li>\n\t<li><code>1 &lt;= x &lt;= 8</code></li>\n</ul>\n",
+  "hints": [
+    "Binary search the answer.",
+    "In each step of the binary search you should calculate the number of the set bits in the <code>i<sup>th</sup></code> position. Then calculate the sum of them."
+  ],
+  "metaData": "{\n  \"name\": \"findMaximumNumber\",\n  \"params\": [\n    {\n      \"name\": \"k\",\n      \"type\": \"long\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"x\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"12.9K\", \"totalSubmission\": \"33.5K\", \"totalAcceptedRaw\": 12941, \"totalSubmissionRaw\": 33514, \"acRate\": \"38.6%\"}",
+  "likes": 347,
+  "dislikes": 131,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "9\n1",
+    "7\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long findMaximumNumber(long long k, int x) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long findMaximumNumber(long k, int x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findMaximumNumber(self, k: int, x: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findMaximumNumber(self, k, x):\n        \"\"\"\n        :type k: int\n        :type x: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} k\n * @param {number} x\n * @return {number}\n */\nvar findMaximumNumber = function(k, x) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findMaximumNumber(k: number, x: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long FindMaximumNumber(long k, int x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long findMaximumNumber(long long k, int x) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findMaximumNumber(k int64, x int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findMaximumNumber(k: Long, x: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findMaximumNumber(_ k: Int, _ x: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_maximum_number(k: i64, x: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} k\n# @param {Integer} x\n# @return {Integer}\ndef find_maximum_number(k, x)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $k\n     * @param Integer $x\n     * @return Integer\n     */\n    function findMaximumNumber($k, $x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int findMaximumNumber(int k, int x) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findMaximumNumber(k: Long, x: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_maximum_number(k :: integer, x :: integer) :: integer\n  def find_maximum_number(k, x) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_maximum_number(K :: integer(), X :: integer()) -> integer().\nfind_maximum_number(K, X) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-maximum-number k x)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

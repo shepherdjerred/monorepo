@@ -1,0 +1,140 @@
+{
+  "questionId": "2856",
+  "questionFrontendId": "2799",
+  "title": "Count Complete Subarrays in an Array",
+  "titleSlug": "count-complete-subarrays-in-an-array",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array <code>nums</code> consisting of <strong>positive</strong> integers.</p>\n\n<p>We call a subarray of an array <strong>complete</strong> if the following condition is satisfied:</p>\n\n<ul>\n\t<li>The number of <strong>distinct</strong> elements in the subarray is equal to the number of distinct elements in the whole array.</li>\n</ul>\n\n<p>Return <em>the number of <strong>complete</strong> subarrays</em>.</p>\n\n<p>A <strong>subarray</strong> is a contiguous non-empty part of an array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,3,1,2,2]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The complete subarrays are the following: [1,3,1,2], [1,3,1,2,2], [3,1,2] and [3,1,2,2].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,5,5,5]\n<strong>Output:</strong> 10\n<strong>Explanation:</strong> The array consists only of the integer 5, so any subarray is complete. The number of subarrays that we can choose is 10.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 2000</code></li>\n</ul>\n",
+  "hints": [
+    "Let’s say k is the number of distinct elements in the array. Our goal is to find the number of subarrays with k distinct elements.",
+    "Since the constraints are small, you can check every subarray."
+  ],
+  "metaData": "{\n  \"name\": \"countCompleteSubarrays\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"170.5K\", \"totalSubmission\": \"224.5K\", \"totalAcceptedRaw\": 170505, \"totalSubmissionRaw\": 224505, \"acRate\": \"75.9%\"}",
+  "likes": 1133,
+  "dislikes": 27,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Substring Without Repeating Characters\", \"titleSlug\": \"longest-substring-without-repeating-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Subarrays with K Different Integers\", \"titleSlug\": \"subarrays-with-k-different-integers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,1,2,2]",
+    "[5,5,5,5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countCompleteSubarrays(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countCompleteSubarrays(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countCompleteSubarrays(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countCompleteSubarrays(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar countCompleteSubarrays = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countCompleteSubarrays(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountCompleteSubarrays(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countCompleteSubarrays(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countCompleteSubarrays(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countCompleteSubarrays(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countCompleteSubarrays(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_complete_subarrays(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef count_complete_subarrays(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function countCompleteSubarrays($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countCompleteSubarrays(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countCompleteSubarrays(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_complete_subarrays(nums :: [integer]) :: integer\n  def count_complete_subarrays(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_complete_subarrays(Nums :: [integer()]) -> integer().\ncount_complete_subarrays(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-complete-subarrays nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2739",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach: Sliding Window\n\n#### Intuition\n\nWe fix the left boundary $\\textit{left}$ and use the $\\textit{cnt}$ hash map to count the number of occurrences of each element in the window. When the number of different elements in the window is less than $\\textit{distinct}$, we continuously shift $\\textit{right}$ to expand the window; once the number of different elements in the window equals $\\textit{distinct}$, it indicates that the current window $[\\textit{left},\\textit{right})$ is a **complete subarray**. At this point, since continuing to increase $\\textit{right}$ will not reduce the number of different elements in the window, all subarrays from $\\textit{right}$ to the end of the array are also valid **complete subarrays**. Therefore, we can count these solutions at once. That is, we add $n-\\textit{right}+1$.\n\nEach time we move $\\textit{left}$, the count of $\\textit{nums}[\\textit{left}]$ in the hash table should be decreased by 1. If the count is reduced to $0$, the element should be deleted from the hash table.\n\nFinally, return the accumulated results.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3WiyynhU/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3WiyynhU\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the $\\textit{nums}$.\n\n- Time complexity: $O(n)$\n\nThe two pointers $\\textit{left}$ and $\\textit{right}$ will each traverse the array once.\n\n- Space complexity: $O(n)$\n\nThis is the space required for the hash map $\\textit{cnt}$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

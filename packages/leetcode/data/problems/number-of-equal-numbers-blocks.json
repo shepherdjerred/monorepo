@@ -1,0 +1,122 @@
+{
+  "questionId": "3222",
+  "questionFrontendId": "2936",
+  "title": "Number of Equal Numbers Blocks",
+  "titleSlug": "number-of-equal-numbers-blocks",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> array of integers, <code>nums</code>. The following property holds for <code>nums</code>:</p>\n\n<ul>\n\t<li>All occurrences of a value are adjacent. In other words, if there are two indices <code>i &lt; j</code> such that <code>nums[i] == nums[j]</code>, then for every index <code>k</code> that <code>i &lt; k &lt; j</code>, <code>nums[k] == nums[i]</code>.</li>\n</ul>\n\n<p>Since <code>nums</code> is a very large array, you are given an instance of the class <code>BigArray</code> which has the following functions:</p>\n\n<ul>\n\t<li><code>int at(long long index)</code>: Returns the value of <code>nums[i]</code>.</li>\n\t<li><code>void size()</code>: Returns <code>nums.length</code>.</li>\n</ul>\n\n<p>Let&#39;s partition the array into <strong>maximal</strong> blocks such that each block contains <strong>equal values</strong>. Return<em> the number of these blocks.</em></p>\n\n<p><strong>Note</strong> that if you want to test your solution using a custom test, behavior for tests with <code>nums.length &gt; 10</code> is undefined.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,3,3,3,3]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> There is only one block here which is the whole array (because all numbers are equal) and that is: [<u>3,3,3,3,3</u>]. So the answer would be 1. \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,1,1,3,9,9,9,2,10,10]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> There are 5 blocks here:\nBlock number 1: [<u>1,1,1</u>,3,9,9,9,2,10,10]\nBlock number 2: [1,1,1,<u>3</u>,9,9,9,2,10,10]\nBlock number 3: [1,1,1,3,<u>9,9,9</u>,2,10,10]\nBlock number 4: [1,1,1,3,9,9,9,<u>2</u>,10,10]\nBlock number 5: [1,1,1,3,9,9,9,2,<u>10,10</u>]\nSo the answer would be 5.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4,5,6,7]\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> Since all numbers are distinct, there are 7 blocks here and each element representing one block. So the answer would be 7. \n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>15</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li>The input is generated such that all equal values are adjacent.</li>\n\t<li>The sum of the elements of&nbsp;<code>nums</code>&nbsp;is at most&nbsp;<code>10<sup>15</sup></code>.</li>\n</ul>\n",
+  "hints": [
+    "Start from the beginning of the array <code>nums.at(0)</code>.",
+    "Do a binary search on the last index <code>last</code> such that <code>nums.at(0) == nums.at(last)</code>.",
+    "Continue this process until you get to the end of the array (<code>nums.size()</code>)."
+  ],
+  "metaData": "{\n  \"name\": \"countBlocks\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"long[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"manual\": true,\n  \"languages\": [\n    \"cpp\",\n    \"java\",\n    \"python\",\n    \"c\",\n    \"csharp\",\n    \"javascript\",\n    \"ruby\",\n    \"swift\",\n    \"python3\",\n    \"kotlin\",\n    \"typescript\",\n    \"golang\",\n    \"scala\",\n    \"rust\",\n    \"php\",\n    \"dart\"\n  ],\n\"typescriptCustomType\" : \"class BigArray {\\n    #elements;\\n    constructor(elements: number[]) {\\n        this.#elements = elements;\\n    }\\n\\n    at(index: number): number {\\n        if (index < 0 || index >= this.size()) {\\n            throw new Error(\\\"index\\\");\\n        }\\n        if (this.#elements.length <= 10) {\\n            return this.#elements[index];\\n        }\\n        let beg = -1;\\n        let end = Math.floor(this.#elements.length / 2);\\n        let mid;\\n        while (end - beg > 1) {\\n            mid = Math.floor((beg + end) / 2);\\n            if (this.#elements[mid] <= index) {\\n                beg = mid;\\n            } else {\\n                end = mid;\\n            }\\n        }\\n        return this.#elements[Math.floor(this.#elements.length / 2) + end];\\n    }\\n\\n    size(): number {\\n        if (this.#elements.length <= 10) {\\n            return this.#elements.length;\\n        }\\n        return this.#elements[Math.floor(this.#elements.length / 2) - 1];\\n    }\\n}\"\n}",
+  "stats": "{\"totalAccepted\": \"2.4K\", \"totalSubmission\": \"3.9K\", \"totalAcceptedRaw\": 2419, \"totalSubmissionRaw\": 3871, \"acRate\": \"62.5%\"}",
+  "likes": 24,
+  "dislikes": 8,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[3,3,3,3,3]",
+    "[1,1,1,3,9,9,9,2,10,10]",
+    "[1,2,3,4,5,6,7]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Interactive",
+      "slug": "interactive"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for BigArray.\n * class BigArray {\n * public:\n *     BigArray(vector<int> elements);\n *     int at(long long index);\n *     long long size();\n * };\n */\nclass Solution {\npublic:\n    int countBlocks(BigArray* nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for BigArray.\n * class BigArray {\n *     public BigArray(int[] elements);\n *     public int at(long index);\n *     public long size();\n * }\n */\nclass Solution {\n    public int countBlocks(BigArray nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for BigArray.\n# class BigArray:\n#     def at(self, index: long) -> int:\n#         pass\n#     def size(self) -> long:\n#         pass\nclass Solution(object):\n    def countBlocks(self, nums: Optional['BigArray']) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for BigArray.\n# class BigArray:\n#     def at(self, index):\n#         pass\n#     def size(self):\n#         pass\nclass Solution(object):\n    def countBlocks(self, nums):\n        \"\"\"\n        :type nums: BigArray\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for BigArray.\n * class BigArray {\n *     @param {number[]} elements\n *     constructor(elements);\n * \n *     @param {number} index\n *     @return {number}\n *     at(index);\n * \n *     @return {number}\n *     size();\n * }\n */\n/**\n * @param {BigArray} nums\n * @return {number}\n */\nvar countBlocks = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for BigArray.\n * class BigArray {\n *     constructor(elements: number[]);\n *     public at(index: number): number;\n *     public size(): number;\n * }\n */\nfunction countBlocks(nums: BigArray | null): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for BigArray.\n * class BigArray {\n *     public BigArray(int[] elements);\n *     public int at(long index);\n *     public long size();\n * }\n */\npublic class Solution {\n    public int CountBlocks(BigArray nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for BigArray.\n * \n * YOU HAVE TO PASS THE OBJECT ITSELF AS THE FIRST PARAMETER\n * \n * struct BigArray {\n *     int (*at)(struct BigArray*, long long);\n *     long long (*size)(struct BigArray*);\n * };\n */\nint countBlocks(struct BigArray* nums){\n\n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for BigArray.\n * type BigArray interface {\n *     At(int64) int\n *     Size() int64\n * }\n */\nfunc countBlocks(nums BigArray) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Definition for BigArray.\n * class BigArray(elements: IntArray) {\n *     fun at(index: Long): Int\n *     fun size(): Long\n * }\n */\nclass Solution {\n    fun countBlocks(nums: BigArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for BigArray.\n * class BigArray {\n *     init(elements: [Int]) {}\n *     func at(_ index: Int) -> Int {}\n *     func size() -> Int {}\n * }\n */\nclass Solution {\n    func countBlocks(_ nums: BigArray) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "/**\n * Definition for BigArray.\n * impl BigArray {\n *     pub fn new(elements: Vec<i32>) -> Self {}\n *     pub fn at(&self, usize) -> i32 {}\n *     pub fn size(&self) -> usize {}\n * }\n */\nimpl Solution {\n    pub fn count_blocks(nums: BigArray) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for BigArray.\n# class BigArray\n#   def initialize(elements)\n#   end\n#   def at(index)\n#   end\n#   def size\n#   end\n# end\n# @param {BigArray} nums\n# @return {Integer}\ndef count_blocks(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for BigArray.\n * class BigArray {\n *      * @param Integer[] $elements\n *     function __construct($elements);\n *      * @param Integer $index\n *      * @return Integer\n *     function at($index);\n *      * @return Integer\n *     function size();\n * }\n */\nclass Solution {\n\n    /**\n     * @param BigArray $nums\n     * @return Integer\n     */\n    function countBlocks($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for BigArray.\n * class BigArray {\n *   BigArray(List<int> elements);\n *   int at(int);\n *   int size();\n * }\n */\nclass Solution {\n  int countBlocks(BigArray nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for BigArray.\n * class BigArray(elements: Array[Int]) {\n *     def at(Long): Int\n *     def size(): Long\n * }\n */\nobject Solution {\n    def countBlocks(nums: BigArray): Int = {\n        \n    }\n}"
+    }
+  ],
+  "solution": null
+}

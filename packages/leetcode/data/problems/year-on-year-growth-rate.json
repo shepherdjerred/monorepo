@@ -1,0 +1,53 @@
+{
+  "questionId": "3520",
+  "questionFrontendId": "3214",
+  "title": "Year on Year Growth Rate",
+  "titleSlug": "year-on-year-growth-rate",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>user_transactions</code></p>\n\n<pre>\n+------------------+----------+\n| Column Name      | Type     | \n+------------------+----------+\n| transaction_id   | integer  |\n| product_id       | integer  |\n| spend            | decimal  |\n| transaction_date | datetime |\n+------------------+----------+\nThe transaction_id column uniquely identifies each row in this table.\nEach row of this table contains the transaction ID, product ID, the spend amount, and the transaction date.\n</pre>\n\n<p>Write a solution to calculate the <strong>year-on-year growth rate</strong> for the total spend <strong>for each product</strong>.</p>\n\n<p>The result table should include the following columns:</p>\n\n<ul>\n\t<li><code>year</code>: The year of the transaction.</li>\n\t<li><code>product_id</code>: The ID of the product.</li>\n\t<li><code>curr_year_spend</code>: The total spend for the current year.</li>\n\t<li><code>prev_year_spend</code>: The total spend for the previous year.</li>\n\t<li><code>yoy_rate</code>: The year-on-year growth rate percentage, rounded to <code>2</code> decimal places.</li>\n</ul>\n\n<p>Return <em>the result table ordered by</em>&nbsp;<code>product_id</code>,<code>year</code> <em>in <strong>ascending</strong> order</em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p><code>user_transactions</code> table:</p>\n\n<pre class=\"example-io\">\n+----------------+------------+---------+---------------------+\n| transaction_id | product_id | spend   | transaction_date    |\n+----------------+------------+---------+---------------------+\n| 1341           | 123424     | 1500.60 | 2019-12-31 12:00:00 |\n| 1423           | 123424     | 1000.20 | 2020-12-31 12:00:00 |\n| 1623           | 123424     | 1246.44 | 2021-12-31 12:00:00 |\n| 1322           | 123424     | 2145.32 | 2022-12-31 12:00:00 |\n+----------------+------------+---------+---------------------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+------+------------+----------------+----------------+----------+\n| year | product_id | curr_year_spend| prev_year_spend| yoy_rate |\n+------+------------+----------------+----------------+----------+\n| 2019 | 123424     | 1500.60        | NULL           | NULL     |\n| 2020 | 123424     | 1000.20        | 1500.60        | -33.35   |\n| 2021 | 123424     | 1246.44        | 1000.20        | 24.62    |\n| 2022 | 123424     | 2145.32        | 1246.44        | 72.12    |\n+------+------------+----------------+----------------+----------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>For product ID 123424:\n\t<ul>\n\t\t<li>In 2019:\n\t\t<ul>\n\t\t\t<li>Current year&#39;s spend is 1500.60</li>\n\t\t\t<li>No previous year&#39;s spend recorded</li>\n\t\t\t<li>YoY growth rate: NULL</li>\n\t\t</ul>\n\t\t</li>\n\t\t<li>In 2020:\n\t\t<ul>\n\t\t\t<li>Current year&#39;s spend is 1000.20</li>\n\t\t\t<li>Previous year&#39;s spend is 1500.60</li>\n\t\t\t<li>YoY growth rate: ((1000.20 - 1500.60) / 1500.60) * 100 = -33.35%</li>\n\t\t</ul>\n\t\t</li>\n\t\t<li>In 2021:\n\t\t<ul>\n\t\t\t<li>Current year&#39;s spend is 1246.44</li>\n\t\t\t<li>Previous year&#39;s spend is 1000.20</li>\n\t\t\t<li>YoY growth rate: ((1246.44 - 1000.20) / 1000.20) * 100 = 24.62%</li>\n\t\t</ul>\n\t\t</li>\n\t\t<li>In 2022:\n\t\t<ul>\n\t\t\t<li>Current year&#39;s spend is 2145.32</li>\n\t\t\t<li>Previous year&#39;s spend is 1246.44</li>\n\t\t\t<li>YoY growth rate: ((2145.32 - 1246.44) / 1246.44) * 100 = 72.12%</li>\n\t\t</ul>\n\t\t</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p><strong>Note:</strong> Output table is ordered by <code>product_id</code> and <code>year</code> in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create Table if not exists user_transactions( transaction_id int, product_id int, spend decimal(10,2), \\ntransaction_date datetime)\"], \"mssql\": [\"Create Table  user_transactions( transaction_id int, product_id int, spend decimal(10,2), \\ntransaction_date datetime)\"], \"oraclesql\": [\"Create Table  user_transactions( transaction_id NUMBER, product_id NUMBER, spend NUMBER(10,2), \\ntransaction_date date)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD HH24:MI:SS'\"], \"database\": true, \"name\": \"calculate_yoy_growth\", \"postgresql\": [\"CREATE TABLE IF NOT EXISTS user_transactions (\\n    transaction_id INT,\\n    product_id INT,\\n    spend NUMERIC(10, 2),\\n    transaction_date TIMESTAMP\\n);\\n\"], \"pythondata\": [\"user_transactions = pd.DataFrame(columns=['transaction_id', 'product_id', 'spend', 'transaction_date']).astype({'transaction_id': 'int','product_id': 'int','spend': 'float','transaction_date': 'datetime64[ns]'})\\n\"], \"database_schema\": {\"user_transactions\": {\"transaction_id\": \"INT\", \"product_id\": \"INT\", \"spend\": \"DECIMAL(10, 2)\", \"transaction_date\": \"DATETIME\"}}}",
+  "stats": "{\"totalAccepted\": \"3.6K\", \"totalSubmission\": \"7K\", \"totalAcceptedRaw\": 3557, \"totalSubmissionRaw\": 6965, \"acRate\": \"51.1%\"}",
+  "likes": 5,
+  "dislikes": 1,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"user_transactions\":[\"transaction_id\",\"product_id\",\"spend\",\"transaction_date\"]},\"rows\":{\"user_transactions\":[[1341,123424,1500.60,\"2019-12-31 12:00:00\"],[1423,123424,1000.20,\"2020-12-31 12:00:00\"],[1623,123424,1246.44,\"2021-12-31 12:00:00\"],[1322,123424,2145.32,\"2022-12-31 12:00:00\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef calculate_yoy_growth(user_transactions: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

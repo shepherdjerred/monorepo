@@ -1,0 +1,137 @@
+{
+  "questionId": "3430",
+  "questionFrontendId": "3169",
+  "title": "Count Days Without Meetings",
+  "titleSlug": "count-days-without-meetings",
+  "difficulty": "Medium",
+  "content": "<p>You are given a positive integer <code>days</code> representing the total number of days an employee is available for work (starting from day 1). You are also given a 2D array <code>meetings</code> of size <code>n</code> where, <code>meetings[i] = [start_i, end_i]</code> represents the starting and ending days of meeting <code>i</code> (inclusive).</p>\n\n<p>Return the count of days when the employee is available for work but no meetings are scheduled.</p>\n\n<p><strong>Note: </strong>The meetings may overlap.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">days = 10, meetings = [[5,7],[1,3],[9,10]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There is no meeting scheduled on the 4<sup>th</sup> and 8<sup>th</sup> days.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">days = 5, meetings = [[2,4],[1,3]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There is no meeting scheduled on the 5<sup>th </sup>day.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">days = 6, meetings = [[1,6]]</span></p>\n\n<p><strong>Output:</strong> 0</p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Meetings are scheduled for all working days.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= days &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= meetings.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>meetings[i].length == 2</code></li>\n\t<li><code><font face=\"monospace\">1 &lt;= meetings[i][0] &lt;= meetings[i][1] &lt;= days</font></code></li>\n</ul>\n",
+  "hints": [
+    "Merge the overlapping meetings and sort the new meetings timings.",
+    "Return the sum of difference between the end time of a meeting and the start time of the next meeting for all adjacent pairs."
+  ],
+  "metaData": "{\n  \"name\": \"countDays\",\n  \"params\": [\n    {\n      \"name\": \"days\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"meetings\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"182.6K\", \"totalSubmission\": \"379.6K\", \"totalAcceptedRaw\": 182601, \"totalSubmissionRaw\": 379572, \"acRate\": \"48.1%\"}",
+  "likes": 783,
+  "dislikes": 19,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Merge Intervals\", \"titleSlug\": \"merge-intervals\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "10\n[[5,7],[1,3],[9,10]]",
+    "5\n[[2,4],[1,3]]",
+    "6\n[[1,6]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"swiggy\", \"name\": \"Swiggy\"}], \"more_than_six_months\": [{\"timesEncountered\": 18, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countDays(int days, vector<vector<int>>& meetings) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countDays(int days, int[][] meetings) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countDays(self, days: int, meetings: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countDays(self, days, meetings):\n        \"\"\"\n        :type days: int\n        :type meetings: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} days\n * @param {number[][]} meetings\n * @return {number}\n */\nvar countDays = function(days, meetings) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countDays(days: number, meetings: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountDays(int days, int[][] meetings) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countDays(int days, int** meetings, int meetingsSize, int* meetingsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countDays(days int, meetings [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countDays(days: Int, meetings: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countDays(_ days: Int, _ meetings: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_days(days: i32, meetings: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} days\n# @param {Integer[][]} meetings\n# @return {Integer}\ndef count_days(days, meetings)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $days\n     * @param Integer[][] $meetings\n     * @return Integer\n     */\n    function countDays($days, $meetings) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countDays(int days, List<List<int>> meetings) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countDays(days: Int, meetings: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_days(days :: integer, meetings :: [[integer]]) :: integer\n  def count_days(days, meetings) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_days(Days :: integer(), Meetings :: [[integer()]]) -> integer().\ncount_days(Days, Meetings) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-days days meetings)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2717",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Line Sweep\n\n#### Intuition\n\nWe need to find the number of available days when no meetings are scheduled. We are given a total number of `days`, representing the maximum number of days an employee can work, and a `2D` array `meetings`, where each meeting `[start, end]` specifies the range of days the meeting occurs (inclusive).\n\n!?!../Documents/3169/slideshow1.json:960,540!?!\n\nA simple approach would be to iterate through each meeting, decreasing `days` whenever a scheduled meeting is found, until every meeting has been explored. However, given the constraints where `meetings` can be as large as `10^5` and `days` can be as large as `10^9`, this approach is too slow. Each meeting might require traversing all possible values of `days`, leading to an impractical time complexity.\n\nTo optimize this, we need a more efficient way to apply the ranges of `meetings`. Instead of accessing each element in a meeting range individually, we can take advantage of a difference map. A map is used over an array to avoid allocating up to `10^9` elements based on the size of `days`. This technique allows us to apply a range update in constant time. The key idea is to store the changes at the boundaries of the range rather than updating every element inside it. For a meeting `[start, end]`, we add `1` to `dayMap[start]`, and subtract `1` from `dayMap[end + 1]`. When we later compute the prefix sum of this difference map, it reconstructs the actual values efficiently. This way, instead of updating each element up to `days` individually, we can process all meetings in an optimized manner.\n\nAfter applying the ranges of each meeting, we can now work on finding the days without scheduled meetings (say `freeDays`). First, we add any days without a meeting before the first meeting (starting at day `1`) to `freeDays`. We then track the prefix sum at each element in `dayMap`. When the prefix sum is ever `0`, we add the difference of the current and previous indices to represent the current range of days without meetings. Finally, we add any days without meetings after the last meeting (up to `days`) to `freeDays` and return the total as our answer.\n\nHere, we can look at how the difference map can be applied to this problem:\n\n!?!../Documents/3169/slideshow2.json:960,540!?!\n\n#### Algorithm\n\n- Initialize:\n    - `dayMap` as a map to track the starting and ending times of the meetings.\n    - `prefixSum` to `0` to track how many meetings are scheduled for the current day.\n    - `freeDays` to `0` to count the number of days with no meeting scheduled.\n    - `previousDay` to `days` to track the previous day checked.\n- Iterate through `meetings`. For each meeting, `[start, end]`:\n    - Increment `dayMap[start]` by `1` to update the start of the range.\n    - Decrement `dayMap[end + 1]` to update the end of the range.\n    - Set `previousDay` to the minimum of `previousDay` and `start` to update the first day with a meeting.\n- Increment `freeDays` by `previousDay - 1` to represent the number of days without a meeting before the first day with a meeting.\n- Iterate through `dayMap`. For each key-value pair, `[currentDay, count]`\n    - If `prefixSum` equals `0`, increase `freeDays` by `currentDay - previousDay` to add the current gap found with no meeting scheduled.\n    - Increment `prefixSum` by `count`.\n    - Set `previousDay` to `currentDay`.\n- Increment `freeDays` by `days - previousDay + 1` to represent the remaining days without a meeting.\n- Return `freeDays`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ZqdspZbT/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZqdspZbT\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the size of `meetings`.\n\n* Time Complexity: $O(N \\cdot log(N))$\n\n    To begin, we iterate through each element of `meetings`. For each meeting, we insert elements into `dayMap`, which are $O(log n)$ operations on average due to the use of ordered maps. This leads to a time complexity of $O(N \\cdot log(N))$ for this step.\n\n    Next, we iterate through the elements in `dayMap`. For each iteration, we perform arithmetic operations in constant time. In the worst case, we iterate up to $2 \\cdot N$ times if each meeting inserts two distinct elements into `dayMap`. This leads to a time complexity of $O(2 \\cdot N)$, which can be simplified to $O(N)$.\n\n    Combining these time complexities leads to an overall time complexity of $O(N \\cdot log(N) + N)$, which can be simplified to $O(N \\cdot log(N))$.\n\n* Space Complexity: $O(N)$\n\n    The space complexity is determined by the ordered map `daysMap`. In the worst case, the map has to store $2 \\cdot N$ unique elements if there are no repeated starting or ending time points in `meetings`. This leads to an overall space complexity of $O(2 \\cdot N)$, which can be simplified to $O(N)$.\n\n---\n\n### Approach 2: Sorting\n\n#### Intuition\n\nIn the previous approach, we used a map to efficiently track meeting schedules, but this required additional space to store boundary changes for each meeting. Since each meeting contributes up to two unique entries in the map, the space complexity grows linearly with the number of meetings. To optimize space usage, we need a solution that avoids maintaining an extra data structure for storing these intervals.\n\nA more space efficient approach relies on sorting the `meetings` array based on the starting times of meetings. By doing so, we can process meeting intervals in order and determine gaps where no meetings are scheduled without needing a separate map to track changes. The key observation here is that if meetings are sorted, any gap between the current latest end time and the next meeting’s start time represents a range of free days.\n\nWith this in mind, we can maintain a variable `latestEnd`, initialized to `0`, which keeps track of the latest ending time of meetings encountered so far. After sorting the meetings, we iterate through them one by one. For each meeting `[start, end]`, we check if `start > latestEnd + 1`. If this condition holds, it means there is a gap between `latestEnd` and `start`, representing a range of days with no scheduled meetings. We add the length of this gap (`start - latestEnd - 1`) to our count of free days. Since `latestEnd` starts at `0`, this check also accounts for any free days before the first scheduled meeting (starting from day `1`). \n\nAfter processing a meeting, we update `latestEnd` to be the maximum of its current value and the `end` of the current meeting, ensuring we always track the furthest scheduled day. Once all meetings have been processed, we add any remaining free days after the last meeting (up to `days`) to our count.\n\nThrough this process, we only process the ranges of each meeting while avoiding the use of any data structures dependent on the input size.\n\n#### Algorithm\n\n- Initialize:\n    - `freeDays` to 0 to count the number of days with no meeting scheduled.\n    - `latestEnd` to 0 to track the latest time a meeting ends.\n- Sort `meetings` based on starting times.\n- Iterate through `meetings`. For each meeting, `[start, end]`:\n    - If `start > latestEnd + 1`, meaning there is a gap where no meeting is scheduled:\n        - Increase `freeDays` by `start - latestEnd - 1` to represent the current range of days without a meeting.\n    - Update `latestEnd` to the maximum of `latestEnd` and `end`.\n- Increase `freeDays` by `days - latestEnd` to represent the remaining days without a meeting.\n- Return `freeDays`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/VN8YytpG/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"VN8YytpG\"></iframe>\n\n#### Sorting\n\nLet $N$ be the size of `meetings`.\n\n* Time Complexity: $O(N \\cdot log(N))$\n\n    To begin, we sort `meetings` chronologically based on starting times. This takes $O(N \\cdot log (N))$.\n\n    Next, we iterate through each element of `meetings`. For each iteration, we perform arithmetic operations in constant time. This leads to a time complexity of $O(N)$.\n\n    Combining these time complexities leads to an overall time complexity of $O(N \\cdot log(N) + N)$, which can be simplified to $O(N \\cdot log(N))$.\n\n* Space complexity: $O(\\log⁡⁡ N)$ or $O(N)$.\n\n    No extra space is needed apart from a few variables. However, some space is required for sorting.\n    \n    The space complexity of the sorting algorithm depends on the implementation of each programming language.\n    \n    For instance, in Java, the `Arrays.sort()` for primitives is implemented as a variant of the quicksort algorithm whose space complexity is $O(\\log⁡⁡ N)$.\n    In C++ `sort()` function provided by STL is a hybrid of Quick Sort, Heap Sort, and Insertion Sort and has a worst-case space complexity of $O(\\log⁡⁡ N)$.\n    In Python, the sort method sorts a list using the Tim Sort algorithm which is a combination of Merge Sort and Insertion Sort and uses $O(N)$ additional space. Thus, the inbuilt `sort()` function might add up to $O(\\log⁡⁡ N)$ or $O(N)$ to the space complexity.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

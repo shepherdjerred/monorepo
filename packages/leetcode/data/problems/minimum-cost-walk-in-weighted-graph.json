@@ -1,0 +1,144 @@
+{
+  "questionId": "3348",
+  "questionFrontendId": "3108",
+  "title": "Minimum Cost Walk in Weighted Graph",
+  "titleSlug": "minimum-cost-walk-in-weighted-graph",
+  "difficulty": "Hard",
+  "content": "<p>There is an undirected weighted graph with <code>n</code> vertices labeled from <code>0</code> to <code>n - 1</code>.</p>\n\n<p>You are given the integer <code>n</code> and an array <code>edges</code>, where <code>edges[i] = [u<sub>i</sub>, v<sub>i</sub>, w<sub>i</sub>]</code> indicates that there is an edge between vertices <code>u<sub>i</sub></code> and <code>v<sub>i</sub></code> with a weight of <code>w<sub>i</sub></code>.</p>\n\n<p>A walk on a graph is a sequence of vertices and edges. The walk starts and ends with a vertex, and each edge connects the vertex that comes before it and the vertex that comes after it. It&#39;s important to note that a walk may visit the same edge or vertex more than once.</p>\n\n<p>The <strong>cost</strong> of a walk starting at node <code>u</code> and ending at node <code>v</code> is defined as the bitwise <code>AND</code> of the weights of the edges traversed during the walk. In other words, if the sequence of edge weights encountered during the walk is <code>w<sub>0</sub>, w<sub>1</sub>, w<sub>2</sub>, ..., w<sub>k</sub></code>, then the cost is calculated as <code>w<sub>0</sub> &amp; w<sub>1</sub> &amp; w<sub>2</sub> &amp; ... &amp; w<sub>k</sub></code>, where <code>&amp;</code> denotes the bitwise <code>AND</code> operator.</p>\n\n<p>You are also given a 2D array <code>query</code>, where <code>query[i] = [s<sub>i</sub>, t<sub>i</sub>]</code>. For each query, you need to find the minimum cost of the walk starting at vertex <code>s<sub>i</sub></code> and ending at vertex <code>t<sub>i</sub></code>. If there exists no such walk, the answer is <code>-1</code>.</p>\n\n<p>Return <em>the array </em><code>answer</code><em>, where </em><code>answer[i]</code><em> denotes the <strong>minimum</strong> cost of a walk for query </em><code>i</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 5, edges = [[0,1,7],[1,3,7],[1,2,1]], query = [[0,3],[3,4]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[1,-1]</span></p>\n\n<p><strong>Explanation:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/01/31/q4_example1-1.png\" style=\"padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; width: 351px; height: 141px;\" />\n<p>To achieve the cost of 1 in the first query, we need to move on the following edges: <code>0-&gt;1</code> (weight 7), <code>1-&gt;2</code> (weight 1), <code>2-&gt;1</code> (weight 1), <code>1-&gt;3</code> (weight 7).</p>\n\n<p>In the second query, there is no walk between nodes 3 and 4, so the answer is -1.</p>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n</div>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 3, edges = [[0,2,7],[0,1,15],[1,2,6],[1,2,1]], query = [[1,2]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[0]</span></p>\n\n<p><strong>Explanation:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/01/31/q4_example2e.png\" style=\"padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; width: 211px; height: 181px;\" />\n<p>To achieve the cost of 0 in the first query, we need to move on the following edges: <code>1-&gt;2</code> (weight 1), <code>2-&gt;1</code> (weight 6), <code>1-&gt;2</code> (weight 1).</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= edges.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>edges[i].length == 3</code></li>\n\t<li><code>0 &lt;= u<sub>i</sub>, v<sub>i</sub> &lt;= n - 1</code></li>\n\t<li><code>u<sub>i</sub> != v<sub>i</sub></code></li>\n\t<li><code>0 &lt;= w<sub>i</sub> &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= query.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>query[i].length == 2</code></li>\n\t<li><code>0 &lt;= s<sub>i</sub>, t<sub>i</sub> &lt;= n - 1</code></li>\n\t<li><code>s<sub>i</sub> !=&nbsp;t<sub>i</sub></code></li>\n</ul>\n",
+  "hints": [
+    "The intended solution uses Disjoint Set Union.",
+    "Notice that, if <code>u</code> and <code>v</code> are not connected then the answer is <code>-1</code>, otherwise we can use all the edges from the connected component where both belong to."
+  ],
+  "metaData": "{\n  \"name\": \"minimumCost\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"query\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"106.3K\", \"totalSubmission\": \"155.7K\", \"totalAcceptedRaw\": 106317, \"totalSubmissionRaw\": 155737, \"acRate\": \"68.3%\"}",
+  "likes": 786,
+  "dislikes": 43,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "5\n[[0,1,7],[1,3,7],[1,2,1]]\n[[0,3],[3,4]]",
+    "3\n[[0,2,7],[0,1,15],[1,2,6],[1,2,1]]\n[[1,2]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> minimumCost(int n, vector<vector<int>>& edges, vector<vector<int>>& query) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] minimumCost(int n, int[][] edges, int[][] query) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumCost(self, n: int, edges: List[List[int]], query: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumCost(self, n, edges, query):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :type query: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @param {number[][]} query\n * @return {number[]}\n */\nvar minimumCost = function(n, edges, query) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumCost(n: number, edges: number[][], query: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] MinimumCost(int n, int[][] edges, int[][] query) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* minimumCost(int n, int** edges, int edgesSize, int* edgesColSize, int** query, int querySize, int* queryColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumCost(n int, edges [][]int, query [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumCost(n: Int, edges: Array<IntArray>, query: Array<IntArray>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumCost(_ n: Int, _ edges: [[Int]], _ query: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_cost(n: i32, edges: Vec<Vec<i32>>, query: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @param {Integer[][]} query\n# @return {Integer[]}\ndef minimum_cost(n, edges, query)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @param Integer[][] $query\n     * @return Integer[]\n     */\n    function minimumCost($n, $edges, $query) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> minimumCost(int n, List<List<int>> edges, List<List<int>> query) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumCost(n: Int, edges: Array[Array[Int]], query: Array[Array[Int]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_cost(n :: integer, edges :: [[integer]], query :: [[integer]]) :: [integer]\n  def minimum_cost(n, edges, query) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_cost(N :: integer(), Edges :: [[integer()]], Query :: [[integer()]]) -> [integer()].\nminimum_cost(N, Edges, Query) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-cost n edges query)\n  (-> exact-integer? (listof (listof exact-integer?)) (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2713",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an undirected weighted graph, represented by an array `edges`, where `edges[i] = [u, v, w]` indicates an edge between vertices `u` and `v` with weight `w`. Additionally, we are given an array `queries`, where `queries[i] = [s, t]` represents a pair of nodes in the graph.\n\nFor each query, our task is to determine the minimum *cost* of a *walk* that starts at node `s` and ends at node `t`. If no such walk exists, the answer is `-1`. Let's first define the two key terms involved in this task:\n\n-   A *walk* in a graph is a sequence of connected vertices and the edges that connect them. Unlike a path, a walk allows both edges and vertices to be repeated.\n-   The *cost* of a walk is defined as the bitwise AND of the weights of all edges encountered in the walk. \n\nFirst, recall that the bitwise AND operation compares the bits of all the numbers involved and keeps a bit as `1` only if it is `1` in every number; otherwise, the bit becomes `0`. Now, consider the smallest number in the group. It already has some bits set to `0`. Since the AND operation can only turn bits off (changing `1` to `0`, but never `0` to `1`), the result can never have more `1`s than the smallest number. This means the result is always less than or equal to the smallest number.\n\nIn this problem, that tells us that adding more edges to a walk can only keep the cost the same or make it smaller. So, to find the minimum cost, we should try to include as many edges as possible in the walk. \n\nNotice that since `w AND w = w`, revisiting the same edge multiple times does not change the total cost. This can be useful if we need to backtrack to take a different path, in order to visit more edges.\n\n---\n\n### Approach 1: Disjoint-Set (Union-Find)\n\n#### Intuition\n\nFirst, let's determine when the answer to a query is `-1`. This happens when no walk exists between the two nodes, meaning they belong to different connected components.\n\n> A connected component in an undirected graph is a group of nodes where there is a path between any pair of nodes.\n\nNow, suppose the two nodes belong to the same connected component. What is the minimum cost of a walk connecting them? As mentioned, the optimal walk includes as many edges as possible. Since revisiting an edge does not affect the total score, we can freely traverse the edges of the component, meaning that we can move back and forth to reach all of them. Therefore, the best way to achieve the lowest cost is to visit every edge in the component.\n\nTo efficiently find and process the connected components of the graph, we use the Disjoint Set (Union-Find) data structure. This approach relies on two main operations: Union and Find. Each connected component has a representative node, known as its root, which is returned by the Find operation for any node in the group. When we Union two nodes, we merge their entire groups, as now a path exists between every node in one group and every node in the other. To maintain efficiency, the root of the larger group is chosen as the representative of the merged group. This minimizes the time needed for future Find operations by reducing the number of steps required to reach the current representative.\n\n> **Disjoint Set (Union-Find)**: For a more comprehensive understanding of the Disjoint Set data structure, check out the [Disjoint Set/Union-Find Explore Card](https://leetcode.com/explore/learn/card/graph/618/disjoint-set/). This resource provides an in-depth look at Union-Find, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\nOnce the nodes are grouped into connected components, we calculate the total cost for each component as the bitwise AND of all its edge weights. In the end, the minimum cost of a walk between any two nodes in the same component will be the same and equal to the component's total cost.\n\n#### Algorithm\n\n##### Main Function: `minimumCost(n, edges, queries)`\n\n- Initialize three arrays of size `n`:\n    -   `parent`, with all values set to `-1`, meaning that each node initially forms its own connected component.\n    -   `depth`, with all values initialized to `0`.\n    -   `componentCost`, with all values set to the largest integer (`2^32 - 1`), which is the neutral value for the AND operation, as it contains only `1`s in its binary representation.\n-   Construct the connected components of the graph:\n    -   For each `edge = [node1, node2, weight]` in `edges`:\n        -   `Union(node1, node2)`.\n-   Calculate the cost of each component:\n    -   For each `edge = [node1, node2, weight]` in `edges`:\n        -   Find the root of the edge's component: `root = find(node1)`.\n        -   Update the component cost by performing a bitwise AND: `componentCost[root] &= weight`. \n-   Initialize an array `answer` to store the answer for each query.\n    -   For each `query = [start, end]` in `queries`:\n        -   If the two nodes belong to different connected components, i.e. `find(start) != find(end)`, push `-1` into `answer`.\n        -   Otherwise:\n            -   Find the root of their component: `root = find(start)`.\n            -   Push `componentCost[root]` into `answer`.\n-   Return `answer`.\n\n##### `find(node)` function:\n- If `parent[node] = -1`, `node` is the representative of its group, so return `node`.\n- Otherwise, return `find(parent[node])` and store the result in `parent[node]` (path compression).\n\n##### `Union(node1, node2)` function:\n- Find the root of each node's component: set `root1 = find(node1)` and `root2 = find(node2)`.\n- If the two nodes already belong to the same component, i.e. `root1 == root2`, return.\n- Otherwise, if `depth[root1] < depth[root2]`, swap the two roots to ensure that `root1` has greater depth.\n- Merge the two groups, by setting `parent[root2] = root1`.\n- If the groups had the same depth, increment the depth of the merged group by `1` (`depth[root1]++`).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/MuYneAW2/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"MuYneAW2\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the graph, $m$ the number of edges, and $q$ the number of queries.\n\n-   Time complexity: $O(n + m + q)$\n\n    First, we must account for the time needed for the initialization of the `parent` and `size` arrays, which is equal to $O(n)$. The rest of the program consists of three loops. In the first loop, we iterate over all edges to construct the connected components of the graph. With the union-by-rank and path compression optimizations, both Find and Union operations take $O(1)$ time on average (or $a(n)$ time, where $a$ is the inverse Ackermann function that grows really slowly and is considered practically constant), so the time complexity of this loop is $O(m)$. In the second loop, we call the Find method and update the component's cost in $O(1)$ time for each iteration, making the time complexity of this loop also $O(m)$. Finally, we answer each query in $O(1)$ time, as it only involves checking if the two nodes belong to the same component and returning a precomputed value if they do. Thus, the total time complexity of the algorithm is $O(n + m + q)$.\n\n-   Space complexity: $O(n)$\n\n    We create three arrays: `parent`, `depth`, and `componentCost`, each of size $n$. The `answer` array is the output of the algorithm and doesn't contribute to the auxiliary space complexity, which is therefore equal to $O(n)$.\n\n---\n\n### Approach 2: Breadth-First Search (BFS)\n\n#### Intuition\n\nIn this approach, we use Breadth-First Search (BFS) to find the connected components of the graph and calculate their costs. Each component is assigned a unique ID, allowing us to later check if two nodes belong to the same component and retrieve the precomputed cost.\n\nWe start a BFS traversal from each unvisited node, marking it as part of a new component with a unique `componentId`. During the traversal, we mark every node we visit as part of the current component by setting `components[node] = componentId`. As we explore, we calculate the component's cost by performing a bitwise AND on the weights of the edges we visit. After finishing the traversal of all nodes and edges in the component, we store the calculated cost in a map, where the key is the `componentId` and the value is the component's cost.\n\nIn the worst case—when each node forms its own connected component—we will need exactly `n` distinct `componentId` values. By setting the `componentId` to the number of already explored components (starting at `0`), we can assign a unique number to each component in the range `[0, n - 1]`. This allows us to use an array instead of a map to store the component costs, optimizing both runtime and memory usage.\n\nFinally, for each query, we compare the `componentId` values of the two nodes in the `components` array. If they have the same ID, indicating they belong to the same component, we return the precomputed cost; otherwise, we return `-1` to show they are not connected.\n\n> **Breadth-First Search**: For a more comprehensive understanding of the Breadth-First Search, check out the [BFS Explore Card](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/). This resource provides an in-depth look at BFS, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n##### Main Function: `minimumCost(n, edges, queries)`\n-   Construct the adjacency list (`adjList`) of the graph:\n    -   For each `edge = [node1, node2, weight]` in edges:\n        -   Push `[node2, weight]` to `adjList[node1]`.\n        -   Push `[node1, weight]` to `adjList[node2]`.\n-   Initialize:\n    -   a `visited` array of size `n`.\n    -   an array, called `components` of size `n`, to store the component ID of the component each node belongs to.\n    -   an empty array, called `componentCost`.\n    -   `componentId` to `0`.\n-   Find the connected components of the graph:\n    -   For each `node` from `0` to `n - 1`:\n        -   If `node` is not visited, meaning that it belongs to a new component:\n            -   Push the result of `getComponentCost(node, adjList, visited, components, componentId)` into `componentCost`.\n            -   Increment `componentId` by `1`.\n-   Initialize an empty array `answer` to store the answer to each query.\n-   For each `query = [start, end]` in `queries`:\n    -   If `components[start] == components[end]`, meaning that the two nodes belong to the same component:\n        -   Push the cost of the component (`componentCost[components[start]]`) into `answer`.\n    -   Otherwise, the two nodes are not connected, so push `-1` into `answer`.\n-   Return `answer`.\n\n##### `getComponentCost(source, adjList, visited, components, componentId)` function:\n-   Initialize:\n    -   a queue, called `nodesQueue`.\n    -   `componentCost` to a number where all bits are set to 1 in its binary representation.\n-   Push `source` into `nodesQueue` and mark it as visited.\n-   While `nodesQueue` is not empty:\n    -   Pop the top node of the queue as `node`.\n    -   Mark that `node` belongs to this component by setting `components[node] = componentId`.\n    -   For each `[neighbor, weight]` in `adjList[node]`:\n        -   Update the component cost by performing a bitwise AND: `componentCost &= weight`.\n        -   If `neighbor` is visited, continue.\n        -   Otherwise, mark it as visited and push it into the queue.\n-   Return `componentCost`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ZvmjGS6T/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZvmjGS6T\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the graph, $m$ the number of edges, and $q$ the number of queries.\n\n-   Time complexity: $O(m + n + q)$\n\n    First, we construct the adjacency list of the graph in $O(m)$ time, as we iterate over the edges and process each of them in constant time. Next, we perform a BFS traversal over the graph, which takes $O(n + m)$ time, as each node and edge is visited exactly once. Finally, we answer each query in constant time, as all component costs are already computed. Overall, the time complexity of the algorithm is $O(m + n + q)$, as the steps are executed sequentially and independently of one another.\n\n-   Space complexity: $O(n + m)$\n\n    The adjacency list contains exactly $2m$ elements, so it takes up $O(m)$ space. The other data structures we use, including the `visited`, `components`, and `componentCost` arrays, grow linearly with the number of nodes in the graph, contributing $O(n)$ to the algorithm's space complexity. Therefore, the overall space complexity is $O(n + m)$.\n\n---\n\n### Approach 3: Depth-First Search (DFS)\n\n#### Intuition\n\nIn this approach, we will use the same logic as previously, assigning a unique ID to each component and marking all nodes of the component with this ID. However, we will now use a different type of graph traversal—Depth-First Search (DFS)—to find the connected components and mark the nodes. \n\nThe main difference between the two traversals (BFS and DFS) is that DFS is typically implemented recursively and explores as far along a path as possible before backtracking, while BFS extends paths one layer at a time. In this problem, since we explore the entire graph and visit all nodes and edges exactly once, both DFS and BFS perform equally in terms of time complexity.\n\n> **Depth-First Search**: For a more comprehensive understanding of the Depth-First Search, check out the [DFS Explore Card](https://leetcode.com/explore/featured/card/graph/620/depth-first-search-in-graph/). This resource provides an in-depth look at DFS, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n##### Main Function: `minimumCost(n, edges, queries)`\n-   Construct the adjacency list (`adjList`) of the graph:\n    -   For each `edge = [node1, node2, weight]` in edges:\n        -   Push `[node2, weight]` to `adjList[node1]`.\n        -   Push `[node1, weight]` to `adjList[node2]`.\n-   Initialize:\n    -   a `visited` array of size `n`.\n    -   an array, called `components` of size `n`, to store the component ID of the component each node belongs to.\n    -   an empty array, called `componentCost`.\n    -   `componentId` to `0`.\n-   Find the connected components of the graph:\n    -   For each `node` from `0` to `n - 1`:\n        -   If `node` is not visited, meaning that it belongs to a new component:\n            -   Push the result of `getComponentCost(node, adjList, visited, components, componentId)` into `componentCost`.\n            -   Increment `componentId` by `1`.\n-   Initialize an empty array `answer`, to store the answer to each query.\n-   For each `query = [start, end]` in `queries`:\n    -   If `components[start] == components[end]`, meaning that the two nodes belong to the same component:\n        -   Push the cost of the component (`componentCost[components[start]]`) into `answer`.\n    -   Otherwise, the two nodes are not connected, so push `-1` into `answer`.\n-   Return `answer`.\n\n##### `getComponentCost(node, adjList, visited, components, componentId)` function:\n-   Set `components[node] = componentId` to mark the `node` as part of the current component.\n-   Mark `node` as visited.\n-   Initialize `currentCost` to a number where all bits are set to 1 in its binary representation.\n-   For each `[neighbor, weight]` in `adjList[node]`:\n    -   Update the component cost by performing a bitwise AND: `currentCost &= weight`.\n    -   If `neighbor` is not visited:\n        -   Recursively explore the rest of the component and accumulate its cost by calling `getComponentCost(neighbor, adjList, visited, components, componentId)` and update `currentCost`.\n-   Return `currentCost`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7m7LDYei/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7m7LDYei\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the graph, $m$ the number of edges, and $q$ the number of queries.\n\n-   Time complexity: $O(m + n + q)$\n\n    Constructing the adjacency list of the graph requires $O(m)$ time, as each edge is processed in constant time. Additionally, the DFS traversal takes $O(m + n)$ time, since each node and each edge is visited exactly once. During the traversal, we calculate and store the costs of the components, so we answer each query in constant time. Therefore, the overall time complexity of the algorithm is $O(m + n + q)$.\n\n-   Space complexity: $O(n + m)$\n\n    The space complexity of the algorithm is determined by the size of the data structures used and the recursion depth. The adjacency list contains two elements for each edge of the graph, taking up $O(m)$ space, while the arrays `visited`, `components`, and `componentCost` have at most $n$ elements, contributing $O(n)$ to the space complexity. Moreover, the recursion depth can grow up to $n$ in the worst case, where all nodes belong to the same connected component and form a list. As a result, the total space complexity of the algorithm is $O(n + m)$.  \n    \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

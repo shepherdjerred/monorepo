@@ -1,0 +1,35 @@
+{
+  "questionId": "2900",
+  "questionFrontendId": "2797",
+  "title": "Partial Function with Placeholders",
+  "titleSlug": "partial-function-with-placeholders",
+  "difficulty": "Easy",
+  "content": "<p>Given a function <code>fn</code>&nbsp;and an array <code>args</code>, return a function <code>partialFn</code>.&nbsp;</p>\n\n<p>Placeholders <code>&quot;_&quot;</code> in the&nbsp;<code>args</code>&nbsp;should be replaced with values from <code>restArgs</code> starting from index <code>0</code>. Any remaining values in the <code>restArgs</code>&nbsp;should be added at the end of the <code>args</code>.</p>\n\n<p><code>partialFn</code>&nbsp;should return a result of <code>fn</code>.&nbsp;<code>fn</code> should be called with the elements of the modified&nbsp;<code>args</code>&nbsp;passed as separate arguments.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> fn = (...args) =&gt; args, args = [2,4,6], restArgs = [8,10]\n<strong>Output:</strong> [2,4,6,8,10]\n<strong>Explanation:</strong> \nconst partialFn = partial(fn, args)\nconst result = partialFn(...restArgs) \nconsole.log(result) //&nbsp;[2,4,6,8,10]\n\nThere are no placeholders &quot;_&quot; in args therefore restArgs is just added at the end of args. Then the elements of the&nbsp;args&nbsp;are passed as separate arguments to fn, which returns passed arguments as an array.\n</pre>\n<strong class=\"example\">Example 2:</strong>\n\n<pre>\n<strong>Input:</strong> fn = (...args) =&gt; args, args = [1,2,&quot;_&quot;,4,&quot;_&quot;,6], restArgs = [3,5]\n<strong>Output:</strong> [1,2,3,4,5,6]\n<strong>Explanation:</strong> \nconst partialFn = partial(fn, args) \nconst result = partialFn(...restArgs) \nconsole.log(result) //&nbsp;[1,2,3,4,5,6] \n\nPlaceholders &quot;_&quot; are replaced with values from the restArgs. Then the elements of the&nbsp;args&nbsp;are passed as separate arguments to fn, which returns passed arguments as an array.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> fn = (a, b, c) =&gt; b + a - c, args = [&quot;_&quot;, 5], restArgs = [5, 20]\n<strong>Output:</strong> -10\n<strong>Explanation:</strong> \nconst partialFn = partial(fn, args)\nconst result = partialFn(...restArgs)\nconsole.log(result) //&nbsp;-10\n\nPlaceholder &quot;_&quot; is replaced with 5 and 20 is added at the end of args. Then the elements of the&nbsp;args&nbsp;are passed as separate arguments to fn, which returns -10 (5 + 5 - 20).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>fn</code> is a function</li>\n\t<li><code>args</code> and <code>restArgs</code> are valid JSON arrays</li>\n\t<li><code>1 &lt;= args.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;=&nbsp;restArgs.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= number of placeholders &lt;= restArgs.length</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"partial\",\n  \"params\": [\n    {\n      \"name\": \"fn\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"args\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"restArgs\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  },\n  \"languages\": [\n    \"javascript\",\n    \"typescript\"\n  ],\n  \"manual\": true\n}",
+  "stats": "{\"totalAccepted\": \"1.7K\", \"totalSubmission\": \"1.9K\", \"totalAcceptedRaw\": 1731, \"totalSubmissionRaw\": 1923, \"acRate\": \"90.0%\"}",
+  "likes": 11,
+  "dislikes": 4,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "(...args) => args\n[2,4,6]\n[8,10]",
+    "(...args) => args\n[1,2,\"_\",4,\"_\",6]\n[3,5]",
+    "(a, b, c) => b + a - c\n[\"_\", 5]\n[5, 20]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [],
+  "codeSnippets": [
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {Function} fn\n * @param {Array} args\n * @return {Function}\n */\nvar partial = function(fn, args) {\n    \n    return function(...restArgs) {\n        \n    }\n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "type JSONValue = null | boolean | number | string | JSONValue[] | { [key: string]: JSONValue };\ntype Fn = (...args: JSONValue[]) => JSONValue\n\nfunction partial(fn: Fn, args: JSONValue[]): Fn {\n    \n    return function(...restArgs) {\n        \n    }\n};"
+    }
+  ],
+  "solution": null
+}

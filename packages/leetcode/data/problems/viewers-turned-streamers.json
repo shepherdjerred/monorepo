@@ -1,0 +1,53 @@
+{
+  "questionId": "3302",
+  "questionFrontendId": "2995",
+  "title": "Viewers Turned Streamers",
+  "titleSlug": "viewers-turned-streamers",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Sessions</code></p>\n\n<pre>\n+---------------+----------+\n| Column Name   | Type     |\n+---------------+----------+\n| user_id       | int      |\n| session_start | datetime |\n| session_end   | datetime |\n| session_id    | int      |\n| session_type  | enum     |\n+---------------+----------+\nsession_id is column of unique values for this table.\nsession_type is an ENUM (category) type of (Viewer, Streamer).\nThis table contains user id, session start, session end, session id and session type.\n</pre>\n\n<p>Write a solution to find the number of <strong>streaming</strong> sessions for users whose <strong>first session </strong>was as a <strong>viewer</strong>.</p>\n\n<p>Return <em>the result table ordered by count of streaming sessions, </em> <code>user_id</code><em> in <strong>descending</strong> order.</em></p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nSessions table:\n+---------+---------------------+---------------------+------------+--------------+\n| user_id | session_start       | session_end         | session_id | session_type | \n+---------+---------------------+---------------------+------------+--------------+\n| 101     | 2023-11-06 13:53:42 | 2023-11-06 14:05:42 | 375        | Viewer       |  \n| 101     | 2023-11-22 16:45:21 | 2023-11-22 20:39:21 | 594        | Streamer     |   \n| 102     | 2023-11-16 13:23:09 | 2023-11-16 16:10:09 | 777        | Streamer     | \n| 102     | 2023-11-17 13:23:09 | 2023-11-17 16:10:09 | 778        | Streamer     | \n| 101     | 2023-11-20 07:16:06 | 2023-11-20 08:33:06 | 315        | Streamer     | \n| 104     | 2023-11-27 03:10:49 | 2023-11-27 03:30:49 | 797        | Viewer       | \n| 103     | 2023-11-27 03:10:49 | 2023-11-27 03:30:49 | 798        | Streamer     |  \n+---------+---------------------+---------------------+------------+--------------+\n<strong>Output:</strong> \n+---------+----------------+\n| user_id | sessions_count | \n+---------+----------------+\n| 101     | 2              | \n+---------+----------------+\n<strong>Explanation</strong>\n- user_id 101, initiated their initial session as a viewer on 2023-11-06 at 13:53:42, followed by two subsequent sessions as a Streamer, the count will be 2.\n- user_id 102, although there are two sessions, the initial session was as a Streamer, so this user will be excluded.\n- user_id 103 participated in only one session, which was as a Streamer, hence, it won&#39;t be considered.\n- User_id 104 commenced their first session as a viewer but didn&#39;t have any subsequent sessions, therefore, they won&#39;t be included in the final count. \nOutput table is ordered by sessions count and user_id in descending order.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Sessions (user_id int, session_start datetime, session_end datetime, session_id int, session_type ENUM('Viewer','Streamer'))\"], \"mssql\": [\"Create table Sessions (user_id int, session_start datetime, session_end datetime, session_id int, session_type varchar(20) NOT NULL CHECK (session_type in ('Viewer', 'Streamer' )))\"], \"oraclesql\": [\"Create table  Sessions (user_id int, session_start date, session_end date, session_id int, session_type varchar(20) NOT NULL CHECK (session_type in ('Viewer', 'Streamer' )))\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD HH24:MI:SS'\"], \"database\": true, \"name\": \"count_turned_streamers\", \"pythondata\": [\"Sessions = pd.DataFrame([], columns=['user_id', 'session_start', 'session_end', 'session_id', 'session_type']).astype({'user_id':'Int64', 'session_start':'datetime64[ns]', 'session_end':'datetime64[ns]', 'session_id':'Int64', 'session_type':'object'})\\n\"], \"postgresql\": [\"Create table If Not Exists Sessions (user_id int, session_start timestamp, session_end timestamp, session_id int, session_type VARCHAR(50) CHECK (session_type IN ('Viewer','Streamer')))\\n\"], \"database_schema\": {\"Sessions\": {\"user_id\": \"INT\", \"session_start\": \"DATETIME\", \"session_end\": \"DATETIME\", \"session_id\": \"INT\", \"session_type\": \"ENUM('Viewer', 'Streamer')\"}}}",
+  "stats": "{\"totalAccepted\": \"4.3K\", \"totalSubmission\": \"10.1K\", \"totalAcceptedRaw\": 4320, \"totalSubmissionRaw\": 10086, \"acRate\": \"42.8%\"}",
+  "likes": 10,
+  "dislikes": 6,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Sessions\":[\"user_id\",\"session_start\",\"session_end\",\"session_id\",\"session_type\"]},\"rows\":{\"Sessions\":[[101,\"2023-11-06 13:53:42\",\"2023-11-06 14:05:42\",375,\"Viewer\"],[101,\"2023-11-22 16:45:21\",\"2023-11-22 20:39:21\",594,\"Streamer\"],[102,\"2023-11-16 13:23:09\",\"2023-11-16 16:10:09\",777,\"Streamer\"],[102,\"2023-11-17 13:23:09\",\"2023-11-17 16:10:09\",778,\"Streamer\"],[101,\"2023-11-20 07:16:06\",\"2023-11-20 08:33:06\",315,\"Streamer\"],[104,\"2023-11-27 03:10:49\",\"2023-11-27 03:30:49\",797,\"Viewer\"],[103,\"2023-11-27 03:10:49\",\"2023-11-27 03:30:49\",798,\"Streamer\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 101, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 10, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef count_turned_streamers(sessions: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

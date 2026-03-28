@@ -1,0 +1,148 @@
+{
+  "questionId": "3092",
+  "questionFrontendId": "2850",
+  "title": "Minimum Moves to Spread Stones Over Grid",
+  "titleSlug": "minimum-moves-to-spread-stones-over-grid",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> 2D integer matrix <code>grid</code> of size <code>3 * 3</code>, representing the number of stones in each cell. The grid contains exactly <code>9</code> stones, and there can be <strong>multiple</strong> stones in a single cell.</p>\n\n<p>In one move, you can move a single stone from its current cell to any other cell if the two cells share a side.</p>\n\n<p>Return <em>the <strong>minimum number of moves</strong> required to place one stone in each cell</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/08/23/example1-3.svg\" style=\"width: 401px; height: 281px;\" />\n<pre>\n<strong>Input:</strong> grid = [[1,1,0],[1,1,1],[1,2,1]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> One possible sequence of moves to place one stone in each cell is: \n1- Move one stone from cell (2,1) to cell (2,2).\n2- Move one stone from cell (2,2) to cell (1,2).\n3- Move one stone from cell (1,2) to cell (0,2).\nIn total, it takes 3 moves to place one stone in each cell of the grid.\nIt can be shown that 3 is the minimum number of moves required to place one stone in each cell.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/08/23/example2-2.svg\" style=\"width: 401px; height: 281px;\" />\n<pre>\n<strong>Input:</strong> grid = [[1,3,0],[1,0,0],[1,0,3]]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> One possible sequence of moves to place one stone in each cell is:\n1- Move one stone from cell (0,1) to cell (0,2).\n2- Move one stone from cell (0,1) to cell (1,1).\n3- Move one stone from cell (2,2) to cell (1,2).\n4- Move one stone from cell (2,2) to cell (2,1).\nIn total, it takes 4 moves to place one stone in each cell of the grid.\nIt can be shown that 4 is the minimum number of moves required to place one stone in each cell.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>grid.length == grid[i].length == 3</code></li>\n\t<li><code>0 &lt;= grid[i][j] &lt;= 9</code></li>\n\t<li>Sum of <code>grid</code> is equal to <code>9</code>.</li>\n</ul>\n",
+  "hints": [
+    "There are at most <code>4</code> cells with more than one stone.",
+    "Let <code>a</code> be the number of cells containing more than one stone, and <code>b</code> be the number of cells containing no stones. <code></code>. <code>b^a ≤ 6561</code>. Use this fact to come up with a bruteforce.",
+    "For all empty cells, bruteforce over all possible cells from which a stone can come. Note that a stone will always come from a cell containing at least 2 stones."
+  ],
+  "metaData": "{\n  \"name\": \"minimumMoves\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"30K\", \"totalSubmission\": \"65.8K\", \"totalAcceptedRaw\": 29959, \"totalSubmissionRaw\": 65811, \"acRate\": \"45.5%\"}",
+  "likes": 556,
+  "dislikes": 77,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Number of Operations to Move All Balls to Each Box\", \"titleSlug\": \"minimum-number-of-operations-to-move-all-balls-to-each-box\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Operations to Make X and Y Equal\", \"titleSlug\": \"minimum-number-of-operations-to-make-x-and-y-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,1,0],[1,1,1],[1,2,1]]",
+    "[[1,3,0],[1,0,0],[1,0,3]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"geico\", \"name\": \"Geico\"}, {\"timesEncountered\": 3, \"slug\": \"guidewire\", \"name\": \"Guidewire\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Bitmask",
+      "slug": "bitmask"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumMoves(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumMoves(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumMoves(self, grid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumMoves(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number}\n */\nvar minimumMoves = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumMoves(grid: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumMoves(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumMoves(int** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumMoves(grid [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumMoves(grid: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumMoves(_ grid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_moves(grid: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer}\ndef minimum_moves(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer\n     */\n    function minimumMoves($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumMoves(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumMoves(grid: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_moves(grid :: [[integer]]) :: integer\n  def minimum_moves(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_moves(Grid :: [[integer()]]) -> integer().\nminimum_moves(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-moves grid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,143 @@
+{
+  "questionId": "3325",
+  "questionFrontendId": "3047",
+  "title": "Find the Largest Area of Square Inside Two Rectangles",
+  "titleSlug": "find-the-largest-area-of-square-inside-two-rectangles",
+  "difficulty": "Medium",
+  "content": "<p>There exist <code>n</code> rectangles in a 2D plane with edges parallel to the x and y axis. You are given two 2D integer arrays&nbsp;<code>bottomLeft</code> and <code>topRight</code>&nbsp;where <code>bottomLeft[i] = [a_i, b_i]</code> and <code>topRight[i] = [c_i, d_i]</code> represent&nbsp;the <strong>bottom-left</strong> and <strong>top-right</strong> coordinates of the <code>i<sup>th</sup></code> rectangle, respectively.</p>\n\n<p>You need to find the <strong>maximum</strong> area of a <strong>square</strong> that can fit inside the intersecting region of at least two rectangles. Return <code>0</code> if such a square does not exist.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/01/05/example12.png\" style=\"width: 443px; height: 364px; padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem;\" />\n<p><strong>Input:</strong> bottomLeft = [[1,1],[2,2],[3,1]], topRight = [[3,3],[4,4],[6,6]]</p>\n\n<p><strong>Output:</strong> 1</p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>A square with side length 1 can fit inside either the intersecting region of rectangles 0 and 1 or the intersecting region of rectangles 1 and 2. Hence the maximum area is 1. It can be shown that a square with a greater side length can not fit inside any intersecting region of two rectangles.</p>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/07/15/diag.png\" style=\"width: 451px; height: 470px; padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem;\" />\n<p><strong>Input:</strong> bottomLeft = [[1,1],[1,3],[1,5]], topRight = [[5,5],[5,7],[5,9]]</p>\n\n<p><strong>Output:</strong> 4</p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>A square with side length 2 can fit inside either the intersecting region of rectangles 0 and 1 or the intersecting region of rectangles 1 and 2. Hence the maximum area is <code>2 * 2 = 4</code>. It can be shown that a square with a greater side length can not fit inside any intersecting region of two rectangles.</p>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<code> <img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/01/04/rectanglesexample2.png\" style=\"padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; width: 445px; height: 365px;\" /> </code>\n\n<p><strong>Input:</strong> bottomLeft = [[1,1],[2,2],[1,2]], topRight = [[3,3],[4,4],[3,4]]</p>\n\n<p><strong>Output:</strong> 1</p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>A square with side length 1 can fit inside the intersecting region of any two rectangles. Also, no larger square can, so the maximum area is 1. Note that the region can be formed by the intersection of more than 2 rectangles.</p>\n\n<p><strong class=\"example\">Example 4:</strong></p>\n<code> <img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/01/04/rectanglesexample3.png\" style=\"padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; width: 444px; height: 364px;\" /> </code>\n\n<p><strong>Input:&nbsp;</strong>bottomLeft = [[1,1],[3,3],[3,1]], topRight = [[2,2],[4,4],[4,2]]</p>\n\n<p><strong>Output:</strong> 0</p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>No pair of rectangles intersect, hence, the answer is 0.</p>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == bottomLeft.length == topRight.length</code></li>\n\t<li><code>2 &lt;= n &lt;= 10<sup>3</sup></code></li>\n\t<li><code>bottomLeft[i].length == topRight[i].length == 2</code></li>\n\t<li><code>1 &lt;= bottomLeft[i][0], bottomLeft[i][1] &lt;= 10<sup>7</sup></code></li>\n\t<li><code>1 &lt;= topRight[i][0], topRight[i][1] &lt;= 10<sup>7</sup></code></li>\n\t<li><code>bottomLeft[i][0] &lt; topRight[i][0]</code></li>\n\t<li><code>bottomLeft[i][1] &lt; topRight[i][1]</code></li>\n</ul>\n",
+  "hints": [
+    "Brute Force the intersection area of each pair of rectangles.",
+    "Two rectangles will not overlap when the bottom left x coordinate of one rectangle is greater than the top right x coordinate of the other rectangle. The same is true for the y coordinate.",
+    "The intersection area (if any) is also a rectangle. Find its corners."
+  ],
+  "metaData": "{\n  \"name\": \"largestSquareArea\",\n  \"params\": [\n    {\n      \"name\": \"bottomLeft\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"topRight\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"100.3K\", \"totalSubmission\": \"149.9K\", \"totalAcceptedRaw\": 100307, \"totalSubmissionRaw\": 149934, \"acRate\": \"66.9%\"}",
+  "likes": 438,
+  "dislikes": 86,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Rectangle Area\", \"titleSlug\": \"rectangle-area\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,1],[2,2],[3,1]]\n[[3,3],[4,4],[6,6]]",
+    "[[1,1],[1,3],[1,5]]\n[[5,5],[5,7],[5,9]]",
+    "[[1,1],[2,2],[1,2]]\n[[3,3],[4,4],[3,4]]",
+    "[[1,1],[3,3],[3,1]]\n[[2,2],[4,4],[4,2]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"cisco\", \"name\": \"Cisco\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Geometry",
+      "slug": "geometry"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long largestSquareArea(vector<vector<int>>& bottomLeft, vector<vector<int>>& topRight) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long largestSquareArea(int[][] bottomLeft, int[][] topRight) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def largestSquareArea(self, bottomLeft: List[List[int]], topRight: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def largestSquareArea(self, bottomLeft, topRight):\n        \"\"\"\n        :type bottomLeft: List[List[int]]\n        :type topRight: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} bottomLeft\n * @param {number[][]} topRight\n * @return {number}\n */\nvar largestSquareArea = function(bottomLeft, topRight) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function largestSquareArea(bottomLeft: number[][], topRight: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long LargestSquareArea(int[][] bottomLeft, int[][] topRight) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long largestSquareArea(int** bottomLeft, int bottomLeftSize, int* bottomLeftColSize, int** topRight, int topRightSize, int* topRightColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func largestSquareArea(bottomLeft [][]int, topRight [][]int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun largestSquareArea(bottomLeft: Array<IntArray>, topRight: Array<IntArray>): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func largestSquareArea(_ bottomLeft: [[Int]], _ topRight: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn largest_square_area(bottom_left: Vec<Vec<i32>>, top_right: Vec<Vec<i32>>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} bottom_left\n# @param {Integer[][]} top_right\n# @return {Integer}\ndef largest_square_area(bottom_left, top_right)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $bottomLeft\n     * @param Integer[][] $topRight\n     * @return Integer\n     */\n    function largestSquareArea($bottomLeft, $topRight) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int largestSquareArea(List<List<int>> bottomLeft, List<List<int>> topRight) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def largestSquareArea(bottomLeft: Array[Array[Int]], topRight: Array[Array[Int]]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec largest_square_area(bottom_left :: [[integer]], top_right :: [[integer]]) :: integer\n  def largest_square_area(bottom_left, top_right) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec largest_square_area(BottomLeft :: [[integer()]], TopRight :: [[integer()]]) -> integer().\nlargest_square_area(BottomLeft, TopRight) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (largest-square-area bottomLeft topRight)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2906",
+    "content": "### Approach: Traversal + Computational Geometry\n\n#### Intuition\n\nFirst, note that this problem asks for the maximum square area formed within the pairwise overlapping regions of rectangles, not the overlapping region shared by all rectangles simultaneously. In other words, we consider every pair of rectangles independently and compute the largest square that can fit inside their intersection.\n\nFor any pair of rectangles, once the overlapping region is determined, the maximum possible square side length is simply the minimum of the overlap’s width and height. By iterating over all pairs and continuously updating a global maximum side length, we can obtain the optimal solution. The final answer is the square of this maximum side length.\n\nTo compute the overlapping dimensions between two rectangles, we use a projection-based approach. For example, to calculate the overlapping width, we project both rectangles onto the x-axis, forming two horizontal line segments. The length of their intersection is given by the smaller of the right endpoints minus the larger of the left endpoints. If the rectangles do not overlap along the x-axis, this value becomes negative. The overlapping height is computed in the same way using the y-axis.\n\nDuring implementation, the maximum square side length can be initialized to zero. When two rectangles do not overlap, at least one of the computed dimensions will be negative, and taking the minimum of the width and height will not improve the result. Therefore, explicit checks for non-overlapping cases are unnecessary.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/6krJoipT/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"6krJoipT\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(n^2)$.\n  \n  Performed a double traversal of magnitude $n$.\n\n- Space complexity: $O(1)$.\n  \n  Only a few number of variables are used.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

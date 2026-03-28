@@ -1,0 +1,142 @@
+{
+  "questionId": "3492",
+  "questionFrontendId": "3212",
+  "title": "Count Submatrices With Equal Frequency of X and Y",
+  "titleSlug": "count-submatrices-with-equal-frequency-of-x-and-y",
+  "difficulty": "Medium",
+  "content": "<p>Given a 2D character matrix <code>grid</code>, where <code>grid[i][j]</code> is either <code>&#39;X&#39;</code>, <code>&#39;Y&#39;</code>, or <code>&#39;.&#39;</code>, return the number of <span data-keyword=\"submatrix\">submatrices</span> that contain:</p>\n\n<ul>\n\t<li><code>grid[0][0]</code></li>\n\t<li>an <strong>equal</strong> frequency of <code>&#39;X&#39;</code> and <code>&#39;Y&#39;</code>.</li>\n\t<li><strong>at least</strong> one <code>&#39;X&#39;</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">grid = [[&quot;X&quot;,&quot;Y&quot;,&quot;.&quot;],[&quot;Y&quot;,&quot;.&quot;,&quot;.&quot;]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p><strong><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2024/06/07/examplems.png\" style=\"padding: 10px; background: rgb(255, 255, 255); border-radius: 0.5rem; width: 175px; height: 350px;\" /></strong></p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">grid = [[&quot;X&quot;,&quot;X&quot;],[&quot;X&quot;,&quot;Y&quot;]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>No submatrix has an equal frequency of <code>&#39;X&#39;</code> and <code>&#39;Y&#39;</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">grid = [[&quot;.&quot;,&quot;.&quot;],[&quot;.&quot;,&quot;.&quot;]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>No submatrix has at least one <code>&#39;X&#39;</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= grid.length, grid[i].length &lt;= 1000</code></li>\n\t<li><code>grid[i][j]</code> is either <code>&#39;X&#39;</code>, <code>&#39;Y&#39;</code>, or <code>&#39;.&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "Replace <code>’X’</code> with 1, <code>’Y’</code> with -1 and <code>’.’</code> with 0.",
+    "You need to find how many submatrices <code>grid[0..x][0..y]</code> have a sum of 0 and at least one <code>’X’</code>.",
+    "Use prefix sum to calculate submatrices sum."
+  ],
+  "metaData": "{\n  \"name\": \"numberOfSubmatrices\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"character[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"105.7K\", \"totalSubmission\": \"151.9K\", \"totalAcceptedRaw\": 105659, \"totalSubmissionRaw\": 151947, \"acRate\": \"69.5%\"}",
+  "likes": 415,
+  "dislikes": 50,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Equal Frequency\", \"titleSlug\": \"maximum-equal-frequency\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Submatrices With All Ones\", \"titleSlug\": \"count-submatrices-with-all-ones\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[\"X\",\"Y\",\".\"],[\"Y\",\".\",\".\"]]",
+    "[[\"X\",\"X\"],[\"X\",\"Y\"]]",
+    "[[\".\",\".\"],[\".\",\".\"]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numberOfSubmatrices(vector<vector<char>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numberOfSubmatrices(char[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfSubmatrices(self, grid: List[List[str]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfSubmatrices(self, grid):\n        \"\"\"\n        :type grid: List[List[str]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {character[][]} grid\n * @return {number}\n */\nvar numberOfSubmatrices = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfSubmatrices(grid: string[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumberOfSubmatrices(char[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numberOfSubmatrices(char** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfSubmatrices(grid [][]byte) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfSubmatrices(grid: Array<CharArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfSubmatrices(_ grid: [[Character]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_submatrices(grid: Vec<Vec<char>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Character[][]} grid\n# @return {Integer}\ndef number_of_submatrices(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[][] $grid\n     * @return Integer\n     */\n    function numberOfSubmatrices($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numberOfSubmatrices(List<List<String>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfSubmatrices(grid: Array[Array[Char]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_submatrices(grid :: [[char]]) :: integer\n  def number_of_submatrices(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_submatrices(Grid :: [[char()]]) -> integer().\nnumber_of_submatrices(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-submatrices grid)\n  (-> (listof (listof char?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2943",
+    "content": "### Approach: 2D Prefix Sum\n\n#### Intuition\n\nWe follow the conditions in the problem to identify valid submatrices.\n\nFirst, the submatrix must include $\\textit{grid}[0][0]$. With this constraint, the top-left corner is fixed, and we only need to determine the bottom-right corner to uniquely define a submatrix.\n\nSecond, the frequencies of $X$ and $Y$ must be equal. We can model this by maintaining a count: increment the count by $1$ for each $X$, decrement it by $1$ for each $Y$, and leave it unchanged for each `.`. A submatrix satisfies this condition if its total count is $0$. This value can be computed efficiently using a 2D prefix sum.\n\nFinally, the submatrix must contain at least one $X$ to be considered valid. To enforce this, we extend the prefix sum structure with an additional dimension that tracks whether a submatrix with bottom-right corner at $(i, j)$ contains at least one $X$. The logic is as follows:\n\n1. If $\\textit{grid}[i][j] = X$, then the submatrix ending at $(i, j)$ must contain an $X$.\n2. If $\\textit{grid}[i][j] \\neq X$, then whether the submatrix contains an $X$ depends on the submatrices ending at $(i - 1, j)$ or $(i, j - 1)$. If either of those contains an $X$, then the current submatrix also contains an $X$.\n\nAlternatively, we could construct two separate prefix sum matrices to count the number of $X$ and $Y$ independently and compare them, but we do not elaborate on that approach here.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/XKrouzsU/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"XKrouzsU\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of rows and $m$ be the number of columns in $\\textit{grid}$.\n\n- Time complexity: $O(nm)$. \n  \n  We traverse each cell once to compute the prefix sums.\n\n- Space complexity: $O(nm)$.\n  \n  We maintain a 2D prefix sum matrix $\\textit{sum}$ of size $(n + 1) \\times (m + 1) \\times 2$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

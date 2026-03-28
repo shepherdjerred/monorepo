@@ -1,0 +1,53 @@
+{
+  "questionId": "3253",
+  "questionFrontendId": "2978",
+  "title": "Symmetric Coordinates",
+  "titleSlug": "symmetric-coordinates",
+  "difficulty": "Medium",
+  "content": "<p>Table: <font face=\"monospace\"><code>Coordinates</code></font></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| X           | int  |\n| Y           | int  |\n+-------------+------+\nEach row includes X and Y, where both are integers. Table may contain duplicate values.\n</pre>\n\n<p>Two coordindates <code>(X1, Y1)</code> and <code>(X2, Y2)</code> are said to be <strong>symmetric</strong> coordintes if <code>X1 == Y2</code> and <code>X2 == Y1</code>.</p>\n\n<p>Write a solution that outputs, among all these <strong>symmetric</strong> <strong>coordintes</strong>, only those <strong>unique</strong> coordinates that satisfy the condition <code>X1 &lt;= Y1</code>.</p>\n\n<p>Return <em>the result table ordered by </em><code>X</code> <em>and </em> <code>Y</code> <em>(respectively)</em> <em>in <strong>ascending order</strong></em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nCoordinates table:\n+----+----+\n| X  | Y  |\n+----+----+\n| 20 | 20 |\n| 20 | 20 |\n| 20 | 21 |\n| 23 | 22 |\n| 22 | 23 |\n| 21 | 20 |\n+----+----+\n<strong>Output:</strong> \n+----+----+\n| x  | y  |\n+----+----+\n| 20 | 20 |\n| 20 | 21 |\n| 22 | 23 |\n+----+----+\n<strong>Explanation:</strong> \n- (20, 20) and (20, 20) are symmetric coordinates because, X1 == Y2 and X2 == Y1. This results in displaying (20, 20) as a distinctive coordinates.\n- (20, 21) and (21, 20) are symmetric coordinates because, X1 == Y2 and X2 == Y1. However, only (20, 21) will be displayed because X1 &lt;= Y1.\n- (23, 22) and (22, 23) are symmetric coordinates because, X1 == Y2 and X2 == Y1. However, only (22, 23) will be displayed because X1 &lt;= Y1.\nThe output table is sorted by X and Y in ascending order.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Coordinates (X int, Y int)\"], \"mssql\": [\"Create table Coordinates (X int,Y int)\"], \"oraclesql\": [\"Create table Coordinates (X int,Y int)\"], \"database\": true, \"name\": \"symmetric_pairs\", \"pythondata\": [\"Coordinates = pd.DataFrame([], columns=['X', 'Y']).astype({'X':'Int64', 'Y':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Coordinates (X int, Y int)\"], \"database_schema\": {\"Coordinates\": {\"X\": \"INT\", \"Y\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"3.1K\", \"totalSubmission\": \"7.5K\", \"totalAcceptedRaw\": 3053, \"totalSubmissionRaw\": 7503, \"acRate\": \"40.7%\"}",
+  "likes": 14,
+  "dislikes": 3,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Coordinates\":[\"X\",\"Y\"]},\"rows\":{\"Coordinates\":[[20,20],[20,20],[20,21],[23,22],[22,23],[21,20]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"mitsogo\", \"name\": \"Mitsogo\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef symmetric_pairs(coordinates: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,53 @@
+{
+  "questionId": "3457",
+  "questionFrontendId": "3150",
+  "title": "Invalid Tweets II",
+  "titleSlug": "invalid-tweets-ii",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Tweets</code></p>\n\n<pre>\n+----------------+---------+\n| Column Name    | Type    |\n+----------------+---------+\n| tweet_id       | int     |\n| content        | varchar |\n+----------------+---------+\ntweet_id is the primary key (column with unique values) for this table.\nThis table contains all the tweets in a social media app.\n</pre>\n\n<p>Write a solution to find <strong>invalid tweets</strong>. A tweet is considered invalid if it meets <strong>any</strong> of the following criteria:</p>\n\n<ul>\n\t<li>It exceeds <code>140</code> characters in length.</li>\n\t<li>It has more than <code>3</code> mentions.</li>\n\t<li>It includes more than <code><font face=\"monospace\">3</font></code>&nbsp;hashtags.</li>\n</ul>\n\n<p>Return <em>the result table ordered by</em> <code>tweet_id</code> <em>in <strong>ascending</strong> order</em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong>Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>Tweets table:</p>\n\n<pre class=\"example-io\">\n  +----------+-----------------------------------------------------------------------------------+\n  | tweet_id | content                                                                           |\n  +----------+-----------------------------------------------------------------------------------+\n  | 1        | Traveling, exploring, and living my best life @JaneSmith @SaraJohnson @LisaTaylor |\n  |          | @MikeBrown #Foodie #Fitness #Learning                                             | \n  | 2        | Just had the best dinner with friends! #Foodie #Friends #Fun                      |\n  | 4        | Working hard on my new project #Work #Goals #Productivity #Fun                    |\n  +----------+-----------------------------------------------------------------------------------+\n  </pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n  +----------+\n  | tweet_id |\n  +----------+\n  | 1        |\n  | 4        |\n  +----------+\n  </pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>tweet_id&nbsp;1 contains 4&nbsp;mentions.</li>\n\t<li>tweet_id 4 contains 4 hashtags.</li>\n</ul>\nOutput table is ordered by tweet_id in ascending order.</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Tweets(tweet_id int, content varchar(500))\"], \"mssql\": [\"Create table Tweets(tweet_id int, content varchar(500))\"], \"oraclesql\": [\"Create table Tweets(tweet_id int, content varchar(500))\"], \"database\": true, \"name\": \"find_invalid_tweets\", \"pythondata\": [\"Tweets = pd.DataFrame([], columns=['tweet_id', 'content']).astype({'tweet_id':'Int64', 'content':'object'})\"], \"postgresql\": [\"Create table If Not Exists Tweets(tweet_id int, content varchar(500))\"], \"database_schema\": {\"Tweets\": {\"tweet_id\": \"INT\", \"content\": \"VARCHAR(500)\"}}}",
+  "stats": "{\"totalAccepted\": \"4K\", \"totalSubmission\": \"4.7K\", \"totalAcceptedRaw\": 3968, \"totalSubmissionRaw\": 4679, \"acRate\": \"84.8%\"}",
+  "likes": 18,
+  "dislikes": 3,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Tweets\": [\"tweet_id\", \"content\"]}, \"rows\": {\"Tweets\": [[1, \"What an amazing meal @MaxPower @AlexJones @JohnDoe #Learning #Fitness #Love\"], [2, \"Learning something new every day @AnnaWilson #Learning #Foodie\"], [3, \"Never been happier about today's achievements @SaraJohnson @JohnDoe @AnnaWilson #Fashion\"], [4, \"Traveling, exploring, and living my best life @JaneSmith @JohnDoe @ChrisAnderson @AlexJones #WorkLife #Travel\"], [5, \"Work hard, play hard, and cherish every moment @AlexJones #Fashion #Foodie\"], [6, \"Never been happier about today's achievements @ChrisAnderson #Fashion #WorkLife\"], [7, \"So grateful for today's experiences @AnnaWilson @LisaTaylor @ChrisAnderson @MikeBrown #Fashion #HappyDay #WorkLife #Nature\"], [8, \"What an amazing meal @EmilyClark @AlexJones @MikeBrown #Fitness\"], [9, \"Learning something new every day @EmilyClark @AnnaWilson @MaxPower #Travel\"], [10, \"So grateful for today's experiences @ChrisAnderson #Nature\"], [11, \"So grateful for today's experiences @AlexJones #Art #WorkLife\"], [12, \"Learning something new every day @JaneSmith @MikeBrown #Travel\"], [13, \"What an amazing meal @EmilyClark @JohnDoe @LisaTaylor @MaxPower #Foodie #Fitness\"], [14, \"Work hard, play hard, and cherish every moment @LisaTaylor @SaraJohnson @MaxPower @ChrisAnderson #TechLife #Nature #Music\"], [15, \"What a beautiful day it is @EmilyClark @MaxPower @SaraJohnson #Fashion\"], [16, \"What a beautiful day it is @AnnaWilson @JaneSmith #Fashion #Love #TechLife\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_invalid_tweets(tweets: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

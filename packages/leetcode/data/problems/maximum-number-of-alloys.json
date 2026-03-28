@@ -1,0 +1,131 @@
+{
+  "questionId": "3095",
+  "questionFrontendId": "2861",
+  "title": "Maximum Number of Alloys",
+  "titleSlug": "maximum-number-of-alloys",
+  "difficulty": "Medium",
+  "content": "<p>You are the owner of a company that creates alloys using various types of metals. There are <code>n</code> different types of metals available, and you have access to <code>k</code> machines that can be used to create alloys. Each machine requires a specific amount of each metal type to create an alloy.</p>\n\n<p>For the <code>i<sup>th</sup></code> machine to create an alloy, it needs <code>composition[i][j]</code> units of metal of type <code>j</code>. Initially, you have <code>stock[i]</code> units of metal type <code>i</code>, and purchasing one unit of metal type <code>i</code> costs <code>cost[i]</code> coins.</p>\n\n<p>Given integers <code>n</code>, <code>k</code>, <code>budget</code>, a <strong>1-indexed</strong> 2D array <code>composition</code>, and <strong>1-indexed</strong> arrays <code>stock</code> and <code>cost</code>, your goal is to <strong>maximize</strong> the number of alloys the company can create while staying within the budget of <code>budget</code> coins.</p>\n\n<p><strong>All alloys must be created with the same machine.</strong></p>\n\n<p>Return <em>the maximum number of alloys that the company can create</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, k = 2, budget = 15, composition = [[1,1,1],[1,1,10]], stock = [0,0,0], cost = [1,2,3]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> It is optimal to use the 1<sup>st</sup> machine to create alloys.\nTo create 2 alloys we need to buy the:\n- 2 units of metal of the 1<sup>st</sup> type.\n- 2 units of metal of the 2<sup>nd</sup> type.\n- 2 units of metal of the 3<sup>rd</sup> type.\nIn total, we need 2 * 1 + 2 * 2 + 2 * 3 = 12 coins, which is smaller than or equal to budget = 15.\nNotice that we have 0 units of metal of each type and we have to buy all the required units of metal.\nIt can be proven that we can create at most 2 alloys.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, k = 2, budget = 15, composition = [[1,1,1],[1,1,10]], stock = [0,0,100], cost = [1,2,3]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> It is optimal to use the 2<sup>nd</sup> machine to create alloys.\nTo create 5 alloys we need to buy:\n- 5 units of metal of the 1<sup>st</sup> type.\n- 5 units of metal of the 2<sup>nd</sup> type.\n- 0 units of metal of the 3<sup>rd</sup> type.\nIn total, we need 5 * 1 + 5 * 2 + 0 * 3 = 15 coins, which is smaller than or equal to budget = 15.\nIt can be proven that we can create at most 5 alloys.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 2, k = 3, budget = 10, composition = [[2,1],[1,2],[1,1]], stock = [1,1], cost = [5,5]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> It is optimal to use the 3<sup>rd</sup> machine to create alloys.\nTo create 2 alloys we need to buy the:\n- 1 unit of metal of the 1<sup>st</sup> type.\n- 1 unit of metal of the 2<sup>nd</sup> type.\nIn total, we need 1 * 5 + 1 * 5 = 10 coins, which is smaller than or equal to budget = 10.\nIt can be proven that we can create at most 2 alloys.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n, k &lt;= 100</code></li>\n\t<li><code>0 &lt;= budget &lt;= 10<sup>8</sup></code></li>\n\t<li><code>composition.length == k</code></li>\n\t<li><code>composition[i].length == n</code></li>\n\t<li><code>1 &lt;= composition[i][j] &lt;= 100</code></li>\n\t<li><code>stock.length == cost.length == n</code></li>\n\t<li><code>0 &lt;= stock[i] &lt;= 10<sup>8</sup></code></li>\n\t<li><code>1 &lt;= cost[i] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Use binary search to find the answer."
+  ],
+  "metaData": "{\n  \"name\": \"maxNumberOfAlloys\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"budget\"\n    },\n    {\n      \"type\": \"list<list<integer>>\",\n      \"name\": \"composition\"\n    },\n    {\n      \"type\": \"list<integer>\",\n      \"name\": \"stock\"\n    },\n    {\n      \"type\": \"list<integer>\",\n      \"name\": \"cost\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"19.9K\", \"totalSubmission\": \"48.9K\", \"totalAcceptedRaw\": 19865, \"totalSubmissionRaw\": 48870, \"acRate\": \"40.6%\"}",
+  "likes": 304,
+  "dislikes": 57,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "3\n2\n15\n[[1,1,1],[1,1,10]]\n[0,0,0]\n[1,2,3]",
+    "3\n2\n15\n[[1,1,1],[1,1,10]]\n[0,0,100]\n[1,2,3]",
+    "2\n3\n10\n[[2,1],[1,2],[1,1]]\n[1,1]\n[5,5]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxNumberOfAlloys(int n, int k, int budget, vector<vector<int>>& composition, vector<int>& stock, vector<int>& cost) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxNumberOfAlloys(int n, int k, int budget, List<List<Integer>> composition, List<Integer> stock, List<Integer> cost) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxNumberOfAlloys(self, n: int, k: int, budget: int, composition: List[List[int]], stock: List[int], cost: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxNumberOfAlloys(self, n, k, budget, composition, stock, cost):\n        \"\"\"\n        :type n: int\n        :type k: int\n        :type budget: int\n        :type composition: List[List[int]]\n        :type stock: List[int]\n        :type cost: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} k\n * @param {number} budget\n * @param {number[][]} composition\n * @param {number[]} stock\n * @param {number[]} cost\n * @return {number}\n */\nvar maxNumberOfAlloys = function(n, k, budget, composition, stock, cost) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxNumberOfAlloys(n: number, k: number, budget: number, composition: number[][], stock: number[], cost: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxNumberOfAlloys(int n, int k, int budget, IList<IList<int>> composition, IList<int> stock, IList<int> cost) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxNumberOfAlloys(int n, int k, int budget, int** composition, int compositionSize, int* compositionColSize, int* stock, int stockSize, int* cost, int costSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxNumberOfAlloys(n int, k int, budget int, composition [][]int, stock []int, cost []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxNumberOfAlloys(n: Int, k: Int, budget: Int, composition: List<List<Int>>, stock: List<Int>, cost: List<Int>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxNumberOfAlloys(_ n: Int, _ k: Int, _ budget: Int, _ composition: [[Int]], _ stock: [Int], _ cost: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_number_of_alloys(n: i32, k: i32, budget: i32, composition: Vec<Vec<i32>>, stock: Vec<i32>, cost: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer} k\n# @param {Integer} budget\n# @param {Integer[][]} composition\n# @param {Integer[]} stock\n# @param {Integer[]} cost\n# @return {Integer}\ndef max_number_of_alloys(n, k, budget, composition, stock, cost)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer $k\n     * @param Integer $budget\n     * @param Integer[][] $composition\n     * @param Integer[] $stock\n     * @param Integer[] $cost\n     * @return Integer\n     */\n    function maxNumberOfAlloys($n, $k, $budget, $composition, $stock, $cost) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxNumberOfAlloys(int n, int k, int budget, List<List<int>> composition, List<int> stock, List<int> cost) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxNumberOfAlloys(n: Int, k: Int, budget: Int, composition: List[List[Int]], stock: List[Int], cost: List[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_number_of_alloys(n :: integer, k :: integer, budget :: integer, composition :: [[integer]], stock :: [integer], cost :: [integer]) :: integer\n  def max_number_of_alloys(n, k, budget, composition, stock, cost) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_number_of_alloys(N :: integer(), K :: integer(), Budget :: integer(), Composition :: [[integer()]], Stock :: [integer()], Cost :: [integer()]) -> integer().\nmax_number_of_alloys(N, K, Budget, Composition, Stock, Cost) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-number-of-alloys n k budget composition stock cost)\n  (-> exact-integer? exact-integer? exact-integer? (listof (listof exact-integer?)) (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

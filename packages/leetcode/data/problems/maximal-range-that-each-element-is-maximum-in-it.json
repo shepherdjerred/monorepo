@@ -1,0 +1,144 @@
+{
+  "questionId": "3088",
+  "questionFrontendId": "2832",
+  "title": "Maximal Range That Each Element Is Maximum in It",
+  "titleSlug": "maximal-range-that-each-element-is-maximum-in-it",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> array <code>nums</code> of <b>distinct </b>integers.</p>\n\n<p>Let us define a <strong>0-indexed </strong>array <code>ans</code> of the same length as <code>nums</code> in the following way:</p>\n\n<ul>\n\t<li><code>ans[i]</code> is the <strong>maximum</strong> length of a subarray <code>nums[l..r]</code>, such that the maximum element in that subarray is equal to <code>nums[i]</code>.</li>\n</ul>\n\n<p>Return<em> the array </em><code>ans</code>.</p>\n\n<p><strong>Note</strong> that a <strong>subarray</strong> is a contiguous part of the array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,5,4,3,6]\n<strong>Output:</strong> [1,4,2,1,5]\n<strong>Explanation:</strong> For nums[0] the longest subarray in which 1 is the maximum is nums[0..0] so ans[0] = 1.\nFor nums[1] the longest subarray in which 5 is the maximum is nums[0..3] so ans[1] = 4.\nFor nums[2] the longest subarray in which 4 is the maximum is nums[2..3] so ans[2] = 2.\nFor nums[3] the longest subarray in which 3 is the maximum is nums[3..3] so ans[3] = 1.\nFor nums[4] the longest subarray in which 6 is the maximum is nums[0..4] so ans[4] = 5.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4,5]\n<strong>Output:</strong> [1,2,3,4,5]\n<strong>Explanation:</strong> For nums[i] the longest subarray in which it&#39;s the maximum is nums[0..i] so ans[i] = i + 1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n\t<li>All elements in <code>nums</code> are distinct.</li>\n</ul>\n",
+  "hints": [
+    "For each index, we must find the nearest bigger element on both its left and right sides.",
+    "First, find the nearest bigger element on the left side of each element. To do that, use a stack of pairs <code>(value, index)</code>.",
+    "Start iterating from the beginning of the array.",
+    "Whenever we reach an element <code>nums[index]</code>, while the top of the stack is smaller than <code>nums[index]</code>, we pop from the stack.",
+    "If there is an element left in the stack, <code>top.index + 1</code> would be the answer. Otherwise, <code>0</code> is the answer.",
+    "After that, we push <code>(nums[index], index)</code> to the stack and go for the next element."
+  ],
+  "metaData": "{\n  \"name\": \"maximumLengthOfRanges\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"6.4K\", \"totalSubmission\": \"8.5K\", \"totalAcceptedRaw\": 6393, \"totalSubmissionRaw\": 8472, \"acRate\": \"75.5%\"}",
+  "likes": 80,
+  "dislikes": 8,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,5,4,3,6]",
+    "[1,2,3,4,5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Monotonic Stack",
+      "slug": "monotonic-stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> maximumLengthOfRanges(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] maximumLengthOfRanges(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumLengthOfRanges(self, nums: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumLengthOfRanges(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number[]}\n */\nvar maximumLengthOfRanges = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumLengthOfRanges(nums: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] MaximumLengthOfRanges(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* maximumLengthOfRanges(int* nums, int numsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumLengthOfRanges(nums []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumLengthOfRanges(nums: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumLengthOfRanges(_ nums: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_length_of_ranges(nums: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer[]}\ndef maximum_length_of_ranges(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer[]\n     */\n    function maximumLengthOfRanges($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> maximumLengthOfRanges(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumLengthOfRanges(nums: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_length_of_ranges(nums :: [integer]) :: [integer]\n  def maximum_length_of_ranges(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_length_of_ranges(Nums :: [integer()]) -> [integer()].\nmaximum_length_of_ranges(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-length-of-ranges nums)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2619",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe are given a 0-indexed array `nums` of distinct integers. We need to construct an array `ans` so that, for each index `i`, `ans[i]` represents the maximum length of a subarray in which nums[i] is the largest element.\n\nSince `nums` contains distinct elements, it is guaranteed that each element will be the maximum in at least one subarray.\n\nIf you aren't experienced with monotonic stacks, consider starting with a similar problem available here: [503. Next Greater Element II](https://leetcode.com/problems/next-greater-element-ii/).\n\n---\n\n### Approach: Monotonic Stack\n\n#### Intuition   \n\nWhat’s the smallest possible size of a subarray where the current element is the maximum? The answer is 1, because the element itself is a subarray of size 1. Since we want to find the longest subarray that contains the current element, we can start adding elements from the left or the right side of the current element. Now, let's consider the elements to the left of the current element:\n\n- If these elements are smaller than the current element, they can be included in the subarray.\n- However, as soon as we encounter an element larger than the current one, we must stop, as the current element can no longer be the maximum in the subarray.\n\nThe same logic applies to the elements on the right side: we expand the subarray until we encounter a larger element. Therefore, the largest subarray for which the current element is the maximum includes all valid elements to the left and right, plus the current element itself.\n\nWhile this idea is intuitive, applying it to every element in the array is computationally expensive, leading to a \"Time Limit Exceeded\" (TLE) error. To optimize this, we can leverage a [stack](https://leetcode.com/explore/learn/card/queue-stack/230/usage-stack/), which allows for efficient last-in, first-out (LIFO) processing with constant-time push and pop operations.\n\nTo implement this concept in a stack, we can divide our steps into two parts:\n1. Stack Processing\n2. Storing Indices\n\nIn step 1, we check if the stack is empty. If the stack is not empty and the top element is not greater than the current element, we pop elements from the stack. This ensures that we discard elements that cannot be the next greater element.\n\nOnce we find a greater element at the top of the stack, this element is the nearest greater element to the left of the current element, due to the LIFO property. All other elements in the stack were added before the current element, making the top stack element the closest greater element. If the stack is empty, it means there is no greater element to the left.\n\nIn step 2, after processing the current element, we push its index onto the stack in the hope that it might be the next greater element for upcoming elements. Since we are interested in the positions of the elements rather than their values, we store their indices in the stack instead of the actual values. For example, `left[currentIndex]` would denote the index of the next greater element to the left of `nums[currentIndex]`.\n\nWe repeat these steps while iterating `nums` from right to left and store the index values in an array `right`.\n\nOnce we have the indices of the next greater element to the right and the next greater element to the left for each element, we can calculate the size of the largest subarray where the current element is the maximum. The size is determined by subtracting the left index from the right index and subtracting one from the result (`right[currentIndex] - left[currentIndex] - 1`).\n\n#### Algorithm\n\n1. Create two arrays `left` and `right` to store the nearest greater elements for each element in `nums`.\n   - `left[currIdx]` will store the index of the nearest greater element to the left of `nums[currIdx]`.\n   - `right[currIdx]` will store the index of the nearest greater element to the right of `nums[currIdx]`.\n2. Initialize a stack `idxStack` to store the indices of the next/previous greater elements.\n3. Iterate over the array `nums` using a loop to compute the left boundaries of subarrays:\n   - For each index `currIdx` from 0 to `n-1`:\n     - While `idxStack` is not empty and `nums[idxStack.top()] < nums[currIdx]`, pop the `idxStack`.\n     - If `idxStack` is empty, set `left[currIdx] = -1`, indicating no greater element exists to the left.\n     - Otherwise, set `left[currIdx] = idxStack.top()`, the index of the nearest greater element to the left.\n     - Push the current index `currIdx` onto the stack.\n3. Clear the stack for reuse.\n4. Iterate over the array `nums` using another loop to compute the right boundaries of subarrays:\n   - Iterate through the indices from `n-1` to `0`:\n     - While `idxStack` is not empty and `nums[idxStack.top()] < nums[currIdx]`, pop the stack.\n     - If `idxStack` is empty, set `right[currIdx] = n`, indicating no greater element exists to the right.\n     - Otherwise, set `right[currIdx] = idxStack.top()`, the index of the nearest greater element to the right.\n     - Push the current index `currIdx` onto the stack.\n5. Compute the maximal range for each element:\n   - Initialize an array `ans` of size `n`.\n   - For each index `currIdx` from 0 to `n-1`, calculate `ans[currIdx] = right[currIdx] - left[currIdx] - 1`, representing the size of the largest subarray where `nums[currIdx]` is the maximum.\n6. Return the array `ans` as the result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LvKtyhsp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LvKtyhsp\"></iframe>\n\n#### Complexity Analysis\n\nLet `n` be the size of the input array `nums`.\n\n- Time Complexity: $O(n)$\n\n    The algorithm processes each element of the array exactly twice (once for finding the nearest greater element to the left and once for the right). Using a stack ensures that each push and pop operation is $O(1)$, making the overall complexity for both left and right boundary calculations $O(n)$. Calculating the maximal range for each element also takes $O(n)$. Hence, the total time complexity is $O(n)$.\n\n- Space complexity: $O(n)$\n\n    The algorithm uses two arrays, `left` and `right`, each of size `n`, contributing $O(n)$ space. Additionally, a stack is used, which in the worst case can hold up to `n` elements, adding another $O(n)$. Therefore, the total space complexity is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "questionId": "3448",
+  "questionFrontendId": "3140",
+  "title": "Consecutive Available Seats II",
+  "titleSlug": "consecutive-available-seats-ii",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Cinema</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| seat_id     | int  |\n| free        | bool |\n+-------------+------+\nseat_id is an auto-increment column for this table.\nEach row of this table indicates whether the i<sup>th</sup> seat is free or not. 1 means free while 0 means occupied.\n</pre>\n\n<p>Write a solution to find the <strong>length</strong> of&nbsp;<strong>longest consecutive sequence</strong> of <strong>available</strong> seats in the cinema.</p>\n\n<p>Note:</p>\n\n<ul>\n\t<li>There will always be <strong>at most</strong> <strong>one</strong> longest consecutive sequence.</li>\n\t<li>If there are <strong>multiple</strong>&nbsp;consecutive sequences with the <strong>same length</strong>, include all of them in the output.</li>\n</ul>\n\n<p>Return <em>the result table <strong>ordered</strong> by</em> <code>first_seat_id</code> <em><strong>in ascending order</strong></em>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong>Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>Cinema table:</p>\n\n<pre class=\"example-io\">\n+---------+------+\n| seat_id | free |\n+---------+------+\n| 1       | 1    |\n| 2       | 0    |\n| 3       | 1    |\n| 4       | 1    |\n| 5       | 1    |\n+---------+------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+-----------------+----------------+-----------------------+\n| first_seat_id   | last_seat_id   | consecutive_seats_len |\n+-----------------+----------------+-----------------------+\n| 3               | 5              | 3                     |\n+-----------------+----------------+-----------------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Longest consecutive sequence of available seats starts from seat 3 and ends at seat 5 with a length of 3.</li>\n</ul>\nOutput table is ordered by first_seat_id in ascending order.</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"CREATE TABLE if Not exists Cinema (\\n    seat_id INT PRIMARY KEY AUTO_INCREMENT,\\n    free BOOLEAN\\n)\\n\"], \"mssql\": [\"Create table Cinema (seat_id int primary key, free BIT)\\n\"], \"oraclesql\": [\"CREATE TABLE Cinema (\\n    seat_id INT PRIMARY KEY,\\n    free NUMBER(1,0)\\n)\\n\"], \"database\": true, \"name\": \"consecutive_available_seats\", \"postgresql\": [\"CREATE TABLE Cinema (\\n    seat_id INT PRIMARY KEY,\\n    free INT CHECK (free IN (0, 1))\\n);\"], \"pythondata\": [\"Cinema = pd.DataFrame({'seat_id': pd.Series(dtype='int'), 'free': pd.Series(dtype='bool')})\"], \"database_schema\": {\"Cinema\": {\"seat_id\": \"INT\", \"free\": \"BOOLEAN\"}}}",
+  "stats": "{\"totalAccepted\": \"2.8K\", \"totalSubmission\": \"5.1K\", \"totalAcceptedRaw\": 2841, \"totalSubmissionRaw\": 5113, \"acRate\": \"55.6%\"}",
+  "likes": 13,
+  "dislikes": 2,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Cinema\":[\"seat_id\",\"free\"]},\"rows\":{\"Cinema\":[[1,1],[2,0],[3,1],[4,1],[5,1]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef consecutive_available_seats(cinema: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

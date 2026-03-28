@@ -1,0 +1,146 @@
+{
+  "questionId": "3303",
+  "questionFrontendId": "3008",
+  "title": "Find Beautiful Indices in the Given Array II",
+  "titleSlug": "find-beautiful-indices-in-the-given-array-ii",
+  "difficulty": "Hard",
+  "content": "<p>You are given a <strong>0-indexed</strong> string <code>s</code>, a string <code>a</code>, a string <code>b</code>, and an integer <code>k</code>.</p>\n\n<p>An index <code>i</code> is <strong>beautiful</strong> if:</p>\n\n<ul>\n\t<li><code>0 &lt;= i &lt;= s.length - a.length</code></li>\n\t<li><code>s[i..(i + a.length - 1)] == a</code></li>\n\t<li>There exists an index <code>j</code> such that:\n\t<ul>\n\t\t<li><code>0 &lt;= j &lt;= s.length - b.length</code></li>\n\t\t<li><code>s[j..(j + b.length - 1)] == b</code></li>\n\t\t<li><code>|j - i| &lt;= k</code></li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>Return <em>the array that contains beautiful indices in <strong>sorted order from smallest to largest</strong></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;isawsquirrelnearmysquirrelhouseohmy&quot;, a = &quot;my&quot;, b = &quot;squirrel&quot;, k = 15\n<strong>Output:</strong> [16,33]\n<strong>Explanation:</strong> There are 2 beautiful indices: [16,33].\n- The index 16 is beautiful as s[16..17] == &quot;my&quot; and there exists an index 4 with s[4..11] == &quot;squirrel&quot; and |16 - 4| &lt;= 15.\n- The index 33 is beautiful as s[33..34] == &quot;my&quot; and there exists an index 18 with s[18..25] == &quot;squirrel&quot; and |33 - 18| &lt;= 15.\nThus we return [16,33] as the result.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abcd&quot;, a = &quot;a&quot;, b = &quot;a&quot;, k = 4\n<strong>Output:</strong> [0]\n<strong>Explanation:</strong> There is 1 beautiful index: [0].\n- The index 0 is beautiful as s[0..0] == &quot;a&quot; and there exists an index 0 with s[0..0] == &quot;a&quot; and |0 - 0| &lt;= 4.\nThus we return [0] as the result.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= s.length &lt;= 5 * 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= a.length, b.length &lt;= 5 * 10<sup>5</sup></code></li>\n\t<li><code>s</code>, <code>a</code>, and <code>b</code> contain only lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Use KMP or string hashing."
+  ],
+  "metaData": "{\n  \"name\": \"beautifulIndices\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"a\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"b\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"17.3K\", \"totalSubmission\": \"62.4K\", \"totalAcceptedRaw\": 17278, \"totalSubmissionRaw\": 62384, \"acRate\": \"27.7%\"}",
+  "likes": 208,
+  "dislikes": 16,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"isawsquirrelnearmysquirrelhouseohmy\"\n\"my\"\n\"squirrel\"\n15",
+    "\"abcd\"\n\"a\"\n\"a\"\n4"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"palantir-technologies\", \"name\": \"Palantir Technologies\"}, {\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 10, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Rolling Hash",
+      "slug": "rolling-hash"
+    },
+    {
+      "name": "String Matching",
+      "slug": "string-matching"
+    },
+    {
+      "name": "Hash Function",
+      "slug": "hash-function"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> beautifulIndices(string s, string a, string b, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> beautifulIndices(String s, String a, String b, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def beautifulIndices(self, s: str, a: str, b: str, k: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def beautifulIndices(self, s, a, b, k):\n        \"\"\"\n        :type s: str\n        :type a: str\n        :type b: str\n        :type k: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string} a\n * @param {string} b\n * @param {number} k\n * @return {number[]}\n */\nvar beautifulIndices = function(s, a, b, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function beautifulIndices(s: string, a: string, b: string, k: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> BeautifulIndices(string s, string a, string b, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* beautifulIndices(char* s, char* a, char* b, int k, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func beautifulIndices(s string, a string, b string, k int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun beautifulIndices(s: String, a: String, b: String, k: Int): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func beautifulIndices(_ s: String, _ a: String, _ b: String, _ k: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn beautiful_indices(s: String, a: String, b: String, k: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String} a\n# @param {String} b\n# @param {Integer} k\n# @return {Integer[]}\ndef beautiful_indices(s, a, b, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String $a\n     * @param String $b\n     * @param Integer $k\n     * @return Integer[]\n     */\n    function beautifulIndices($s, $a, $b, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> beautifulIndices(String s, String a, String b, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def beautifulIndices(s: String, a: String, b: String, k: Int): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec beautiful_indices(s :: String.t, a :: String.t, b :: String.t, k :: integer) :: [integer]\n  def beautiful_indices(s, a, b, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec beautiful_indices(S :: unicode:unicode_binary(), A :: unicode:unicode_binary(), B :: unicode:unicode_binary(), K :: integer()) -> [integer()].\nbeautiful_indices(S, A, B, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (beautiful-indices s a b k)\n  (-> string? string? string? exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

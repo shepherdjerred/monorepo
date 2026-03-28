@@ -1,0 +1,160 @@
+{
+  "questionId": "3001",
+  "questionFrontendId": "2818",
+  "title": "Apply Operations to Maximize Score",
+  "titleSlug": "apply-operations-to-maximize-score",
+  "difficulty": "Hard",
+  "content": "<p>You are given an array <code>nums</code> of <code>n</code> positive integers and an integer <code>k</code>.</p>\n\n<p>Initially, you start with a score of <code>1</code>. You have to maximize your score by applying the following operation at most <code>k</code> times:</p>\n\n<ul>\n\t<li>Choose any <strong>non-empty</strong> subarray <code>nums[l, ..., r]</code> that you haven&#39;t chosen previously.</li>\n\t<li>Choose an element <code>x</code> of <code>nums[l, ..., r]</code> with the highest <strong>prime score</strong>. If multiple such elements exist, choose the one with the smallest index.</li>\n\t<li>Multiply your score by <code>x</code>.</li>\n</ul>\n\n<p>Here, <code>nums[l, ..., r]</code> denotes the subarray of <code>nums</code> starting at index <code>l</code> and ending at the index <code>r</code>, both ends being inclusive.</p>\n\n<p>The <strong>prime score</strong> of an integer <code>x</code> is equal to the number of distinct prime factors of <code>x</code>. For example, the prime score of <code>300</code> is <code>3</code> since <code>300 = 2 * 2 * 3 * 5 * 5</code>.</p>\n\n<p>Return <em>the <strong>maximum possible score</strong> after applying at most </em><code>k</code><em> operations</em>.</p>\n\n<p>Since the answer may be large, return it modulo <code>10<sup>9 </sup>+ 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [8,3,9,3,8], k = 2\n<strong>Output:</strong> 81\n<strong>Explanation:</strong> To get a score of 81, we can apply the following operations:\n- Choose subarray nums[2, ..., 2]. nums[2] is the only element in this subarray. Hence, we multiply the score by nums[2]. The score becomes 1 * 9 = 9.\n- Choose subarray nums[2, ..., 3]. Both nums[2] and nums[3] have a prime score of 1, but nums[2] has the smaller index. Hence, we multiply the score by nums[2]. The score becomes 9 * 9 = 81.\nIt can be proven that 81 is the highest score one can obtain.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [19,12,14,6,10,18], k = 3\n<strong>Output:</strong> 4788\n<strong>Explanation:</strong> To get a score of 4788, we can apply the following operations: \n- Choose subarray nums[0, ..., 0]. nums[0] is the only element in this subarray. Hence, we multiply the score by nums[0]. The score becomes 1 * 19 = 19.\n- Choose subarray nums[5, ..., 5]. nums[5] is the only element in this subarray. Hence, we multiply the score by nums[5]. The score becomes 19 * 18 = 342.\n- Choose subarray nums[2, ..., 3]. Both nums[2] and nums[3] have a prime score of 2, but nums[2] has the smaller index. Hence, we multipy the score by nums[2]. The score becomes 342 * 14 = 4788.\nIt can be proven that 4788 is the highest score one can obtain.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length == n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= min(n * (n + 1) / 2, 10<sup>9</sup>)</code></li>\n</ul>\n",
+  "hints": [
+    "<div class=\"_1l1MA\">Calculate <code>nums[i]</code>'s prime score <code>s[i]</code> by factoring in <code>O(sqrt(nums[i]))</code> time.</div>",
+    "<div class=\"_1l1MA\">For each <code>nums[i]</code>, find the nearest index <code>left[i]</code> on the left (if any) such that <code>s[left[i]] >= s[i]</code>. if none is found, set <code>left[i]</code> to <code>-1</code>. Similarly, find the nearest index <code>right[i]</code> on the right (if any) such that <code>s[right[i]] > s[i]</code>. If none is found, set <code>right[i]</code> to <code>n</code>.</div>",
+    "<div class=\"_1l1MA\">Use a monotonic stack to compute <code>right[i]</code> and <code>left[i]</code>.</div>",
+    "<div class=\"_1l1MA\">For each index <code>i</code>, if <code>left[i] + 1 <= l <= i <= r <= right[i] - 1</code>, then <code>s[i]</code> is the maximum value in the range <code>[l, r]</code>. For this particular <code>i</code>, there are <code>ranges[i] = (i - left[i]) * (right[i] - i)</code> ranges where index <code>i</code> will be chosen.</div>",
+    "<div class=\"_1l1MA\">Loop over all elements of <code>nums</code> by non-increasing prime score, each element will be chosen <code>min(ranges[i], remainingK)</code> times, where <code>reaminingK</code> denotes the number of remaining operations. Therefore, the score will be multiplied by <code>s[i]^min(ranges[i],remainingK)</code>.</div>",
+    "<div class=\"_1l1MA\">Use fast exponentiation to quickly calculate <code>A^B mod C</code>.</div>"
+  ],
+  "metaData": "{\n  \"name\": \"maximumScore\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"list<integer>\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"76.1K\", \"totalSubmission\": \"141.9K\", \"totalAcceptedRaw\": 76112, \"totalSubmissionRaw\": 141884, \"acRate\": \"53.6%\"}",
+  "likes": 775,
+  "dislikes": 127,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Next Greater Element IV\", \"titleSlug\": \"next-greater-element-iv\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[8,3,9,3,8]\n2",
+    "[19,12,14,6,10,18]\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Monotonic Stack",
+      "slug": "monotonic-stack"
+    },
+    {
+      "name": "Number Theory",
+      "slug": "number-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumScore(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumScore(List<Integer> nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumScore(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumScore(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar maximumScore = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumScore(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumScore(IList<int> nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumScore(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumScore(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumScore(nums: List<Int>, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumScore(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_score(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef maximum_score(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function maximumScore($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumScore(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumScore(nums: List[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_score(nums :: [integer], k :: integer) :: integer\n  def maximum_score(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_score(Nums :: [integer()], K :: integer()) -> integer().\nmaximum_score(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-score nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2714",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an array of positive integers `nums`, a number `k`, and the ability to perform the following operation at most `k` times:\n\n-   Select any non-empty subarray that has **not been chosen before**.\n-   Identify the number in this subarray with the highest *prime score*. The prime score of a number `num` is defined as the number of distinct prime factors of `num`. For example, `60` has a prime score of `3` because `60 = 2 × 2 × 3 × 5`, whereas `24 = 2 × 2 × 2 × 3` has a prime score of `2`. If the selected subarray contains only `60` and `24`, we choose `60`. If multiple numbers have the same prime score, we select the one that appears first in the subarray.\n-   Multiply the current score by the chosen number. The score starts at `1`.\n\nOur task is to determine the greatest possible score we can achieve by performing the operation at most `k` times. Since the result may be large, we return it modulo `10^9 + 7`.\n\nAn important observation is that since the array consists of positive integers, multiplying the current score by any of them can only increase or maintain its value. Therefore, it is always optimal to perform all `k` allowed operations. Notice that the constraint `k <= (n + 1) * n / 2` ensures that there are always enough unique subarrays to apply the operations on.\n\nNow, consider a variation of the problem where we are not restricted to choosing a previously unselected subarray for each operation. What would be the optimal strategy to maximize our score? Intuitively, we would always select the subarray containing the greatest element, repeating this choice `k` times. This is valid because, in subarrays of length `1`, the largest element would have the highest prime score and would always be chosen.\n\nHowever, in our original problem, we cannot repeatedly select the same subarray. We could start by choosing the subarray containing the maximum element, but what happens next? While there may still be subarrays that include this maximum element, we cannot be certain that it has the highest prime score in each of them. \n\n---\n\n### Approach 1: Monotonic Stack & Priority Queue\n\n#### Intuition\n\n> For convenience, let the element with the highest prime score in a subarray be the \"dominant\" element of that subarray.\n\nTo address the challenge described above, it is helpful to calculate the number of subarrays each number is dominant in. With this information, we can start with the largest element and apply the operation to all subarrays where it remains dominant. We then repeat this for the second-largest element, and so on, until no further operations can be performed.\n\nFirst, we need an efficient way to calculate the prime score of a number `n`. To do this, we iterate over all numbers in the range `[2, sqrt(n)]`. If we find a number `p` that divides `n`, we increment the prime score and remove all occurrences of `p` in `n` by repeatedly dividing `n` by `p` until it is no longer possible. Notice that we don't need to check if `p` is prime to increment the prime score because any composite number (e.g., `9`, `15`) will have had its smaller prime factors removed earlier and therefore will not divide `n`. Finally, if `n >= 2`, `n` must be prime, so we increment the score once more.\n\nNow, notice that a number remains dominant until another element with a greater prime score appears either to its left or right. To efficiently determine this region, we use a monotonic decreasing stack, which helps identify the nearest elements with a higher prime score on both sides.\n\nTo better understand monotonic stacks, you can try solving [Next Greater Element I](https://leetcode.com/problems/next-greater-element-i/) first. It’s a great prerequisite for this problem!\n\nA monotonic stack is a data structure that maintains a specific order as elements are inserted. In this case, we need a monotonically decreasing stack based on prime scores, meaning each new element can only be added if it has a lower prime score than the one at the top. If the top element has a greater prime score, we pop it from the stack. When the current element causes another to be popped, it means it is the first element with a higher prime score to the right. Conversely, if we reach an element in the stack with a greater prime score than the current one, that element is the first with a higher prime score to the left.\n\n!?!../Documents/2818/2818_monotonic_decreasing_stack.json:960,540!?!\n\nAfter finding the indices of the nearest elements with a higher prime score on the left and right, `prevDominant[i]` and `nextDominant[i]`, we can compute the number of subarrays in which the `i-th` element is dominant.\n\nFor the left boundary, we have `i - prevDominant[i]` choices, and for each of them, we have `nextDominant[i] - i` choices for the right boundary. This gives a total of: `(i - prevDominant[i]) * (nextDominant[i] - i)` subarrays, where the `i-th` element is dominant.\n\n![Visual Representation of All Valid Subarrays](../Figures/2818/2818_number_of_subarrays.png)\n\nFinally, we need an efficient way to determine the next element on which we will apply operations across all subarrays where it is dominant. Since we need to process elements in decreasing order to maximize the score, a priority queue (max-heap) is a useful data structure. It allows us to quickly extract the largest element and then remove it to move on to the next one.\n\n> If you need a refresher on heaps, check out the [Heap Explore Card](https://leetcode.com/problem-list/heap-priority-queue/) to review their functionality and common patterns.\n\nTo sum up, the algorithm follows these steps:\n\n1. Calculate the prime score for each number in `nums`.\n2. Use a monotonic stack to determine the `prevDominant[i]` and `nextDominant[i]` indices for each `nums[i]`.\n3. Compute the number of subarrays in which each number is dominant.\n4. Use a priority queue to process the numbers in decreasing order and apply operations to all subarrays where they are dominant.\n\n#### Algorithm\n\n-   Initialize:\n    -   `n` to the size of the `nums` array.\n    -    an array, called `primeScores` of size `n`.\n-   Iterate over `nums` with `index` from `0` to `n - 1` to calculate the prime scores:\n    -   Set `num` to `nums[index]`.\n    -   For each `factor` in range `[2, sqrt(num)]`:\n        -   If `factor` divides `num`:\n            -   Increment `primeScores[index]` by `1`.\n            -   Remove all occurrences of `factor` in `num` by repeatedly dividing by `factor`.\n    -   If `num >= 2`, `num` is prime, so increment `primeScores[index]` one more time.\n-   Initialize:\n    -   two arrays `nextDominant` and `prevDominant` to store the indices of the nearest elements with a higher prime score on both sides of each number. Set all elements in `nextDominant` to `n` and all values of `prevDominant` to `-1`.\n    -   an empty stack `decreasingPrimeScoreStack`.\n-   Iterate over `nums` with `index` from `0` to `n - 1` to fill the `nextDominant` and `prevDominant` arrays:\n    -   While the stack is not empty and the element at index `decreasingPrimeScoreStack.top()` has a lower prime score than `nums[index]`:\n        -   Pop the top element of the stack as `topIndex`.\n        -   Set `nextDominant[topIndex]` to the current `index`.\n    -   If the stack is not empty, set `prevDominant[index]` to the index at the top of the stack.\n    -   Push `index` into the stack.\n-   Initialize an array of size `n` called `numOfSubarrays`.\n-   Iterate over `nums` with `index` from `0` to `n - 1` to count the number of subarrays in which each element is dominant:\n    -   Calculate `numOfSubarrays[index]` as `(nextDominant[index] - index) * (index - prevDominant[index])`.\n-   Initialize:\n    -   a priority queue, `processingQueue` of pairs `(value, index)` and insert all elements of `nums` into it.\n    -   `score` to `1`.\n-   While `k > 0`, meaning that we are still allowed to perform operations:\n    -   Pop the front element of the queue as `[num, index]`.\n    -   Calculate the number of `operations` that we will perform on subarrays in which `num` is dominant, as `min(k, subarrays[index])`.\n    -   Multiply `score` by `num ^ operations` using modular exponentiation.\n    -   Decrement `k` by `operations`.\n-   Return `score`.\n  \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/L5dp8Mfa/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"L5dp8Mfa\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of `nums` array, $k$ the number of operations and $m$ the largest element in `nums`.\n\n-   Time complexity: $O(n \\times (\\sqrt{m} + \\log{n}))$\n\n    The algorithm consists of the following steps:\n\n    1. First, we calculate the prime scores of each number in `nums`. This is done by iterating over all numbers in the range $[2, \\sqrt{\\text{num}}]$ and removing all occurrences of each factor in $\\text{num}$. In the worst case (when $\\text{num}$ is prime), the outer loop runs $\\sqrt{\\text{num}}$ times, and therefore the time complexity of this step is $O(n \\times \\sqrt{m})$.\n    2. Next, we fill the `nextDominant` and `prevDominant` arrays in $O(n)$ time, since each index is inserted and removed from the stack at most once. The calculation of the number of subarrays where each element is dominant takes an additional $O(n)$ time, since it only involves looping over `nums` and performing constant-time (arithmetic) operations in each iteration.\n    3. Finally, we create a priority queue where each element is inserted and removed at most once. The time complexity of this step is $O(n \\log{n})$, since both insertion and removal from a priority queue take $O(\\log{n})$ time. To calculate the result, we use binary exponentiation, which runs in $O(\\log{\\text{exponent}})$ time. Since the exponent represents the number of operations, the total time complexity of the binary exponentiation steps is $O(\\log{k})$, which is bounded by $O(n \\log{n})$.\n\n    As a result, the overall time complexity of the algorithm is $O(n \\times (\\sqrt{m} + \\log{n}))$.\n\n-   Space complexity: $O(n)$\n\n    All data structures we use, including `primeScores`, `nextDominant`, and `prevDominant` arrays, as well as `decreasingPrimeScoreStack` and `processingQueue`, grow linearly with the size of the input array. Therefore, the algorithm requires $O(n)$ auxiliary space.\n\n---\n\n### Approach 2: Sieve of Eratosthenes & Sorting\n\n#### Intuition\n\nIn this approach, we will follow the same logic as the previous one, but we will focus on different strategies for executing the two main steps: calculating the prime scores and determining the processing order of the elements.\n\nTo calculate the prime score of each number in `nums`, we will use the \"Sieve of Eratosthenes,\" an ancient and efficient method for finding all primes in a range `[1, n]`. The sieve works by iteratively marking the multiples of each prime number, starting from `2`. For each prime `p`, it marks all multiples of `p` as non-prime (composite). This process continues up to `sqrt(n)`, as any composite number greater than this will have already been marked by smaller primes. The remaining unmarked numbers are primes. Using this information, we can then iterate over each number and count how many smaller primes divide it evenly.\n\nNext, we will again use a monotonic stack to identify the regions where each number is dominant in any subarray. \n\nFinally, in the previous approach, we used a priority queue to quickly access the largest remaining element. However, a priority queue is only necessary when the insertion and removal of elements disrupt the order. In this case, since we process the elements in decreasing order, we can use a sorted array instead, which simplifies the process.\n\n#### Algorithm\n\n-   Define a helper function `getPrimes(limit)`:\n    -   Initialize:\n        -   an array of size `limit + 1`, called `isPrime` and set all values to `true`.\n        -   an empty array, called `primes`.\n    -   For each `number` in range: `[2, limit]`:\n        -   If `number` is not prime, continue.\n        -   Otherwise, push `number` into `primes`.\n        -   Mark every multiple of `number` in range `[number * number, limit]` as not prime.\n    -   Return `primes`.\n-   In the main `maximumScore(nums, k)` function:\n    -   Initialize:\n        -   `n` to the size of the `nums` array.\n        -    an array, called `primeScores` of size `n`.\n    -   Store the greatest element of `nums` in `maxElement`.\n    -   Find all `primes` up to `maxElement` by calling `getPrimes(maxElement)`.\n    -   Iterate over `nums` with `index` from `0` to `n - 1` to calculate the prime scores:\n        -   Set `num = nums[index]`.\n        -   For each `prime` in `primes`:\n            -   If `prime * prime > num`, no more primes divide `num`, so break.\n            -   If `num % prime != 0`, continue to the next prime.\n            -   Increment `primeScores[index]` by `1`.\n            -   While `num` is divisible by `prime`, divide `num` by `prime`.\n        -   If `num > 1`, `num` is prime, so increment `primeScores[index]` by `1`.\n    -   Initialize:\n        -   two arrays `nextDominant` and `prevDominant` to store the indices of the nearest elements with a higher prime score on both sides of each number. Set all elements in `nextDominant` to `n` and all values of `prevDominant` to `-1`.\n        -   an empty stack `decreasingPrimeScoreStack`.\n    -   Iterate over `nums` with `index` from `0` to `n - 1` to fill the `nextDominant` and `prevDominant` arrays:\n        -   While the stack is not empty and the element at index `decreasingPrimeScoreStack.top()` has a lower prime score than `nums[index]`:\n            -   Pop the top element of the stack as `topIndex`.\n            -   Set `nextDominant[topIndex]` to the current `index`.\n        -   If the stack is not empty, set `prevDominant[index]` to the index at the top of the stack.\n        -   Push `index` into the stack.\n    -   Initialize an array of size `n`, called `numOfSubarrays`.\n    -   Iterate over `nums` with `index` from `0` to `n - 1` to count the number of subarrays in which each element is dominant:\n        -   Calculate `numOfSubarrays[index]` as `(nextDominant[index] - index) * (index - prevDominant[index])`.\n    -   Initialize:\n        -   an array `sortedArray` of pairs `(value, index)` and push all elements of `nums` into it.\n        -   `score` to `1`.\n        -   `processingIndex` to `0`.\n    -   Sort `sortedArray` in decreasing order of `value`.\n    -   While `k > 0`, meaning that we are still allowed to perform operations:\n        -   Get the element of the `sortedArray` at `processingIndex` as `[num, index]`.\n         -   Increment `processingIndex` by `1` to continue to the next element.\n        -   Calculate the number of `operations` that we will perform on subarrays in which `num` is dominant, as `min(k, subarrays[index])`.\n        -   Multiply `score` by `num ^ operations`, using modular exponentiation.\n        -   Decrement `k` by `operations`.\n-   Return `score`.\n  \n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/W9WKyk3v/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"W9WKyk3v\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of `nums` array, $k$ the number of operations and $m$ the largest element in `nums`.\n\n- Time complexity: $O\\left(n \\times \\left(\\log{n} + \\frac{\\sqrt{m}}{\\log{m}} + \\log{k}\\right) + m \\log{\\log{m}}\\right)$\n\n    The algorithm consists of the following steps:\n\n    1. We first use the Sieve of Eratosthenes to find all primes in the range $[1, m]$, which takes $O(m \\log \\log m)$ time to compute the primes up to $m$.\n    \n    2. For each number in `nums`, we iterate over the list of primes up to $ \\sqrt{m} $. The number of primes up to $ \\sqrt{m} $ is approximately $ \\frac{\\sqrt{m}}{\\log{m}} $, so the prime factorization of each number takes $O(\\frac{\\sqrt{m}}{\\log{m}})$ time, and for all numbers in `nums`, this takes $O(n \\times \\frac{\\sqrt{m}}{\\log{m}})$.\n    \n    3. Filling the `nextDominant` and `prevDominant` arrays takes $O(n)$ time, as each index is processed at most once, and the number of subarrays is calculated in constant time for each index, which also takes $O(n)$.\n    \n    4. Sorting the `sortedArray` takes $O(n \\log n)$ time.\n\n    5. Binary exponentiation is performed to compute the result, which takes $O(\\log{k})$ time for each operation. Since the loop runs at most $n$ times, the total time complexity for the exponentiation step is $O(n \\log k)$.\n\n    Therefore, the overall time complexity is: $O\\left(n \\times \\left(\\log{n} + \\frac{\\sqrt{m}}{\\log{m}} + \\log{k}\\right) + m \\log{\\log{m}}\\right)$\n\n- Space complexity: $O(m + n)$\n\n    We use an array `isPrime` of size $O(m)$ to mark numbers as prime or not. Additionally, several data structures such as `primes`, `primeScores`, `nextDominant`, `prevDominant`, and `sortedArray` are used, all of which grow linearly with the size of the input array, $O(n)$.\n\n    The space required for sorting depends on the language:\n    - In Java, the space complexity is $O(\\log n)$ due to Quick Sort.\n    - In C++, it is $O(\\log n)$ for the hybrid sort.\n    - In Python, it is $O(n)$ due to Timsort.\n\n    Therefore, the total space complexity is $O(m + n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

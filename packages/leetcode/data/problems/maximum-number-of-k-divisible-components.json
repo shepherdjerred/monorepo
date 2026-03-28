@@ -1,0 +1,138 @@
+{
+  "questionId": "3058",
+  "questionFrontendId": "2872",
+  "title": "Maximum Number of K-Divisible Components",
+  "titleSlug": "maximum-number-of-k-divisible-components",
+  "difficulty": "Hard",
+  "content": "<p>There is an undirected tree with <code>n</code> nodes labeled from <code>0</code> to <code>n - 1</code>. You are given the integer <code>n</code> and a 2D integer array <code>edges</code> of length <code>n - 1</code>, where <code>edges[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> indicates that there is an edge between nodes <code>a<sub>i</sub></code> and <code>b<sub>i</sub></code> in the tree.</p>\n\n<p>You are also given a <strong>0-indexed</strong> integer array <code>values</code> of length <code>n</code>, where <code>values[i]</code> is the <strong>value</strong> associated with the <code>i<sup>th</sup></code> node, and an integer <code>k</code>.</p>\n\n<p>A <strong>valid split</strong> of the tree is obtained by removing any set of edges, possibly empty, from the tree such that the resulting components all have values that are divisible by <code>k</code>, where the <strong>value of a connected component</strong> is the sum of the values of its nodes.</p>\n\n<p>Return <em>the <strong>maximum number of components</strong> in any valid split</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/08/07/example12-cropped2svg.jpg\" style=\"width: 1024px; height: 453px;\" />\n<pre>\n<strong>Input:</strong> n = 5, edges = [[0,2],[1,2],[1,3],[2,4]], values = [1,8,1,4,4], k = 6\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> We remove the edge connecting node 1 with 2. The resulting split is valid because:\n- The value of the component containing nodes 1 and 3 is values[1] + values[3] = 12.\n- The value of the component containing nodes 0, 2, and 4 is values[0] + values[2] + values[4] = 6.\nIt can be shown that no other valid split has more than 2 connected components.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2023/08/07/example21svg-1.jpg\" style=\"width: 999px; height: 338px;\" />\n<pre>\n<strong>Input:</strong> n = 7, edges = [[0,1],[0,2],[1,3],[1,4],[2,5],[2,6]], values = [3,0,6,1,5,2,1], k = 3\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We remove the edge connecting node 0 with 2, and the edge connecting node 0 with 1. The resulting split is valid because:\n- The value of the component containing node 0 is values[0] = 3.\n- The value of the component containing nodes 2, 5, and 6 is values[2] + values[5] + values[6] = 9.\n- The value of the component containing nodes 1, 3, and 4 is values[1] + values[3] + values[4] = 6.\nIt can be shown that no other valid split has more than 3 connected components.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>edges.length == n - 1</code></li>\n\t<li><code>edges[i].length == 2</code></li>\n\t<li><code>0 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt; n</code></li>\n\t<li><code>values.length == n</code></li>\n\t<li><code>0 &lt;= values[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>9</sup></code></li>\n\t<li>Sum of <code>values</code> is divisible by <code>k</code>.</li>\n\t<li>The input is generated such that <code>edges</code> represents a valid tree.</li>\n</ul>\n",
+  "hints": [
+    "Root the tree at node <code>0</code>.",
+    "If a leaf node is not divisible by <code>k</code>, it must be in the same component as its parent node so we merge it with its parent node.",
+    "If a leaf node is divisible by <code>k</code>, it will be in its own components so we separate it from its parent node.",
+    "In each step, we either cut a leaf node down or merge a leaf node. The number of nodes on the tree reduces by one. Repeat this process until only one node is left."
+  ],
+  "metaData": "{\n  \"name\": \"maxKDivisibleComponents\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"values\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"145K\", \"totalSubmission\": \"195.7K\", \"totalAcceptedRaw\": 144978, \"totalSubmissionRaw\": 195693, \"acRate\": \"74.1%\"}",
+  "likes": 947,
+  "dislikes": 41,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Create Components With Same Value\", \"titleSlug\": \"create-components-with-same-value\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "5\n[[0,2],[1,2],[1,3],[2,4]]\n[1,8,1,4,4]\n6",
+    "7\n[[0,1],[0,2],[1,3],[1,4],[2,5],[2,6]]\n[3,0,6,1,5,2,1]\n3"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxKDivisibleComponents(int n, vector<vector<int>>& edges, vector<int>& values, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxKDivisibleComponents(int n, int[][] edges, int[] values, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxKDivisibleComponents(self, n: int, edges: List[List[int]], values: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxKDivisibleComponents(self, n, edges, values, k):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :type values: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @param {number[]} values\n * @param {number} k\n * @return {number}\n */\nvar maxKDivisibleComponents = function(n, edges, values, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxKDivisibleComponents(n: number, edges: number[][], values: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxKDivisibleComponents(int n, int[][] edges, int[] values, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxKDivisibleComponents(int n, int** edges, int edgesSize, int* edgesColSize, int* values, int valuesSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxKDivisibleComponents(n int, edges [][]int, values []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxKDivisibleComponents(n: Int, edges: Array<IntArray>, values: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxKDivisibleComponents(_ n: Int, _ edges: [[Int]], _ values: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_k_divisible_components(n: i32, edges: Vec<Vec<i32>>, values: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @param {Integer[]} values\n# @param {Integer} k\n# @return {Integer}\ndef max_k_divisible_components(n, edges, values, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @param Integer[] $values\n     * @param Integer $k\n     * @return Integer\n     */\n    function maxKDivisibleComponents($n, $edges, $values, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxKDivisibleComponents(int n, List<List<int>> edges, List<int> values, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxKDivisibleComponents(n: Int, edges: Array[Array[Int]], values: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_k_divisible_components(n :: integer, edges :: [[integer]], values :: [integer], k :: integer) :: integer\n  def max_k_divisible_components(n, edges, values, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_k_divisible_components(N :: integer(), Edges :: [[integer()]], Values :: [integer()], K :: integer()) -> integer().\nmax_k_divisible_components(N, Edges, Values, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-k-divisible-components n edges values k)\n  (-> exact-integer? (listof (listof exact-integer?)) (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2624",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe are given an undirected tree with `n` nodes (labeled from `0` to `n - 1`) and an array `values`, representing the value of each node. We are also provided with an integer `k`.\n\nA valid split of the tree occurs by removing some (or possibly none) edges, such that the sum of node values in each resulting component is divisible by `k`. The goal is to determine the maximum number of components in any valid split.\n\nLet's consider an example where `n = 4`, `edges = [[0, 1], [1, 2], [1, 3]]`, `values = [10, 10, 10, 10]`, and `k = 10`.\n\nIn this case, the entire tree can be viewed as a single component, as the sum of all node values (40) is divisible by `k` (10). However, by removing certain edges, the tree can be divided into multiple components, where the sum of the node values in each component is also divisible by `k`. Below is a visual representation of the valid splits.\n\n![valid Splits](../Figures/2872/Edge_Cuts.png)\n\n> Note: The goal is to maximize the number of components, not to find the exact split.\n\nWe will explore three different approaches, with a primary focus on their practical application. Although the fundamental concept underlying each approach remains the same, the difference lies in how they are implemented.\n\n---\n\n### Approach 1: Depth-First-Search (DFS)\n\n#### Intuition   \n\nTo solve this problem, let’s consider how the structure of a tree can help us.\n\nA tree consists of nodes connected by edges, and each edge connects a parent node to one of its children. Once we pick a node as the root, we can break the tree down into smaller parts, called subtrees, based on the parent-child relationships. The tree is undirected, so we can choose any node to be the root without affecting the result.\n\nNow, let’s think about how we can use recursion to solve this. We want to calculate the sum of each subtree. After calculating the sum, we need to check: *Is this sum divisible by $k$?* If it is, we can detach the subtree at that point because it forms a valid component.\n\nBut what if the sum isn’t divisible by $k$? In that case, we need to \"carry over\" the remainder (the leftover part when divided by $k$) to the parent node. This way, the parent node can combine its remainder with its children's remainders to check if the total sum becomes divisible by $k$. This recursive process naturally fits a Depth-First Search (DFS) approach:\n1. Start from the leaves of the tree (the smallest subtrees) and compute their sums.\n2. Propagate the results up to their parent nodes, adding up the remainders modulo $k$.\n3. Whenever a subtree's sum is divisible by $k$, count it as a valid component.\n\n> For a more comprehensive understanding of depth-first search, check out the [DFS Explore Card 🔗](https://leetcode.com/explore/learn/card/graph/619/depth-first-search-in-graph/). This resource provides an in-depth look at DFS, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n- `maxKDivisibleComponents` function:\n  - Initialize an adjacency list `adjList` to represent the graph.\n  - Populate `adjList` using the given `edges`.\n  - Initialize `componentCount` to `0`, which will store the count of k-divisible components.\n  - Call `dfs(0, -1, adjList, values, k, componentCount)` starting from node `0` with no parent (`-1`).\n  - Return `componentCount` as the result.\n\n- `dfs` function:\n  - Initialize `sum` to `0`, representing the sum of node values in the current subtree.\n  - For each `neighborNode` of `currentNode`:\n    - If `neighborNode` is not equal to `parentNode`, recursively call `dfs` for `neighborNode` with `currentNode` as its parent.\n    - Add the result of the recursive call to `sum` and take modulo `k`.\n  - Add the value of `currentNode` (`nodeValues[currentNode]`) to `sum` and take modulo `k`.\n  - If `sum` is `0`, increment `componentCount` because the current subtree forms a k-divisible component.\n  - Return `sum` to allow the parent node to incorporate the result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Ke4MinBu/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Ke4MinBu\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the graph, and the number of edges in the tree is $n - 1$.\n\n- Time complexity: $O(n)$\n\n    The algorithm involves creating an adjacency list from the edges, which takes $O(n - 1)$ time. The depth-first search (DFS) traversal visits each node and edge exactly once, resulting in a time complexity of $O(n)$. The operations within the DFS (such as summing values and checking divisibility) are constant time operations, so they do not affect the overall time complexity.\n\n- Space complexity: $O(n)$\n\n    The space complexity is determined by the storage used for the adjacency list, which requires $O(n - 1)$ space, and the recursion stack during the DFS, which can go up to $O(n)$ in the worst case (for a skewed tree). Additionally, the `values` array and other variables consume $O(n)$ space. Therefore, the total space complexity is $O(n)$.\n \n---\n\n### Approach 2: Breadth-First Search (BFS)\n\n#### Intuition   \n\nInstead of using Depth-First Search (DFS) to build the solution from the bottom up, we can approach the problem in a different way: what if we process the tree layer by layer? This means we start with the simplest parts of the tree — the leaf nodes — and work our way up.\n\nA leaf node is a node that has only one neighbor, which makes it easy to handle because it doesn’t depend on any other parts of the tree once it’s processed. If a leaf node’s value is divisible by $k$, it can immediately form a valid component. If it’s not, its value is added to its parent’s sum. This leads to the insight that:\n- We can iteratively remove processed leaf nodes, reducing the tree layer by layer.\n- As we remove a leaf node, we update its parent with the carry-over sum (modulo $k$).\n\nThis iterative process naturally fits a Breadth-First Search (BFS) approach:\n1. Start with all the leaf nodes, as they are the simplest to process.\n2. Remove each leaf node, updating its parent node’s value with the carry-over sum.\n3. If the parent node becomes a new leaf (i.e., it now has only one remaining neighbor), add it to the processing queue and repeat the process.\n\n> For a more comprehensive understanding of breadth-first search, check out the [BFS Explore Card 🔗](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/). This resource provides an in-depth look at BFS, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n- If `n` is less than 2, return `1` (only one node forms one component).\n\n- Initialize `componentCount` to `0` to track the number of components where the sum of node values is divisible by `k`.\n\n- Build the graph's adjacency list:\n  - For each edge `[node1, node2]`, add `node2` to the neighbors of `node1` and vice versa.\n\n- Initialize a queue with all leaf nodes (nodes with only one neighbor):\n  - Iterate through the graph, adding nodes with exactly one neighbor to the queue.\n\n- While the queue is not empty:\n  - Pop a node (`currentNode`) from the queue.\n  - Identify its only neighbor (`neighborNode`), if it exists. If the graph for `currentNode` is empty, set `neighborNode` to `-1`.\n\n  - If `neighborNode` exists:\n    - Remove `currentNode` from the neighbors of `neighborNode`.\n\n  - Check if the value of `currentNode` is divisible by `k`:\n    - If divisible, increment `componentCount` by `1`.\n    - Otherwise, add the value of `currentNode` to `values[neighborNode]`.\n\n  - If `neighborNode` exists and becomes a leaf node (only one connection remains), add it to the queue.\n\n- Return `componentCount`, which represents the number of valid components found.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/NrHQKQSQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"NrHQKQSQ\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the graph, and the number of edges in the tree is $n - 1$.\n\n- Time complexity: $O(n)$\n\n    The algorithm involves building the graph using an adjacency list, which takes $O(n - 1)$ time.. The BFS traversal processes each node and edge exactly once, resulting in a time complexity of $O(n)$. The operations within the BFS (such as checking divisibility and updating values) are constant time operations, so they do not affect the overall time complexity.\n\n- Space complexity: $O(n)$\n\n    The space complexity is determined by the storage used for the adjacency list, which requires $O(n - 1)$ space, and the BFS queue, which can store up to $O(n)$ nodes in the worst case (when all nodes are leaf nodes or when the graph is a star graph). Additionally, the `longValues` array and other variables consume $O(n)$ space. Therefore, the total space complexity is $O(n)$.\n\n---\n\n### Approach 3: Topological Sort / Onion Sort\n\n#### Intuition\n\nBuilding on the BFS idea, we can refine it further by introducing the concept of dependencies (in-degrees) between nodes. In a tree, dependencies can be represented by the number of connections (or edges) each node has. For instance, a leaf node has exactly one connection, and as we process it, its parent loses one dependency.\n\nThis observation allows us to think about the problem in terms of topological sorting:\n1. Start with nodes that have only one connection (leaves) since they have no unresolved dependencies.\n2. Process each node by reducing the dependencies of its neighbors (its parent in this case).\n3. If a node’s value is divisible by $k$, count it as a component; otherwise, propagate its remainder to its parent.\n\n> For a more comprehensive understanding of graph algorithms, check out the [Graph Theory Explore Card 🔗](https://leetcode.com/explore/learn/card/graph/). This resource provides an in-depth look at graph theory, topological sorting, and various techniques, explaining key concepts and applications with a variety of problems to solidify your understanding of the pattern.\n\n#### Algorithm\n\n- If `n` is less than 2, return `1` (a single node graph has one component).\n\n- Initialize `componentCount` to `0` to count the number of components divisible by `k`.\n\n- Build the graph's adjacency list and calculate in-degrees for each node:\n  - For each edge `(node1, node2)`:\n    - Add `node2` to the adjacency list of `node1` and vice versa.\n    - Increment the in-degrees of both nodes.\n\n- Initialize a queue with all leaf nodes (nodes with an in-degree of `1`).\n\n- While the queue is not empty:\n  - Dequeue a `currentNode`.\n  - Decrement the in-degree of `currentNode` by `1`.\n  - Initialize `addValue` to `0`.\n\n  - Check if the value of `currentNode` is divisible by `k`:\n    - If yes, increment `componentCount`.\n    - Otherwise, set `addValue` to the value of `currentNode`.\n\n  - For each `neighborNode` of `currentNode`:\n    - If `inDegree[neighborNode]` is already `0`, skip it (processed nodes).\n    - Decrement the in-degree of `neighborNode` by `1`.\n    - Add `addValue` to `values[neighborNode]` to propagate the contribution of `currentNode`.\n    - If the in-degree of `neighborNode` becomes `1`, enqueue `neighborNode`.\n\n- Return `componentCount` as the number of connected components where the sum of node values is divisible by `k`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/kxp4mjbi/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"kxp4mjbi\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes in the graph, and the number of edges in the graph is $n - 1$ (for a tree).\n\n- Time complexity: $O(n)$\n\n    The algorithm involves building the adjacency list and calculating in-degrees, which takes $O(n - 1)$ time. The queue initialization step iterates over all nodes, taking $O(n)$ time. The main loop processes each node and edge exactly once, as nodes are added to the queue only when their in-degree becomes 1. The operations within the loop (such as updating values and checking divisibility) are constant time operations. Therefore, the overall time complexity is $O(n)$.\n\n- Space complexity: $O(n)$\n\n    The space complexity is determined by the storage used for the adjacency list, which requires $O(n - 1)$ space, and the in-degree array, which requires $O(n)$ space. The queue can store up to $O(n)$ nodes in the worst case (when all nodes are leaf nodes). Additionally, the `longValues` array and other variables consume $O(n)$ space. Therefore, the total space complexity is $O(n)$.\n \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

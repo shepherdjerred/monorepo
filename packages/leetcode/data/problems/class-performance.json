@@ -1,0 +1,53 @@
+{
+  "questionId": "3286",
+  "questionFrontendId": "2989",
+  "title": "Class Performance",
+  "titleSlug": "class-performance",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Scores</code></p>\n\n<pre>\n+--------------+---------+\n| Column Name  | Type    |\n+--------------+---------+\n| student_id   | int     |\n| student_name | varchar |\n| assignment1  | int     |\n| assignment2  | int     |\n| assignment3  | int     |\n+--------------+---------+\nstudent_id is column of unique values for this table.\nThis table contains student_id, student_name, assignment1, assignment2, and assignment3.\n</pre>\n\n<p>Write a solution to calculate the <strong>difference</strong> in the <strong>total score</strong> (sum of all <code>3</code> assignments) between the <strong>highest score</strong> obtained by students and the <strong>lowest score</strong> obtained by them.</p>\n\n<p>Return <em>the result table in <strong>any</strong> order</em><em>.</em></p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nScores table:\n+------------+--------------+-------------+-------------+-------------+\n| student_id | student_name | assignment1 | assignment2 | assignment3 |\n+------------+--------------+-------------+-------------+-------------+\n| 309        | Owen         | 88          | 47          | 87          |\n| 321        | Claire       | 98          | 95          | 37          |     \n| 338        | Julian       | 100         | 64          | 43          |  \n| 423        | Peyton       | 60          | 44          | 47          |  \n| 896        | David        | 32          | 37          | 50          | \n| 235        | Camila       | 31          | 53          | 69          | \n+------------+--------------+-------------+-------------+-------------+\n<strong>Output</strong>\n+---------------------+\n| difference_in_score | \n+---------------------+\n| 111                 | \n+---------------------+\n<strong>Explanation</strong>\n- student_id 309 has a total score of 88 + 47 + 87 = 222.\n- student_id 321 has a total score of 98 + 95 + 37 = 230.\n- student_id 338 has a total score of 100 + 64 + 43 = 207.\n- student_id 423 has a total score of 60 + 44 + 47 = 151.\n- student_id 896 has a total score of 32 + 37 + 50 = 119.\n- student_id 235 has a total score of 31 + 53 + 69 = 153.\nstudent_id 321 has the highest score of 230, while student_id 896 has the lowest score of 119. Therefore, the difference between them is 111.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create Table if Not Exists Scores (student_id int, student_name varchar(40), assignment1 int,assignment2 int, assignment3 int)\"], \"mssql\": [\"Create Table Scores (student_id int, student_name varchar(40), assignment1 int,assignment2 int, assignment3 int)\"], \"oraclesql\": [\"Create Table Scores (student_id int, student_name varchar(40), assignment1 int,assignment2 int, assignment3 int)\"], \"database\": true, \"name\": \"class_performance\", \"postgresql\": [\"CREATE TABLE Scores (\\n  student_id INT,\\n  student_name VARCHAR(40),\\n  assignment1 INT,\\n  assignment2 INT,\\n  assignment3 INT\\n);\"], \"pythondata\": [\"Scores = pd.DataFrame([], columns=['student_id', 'student_name', 'assignment1', 'assignment2', 'assignment3']).astype({'student_id':'Int64', 'student_name':'object', 'assignment1':'Int64', 'assignment2':'Int64', 'assignment3':'Int64'})\\n\"], \"database_schema\": {\"Scores\": {\"student_id\": \"INT\", \"student_name\": \"VARCHAR(40)\", \"assignment1\": \"INT\", \"assignment2\": \"INT\", \"assignment3\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"5.9K\", \"totalSubmission\": \"6.6K\", \"totalAcceptedRaw\": 5868, \"totalSubmissionRaw\": 6608, \"acRate\": \"88.8%\"}",
+  "likes": 14,
+  "dislikes": 3,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Scores\":[\"student_id\",\"student_name\",\"assignment1\",\"assignment2\",\"assignment3\"]},\"rows\":{\"Scores\":[[309,\"Owen\",88,47,87],[321,\"Claire\",98,95,37],[338,\"Julian\",100,64,43],[423,\"Peyton\",60,44,47],[896,\"David\",32,37,50],[235,\"Camila\",31,53,69]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef class_performance(scores: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

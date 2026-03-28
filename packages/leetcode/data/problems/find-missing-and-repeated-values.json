@@ -1,0 +1,141 @@
+{
+  "questionId": "3227",
+  "questionFrontendId": "2965",
+  "title": "Find Missing and Repeated Values",
+  "titleSlug": "find-missing-and-repeated-values",
+  "difficulty": "Easy",
+  "content": "<p>You are given a <strong>0-indexed</strong> 2D integer matrix <code><font face=\"monospace\">grid</font></code> of size <code>n * n</code> with values in the range <code>[1, n<sup>2</sup>]</code>. Each integer appears <strong>exactly once</strong> except <code>a</code> which appears <strong>twice</strong> and <code>b</code> which is <strong>missing</strong>. The task is to find the repeating and missing numbers <code>a</code> and <code>b</code>.</p>\n\n<p>Return <em>a <strong>0-indexed </strong>integer array </em><code>ans</code><em> of size </em><code>2</code><em> where </em><code>ans[0]</code><em> equals to </em><code>a</code><em> and </em><code>ans[1]</code><em> equals to </em><code>b</code><em>.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[1,3],[2,2]]\n<strong>Output:</strong> [2,4]\n<strong>Explanation:</strong> Number 2 is repeated and number 4 is missing so the answer is [2,4].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> grid = [[9,1,7],[8,9,2],[3,4,6]]\n<strong>Output:</strong> [9,5]\n<strong>Explanation:</strong> Number 9 is repeated and number 5 is missing so the answer is [9,5].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n == grid.length == grid[i].length &lt;= 50</code></li>\n\t<li><code>1 &lt;= grid[i][j] &lt;= n * n</code></li>\n\t<li>For all <code>x</code> that <code>1 &lt;= x &lt;= n * n</code> there is exactly one <code>x</code> that is not equal to any of the grid members.</li>\n\t<li>For all <code>x</code> that <code>1 &lt;= x &lt;= n * n</code> there is exactly one <code>x</code> that is equal to exactly two of the grid members.</li>\n\t<li>For all <code>x</code> that <code>1 &lt;= x &lt;= n * n</code> except two of them there is exactly one pair of <code>i, j</code> that <code>0 &lt;= i, j &lt;= n - 1</code> and <code>grid[i][j] == x</code>.</li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"findMissingAndRepeatedValues\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"331.1K\", \"totalSubmission\": \"397.8K\", \"totalAcceptedRaw\": 331109, \"totalSubmissionRaw\": 397802, \"acRate\": \"83.2%\"}",
+  "likes": 1015,
+  "dislikes": 50,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[[1,3],[2,2]]",
+    "[[9,1,7],[8,9,2],[3,4,6]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 9, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> findMissingAndRepeatedValues(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] findMissingAndRepeatedValues(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findMissingAndRepeatedValues(self, grid: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findMissingAndRepeatedValues(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number[]}\n */\nvar findMissingAndRepeatedValues = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findMissingAndRepeatedValues(grid: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] FindMissingAndRepeatedValues(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* findMissingAndRepeatedValues(int** grid, int gridSize, int* gridColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findMissingAndRepeatedValues(grid [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findMissingAndRepeatedValues(grid: Array<IntArray>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findMissingAndRepeatedValues(_ grid: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_missing_and_repeated_values(grid: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer[]}\ndef find_missing_and_repeated_values(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer[]\n     */\n    function findMissingAndRepeatedValues($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> findMissingAndRepeatedValues(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findMissingAndRepeatedValues(grid: Array[Array[Int]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_missing_and_repeated_values(grid :: [[integer]]) :: [integer]\n  def find_missing_and_repeated_values(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_missing_and_repeated_values(Grid :: [[integer()]]) -> [integer()].\nfind_missing_and_repeated_values(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-missing-and-repeated-values grid)\n  (-> (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2697",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Hash Map\n\n#### Intuition\n\nWe are given a grid containing integers ranging from $1$ to $n^2$ with the following rules:\n1. One number is repeated twice.\n2. One number from the range is missing in the input.\n3. All other numbers occur exactly once.\n\nOur task is to find both the repeated number and the missing number in the grid. The most straightforward way to do this is to count how many times each number appears. The number that appears twice is the repeated number, while the number that does not appear at all is the missing one. But how can we efficiently count occurrences without excessive searching?  \n\nA hash map is a perfect tool for this task because it allows us to store and retrieve counts efficiently. Since each number can be associated with its count, we can map each integer to its frequency using a hash map. Fetching and updating values in a hash map happens in constant time on average, which makes it well-suited for this problem.  \n\nTo implement this, we start by creating a hash map called `freq` to store the frequency of each number in the grid. We then iterate through the grid, updating the count for each number as we encounter it. Once we finish scanning the grid, we have a complete record of how many times each number appears.  \n\nNext, we loop through all numbers from $1$ to $n^2$ and check their frequencies in `freq`. If a number has a count of `2`, it is the repeated number. If a number does not exist in the map, it is the missing number. Once we identify both, we return them as our final answer.  \n\nThe slideshow below demonstrates the algorithm in action:\n\n!?!../Documents/2965/slideshow.json:604,1082!?!\n\n> For a more comprehensive understanding of hash tables, check out the [Hash Table Explore Card](https://leetcode.com/explore/learn/card/hash-table/). This resource provides an in-depth look at hash tables, explaining their key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n- Initialize variables:\n  - `n` to store the length of the `grid`.\n  - `missing` and `repeat` to `-1`.\n- Initialize a frequency map `freq` to track the count of each number in the `grid`.\n- For each `row` in the `grid`:\n  - For each number in the `row`:\n    - Add the number to `freq` or increment its count if already present.\n- For each `num` from `1` to `n * n` (inclusive):\n  - If `num` is not present in the frequency map:\n    - Set `missing` to `num`.\n  - If `num` appears twice in the frequency map:\n    - Set `repeat` to `num`.\n- Return an array containing the repeated and missing numbers.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/WEb2C5Zo/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"WEb2C5Zo\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the side length of the `grid`.\n\n- Time complexity: $O(n^2)$\n\n    The algorithm makes two main passes. First, we iterate through each cell in our $n \\times n$ grid to build the frequency map, which takes $O(n^2)$ operations. Then, we iterate through numbers from $1$ to $n^2$ to find our missing and repeated values, which takes $O(n^2)$ operations. Since both passes are sequential and take $O(n^2)$ time, our overall time complexity is $O(n^2)$.\n\n- Space complexity: $O(n^2)$\n\n    The algorithm uses a hash map to store the frequency of each number. The map will store all unique numbers from $1$ to $n^2$ except the missing number, making the space complexity $O(n^2)$.  \n\n---\n\n### Approach 2: Math\n\n#### Intuition\n\nAt first glance, this problem might seem to require tracking frequencies, but there's a more elegant mathematical approach. In a perfect sequence from $1$ to $n^2$, every number appears exactly once. However, in our given sequence, one number appears twice, and another number is missing. Let’s define the repeated number as $x$ and the missing number as $y$.  \n\nInstead of explicitly counting occurrences, we can leverage basic mathematical properties of numbers. The sum of all numbers in a proper sequence from $1$ to $n^2$ can be computed using the formula:  \n\n$$\n\\begin{aligned}\n    \\text{perfectSum} = \\frac{n^2 \\cdot (n^2 + 1)}{2}\n\\end{aligned}\n$$\n\nSimilarly, the sum of the squares of these numbers follows this formula:  \n\n$$\n\\begin{aligned}\n    \\text{perfectSqrSum} = \\frac{n^2 \\cdot (n^2 + 1) \\cdot (2n^2 + 1)}{6}\n\\end{aligned}\n$$\n\nNow, if we compute the sum of numbers in our given grid ($\\text{sum}$) and compare it with $\\text{perfectSum}$, we can express their relationship as:  \n\n$$\n\\begin{aligned}\n    \\text{sum} = \\text{perfectSum} + x - y\n\\end{aligned}\n$$\n\nThis tells us that the difference between the actual sum and the perfect sum gives us:\n\n$$\n\\begin{aligned}\n    \\text{sumDiff} = x - y\n\\end{aligned}\n$$\n\nSimilarly, if we compute the sum of squares from our grid ($\\text{sqrSum}$) and compare it with $\\text{perfectSqrSum}$, we get:\n\n$$\n\\begin{aligned}\n    \\text{sqrDiff} = x^2 - y^2\n\\end{aligned}\n$$\n\nNow, we recall a fundamental algebraic identity:\n\n$$\n\\begin{aligned}\nx^2 - y^2 = (x + y) \\cdot (x - y)\n\\end{aligned}\n$$\n\nSince we already know $x - y$ from $\\text{sumDiff}$, we can substitute it into the equation:\n\n$$\n\\begin{aligned}\n    \\text{sqrDiff} = (x + y) \\cdot \\text{sumDiff}\n\\end{aligned}\n$$\n\nRearranging this equation, we can solve for $x + y$:\n\n$$\n\\begin{aligned}\nx + y = \\frac{\\text{sqrDiff}}{\\text{sumDiff}}\n\\end{aligned}\n$$\n\nNow, we have two simple equations:\n\n$$\n\\begin{aligned}\nx - y = \\text{sumDiff}\n\\end{aligned}\n$$\n\n$$\n\\begin{aligned}\nx + y = \\frac{\\text{sqrDiff}}{\\text{sumDiff}}\n\\end{aligned}\n$$\n\nSolving for $x$ and $y$:\n\n$$\n\\begin{aligned}\nx = \\frac{\\text{sqrDiff}/\\text{sumDiff} + \\text{sumDiff}}{2}\n\\end{aligned}\n$$\n\n$$\n\\begin{aligned}\ny = \\frac{\\text{sqrDiff}/\\text{sumDiff} - \\text{sumDiff}}{2}\n\\end{aligned}\n$$\n\nThis mathematical derivation translates directly into our code. We first calculate the actual sums from our grid and then compute the perfect sums using the formulas. The differences between these give us $\\text{sumDiff}$ and $\\text{squareDifference}$, which we can plug into our final formulas to get the repeating and missing numbers.\n\n> Note: One important implementation detail is the use of long instead of int for our calculations. This is crucial because when we're dealing with squares of numbers, we can easily exceed the integer range.\n\n#### Algorithm\n\n- Initialize variables:\n  - `sum` and `sqrSum` to `0` to store the actual sums from the `grid`.\n  - `n` to store the length of the `grid`.\n- Initialize a variable `total` to `n * n` to store the total number of elements.\n- For each `row` in the `grid`:\n  - For each `col` in the `grid`:\n    - Add the current element to `sum`.\n    - Add the square of the current element to `sqrSum`.\n- Calculate the `sumDiff` by subtracting the expected sum `(total * (total + 1) / 2)` from the actual `sum`.\n- Calculate the `sqrDiff` by subtracting the expected square sum `(total * (total + 1) * (2 * total + 1) / 6)` from the actual `sqrSum`.\n- Calculate `repeat` using the formula `(sqrDiff / sumDiff + sumDiff) / 2`.\n- Calculate `missing` using the formula `(sqrDiff / sumDiff - sumDiff) / 2`.\n- Return an array containing `repeat` and `missing` numbers.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Z4AW4BmW/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Z4AW4BmW\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the side length of the `grid`.\n\n- Time complexity: $O(n^2)$\n\n    The algorithm iterates through each cell in the $n \\times n$ grid exactly once using two nested loops. All other operations (calculating sums, differences, and the final values) are constant time operations. Therefore, the total time complexity is $O(n^2)$.\n\n- Space complexity: $O(1)$\n\n    The algorithm only uses a constant amount of extra space to store variables (`sum`, `sqrSum`, `n`, `total`, `sumDiff`, `sqrDiff`) regardless of the input size. Therefore, the space complexity is $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

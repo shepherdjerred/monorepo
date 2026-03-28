@@ -1,0 +1,135 @@
+{
+  "questionId": "3498",
+  "questionFrontendId": "3224",
+  "title": "Minimum Array Changes to Make Differences Equal",
+  "titleSlug": "minimum-array-changes-to-make-differences-equal",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code> of size <code>n</code> where <code>n</code> is <strong>even</strong>, and an integer <code>k</code>.</p>\n\n<p>You can perform some changes on the array, where in one change you can replace <strong>any</strong> element in the array with <strong>any</strong> integer in the range from <code>0</code> to <code>k</code>.</p>\n\n<p>You need to perform some changes (possibly none) such that the final array satisfies the following condition:</p>\n\n<ul>\n\t<li>There exists an integer <code>X</code> such that <code>abs(a[i] - a[n - i - 1]) = X</code> for all <code>(0 &lt;= i &lt; n)</code>.</li>\n</ul>\n\n<p>Return the <strong>minimum</strong> number of changes required to satisfy the above condition.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,0,1,2,4,3], k = 4</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong><br />\nWe can perform the following changes:</p>\n\n<ul>\n\t<li>Replace <code>nums[1]</code> by 2. The resulting array is <code>nums = [1,<u><strong>2</strong></u>,1,2,4,3]</code>.</li>\n\t<li>Replace <code>nums[3]</code> by 3. The resulting array is <code>nums = [1,2,1,<u><strong>3</strong></u>,4,3]</code>.</li>\n</ul>\n\n<p>The integer <code>X</code> will be 2.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [0,1,2,3,3,6,5,4], k = 6</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong><br />\nWe can perform the following operations:</p>\n\n<ul>\n\t<li>Replace <code>nums[3]</code> by 0. The resulting array is <code>nums = [0,1,2,<u><strong>0</strong></u>,3,6,5,4]</code>.</li>\n\t<li>Replace <code>nums[4]</code> by 4. The resulting array is <code>nums = [0,1,2,0,<strong><u>4</u></strong>,6,5,4]</code>.</li>\n</ul>\n\n<p>The integer <code>X</code> will be 4.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n == nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>n</code> is even.</li>\n\t<li><code>0 &lt;= nums[i] &lt;= k &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "There are at most <code>k + 1</code> possible values of the integer <code>X</code>.",
+    "How do we calculate the minimum number of changes efficiently if we fix the value of <code>X</code> before applying any changes?"
+  ],
+  "metaData": "{\n  \"name\": \"minChanges\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"15.3K\", \"totalSubmission\": \"62.9K\", \"totalAcceptedRaw\": 15314, \"totalSubmissionRaw\": 62923, \"acRate\": \"24.3%\"}",
+  "likes": 253,
+  "dislikes": 28,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,0,1,2,4,3]\n4",
+    "[0,1,2,3,3,6,5,4]\n6"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"airbus\", \"name\": \"Airbus SE\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minChanges(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minChanges(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minChanges(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minChanges(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar minChanges = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minChanges(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinChanges(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minChanges(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minChanges(nums []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minChanges(nums: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minChanges(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_changes(nums: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef min_changes(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function minChanges($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minChanges(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minChanges(nums: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_changes(nums :: [integer], k :: integer) :: integer\n  def min_changes(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_changes(Nums :: [integer()], K :: integer()) -> integer().\nmin_changes(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-changes nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,153 @@
+{
+  "questionId": "3309",
+  "questionFrontendId": "3042",
+  "title": "Count Prefix and Suffix Pairs I",
+  "titleSlug": "count-prefix-and-suffix-pairs-i",
+  "difficulty": "Easy",
+  "content": "<p>You are given a <strong>0-indexed</strong> string array <code>words</code>.</p>\n\n<p>Let&#39;s define a <strong>boolean</strong> function <code>isPrefixAndSuffix</code> that takes two strings, <code>str1</code> and <code>str2</code>:</p>\n\n<ul>\n\t<li><code>isPrefixAndSuffix(str1, str2)</code> returns <code>true</code> if <code>str1</code> is <strong>both</strong> a <span data-keyword=\"string-prefix\">prefix</span> and a <span data-keyword=\"string-suffix\">suffix</span> of <code>str2</code>, and <code>false</code> otherwise.</li>\n</ul>\n\n<p>For example, <code>isPrefixAndSuffix(&quot;aba&quot;, &quot;ababa&quot;)</code> is <code>true</code> because <code>&quot;aba&quot;</code> is a prefix of <code>&quot;ababa&quot;</code> and also a suffix, but <code>isPrefixAndSuffix(&quot;abc&quot;, &quot;abcd&quot;)</code> is <code>false</code>.</p>\n\n<p>Return <em>an integer denoting the <strong>number</strong> of index pairs </em><code>(i, j)</code><em> such that </em><code>i &lt; j</code><em>, and </em><code>isPrefixAndSuffix(words[i], words[j])</code><em> is </em><code>true</code><em>.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;a&quot;,&quot;aba&quot;,&quot;ababa&quot;,&quot;aa&quot;]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> In this example, the counted index pairs are:\ni = 0 and j = 1 because isPrefixAndSuffix(&quot;a&quot;, &quot;aba&quot;) is true.\ni = 0 and j = 2 because isPrefixAndSuffix(&quot;a&quot;, &quot;ababa&quot;) is true.\ni = 0 and j = 3 because isPrefixAndSuffix(&quot;a&quot;, &quot;aa&quot;) is true.\ni = 1 and j = 2 because isPrefixAndSuffix(&quot;aba&quot;, &quot;ababa&quot;) is true.\nTherefore, the answer is 4.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;pa&quot;,&quot;papa&quot;,&quot;ma&quot;,&quot;mama&quot;]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> In this example, the counted index pairs are:\ni = 0 and j = 1 because isPrefixAndSuffix(&quot;pa&quot;, &quot;papa&quot;) is true.\ni = 2 and j = 3 because isPrefixAndSuffix(&quot;ma&quot;, &quot;mama&quot;) is true.\nTherefore, the answer is 2.  </pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;abab&quot;,&quot;ab&quot;]\n<strong>Output:</strong> 0\n<strong>Explanation: </strong>In this example, the only valid index pair is i = 0 and j = 1, and isPrefixAndSuffix(&quot;abab&quot;, &quot;ab&quot;) is false.\nTherefore, the answer is 0.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 50</code></li>\n\t<li><code>1 &lt;= words[i].length &lt;= 10</code></li>\n\t<li><code>words[i]</code> consists only of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Iterate through all index pairs <code>(i, j)</code>, such that <code>i < j</code>, and check <code>isPrefixAndSuffix(words[i], words[j])</code>.",
+    "The answer is the total number of pairs where <code>isPrefixAndSuffix(words[i], words[j]) == true</code>."
+  ],
+  "metaData": "{\n  \"name\": \"countPrefixSuffixPairs\",\n  \"params\": [\n    {\n      \"name\": \"words\",\n      \"type\": \"string[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"212.8K\", \"totalSubmission\": \"273.7K\", \"totalAcceptedRaw\": 212825, \"totalSubmissionRaw\": 273692, \"acRate\": \"77.8%\"}",
+  "likes": 605,
+  "dislikes": 46,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Implement Trie (Prefix Tree)\", \"titleSlug\": \"implement-trie-prefix-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Design Add and Search Words Data Structure\", \"titleSlug\": \"design-add-and-search-words-data-structure\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"a\",\"aba\",\"ababa\",\"aa\"]",
+    "[\"pa\",\"papa\",\"ma\",\"mama\"]",
+    "[\"abab\",\"ab\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"fico\", \"name\": \"FICO\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"autodesk\", \"name\": \"Autodesk\"}, {\"timesEncountered\": 2, \"slug\": \"capital-one\", \"name\": \"Capital One\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    },
+    {
+      "name": "Rolling Hash",
+      "slug": "rolling-hash"
+    },
+    {
+      "name": "String Matching",
+      "slug": "string-matching"
+    },
+    {
+      "name": "Hash Function",
+      "slug": "hash-function"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countPrefixSuffixPairs(vector<string>& words) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countPrefixSuffixPairs(String[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countPrefixSuffixPairs(self, words: List[str]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countPrefixSuffixPairs(self, words):\n        \"\"\"\n        :type words: List[str]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @return {number}\n */\nvar countPrefixSuffixPairs = function(words) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countPrefixSuffixPairs(words: string[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountPrefixSuffixPairs(string[] words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countPrefixSuffixPairs(char** words, int wordsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countPrefixSuffixPairs(words []string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countPrefixSuffixPairs(words: Array<String>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countPrefixSuffixPairs(_ words: [String]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_prefix_suffix_pairs(words: Vec<String>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @return {Integer}\ndef count_prefix_suffix_pairs(words)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @return Integer\n     */\n    function countPrefixSuffixPairs($words) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countPrefixSuffixPairs(List<String> words) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countPrefixSuffixPairs(words: Array[String]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_prefix_suffix_pairs(words :: [String.t]) :: integer\n  def count_prefix_suffix_pairs(words) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_prefix_suffix_pairs(Words :: [unicode:unicode_binary()]) -> integer().\ncount_prefix_suffix_pairs(Words) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-prefix-suffix-pairs words)\n  (-> (listof string?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2638",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nWe need to count pairs of words where one word is both a prefix and a suffix of the other. A prefix of a string is a part of the string that appears at the start, and a suffix is a part of the string that appears at the end. For example, in the word `\"ababa\"`, `\"aba\"` is both a prefix and a suffix.\n\nA simple logical solution is to use a brute-force approach, which involves comparing all pairs of words and checking if one word is a prefix and a suffix of the other.\n\n> To check if one string is a prefix or suffix of another, we can use specific built-in functions in different programming languages:\n> \n> - In C++, the `find` function checks if a string appears at the start, and `rfind` checks if it appears at the end.\n> - In Java and Python3, the `startsWith` method verifies if a string appears at the start, and the `endsWith` method checks if it appears at the end.\n\nTo implement this, we loop through all pairs of words (`i`, `j`) and:\n- For each pair, if `str1` is longer than `str2`, we skip that pair because `str1` cannot be a prefix or suffix of a smaller string.\n- If `str1` is both a prefix and a suffix of `str2`, we increment our count.\n\nWe repeat this process until we exhaust all possibilities.\n\nThis works well for small inputs but becomes inefficient for larger input sizes because of the repeated checks for each pair of words.\n\n#### Algorithm\n\n- Initialize `n` as the size of the list of words and `count` as `0` to track prefix-suffix pairs.\n- Iterate over all pairs of words:\n  - For each word at index `i`, iterate over all words at index `j` where `j > i`.\n\n- For each pair of words (`word1` and `word2`):\n  - Skip the pair if the length of `word1` is greater than the length of `word2`.\n  - Check if `word1` is both a prefix and a suffix of `word2`:\n    - Verify if `word2` starts with `word1`.\n    - Verify if `word2` ends with `word1`.\n  - If both conditions are satisfied, increment `count`.\n\n- Return `count` as the total number of prefix-suffix pairs.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5w2vLK3F/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5w2vLK3F\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of words in the input array `words`, and let $m$ be the average length of the words.\n\n- Time complexity: $O(n^2 \\cdot m)$\n\n    The algorithm involves a nested loop where the outer loop runs $n$ times and the inner loop runs $n - i - 1$ times for each iteration of the outer loop. For each pair of elements, the algorithm performs two operations:\n    1. A prefix check using a substring search.\n    2. A suffix check using a reverse substring search.\n\n    Both operations take $O(m)$ time in the worst case, where $m$ is the length of the element being processed. Therefore, the overall time complexity is $O(n^2 \\cdot m)$.\n\n- Space complexity: $O(1)$\n\n    The space complexity is constant because the algorithm uses a fixed amount of extra space, regardless of the input size. The only additional space used is for the loop variables and the `count` variable, which do not depend on the input size.\n \n---\n\n### Approach 2: Dual Trie\n\n#### Intuition\n\nThe main challenge in the brute force approach is repeatedly checking for prefixes and suffixes for each word pair. This brings us to the idea of improving efficiency by using a Trie, a data structure that helps with fast prefix matching. \n\n##### What is a Trie?\n\nA Trie is a tree-like structure where each node represents a character. When we insert words into a Trie, common prefixes are shared, allowing for efficient prefix lookups. For example, if we store `\"bat\"` and `\"ball\"`, the Trie would look like this:\n\n```\n      (root)\n       |\n       b\n       |\n       a\n      / \\\n     t   l\n          \\\n           l\n```\nNotice how `\"b\"` and `\"a\"` are shared to save space.\n\nTries are useful in everyday examples like autocomplete, dictionaries, and word games:  \n- Autocomplete: When you type \"ca\" on your phone, it suggests words like \"cat\", \"car\", or \"can\". It does this by looking up all the words that start with \"ca\" in a Trie.  \n- Dictionaries: If you’re searching for words that begin with \"app\", a Trie quickly finds options like \"apple\", \"apply\", and \"application\" without going through the whole list.\n- Word Games: In games like Scrabble or Boggle, Tries help check if a word is real or suggest possible words from your letters. Some puzzles, like Sudoku, use them too.  \n\nWhen inserting a word into the prefix Trie, we are essentially storing all possible prefixes of that word. For example, if the word is `\"abzdcabz\"`, we add the following prefixes to the Trie: [`\"a\"`, `\"ab\"`, `\"abz\"`, `\"abzd\"`, `\"abzdc\"`, `\"abzdca\"`, `\"abzdcab\"`, `\"abzdcabz\"`]. This allows us to quickly determine if any other word starts with the same prefix.\n\nFor suffixes, rather than directly storing and checking suffixes (which would require reversing and checking repeatedly for every comparison), we use a trick to convert them to a prefix Trie:  \n1. Reverse the word.\n2. Insert the reversed word into a separate Trie.\n\nBy treating the reversed word as a prefix, the suffix-checking problem is reduced to a prefix-matching problem. This allows us to use the same Trie structure for both tasks.  \n\nWith both the prefix Trie and the suffix Trie set up, we can efficiently check for valid word pairs:\n- For a given word `word[i]`, use the prefix Trie to check if another word shares the same prefix.  \n- Use the suffix Trie to check if another word shares the same suffix (by checking the reversed version of the word).\n\nLet's check if `\"abz\"` is both a prefix and a suffix of `\"abzdcabz\"`.\n\nFirst, we insert the string `\"abzdcabz\"` into a prefix Trie. This allows us to check if any prefix of a word matches the start of `\"abzdcabz\"`. Next, we reverse the string to `\"zbacdzba\"` and insert this reversed version into a suffix Trie. This enables us to check if any prefix of a word matches the reversed suffix of `\"abzdcabz\"`.\n\nIn this way:\n- The prefix Trie for `\"abzdcabz\"` stores `\"abzdcabz\"`, `\"abzdcab\"`, `\"abzdc\"`, and so on.\n- The suffix Trie for `\"abzdcabz\"` stores `\"zbacdzba\"`, `\"zbacdzb\"`, `\"zbacdz\"`, and so on.\n\nNow, we check each previous word (where `j < i`). For instance, let's consider `\"abz\"` as a previous word.\n\nTo verify, we check whether `\"abz\"` is a prefix in the prefix Trie and whether `\"zba\"` (the reverse of `\"abz\"`) is a prefix in the suffix Trie.\n\nIn this case:\n- `\"abz\"` is a prefix of `\"abzdcabz\"`, and\n- `\"zba\"` (the reversed `\"abz\"`) is a prefix of `\"zbacdzba\"`, the reversed string of `\"abzdcabz\"`.\n\nThus, we count this pair as valid.\n\nThe algorithm is visualized below:\n\n!?!../Documents/3042/trie.json:805,355!?!\n\n> For a more comprehensive understanding of tries, check out the [Trie Explore Card 🔗](https://leetcode.com/explore/learn/card/trie/). This resource provides an in-depth look at the trie data structure, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n##### Trie Initialization: \n\n  - Define a `Node` class that represents each node in the Trie. Each node contains an array `links[26]` to represent links to `26` lowercase letters (`a` - `z`). \n  - Provide functions:\n    - `contains(c)`: Check if a link for character `c` exists.\n    - `put(c, node)`: Insert a new node for character `c`.\n    - `next(c)`: Get the next node for character `c`.\n\n##### Trie Insertions / Prefix Search: \n\n  - Define a `Trie` class which contains a root node and provides the function `insert(word)` to insert a word into the Trie and `startsWith(prefix)` for prefix search:\n  - `insert(word)` function:\n    - For each character in the word, check if it already exists as a link from the current node. If not, create a new node.\n    - Move to the next node for each character until the entire word is inserted.\n\n  - `startsWith(prefix)` function:\n    - Traverse the Trie from the root, following the links for each character in the prefix.\n    - If a character link does not exist, return `false`, indicating the prefix doesn't exist in the Trie.\n    - If the traversal finishes successfully, return `true`, indicating the prefix exists.\n\n##### Main Algorithm (countPrefixSuffixPairs): \n\n  - Initialize a counter `count` to 0.\n  - For each word in `words`, do the following:\n    - Create two Tries: `prefixTrie` for storing prefixes of the word and `suffixTrie` for storing reversed suffixes.\n    - Insert the word into `prefixTrie` and its reversed version into `suffixTrie`.\n\n  - For each word `words[j]` (where `j < i`), check the following:\n    - If the length of `words[j]` is greater than `words[i]`, skip to the next `j`.\n    - Extract the prefix `prefixWord` from `words[j]` and reverse it to get `revPrefixWord`.\n    - Check if `prefixWord` exists in the `prefixTrie` and `revPrefixWord` exists in the `suffixTrie`:\n      - If both are true, increment the `count`.\n\n- Return the `count` of prefix-suffix pairs.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/egLL23Vb/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"egLL23Vb\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of words in the input array `words`, and let $m$ be the average length of the words.\n\n- Time complexity: $O(n^2 \\cdot m)$\n\n    The algorithm involves a nested loop where the outer loop runs $n$ times and the inner loop runs $i$ times for each iteration of the outer loop. For each pair of words, the `insert` and `startsWith` operations are performed on the Trie. The `insert` operation takes $O(m)$ time, and the `startsWith` operation also takes $O(m)$ time. Therefore, the overall time complexity is $O(n^2 \\cdot m)$.\n\n- Space complexity: $O(n \\cdot m)$\n\n    The space complexity is determined by the space used by the Tries. Each Trie can store up to $m$ nodes (one for each character in the word), and since there are $n$ words, the total space required for the Tries is $O(n \\cdot m)$. Additionally, the algorithm uses a constant amount of extra space for variables and temporary storage, but this is dominated by the space used by the Tries.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

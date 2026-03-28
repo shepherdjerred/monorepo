@@ -1,0 +1,152 @@
+{
+  "questionId": "3101",
+  "questionFrontendId": "2838",
+  "title": "Maximum Coins Heroes Can Collect",
+  "titleSlug": "maximum-coins-heroes-can-collect",
+  "difficulty": "Medium",
+  "content": "<p>There is a battle and <code>n</code> heroes are trying to defeat <code>m</code> monsters. You are given two <strong>1-indexed</strong> arrays of <strong>positive</strong> integers <code><font face=\"monospace\">heroes</font></code> and <code><font face=\"monospace\">monsters</font></code> of length <code>n</code> and <code>m</code>, respectively. <code><font face=\"monospace\">heroes</font>[i]</code> is the power of <code>i<sup>th</sup></code> hero, and <code><font face=\"monospace\">monsters</font>[i]</code> is the power of <code>i<sup>th</sup></code> monster.</p>\n\n<p>The <code>i<sup>th</sup></code> hero can defeat the <code>j<sup>th</sup></code> monster if <code>monsters[j] &lt;= heroes[i]</code>.</p>\n\n<p>You are also given a <strong>1-indexed</strong> array <code>coins</code> of length <code>m</code> consisting of <strong>positive</strong> integers. <code>coins[i]</code> is the number of coins that each hero earns after defeating the <code>i<sup>th</sup></code> monster.</p>\n\n<p>Return<em> an array </em><code>ans</code><em> of length </em><code>n</code><em> where </em><code>ans[i]</code><em> is the <strong>maximum</strong> number of coins that the </em><code>i<sup>th</sup></code><em> hero can collect from this battle</em>.</p>\n\n<p><strong>Notes</strong></p>\n\n<ul>\n\t<li>The health of a hero doesn&#39;t get reduced after defeating a monster.</li>\n\t<li>Multiple heroes can defeat a monster, but each monster can be defeated by a given hero only once.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> heroes = [1,4,2], monsters = [1,1,5,2,3], coins = [2,3,4,5,6]\n<strong>Output:</strong> [5,16,10]\n<strong>Explanation: </strong>For each hero, we list the index of all the monsters he can defeat:\n1<sup>st</sup> hero: [1,2] since the power of this hero is 1 and monsters[1], monsters[2] &lt;= 1. So this hero collects coins[1] + coins[2] = 5 coins.\n2<sup>nd</sup> hero: [1,2,4,5] since the power of this hero is 4 and monsters[1], monsters[2], monsters[4], monsters[5] &lt;= 4. So this hero collects coins[1] + coins[2] + coins[4] + coins[5] = 16 coins.\n3<sup>rd</sup> hero: [1,2,4] since the power of this hero is 2 and monsters[1], monsters[2], monsters[4] &lt;= 2. So this hero collects coins[1] + coins[2] + coins[4] = 10 coins.\nSo the answer would be [5,16,10].</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> heroes = [5], monsters = [2,3,1,2], coins = [10,6,5,2]\n<strong>Output:</strong> [23]\n<strong>Explanation:</strong> This hero can defeat all the monsters since monsters[i] &lt;= 5. So he collects all of the coins: coins[1] + coins[2] + coins[3] + coins[4] = 23, and the answer would be [23].\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> heroes = [4,4], monsters = [5,7,8], coins = [1,1,1]\n<strong>Output:</strong> [0,0]\n<strong>Explanation:</strong> In this example, no hero can defeat a monster. So the answer would be [0,0],\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n == heroes.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= m == monsters.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>coins.length == m</code></li>\n\t<li><code>1 &lt;= heroes[i], monsters[i], coins[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "If a hero can defeat the <code>i<sup>th</sup></code> monster, then he defeats all the monsters having a power less than <code>monster[i]</code>.",
+    "Sort monsters by their powers. Also change the order of the coins array according to this sort.",
+    "Construct a prefix sum array for the updated coins array.",
+    "For each hero, do a binary search and find the last position of the most powerful monster that this hero can defeat.",
+    "If said monster has index <code>i</code>, then the <code>i<sup>th</sup></code> element of the partial sum array would be the answer."
+  ],
+  "metaData": "{\n  \"name\": \"maximumCoins\",\n  \"params\": [\n    {\n      \"name\": \"heroes\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"monsters\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"coins\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"7.1K\", \"totalSubmission\": \"10.3K\", \"totalAcceptedRaw\": 7083, \"totalSubmissionRaw\": 10306, \"acRate\": \"68.7%\"}",
+  "likes": 74,
+  "dislikes": 7,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,4,2]\n[1,1,5,2,3]\n[2,3,4,5,6]",
+    "[5]\n[2,3,1,2]\n[10,6,5,2]",
+    "[4,4]\n[5,7,8]\n[1,1,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"deutsche-bank\", \"name\": \"Deutsche Bank\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<long long> maximumCoins(vector<int>& heroes, vector<int>& monsters, vector<int>& coins) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long[] maximumCoins(int[] heroes, int[] monsters, int[] coins) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumCoins(self, heroes: List[int], monsters: List[int], coins: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumCoins(self, heroes, monsters, coins):\n        \"\"\"\n        :type heroes: List[int]\n        :type monsters: List[int]\n        :type coins: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} heroes\n * @param {number[]} monsters\n * @param {number[]} coins\n * @return {number[]}\n */\nvar maximumCoins = function(heroes, monsters, coins) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumCoins(heroes: number[], monsters: number[], coins: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long[] MaximumCoins(int[] heroes, int[] monsters, int[] coins) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nlong long* maximumCoins(int* heroes, int heroesSize, int* monsters, int monstersSize, int* coins, int coinsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumCoins(heroes []int, monsters []int, coins []int) []int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumCoins(heroes: IntArray, monsters: IntArray, coins: IntArray): LongArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumCoins(_ heroes: [Int], _ monsters: [Int], _ coins: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_coins(heroes: Vec<i32>, monsters: Vec<i32>, coins: Vec<i32>) -> Vec<i64> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} heroes\n# @param {Integer[]} monsters\n# @param {Integer[]} coins\n# @return {Integer[]}\ndef maximum_coins(heroes, monsters, coins)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $heroes\n     * @param Integer[] $monsters\n     * @param Integer[] $coins\n     * @return Integer[]\n     */\n    function maximumCoins($heroes, $monsters, $coins) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> maximumCoins(List<int> heroes, List<int> monsters, List<int> coins) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumCoins(heroes: Array[Int], monsters: Array[Int], coins: Array[Int]): Array[Long] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_coins(heroes :: [integer], monsters :: [integer], coins :: [integer]) :: [integer]\n  def maximum_coins(heroes, monsters, coins) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_coins(Heroes :: [integer()], Monsters :: [integer()], Coins :: [integer()]) -> [integer()].\nmaximum_coins(Heroes, Monsters, Coins) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-coins heroes monsters coins)\n  (-> (listof exact-integer?) (listof exact-integer?) (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2457",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an array of heroes `heroes`. We are also given an array of monsters `monsters` and an array of coins `coins` where hero `heroes[i]` can collect `coins[j]` coins by defeating the monster `monsters[j]`. However, `heroes[i]` can only defeat `monsters[j]` if `heroes[i] >= monsters[j]`. We want to return an array for the total number of coins each hero can gain by defeating all the possible monsters they can defeat.\n\n### Approach 1: Sorting + Prefix Sum + Binary Search \n\n### Intuition\n\nA brute force approach for this problem would be to iterate through each `monsters[j]` and check if the current hero `heroes[i]` can defeat it. However, this approach is inefficient as it requires traversing the entirety of the `monsters` array for all `n` heroes. This leads to a $O(n \\cdot m)$ time complexity that would result in a Time Limit Exceeded submission. \n\nWe notice that if we have the values of `monsters` sorted in ascending order, we can more efficiently find all the monsters a hero can defeat. Specifically, if the values were sorted, we can use [binary search](https://leetcode.com/explore/learn/card/binary-search/) to find the index `i` of the largest possible monster a hero can defeat. If we can find this index, then we know the hero can defeat all monsters up to the largest possible monster at index `i` in the sorted array. This would only take $O(\\log m)$ for each search, whereas the brute force approach would require an entire $O(m)$ traversal to find all the monsters a hero can defeat.\n\nThus, we can first sort our values of `monsters`. However, if we directly sort `monsters`, we'd lose the 1-to-1 mapping to `coins`, and finding the coin reward for a certain monster `i` would be difficult. Thus, we can first create a new 2D array `monsterAndCoin` where each element is a 1D array of size 2, containing the power of monster `i` as well as the corresponding coins awarded for defeating monster `i`. This way, we can sort our 2D array in ascending order of monster power and maintain access to each monster's coin reward. \n\nAfter performing binary search on the 2D array, we will find the index `i` of the largest monster the hero can defeat. However, this won't directly give us the total coin reward for the hero. We know that if the hero can defeat all monsters from index `0` to index `i`, then their total reward is the sum of coins from `monsterAndCoin[0][1]` to `monsterAndCoin[i][1]`. \n\nThis is a prefix sum—a running total of values up to a certain index. Since we need to calculate the coin total for all heroes, we can save time by precomputing the prefix sum for all indices. We create a prefix sum array `coinsSum`, where `coinsSum[i]` equals the sum of coins from defeating all monsters up to index `i`. Building this array takes only $O(m)$ time, as we traverse the `monsterAndCoin` array once.\n\nThus, for each hero, we can use binary search to find the largest monster `i` it can defeat, and then find the corresponding maximum coins collected from defeating all monsters from `0` to `i` by accessing our prefix sum array `coinsSum[i]`. \n\n### Algorithm\n\n1. Initialize an empty array `ans` to store the maximum number of coins each hero can collect\n2. Initialize our 2D array `monsterAndCoin` to store tuples of `(monsters[i], coins[i])` and populate it accordingly.\n3. Sort `monsterAndCoin` by ascending value of monster power so we can perform binary search on it to process our input more efficiently \n4. Initialize our `coinsSum` prefix sum array where `coinsSum[i]` will contain the total number of coins rewarded when beating all monsters up to monster `i`:\n    * Initialize variable `prefixSum = 0`\n    * Iterate through each tuple in `monsterAndCoin` from left to right:\n        * Update `prefixSum` so that it includes the coin reward for the monster in the current tuple:  `prefixSum += monsterAndCoin[i][1]`\n        * `coinSum[i] = prefixSum`\n5. For each `heroes[i]` in `heroes`:\n    * Find the maximum number of coins by performing binary search on `monsterAndCoin` and using `coinsSum`: `ans[i] = findTotalCoins(monsterAndCoin, heroes[i], coinsSum)`\n6. Define `findTotalCoins(monsterAndCoin, heroPower, coinsSum)`:\n    * Initialize our boundaries for binary search: `l = 0` and `r = monsterAndCoin.length - 1`\n    * While `l <= r`:\n        * `mid = (l + r) / 2`\n        * If `monsterAndCoin[mid][0] > heroPower`, then we want to look for a weaker monster that our hero can defeat, so `r = mid - 1` to look at the left half of the current search space\n        * Otherwise, we'd like to look for a stronger monster that our hero can defeat, so `l = mid + 1` to look at the right half of the current search space\n    * At this point, `l > r` and we have exhausted all possible indices:\n        * If `l == 0`, then that means we exhausted our entire search space by constantly looking towards the left half until we saw that our hero cannot defeat even the weakest monster at `monsterAndCoin[0][0]` in the last iteration. This means no coins can be collected so return `0`.\n        * Otherwise, our hero can defeat at least the weakest monster and can collect some coins. Specifically, our `r` pointer would refer to the index of the strongest monster that our hero can defeat, so we can return `coinsSum[r]`, the total coins collected by being able to defeat all monsters up to monster `r`\n\n### Implementation \n\n<iframe src=\"https://leetcode.com/playground/5TdPjJaA/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5TdPjJaA\"></iframe>\n\n\n### Complexity Analysis \n\n* Time Complexity: $O((m + n) \\cdot \\log m)$\n\n    Sorting our `monsterAndCoin` array of size $m$ will take $O(m \\cdot \\log m)$ time. Our binary searches for all `n` heroes will take a total of $O(n \\cdot \\log m)$ time. Thus, the total time complexity is $O((m + n) \\cdot \\log m)$.\n\n* Space Complexity: $O(m + S)$\n    \n    Our auxiliary `monsterAndCoin` data structure takes an extra $O(m)$ space.\n\n    The other additional space used is for the sorting algorithm. The space taken by the sorting algorithm ($S$) depends on the language of implementation:\n        - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$.\n        - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O(\\log n)$.\n        - In Python, the `sort()` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(n)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "questionId": "3451",
+  "questionFrontendId": "3163",
+  "title": "String Compression III",
+  "titleSlug": "string-compression-iii",
+  "difficulty": "Medium",
+  "content": "<p>Given a string <code>word</code>, compress it using the following algorithm:</p>\n\n<ul>\n\t<li>Begin with an empty string <code>comp</code>. While <code>word</code> is <strong>not</strong> empty, use the following operation:\n\n\t<ul>\n\t\t<li>Remove a maximum length prefix of <code>word</code> made of a <em>single character</em> <code>c</code> repeating <strong>at most</strong> 9 times.</li>\n\t\t<li>Append the length of the prefix followed by <code>c</code> to <code>comp</code>.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>Return the string <code>comp</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">word = &quot;abcde&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;1a1b1c1d1e&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Initially, <code>comp = &quot;&quot;</code>. Apply the operation 5 times, choosing <code>&quot;a&quot;</code>, <code>&quot;b&quot;</code>, <code>&quot;c&quot;</code>, <code>&quot;d&quot;</code>, and <code>&quot;e&quot;</code> as the prefix in each operation.</p>\n\n<p>For each prefix, append <code>&quot;1&quot;</code> followed by the character to <code>comp</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">word = &quot;aaaaaaaaaaaaaabb&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;9a5a2b&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Initially, <code>comp = &quot;&quot;</code>. Apply the operation 3 times, choosing <code>&quot;aaaaaaaaa&quot;</code>, <code>&quot;aaaaa&quot;</code>, and <code>&quot;bb&quot;</code> as the prefix in each operation.</p>\n\n<ul>\n\t<li>For prefix <code>&quot;aaaaaaaaa&quot;</code>, append <code>&quot;9&quot;</code> followed by <code>&quot;a&quot;</code> to <code>comp</code>.</li>\n\t<li>For prefix <code>&quot;aaaaa&quot;</code>, append <code>&quot;5&quot;</code> followed by <code>&quot;a&quot;</code> to <code>comp</code>.</li>\n\t<li>For prefix <code>&quot;bb&quot;</code>, append <code>&quot;2&quot;</code> followed by <code>&quot;b&quot;</code> to <code>comp</code>.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= word.length &lt;= 2 * 10<sup>5</sup></code></li>\n\t<li><code>word</code> consists only of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Each time, just cut the same character in prefix up to at max 9 times. It’s always better to cut a bigger prefix."
+  ],
+  "metaData": "{\n  \"name\": \"compressedString\",\n  \"params\": [\n    {\n      \"name\": \"word\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"202.1K\", \"totalSubmission\": \"301.5K\", \"totalAcceptedRaw\": 202097, \"totalSubmissionRaw\": 301491, \"acRate\": \"67.0%\"}",
+  "likes": 634,
+  "dislikes": 54,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"String Compression\", \"titleSlug\": \"string-compression\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"String Compression II\", \"titleSlug\": \"string-compression-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abcde\"",
+    "\"aaaaaaaaaaaaaabb\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"qualcomm\", \"name\": \"Qualcomm\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string compressedString(string word) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String compressedString(String word) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def compressedString(self, word: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def compressedString(self, word):\n        \"\"\"\n        :type word: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} word\n * @return {string}\n */\nvar compressedString = function(word) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function compressedString(word: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string CompressedString(string word) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* compressedString(char* word) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func compressedString(word string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun compressedString(word: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func compressedString(_ word: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn compressed_string(word: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} word\n# @return {String}\ndef compressed_string(word)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $word\n     * @return String\n     */\n    function compressedString($word) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String compressedString(String word) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def compressedString(word: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec compressed_string(word :: String.t) :: String.t\n  def compressed_string(word) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec compressed_string(Word :: unicode:unicode_binary()) -> unicode:unicode_binary().\ncompressed_string(Word) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (compressed-string word)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2553",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nOur task is to create a new string based on a given string `s` with the format `(frequency)(character)`. For example, \"baaaaa\" becomes \"1b5a\" because 'b' appears 1 time and 'a' appears 5 consecutive times.\n\nHowever, there’s an important constraint: the frequency digit cannot exceed 9. If a character appears more than 9 consecutive times, the encoding must be split. For instance, if 'a' appears 13 consecutive times, we encode it as \"9a4a\" rather than \"13a\".\n    \n---\n\n### Approach: String Manipulation\n\n#### Intuition\n\nWe can solve this problem in a straightforward way by initializing a variable, `comp`, that we will update as we iterate through the given string. For this explanation, consider a \"segment\" to mean one letter of its kind standing alone in the string **or** a consecutive group of letters with the same value occurring 9 or less times in a row. \n\nWe'll use a nested while loop to solve this problem. Our outer loop will initialize the `consecutiveCount` of each new segment (starting at 0), and store the current letter we are tracking as `currentChar`.\n\nThe inner while loop will count the number of characters of each segment by incrementing `consecutiveCount` to count the number of times the current letter occurs in a row, and the counter `pos` to track our position in the given string. We continue in the inner loop until the letter changes, the count of this segment reaches 9, or we reach the end of the given string. Then, we break out into our outer loop where we append both the count and the letter to `comp`. \n\nBy the end of the process, `comp` will hold the compressed version of the string, which we then return.\n\nThe slideshow below demonstrates the algorithm in action:\n\n!?!../Documents/3163/slideshow.json:760,600!?!\n\n#### Algorithm\n\n- Initialize a variable: \n  - `comp` to an empty string to store the final compressed output.\n  - `pos` to 0 to track the current position in the input string.\n- While `pos` is less than the length of the input string `word`:\n  - Initialize a variable :\n    - `consecutiveCount` to 0 to track the count of the current character.\n    - `currentChar` to the character at position `pos` in `word`.\n    - While all these conditions are true:\n      - `pos` is less than the length of `word`\n      - `consecutiveCount` is less than 9\n      - character at position `pos` equals `currentChar`\n        - Increment `consecutiveCount` and `pos` by 1.\n  - Append the string formed by concatenating `consecutiveCount` and `currentChar` to `comp`.\n- Return the final compressed string stored in `comp`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DFfdUokU/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DFfdUokU\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the given string `word`.\n\n- Time complexity: $O(n)$\n\n    The loop iterates over each character in the string exactly once. All increment and append operations inside the loop take constant time.\n\n    Thus, the time complexity of the algorithm is $O(n)$. \n\n    > Note: The usage of built-in functions like `to_string()` does not significantly affect the overall complexity in this context, as its operation is constant with respect to the number of digits in the count (which is at most 2 for the range of counts allowed)\n\n- Space complexity: $O(n)$ for Java and Python3, $O(1)$ for C++\n\n    The space complexity of this algorithm varies by implementation language. In Java and Python3, we use an additional variable to build the output string, which requires $O(n)$ space. However, the C++ implementation modifies the output string in place, avoiding the need for additional storage. All other variables in the algorithm use only constant space. \n    \n    Thus, the overall space complexity is $O(n)$ for Java and Python3, while remaining $O(1)$ for C++.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

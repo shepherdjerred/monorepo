@@ -1,0 +1,35 @@
+{
+  "questionId": "3070",
+  "questionFrontendId": "2887",
+  "title": "Fill Missing Data",
+  "titleSlug": "fill-missing-data",
+  "difficulty": "Easy",
+  "content": "<pre>\nDataFrame <code>products</code>\n+-------------+--------+\n| Column Name | Type   |\n+-------------+--------+\n| name        | object |\n| quantity    | int    |\n| price       | int    |\n+-------------+--------+\n</pre>\n\n<p>Write a solution to fill in the missing value as <code><strong>0</strong></code> in the <code>quantity</code> column.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<pre>\n<strong class=\"example\">Example 1:</strong>\n<strong>Input:</strong>+-----------------+----------+-------+\n| name            | quantity | price |\n+-----------------+----------+-------+\n| Wristwatch      | None     | 135   |\n| WirelessEarbuds | None     | 821   |\n| GolfClubs       | 779      | 9319  |\n| Printer         | 849      | 3051  |\n+-----------------+----------+-------+\n<strong>Output:\n</strong>+-----------------+----------+-------+\n| name            | quantity | price |\n+-----------------+----------+-------+\n| Wristwatch      | 0        | 135   |\n| WirelessEarbuds | 0        | 821   |\n| GolfClubs       | 779      | 9319  |\n| Printer         | 849      | 3051  |\n+-----------------+----------+-------+\n<strong>Explanation:</strong> \nThe quantity for Wristwatch and WirelessEarbuds are filled by 0.</pre>\n",
+  "hints": [
+    "Consider using a build-in function in pandas library to fill the missing values of specified columns."
+  ],
+  "metaData": "{\n  \"pythondata\": [\n    \"products = pd.DataFrame([], columns=['name', 'quantity', 'price']).astype({'name':'object', 'quantity':'Int64', 'price':'Int64'})\"\n  ],\n  \"database\": true,\n  \"name\": \"fillMissingValues\",\n  \"languages\": [\n    \"pythondata\"\n  ]\n}",
+  "stats": "{\"totalAccepted\": \"115.4K\", \"totalSubmission\": \"159.3K\", \"totalAcceptedRaw\": 115430, \"totalSubmissionRaw\": 159287, \"acRate\": \"72.5%\"}",
+  "likes": 90,
+  "dislikes": 3,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"products\":[\"name\",\"quantity\",\"price\"]},\"rows\":{\"products\":[[\"Wristwatch\",null,135],[\"WirelessEarbuds\",null,821],[\"GolfClubs\",779,9319],[\"Printer\",849,3051]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"acko\", \"name\": \"Acko\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [],
+  "codeSnippets": [
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef fillMissingValues(products: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2112",
+    "content": "[TOC]\n\n## Solution\n--- \n### Overview\n\nIn this problem, we have a DataFrame named `products` that contains product data. However, some of the `quantity` data is missing. The goal is to fill the missing quantity data with the value of 0.\n\n**Key Concepts**:\n1. **DataFrame:** a 2D table-like structure, similar to a spreadsheet or SQL table. Each row represents an individual record and each column represents a different attribute. It is size-mutable designed to handle a mix of different types of data.\n2. **fillna Function:** `fillna` is a function in the pandas library, used primarily with pandas Series and DataFrame objects. It allows you to fill NA/NaN values using specified methods. In this context, we are using it to replace the `None` (or `NaN` in the usual dataframe representation) values.\n\n**`fillna` Function Argument Definition:**\n\nThe `fillna` function has several arguments that you can utilize, but we'll focus on the most commonly used ones:\n\n- **value:** Scalar, dict, Series, or DataFrame. The value to use to fill holes (e.g. 0). This is what we use in our solution.\n\n- **method:** {‘backfill’, ‘bfill’, ‘pad’, ‘ffill’, None}. Method to use for filling holes in reindexed Series. Default is `None`. \n\n- **axis:** {0 or ‘index’, 1 or ‘columns’}. Axis along which to fill missing values. \n\n- **inplace:** Bool. If True, fills in place. Note: this will modify any other views on this object. Default is False.\n\n\n### Intuition\n\nIn our solution, we use:\n\n```python\nproducts['quantity'].fillna(0, inplace=True)\n```\n\n- Since we are trying to fill missing data from the `quantity` column of the `products` DataFrame, we apply the `fillna` function to `products['quantity']`.\n- Since we want to replace missing values (`NaN` or `None`) with `0`, we use the `value` argument as `0`.\n- Finally, we want to return the original DataFrame, so we set `inplace=True` to modify the original DataFrame directly without returning a new one. Note that if you don't use `inplace=True`, you would have to capture the result like this: `products['quantity'] = products['quantity'].fillna(0)`\n\n**Visualization of `fillna` function**\n\n![fig](../Figures/3314/3314-1.png)\n\nWhen you pass the following DataFrame to this function:\n\n<table>\n  <tr>\n    <th>name</th>\n    <th>quantity</th>\n    <th>price</th>\n  </tr>\n  <tr>\n    <td>Wristwatch</td>\n    <td>32</td>\n    <td>135</td>\n  </tr>\n  <tr>\n    <td>WirelessEarbuds</td>\n    <td>None</td>\n    <td>821</td>\n  </tr>\n  <tr>\n    <td>GolfClubs</td>\n    <td>None</td>\n    <td>9319</td>\n  </tr>\n  <tr>\n    <td>Printer</td>\n    <td>849</td>\n    <td>3051</td>\n  </tr>\n</table>\n<br>\n\nIt will return:\n\n<table>\n  <tr>\n    <th>name</th>\n    <th>quantity</th>\n    <th>price</th>\n  </tr>\n  <tr>\n    <td>Wristwatch</td>\n    <td>32</td>\n    <td>135</td>\n  </tr>\n  <tr>\n    <td>WirelessEarbuds</td>\n    <td>0</td>\n    <td>821</td>\n  </tr>\n  <tr>\n    <td>GolfClubs</td>\n    <td>0</td>\n    <td>9319</td>\n  </tr>\n  <tr>\n    <td>Printer</td>\n    <td>849</td>\n    <td>3051</td>\n  </tr>\n</table>\n<br>\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/HGGybHvG/shared\" frameBorder=\"0\" width=\"100%\" height=\"157\" name=\"HGGybHvG\"></iframe>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

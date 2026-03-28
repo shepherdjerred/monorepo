@@ -1,0 +1,35 @@
+{
+  "questionId": "3075",
+  "questionFrontendId": "2883",
+  "title": "Drop Missing Data",
+  "titleSlug": "drop-missing-data",
+  "difficulty": "Easy",
+  "content": "<pre>\nDataFrame students\n+-------------+--------+\n| Column Name | Type   |\n+-------------+--------+\n| student_id  | int    |\n| name        | object |\n| age         | int    |\n+-------------+--------+\n</pre>\n\n<p>There are some rows having missing values in the <code>name</code> column.</p>\n\n<p>Write a solution to remove the rows with missing values.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:\n</strong>+------------+---------+-----+\n| student_id | name    | age |\n+------------+---------+-----+\n| 32         | Piper   | 5   |\n| 217        | None    | 19  |\n| 779        | Georgia | 20  |\n| 849        | Willow  | 14  |\n+------------+---------+-----+\n<strong>Output:\n</strong>+------------+---------+-----+\n| student_id | name    | age |\n+------------+---------+-----+\n| 32         | Piper   | 5   |\n| 779        | Georgia | 20  | \n| 849        | Willow  | 14  | \n+------------+---------+-----+\n<strong>Explanation:</strong> \nStudent with id 217 havs empty value in the name column, so it will be removed.</pre>\n",
+  "hints": [
+    "Consider using a build-in function in pandas library to remove the rows with missing values based on specified data."
+  ],
+  "metaData": "{\n  \"pythondata\": [\n    \"students = pd.DataFrame([], columns=['student_id', 'name', 'age']).astype({'student_id':'Int64', 'name':'object', 'age':'Int64'})\"\n  ],\n  \"database\": true,\n  \"name\": \"dropMissingData\",\n  \"languages\": [\n    \"pythondata\"\n  ]\n}",
+  "stats": "{\"totalAccepted\": \"129.8K\", \"totalSubmission\": \"201.1K\", \"totalAcceptedRaw\": 129781, \"totalSubmissionRaw\": 201067, \"acRate\": \"64.5%\"}",
+  "likes": 102,
+  "dislikes": 7,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"students\":[\"student_id\",\"name\",\"age\"]},\"rows\":{\"students\":[[32,\"Piper\",5],[217,null,19],[779,\"Georgia\",20],[849,\"Willow\",14]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [],
+  "codeSnippets": [
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef dropMissingData(students: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2108",
+    "content": "[TOC]\n\n## Solution\n--- \n### Overview\n\nThe problem pertains to the handling of missing data in a pandas DataFrame representing student information. Specifically, there are some rows in the `name` column that have missing values (`None` or `NaN`). The objective is to remove those rows with missing names from the DataFrame using the `dropna` function of pandas.\n\n**Key Concepts:**\n1. **`dropna` Function:** The `dropna` function belongs to the pandas DataFrame and is used to remove missing values. Missing data in pandas is generally represented by the `NaN` (short for Not a Number) value, though in your example it appears as `None` which is also considered a missing value by pandas.\n\nHere's the general usage of the `dropna` function:\n```python\nDataFrame.dropna(axis=0, how='any', thresh=None, subset=None, inplace=False)\n```\n\n**`dropna` Function Argument Definition:**\n\n 1. `axis`: It can be `{0 or 'index', 1 or 'columns'}`. By default it's `0`. If `axis=0`, it drops rows which contain missing values, and if `axis=1`, it drops columns which contain missing value.\n 2. `how`: Determines if row or column is removed from DataFrame, when we have at least one NA or all NA.\n    - `how='any'` : If any NA values are present, drop that row or column (default).\n    - `how='all'` : If all values are NA, drop that row or column.\n 3. `thresh`: Require that many non-NA values. This is an integer argument which requires a minimum number of non-NA values to keep the row/column.\n 4. `subset`: Labels along the other axis to consider, e.g. if you are dropping rows these would be a list of columns to include. This is particularly useful when you only want to consider NA values in certain columns.\n 5. `inplace`: It's a boolean which makes the changes in data frame itself if `True`. Always remember when using the `inplace=True` argument, you're modifying the original DataFrame. If you need to retain the original data for any reason, avoid using `inplace=True` and instead assign the result to a new DataFrame.\n\n### Intuition\n\nWe need to use the `dropna` function to remove rows with missing data in the `name` column. We can do this by setting the required parameters based on the \"Function Argument Definition\" section mentioned earlier; here is the breakdown:\n\n- We are only considering the `name` column, so we set `subset=['name']`. This argument tells `dropna` to consider only the `name` column when looking for missing values. So, only rows where the `name` column has missing values will be dropped.\n- We need to modify the original DataFrame, so set `inplace=True`. By setting `inplace` to `True`, we're modifying the original `students` DataFrame directly. If you set it to `False` (or omitted it), then a new DataFrame with the dropped rows would be returned, and the original `students` DataFrame would remain unchanged.\n\n```python\nstudents.dropna(subset=['name'], inplace=True)\n```\n\n**Visualization of `dropna` function**\n\n![fig](../Figures/3319/3319-1.png)\n\nWhen you pass this DataFrame to the function:\n\n<table>\n  <tr>\n    <th>student_id</th>\n    <th>name</th>\n    <th>age</th>\n  </tr>\n  <tr>\n    <td>32</td>\n    <td>Piper</td>\n    <td>5</td>\n  </tr>\n  <tr>\n    <td>217</td>\n    <td>Grace</td>\n    <td>19</td>\n  </tr>\n  <tr>\n    <td>779</td>\n    <td>None</td>\n    <td>20</td>\n  </tr>\n  <tr>\n    <td>849</td>\n    <td>None</td>\n    <td>14</td>\n  </tr>\n</table>\n<br>\n\nIt will return:\n\n<table>\n  <tr>\n    <th>student_id</th>\n    <th>name</th>\n    <th>age</th>\n  </tr>\n  <tr>\n    <td>32</td>\n    <td>Piper</td>\n    <td>5</td>\n  </tr>\n  <tr>\n    <td>217</td>\n    <td>Grace</td>\n    <td>19</td>\n  </tr>\n</table>\n<br>\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PrPoqTfz/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"PrPoqTfz\"></iframe>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

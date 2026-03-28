@@ -1,0 +1,140 @@
+{
+  "questionId": "3321",
+  "questionFrontendId": "3024",
+  "title": "Type of Triangle",
+  "titleSlug": "type-of-triangle",
+  "difficulty": "Easy",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>nums</code> of size <code>3</code> which can form the sides of a triangle.</p>\n\n<ul>\n\t<li>A triangle is called <strong>equilateral</strong> if it has all sides of equal length.</li>\n\t<li>A triangle is called <strong>isosceles</strong> if it has exactly two sides of equal length.</li>\n\t<li>A triangle is called <strong>scalene</strong> if all its sides are of different lengths.</li>\n</ul>\n\n<p>Return <em>a string representing</em> <em>the type of triangle that can be formed </em><em>or </em><code>&quot;none&quot;</code><em> if it <strong>cannot</strong> form a triangle.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,3,3]\n<strong>Output:</strong> &quot;equilateral&quot;\n<strong>Explanation:</strong> Since all the sides are of equal length, therefore, it will form an equilateral triangle.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,4,5]\n<strong>Output:</strong> &quot;scalene&quot;\n<strong>Explanation:</strong> \nnums[0] + nums[1] = 3 + 4 = 7, which is greater than nums[2] = 5.\nnums[0] + nums[2] = 3 + 5 = 8, which is greater than nums[1] = 4.\nnums[1] + nums[2] = 4 + 5 = 9, which is greater than nums[0] = 3. \nSince the sum of the two sides is greater than the third side for all three cases, therefore, it can form a triangle.\nAs all the sides are of different lengths, it will form a scalene triangle.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>nums.length == 3</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "The condition for a valid triangle is that for any two sides, the sum of their lengths must be greater than the third side.",
+    "Simply count the number of unique edge lengths after checking it’s a valid triangle."
+  ],
+  "metaData": "{\n  \"name\": \"triangleType\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"216K\", \"totalSubmission\": \"489.9K\", \"totalAcceptedRaw\": 215974, \"totalSubmissionRaw\": 489941, \"acRate\": \"44.1%\"}",
+  "likes": 461,
+  "dislikes": 68,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[3,3,3]",
+    "[3,4,5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 24, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string triangleType(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String triangleType(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def triangleType(self, nums: List[int]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def triangleType(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {string}\n */\nvar triangleType = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function triangleType(nums: number[]): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string TriangleType(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* triangleType(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func triangleType(nums []int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun triangleType(nums: IntArray): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func triangleType(_ nums: [Int]) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn triangle_type(nums: Vec<i32>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {String}\ndef triangle_type(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return String\n     */\n    function triangleType($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String triangleType(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def triangleType(nums: Array[Int]): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec triangle_type(nums :: [integer]) :: String.t\n  def triangle_type(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec triangle_type(Nums :: [integer()]) -> unicode:unicode_binary().\ntriangle_type(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (triangle-type nums)\n  (-> (listof exact-integer?) string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2756",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach: Mathematics\n\n#### Intuition\n\nFirst, sort $\\textit{nums}$ in ascending order, then make the following checks in sequence:\n\n- If $\\textit{nums}[0] + \\textit{nums}[1] \\le \\textit{nums}[2]$, return `\"none\"`.\n\n- If $\\textit{nums}[0] = \\textit{nums}[2]$, return `\"equilateral\"`.\n\n- If $\\textit{nums}[0] = \\textit{nums}[1]$ or $\\textit{nums}[1] = \\textit{nums}[2]$, return `\"isosceles\"`.\n\n- If none of the above conditions are met, return `\"scalene\"`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/o35iMU5B/shared\" frameBorder=\"0\" width=\"100%\" height=\"310\" name=\"o35iMU5B\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(1)$.\n\n  Since the length of $nums$ is only 3, the time required for sorting can be ignored.\n\n- Space complexity: $O(1)$.\n  \n  No additional variables are needed.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

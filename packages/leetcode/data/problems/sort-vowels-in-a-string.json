@@ -1,0 +1,136 @@
+{
+  "questionId": "2887",
+  "questionFrontendId": "2785",
+  "title": "Sort Vowels in a String",
+  "titleSlug": "sort-vowels-in-a-string",
+  "difficulty": "Medium",
+  "content": "<p>Given a <strong>0-indexed</strong> string <code>s</code>, <strong>permute</strong> <code>s</code> to get a new string <code>t</code> such that:</p>\n\n<ul>\n\t<li>All consonants remain in their original places. More formally, if there is an index <code>i</code> with <code>0 &lt;= i &lt; s.length</code> such that <code>s[i]</code> is a consonant, then <code>t[i] = s[i]</code>.</li>\n\t<li>The vowels must be sorted in the <strong>nondecreasing</strong> order of their <strong>ASCII</strong> values. More formally, for pairs of indices <code>i</code>, <code>j</code> with <code>0 &lt;= i &lt; j &lt; s.length</code> such that <code>s[i]</code> and <code>s[j]</code> are vowels, then <code>t[i]</code> must not have a higher ASCII value than <code>t[j]</code>.</li>\n</ul>\n\n<p>Return <em>the resulting string</em>.</p>\n\n<p>The vowels are <code>&#39;a&#39;</code>, <code>&#39;e&#39;</code>, <code>&#39;i&#39;</code>, <code>&#39;o&#39;</code>, and <code>&#39;u&#39;</code>, and they can appear in lowercase or uppercase. Consonants comprise all letters that are not vowels.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;lEetcOde&quot;\n<strong>Output:</strong> &quot;lEOtcede&quot;\n<strong>Explanation:</strong> &#39;E&#39;, &#39;O&#39;, and &#39;e&#39; are the vowels in s; &#39;l&#39;, &#39;t&#39;, &#39;c&#39;, and &#39;d&#39; are all consonants. The vowels are sorted according to their ASCII values, and the consonants remain in the same places.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;lYmpH&quot;\n<strong>Output:</strong> &quot;lYmpH&quot;\n<strong>Explanation:</strong> There are no vowels in s (all characters in s are consonants), so we return &quot;lYmpH&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists only of letters of the&nbsp;English alphabet&nbsp;in <strong>uppercase and lowercase</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Add all the vowels in an array and sort the array.",
+    "Replace characters in string s if it's a vowel from the new array."
+  ],
+  "metaData": "{\n  \"name\": \"sortVowels\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"309.1K\", \"totalSubmission\": \"370.4K\", \"totalAcceptedRaw\": 309065, \"totalSubmissionRaw\": 370422, \"acRate\": \"83.4%\"}",
+  "likes": 1426,
+  "dislikes": 73,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Reverse Vowels of a String\", \"titleSlug\": \"reverse-vowels-of-a-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"lEetcOde\"",
+    "\"lYmpH\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string sortVowels(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String sortVowels(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def sortVowels(self, s: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def sortVowels(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {string}\n */\nvar sortVowels = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function sortVowels(s: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string SortVowels(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* sortVowels(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func sortVowels(s string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun sortVowels(s: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func sortVowels(_ s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn sort_vowels(s: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {String}\ndef sort_vowels(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return String\n     */\n    function sortVowels($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String sortVowels(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def sortVowels(s: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec sort_vowels(s :: String.t) :: String.t\n  def sort_vowels(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec sort_vowels(S :: unicode:unicode_binary()) -> unicode:unicode_binary().\nsort_vowels(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (sort-vowels s)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2171",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Sorting\n\n**Intuition**\n\nGiven a string `s` having English lowercase or uppercase letters, we need to build a new string such that the vowels in the original strings are arranged in the non-decreasing order of their ASCII values.\n\nWe don't want to break the original order of the consonants, so we will not sort the whole string. Instead, we need to sort only the vowels. Therefore, we will collect all the vowels from `s` into a string `temp`, and sort it in ascending order. Now, we need to put these characters back into the original string `s` in the sorted order, that is, the first vowel in the original string `s` will be replaced with the first character in `temp`, the second vowel will be replaced with the second character in `temp`, and so on. This way, the consonants will remain in the original order and the vowels will be sorted in the ascending order.\n\nIn some languages where strings are immutable, we can use other mutable data structures provided by that language to collect and sort all the vowel characters.\n\n**Algorithm**\n\n1. Create a method `isVowel` that returns `true` if the given character is a lowercase or uppercase vowel, and returns `false` otherwise.\n2. Iterate over the string `s` and store the vowels in the string `temp`.\n3. Sort the string `temp` in ascending order.\n4. Initialize an empty string `ans` to store the answer string, and an integer `j` to `0` to track the current index in the string `temp`.\n5. Iterate over the string `s` and for each character, if the character is a vowel, we add the character `temp[j]` to `ans` and increment `j`, otherwise, we add the character from `s`.\n6. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/AWC5R2pR/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"AWC5R2pR\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the number of characters in the string `s`.\n\n* Time complexity: $O(N \\log N)$\n\n  In the worst case, all characters in the string `s` could be vowels, and we will have to sort all the $N$ characters which takes $O(N \\log N)$ time. In the end, we will iterate over the string `s` and build the string `ans`, this will take $O(N)$ time. Therefore, the total time complexity is equal to $O(N \\log N)$.\n\n* Space complexity: $O(N)$\n\n  We need to store the vowels in the string `temp` which could be $N$ in the worst case and thus will take $O(N)$ space. We also need space to store the answer string `ans`, however, the space to store the output is generally not considered as part of space complexity.\n\n  Additional space is used for sorting the string `temp`. The space complexity of the sorting algorithm is language-specific. For instance, in Java, the Arrays.sort() for primitives is implemented as a variant of the quicksort algorithm whose space complexity is $$O(\\log N)$$. In C++ sort() function provided by STL is a hybrid of Quick Sort, Heap Sort, and Insertion Sort and has a worst-case space complexity of $$O(\\log N)$$. Thus, using the inbuilt sort() function might add up to $$O(\\log N)$$ to space complexity.\n  <br/>\n\n---\n### Approach 2: Counting Sort\n\n**Intuition**\n\nIn the previous approach, we incurred an extra time complexity of $O(N \\log N)$ due to sorting the string `temp`. The important point to observe here is that the string `temp` will only have ten different characters, as there are five vowels and their corresponding upper-case letters. In such scenarios, where the length is much greater than the number of distinct characters, it's much more efficient to use counting sort. This is because we will just have to count the frequencies for just ten characters instead of sorting all the characters in the string `temp`. We will store the frequencies of these vowels in a map `count`.\n\nSince we know the ten characters we can have in the string `temp`, to get the ascending order of `temp` we can just iterate over the ten vowels in their ASCII order with their count. Hence, we will keep the string `sortedVowels` which will be equal to `AEIOUaeiou` which represents the ten vowels in ascending order of their ASCII values. Then similar to the previous approach, we will iterate over the string `s`, and for every vowel character, we will find the sorted vowel character we need to place here. For this, we will find the first character in `AEIOUaeiou` that has a remaining count in the map `count`, add this character to `s`, and decrement the count of this character.\n\n![fig](../Figures/2785/2785A.png)\n\n**Algorithm**\n\n1. Create a method `isVowel` that returns `true` if the given character is a lowercase or uppercase vowel or not, otherwise return `false`.\n2. Iterate over the string `s` and store the frequencies of each vowel in the map `count`.\n3. Initialize:\n\n    1. A string `sortedVowel` to `AEIOUaeiou` the answer string, and\n    2. An empty string `ans` to store the answer string.\n    3. An integer `j` to `0` to track the current index in the string `sortedVowel`.\n5. Iterate over the string `s` and for each character\n\n    1. If the character is consonant, add it to the string `ans`.\n    2. If the character is a vowel, find the first character in the string `sortedVowel` which has a non-zero frequency in the map `count`.\n    3. Add the character `sortedVowel[j]` to `ans` and decrement the count in the map `count`.\n6. Return `ans`.\n\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/7mUTgjNE/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7mUTgjNE\"></iframe>\n\n**Complexity Analysis**\n\n\nHere, $N$ is the number of characters in the string `s`.\n\n* Time complexity: $O(N)$\n\n  To store the frequencies in the map `count` we need $O(N)$ time. Then we iterate over each character in the string `s` to build the answer string `ans`, we first have to find the character in the string `sortedVowel`. This operation however will only take $O(1)$ time as there are only ten characters and we never iterate over the character twice. Hence, the total time complexity is equal to $O(N)$.\n\n* Space complexity: $O(1)$\n\n  The map `count` will only need $O(1)$ space as there are only ten vowels. The string `sortedVowels` also stores only ten characters and hence needs constant space. We also need space to store the answer string `ans`, however, the space to store the output is generally not considered as part of space complexity. Hence, the space complexity is constant.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

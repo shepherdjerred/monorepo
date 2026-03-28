@@ -1,0 +1,132 @@
+{
+  "questionId": "3368",
+  "questionFrontendId": "3062",
+  "title": "Winner of the Linked List Game",
+  "titleSlug": "winner-of-the-linked-list-game",
+  "difficulty": "Easy",
+  "content": "<p>You are given the <code>head</code> of a linked list of <strong>even</strong> length containing integers.</p>\n\n<p>Each <strong>odd-indexed</strong> node contains an odd integer and each <strong>even-indexed</strong> node contains an even integer.</p>\n\n<p>We call each even-indexed node and its next node a <strong>pair</strong>, e.g., the nodes with indices <code>0</code> and <code>1</code> are a pair, the nodes with indices <code>2</code> and <code>3</code> are a pair, and so on.</p>\n\n<p>For every <strong>pair</strong>, we compare the values of the nodes in the pair:</p>\n\n<ul>\n\t<li>If the odd-indexed node is higher, the <code>&quot;Odd&quot;</code> team gets a point.</li>\n\t<li>If the even-indexed node is higher, the <code>&quot;Even&quot;</code> team gets a point.</li>\n</ul>\n\n<p>Return <em>the name of the team with the <strong>higher</strong> points, if the points are equal, return</em> <code>&quot;Tie&quot;</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1: </strong></p>\n\n<div class=\"example-block\" style=\"border-color: var(--border-tertiary); border-left-width: 2px; color: var(--text-secondary); font-size: .875rem; margin-bottom: 1rem; margin-top: 1rem; overflow: visible; padding-left: 1rem;\">\n<p><strong>Input: </strong> <span class=\"example-io\" style=\"font-family: Menlo,sans-serif; font-size: 0.85rem;\"> head = [2,1] </span></p>\n\n<p><strong>Output: </strong> <span class=\"example-io\" style=\"font-family: Menlo,sans-serif; font-size: 0.85rem;\"> &quot;Even&quot; </span></p>\n\n<p><strong>Explanation: </strong> There is only one pair in this linked list and that is <code>(2,1)</code>. Since <code>2 &gt; 1</code>, the Even team gets the point.</p>\n\n<p>Hence, the answer would be <code>&quot;Even&quot;</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2: </strong></p>\n\n<div class=\"example-block\" style=\"border-color: var(--border-tertiary); border-left-width: 2px; color: var(--text-secondary); font-size: .875rem; margin-bottom: 1rem; margin-top: 1rem; overflow: visible; padding-left: 1rem;\">\n<p><strong>Input: </strong> <span class=\"example-io\" style=\"font-family: Menlo,sans-serif; font-size: 0.85rem;\"> head = [2,5,4,7,20,5] </span></p>\n\n<p><strong>Output: </strong> <span class=\"example-io\" style=\"font-family: Menlo,sans-serif; font-size: 0.85rem;\"> &quot;Odd&quot; </span></p>\n\n<p><strong>Explanation: </strong> There are <code>3</code> pairs in this linked list. Let&#39;s investigate each pair individually:</p>\n\n<p><code>(2,5)</code> -&gt; Since <code>2 &lt; 5</code>, The Odd team gets the point.</p>\n\n<p><code>(4,7)</code> -&gt; Since <code>4 &lt; 7</code>, The Odd team gets the point.</p>\n\n<p><code>(20,5)</code> -&gt; Since <code>20 &gt; 5</code>, The Even team gets the point.</p>\n\n<p>The Odd team earned <code>2</code> points while the Even team got <code>1</code> point and the Odd team has the higher points.</p>\n\n<p>Hence, the answer would be <code>&quot;Odd&quot;</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 3: </strong></p>\n\n<div class=\"example-block\" style=\"border-color: var(--border-tertiary); border-left-width: 2px; color: var(--text-secondary); font-size: .875rem; margin-bottom: 1rem; margin-top: 1rem; overflow: visible; padding-left: 1rem;\">\n<p><strong>Input: </strong> <span class=\"example-io\" style=\"font-family: Menlo,sans-serif; font-size: 0.85rem;\"> head = [4,5,2,1] </span></p>\n\n<p><strong>Output: </strong> <span class=\"example-io\" style=\"font-family: Menlo,sans-serif; font-size: 0.85rem;\"> &quot;Tie&quot; </span></p>\n\n<p><strong>Explanation: </strong> There are <code>2</code> pairs in this linked list. Let&#39;s investigate each pair individually:</p>\n\n<p><code>(4,5)</code> -&gt; Since <code>4 &lt; 5</code>, the Odd team gets the point.</p>\n\n<p><code>(2,1)</code> -&gt; Since <code>2 &gt; 1</code>, the Even team gets the point.</p>\n\n<p>Both teams earned <code>1</code> point.</p>\n\n<p>Hence, the answer would be <code>&quot;Tie&quot;</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the list is in the range <code>[2, 100]</code>.</li>\n\t<li>The number of nodes in the list is even.</li>\n\t<li><code>1 &lt;= Node.val &lt;= 100</code></li>\n\t<li>The value of each odd-indexed node is odd.</li>\n\t<li>The value of each even-indexed node is even.</li>\n</ul>\n",
+  "hints": [
+    "Traverse linked list and try to find pairs.",
+    "For each team, keep the number of its winning games in a variable.",
+    "Compare the winning variables and find the answer."
+  ],
+  "metaData": "{\n  \"name\": \"gameResult\",\n  \"params\": [\n    {\n      \"name\": \"head\",\n      \"type\": \"ListNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"12K\", \"totalSubmission\": \"15.4K\", \"totalAcceptedRaw\": 11962, \"totalSubmissionRaw\": 15414, \"acRate\": \"77.6%\"}",
+  "likes": 32,
+  "dislikes": 5,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    string gameResult(ListNode* head) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public String gameResult(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def gameResult(self, head: Optional[ListNode]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def gameResult(self, head):\n        \"\"\"\n        :type head: Optional[ListNode]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} head\n * @return {string}\n */\nvar gameResult = function(head) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction gameResult(head: ListNode | null): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public string GameResult(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\nchar* gameResult(struct ListNode* head) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc gameResult(head *ListNode) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun gameResult(head: ListNode?): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func gameResult(_ head: ListNode?) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn game_result(head: Option<Box<ListNode>>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {ListNode} head\n# @return {String}\ndef game_result(head)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $head\n     * @return String\n     */\n    function gameResult($head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *   int val;\n *   ListNode? next;\n *   ListNode([this.val = 0, this.next]);\n * }\n */\nclass Solution {\n  String gameResult(ListNode? head) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def gameResult(head: ListNode): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for singly-linked list.\n#\n# defmodule ListNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           next: ListNode.t() | nil\n#         }\n#   defstruct val: 0, next: nil\n# end\n\ndefmodule Solution do\n  @spec game_result(head :: ListNode.t | nil) :: String.t\n  def game_result(head) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for singly-linked list.\n%%\n%% -record(list_node, {val = 0 :: integer(),\n%%                     next = null :: 'null' | #list_node{}}).\n\n-spec game_result(Head :: #list_node{} | null) -> unicode:unicode_binary().\ngame_result(Head) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n(define/contract (game-result head)\n  (-> (or/c list-node? #f) string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2256",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThe linked list is made up of pairs of **odd** and **even** nodes. **Even** nodes are at even indexes and have even values. **Odd** nodes are at odd indexes and have odd values. For a given pair of **odd** and **even** nodes, the node with the higher value's team gets a point.\n\nNote there is an equal number of **odd** and **even** nodes in the linked list. \n\n### Approach: Two Pointer\n\n#### Intuition\n\nWe will need to compare the values of each pair of nodes to determine the winning team. To calculate the number of points each team receives, we will traverse the linked list. Linked list traversal is often done using a while loop.\n\nWe will create a pointer `even` that starts at the head of the linked list. Every other node is **even**, and the node directly after each **even** node is the corresponding **odd** node in the pair. With each iteration, we set a pointer `odd` to `even.next`. We can then compare the values of `odd` and `even` and assign a point to the appropriate team. After determining which team from this pair receives a point, we set `even` to `odd.next`, which is the next **even** node in the linked list. \n\nThe initial state of the pointers is shown in the image below:\n\n![Example 1](../Figures/3062/3062_1.png)\n\nAfter processing the list and calculating the points for each team, we use an `if` / `else if` / `else` statement to return the team with the most points: `\"Odd\"`or `\"Even\"`,  or `\"Tie\"` if the teams have the same number of points.\n\n#### Algorithm\n\n1. Initializations:\n    - Initialize a ListNode `even` to `head`.\n    - Initialize two variables, `odd_points` and `even_points` to `0`.\n2. Iterate through the nodes in the linked list while `even != null`:\n    - Set a ListNode `odd` to `even.next`.\n    - If `even.val > odd.val`, add `1` to `even_points`.\n    - Otherwise, the odd node in this pair must have a higher value, so add `1` to `odd_points`. The nodes will never have an equal value because odd-indexed nodes always have odd values and even-indexed nodes always have even values.\n    - Set `even` to `odd.next`.\n3. Return the winning team:\n    - If `odd_points` is greater than `even_points`, return `\"Odd\"`.\n    - Else if `odd_points` is less than `even_points`, return `\"Even\"`.\n    - Otherwise, both teams have the same amount of points, so return `\"Tie\"`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/BQiqC6Wi/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"BQiqC6Wi\"></iframe>\n\n> Note: The `odd` pointer is used for the sake of readability. The comparison `even.val > odd.val` could be done with `even.val > even.next.val`, and at the end of the while loop, `even` would be set to `even.next.next`, which is the standard way to skip a node.\n\n#### Complexity Analysis\n\nLet $n$ be the length of the linked list.\n\n* Time complexity: $O(n)$\n\n    We use a `while` loop to process the list. With each iteration of the while loop, two nodes are processed. The while loop will run $\\frac{n}{2}$ times since there are $n$ nodes in the list. With each iteration, we perform $O(1)$ work. Therefore, the time complexity will be linear, i.e. $O(n)$.\n\n* Space complexity: $O(1)$\n\n    We use a handful of variables and no extra space that grows with input size, so the space complexity is constant, i.e. $O(1)$.\n\n---\n\n### Approach 2: Point Difference\n\n#### Intuition\n\nIn the above solution, we used two variables to store points. Since there are only two teams, we can use just one variable, `point_difference`, if we represent the `\"Even\"` team's points as positive and the `\"Odd\"` team's points as positive negative. A positive `point_difference` indicates the `\"Even\"` team wins, a negative `point_difference` indicates the `\"Odd\"` team wins, and a `point_difference` of zero indicates a tie.\n\n**Example 1**\n\n> Input: head = [2,1]\n> The \"Even\" team gets 1 point and the \"Odd\" team gets 0 points.\n> 1 + 0 = 1\n> The score is positive, so the \"Even\" team wins.\n\n**Example 2**\n\n> Input: head = [2,5,4,7,20,5]\n> The \"Even\" team gets 1 point and the \"Odd\" team gets 2 points.\n> 1 + (-2) = -1\n> The score is negative, so the \"Odd\" team wins.\n\nWe can traverse the linked list, comparing the values of each pair of nodes. If the **even** node has a higher value, we add `1` to  `point_difference`, whereas if the **odd** node has a higher value, we subtract `1`.\n\nAs noted in the above approach, we can use just one node to compare the values of a pair of nodes. For a given pair, `current` is the **even** node, and `current.next` is the corresponding **odd** node.\n\nThe initial state of the pointers is shown in the image below:\n\n![Example 2](../Figures/3062/3062_2.png)\n\n#### Algorithm\n\n1. Initializations:\n    - Initialize a ListNode `current` to `head`.\n    - Initialize a variable, `point_difference`  to `0`.\n2. Iterate through the nodes in the linked list while `current != null`:\n    - Compare the **even** node (`current_node.val`) with the **odd** node (`current_node.next.val`), adding `1` to `point_difference` if the **even** node has a higher value and subtracting `1` if the **odd** node has a higher value.\n    - Set `current` to `current.next.next`.\n3. Return the winning team:\n    - If `point_difference` is negative, return `\"Odd\"`.\n    - Else if `point_difference` is positive, return `\"Even\"`.\n    - Otherwise, both teams have the same amount of points, so return `\"Tie\"`. \n\n#### Implementation\n\nThe below implementations use two ways to compare the node values:\n\n1. Boolean Subtraction: (python3)\n\nExpression A: `current.val > current.next.val` \nEvaluates to `true`, the boolean value `1`, when the **even** node has a higher value.\n\nExpression B: `current.val < current.next.val` \nEvaluates to `true`, the boolean value `1`, when the **odd** node has a higher value.\n\nFor a given pair of **even** and **odd** nodes, one expression will always evaluate `1` and the other to `0`. To calculate `point_difference`, we subtract expression B from expression A. When the even node has a higher value, it will be `1 - 0`, and when the odd node has a higher value, it will be `0 - 1`. This way, we either add or subtract `1` from the `point_difference`.\n\n2. Ternary: (Java & C++)\n\nThe ternary operator functions like an `if` / `else` statement. `condition ? Expression1: Expression2` means \"if (condition) then expression 1, else expression 2\".\n\n> Note: The comparison could be implemented with a standard `if` / `else` statement like the first approach. These other methods are included in this implementation for demonstrative purposes. Boolean Subtraction can solve some problems more efficiently. The ternary operator should be used with care; it improves readability in some situations but detracts from it in others. In an interview setting it's always best to use common, readable coding practices, and use these tools when they improve readability or are needed for your code's functionality. \n\n<iframe src=\"https://leetcode.com/playground/dZ6QAeEJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"dZ6QAeEJ\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the linked list.\n\n* Time complexity: $O(n)$\n\n    We use a `while` loop to process the list. With each iteration of the while loop, two nodes are processed. The while loop will run $\\frac{n}{2}$ times since there are $n$ nodes in the list. With each iteration, we perform $O(1)$ work. Therefore, the time complexity will be linear, i.e. $O(n)$.\n\n* Space complexity: $O(1)$\n\n    We use a handful of variables and no extra space that grows with input size, so the space complexity is constant, i.e. $O(1)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,157 @@
+{
+  "questionId": "3437",
+  "questionFrontendId": "3186",
+  "title": "Maximum Total Damage With Spell Casting",
+  "titleSlug": "maximum-total-damage-with-spell-casting",
+  "difficulty": "Medium",
+  "content": "<p>A magician has various spells.</p>\n\n<p>You are given an array <code>power</code>, where each element represents the damage of a spell. Multiple spells can have the same damage value.</p>\n\n<p>It is a known fact that if a magician decides to cast a spell with a damage of <code>power[i]</code>, they <strong>cannot</strong> cast any spell with a damage of <code>power[i] - 2</code>, <code>power[i] - 1</code>, <code>power[i] + 1</code>, or <code>power[i] + 2</code>.</p>\n\n<p>Each spell can be cast <strong>only once</strong>.</p>\n\n<p>Return the <strong>maximum</strong> possible <em>total damage</em> that a magician can cast.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">power = [1,1,3,4]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">6</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The maximum possible damage of 6 is produced by casting spells 0, 1, 3 with damage 1, 1, 4.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">power = [7,1,6,6]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">13</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The maximum possible damage of 13 is produced by casting spells 1, 2, 3 with damage 1, 6, 6.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= power.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= power[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "If we ever decide to use some spell with power <code>x</code>, then we will use all spells with power <code>x</code>.",
+    "Think of dynamic programming.",
+    "<code>dp[i][j]</code> represents the maximum damage considering up to the <code>i</code>-th unique spell and <code>j</code> represents the number of spells skipped (up to 3 as per constraints)."
+  ],
+  "metaData": "{\n  \"name\": \"maximumTotalDamage\",\n  \"params\": [\n    {\n      \"name\": \"power\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"114.2K\", \"totalSubmission\": \"253.3K\", \"totalAcceptedRaw\": 114247, \"totalSubmissionRaw\": 253313, \"acRate\": \"45.1%\"}",
+  "likes": 751,
+  "dislikes": 64,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,1,3,4]",
+    "[7,1,6,6]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 3, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long maximumTotalDamage(vector<int>& power) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long maximumTotalDamage(int[] power) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumTotalDamage(self, power: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumTotalDamage(self, power):\n        \"\"\"\n        :type power: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} power\n * @return {number}\n */\nvar maximumTotalDamage = function(power) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumTotalDamage(power: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MaximumTotalDamage(int[] power) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long maximumTotalDamage(int* power, int powerSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumTotalDamage(power []int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumTotalDamage(power: IntArray): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumTotalDamage(_ power: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_total_damage(power: Vec<i32>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} power\n# @return {Integer}\ndef maximum_total_damage(power)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $power\n     * @return Integer\n     */\n    function maximumTotalDamage($power) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumTotalDamage(List<int> power) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumTotalDamage(power: Array[Int]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_total_damage(power :: [integer]) :: integer\n  def maximum_total_damage(power) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_total_damage(Power :: [integer()]) -> integer().\nmaximum_total_damage(Power) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-total-damage power)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2845",
+    "content": "### Approach: Dynamic Programming\n\n#### Intuition\n\nAfter selecting a spell, you cannot use any spell whose absolute damage difference is 1 or 2 from the selected one. Since the result depends only on the set of selected spells and not on their order, we can process them in ascending order and treat spells with the same damage value as belonging to the same type.\n\nLet the number of spells with damage value $\\textit{power}_i$ be $\\textit{count}_i$.\nDefine $f(i)$ as the maximum total damage achievable by choosing spells from the $0$th to the $i$th spell and including the $i$th spell. Then:\n\n$$\nf(i)=\\max \\limits _{\\textit{power}_j<\\textit{power}_i-2}f(j)+\\textit{power}_i \\times \\textit{count}_i\n$$\n\nSince we traverse the spells in increasing order of damage, we can use a monotonic pointer to maintain $\\max_{\\textit{power}_j < \\textit{power}_i - 2} f(j)$ during the traversal, which represents the best previous state for transition.\n\nThe final answer is the maximum value among all $f(i)$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/X8w3yYvv/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"X8w3yYvv\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array $\\textit{power}$.\n\n- Time complexity: $O(n \\log n)$.\n  \n  Sorting requires $O(n \\log n)$, and the dynamic programming traversal requires $O(n)$.\n\n- Space complexity: $O(n)$.\n  \n  The hash table and dynamic programming arrays both require $O(n)$ space.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

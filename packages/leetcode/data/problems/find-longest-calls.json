@@ -1,0 +1,53 @@
+{
+  "questionId": "3432",
+  "questionFrontendId": "3124",
+  "title": "Find Longest Calls",
+  "titleSlug": "find-longest-calls",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Contacts</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| id          | int     |\n| first_name  | varchar |\n| last_name   | varchar |\n+-------------+---------+\nid is the primary key (column with unique values) of this table.\nid is a foreign key (reference column) to <code>Calls</code> table.\nEach row of this table contains id, first_name, and last_name.\n</pre>\n\n<p>Table: <code>Calls</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| contact_id  | int  |\n| type        | enum |\n| duration    | int  |\n+-------------+------+\n(contact_id, type, duration) is the primary key (column with unique values) of this table.\ntype is an ENUM (category) type of (&#39;incoming&#39;, &#39;outgoing&#39;).\nEach row of this table contains information about calls, comprising of contact_id, type, and duration in seconds.\n</pre>\n\n<p>Write a solution to find the <b>three longest&nbsp;</b><strong>incoming</strong> and <strong>outgoing</strong> calls.</p>\n\n<p>Return t<em>he result table ordered by</em> <code>type</code>, <code>duration</code>, and<code> first_name</code>&nbsp;<em>in <strong>descending&nbsp;</strong>order and <code>duration</code> must be formatted as <strong>HH:MM:SS</strong>.</em></p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p>Contacts table:</p>\n\n<pre class=\"example-io\">\n+----+------------+-----------+\n| id | first_name | last_name |\n+----+------------+-----------+\n| 1  | John       | Doe       |\n| 2  | Jane       | Smith     |\n| 3  | Alice      | Johnson   |\n| 4  | Michael    | Brown     |\n| 5  | Emily      | Davis     |\n+----+------------+-----------+        \n</pre>\n\n<p>Calls table:</p>\n\n<pre class=\"example-io\">\n+------------+----------+----------+\n| contact_id | type     | duration |\n+------------+----------+----------+\n| 1          | incoming | 120      |\n| 1          | outgoing | 180      |\n| 2          | incoming | 300      |\n| 2          | outgoing | 240      |\n| 3          | incoming | 150      |\n| 3          | outgoing | 360      |\n| 4          | incoming | 420      |\n| 4          | outgoing | 200      |\n| 5          | incoming | 180      |\n| 5          | outgoing | 280      |\n+------------+----------+----------+\n        </pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+-----------+----------+-------------------+\n| first_name| type     | duration_formatted|\n+-----------+----------+-------------------+\n| Alice     | outgoing | 00:06:00          |\n| Emily     | outgoing | 00:04:40          |\n| Jane      | outgoing | 00:04:00          |\n| Michael   | incoming | 00:07:00          |\n| Jane      | incoming | 00:05:00          |\n| Emily     | incoming | 00:03:00          |\n+-----------+----------+-------------------+\n        </pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Alice had an outgoing call lasting 6 minutes.</li>\n\t<li>Emily had an outgoing call lasting 4 minutes and 40 seconds.</li>\n\t<li>Jane had an outgoing call lasting 4 minutes.</li>\n\t<li>Michael had an incoming call lasting 7 minutes.</li>\n\t<li>Jane had an incoming call lasting 5 minutes.</li>\n\t<li>Emily had an incoming call lasting 3 minutes.</li>\n</ul>\n\n<p><b>Note:</b> Output table is sorted by type, duration, and first_name in descending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table if Not Exists Contacts(id int, first_name varchar(20), last_name varchar(20))\", \"Create table if Not Exists Calls(contact_id int, type ENUM('incoming', 'outgoing'), duration int)\"], \"mssql\": [\"Create table Contacts(id int, first_name varchar(20), last_name varchar(20))\", \"Create table Calls(contact_id int, type varchar(20) NOT NULL CHECK (type in ('incoming' , 'outgoing')), duration int)\"], \"oraclesql\": [\"Create table Contacts(id int, first_name varchar(20), last_name varchar(20))\", \"Create table Calls(contact_id int, type varchar(20) NOT NULL CHECK (type in ('incoming' , 'outgoing')), duration int)\"], \"database\": true, \"name\": \"find_longest_calls\", \"pythondata\": [\"Contacts = pd.DataFrame([], columns=['id', 'first_name', 'last_name']).astype({'id':'Int64', 'first_name':'object', 'last_name':'object'})\\n\", \"Calls = pd.DataFrame([], columns=['contact_id', 'type', 'duration']).astype({'contact_id': 'Int64', 'type': 'category', 'duration': 'Int64'})\\n\"], \"postgresql\": [\"CREATE TABLE Contacts (\\n    id SERIAL PRIMARY KEY,\\n    first_name VARCHAR(20),\\n    last_name VARCHAR(20)\\n);\\n\", \"CREATE TABLE Calls (\\n    contact_id INT,\\n    type VARCHAR(20) NOT NULL CHECK (type IN ('incoming', 'outgoing')),\\n    duration INT\\n);\\n\"], \"manual\": true, \"database_schema\": {\"Contacts\": {\"id\": \"INT\", \"first_name\": \"VARCHAR(20)\", \"last_name\": \"VARCHAR(20)\"}, \"Calls\": {\"contact_id\": \"INT\", \"type\": \"ENUM('incoming', 'outgoing')\", \"duration\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"3K\", \"totalSubmission\": \"4.7K\", \"totalAcceptedRaw\": 2984, \"totalSubmissionRaw\": 4700, \"acRate\": \"63.5%\"}",
+  "likes": 7,
+  "dislikes": 5,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Contacts\":[\"id\",\"first_name\",\"last_name\"],\"Calls\":[\"contact_id\",\"type\",\"duration\"]},\"rows\":{\"Contacts\":[[1,\"John\",\"Doe\"],[2,\"Jane\",\"Smith\"],[3,\"Alice\",\"Johnson\"],[4,\"Michael\",\"Brown\"],[5,\"Emily\",\"Davis\"]],\"Calls\":[[1,\"incoming\",120],[1,\"outgoing\",180],[2,\"incoming\",300],[2,\"outgoing\",240],[3,\"incoming\",150],[3,\"outgoing\",360],[4,\"incoming\",420],[4,\"outgoing\",200],[5,\"incoming\",180],[5,\"outgoing\",280]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_longest_calls(contacts: pd.DataFrame, calls: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

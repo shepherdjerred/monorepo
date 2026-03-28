@@ -1,0 +1,35 @@
+{
+  "questionId": "3066",
+  "questionFrontendId": "2881",
+  "title": "Create a New Column",
+  "titleSlug": "create-a-new-column",
+  "difficulty": "Easy",
+  "content": "<pre>\nDataFrame <code>employees</code>\n+-------------+--------+\n| Column Name | Type.  |\n+-------------+--------+\n| name        | object |\n| salary      | int.   |\n+-------------+--------+\n</pre>\n\n<p>A&nbsp;company plans to provide its employees with a bonus.</p>\n\n<p>Write a solution to create a new column name <code>bonus</code> that contains the <strong>doubled values</strong> of the <code>salary</code> column.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong>\nDataFrame employees\n+---------+--------+\n| name    | salary |\n+---------+--------+\n| Piper   | 4548   |\n| Grace   | 28150  |\n| Georgia | 1103   |\n| Willow  | 6593   |\n| Finn    | 74576  |\n| Thomas  | 24433  |\n+---------+--------+\n<strong>Output:</strong>\n+---------+--------+--------+\n| name    | salary | bonus  |\n+---------+--------+--------+\n| Piper   | 4548   | 9096   |\n| Grace   | 28150  | 56300  |\n| Georgia | 1103   | 2206   |\n| Willow  | 6593   | 13186  |\n| Finn    | 74576  | 149152 |\n| Thomas  | 24433  | 48866  |\n+---------+--------+--------+\n<strong>Explanation:</strong> \nA new column bonus is created by doubling the value in the column salary.</pre>\n",
+  "hints": [
+    "Consider using the `[]` brackets with the new column name at the left side of the assignment. The calculation of the value is done element-wise."
+  ],
+  "metaData": "{\n  \"pythondata\": [\n    \"employees = pd.DataFrame([], columns=['name', 'salary']).astype({'name':'object', 'salary':'Int64'})\"\n  ],\n  \"database\": true,\n  \"name\": \"createBonusColumn\",\n  \"languages\": [\n    \"pythondata\"\n  ]\n}",
+  "stats": "{\"totalAccepted\": \"154.5K\", \"totalSubmission\": \"171.3K\", \"totalAcceptedRaw\": 154541, \"totalSubmissionRaw\": 171340, \"acRate\": \"90.2%\"}",
+  "likes": 109,
+  "dislikes": 6,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"employees\":[\"name\",\"salary\"]},\"rows\":{\"employees\":[[\"Piper\",4548],[\"Grace\",28150],[\"Georgia\",1103],[\"Willow\",6593],[\"Finn\",74576],[\"Thomas\",24433]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [],
+  "codeSnippets": [
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef createBonusColumn(employees: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2103",
+    "content": "[TOC]\n\n## Solution\n--- \n### Overview\nThis problem requires us to create a new column 'bonus' in the DataFrame `employees`. The new column should contain  double the value of each employee's salary.\n\n**Key Concepts:**\n\n1. **pandas Series:** a one dimensional data structure provided by the pandas library. A Series can be thought of as a column of data in a pandas DataFrame. A Series can contain of a wide-range of data types, however they are homogenous, meaning that all elements within one pandas Series must be of the same data type. Like DataFrames, Series are indexed and can be labeled for easy data retrieval.\n2. **pandas DataFrame:** similar to a SQL table, a DataFrame is a collection of Series displayed as columns. They are size-mutable, meaning we can add, delete, and alter values, rows, and columns in a DataFrame.\n3. **column-wise operations:** operations that can be performed on each individual element in a DataFrame Series. A few examples of types of column-wise operations are  arithmetic operations, aggregate functions, filtering and conditional operations, and string operations.\n\n### Intuition\n\nTo solve this problem, we can create a new column and calculate the bonus using the column-wise operation `*` to multiply the salary column by 2. \n\nThe simplest way to create a new column will be to assign the new column to the `employees` DataFrame using the column name. Then, we will set it equal to the value of the `salary` column multiplied by two. \n\n**Visualization of column-wise operations**\n\n![fig](../Figures/3310/3310-1.png)\n\n\n**Example:**\nIf you have the following DataFrame:\n\n<table>\n  <tr>\n    <th>name</th>\n    <th>salary</th>\n  </tr>\n  <tr>\n    <td>Piper</td>\n    <td>4548</td>\n  </tr>\n  <tr>\n    <td>Grace</td>\n    <td>28150</td>\n  </tr>\n</table>\n<br>\n\n`employees['salary']` would give:\n\n<table>\n  <tr>\n    <th>index</th>\n    <th>salary</th>\n  </tr>\n  <tr>\n    <td>0</td>\n    <td>4548</td>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>28150</td>\n  </tr>\n</table>\n<br>\n\npandas allows for vectorized operations. When you multiply a Series by a scalar (a single number), it multiplies every single element in the Series by that number. In our case, we want to use this to double each value in the `salary` column.\n\nUsing the previous DataFrame, `employees['salary'] * 2` would result in:\n\n<table>\n  <tr>\n    <th>index</th>\n    <th>bonus</th>\n  </tr>\n  <tr>\n    <td>0</td>\n    <td>9096</td>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>56300</td>\n  </tr>\n</table>\n<br> \n\nWe can assign these values to a new (or existing) column in the DataFrame. If the column `bonus` doesn't already exist, pandas will create it. \n\nWhen we do `employees['bonus'] = employees['salary'] * 2`, we're creating a new column called `bonus` in the DataFrame `employees`, and populating it with the doubled values of the `salary` column.\n\n### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4LjjuZqG/shared\" frameBorder=\"0\" width=\"100%\" height=\"140\" name=\"4LjjuZqG\"></iframe>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

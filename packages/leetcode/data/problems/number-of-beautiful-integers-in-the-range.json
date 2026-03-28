@@ -1,0 +1,132 @@
+{
+  "questionId": "3017",
+  "questionFrontendId": "2827",
+  "title": "Number of Beautiful Integers in the Range",
+  "titleSlug": "number-of-beautiful-integers-in-the-range",
+  "difficulty": "Hard",
+  "content": "<p>You are given positive integers <code>low</code>, <code>high</code>, and <code>k</code>.</p>\n\n<p>A number is <strong>beautiful</strong> if it meets both of the following conditions:</p>\n\n<ul>\n\t<li>The count of even digits in the number is equal to the count of odd digits.</li>\n\t<li>The number is divisible by <code>k</code>.</li>\n</ul>\n\n<p>Return <em>the number of beautiful integers in the range</em> <code>[low, high]</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> low = 10, high = 20, k = 3\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> There are 2 beautiful integers in the given range: [12,18]. \n- 12 is beautiful because it contains 1 odd digit and 1 even digit, and is divisible by k = 3.\n- 18 is beautiful because it contains 1 odd digit and 1 even digit, and is divisible by k = 3.\nAdditionally we can see that:\n- 16 is not beautiful because it is not divisible by k = 3.\n- 15 is not beautiful because it does not contain equal counts even and odd digits.\nIt can be shown that there are only 2 beautiful integers in the given range.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> low = 1, high = 10, k = 1\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> There is 1 beautiful integer in the given range: [10].\n- 10 is beautiful because it contains 1 odd digit and 1 even digit, and is divisible by k = 1.\nIt can be shown that there is only 1 beautiful integer in the given range.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> low = 5, high = 5, k = 2\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> There are 0 beautiful integers in the given range.\n- 5 is not beautiful because it is not divisible by k = 2 and it does not contain equal even and odd digits.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt; low &lt;= high &lt;= 10<sup>9</sup></code></li>\n\t<li><code>0 &lt; k &lt;= 20</code></li>\n</ul>\n",
+  "hints": [
+    "<div class=\"_1l1MA\">The intended solution uses Dynamic Programming.</div>",
+    "<div class=\"_1l1MA\">Let <code> f(n) </code> denote number of beautiful integers in the range <code> [1…n] </code>, then the answer is <code> f(r) - f(l-1) </code>.</div>"
+  ],
+  "metaData": "{\n  \"name\": \"numberOfBeautifulIntegers\",\n  \"params\": [\n    {\n      \"name\": \"low\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"high\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"13.6K\", \"totalSubmission\": \"62.1K\", \"totalAcceptedRaw\": 13562, \"totalSubmissionRaw\": 62124, \"acRate\": \"21.8%\"}",
+  "likes": 400,
+  "dislikes": 37,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Numbers with Non-Decreasing Digits \", \"titleSlug\": \"count-numbers-with-non-decreasing-digits\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "10\n20\n3",
+    "1\n10\n1",
+    "5\n5\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numberOfBeautifulIntegers(int low, int high, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numberOfBeautifulIntegers(int low, int high, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfBeautifulIntegers(self, low: int, high: int, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfBeautifulIntegers(self, low, high, k):\n        \"\"\"\n        :type low: int\n        :type high: int\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} low\n * @param {number} high\n * @param {number} k\n * @return {number}\n */\nvar numberOfBeautifulIntegers = function(low, high, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfBeautifulIntegers(low: number, high: number, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumberOfBeautifulIntegers(int low, int high, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numberOfBeautifulIntegers(int low, int high, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfBeautifulIntegers(low int, high int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfBeautifulIntegers(low: Int, high: Int, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfBeautifulIntegers(_ low: Int, _ high: Int, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_beautiful_integers(low: i32, high: i32, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} low\n# @param {Integer} high\n# @param {Integer} k\n# @return {Integer}\ndef number_of_beautiful_integers(low, high, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $low\n     * @param Integer $high\n     * @param Integer $k\n     * @return Integer\n     */\n    function numberOfBeautifulIntegers($low, $high, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numberOfBeautifulIntegers(int low, int high, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfBeautifulIntegers(low: Int, high: Int, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_beautiful_integers(low :: integer, high :: integer, k :: integer) :: integer\n  def number_of_beautiful_integers(low, high, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_beautiful_integers(Low :: integer(), High :: integer(), K :: integer()) -> integer().\nnumber_of_beautiful_integers(Low, High, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-beautiful-integers low high k)\n  (-> exact-integer? exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}
