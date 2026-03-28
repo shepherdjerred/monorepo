@@ -471,9 +471,7 @@ async function updateSnapshots(): Promise<void> {
 
       console.log(`  Updating: ${testFile}`);
       const result =
-        await $`cd ${cwd} && bun test --update-snapshots ${testFile}`
-          .quiet()
-          .nothrow();
+        await $`cd ${cwd} && bun test --update-snapshots ${testFile}`.quiet();
       if (result.exitCode !== 0) {
         console.warn(
           `    ⚠ Warning: snapshot update had non-zero exit code for ${testFile}`,
