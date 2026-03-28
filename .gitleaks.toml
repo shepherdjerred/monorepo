@@ -4,4 +4,25 @@ useDefault = true
 [allowlist]
 paths = [
   '''packages/dotfiles/Library/Application Support/pinchtab/config\.json''',
+  # Archive projects — legacy code, not deployed
+  '''archive/''',
+  # Worktrees from Claude Code agents
+  '''\.claude/worktrees/''',
+  # Lock files — contain hashes, not secrets
+  '''\.lock$''',
+  '''Podfile\.lock$''',
+  '''Manifest\.lock$''',
+  # Generated/vendored code
+  '''generated/imports/''',
+  '''\.build/checkouts/''',
+  '''debug/index/store/''',
+  '''src/cdk8s/dist/''',
+  # Minecraft server config files (RCON passwords are non-sensitive defaults)
+  '''config/minecraft-.*/server\.properties$''',
+  # Example private key in Rust code (test/documentation constant, not a real key)
+  '''packages/clauderon/src/proxy/talos_gateway\.rs''',
+  # JWT in README (documentation example)
+  '''packages/discord-plays-pokemon/README\.md''',
+  # Google Maps API key (restricted to specific referrer, public-facing)
+  '''packages/better-skill-capped/fetcher/src/''',
 ]

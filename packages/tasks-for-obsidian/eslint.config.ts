@@ -1,4 +1,5 @@
 import { recommended } from "@shepherdjerred/eslint-config";
+import type { TSESLint } from "@typescript-eslint/utils";
 
 export default [
   ...recommended({
@@ -47,4 +48,4 @@ export default [
       "custom-rules/no-re-exports": "off",
     },
   },
-];
+] satisfies TSESLint.FlatConfig.ConfigArray;

@@ -1,4 +1,5 @@
 import { recommended } from "./local.ts";
+import type { TSESLint } from "@typescript-eslint/utils";
 
 export default [
   ...recommended({
@@ -61,4 +62,4 @@ export default [
       "@typescript-eslint/no-deprecated": "off",
     },
   },
-];
+] satisfies TSESLint.FlatConfig.ConfigArray;

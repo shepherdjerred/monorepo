@@ -22,6 +22,7 @@
     "typescript": "^5",
     "typescript-eslint": "^8.35.1"
   },
+  "trustedDependencies": [],
   "scripts": {
     "build": "bun run --filter=* build",
     "test": "bun run --filter=* test",

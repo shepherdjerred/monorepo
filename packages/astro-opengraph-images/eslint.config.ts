@@ -1,4 +1,5 @@
 import { recommended } from "@shepherdjerred/eslint-config";
+import type { TSESLint } from "@typescript-eslint/utils";
 
 export default [
   {
@@ -17,4 +18,4 @@ export default [
       "unicorn/prefer-export-from": "off",
     },
   },
-];
+] satisfies TSESLint.FlatConfig.ConfigArray;

@@ -1,4 +1,5 @@
 import { recommended } from "@shepherdjerred/eslint-config";
+import type { TSESLint } from "@typescript-eslint/utils";
 
 export default [
   {
@@ -25,4 +26,4 @@ export default [
       "custom-rules/prefer-bun-apis": "off",
     },
   },
-];
+] satisfies TSESLint.FlatConfig.ConfigArray;

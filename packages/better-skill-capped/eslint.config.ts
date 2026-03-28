@@ -1,4 +1,5 @@
 import { recommended } from "@shepherdjerred/eslint-config";
+import type { TSESLint } from "@typescript-eslint/utils";
 
 export default [
   {
@@ -10,4 +11,4 @@ export default [
     ],
   },
   ...recommended({ tsconfigRootDir: import.meta.dirname, react: true }),
-];
+] satisfies TSESLint.FlatConfig.ConfigArray;

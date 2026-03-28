@@ -1,6 +1,10 @@
 import { match } from "ts-pattern";
 import { z } from "zod";
-import type { DiscordAccountId, DiscordChannelId, DiscordGuildId } from "#src/model/discord.ts";
+import type {
+  DiscordAccountId,
+  DiscordChannelId,
+  DiscordGuildId,
+} from "#src/model/discord.ts";
 import { RankSchema } from "#src/model/rank.ts";
 import type { SeasonId } from "#src/seasons.ts";
 import { getSeasonById } from "#src/seasons.ts";

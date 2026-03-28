@@ -12,6 +12,11 @@ export function createMinecraftStoneblock4App(chart: Chart) {
     resourceRequests: { memory: "8Gi", cpu: "1" },
     resourceLimits: { memory: "8Gi" },
     storageGi: 32,
-    whitelist: ["RiotShielder", "vietnamesechovy", "XiguaShuxin", "XiguaJerred"],
+    whitelist: [
+      "RiotShielder",
+      "vietnamesechovy",
+      "XiguaShuxin",
+      "XiguaJerred",
+    ],
   });
 }

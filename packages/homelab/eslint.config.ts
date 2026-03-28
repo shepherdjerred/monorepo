@@ -1,4 +1,5 @@
 import { recommended } from "@shepherdjerred/eslint-config";
+import type { TSESLint } from "@typescript-eslint/utils";
 
 export default [
   ...recommended({ tsconfigRootDir: import.meta.dirname }),
@@ -15,4 +16,4 @@ export default [
       "src/cdk8s/generated/",
     ],
   },
-];
+] satisfies TSESLint.FlatConfig.ConfigArray;

@@ -109,8 +109,17 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
   }
 
   // homelab: add HA lint/typecheck steps that generate types with HASS_TOKEN
+  // haLint/haTypecheck have no --pkg param (pkg is hardcoded in haGenerate)
   if (pkg === "homelab") {
-    const haFlags = daggerPkgFlags("homelab/src/ha");
+    const haDeps = WORKSPACE_DEPS["homelab/src/ha"] ?? [];
+    const haFlags = [
+      `--pkg-dir ./packages/homelab/src/ha`,
+      ...haDeps.flatMap((dep) => [
+        `--dep-names ${dep}`,
+        `--dep-dirs ./packages/${dep}`,
+      ]),
+      `--tsconfig ./tsconfig.base.json`,
+    ].join(" ");
     steps.push(
       daggerCallStep(
         `:house: HA Lint`,

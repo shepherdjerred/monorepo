@@ -14,7 +14,9 @@ const BACKEND_URL: string =
 /**
  * Create a tRPC client with optional auth token
  */
-export function createApiClient(sessionToken?: string): ReturnType<typeof createTRPCClient<AppRouter>> {
+export function createApiClient(
+  sessionToken?: string,
+): ReturnType<typeof createTRPCClient<AppRouter>> {
   return createTRPCClient<AppRouter>({
     links: [
       httpBatchLink({

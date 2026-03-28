@@ -2,15 +2,15 @@
 
 ## Cluster Overview
 
-| Metric | Value | Metric | Value |
-|--------|-------|--------|-------|
-| Node | torvalds (single) | Uptime | 313 days |
-| Talos | v1.12.0 | Kubernetes | v1.35.0 |
-| CPU | 36–46% | Memory | 71% (27.6% free) |
-| Load Avg | 17.72 | Storage | 32 TB raw (8 SSDs) |
-| PVCs | 57/57 Bound | API Server | 34/34 checks pass |
-| Deployments | 73 available | StatefulSets | 35 healthy |
-| DaemonSets | 13 healthy | etcd | Consistent |
+| Metric      | Value             | Metric       | Value              |
+| ----------- | ----------------- | ------------ | ------------------ |
+| Node        | torvalds (single) | Uptime       | 313 days           |
+| Talos       | v1.12.0           | Kubernetes   | v1.35.0            |
+| CPU         | 36–46%            | Memory       | 71% (27.6% free)   |
+| Load Avg    | 17.72             | Storage      | 32 TB raw (8 SSDs) |
+| PVCs        | 57/57 Bound       | API Server   | 34/34 checks pass  |
+| Deployments | 73 available      | StatefulSets | 35 healthy         |
+| DaemonSets  | 13 healthy        | etcd         | Consistent         |
 
 ## Critical Issues (3)
 
@@ -68,56 +68,56 @@ GitHub Actions Runner Controller hitting `context deadline exceeded` on CRD fina
 
 ## Informational Issues (4)
 
-| Item | Details |
-|------|---------|
-| 30 ArgoCD apps OutOfSync | All healthy — pending chart changes with manual sync policies. Sync at convenience |
-| Talosctl version skew | Client v1.12.5 vs server v1.12.0. Upgrade node to match |
-| Velero backup item errors | Weekly backup schedule reporting errors |
+| Item                        | Details                                                                                                 |
+| --------------------------- | ------------------------------------------------------------------------------------------------------- |
+| 30 ArgoCD apps OutOfSync    | All healthy — pending chart changes with manual sync policies. Sync at convenience                      |
+| Talosctl version skew       | Client v1.12.5 vs server v1.12.0. Upgrade node to match                                                 |
+| Velero backup item errors   | Weekly backup schedule reporting errors                                                                 |
 | 11 PagerDuty incidents open | Includes above items plus: cat feeder desiccant (-25d), litter robot (72%), skill-capped-fetcher failed |
 
 ## Monitoring Stack Status
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Prometheus | Healthy | 44/45 targets up (status-page down) |
-| Grafana | Degraded | 33/40 dashboards loading — 7 have invalid JSON |
-| Loki | Degraded | Running but ruler partially broken (dns-audit YAML error) |
-| Tempo | Healthy | Distributed tracing operational |
-| Alertmanager | Degraded | Running but PagerDuty delivery failing |
-| Promtail | Healthy | Shipping logs from all pods |
+| Component    | Status   | Notes                                                     |
+| ------------ | -------- | --------------------------------------------------------- |
+| Prometheus   | Healthy  | 44/45 targets up (status-page down)                       |
+| Grafana      | Degraded | 33/40 dashboards loading — 7 have invalid JSON            |
+| Loki         | Degraded | Running but ruler partially broken (dns-audit YAML error) |
+| Tempo        | Healthy  | Distributed tracing operational                           |
+| Alertmanager | Degraded | Running but PagerDuty delivery failing                    |
+| Promtail     | Healthy  | Shipping logs from all pods                               |
 
 ## Top Resource Consumers
 
-| Pod | Memory | CPU |
-|-----|--------|-----|
-| minecraft-allthemons-0 | 17,352 Mi | 2,982m |
-| plausible-clickhouse | 3,082 Mi | 1,357m |
-| dagger-engine | 2,329 Mi | 1,148m |
-| kube-apiserver | 2,149 Mi | 194m |
-| loki-0 | 1,304 Mi | — |
-| prometheus | 958 Mi | — |
-| argocd-application-controller | 822 Mi | 142m |
-| home-homeassistant | 689 Mi | — |
+| Pod                           | Memory    | CPU    |
+| ----------------------------- | --------- | ------ |
+| minecraft-allthemons-0        | 17,352 Mi | 2,982m |
+| plausible-clickhouse          | 3,082 Mi  | 1,357m |
+| dagger-engine                 | 2,329 Mi  | 1,148m |
+| kube-apiserver                | 2,149 Mi  | 194m   |
+| loki-0                        | 1,304 Mi  | —      |
+| prometheus                    | 958 Mi    | —      |
+| argocd-application-controller | 822 Mi    | 142m   |
+| home-homeassistant            | 689 Mi    | —      |
 
 ## Firing Alerts (18)
 
-| Severity | Alert | Target |
-|----------|-------|--------|
-| Critical | R2StorageExceedingLimit | R2 bucket `homelab` |
-| Warning | TargetDown | status-page service |
-| Warning | PVCStorageHigh | plex-tv-hdd-pvc (94.65%) |
-| Warning | KubePersistentVolumeFillingUp | plex-tv-hdd-pvc |
-| Warning | ReleasedPVsAccumulating | Orphaned PVs |
-| Warning | KubePodCrashLooping | kubernetes-event-exporter |
-| Warning | KubeDeploymentReplicasMismatch | kubernetes-event-exporter |
-| Warning | KubePdbNotEnoughHealthyPods | bugsink, prometheus, plausible |
-| Warning | NodeMemoryMajorPagesFaults | torvalds |
-| Warning | SustainedDiskWriteActivity | nvme0n1, nvme1n1 |
-| Warning | VeleroBackupItemErrors | Weekly schedule |
-| Warning | AlertmanagerFailedToSendAlerts | PagerDuty integration |
-| Warning | R2StorageNearingLimit | R2 bucket `homelab` |
-| Info | GranaryFeederDesiccantRemainingDays | Cat feeder (-25 days) |
-| Info | Watchdog | Heartbeat (expected) |
+| Severity | Alert                               | Target                         |
+| -------- | ----------------------------------- | ------------------------------ |
+| Critical | R2StorageExceedingLimit             | R2 bucket `homelab`            |
+| Warning  | TargetDown                          | status-page service            |
+| Warning  | PVCStorageHigh                      | plex-tv-hdd-pvc (94.65%)       |
+| Warning  | KubePersistentVolumeFillingUp       | plex-tv-hdd-pvc                |
+| Warning  | ReleasedPVsAccumulating             | Orphaned PVs                   |
+| Warning  | KubePodCrashLooping                 | kubernetes-event-exporter      |
+| Warning  | KubeDeploymentReplicasMismatch      | kubernetes-event-exporter      |
+| Warning  | KubePdbNotEnoughHealthyPods         | bugsink, prometheus, plausible |
+| Warning  | NodeMemoryMajorPagesFaults          | torvalds                       |
+| Warning  | SustainedDiskWriteActivity          | nvme0n1, nvme1n1               |
+| Warning  | VeleroBackupItemErrors              | Weekly schedule                |
+| Warning  | AlertmanagerFailedToSendAlerts      | PagerDuty integration          |
+| Warning  | R2StorageNearingLimit               | R2 bucket `homelab`            |
+| Info     | GranaryFeederDesiccantRemainingDays | Cat feeder (-25 days)          |
+| Info     | Watchdog                            | Heartbeat (expected)           |
 
 ## What's Working Well
 

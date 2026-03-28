@@ -57,7 +57,12 @@ export function complianceCheckHelper(source: Directory): Container {
 
 /** Run knip to detect unused code and return its output. */
 export function knipCheckHelper(source: Directory): Container {
-  return bunContainer(source).withExec(["bunx", "knip", "--no-exit-code"]);
+  return bunContainer(source).withExec([
+    "bunx",
+    "knip",
+    "--no-exit-code",
+    "--no-config-hints",
+  ]);
 }
 
 /** Run gitleaks to detect secrets in the source tree. */

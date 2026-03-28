@@ -1,4 +1,5 @@
 import { recommended } from "@shepherdjerred/eslint-config";
+import type { TSESLint } from "@typescript-eslint/utils";
 
 export default [
   ...recommended({
@@ -9,4 +10,4 @@ export default [
   {
     ignores: ["src/hass/"],
   },
-];
+] satisfies TSESLint.FlatConfig.ConfigArray;

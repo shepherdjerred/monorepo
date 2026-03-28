@@ -1,4 +1,5 @@
 import { recommended, customRulesPlugin } from "@shepherdjerred/eslint-config";
+import type { TSESLint } from "@typescript-eslint/utils";
 
 export default [
   ...recommended({
@@ -171,4 +172,4 @@ export default [
     ],
     rules: { "unicorn/prefer-add-event-listener": "off" },
   },
-];
+] satisfies TSESLint.FlatConfig.ConfigArray;

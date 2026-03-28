@@ -1,4 +1,5 @@
 import { recommended } from "@shepherdjerred/eslint-config";
+import type { TSESLint } from "@typescript-eslint/utils";
 
 export default [
   ...recommended({
@@ -16,4 +17,4 @@ export default [
       "max-lines": ["error", { max: 600 }],
     },
   },
-];
+] satisfies TSESLint.FlatConfig.ConfigArray;

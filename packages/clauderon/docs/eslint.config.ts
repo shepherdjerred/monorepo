@@ -1,4 +1,5 @@
 import { recommended, astroConfig } from "@shepherdjerred/eslint-config";
+import type { TSESLint } from "@typescript-eslint/utils";
 
 export default [
   ...recommended({
@@ -13,4 +14,4 @@ export default [
       "@typescript-eslint/no-unsafe-call": "off",
     },
   },
-];
+] satisfies TSESLint.FlatConfig.ConfigArray;
