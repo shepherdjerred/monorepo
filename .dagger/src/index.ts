@@ -120,16 +120,17 @@ export class Monorepo {
           dag.cacheVolume(BUN_CACHE),
         )
         .withWorkdir("/workspace")
-        // Copy dependency manifests first for better layer caching
-        .withFile("/workspace/package.json", source.file("package.json"))
-        .withFile("/workspace/bun.lock", source.file("bun.lock"))
-        .withDirectory("/workspace/patches", source.directory("patches"))
+        // Copy all package.json files + lockfile first for layer caching.
+        // Bun workspaces need all workspace package.json files to resolve the lockfile.
+        .withDirectory("/workspace", source, {
+          include: ["package.json", "bun.lock", "patches/**", "**/package.json"],
+          exclude: ["**/node_modules/**"],
+        })
         .withExec(["bun", "install", "--frozen-lockfile"])
-        // Now mount the full source (excludes node_modules so install is preserved)
+        // Now mount the full source (node_modules excluded so install is preserved)
         .withDirectory("/workspace", source, {
           exclude: SOURCE_EXCLUDES,
         })
-        .withExec(["bun", "install", "--frozen-lockfile"])
         // Build workspace deps that publish types/exports via dist/
         .withWorkdir("/workspace/packages/eslint-config")
         .withExec(["bun", "run", "build"])

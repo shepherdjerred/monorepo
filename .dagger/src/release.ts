@@ -120,12 +120,12 @@ export function publishNpmHelper(
     .from(BUN_IMAGE)
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
     .withWorkdir("/workspace")
-    .withFile("/workspace/package.json", source.file("package.json"))
-    .withFile("/workspace/bun.lock", source.file("bun.lock"))
-    .withDirectory("/workspace/patches", source.directory("patches"))
+    .withDirectory("/workspace", source, {
+      include: ["package.json", "bun.lock", "patches/**", "**/package.json"],
+      exclude: ["**/node_modules/**"],
+    })
     .withExec(["bun", "install", "--frozen-lockfile"])
     .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
-    .withExec(["bun", "install", "--frozen-lockfile"])
     .withWorkdir(`/workspace/packages/${pkg}`)
     .withSecretVariable("NPM_TOKEN", npmToken)
     .withExec([
@@ -165,12 +165,12 @@ export function deploySiteHelper(
     ])
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
     .withWorkdir("/workspace")
-    .withFile("/workspace/package.json", source.file("package.json"))
-    .withFile("/workspace/bun.lock", source.file("bun.lock"))
-    .withDirectory("/workspace/patches", source.directory("patches"))
+    .withDirectory("/workspace", source, {
+      include: ["package.json", "bun.lock", "patches/**", "**/package.json"],
+      exclude: ["**/node_modules/**"],
+    })
     .withExec(["bun", "install", "--frozen-lockfile"])
     .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
-    .withExec(["bun", "install", "--frozen-lockfile"])
     .withWorkdir(`/workspace/${pkg}`)
     .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
     .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey);
@@ -250,12 +250,12 @@ export function cooklangBuildHelper(
     .from(BUN_IMAGE)
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
     .withWorkdir("/workspace")
-    .withFile("/workspace/package.json", source.file("package.json"))
-    .withFile("/workspace/bun.lock", source.file("bun.lock"))
-    .withDirectory("/workspace/patches", source.directory("patches"))
+    .withDirectory("/workspace", source, {
+      include: ["package.json", "bun.lock", "patches/**", "**/package.json"],
+      exclude: ["**/node_modules/**"],
+    })
     .withExec(["bun", "install", "--frozen-lockfile"])
     .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
-    .withExec(["bun", "install", "--frozen-lockfile"])
     .withWorkdir("/workspace/packages/cooklang-for-obsidian")
     .withExec(["bun", "run", "build"]);
 }

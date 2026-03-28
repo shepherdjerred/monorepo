@@ -40,14 +40,14 @@ function bunContainer(source: Directory): Container {
     .from(BUN_IMAGE)
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
     .withWorkdir("/workspace")
-    .withFile("/workspace/package.json", source.file("package.json"))
-    .withFile("/workspace/bun.lock", source.file("bun.lock"))
-    .withDirectory("/workspace/patches", source.directory("patches"))
+    .withDirectory("/workspace", source, {
+      include: ["package.json", "bun.lock", "patches/**", "**/package.json"],
+      exclude: ["**/node_modules/**"],
+    })
     .withExec(["bun", "install", "--frozen-lockfile"])
     .withDirectory("/workspace", source, {
       exclude: SOURCE_EXCLUDES,
-    })
-    .withExec(["bun", "install", "--frozen-lockfile"]);
+    });
 }
 
 /** Run the quality ratchet script and return its output. */
