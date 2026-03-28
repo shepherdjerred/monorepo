@@ -19,12 +19,7 @@
   "dislikes": 16,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[2,4,6,5,7]",
-    "[2,4,5,7]",
-    "[1,2,3]",
-    "[4,5,6,8]"
-  ],
+  "exampleTestcaseList": ["[2,4,6,5,7]", "[2,4,5,7]", "[1,2,3]", "[4,5,6,8]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

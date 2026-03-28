@@ -14,11 +14,7 @@
   "dislikes": 33,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1]",
-    "[2,1,4]",
-    "[4,3,1,6]"
-  ],
+  "exampleTestcaseList": ["[1]", "[2,1,4]", "[4,3,1,6]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 16, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"national-payments-coorperation-india\", \"name\": \"National Payments Corporation of India\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

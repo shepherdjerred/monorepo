@@ -15,10 +15,7 @@
   "dislikes": 16,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[4,2,9,5,3]",
-    "[4,8,2,8]"
-  ],
+  "exampleTestcaseList": ["[4,2,9,5,3]", "[4,8,2,8]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"unstop\", \"name\": \"Unstop\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

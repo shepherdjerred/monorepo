@@ -14,11 +14,7 @@
   "dislikes": 2,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Permutations IV\", \"titleSlug\": \"permutations-iv\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "4",
-    "2",
-    "3"
-  ],
+  "exampleTestcaseList": ["4", "2", "3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

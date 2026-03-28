@@ -15,10 +15,7 @@
   "dislikes": 29,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "5\n[[2,4],[0,2],[0,4]]",
-    "4\n[[0,3],[0,2]]"
-  ],
+  "exampleTestcaseList": ["5\n[[2,4],[0,2],[0,4]]", "4\n[[0,3],[0,2]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

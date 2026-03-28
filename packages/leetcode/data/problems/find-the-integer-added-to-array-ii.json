@@ -15,10 +15,7 @@
   "dislikes": 43,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[4,20,16,12,8]\n[14,18,10]",
-    "[3,5,5,3]\n[7,7]"
-  ],
+  "exampleTestcaseList": ["[4,20,16,12,8]\n[14,18,10]", "[3,5,5,3]\n[7,7]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"mitsogo\", \"name\": \"Mitsogo\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -12,10 +12,7 @@
   "dislikes": 2,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Balanced Binary Tree\", \"titleSlug\": \"balanced-binary-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"1234\"",
-    "\"24123\""
-  ],
+  "exampleTestcaseList": ["\"1234\"", "\"24123\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

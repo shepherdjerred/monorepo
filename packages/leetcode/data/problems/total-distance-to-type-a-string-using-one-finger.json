@@ -17,10 +17,7 @@
   "dislikes": 2,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Single-Row Keyboard\", \"titleSlug\": \"single-row-keyboard\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"hello\"",
-    "\"a\""
-  ],
+  "exampleTestcaseList": ["\"hello\"", "\"a\""],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

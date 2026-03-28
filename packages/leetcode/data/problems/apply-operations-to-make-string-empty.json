@@ -15,10 +15,7 @@
   "dislikes": 8,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"aabcbbca\"",
-    "\"abcd\""
-  ],
+  "exampleTestcaseList": ["\"aabcbbca\"", "\"abcd\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"virtusa\", \"name\": \"Virtusa\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

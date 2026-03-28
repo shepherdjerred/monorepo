@@ -16,10 +16,7 @@
   "dislikes": 11,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[[1,1],[1,2],[3,2],[3,3]]",
-    "[[1,1],[2,2],[3,3]]"
-  ],
+  "exampleTestcaseList": ["[[1,1],[1,2],[3,2],[3,3]]", "[[1,1],[2,2],[3,3]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"docusign\", \"name\": \"Docusign\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

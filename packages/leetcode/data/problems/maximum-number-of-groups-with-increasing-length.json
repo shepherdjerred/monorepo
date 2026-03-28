@@ -16,11 +16,7 @@
   "dislikes": 44,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Group the People Given the Group Size They Belong To\", \"titleSlug\": \"group-the-people-given-the-group-size-they-belong-to\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,5]",
-    "[2,1,2]",
-    "[1,1]"
-  ],
+  "exampleTestcaseList": ["[1,2,5]", "[2,1,2]", "[1,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 17, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

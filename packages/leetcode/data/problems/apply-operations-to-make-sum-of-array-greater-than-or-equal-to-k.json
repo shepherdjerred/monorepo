@@ -15,10 +15,7 @@
   "dislikes": 18,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "11",
-    "1"
-  ],
+  "exampleTestcaseList": ["11", "1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"turing\", \"name\": \"Turing\"}, {\"timesEncountered\": 3, \"slug\": \"zscaler\", \"name\": \"ZScaler\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

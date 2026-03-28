@@ -16,11 +16,7 @@
   "dislikes": 15,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Kth Smallest Amount With Single Denomination Combination\", \"titleSlug\": \"kth-smallest-amount-with-single-denomination-combination\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1\n2\n3",
-    "5\n2\n1",
-    "3\n3\n4"
-  ],
+  "exampleTestcaseList": ["1\n2\n3", "5\n2\n1", "3\n3\n4"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

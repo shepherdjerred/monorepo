@@ -16,11 +16,7 @@
   "dislikes": 11,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"(())\"\n1",
-    "\"(()(\"\n1",
-    "\"((()))()()()\"\n3"
-  ],
+  "exampleTestcaseList": ["\"(())\"\n1", "\"(()(\"\n1", "\"((()))()()()\"\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"deloitte\", \"name\": \"Deloitte\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

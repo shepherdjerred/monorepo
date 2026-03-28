@@ -5,20 +5,14 @@
   "titleSlug": "find-valid-pair-of-adjacent-digits-in-string",
   "difficulty": "Easy",
   "content": "<p>You are given a string <code>s</code> consisting only of digits. A <strong>valid pair</strong> is defined as two <strong>adjacent</strong> digits in <code>s</code> such that:</p>\n\n<ul>\n\t<li>The first digit is <strong>not equal</strong> to the second.</li>\n\t<li>Each digit in the pair appears in <code>s</code> <strong>exactly</strong> as many times as its numeric value.</li>\n</ul>\n\n<p>Return the first <strong>valid pair</strong> found in the string <code>s</code> when traversing from left to right. If no valid pair exists, return an empty string.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;2523533&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;23&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Digit <code>&#39;2&#39;</code> appears 2 times and digit <code>&#39;3&#39;</code> appears 3 times. Each digit in the pair <code>&quot;23&quot;</code> appears in <code>s</code> exactly as many times as its numeric value. Hence, the output is <code>&quot;23&quot;</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;221&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;21&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Digit <code>&#39;2&#39;</code> appears 2 times and digit <code>&#39;1&#39;</code> appears 1 time. Hence, the output is <code>&quot;21&quot;</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;22&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There are no valid adjacent pairs.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= s.length &lt;= 100</code></li>\n\t<li><code>s</code> only consists of digits from <code>&#39;1&#39;</code> to <code>&#39;9&#39;</code>.</li>\n</ul>\n",
-  "hints": [
-    "Use a HashMap to count the frequency of each digit."
-  ],
+  "hints": ["Use a HashMap to count the frequency of each digit."],
   "metaData": "{\n  \"name\": \"findValidPair\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"47K\", \"totalSubmission\": \"77.4K\", \"totalAcceptedRaw\": 46976, \"totalSubmissionRaw\": 77357, \"acRate\": \"60.7%\"}",
   "likes": 82,
   "dislikes": 9,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Majority Element\", \"titleSlug\": \"majority-element\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Contains Duplicate\", \"titleSlug\": \"contains-duplicate\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"2523533\"",
-    "\"221\"",
-    "\"22\""
-  ],
+  "exampleTestcaseList": ["\"2523533\"", "\"221\"", "\"22\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -16,11 +16,7 @@
   "dislikes": 4,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Subsequences That Satisfy the Given Sum Condition\", \"titleSlug\": \"number-of-subsequences-that-satisfy-the-given-sum-condition\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3]\n3",
-    "[2,3,3]\n5",
-    "[1,2,3]\n7"
-  ],
+  "exampleTestcaseList": ["[1,2,3]\n3", "[2,3,3]\n5", "[1,2,3]\n7"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

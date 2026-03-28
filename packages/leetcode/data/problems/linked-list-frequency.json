@@ -14,9 +14,7 @@
   "dislikes": 21,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Top K Frequent Elements\", \"titleSlug\": \"top-k-frequent-elements\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,1,2,1,2,3]"
-  ],
+  "exampleTestcaseList": ["[1,1,2,1,2,3]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

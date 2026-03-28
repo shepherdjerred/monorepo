@@ -14,10 +14,7 @@
   "dislikes": 2,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Find the Shortest Superstring\", \"titleSlug\": \"find-the-shortest-superstring\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"aba\"\n\"bab\"",
-    "\"aa\"\n\"aaa\""
-  ],
+  "exampleTestcaseList": ["\"aba\"\n\"bab\"", "\"aa\"\n\"aaa\""],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

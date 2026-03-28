@@ -16,10 +16,7 @@
   "dislikes": 3,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"hello world\"\n0",
-    "\"hello world\"\n15"
-  ],
+  "exampleTestcaseList": ["\"hello world\"\n0", "\"hello world\"\n15"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

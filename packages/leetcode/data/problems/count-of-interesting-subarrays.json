@@ -19,10 +19,7 @@
   "dislikes": 270,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Subarray Sums Divisible by K\", \"titleSlug\": \"subarray-sums-divisible-by-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Number of Nice Subarrays\", \"titleSlug\": \"count-number-of-nice-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,2,4]\n2\n1",
-    "[3,1,9,6]\n3\n0"
-  ],
+  "exampleTestcaseList": ["[3,2,4]\n2\n1", "[3,1,9,6]\n3\n0"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

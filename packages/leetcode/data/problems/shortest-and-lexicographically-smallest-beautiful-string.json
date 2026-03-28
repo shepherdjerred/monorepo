@@ -15,11 +15,7 @@
   "dislikes": 12,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"100011001\"\n3",
-    "\"1011\"\n2",
-    "\"000\"\n1"
-  ],
+  "exampleTestcaseList": ["\"100011001\"\n3", "\"1011\"\n2", "\"000\"\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 3, \"slug\": \"wells-fargo\", \"name\": \"Wells Fargo\"}, {\"timesEncountered\": 2, \"slug\": \"yelp\", \"name\": \"Yelp\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

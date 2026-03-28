@@ -14,10 +14,7 @@
   "dislikes": 52,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[2,3,5,7]",
-    "[11,13,31]"
-  ],
+  "exampleTestcaseList": ["[2,3,5,7]", "[11,13,31]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"aon\", \"name\": \"Aon\"}]}",
   "topicTags": [
     {

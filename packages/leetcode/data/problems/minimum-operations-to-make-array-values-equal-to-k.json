@@ -17,11 +17,7 @@
   "dislikes": 532,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[5,2,5,4,5]\n2",
-    "[2,1,2]\n2",
-    "[9,7,5,3]\n1"
-  ],
+  "exampleTestcaseList": ["[5,2,5,4,5]\n2", "[2,1,2]\n2", "[9,7,5,3]\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"lowe\", \"name\": \"Lowe's\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

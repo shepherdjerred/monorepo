@@ -16,10 +16,7 @@
   "dislikes": 41,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Substrings Containing All Three Characters\", \"titleSlug\": \"number-of-substrings-containing-all-three-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Substrings Without Repeating Character\", \"titleSlug\": \"count-substrings-without-repeating-character\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"igigee\"\n2",
-    "\"aaabbbccc\"\n3"
-  ],
+  "exampleTestcaseList": ["\"igigee\"\n2", "\"aaabbbccc\"\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"meesho\", \"name\": \"Meesho\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -16,10 +16,7 @@
   "dislikes": 2,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[4,2,3]",
-    "[1,3,1]"
-  ],
+  "exampleTestcaseList": ["[4,2,3]", "[1,3,1]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"harness\", \"name\": \"Harness\"}], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

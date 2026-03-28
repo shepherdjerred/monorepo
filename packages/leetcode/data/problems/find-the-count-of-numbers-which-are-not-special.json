@@ -16,10 +16,7 @@
   "dislikes": 26,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Primes\", \"titleSlug\": \"count-primes\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "5\n7",
-    "4\n16"
-  ],
+  "exampleTestcaseList": ["5\n7", "4\n16"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

@@ -14,10 +14,7 @@
   "dislikes": 7,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Odd Even Linked List\", \"titleSlug\": \"odd-even-linked-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,3,2,1]",
-    "[1,5,1,4,2]"
-  ],
+  "exampleTestcaseList": ["[4,3,2,1]", "[1,5,1,4,2]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

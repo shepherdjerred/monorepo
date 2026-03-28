@@ -15,10 +15,7 @@
   "dislikes": 76,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Vowels Permutation\", \"titleSlug\": \"count-vowels-permutation\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "4",
-    "10"
-  ],
+  "exampleTestcaseList": ["4", "10"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"meesho\", \"name\": \"Meesho\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

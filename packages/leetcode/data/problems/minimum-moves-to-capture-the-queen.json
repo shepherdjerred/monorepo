@@ -15,10 +15,7 @@
   "dislikes": 209,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Available Captures for Rook\", \"titleSlug\": \"available-captures-for-rook\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Queens That Can Attack the King\", \"titleSlug\": \"queens-that-can-attack-the-king\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1\n1\n8\n8\n2\n3",
-    "5\n3\n3\n4\n5\n2"
-  ],
+  "exampleTestcaseList": ["1\n1\n8\n8\n2\n3", "5\n3\n3\n4\n5\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"wipro\", \"name\": \"Wipro\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

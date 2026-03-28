@@ -17,11 +17,7 @@
   "dislikes": 6,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[3,3,4,7,8]\n5",
-    "[3,3,3,3]\n3",
-    "[3,3,3,3]\n6"
-  ],
+  "exampleTestcaseList": ["[3,3,4,7,8]\n5", "[3,3,3,3]\n3", "[3,3,3,3]\n6"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"visa\", \"name\": \"Visa\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"at-t\", \"name\": \"AT&T\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 4, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 3, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}, {\"timesEncountered\": 2, \"slug\": \"activision\", \"name\": \"Activision\"}, {\"timesEncountered\": 2, \"slug\": \"zscaler\", \"name\": \"ZScaler\"}, {\"timesEncountered\": 2, \"slug\": \"palantir-technologies\", \"name\": \"Palantir Technologies\"}]}",
   "topicTags": [
     {

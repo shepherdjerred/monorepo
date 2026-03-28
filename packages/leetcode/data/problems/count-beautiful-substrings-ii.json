@@ -16,11 +16,7 @@
   "dislikes": 9,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"baeyh\"\n2",
-    "\"abba\"\n1",
-    "\"bcdf\"\n1"
-  ],
+  "exampleTestcaseList": ["\"baeyh\"\n2", "\"abba\"\n1", "\"bcdf\"\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -14,11 +14,7 @@
   "dislikes": 12,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find Numbers with Even Number of Digits\", \"titleSlug\": \"find-numbers-with-even-number-of-digits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count Integers With Even Digit Sum\", \"titleSlug\": \"count-integers-with-even-digit-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4,10]",
-    "[1,2,3,4,5,14]",
-    "[5,5,5,25]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4,10]", "[1,2,3,4,5,14]", "[5,5,5,25]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

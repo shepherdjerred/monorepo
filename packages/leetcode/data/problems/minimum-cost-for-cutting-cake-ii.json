@@ -16,10 +16,7 @@
   "dislikes": 18,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Cost for Cutting Cake I\", \"titleSlug\": \"minimum-cost-for-cutting-cake-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "3\n2\n[1,3]\n[5]",
-    "2\n2\n[7]\n[4]"
-  ],
+  "exampleTestcaseList": ["3\n2\n[1,3]\n[5]", "2\n2\n[7]\n[4]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

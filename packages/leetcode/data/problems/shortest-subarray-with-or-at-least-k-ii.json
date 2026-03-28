@@ -16,11 +16,7 @@
   "dislikes": 73,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Size Subarray Sum Equals k\", \"titleSlug\": \"maximum-size-subarray-sum-equals-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Shortest Subarray with Sum at Least K\", \"titleSlug\": \"shortest-subarray-with-sum-at-least-k\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3]\n2",
-    "[2,1,8]\n10",
-    "[1,2]\n0"
-  ],
+  "exampleTestcaseList": ["[1,2,3]\n2", "[2,1,8]\n10", "[1,2]\n0"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"mitsogo\", \"name\": \"Mitsogo\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

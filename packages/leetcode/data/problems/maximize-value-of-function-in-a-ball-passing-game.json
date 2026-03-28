@@ -19,10 +19,7 @@
   "dislikes": 93,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Jump Game VI\", \"titleSlug\": \"jump-game-vi\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,0,1]\n4",
-    "[1,1,1,2,3]\n3"
-  ],
+  "exampleTestcaseList": ["[2,0,1]\n4", "[1,1,1,2,3]\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

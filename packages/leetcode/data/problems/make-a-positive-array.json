@@ -17,11 +17,7 @@
   "dislikes": 7,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[-10,15,-12]",
-    "[-1,-2,3,-1,2,6]",
-    "[1,2,3]"
-  ],
+  "exampleTestcaseList": ["[-10,15,-12]", "[-1,-2,3,-1,2,6]", "[1,2,3]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"ukg\", \"name\": \"UKG\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

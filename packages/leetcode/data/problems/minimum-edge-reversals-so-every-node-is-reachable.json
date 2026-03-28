@@ -18,10 +18,7 @@
   "dislikes": 12,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Reorder Routes to Make All Paths Lead to the City Zero\", \"titleSlug\": \"reorder-routes-to-make-all-paths-lead-to-the-city-zero\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "4\n[[2,0],[2,1],[1,3]]",
-    "3\n[[1,2],[2,0]]"
-  ],
+  "exampleTestcaseList": ["4\n[[2,0],[2,1],[1,3]]", "3\n[[1,2],[2,0]]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 13, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 12, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 2, \"slug\": \"cashfree\", \"name\": \"Cashfree\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}, {\"timesEncountered\": 4, \"slug\": \"meesho\", \"name\": \"Meesho\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}]}",
   "topicTags": [
     {

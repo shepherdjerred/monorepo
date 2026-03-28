@@ -20,11 +20,7 @@
   "dislikes": 2,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Number of Steps to Make Two Strings Anagram\", \"titleSlug\": \"minimum-number-of-steps-to-make-two-strings-anagram\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"acab\"",
-    "\"wddw\"",
-    "\"aaabbc\""
-  ],
+  "exampleTestcaseList": ["\"acab\"", "\"wddw\"", "\"aaabbc\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

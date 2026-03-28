@@ -14,10 +14,7 @@
   "dislikes": 311,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Longest Common Prefix\", \"titleSlug\": \"longest-common-prefix\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"First Missing Positive\", \"titleSlug\": \"first-missing-positive\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Next Greater Element I\", \"titleSlug\": \"next-greater-element-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,2,5]",
-    "[3,4,5,1,12,14,13]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,2,5]", "[3,4,5,1,12,14,13]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
   "topicTags": [
     {

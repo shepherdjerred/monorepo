@@ -16,10 +16,7 @@
   "dislikes": 20,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Total Hamming Distance\", \"titleSlug\": \"total-hamming-distance\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[13,23,12]",
-    "[10,10,10,10]"
-  ],
+  "exampleTestcaseList": ["[13,23,12]", "[10,10,10,10]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"turing\", \"name\": \"Turing\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

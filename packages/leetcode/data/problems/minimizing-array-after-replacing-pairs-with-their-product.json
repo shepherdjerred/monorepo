@@ -20,10 +20,7 @@
   "dislikes": 1,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[2,3,3,7,3,5]\n20",
-    "[3,3,3,3]\n6"
-  ],
+  "exampleTestcaseList": ["[2,3,3,7,3,5]\n20", "[3,3,3,3]\n6"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"wells-fargo\", \"name\": \"Wells Fargo\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

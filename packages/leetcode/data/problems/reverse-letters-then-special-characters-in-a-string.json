@@ -15,11 +15,7 @@
   "dislikes": 3,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Reverse Only Letters\", \"titleSlug\": \"reverse-only-letters\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\")ebc#da@f(\"",
-    "\"z\"",
-    "\"!@#$%^&*()\""
-  ],
+  "exampleTestcaseList": ["\")ebc#da@f(\"", "\"z\"", "\"!@#$%^&*()\""],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

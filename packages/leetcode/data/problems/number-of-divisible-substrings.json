@@ -16,11 +16,7 @@
   "dislikes": 6,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Count Substrings Divisible By Last Digit\", \"titleSlug\": \"count-substrings-divisible-by-last-digit\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"asdf\"",
-    "\"bdh\"",
-    "\"abcd\""
-  ],
+  "exampleTestcaseList": ["\"asdf\"", "\"bdh\"", "\"abcd\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"wayfair\", \"name\": \"Wayfair\"}, {\"timesEncountered\": 5, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 5, \"slug\": \"paytm\", \"name\": \"Paytm\"}, {\"timesEncountered\": 2, \"slug\": \"amdocs\", \"name\": \"Amdocs\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

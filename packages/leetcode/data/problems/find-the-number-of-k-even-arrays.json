@@ -15,11 +15,7 @@
   "dislikes": 3,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Sort Array By Parity II\", \"titleSlug\": \"sort-array-by-parity-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "3\n4\n2",
-    "5\n1\n0",
-    "7\n7\n5"
-  ],
+  "exampleTestcaseList": ["3\n4\n2", "5\n1\n0", "7\n7\n5"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

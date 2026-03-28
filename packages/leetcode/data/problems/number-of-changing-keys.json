@@ -14,10 +14,7 @@
   "dislikes": 18,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"aAbBcC\"",
-    "\"AaAaAaaA\""
-  ],
+  "exampleTestcaseList": ["\"aAbBcC\"", "\"AaAaAaaA\""],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"visa\", \"name\": \"Visa\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"autodesk\", \"name\": \"Autodesk\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"three_months\": []}",
   "topicTags": [
     {

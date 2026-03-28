@@ -15,10 +15,7 @@
   "dislikes": 11,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "2\n2\n2",
-    "1\n4\n3"
-  ],
+  "exampleTestcaseList": ["2\n2\n2", "1\n4\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"rubrik\", \"name\": \"Rubrik\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

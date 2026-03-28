@@ -18,11 +18,7 @@
   "dislikes": 13,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"aaabbbccdddde\"",
-    "\"abcd\"",
-    "\"pfpfgi\""
-  ],
+  "exampleTestcaseList": ["\"aaabbbccdddde\"", "\"abcd\"", "\"pfpfgi\""],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

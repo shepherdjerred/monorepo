@@ -5,19 +5,14 @@
   "titleSlug": "count-commas-in-range",
   "difficulty": "Easy",
   "content": "<p>You are given an integer <code>n</code>.</p>\n\n<p>Return the <strong>total</strong> number of commas used when writing all integers from <code>[1, n]</code> (inclusive) in <strong>standard</strong> number formatting.</p>\n\n<p>In <strong>standard</strong> formatting:</p>\n\n<ul>\n\t<li>A comma is inserted after <strong>every three</strong> digits from the right.</li>\n\t<li>Numbers with <strong>fewer</strong> than 4 digits contain no commas.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 1002</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The numbers <code>&quot;1,000&quot;</code>, <code>&quot;1,001&quot;</code>, and <code>&quot;1,002&quot;</code> each contain one comma, giving a total of 3.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 998</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>All numbers from 1 to 998 have fewer than four digits. Therefore, no commas are used.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
-  "hints": [
-    "Numbers in the range <code>[1000, 100000]</code> have one comma."
-  ],
+  "hints": ["Numbers in the range <code>[1000, 100000]</code> have one comma."],
   "metaData": "{\n  \"name\": \"countCommas\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"53.7K\", \"totalSubmission\": \"78.4K\", \"totalAcceptedRaw\": 53737, \"totalSubmissionRaw\": 78410, \"acRate\": \"68.5%\"}",
   "likes": 35,
   "dislikes": 3,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "1002",
-    "998"
-  ],
+  "exampleTestcaseList": ["1002", "998"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

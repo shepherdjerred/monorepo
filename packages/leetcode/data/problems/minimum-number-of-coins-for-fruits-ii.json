@@ -20,10 +20,7 @@
   "dislikes": 0,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[3,1,2]",
-    "[1,10,1,1]"
-  ],
+  "exampleTestcaseList": ["[3,1,2]", "[1,10,1,1]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

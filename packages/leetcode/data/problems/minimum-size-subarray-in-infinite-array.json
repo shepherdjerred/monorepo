@@ -15,11 +15,7 @@
   "dislikes": 32,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,2,3]\n5",
-    "[1,1,1,2,3]\n4",
-    "[2,4,6,8]\n3"
-  ],
+  "exampleTestcaseList": ["[1,2,3]\n5", "[1,1,1,2,3]\n4", "[2,4,6,8]\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

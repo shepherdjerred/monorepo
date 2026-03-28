@@ -16,11 +16,7 @@
   "dislikes": 20,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Trapping Rain Water\", \"titleSlug\": \"trapping-rain-water\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Sum of Beauty in the Array\", \"titleSlug\": \"sum-of-beauty-in-the-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Sum of Mountain Triplets II\", \"titleSlug\": \"minimum-sum-of-mountain-triplets-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[12,6,1,2,7]",
-    "[1,10,3,4,19]",
-    "[1,2,3]"
-  ],
+  "exampleTestcaseList": ["[12,6,1,2,7]", "[1,10,3,4,19]", "[1,2,3]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"medianet\", \"name\": \"Media.net\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

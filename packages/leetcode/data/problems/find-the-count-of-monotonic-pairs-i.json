@@ -16,10 +16,7 @@
   "dislikes": 13,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Monotonic Array\", \"titleSlug\": \"monotonic-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,3,2]",
-    "[5,5,5,5]"
-  ],
+  "exampleTestcaseList": ["[2,3,2]", "[5,5,5,5]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"arcesium\", \"name\": \"Arcesium\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -5,19 +5,14 @@
   "titleSlug": "minimum-k-to-reduce-array-within-limit",
   "difficulty": "Medium",
   "content": "<p>You are given a <strong>positive</strong> integer array <code>nums</code>.</p>\n\n<p>For a positive integer <code>k</code>, define <code>nonPositive(nums, k)</code> as the <strong>minimum</strong> number of <strong>operations</strong> needed to make every element of <code>nums</code> <strong>non-positive</strong>. In one operation, you can choose an index <code>i</code> and reduce <code>nums[i]</code> by <code>k</code>.</p>\n\n<p>Return an integer denoting the <strong>minimum</strong> value of <code>k</code> such that <code>nonPositive(nums, k) &lt;= k<sup>2</sup></code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [3,7,5]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>When <code>k = 3</code>, <code>nonPositive(nums, k) = 6 &lt;= k<sup>2</sup></code>.</p>\n\n<ul>\n\t<li>Reduce <code>nums[0] = 3</code> one time. <code>nums[0]</code> becomes <code>3 - 3 = 0</code>.</li>\n\t<li>Reduce <code>nums[1] = 7</code> three times. <code>nums[1]</code> becomes <code>7 - 3 - 3 - 3 = -2</code>.</li>\n\t<li>Reduce <code>nums[2] = 5</code> two times. <code>nums[2]</code> becomes <code>5 - 3 - 3 = -1</code>.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>When <code>k = 1</code>, <code>nonPositive(nums, k) = 1 &lt;= k<sup>2</sup></code>.</p>\n\n<ul>\n\t<li>Reduce <code>nums[0] = 1</code> one time. <code>nums[0]</code> becomes <code>1 - 1 = 0</code>.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
-  "hints": [
-    "Use binary search"
-  ],
+  "hints": ["Use binary search"],
   "metaData": "{\n  \"name\": \"minimumK\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"46.5K\", \"totalSubmission\": \"113.2K\", \"totalAcceptedRaw\": 46479, \"totalSubmissionRaw\": 113159, \"acRate\": \"41.1%\"}",
   "likes": 66,
   "dislikes": 2,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[3,7,5]",
-    "[1]"
-  ],
+  "exampleTestcaseList": ["[3,7,5]", "[1]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

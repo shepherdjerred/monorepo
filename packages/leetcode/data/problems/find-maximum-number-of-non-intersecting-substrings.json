@@ -17,10 +17,7 @@
   "dislikes": 3,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"abcdeafdef\"",
-    "\"bcdaaaab\""
-  ],
+  "exampleTestcaseList": ["\"abcdeafdef\"", "\"bcdaaaab\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

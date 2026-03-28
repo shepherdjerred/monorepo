@@ -15,11 +15,7 @@
   "dislikes": 7,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "13\n4",
-    "21\n21",
-    "14\n13"
-  ],
+  "exampleTestcaseList": ["13\n4", "21\n21", "14\n13"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"thoughtworks\", \"name\": \"ThoughtWorks\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

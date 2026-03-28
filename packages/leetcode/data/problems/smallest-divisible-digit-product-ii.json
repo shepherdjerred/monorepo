@@ -16,11 +16,7 @@
   "dislikes": 18,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Smallest Number With Given Digit Product\", \"titleSlug\": \"smallest-number-with-given-digit-product\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"1234\"\n256",
-    "\"12355\"\n50",
-    "\"11111\"\n26"
-  ],
+  "exampleTestcaseList": ["\"1234\"\n256", "\"12355\"\n50", "\"11111\"\n26"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

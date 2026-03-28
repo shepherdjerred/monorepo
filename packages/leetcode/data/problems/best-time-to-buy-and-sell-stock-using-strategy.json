@@ -15,10 +15,7 @@
   "dislikes": 41,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[4,2,8]\n[-1,0,1]\n2",
-    "[5,4,3]\n[1,1,0]\n2"
-  ],
+  "exampleTestcaseList": ["[4,2,8]\n[-1,0,1]\n2", "[5,4,3]\n[1,1,0]\n2"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}], \"three_months\": []}",
   "topicTags": [
     {

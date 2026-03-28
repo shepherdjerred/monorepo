@@ -16,10 +16,7 @@
   "dislikes": 14,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "4",
-    "5"
-  ],
+  "exampleTestcaseList": ["4", "5"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

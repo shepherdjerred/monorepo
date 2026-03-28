@@ -15,10 +15,7 @@
   "dislikes": 10,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Frequency of the Most Frequent Element\", \"titleSlug\": \"frequency-of-the-most-frequent-element\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,6,4]\n3",
-    "[1,4,4,2,4]\n0"
-  ],
+  "exampleTestcaseList": ["[1,2,6,4]\n3", "[1,4,4,2,4]\n0"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"deutsche-bank\", \"name\": \"Deutsche Bank\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -5,19 +5,14 @@
   "titleSlug": "once-twice",
   "difficulty": "Medium",
   "content": "<p>You are given an integer array <code>nums</code>. In this array:</p>\n\n<ul>\n\t<li>\n\t<p>Exactly one element appears <strong>once</strong>.</p>\n\t</li>\n\t<li>\n\t<p>Exactly one element appears <strong>twice</strong>.</p>\n\t</li>\n\t<li>\n\t<p>All other elements appear <strong>exactly three times</strong>.</p>\n\t</li>\n</ul>\n\n<p>Return an integer array of length 2, where the first element is the one that appears <strong>once</strong>, and the second is the one that appears <strong>twice</strong>.</p>\n\n<p>Your solution must run in <strong>O(n)</strong> time and <strong>O(1)</strong> space.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [2,2,3,2,5,5,5,7,7]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[3,7]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The element 3 appears <b>once</b>, and the element 7 appears <b>twice</b>. The remaining elements each appear <b>three times</b>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [4,4,6,4,9,9,9,6,8]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[8,6]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The element 8 appears <b>once</b>, and the element 6 appears <b>twice</b>. The remaining elements each appear <b>three times</b>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-2<sup>31</sup> &lt;= nums[i] &lt;= 2<sup>31</sup> - 1</code></li>\n\t<li><code>nums.length</code> is a multiple of 3.</li>\n\t<li>Exactly one element appears once, one element appears twice, and all other elements appear three times.</li>\n</ul>\n",
-  "hints": [
-    "Use bitmasks"
-  ],
+  "hints": ["Use bitmasks"],
   "metaData": "{\n  \"name\": \"onceTwice\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"650\", \"totalSubmission\": \"854\", \"totalAcceptedRaw\": 650, \"totalSubmissionRaw\": 854, \"acRate\": \"76.1%\"}",
   "likes": 9,
   "dislikes": 3,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[2,2,3,2,5,5,5,7,7]",
-    "[4,4,6,4,9,9,9,6,8]"
-  ],
+  "exampleTestcaseList": ["[2,2,3,2,5,5,5,7,7]", "[4,4,6,4,9,9,9,6,8]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

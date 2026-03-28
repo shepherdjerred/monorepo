@@ -16,10 +16,7 @@
   "dislikes": 11,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,2]",
-    "[3,1,2]"
-  ],
+  "exampleTestcaseList": ["[1,2]", "[3,1,2]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"meesho\", \"name\": \"Meesho\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -14,10 +14,7 @@
   "dislikes": 77,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Operations to Exceed Threshold Value I\", \"titleSlug\": \"minimum-operations-to-exceed-threshold-value-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[0,1,2,3,4]\n2",
-    "[5,1,4,2,2]\n6"
-  ],
+  "exampleTestcaseList": ["[0,1,2,3,4]\n2", "[5,1,4,2,2]\n6"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

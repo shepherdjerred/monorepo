@@ -18,11 +18,7 @@
   "dislikes": 27,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Build an Array With Stack Operations\", \"titleSlug\": \"build-an-array-with-stack-operations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,1,5,4,2]\n2",
-    "[3,1,5,4,2]\n5",
-    "[3,2,5,3,1]\n3"
-  ],
+  "exampleTestcaseList": ["[3,1,5,4,2]\n2", "[3,1,5,4,2]\n5", "[3,2,5,3,1]\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"deutsche-bank\", \"name\": \"Deutsche Bank\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

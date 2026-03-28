@@ -5,19 +5,14 @@
   "titleSlug": "minimum-total-operations",
   "difficulty": "Easy",
   "content": "<p>Given an array of integers <code><font face=\"monospace\">nums</font></code>, you can perform <em>any</em> number of operations on this array.</p>\n\n<p>In each <strong>operation</strong>, you can:</p>\n\n<ul>\n\t<li>Choose a <strong>prefix</strong> of the array.</li>\n\t<li>Choose an integer <code><font face=\"monospace\">k</font></code><font face=\"monospace\"> </font>(which can be negative) and add <code><font face=\"monospace\">k</font></code> to each element in the chosen prefix.</li>\n</ul>\n\n<p>A <strong>prefix</strong> of an array is a subarray that starts from the beginning of the array and extends to any point within it.</p>\n\n<p>Return the <strong>minimum</strong> number of operations required to make all elements in <code>arr</code> equal.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,4,2]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li><strong>Operation 1</strong>: Choose the prefix <code>[1, 4]</code> of length 2 and add -2 to each element of the prefix. The array becomes <code>[-1, 2, 2]</code>.</li>\n\t<li><strong>Operation 2</strong>: Choose the prefix <code>[-1]</code> of length 1 and add 3 to it. The array becomes <code>[2, 2, 2]</code>.</li>\n\t<li>Thus, the minimum number of required operations is 2.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [10,10,10]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>All elements are already equal, so no operations are needed.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
-  "hints": [
-    "Would you ever change the last element of the array?"
-  ],
+  "hints": ["Would you ever change the last element of the array?"],
   "metaData": "{\n  \"name\": \"minOperations\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"1.3K\", \"totalSubmission\": \"2.1K\", \"totalAcceptedRaw\": 1348, \"totalSubmissionRaw\": 2114, \"acRate\": \"63.8%\"}",
   "likes": 14,
   "dislikes": 1,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,4,2]",
-    "[10,10,10]"
-  ],
+  "exampleTestcaseList": ["[1,4,2]", "[10,10,10]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

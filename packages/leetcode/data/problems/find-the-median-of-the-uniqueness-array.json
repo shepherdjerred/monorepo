@@ -16,11 +16,7 @@
   "dislikes": 13,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find K-th Smallest Pair Distance\", \"titleSlug\": \"find-k-th-smallest-pair-distance\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Total Appeal of A String\", \"titleSlug\": \"total-appeal-of-a-string\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3]",
-    "[3,4,3,4,5]",
-    "[4,3,5,4]"
-  ],
+  "exampleTestcaseList": ["[1,2,3]", "[3,4,3,4,5]", "[4,3,5,4]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

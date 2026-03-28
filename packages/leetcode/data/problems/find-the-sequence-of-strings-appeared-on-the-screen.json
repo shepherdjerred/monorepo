@@ -15,10 +15,7 @@
   "dislikes": 12,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Keyboard Row\", \"titleSlug\": \"keyboard-row\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abc\"",
-    "\"he\""
-  ],
+  "exampleTestcaseList": ["\"abc\"", "\"he\""],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

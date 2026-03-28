@@ -12,10 +12,7 @@
   "dislikes": 9,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[[1,2,-1],[4,-1,6],[7,8,9]]",
-    "[[3,-1],[5,2]]"
-  ],
+  "exampleTestcaseList": ["[[1,2,-1],[4,-1,6],[7,8,9]]", "[[3,-1],[5,2]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"fidelity\", \"name\": \"Fidelity\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

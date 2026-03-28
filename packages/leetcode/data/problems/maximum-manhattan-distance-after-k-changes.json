@@ -15,10 +15,7 @@
   "dislikes": 69,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"As Far from Land as Possible\", \"titleSlug\": \"as-far-from-land-as-possible\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"NWSE\"\n1",
-    "\"NSWWEW\"\n3"
-  ],
+  "exampleTestcaseList": ["\"NWSE\"\n1", "\"NSWWEW\"\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -15,11 +15,7 @@
   "dislikes": 7,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"cdcd\"",
-    "\"aca\"",
-    "\"bc\""
-  ],
+  "exampleTestcaseList": ["\"cdcd\"", "\"aca\"", "\"bc\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 10, \"slug\": \"fractal-analytics\", \"name\": \"Fractal Analytics\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

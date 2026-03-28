@@ -14,11 +14,7 @@
   "dislikes": 8,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Product of Three Numbers\", \"titleSlug\": \"maximum-product-of-three-numbers\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[-5,7,0]",
-    "[-4,-2,-1,-3]",
-    "[0,10,0]"
-  ],
+  "exampleTestcaseList": ["[-5,7,0]", "[-4,-2,-1,-3]", "[0,10,0]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

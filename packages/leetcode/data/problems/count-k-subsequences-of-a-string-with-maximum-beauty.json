@@ -18,10 +18,7 @@
   "dislikes": 36,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Distinct Subsequences II\", \"titleSlug\": \"distinct-subsequences-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"bcca\"\n2",
-    "\"abbcd\"\n4"
-  ],
+  "exampleTestcaseList": ["\"bcca\"\n2", "\"abbcd\"\n4"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

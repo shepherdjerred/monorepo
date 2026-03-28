@@ -17,10 +17,7 @@
   "dislikes": 50,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "3\n3\n[[0,0]]",
-    "3\n3\n[[0,0],[1,1],[0,2]]"
-  ],
+  "exampleTestcaseList": ["3\n3\n[[0,0]]", "3\n3\n[[0,0],[1,1],[0,2]]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 5, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 2, \"slug\": \"roblox\", \"name\": \"Roblox\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"capital-one\", \"name\": \"Capital One\"}, {\"timesEncountered\": 9, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"sig\", \"name\": \"SIG\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}, {\"timesEncountered\": 2, \"slug\": \"square\", \"name\": \"Block\"}, {\"timesEncountered\": 2, \"slug\": \"stripe\", \"name\": \"Stripe\"}], \"three_months\": []}",
   "topicTags": [
     {

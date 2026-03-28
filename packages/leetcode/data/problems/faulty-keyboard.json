@@ -14,10 +14,7 @@
   "dislikes": 16,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Reverse Vowels of a String\", \"titleSlug\": \"reverse-vowels-of-a-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Reverse String II\", \"titleSlug\": \"reverse-string-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Reverse Only Letters\", \"titleSlug\": \"reverse-only-letters\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Original Typed String I\", \"titleSlug\": \"find-the-original-typed-string-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Original Typed String II\", \"titleSlug\": \"find-the-original-typed-string-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"string\"",
-    "\"poiinter\""
-  ],
+  "exampleTestcaseList": ["\"string\"", "\"poiinter\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"samsung\", \"name\": \"Samsung\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

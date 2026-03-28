@@ -19,10 +19,7 @@
   "dislikes": 5,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "3\n2\n2\n[1,1]\n[2,2]",
-    "3\n4\n3\n[1,2]\n[2,3]"
-  ],
+  "exampleTestcaseList": ["3\n2\n2\n[1,1]\n[2,2]", "3\n4\n3\n[1,2]\n[2,3]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

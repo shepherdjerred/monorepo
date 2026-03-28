@@ -17,10 +17,7 @@
   "dislikes": 11,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Stepping Numbers\", \"titleSlug\": \"stepping-numbers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"1\"\n\"11\"",
-    "\"90\"\n\"101\""
-  ],
+  "exampleTestcaseList": ["\"1\"\n\"11\"", "\"90\"\n\"101\""],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

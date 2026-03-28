@@ -18,11 +18,7 @@
   "dislikes": 6,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Select K Disjoint Special Substrings\", \"titleSlug\": \"select-k-disjoint-special-substrings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abba\"",
-    "\"abab\"",
-    "\"abacd\""
-  ],
+  "exampleTestcaseList": ["\"abba\"", "\"abab\"", "\"abacd\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

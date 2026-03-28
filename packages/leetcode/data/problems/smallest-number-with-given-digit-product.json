@@ -18,11 +18,7 @@
   "dislikes": 1,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Smallest Divisible Digit Product I\", \"titleSlug\": \"smallest-divisible-digit-product-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Smallest Divisible Digit Product II\", \"titleSlug\": \"smallest-divisible-digit-product-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "105",
-    "7",
-    "44"
-  ],
+  "exampleTestcaseList": ["105", "7", "44"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -17,11 +17,7 @@
   "dislikes": 6,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Subsequences That Satisfy the Given Sum Condition\", \"titleSlug\": \"number-of-subsequences-that-satisfy-the-given-sum-condition\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Closest Subsequence Sum\", \"titleSlug\": \"closest-subsequence-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4]\n3",
-    "[2,2]\n2",
-    "[4,3,-1]\n2"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4]\n3", "[2,2]\n2", "[4,3,-1]\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"rubrik\", \"name\": \"Rubrik\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

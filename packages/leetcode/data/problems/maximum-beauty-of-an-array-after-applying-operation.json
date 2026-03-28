@@ -15,10 +15,7 @@
   "dislikes": 48,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Size Subarray Sum Equals k\", \"titleSlug\": \"maximum-size-subarray-sum-equals-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Partition Array Such That Maximum Difference Is K\", \"titleSlug\": \"partition-array-such-that-maximum-difference-is-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,6,1,2]\n2",
-    "[1,1,1,1]\n10"
-  ],
+  "exampleTestcaseList": ["[4,6,1,2]\n2", "[1,1,1,1]\n10"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

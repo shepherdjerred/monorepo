@@ -12,11 +12,7 @@
   "dislikes": 33,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,4,3,3,2]",
-    "[3,3,3,3]",
-    "[3,2,1]"
-  ],
+  "exampleTestcaseList": ["[1,4,3,3,2]", "[3,3,3,3]", "[3,2,1]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"larsen-toubro\", \"name\": \"Larsen & Toubro\"}], \"six_months\": []}",
   "topicTags": [
     {

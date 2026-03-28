@@ -16,10 +16,7 @@
   "dislikes": 61,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Best Time to Buy and Sell Stock\", \"titleSlug\": \"best-time-to-buy-and-sell-stock\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,7,9,8,2]\n2",
-    "[12,16,19,19,8,1,19,13,9]\n3"
-  ],
+  "exampleTestcaseList": ["[1,7,9,8,2]\n2", "[12,16,19,19,8,1,19,13,9]\n3"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

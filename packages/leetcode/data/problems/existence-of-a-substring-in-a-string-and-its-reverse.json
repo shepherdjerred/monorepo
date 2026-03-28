@@ -15,11 +15,7 @@
   "dislikes": 1,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"leetcode\"",
-    "\"abcba\"",
-    "\"abcd\""
-  ],
+  "exampleTestcaseList": ["\"leetcode\"", "\"abcba\"", "\"abcd\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"rubrik\", \"name\": \"Rubrik\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

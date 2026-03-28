@@ -16,10 +16,7 @@
   "dislikes": 8,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Shortest Path Visiting All Nodes\", \"titleSlug\": \"shortest-path-visiting-all-nodes\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Shortest Superstring\", \"titleSlug\": \"find-the-shortest-superstring\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,0,2]",
-    "[0,2,1]"
-  ],
+  "exampleTestcaseList": ["[1,0,2]", "[0,2,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -17,10 +17,7 @@
   "dislikes": 3,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[2,8]\n[4,1]\n[6]\n[3]",
-    "[5]\n[3]\n[1]\n[10]"
-  ],
+  "exampleTestcaseList": ["[2,8]\n[4,1]\n[6]\n[3]", "[5]\n[3]\n[1]\n[10]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

@@ -18,10 +18,7 @@
   "dislikes": 13,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Transform to Chessboard\", \"titleSlug\": \"transform-to-chessboard\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Most Stones Removed with Same Row or Column\", \"titleSlug\": \"most-stones-removed-with-same-row-or-column\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[0,0],[1,0],[1,1]]",
-    "[[0,0],[0,1],[0,2],[0,3]]"
-  ],
+  "exampleTestcaseList": ["[[0,0],[1,0],[1,1]]", "[[0,0],[0,1],[0,2],[0,3]]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

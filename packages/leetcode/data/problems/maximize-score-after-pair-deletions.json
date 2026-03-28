@@ -17,10 +17,7 @@
   "dislikes": 3,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[2,4,1]",
-    "[5,-1,4,2]"
-  ],
+  "exampleTestcaseList": ["[2,4,1]", "[5,-1,4,2]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"drw\", \"name\": \"DRW\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

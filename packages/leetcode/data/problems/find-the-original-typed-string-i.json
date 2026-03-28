@@ -5,20 +5,14 @@
   "titleSlug": "find-the-original-typed-string-i",
   "difficulty": "Easy",
   "content": "<p>Alice is attempting to type a specific string on her computer. However, she tends to be clumsy and <strong>may</strong> press a key for too long, resulting in a character being typed <strong>multiple</strong> times.</p>\n\n<p>Although Alice tried to focus on her typing, she is aware that she may still have done this <strong>at most</strong> <em>once</em>.</p>\n\n<p>You are given a string <code>word</code>, which represents the <strong>final</strong> output displayed on Alice&#39;s screen.</p>\n\n<p>Return the total number of <em>possible</em> original strings that Alice <em>might</em> have intended to type.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">word = &quot;abbcccc&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">5</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The possible strings are: <code>&quot;abbcccc&quot;</code>, <code>&quot;abbccc&quot;</code>, <code>&quot;abbcc&quot;</code>, <code>&quot;abbc&quot;</code>, and <code>&quot;abcccc&quot;</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">word = &quot;abcd&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The only possible string is <code>&quot;abcd&quot;</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">word = &quot;aaaa&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">4</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= word.length &lt;= 100</code></li>\n\t<li><code>word</code> consists only of lowercase English letters.</li>\n</ul>\n",
-  "hints": [
-    "Any group of consecutive characters might have been the mistake."
-  ],
+  "hints": ["Any group of consecutive characters might have been the mistake."],
   "metaData": "{\n  \"name\": \"possibleStringCount\",\n  \"params\": [\n    {\n      \"name\": \"word\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"196.8K\", \"totalSubmission\": \"273.1K\", \"totalAcceptedRaw\": 196828, \"totalSubmissionRaw\": 273076, \"acRate\": \"72.1%\"}",
   "likes": 528,
   "dislikes": 78,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Keyboard Row\", \"titleSlug\": \"keyboard-row\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Faulty Keyboard\", \"titleSlug\": \"faulty-keyboard\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abbcccc\"",
-    "\"abcd\"",
-    "\"aaaa\""
-  ],
+  "exampleTestcaseList": ["\"abbcccc\"", "\"abcd\"", "\"aaaa\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"lowe\", \"name\": \"Lowe's\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

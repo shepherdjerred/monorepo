@@ -12,10 +12,7 @@
   "dislikes": 6,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "5\n[[2,4],[0,2],[0,4]]",
-    "4\n[[0,3],[0,2]]"
-  ],
+  "exampleTestcaseList": ["5\n[[2,4],[0,2],[0,4]]", "4\n[[0,3],[0,2]]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

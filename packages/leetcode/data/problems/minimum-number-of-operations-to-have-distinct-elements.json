@@ -16,11 +16,7 @@
   "dislikes": 2,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[3,8,3,6,5,8]",
-    "[2,2]",
-    "[4,3,5,1,2]"
-  ],
+  "exampleTestcaseList": ["[3,8,3,6,5,8]", "[2,2]", "[4,3,5,1,2]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}], \"three_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

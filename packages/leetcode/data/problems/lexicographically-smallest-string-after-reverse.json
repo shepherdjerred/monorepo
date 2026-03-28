@@ -5,20 +5,14 @@
   "titleSlug": "lexicographically-smallest-string-after-reverse",
   "difficulty": "Medium",
   "content": "<p>You are given a string <code>s</code> of length <code>n</code> consisting of lowercase English letters.</p>\n\n<p>You must perform <strong>exactly</strong> one operation by choosing any integer <code>k</code> such that <code>1 &lt;= k &lt;= n</code> and either:</p>\n\n<ul>\n\t<li>reverse the <strong>first</strong> <code>k</code> characters of <code>s</code>, or</li>\n\t<li>reverse the <strong>last</strong> <code>k</code> characters of <code>s</code>.</li>\n</ul>\n\n<p>Return the <strong><span data-keyword=\"lexicographically-smaller-string\">lexicographically smallest</span></strong> string that can be obtained after <strong>exactly</strong> one such operation.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;dcab&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;acdb&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Choose <code>k = 3</code>, reverse the first 3 characters.</li>\n\t<li>Reverse <code>&quot;dca&quot;</code> to <code>&quot;acd&quot;</code>, resulting string <code>s = &quot;acdb&quot;</code>, which is the lexicographically smallest string achievable.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;abba&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;aabb&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Choose <code>k = 3</code>, reverse the last 3 characters.</li>\n\t<li>Reverse <code>&quot;bba&quot;</code> to <code>&quot;abb&quot;</code>, so the resulting string is <code>&quot;aabb&quot;</code>, which is the lexicographically smallest string achievable.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;zxy&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;xzy&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Choose <code>k = 2</code>, reverse the first 2 characters.</li>\n\t<li>Reverse <code>&quot;zx&quot;</code> to <code>&quot;xz&quot;</code>, so the resulting string is <code>&quot;xzy&quot;</code>, which is the lexicographically smallest string achievable.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n == s.length &lt;= 1000</code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n</ul>\n",
-  "hints": [
-    "Use bruteforce"
-  ],
+  "hints": ["Use bruteforce"],
   "metaData": "{\n  \"name\": \"lexSmallest\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"24.8K\", \"totalSubmission\": \"45.4K\", \"totalAcceptedRaw\": 24846, \"totalSubmissionRaw\": 45444, \"acRate\": \"54.7%\"}",
   "likes": 36,
   "dislikes": 7,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"dcab\"",
-    "\"abba\"",
-    "\"zxy\""
-  ],
+  "exampleTestcaseList": ["\"dcab\"", "\"abba\"", "\"zxy\""],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

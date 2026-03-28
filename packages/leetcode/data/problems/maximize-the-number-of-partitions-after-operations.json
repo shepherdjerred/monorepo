@@ -17,11 +17,7 @@
   "dislikes": 88,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Can Make Palindrome from Substring\", \"titleSlug\": \"can-make-palindrome-from-substring\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"accca\"\n2",
-    "\"aabaab\"\n3",
-    "\"xxyz\"\n1"
-  ],
+  "exampleTestcaseList": ["\"accca\"\n2", "\"aabaab\"\n3", "\"xxyz\"\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"thoughtworks\", \"name\": \"ThoughtWorks\"}, {\"timesEncountered\": 2, \"slug\": \"hilabs\", \"name\": \"HiLabs\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

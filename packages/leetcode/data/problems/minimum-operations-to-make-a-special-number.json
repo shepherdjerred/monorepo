@@ -16,11 +16,7 @@
   "dislikes": 57,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Remove K Digits\", \"titleSlug\": \"remove-k-digits\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Remove Digit From Number to Maximize Result\", \"titleSlug\": \"remove-digit-from-number-to-maximize-result\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"2245047\"",
-    "\"2908305\"",
-    "\"10\""
-  ],
+  "exampleTestcaseList": ["\"2245047\"", "\"2908305\"", "\"10\""],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

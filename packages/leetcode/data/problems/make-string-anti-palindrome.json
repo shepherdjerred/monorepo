@@ -15,11 +15,7 @@
   "dislikes": 2,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"abca\"",
-    "\"abba\"",
-    "\"cccd\""
-  ],
+  "exampleTestcaseList": ["\"abca\"", "\"abba\"", "\"cccd\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"intuit\", \"name\": \"Intuit\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

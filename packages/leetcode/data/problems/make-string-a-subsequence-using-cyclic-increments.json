@@ -17,11 +17,7 @@
   "dislikes": 72,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Is Subsequence\", \"titleSlug\": \"is-subsequence\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abc\"\n\"ad\"",
-    "\"zc\"\n\"ad\"",
-    "\"ab\"\n\"d\""
-  ],
+  "exampleTestcaseList": ["\"abc\"\n\"ad\"", "\"zc\"\n\"ad\"", "\"ab\"\n\"d\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

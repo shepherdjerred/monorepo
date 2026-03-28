@@ -15,11 +15,7 @@
   "dislikes": 8,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"a#b%*\"\n1",
-    "\"cd%#*#\"\n3",
-    "\"z*#\"\n0"
-  ],
+  "exampleTestcaseList": ["\"a#b%*\"\n1", "\"cd%#*#\"\n3", "\"z*#\"\n0"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

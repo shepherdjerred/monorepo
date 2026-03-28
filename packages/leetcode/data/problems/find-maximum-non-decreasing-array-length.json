@@ -16,11 +16,7 @@
   "dislikes": 25,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[5,2,2]",
-    "[1,2,3,4]",
-    "[4,3,2,6]"
-  ],
+  "exampleTestcaseList": ["[5,2,2]", "[1,2,3,4]", "[4,3,2,6]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"medianet\", \"name\": \"Media.net\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

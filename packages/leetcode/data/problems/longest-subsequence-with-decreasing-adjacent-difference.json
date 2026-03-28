@@ -15,11 +15,7 @@
   "dislikes": 25,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Longest Increasing Subsequence\", \"titleSlug\": \"longest-increasing-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Increasing Subsequence II\", \"titleSlug\": \"longest-increasing-subsequence-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[16,6,3]",
-    "[6,5,3,4,2,1]",
-    "[10,20,10,19,10,20]"
-  ],
+  "exampleTestcaseList": ["[16,6,3]", "[6,5,3,4,2,1]", "[10,20,10,19,10,20]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"juspay\", \"name\": \"Juspay\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

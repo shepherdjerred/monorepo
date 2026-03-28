@@ -15,10 +15,7 @@
   "dislikes": 7,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,-1,1,-1,1]\n3",
-    "[-1,-1,-1,1,1,1]\n5"
-  ],
+  "exampleTestcaseList": ["[1,-1,1,-1,1]\n3", "[-1,-1,-1,1,1,1]\n5"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

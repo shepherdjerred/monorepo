@@ -15,11 +15,7 @@
   "dislikes": 27,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[2,1,5]\n2",
-    "[1,6,2,9]\n3",
-    "[4,6]\n2"
-  ],
+  "exampleTestcaseList": ["[2,1,5]\n2", "[1,6,2,9]\n3", "[4,6]\n2"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

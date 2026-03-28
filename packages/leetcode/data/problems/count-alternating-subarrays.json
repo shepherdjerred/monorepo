@@ -16,10 +16,7 @@
   "dislikes": 10,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[0,1,1,1]",
-    "[1,0,1,0]"
-  ],
+  "exampleTestcaseList": ["[0,1,1,1]", "[1,0,1,0]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"capital-one\", \"name\": \"Capital One\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

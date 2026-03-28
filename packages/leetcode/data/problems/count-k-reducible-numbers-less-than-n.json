@@ -15,11 +15,7 @@
   "dislikes": 3,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"111\"\n1",
-    "\"1000\"\n2",
-    "\"1\"\n3"
-  ],
+  "exampleTestcaseList": ["\"111\"\n1", "\"1000\"\n2", "\"1\"\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"schneider-electric\", \"name\": \"Schneider Electric\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

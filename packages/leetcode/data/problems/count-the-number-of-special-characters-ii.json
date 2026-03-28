@@ -14,11 +14,7 @@
   "dislikes": 16,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Detect Capital\", \"titleSlug\": \"detect-capital\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Greatest English Letter in Upper and Lower Case\", \"titleSlug\": \"greatest-english-letter-in-upper-and-lower-case\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Special Characters I\", \"titleSlug\": \"count-the-number-of-special-characters-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"aaAbcBC\"",
-    "\"abc\"",
-    "\"AbBCab\""
-  ],
+  "exampleTestcaseList": ["\"aaAbcBC\"", "\"abc\"", "\"AbBCab\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

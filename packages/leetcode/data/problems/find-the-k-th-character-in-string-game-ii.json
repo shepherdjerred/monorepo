@@ -15,10 +15,7 @@
   "dislikes": 31,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Shifting Letters\", \"titleSlug\": \"shifting-letters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "5\n[0,0,0]",
-    "10\n[0,1,0,1]"
-  ],
+  "exampleTestcaseList": ["5\n[0,0,0]", "10\n[0,1,0,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

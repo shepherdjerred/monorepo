@@ -5,19 +5,14 @@
   "titleSlug": "find-the-number-of-good-pairs-i",
   "difficulty": "Easy",
   "content": "<p>You are given 2 integer arrays <code>nums1</code> and <code>nums2</code> of lengths <code>n</code> and <code>m</code> respectively. You are also given a <strong>positive</strong> integer <code>k</code>.</p>\n\n<p>A pair <code>(i, j)</code> is called <strong>good</strong> if <code>nums1[i]</code> is divisible by <code>nums2[j] * k</code> (<code>0 &lt;= i &lt;= n - 1</code>, <code>0 &lt;= j &lt;= m - 1</code>).</p>\n\n<p>Return the total number of <strong>good</strong> pairs.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums1 = [1,3,4], nums2 = [1,3,4], k = 1</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">5</span></p>\n\n<p><strong>Explanation:</strong></p>\nThe 5 good pairs are <code>(0, 0)</code>, <code>(1, 0)</code>, <code>(1, 1)</code>, <code>(2, 0)</code>, and <code>(2, 2)</code>.</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums1 = [1,2,4,12], nums2 = [2,4], k = 3</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The 2 good pairs are <code>(3, 0)</code> and <code>(3, 1)</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n, m &lt;= 50</code></li>\n\t<li><code>1 &lt;= nums1[i], nums2[j] &lt;= 50</code></li>\n\t<li><code>1 &lt;= k &lt;= 50</code></li>\n</ul>\n",
-  "hints": [
-    "The constraints are small. Check all pairs."
-  ],
+  "hints": ["The constraints are small. Check all pairs."],
   "metaData": "{\n  \"name\": \"numberOfPairs\",\n  \"params\": [\n    {\n      \"name\": \"nums1\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"nums2\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"95.9K\", \"totalSubmission\": \"111K\", \"totalAcceptedRaw\": 95856, \"totalSubmissionRaw\": 110964, \"acRate\": \"86.4%\"}",
   "likes": 169,
   "dislikes": 16,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Array Pairs Divisible by K\", \"titleSlug\": \"count-array-pairs-divisible-by-k\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,3,4]\n[1,3,4]\n1",
-    "[1,2,4,12]\n[2,4]\n3"
-  ],
+  "exampleTestcaseList": ["[1,3,4]\n[1,3,4]\n1", "[1,2,4,12]\n[2,4]\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"airbus\", \"name\": \"Airbus SE\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

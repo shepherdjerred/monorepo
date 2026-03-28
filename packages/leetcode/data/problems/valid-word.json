@@ -5,20 +5,14 @@
   "titleSlug": "valid-word",
   "difficulty": "Easy",
   "content": "<p>A word is considered <strong>valid</strong> if:</p>\n\n<ul>\n\t<li>It contains a <strong>minimum</strong> of 3 characters.</li>\n\t<li>It contains only digits (0-9), and English letters (uppercase and lowercase).</li>\n\t<li>It includes <strong>at least</strong> one <strong>vowel</strong>.</li>\n\t<li>It includes <strong>at least</strong> one <strong>consonant</strong>.</li>\n</ul>\n\n<p>You are given a string <code>word</code>.</p>\n\n<p>Return <code>true</code> if <code>word</code> is valid, otherwise, return <code>false</code>.</p>\n\n<p><strong>Notes:</strong></p>\n\n<ul>\n\t<li><code>&#39;a&#39;</code>, <code>&#39;e&#39;</code>, <code>&#39;i&#39;</code>, <code>&#39;o&#39;</code>, <code>&#39;u&#39;</code>, and their uppercases are <strong>vowels</strong>.</li>\n\t<li>A <strong>consonant</strong> is an English letter that is not a vowel.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">word = &quot;234Adas&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">true</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>This word satisfies the conditions.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">word = &quot;b3&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">false</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The length of this word is fewer than 3, and does not have a vowel.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">word = &quot;a3$e&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">false</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>This word contains a <code>&#39;$&#39;</code> character and does not have a consonant.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= word.length &lt;= 20</code></li>\n\t<li><code>word</code> consists of English uppercase and lowercase letters, digits, <code>&#39;@&#39;</code>, <code>&#39;#&#39;</code>, and <code>&#39;$&#39;</code>.</li>\n</ul>\n",
-  "hints": [
-    "Use if-else to check all the conditions."
-  ],
+  "hints": ["Use if-else to check all the conditions."],
   "metaData": "{\n  \"name\": \"isValid\",\n  \"params\": [\n    {\n      \"name\": \"word\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"207.6K\", \"totalSubmission\": \"408K\", \"totalAcceptedRaw\": 207566, \"totalSubmissionRaw\": 408037, \"acRate\": \"50.9%\"}",
   "likes": 483,
   "dislikes": 169,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"234Adas\"",
-    "\"b3\"",
-    "\"a3$e\""
-  ],
+  "exampleTestcaseList": ["\"234Adas\"", "\"b3\"", "\"a3$e\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"ukg\", \"name\": \"UKG\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"expedia\", \"name\": \"Expedia\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

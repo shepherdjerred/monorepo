@@ -5,20 +5,14 @@
   "titleSlug": "trim-trailing-vowels",
   "difficulty": "Easy",
   "content": "<p>You are given a string <code>s</code> that consists of lowercase English letters.</p>\n\n<p>Return the string obtained by removing <strong>all</strong> trailing <strong>vowels</strong> from <code>s</code>.</p>\n\n<p>The <strong>vowels</strong> consist of the characters <code>&#39;a&#39;</code>, <code>&#39;e&#39;</code>, <code>&#39;i&#39;</code>, <code>&#39;o&#39;</code>, and <code>&#39;u&#39;</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;idea&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;id&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Removing <code>&quot;id<u><strong>ea</strong></u>&quot;</code>, we obtain the string <code>&quot;id&quot;</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;day&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;day&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There are no trailing vowels in the string <code>&quot;day&quot;</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;aeiou&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Removing <code>&quot;<u><strong>aeiou</strong></u>&quot;</code>, we obtain the string <code>&quot;&quot;</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 100</code></li>\n\t<li><code>s</code> consists of only lowercase English letters.</li>\n</ul>\n",
-  "hints": [
-    "Simulate; pop the last character as long as it is a vowel."
-  ],
+  "hints": ["Simulate; pop the last character as long as it is a vowel."],
   "metaData": "{\n  \"name\": \"trimTrailingVowels\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"53.3K\", \"totalSubmission\": \"69K\", \"totalAcceptedRaw\": 53336, \"totalSubmissionRaw\": 69040, \"acRate\": \"77.3%\"}",
   "likes": 32,
   "dislikes": 0,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"idea\"",
-    "\"day\"",
-    "\"aeiou\""
-  ],
+  "exampleTestcaseList": ["\"idea\"", "\"day\"", "\"aeiou\""],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

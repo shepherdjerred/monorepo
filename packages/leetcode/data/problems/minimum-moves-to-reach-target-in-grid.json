@@ -16,11 +16,7 @@
   "dislikes": 3,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "1\n2\n5\n4",
-    "0\n1\n2\n3",
-    "1\n1\n2\n2"
-  ],
+  "exampleTestcaseList": ["1\n2\n5\n4", "0\n1\n2\n3", "1\n1\n2\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

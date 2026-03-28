@@ -5,19 +5,14 @@
   "titleSlug": "maximum-frequency-of-an-element-after-performing-operations-i",
   "difficulty": "Medium",
   "content": "<p>You are given an integer array <code>nums</code> and two integers <code>k</code> and <code>numOperations</code>.</p>\n\n<p>You must perform an <strong>operation</strong> <code>numOperations</code> times on <code>nums</code>, where in each operation you:</p>\n\n<ul>\n\t<li>Select an index <code>i</code> that was <strong>not</strong> selected in any previous operations.</li>\n\t<li>Add an integer in the range <code>[-k, k]</code> to <code>nums[i]</code>.</li>\n</ul>\n\n<p>Return the <strong>maximum</strong> possible <span data-keyword=\"frequency-array\">frequency</span> of any element in <code>nums</code> after performing the <strong>operations</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,4,5], k = 1, numOperations = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>We can achieve a maximum frequency of two by:</p>\n\n<ul>\n\t<li>Adding 0 to <code>nums[1]</code>. <code>nums</code> becomes <code>[1, 4, 5]</code>.</li>\n\t<li>Adding -1 to <code>nums[2]</code>. <code>nums</code> becomes <code>[1, 4, 4]</code>.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [5,11,20,20], k = 5, numOperations = 1</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>We can achieve a maximum frequency of two by:</p>\n\n<ul>\n\t<li>Adding 0 to <code>nums[1]</code>.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= k &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= numOperations &lt;= nums.length</code></li>\n</ul>\n",
-  "hints": [
-    "Sort the array and try each value in range as a candidate."
-  ],
+  "hints": ["Sort the array and try each value in range as a candidate."],
   "metaData": "{\n  \"name\": \"maxFrequency\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"numOperations\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"89.4K\", \"totalSubmission\": \"223.1K\", \"totalAcceptedRaw\": 89389, \"totalSubmissionRaw\": 223104, \"acRate\": \"40.1%\"}",
   "likes": 622,
   "dislikes": 106,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Frequency of the Most Frequent Element\", \"titleSlug\": \"frequency-of-the-most-frequent-element\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Elements With Maximum Frequency\", \"titleSlug\": \"count-elements-with-maximum-frequency\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,4,5]\n1\n2",
-    "[5,11,20,20]\n5\n1"
-  ],
+  "exampleTestcaseList": ["[1,4,5]\n1\n2", "[5,11,20,20]\n5\n1"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

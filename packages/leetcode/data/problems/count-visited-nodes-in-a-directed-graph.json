@@ -16,10 +16,7 @@
   "dislikes": 7,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,2,0,0]",
-    "[1,2,3,4,0]"
-  ],
+  "exampleTestcaseList": ["[1,2,0,0]", "[1,2,3,4,0]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"bny-mellon\", \"name\": \"BNY Mellon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -16,10 +16,7 @@
   "dislikes": 40,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Array Pairs Divisible by K\", \"titleSlug\": \"count-array-pairs-divisible-by-k\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,3,4]\n[1,3,4]\n1",
-    "[1,2,4,12]\n[2,4]\n3"
-  ],
+  "exampleTestcaseList": ["[1,3,4]\n[1,3,4]\n1", "[1,2,4,12]\n[2,4]\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"airbus\", \"name\": \"Airbus SE\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

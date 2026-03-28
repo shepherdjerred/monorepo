@@ -17,11 +17,7 @@
   "dislikes": 8,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[0,1,2,3]",
-    "[-3,2,-1,4]",
-    "[1,10,100,1000]"
-  ],
+  "exampleTestcaseList": ["[0,1,2,3]", "[-3,2,-1,4]", "[1,10,100,1000]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 3, \"slug\": \"wise\", \"name\": \"Wise\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"squarepoint-capital\", \"name\": \"Squarepoint Capital\"}, {\"timesEncountered\": 2, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}], \"more_than_six_months\": []}",
   "topicTags": [
     {

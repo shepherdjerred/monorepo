@@ -16,10 +16,7 @@
   "dislikes": 49,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"abcd\"\n\"cdab\"\n2",
-    "\"ababab\"\n\"ababab\"\n1"
-  ],
+  "exampleTestcaseList": ["\"abcd\"\n\"cdab\"\n2", "\"ababab\"\n\"ababab\"\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

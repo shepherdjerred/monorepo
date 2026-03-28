@@ -14,10 +14,7 @@
   "dislikes": 42,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[[9,3],[8,6]]",
-    "[[3,4],[4,3]]"
-  ],
+  "exampleTestcaseList": ["[[9,3],[8,6]]", "[[3,4],[4,3]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

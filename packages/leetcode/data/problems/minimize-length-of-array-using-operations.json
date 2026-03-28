@@ -18,11 +18,7 @@
   "dislikes": 43,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,4,3,1]",
-    "[5,5,5,10,5]",
-    "[2,3,4]"
-  ],
+  "exampleTestcaseList": ["[1,4,3,1]", "[5,5,5,10,5]", "[2,3,4]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"hashedin\", \"name\": \"HashedIn\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"bny-mellon\", \"name\": \"BNY Mellon\"}, {\"timesEncountered\": 2, \"slug\": \"dtcc\", \"name\": \"DTCC\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

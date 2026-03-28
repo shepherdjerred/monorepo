@@ -15,9 +15,7 @@
   "dislikes": 278,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Counting Bits\", \"titleSlug\": \"counting-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Values at Indices With K Set Bits\", \"titleSlug\": \"sum-of-values-at-indices-with-k-set-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[7,12,9,8,9,15]\n4"
-  ],
+  "exampleTestcaseList": ["[7,12,9,8,9,15]\n4"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

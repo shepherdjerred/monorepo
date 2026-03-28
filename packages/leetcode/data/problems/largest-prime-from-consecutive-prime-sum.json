@@ -16,10 +16,7 @@
   "dislikes": 4,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "20",
-    "2"
-  ],
+  "exampleTestcaseList": ["20", "2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -17,11 +17,7 @@
   "dislikes": 8,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Divisible Substrings\", \"titleSlug\": \"number-of-divisible-substrings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"12936\"",
-    "\"5701283\"",
-    "\"1010101010\""
-  ],
+  "exampleTestcaseList": ["\"12936\"", "\"5701283\"", "\"1010101010\""],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

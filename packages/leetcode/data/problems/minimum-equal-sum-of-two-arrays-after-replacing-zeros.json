@@ -15,10 +15,7 @@
   "dislikes": 55,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[3,2,0,1,0]\n[6,5,0]",
-    "[2,0,2,0]\n[1,4]"
-  ],
+  "exampleTestcaseList": ["[3,2,0,1,0]\n[6,5,0]", "[2,0,2,0]\n[1,4]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"squarepoint-capital\", \"name\": \"Squarepoint Capital\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}]}",
   "topicTags": [
     {

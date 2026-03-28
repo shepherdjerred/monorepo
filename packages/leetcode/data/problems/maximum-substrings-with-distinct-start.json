@@ -5,20 +5,14 @@
   "titleSlug": "maximum-substrings-with-distinct-start",
   "difficulty": "Medium",
   "content": "<p>You are given a string <code>s</code> consisting of lowercase English letters.</p>\n\n<p>Return an integer denoting the <strong>maximum</strong> number of <span data-keyword=\"substring-nonempty\">substrings</span> you can split <code>s</code> into such that each <strong>substring</strong> starts with a <strong>distinct</strong> character (i.e., no two substrings start with the same character).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;abab&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Split <code>&quot;abab&quot;</code> into <code>&quot;a&quot;</code> and <code>&quot;bab&quot;</code>.</li>\n\t<li>Each substring starts with a distinct character i.e <code>&#39;a&#39;</code> and <code>&#39;b&#39;</code>. Thus, the answer is 2.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;abcd&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">4</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Split <code>&quot;abcd&quot;</code> into <code>&quot;a&quot;</code>, <code>&quot;b&quot;</code>, <code>&quot;c&quot;</code>, and <code>&quot;d&quot;</code>.</li>\n\t<li>Each substring starts with a distinct character. Thus, the answer is 4.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;aaaa&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>All characters in <code>&quot;aaaa&quot;</code> are <code>&#39;a&#39;</code>.</li>\n\t<li>Only one substring can start with <code>&#39;a&#39;</code>. Thus, the answer is 1.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n</ul>\n",
-  "hints": [
-    "Count the number of distinct characters in <code>s</code>"
-  ],
+  "hints": ["Count the number of distinct characters in <code>s</code>"],
   "metaData": "{\n  \"name\": \"maxDistinct\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"50.8K\", \"totalSubmission\": \"55.6K\", \"totalAcceptedRaw\": 50783, \"totalSubmissionRaw\": 55580, \"acRate\": \"91.4%\"}",
   "likes": 75,
   "dislikes": 16,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"abab\"",
-    "\"abcd\"",
-    "\"aaaa\""
-  ],
+  "exampleTestcaseList": ["\"abab\"", "\"abcd\"", "\"aaaa\""],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

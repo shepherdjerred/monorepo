@@ -14,10 +14,7 @@
   "dislikes": 10,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"dart\"\n3",
-    "\"aaa\"\n1"
-  ],
+  "exampleTestcaseList": ["\"dart\"\n3", "\"aaa\"\n1"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

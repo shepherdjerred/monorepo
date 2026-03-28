@@ -15,10 +15,7 @@
   "dislikes": 19,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Kth Smallest Number in Multiplication Table\", \"titleSlug\": \"kth-smallest-number-in-multiplication-table\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Number of Possible Ways for an Event\", \"titleSlug\": \"find-the-number-of-possible-ways-for-an-event\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,6,9]\n3",
-    "[5,2]\n7"
-  ],
+  "exampleTestcaseList": ["[3,6,9]\n3", "[5,2]\n7"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

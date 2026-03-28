@@ -15,10 +15,7 @@
   "dislikes": 38,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Letter Combinations of a Phone Number\", \"titleSlug\": \"letter-combinations-of-a-phone-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abcde\"",
-    "\"xycdefghij\""
-  ],
+  "exampleTestcaseList": ["\"abcde\"", "\"xycdefghij\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"elitmus\", \"name\": \"eLitmus\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}], \"six_months\": []}",
   "topicTags": [
     {

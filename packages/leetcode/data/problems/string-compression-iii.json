@@ -14,10 +14,7 @@
   "dislikes": 54,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"String Compression\", \"titleSlug\": \"string-compression\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"String Compression II\", \"titleSlug\": \"string-compression-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abcde\"",
-    "\"aaaaaaaaaaaaaabb\""
-  ],
+  "exampleTestcaseList": ["\"abcde\"", "\"aaaaaaaaaaaaaabb\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"qualcomm\", \"name\": \"Qualcomm\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

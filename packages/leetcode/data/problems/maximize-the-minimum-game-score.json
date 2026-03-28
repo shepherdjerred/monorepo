@@ -16,10 +16,7 @@
   "dislikes": 6,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[2,4]\n3",
-    "[1,2,3]\n5"
-  ],
+  "exampleTestcaseList": ["[2,4]\n3", "[1,2,3]\n5"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

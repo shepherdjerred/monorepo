@@ -14,11 +14,7 @@
   "dislikes": 13,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[10,10,3,7,6]",
-    "[1,2,2]",
-    "[2,4,6,8]"
-  ],
+  "exampleTestcaseList": ["[10,10,3,7,6]", "[1,2,2]", "[2,4,6,8]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
   "topicTags": [
     {

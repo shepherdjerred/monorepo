@@ -15,10 +15,7 @@
   "dislikes": 21,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Least Number of Unique Integers after K Removals\", \"titleSlug\": \"least-number-of-unique-integers-after-k-removals\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,2,3,3,4]\n2",
-    "[4,4,4,4]\n1"
-  ],
+  "exampleTestcaseList": ["[1,2,2,3,3,4]\n2", "[4,4,4,4]\n1"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
   "topicTags": [
     {

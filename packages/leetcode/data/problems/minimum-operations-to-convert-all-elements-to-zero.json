@@ -16,11 +16,7 @@
   "dislikes": 64,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[0,2]",
-    "[3,1,2,1]",
-    "[1,2,1,2,1,2]"
-  ],
+  "exampleTestcaseList": ["[0,2]", "[3,1,2,1]", "[1,2,1,2,1,2]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}]}",
   "topicTags": [
     {

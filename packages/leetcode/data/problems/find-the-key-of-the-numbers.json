@@ -12,11 +12,7 @@
   "dislikes": 17,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Largest Number\", \"titleSlug\": \"largest-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1\n10\n1000",
-    "987\n879\n798",
-    "1\n2\n3"
-  ],
+  "exampleTestcaseList": ["1\n10\n1000", "987\n879\n798", "1\n2\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

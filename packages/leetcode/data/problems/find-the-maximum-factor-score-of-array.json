@@ -15,11 +15,7 @@
   "dislikes": 13,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Greatest Common Divisor of Strings\", \"titleSlug\": \"greatest-common-divisor-of-strings\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Remove One Element to Make the Array Strictly Increasing\", \"titleSlug\": \"remove-one-element-to-make-the-array-strictly-increasing\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,4,8,16]",
-    "[1,2,3,4,5]",
-    "[3]"
-  ],
+  "exampleTestcaseList": ["[2,4,8,16]", "[1,2,3,4,5]", "[3]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"info-edge\", \"name\": \"Info Edge\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

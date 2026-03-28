@@ -16,10 +16,7 @@
   "dislikes": 770,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Reaching Points\", \"titleSlug\": \"reaching-points\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2\n4\n7\n7\n6",
-    "3\n1\n7\n3\n3"
-  ],
+  "exampleTestcaseList": ["2\n4\n7\n7\n6", "3\n1\n7\n3\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"github\", \"name\": \"Github\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

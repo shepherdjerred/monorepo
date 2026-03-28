@@ -15,10 +15,7 @@
   "dislikes": 50,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Latest Time by Replacing Hidden Digits\", \"titleSlug\": \"latest-time-by-replacing-hidden-digits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"1?:?4\"",
-    "\"0?:5?\""
-  ],
+  "exampleTestcaseList": ["\"1?:?4\"", "\"0?:5?\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

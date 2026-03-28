@@ -16,10 +16,7 @@
   "dislikes": 9,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Next Greater Element II\", \"titleSlug\": \"next-greater-element-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3]\n2",
-    "[1,-3,1]\n2"
-  ],
+  "exampleTestcaseList": ["[1,2,3]\n2", "[1,-3,1]\n2"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

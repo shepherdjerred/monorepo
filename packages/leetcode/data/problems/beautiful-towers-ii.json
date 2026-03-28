@@ -18,11 +18,7 @@
   "dislikes": 32,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Number of Removals to Make Mountain Array\", \"titleSlug\": \"minimum-number-of-removals-to-make-mountain-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Books You Can Take\", \"titleSlug\": \"maximum-number-of-books-you-can-take\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[5,3,4,1,1]",
-    "[6,5,3,9,2,7]",
-    "[3,2,5,5,2,3]"
-  ],
+  "exampleTestcaseList": ["[5,3,4,1,1]", "[6,5,3,9,2,7]", "[3,2,5,5,2,3]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

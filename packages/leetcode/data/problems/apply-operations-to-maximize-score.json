@@ -19,10 +19,7 @@
   "dislikes": 127,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Next Greater Element IV\", \"titleSlug\": \"next-greater-element-iv\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[8,3,9,3,8]\n2",
-    "[19,12,14,6,10,18]\n3"
-  ],
+  "exampleTestcaseList": ["[8,3,9,3,8]\n2", "[19,12,14,6,10,18]\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

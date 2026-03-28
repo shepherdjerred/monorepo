@@ -15,10 +15,7 @@
   "dislikes": 65,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Rectangle Area II\", \"titleSlug\": \"rectangle-area-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[0,0,1],[2,2,1]]",
-    "[[0,0,2],[1,1,1]]"
-  ],
+  "exampleTestcaseList": ["[[0,0,1],[2,2,1]]", "[[0,0,2],[1,1,1]]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

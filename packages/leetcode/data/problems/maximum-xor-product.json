@@ -16,11 +16,7 @@
   "dislikes": 73,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum XOR After Operations \", \"titleSlug\": \"maximum-xor-after-operations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "12\n5\n4",
-    "6\n7\n5",
-    "1\n6\n3"
-  ],
+  "exampleTestcaseList": ["12\n5\n4", "6\n7\n5", "1\n6\n3"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 7, \"slug\": \"squarepoint-capital\", \"name\": \"Squarepoint Capital\"}, {\"timesEncountered\": 2, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"rippling\", \"name\": \"Rippling\"}], \"three_months\": []}",
   "topicTags": [
     {

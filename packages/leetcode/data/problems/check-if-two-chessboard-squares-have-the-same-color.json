@@ -14,10 +14,7 @@
   "dislikes": 5,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Determine Color of a Chessboard Square\", \"titleSlug\": \"determine-color-of-a-chessboard-square\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"a1\"\n\"c3\"",
-    "\"a1\"\n\"h3\""
-  ],
+  "exampleTestcaseList": ["\"a1\"\n\"c3\"", "\"a1\"\n\"h3\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

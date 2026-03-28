@@ -14,10 +14,7 @@
   "dislikes": 54,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[2,3,-5]",
-    "[3,2,-3,-4]"
-  ],
+  "exampleTestcaseList": ["[2,3,-5]", "[3,2,-3,-4]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

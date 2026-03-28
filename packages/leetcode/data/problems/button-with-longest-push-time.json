@@ -12,10 +12,7 @@
   "dislikes": 74,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[[1,2],[2,5],[3,9],[1,15]]",
-    "[[10,5],[1,7]]"
-  ],
+  "exampleTestcaseList": ["[[1,2],[2,5],[3,9],[1,15]]", "[[10,5],[1,7]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

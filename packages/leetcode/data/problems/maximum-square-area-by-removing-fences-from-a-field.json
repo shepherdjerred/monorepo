@@ -16,10 +16,7 @@
   "dislikes": 162,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximize Area of Square Hole in Grid\", \"titleSlug\": \"maximize-area-of-square-hole-in-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "4\n3\n[2,3]\n[2]",
-    "6\n7\n[2]\n[4]"
-  ],
+  "exampleTestcaseList": ["4\n3\n[2,3]\n[2]", "6\n7\n[2]\n[4]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": []}",
   "topicTags": [
     {

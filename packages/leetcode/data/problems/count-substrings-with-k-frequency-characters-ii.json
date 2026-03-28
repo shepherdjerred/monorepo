@@ -15,10 +15,7 @@
   "dislikes": 1,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"abacb\"\n2",
-    "\"abcde\"\n1"
-  ],
+  "exampleTestcaseList": ["\"abacb\"\n2", "\"abcde\"\n1"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

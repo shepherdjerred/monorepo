@@ -14,11 +14,7 @@
   "dislikes": 4,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Count Numbers with Unique Digits\", \"titleSlug\": \"count-numbers-with-unique-digits\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1\n20",
-    "9\n19",
-    "80\n120"
-  ],
+  "exampleTestcaseList": ["1\n20", "9\n19", "80\n120"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

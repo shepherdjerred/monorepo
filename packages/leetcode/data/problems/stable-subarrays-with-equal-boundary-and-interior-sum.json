@@ -17,11 +17,7 @@
   "dislikes": 3,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[9,3,3,3,9]",
-    "[1,2,3,4,5]",
-    "[-4,4,0,0,-8,-4]"
-  ],
+  "exampleTestcaseList": ["[9,3,3,3,9]", "[1,2,3,4,5]", "[-4,4,0,0,-8,-4]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -16,10 +16,7 @@
   "dislikes": 10,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Difference in Sums After Removal of Elements\", \"titleSlug\": \"minimum-difference-in-sums-after-removal-of-elements\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[6,2,8,4]",
-    "[2,1,3,3]"
-  ],
+  "exampleTestcaseList": ["[6,2,8,4]", "[2,1,3,3]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 17, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

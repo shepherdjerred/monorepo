@@ -14,11 +14,7 @@
   "dislikes": 9,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find Greatest Common Divisor of Array\", \"titleSlug\": \"find-greatest-common-divisor-of-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4]",
-    "[10,20,30]",
-    "[1,1,1,1]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4]", "[10,20,30]", "[1,1,1,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

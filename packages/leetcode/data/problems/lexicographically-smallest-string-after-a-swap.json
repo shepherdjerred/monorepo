@@ -14,10 +14,7 @@
   "dislikes": 30,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Lexicographically Smallest String After Applying Operations\", \"titleSlug\": \"lexicographically-smallest-string-after-applying-operations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"45320\"",
-    "\"001\""
-  ],
+  "exampleTestcaseList": ["\"45320\"", "\"001\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

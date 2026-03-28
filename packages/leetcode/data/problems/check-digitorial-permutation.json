@@ -15,10 +15,7 @@
   "dislikes": 2,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "145",
-    "10"
-  ],
+  "exampleTestcaseList": ["145", "10"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

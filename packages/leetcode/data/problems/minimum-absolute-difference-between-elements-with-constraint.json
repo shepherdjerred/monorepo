@@ -18,11 +18,7 @@
   "dislikes": 78,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"K-diff Pairs in an Array\", \"titleSlug\": \"k-diff-pairs-in-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find All K-Distant Indices in an Array\", \"titleSlug\": \"find-all-k-distant-indices-in-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find Indices With Index and Value Difference I\", \"titleSlug\": \"find-indices-with-index-and-value-difference-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find Indices With Index and Value Difference II\", \"titleSlug\": \"find-indices-with-index-and-value-difference-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,3,2,4]\n2",
-    "[5,3,2,10,15]\n1",
-    "[1,2,3,4]\n3"
-  ],
+  "exampleTestcaseList": ["[4,3,2,4]\n2", "[5,3,2,10,15]\n1", "[1,2,3,4]\n3"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"capital-one\", \"name\": \"Capital One\"}], \"six_months\": [{\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 4, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 2, \"slug\": \"sig\", \"name\": \"SIG\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}]}",
   "topicTags": [
     {

@@ -5,19 +5,14 @@
   "titleSlug": "find-the-lexicographically-largest-string-from-the-box-ii",
   "difficulty": "Hard",
   "content": "<p>You are given a string <code>word</code>, and an integer <code>numFriends</code>.</p>\n\n<p>Alice is organizing a game for her <code>numFriends</code> friends. There are multiple rounds in the game, where in each round:</p>\n\n<ul>\n\t<li><code>word</code> is split into <code>numFriends</code> <strong>non-empty</strong> strings, such that no previous round has had the <strong>exact</strong> same split.</li>\n\t<li>All the split words are put into a box.</li>\n</ul>\n\n<p>Find the <strong>lexicographically largest</strong> string from the box after all the rounds are finished.</p>\n\n<p>A string <code>a</code> is <strong>lexicographically smaller</strong> than a string <code>b</code> if in the first position where <code>a</code> and <code>b</code> differ, string <code>a</code> has a letter that appears earlier in the alphabet than the corresponding letter in <code>b</code>.<br />\nIf the first <code>min(a.length, b.length)</code> characters do not differ, then the shorter string is the lexicographically smaller one.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">word = &quot;dbca&quot;, numFriends = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;dbc&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>All possible splits are:</p>\n\n<ul>\n\t<li><code>&quot;d&quot;</code> and <code>&quot;bca&quot;</code>.</li>\n\t<li><code>&quot;db&quot;</code> and <code>&quot;ca&quot;</code>.</li>\n\t<li><code>&quot;dbc&quot;</code> and <code>&quot;a&quot;</code>.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">word = &quot;gggg&quot;, numFriends = 4</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;g&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The only possible split is: <code>&quot;g&quot;</code>, <code>&quot;g&quot;</code>, <code>&quot;g&quot;</code>, and <code>&quot;g&quot;</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= word.length &lt;= 2 * 10<sup>5</sup></code></li>\n\t<li><code>word</code> consists only of lowercase English letters.</li>\n\t<li><code>1 &lt;= numFriends &lt;= word.length</code></li>\n</ul>\n",
-  "hints": [
-    "Use suffix array."
-  ],
+  "hints": ["Use suffix array."],
   "metaData": "{\n  \"name\": \"answerString\",\n  \"params\": [\n    {\n      \"name\": \"word\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"numFriends\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"644\", \"totalSubmission\": \"1.3K\", \"totalAcceptedRaw\": 644, \"totalSubmissionRaw\": 1308, \"acRate\": \"49.2%\"}",
   "likes": 7,
   "dislikes": 1,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"dbca\"\n2",
-    "\"gggg\"\n4"
-  ],
+  "exampleTestcaseList": ["\"dbca\"\n2", "\"gggg\"\n4"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

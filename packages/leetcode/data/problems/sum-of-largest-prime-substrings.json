@@ -16,10 +16,7 @@
   "dislikes": 11,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"12234\"",
-    "\"111\""
-  ],
+  "exampleTestcaseList": ["\"12234\"", "\"111\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"netcracker-technology\", \"name\": \"Netcracker Technology\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

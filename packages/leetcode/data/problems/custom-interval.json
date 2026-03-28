@@ -12,11 +12,7 @@
   "dislikes": 8,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "50\n20\n225",
-    "20\n20\n150",
-    "100\n200\n500"
-  ],
+  "exampleTestcaseList": ["50\n20\n225", "20\n20\n150", "100\n200\n500"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [],
   "codeSnippets": [

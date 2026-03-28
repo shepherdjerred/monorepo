@@ -16,10 +16,7 @@
   "dislikes": 16,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Can I Win\", \"titleSlug\": \"can-i-win\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Predict the Winner\", \"titleSlug\": \"predict-the-winner\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2\n7",
-    "4\n11"
-  ],
+  "exampleTestcaseList": ["2\n7", "4\n11"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

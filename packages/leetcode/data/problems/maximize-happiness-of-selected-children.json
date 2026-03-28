@@ -16,11 +16,7 @@
   "dislikes": 100,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Candies Allocated to K Children\", \"titleSlug\": \"maximum-candies-allocated-to-k-children\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3]\n2",
-    "[1,1,1,1]\n2",
-    "[2,3,4,5]\n1"
-  ],
+  "exampleTestcaseList": ["[1,2,3]\n2", "[1,1,1,1]\n2", "[2,3,4,5]\n1"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}]}",
   "topicTags": [
     {

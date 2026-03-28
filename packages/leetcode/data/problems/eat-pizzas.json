@@ -17,10 +17,7 @@
   "dislikes": 16,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,2,3,4,5,6,7,8]",
-    "[2,1,1,1,1,1,1,1]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4,5,6,7,8]", "[2,1,1,1,1,1,1,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

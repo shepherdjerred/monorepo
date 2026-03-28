@@ -17,10 +17,7 @@
   "dislikes": 19,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,3,2,3,1,3]\n3",
-    "[1,1,2,2,1,1]\n2"
-  ],
+  "exampleTestcaseList": ["[1,3,2,3,1,3]\n3", "[1,1,2,2,1,1]\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"palo-alto-networks\", \"name\": \"Palo Alto Networks\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

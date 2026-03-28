@@ -17,10 +17,7 @@
   "dislikes": 44,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Longest Consecutive Sequence\", \"titleSlug\": \"longest-consecutive-sequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[5,4,1,2,2]",
-    "[1,3,2,4]"
-  ],
+  "exampleTestcaseList": ["[5,4,1,2,2]", "[1,3,2,4]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

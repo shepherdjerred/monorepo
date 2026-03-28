@@ -17,10 +17,7 @@
   "dislikes": 16,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,2,3]\n[1,2,3]\n4",
-    "[1,2,3]\n[3,3,3]\n4"
-  ],
+  "exampleTestcaseList": ["[1,2,3]\n[1,2,3]\n4", "[1,2,3]\n[3,3,3]\n4"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"jane-street\", \"name\": \"Jane Street\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

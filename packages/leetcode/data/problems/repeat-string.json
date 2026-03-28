@@ -12,11 +12,7 @@
   "dislikes": 2,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"hello\"\n2",
-    "\"code\"\n3",
-    "\"js\"\n1"
-  ],
+  "exampleTestcaseList": ["\"hello\"\n2", "\"code\"\n3", "\"js\"\n1"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [],
   "codeSnippets": [

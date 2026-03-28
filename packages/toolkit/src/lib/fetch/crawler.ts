@@ -41,7 +41,8 @@ export type CrawlResult = {
  */
 export async function crawlSite(options: CrawlOptions): Promise<CrawlResult> {
   const start = performance.now();
-  const { baseUrl, maxDepth, useBrowser, useSitemap, verbose, quiet, tags } = options;
+  const { baseUrl, maxDepth, useBrowser, useSitemap, verbose, quiet, tags } =
+    options;
   const log = quiet ? () => {} : (msg: string) => console.log(msg);
 
   const urls = await (useSitemap

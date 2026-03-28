@@ -17,11 +17,7 @@
   "dislikes": 4,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"String Compression\", \"titleSlug\": \"string-compression\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"a3c9b2c1\"",
-    "\"c2b3a1\"",
-    "\"a2b4c1\""
-  ],
+  "exampleTestcaseList": ["\"a3c9b2c1\"", "\"c2b3a1\"", "\"a2b4c1\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"riot-games\", \"name\": \"Riot Games\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

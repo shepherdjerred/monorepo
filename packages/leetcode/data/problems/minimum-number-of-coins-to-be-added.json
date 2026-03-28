@@ -16,11 +16,7 @@
   "dislikes": 65,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Coin Change\", \"titleSlug\": \"coin-change\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Most Expensive Item That Can Not Be Bought\", \"titleSlug\": \"most-expensive-item-that-can-not-be-bought\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,4,10]\n19",
-    "[1,4,10,5,7,19]\n19",
-    "[1,1,1]\n20"
-  ],
+  "exampleTestcaseList": ["[1,4,10]\n19", "[1,4,10,5,7,19]\n19", "[1,1,1]\n20"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

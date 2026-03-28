@@ -15,11 +15,7 @@
   "dislikes": 25,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Changes To Make Alternating Binary String\", \"titleSlug\": \"minimum-changes-to-make-alternating-binary-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"aaaaa\"",
-    "\"abddez\"",
-    "\"zyxyxyz\""
-  ],
+  "exampleTestcaseList": ["\"aaaaa\"", "\"abddez\"", "\"zyxyxyz\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

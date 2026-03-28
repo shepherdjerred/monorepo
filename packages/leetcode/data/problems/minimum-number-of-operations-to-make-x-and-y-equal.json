@@ -18,11 +18,7 @@
   "dislikes": 23,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Shortest Bridge\", \"titleSlug\": \"shortest-bridge\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Moves to Spread Stones Over Grid\", \"titleSlug\": \"minimum-moves-to-spread-stones-over-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "26\n1",
-    "54\n2",
-    "25\n30"
-  ],
+  "exampleTestcaseList": ["26\n1", "54\n2", "25\n30"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"groww\", \"name\": \"Groww\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

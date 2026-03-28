@@ -14,10 +14,7 @@
   "dislikes": 102,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Water Bottles\", \"titleSlug\": \"water-bottles\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "13\n6",
-    "10\n3"
-  ],
+  "exampleTestcaseList": ["13\n6", "10\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

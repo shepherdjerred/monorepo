@@ -5,20 +5,14 @@
   "titleSlug": "maximum-subarray-with-equal-products",
   "difficulty": "Easy",
   "content": "<p>You are given an array of <strong>positive</strong> integers <code>nums</code>.</p>\n\n<p>An array <code>arr</code> is called <strong>product equivalent</strong> if <code>prod(arr) == lcm(arr) * gcd(arr)</code>, where:</p>\n\n<ul>\n\t<li><code>prod(arr)</code> is the product of all elements of <code>arr</code>.</li>\n\t<li><code>gcd(arr)</code> is the <span data-keyword=\"gcd-function\">GCD</span> of all elements of <code>arr</code>.</li>\n\t<li><code>lcm(arr)</code> is the <span data-keyword=\"lcm-function\">LCM</span> of all elements of <code>arr</code>.</li>\n</ul>\n\n<p>Return the length of the <strong>longest</strong> <strong>product equivalent</strong> <span data-keyword=\"subarray-nonempty\">subarray</span> of <code>nums</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,2,1,2,1,1,1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">5</span></p>\n\n<p><strong>Explanation:</strong>&nbsp;</p>\n\n<p>The longest product equivalent subarray is <code>[1, 2, 1, 1, 1]</code>, where&nbsp;<code>prod([1, 2, 1, 1, 1]) = 2</code>,&nbsp;<code>gcd([1, 2, 1, 1, 1]) = 1</code>, and&nbsp;<code>lcm([1, 2, 1, 1, 1]) = 2</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [2,3,4,5,6]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong>&nbsp;</p>\n\n<p>The longest product equivalent subarray is <code>[3, 4, 5].</code></p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,2,3,1,4,5,1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">5</span></p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= nums.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10</code></li>\n</ul>\n",
-  "hints": [
-    "What is the maximum possible lcm?"
-  ],
+  "hints": ["What is the maximum possible lcm?"],
   "metaData": "{\n  \"name\": \"maxLength\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"28.8K\", \"totalSubmission\": \"61.7K\", \"totalAcceptedRaw\": 28804, \"totalSubmissionRaw\": 61742, \"acRate\": \"46.7%\"}",
   "likes": 103,
   "dislikes": 44,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find Greatest Common Divisor of Array\", \"titleSlug\": \"find-greatest-common-divisor-of-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,1,2,1,1,1]",
-    "[2,3,4,5,6]",
-    "[1,2,3,1,4,5,1]"
-  ],
+  "exampleTestcaseList": ["[1,2,1,2,1,1,1]", "[2,3,4,5,6]", "[1,2,3,1,4,5,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -18,11 +18,7 @@
   "dislikes": 33,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Longest Substring Without Repeating Characters\", \"titleSlug\": \"longest-substring-without-repeating-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Substring with At Least K Repeating Characters\", \"titleSlug\": \"longest-substring-with-at-least-k-repeating-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"aaaa\"",
-    "\"abcdef\"",
-    "\"abcaba\""
-  ],
+  "exampleTestcaseList": ["\"aaaa\"", "\"abcdef\"", "\"abcaba\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"rubrik\", \"name\": \"Rubrik\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

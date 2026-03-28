@@ -14,10 +14,7 @@
   "dislikes": 26,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,3,1,7]\n[1,3,2,4]\n1",
-    "[1,2,3]\n[10]\n5"
-  ],
+  "exampleTestcaseList": ["[1,3,1,7]\n[1,3,2,4]\n1", "[1,2,3]\n[10]\n5"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}], \"six_months\": []}",
   "topicTags": [
     {

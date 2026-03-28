@@ -15,11 +15,7 @@
   "dislikes": 28,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Lexicographically Smallest String After Substring Operation\", \"titleSlug\": \"lexicographically-smallest-string-after-substring-operation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"zbbz\"\n3",
-    "\"xaxcd\"\n4",
-    "\"lol\"\n0"
-  ],
+  "exampleTestcaseList": ["\"zbbz\"\n3", "\"xaxcd\"\n4", "\"lol\"\n0"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

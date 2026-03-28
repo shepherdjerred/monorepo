@@ -15,10 +15,7 @@
   "dislikes": 4,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimize OR of Remaining Elements Using Operations\", \"titleSlug\": \"minimize-or-of-remaining-elements-using-operations\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,6,5,8]\n2",
-    "[4,5,4,7]\n3"
-  ],
+  "exampleTestcaseList": ["[2,6,5,8]\n2", "[4,5,4,7]\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"sprinklr\", \"name\": \"Sprinklr\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

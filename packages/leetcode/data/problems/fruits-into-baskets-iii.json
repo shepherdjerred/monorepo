@@ -17,10 +17,7 @@
   "dislikes": 83,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Block Placement Queries\", \"titleSlug\": \"block-placement-queries\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,2,5]\n[3,5,4]",
-    "[3,6,1]\n[6,4,7]"
-  ],
+  "exampleTestcaseList": ["[4,2,5]\n[3,5,4]", "[3,6,1]\n[6,4,7]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

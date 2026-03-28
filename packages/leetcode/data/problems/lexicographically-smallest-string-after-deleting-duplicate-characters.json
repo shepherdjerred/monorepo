@@ -19,10 +19,7 @@
   "dislikes": 4,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Remove Duplicate Letters\", \"titleSlug\": \"remove-duplicate-letters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"aaccb\"",
-    "\"z\""
-  ],
+  "exampleTestcaseList": ["\"aaccb\"", "\"z\""],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

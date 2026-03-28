@@ -18,10 +18,7 @@
   "dislikes": 32,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Contain Virus\", \"titleSlug\": \"contain-virus\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Amount of Time for Binary Tree to Be Infected\", \"titleSlug\": \"amount-of-time-for-binary-tree-to-be-infected\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "5\n[0,4]",
-    "4\n[1]"
-  ],
+  "exampleTestcaseList": ["5\n[0,4]", "4\n[1]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 9, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"tekion\", \"name\": \"Tekion\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 2, \"slug\": \"sap\", \"name\": \"SAP\"}], \"three_months\": []}",
   "topicTags": [
     {

@@ -15,10 +15,7 @@
   "dislikes": 16,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[3,2,1,2,3,4]",
-    "[3,2,6,1,4]"
-  ],
+  "exampleTestcaseList": ["[3,2,1,2,3,4]", "[3,2,6,1,4]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

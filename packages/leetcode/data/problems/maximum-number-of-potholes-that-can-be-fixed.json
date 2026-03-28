@@ -16,11 +16,7 @@
   "dislikes": 3,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"..\"\n5",
-    "\"..xxxxx\"\n4",
-    "\"x.x.xxx...x\"\n14"
-  ],
+  "exampleTestcaseList": ["\"..\"\n5", "\"..xxxxx\"\n4", "\"x.x.xxx...x\"\n14"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"geico\", \"name\": \"Geico\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

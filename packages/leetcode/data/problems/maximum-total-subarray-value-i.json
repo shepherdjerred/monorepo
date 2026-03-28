@@ -5,19 +5,14 @@
   "titleSlug": "maximum-total-subarray-value-i",
   "difficulty": "Medium",
   "content": "<p>You are given an integer array <code>nums</code> of length <code>n</code> and an integer <code>k</code>.</p>\n\n<p>You need to choose <strong>exactly</strong> <code>k</code> non-empty <span data-keyword=\"subarray-nonempty\">subarrays</span> <code>nums[l..r]</code> of <code>nums</code>. Subarrays may overlap, and the exact same subarray (same <code>l</code> and <code>r</code>) <strong>can</strong> be chosen more than once.</p>\n\n<p>The <strong>value</strong> of a subarray <code>nums[l..r]</code> is defined as: <code>max(nums[l..r]) - min(nums[l..r])</code>.</p>\n\n<p>The <strong>total value</strong> is the sum of the <strong>values</strong> of all chosen subarrays.</p>\n\n<p>Return the <strong>maximum</strong> possible total value you can achieve.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,3,2], k = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">4</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>One optimal approach is:</p>\n\n<ul>\n\t<li>Choose <code>nums[0..1] = [1, 3]</code>. The maximum is 3 and the minimum is 1, giving a value of <code>3 - 1 = 2</code>.</li>\n\t<li>Choose <code>nums[0..2] = [1, 3, 2]</code>. The maximum is still 3 and the minimum is still 1, so the value is also <code>3 - 1 = 2</code>.</li>\n</ul>\n\n<p>Adding these gives <code>2 + 2 = 4</code>.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [4,2,5,1], k = 3</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">12</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>One optimal approach is:</p>\n\n<ul>\n\t<li>Choose <code>nums[0..3] = [4, 2, 5, 1]</code>. The maximum is 5 and the minimum is 1, giving a value of <code>5 - 1 = 4</code>.</li>\n\t<li>Choose <code>nums[0..3] = [4, 2, 5, 1]</code>. The maximum is 5 and the minimum is 1, so the value is also <code>4</code>.</li>\n\t<li>Choose <code>nums[2..3] = [5, 1]</code>. The maximum is 5 and the minimum is 1, so the value is again <code>4</code>.</li>\n</ul>\n\n<p>Adding these gives <code>4 + 4 + 4 = 12</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n == nums.length &lt;= 5 * 10<sup>​​​​​​​4</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
-  "hints": [
-    "Choose the whole subarray <code>k</code> times."
-  ],
+  "hints": ["Choose the whole subarray <code>k</code> times."],
   "metaData": "{\n  \"name\": \"maxTotalValue\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"53.5K\", \"totalSubmission\": \"83.1K\", \"totalAcceptedRaw\": 53482, \"totalSubmissionRaw\": 83067, \"acRate\": \"64.4%\"}",
   "likes": 53,
   "dislikes": 20,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,3,2]\n2",
-    "[4,2,5,1]\n3"
-  ],
+  "exampleTestcaseList": ["[1,3,2]\n2", "[4,2,5,1]\n3"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

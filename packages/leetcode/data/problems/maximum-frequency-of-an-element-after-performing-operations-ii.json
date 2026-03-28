@@ -14,10 +14,7 @@
   "dislikes": 21,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Frequency of the Most Frequent Element\", \"titleSlug\": \"frequency-of-the-most-frequent-element\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Elements With Maximum Frequency\", \"titleSlug\": \"count-elements-with-maximum-frequency\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,4,5]\n1\n2",
-    "[5,11,20,20]\n5\n1"
-  ],
+  "exampleTestcaseList": ["[1,4,5]\n1\n2", "[5,11,20,20]\n5\n1"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
   "topicTags": [
     {

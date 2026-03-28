@@ -15,11 +15,7 @@
   "dislikes": 52,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Robot Return to Origin\", \"titleSlug\": \"robot-return-to-origin\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"L_RL__R\"",
-    "\"_R__LL_\"",
-    "\"_______\""
-  ],
+  "exampleTestcaseList": ["\"L_RL__R\"", "\"_R__LL_\"", "\"_______\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"barclays\", \"name\": \"Barclays\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

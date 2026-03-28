@@ -20,10 +20,7 @@
   "dislikes": 38,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[0,-2,-1,-3,0,2,-1]",
-    "[1,4,2,7]"
-  ],
+  "exampleTestcaseList": ["[0,-2,-1,-3,0,2,-1]", "[1,4,2,7]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

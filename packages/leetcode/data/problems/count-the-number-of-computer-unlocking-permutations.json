@@ -16,10 +16,7 @@
   "dislikes": 129,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Clumsy Factorial\", \"titleSlug\": \"clumsy-factorial\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3]",
-    "[3,3,3,4,4,4]"
-  ],
+  "exampleTestcaseList": ["[1,2,3]", "[3,3,3,4,4,4]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
   "topicTags": [
     {

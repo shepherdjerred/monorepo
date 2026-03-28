@@ -14,10 +14,7 @@
   "dislikes": 21,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Left and Right Sum Differences\", \"titleSlug\": \"left-and-right-sum-differences\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "4\n5",
-    "5\n3"
-  ],
+  "exampleTestcaseList": ["4\n5", "5\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

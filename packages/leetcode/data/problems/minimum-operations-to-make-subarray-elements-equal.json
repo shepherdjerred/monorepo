@@ -16,10 +16,7 @@
   "dislikes": 5,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Find Median from Data Stream\", \"titleSlug\": \"find-median-from-data-stream\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Moves to Equal Array Elements II\", \"titleSlug\": \"minimum-moves-to-equal-array-elements-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,-3,2,1,-4,6]\n3",
-    "[-2,-2,3,1,4]\n2"
-  ],
+  "exampleTestcaseList": ["[4,-3,2,1,-4,6]\n3", "[-2,-2,3,1,4]\n2"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

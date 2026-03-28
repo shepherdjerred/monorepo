@@ -16,10 +16,7 @@
   "dislikes": 54,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Swaps to Group All 1's Together\", \"titleSlug\": \"minimum-swaps-to-group-all-1s-together\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,1,0,0,0,1,1,0,0,1]\n3\n1",
-    "[0,0,0,0]\n2\n3"
-  ],
+  "exampleTestcaseList": ["[1,1,0,0,0,1,1,0,0,1]\n3\n1", "[0,0,0,0]\n2\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

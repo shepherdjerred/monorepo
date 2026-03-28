@@ -15,10 +15,7 @@
   "dislikes": 31,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"abcd\"\n\"cdab\"",
-    "\"abcd\"\n\"dacb\""
-  ],
+  "exampleTestcaseList": ["\"abcd\"\n\"cdab\"", "\"abcd\"\n\"dacb\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"citrix\", \"name\": \"Citrix\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

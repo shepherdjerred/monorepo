@@ -15,10 +15,7 @@
   "dislikes": 13,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Repeating Substring\", \"titleSlug\": \"maximum-repeating-substring\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"leetcodeleet\"\n4",
-    "\"leetcoleet\"\n2"
-  ],
+  "exampleTestcaseList": ["\"leetcodeleet\"\n4", "\"leetcoleet\"\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"turing\", \"name\": \"Turing\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

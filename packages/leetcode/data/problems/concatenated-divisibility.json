@@ -17,11 +17,7 @@
   "dislikes": 7,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[3,12,45]\n5",
-    "[10,5]\n10",
-    "[1,2,3]\n5"
-  ],
+  "exampleTestcaseList": ["[3,12,45]\n5", "[10,5]\n10", "[1,2,3]\n5"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

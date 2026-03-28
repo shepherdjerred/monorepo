@@ -14,10 +14,7 @@
   "dislikes": 18,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find Peak Element\", \"titleSlug\": \"find-peak-element\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find a Peak Element II\", \"titleSlug\": \"find-a-peak-element-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,4,4]",
-    "[1,4,3,8,5]"
-  ],
+  "exampleTestcaseList": ["[2,4,4]", "[1,4,3,8,5]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"accelya\", \"name\": \"Accelya\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

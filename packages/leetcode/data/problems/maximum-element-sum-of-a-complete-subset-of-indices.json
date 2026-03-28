@@ -16,10 +16,7 @@
   "dislikes": 59,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Constrained Subsequence Sum\", \"titleSlug\": \"constrained-subsequence-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Alternating Subsequence Sum\", \"titleSlug\": \"maximum-alternating-subsequence-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[8,7,3,5,7,2,4,9]",
-    "[8,10,3,8,1,13,7,9,4]"
-  ],
+  "exampleTestcaseList": ["[8,7,3,5,7,2,4,9]", "[8,10,3,8,1,13,7,9,4]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"purplle\", \"name\": \"Purplle\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

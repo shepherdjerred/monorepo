@@ -15,10 +15,7 @@
   "dislikes": 97,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Frequency of an Element After Performing Operations I\", \"titleSlug\": \"maximum-frequency-of-an-element-after-performing-operations-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Frequency of an Element After Performing Operations II\", \"titleSlug\": \"maximum-frequency-of-an-element-after-performing-operations-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Difference Between Even and Odd Frequency II\", \"titleSlug\": \"maximum-difference-between-even-and-odd-frequency-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,2,3,1,4]",
-    "[1,2,3,4,5]"
-  ],
+  "exampleTestcaseList": ["[1,2,2,3,1,4]", "[1,2,3,4,5]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"capgemini\", \"name\": \"Capgemini\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"cred\", \"name\": \"CRED\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

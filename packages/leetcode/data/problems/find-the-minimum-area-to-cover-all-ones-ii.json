@@ -16,10 +16,7 @@
   "dislikes": 68,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Smallest Rectangle Enclosing Black Pixels\", \"titleSlug\": \"smallest-rectangle-enclosing-black-pixels\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[1,0,1],[1,1,1]]",
-    "[[1,0,1,0],[0,1,0,1]]"
-  ],
+  "exampleTestcaseList": ["[[1,0,1],[1,1,1]]", "[[1,0,1,0],[0,1,0,1]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

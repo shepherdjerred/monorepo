@@ -17,11 +17,7 @@
   "dislikes": 4,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Permutations III\", \"titleSlug\": \"permutations-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "4\n6",
-    "3\n2",
-    "2\n3"
-  ],
+  "exampleTestcaseList": ["4\n6", "3\n2", "2\n3"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

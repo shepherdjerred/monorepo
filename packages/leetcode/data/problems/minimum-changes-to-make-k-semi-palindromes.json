@@ -16,9 +16,7 @@
   "dislikes": 108,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Palindrome Partitioning III\", \"titleSlug\": \"palindrome-partitioning-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abcac\"\n2"
-  ],
+  "exampleTestcaseList": ["\"abcac\"\n2"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

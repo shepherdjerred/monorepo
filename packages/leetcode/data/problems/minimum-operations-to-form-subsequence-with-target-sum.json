@@ -18,11 +18,7 @@
   "dislikes": 128,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Subsequences That Satisfy the Given Sum Condition\", \"titleSlug\": \"number-of-subsequences-that-satisfy-the-given-sum-condition\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Closest Subsequence Sum\", \"titleSlug\": \"closest-subsequence-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,8]\n7",
-    "[1,32,1,2]\n12",
-    "[1,32,1]\n35"
-  ],
+  "exampleTestcaseList": ["[1,2,8]\n7", "[1,32,1,2]\n12", "[1,32,1]\n35"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"medianet\", \"name\": \"Media.net\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -15,10 +15,7 @@
   "dislikes": 26,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"abc\"",
-    "\"cb34\""
-  ],
+  "exampleTestcaseList": ["\"abc\"", "\"cb34\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"flexera\", \"name\": \"Flexera\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -15,10 +15,7 @@
   "dislikes": 139,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Sum of Square Numbers\", \"titleSlug\": \"sum-of-square-numbers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sum of All Odd Length Subarrays\", \"titleSlug\": \"sum-of-all-odd-length-subarrays\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4]",
-    "[2,7,1,19,18,3]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4]", "[2,7,1,19,18,3]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

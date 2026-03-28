@@ -15,11 +15,7 @@
   "dislikes": 11,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find the Losers of the Circular Game\", \"titleSlug\": \"find-the-losers-of-the-circular-game\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "3\n5",
-    "5\n6",
-    "4\n2"
-  ],
+  "exampleTestcaseList": ["3\n5", "5\n6", "4\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"agoda\", \"name\": \"Agoda\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -12,10 +12,7 @@
   "dislikes": 11,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of 1 Bits\", \"titleSlug\": \"number-of-1-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Convert to Base -2\", \"titleSlug\": \"convert-to-base-2\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"2080-02-29\"",
-    "\"1900-01-01\""
-  ],
+  "exampleTestcaseList": ["\"2080-02-29\"", "\"1900-01-01\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

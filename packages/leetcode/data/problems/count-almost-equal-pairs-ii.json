@@ -15,10 +15,7 @@
   "dislikes": 23,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find the Occurrence of First Almost Equal Substring\", \"titleSlug\": \"find-the-occurrence-of-first-almost-equal-substring\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1023,2310,2130,213]",
-    "[1,10,100]"
-  ],
+  "exampleTestcaseList": ["[1023,2310,2130,213]", "[1,10,100]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

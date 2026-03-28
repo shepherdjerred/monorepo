@@ -15,11 +15,7 @@
   "dislikes": 26,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Check if One String Swap Can Make Strings Equal\", \"titleSlug\": \"check-if-one-string-swap-can-make-strings-equal\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,12,30,17,21]",
-    "[1,1,1,1,1]",
-    "[123,231]"
-  ],
+  "exampleTestcaseList": ["[3,12,30,17,21]", "[1,1,1,1,1]", "[123,231]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"info-edge\", \"name\": \"Info Edge\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

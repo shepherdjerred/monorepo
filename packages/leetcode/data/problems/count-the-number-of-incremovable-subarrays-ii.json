@@ -18,11 +18,7 @@
   "dislikes": 20,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Shortest Subarray to be Removed to Make Array Sorted\", \"titleSlug\": \"shortest-subarray-to-be-removed-to-make-array-sorted\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4]",
-    "[6,5,7,8]",
-    "[8,7,6,6]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4]", "[6,5,7,8]", "[8,7,6,6]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 9, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

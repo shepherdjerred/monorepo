@@ -16,11 +16,7 @@
   "dislikes": 2,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Array Prototype Last\", \"titleSlug\": \"array-prototype-last\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Group By\", \"titleSlug\": \"group-by\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Snail Traversal\", \"titleSlug\": \"snail-traversal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,4,5]\n5",
-    "[1,4,5]\n2",
-    "[3,4,6,6,6,6,7]\n6"
-  ],
+  "exampleTestcaseList": ["[3,4,5]\n5", "[1,4,5]\n2", "[3,4,6,6,6,6,7]\n6"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [],
   "codeSnippets": [

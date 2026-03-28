@@ -15,11 +15,7 @@
   "dislikes": 104,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"abba\"",
-    "\"cdef\"",
-    "\"abcbcacabbaccba\""
-  ],
+  "exampleTestcaseList": ["\"abba\"", "\"cdef\"", "\"abcbcacabbaccba\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"turing\", \"name\": \"Turing\"}, {\"timesEncountered\": 4, \"slug\": \"ukg\", \"name\": \"UKG\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

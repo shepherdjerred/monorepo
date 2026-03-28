@@ -15,10 +15,7 @@
   "dislikes": 8,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"aczzx\"",
-    "\"abcdef\""
-  ],
+  "exampleTestcaseList": ["\"aczzx\"", "\"abcdef\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"carwale\", \"name\": \"carwale\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

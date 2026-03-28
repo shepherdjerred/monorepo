@@ -16,11 +16,7 @@
   "dislikes": 68,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Good Numbers\", \"titleSlug\": \"count-good-numbers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "3\n2\n1",
-    "4\n2\n2",
-    "5\n2\n0"
-  ],
+  "exampleTestcaseList": ["3\n2\n1", "4\n2\n2", "5\n2\n0"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -15,11 +15,7 @@
   "dislikes": 18,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Absolute Difference Between Elements With Constraint\", \"titleSlug\": \"minimum-absolute-difference-between-elements-with-constraint\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Indices With Index and Value Difference II\", \"titleSlug\": \"find-indices-with-index-and-value-difference-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[5,1,4,1]\n2\n4",
-    "[2,1]\n0\n0",
-    "[1,2,3]\n2\n4"
-  ],
+  "exampleTestcaseList": ["[5,1,4,1]\n2\n4", "[2,1]\n0\n0", "[1,2,3]\n2\n4"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"paytm\", \"name\": \"Paytm\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

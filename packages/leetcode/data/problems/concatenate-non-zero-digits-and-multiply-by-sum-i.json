@@ -5,19 +5,14 @@
   "titleSlug": "concatenate-non-zero-digits-and-multiply-by-sum-i",
   "difficulty": "Easy",
   "content": "<p>You are given an integer <code>n</code>.</p>\n\n<p>Form a new integer <code>x</code> by concatenating all the <strong>non-zero digits</strong> of <code>n</code> in their original order. If there are no <strong>non-zero</strong> digits, <code>x = 0</code>.</p>\n\n<p>Let <code>sum</code> be the <strong>sum of digits</strong> in <code>x</code>.</p>\n\n<p>Return an integer representing the value of <code>x * sum</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 10203004</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">12340</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>The non-zero digits are 1, 2, 3, and 4. Thus, <code>x = 1234</code>.</li>\n\t<li>The sum of digits is <code>sum = 1 + 2 + 3 + 4 = 10</code>.</li>\n\t<li>Therefore, the answer is <code>x * sum = 1234 * 10 = 12340</code>.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 1000</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>The non-zero digit is 1, so <code>x = 1</code> and <code>sum = 1</code>.</li>\n\t<li>Therefore, the answer is <code>x * sum = 1 * 1 = 1</code>.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= n &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
-  "hints": [
-    "Simulate as described"
-  ],
+  "hints": ["Simulate as described"],
   "metaData": "{\n  \"name\": \"sumAndMultiply\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"39.7K\", \"totalSubmission\": \"71.2K\", \"totalAcceptedRaw\": 39703, \"totalSubmissionRaw\": 71209, \"acRate\": \"55.8%\"}",
   "likes": 38,
   "dislikes": 0,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "10203004",
-    "1000"
-  ],
+  "exampleTestcaseList": ["10203004", "1000"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

@@ -14,11 +14,7 @@
   "dislikes": 3,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"abc\"",
-    "\"adcb\"",
-    "\"zadb\""
-  ],
+  "exampleTestcaseList": ["\"abc\"", "\"adcb\"", "\"zadb\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

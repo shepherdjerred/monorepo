@@ -16,11 +16,7 @@
   "dislikes": 34,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"110\"\n1",
-    "\"0101\"\n3",
-    "\"101\"\n2"
-  ],
+  "exampleTestcaseList": ["\"110\"\n1", "\"0101\"\n3", "\"101\"\n2"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}]}",
   "topicTags": [
     {

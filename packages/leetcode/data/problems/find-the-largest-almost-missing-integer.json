@@ -17,11 +17,7 @@
   "dislikes": 44,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Missing Number\", \"titleSlug\": \"missing-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,9,2,1,7]\n3",
-    "[3,9,7,2,1,7]\n4",
-    "[0,0]\n1"
-  ],
+  "exampleTestcaseList": ["[3,9,2,1,7]\n3", "[3,9,7,2,1,7]\n4", "[0,0]\n1"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

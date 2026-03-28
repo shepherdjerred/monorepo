@@ -15,10 +15,7 @@
   "dislikes": 32,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Continuous Subarray Sum\", \"titleSlug\": \"continuous-subarray-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Sub-arrays of Size K and Average Greater than or Equal to Threshold\", \"titleSlug\": \"number-of-sub-arrays-of-size-k-and-average-greater-than-or-equal-to-threshold\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,2,3,1,1,0]\n3",
-    "[1,3,1,1]\n2"
-  ],
+  "exampleTestcaseList": ["[2,2,3,1,1,0]\n3", "[1,3,1,1]\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

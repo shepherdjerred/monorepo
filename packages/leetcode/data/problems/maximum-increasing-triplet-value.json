@@ -18,9 +18,7 @@
   "dislikes": 8,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[5,6,9]"
-  ],
+  "exampleTestcaseList": ["[5,6,9]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -5,20 +5,14 @@
   "titleSlug": "minimum-sum-of-mountain-triplets-i",
   "difficulty": "Easy",
   "content": "<p>You are given a <strong>0-indexed</strong> array <code>nums</code> of integers.</p>\n\n<p>A triplet of indices <code>(i, j, k)</code> is a <strong>mountain</strong> if:</p>\n\n<ul>\n\t<li><code>i &lt; j &lt; k</code></li>\n\t<li><code>nums[i] &lt; nums[j]</code> and <code>nums[k] &lt; nums[j]</code></li>\n</ul>\n\n<p>Return <em>the <strong>minimum possible sum</strong> of a mountain triplet of</em> <code>nums</code>. <em>If no such triplet exists, return</em> <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [8,6,1,5,3]\n<strong>Output:</strong> 9\n<strong>Explanation:</strong> Triplet (2, 3, 4) is a mountain triplet of sum 9 since: \n- 2 &lt; 3 &lt; 4\n- nums[2] &lt; nums[3] and nums[4] &lt; nums[3]\nAnd the sum of this triplet is nums[2] + nums[3] + nums[4] = 9. It can be shown that there are no mountain triplets with a sum of less than 9.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [5,4,8,7,10,2]\n<strong>Output:</strong> 13\n<strong>Explanation:</strong> Triplet (1, 3, 5) is a mountain triplet of sum 13 since: \n- 1 &lt; 3 &lt; 5\n- nums[1] &lt; nums[3] and nums[5] &lt; nums[3]\nAnd the sum of this triplet is nums[1] + nums[3] + nums[5] = 13. It can be shown that there are no mountain triplets with a sum of less than 13.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [6,5,4,3,4,5]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> It can be shown that there are no mountain triplets in nums.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= nums.length &lt;= 50</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 50</code></li>\n</ul>\n",
-  "hints": [
-    "Bruteforce over all possible triplets."
-  ],
+  "hints": ["Bruteforce over all possible triplets."],
   "metaData": "{\n  \"name\": \"minimumSum\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"48.1K\", \"totalSubmission\": \"71.4K\", \"totalAcceptedRaw\": 48062, \"totalSubmissionRaw\": 71411, \"acRate\": \"67.3%\"}",
   "likes": 202,
   "dislikes": 15,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"3Sum\", \"titleSlug\": \"3sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Arithmetic Triplets\", \"titleSlug\": \"number-of-arithmetic-triplets\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Maximum Value of an Ordered Triplet I\", \"titleSlug\": \"maximum-value-of-an-ordered-triplet-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[8,6,1,5,3]",
-    "[5,4,8,7,10,2]",
-    "[6,5,4,3,4,5]"
-  ],
+  "exampleTestcaseList": ["[8,6,1,5,3]", "[5,4,8,7,10,2]", "[6,5,4,3,4,5]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

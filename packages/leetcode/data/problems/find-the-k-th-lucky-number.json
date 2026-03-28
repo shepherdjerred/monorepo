@@ -18,11 +18,7 @@
   "dislikes": 15,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "4",
-    "10",
-    "1000"
-  ],
+  "exampleTestcaseList": ["4", "10", "1000"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

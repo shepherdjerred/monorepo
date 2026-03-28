@@ -16,11 +16,7 @@
   "dislikes": 29,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Contiguous Array\", \"titleSlug\": \"contiguous-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Binary Subarrays With Sum\", \"titleSlug\": \"binary-subarrays-with-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1\n1\n2",
-    "1\n2\n1",
-    "3\n3\n2"
-  ],
+  "exampleTestcaseList": ["1\n1\n2", "1\n2\n1", "3\n3\n2"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}], \"six_months\": []}",
   "topicTags": [
     {

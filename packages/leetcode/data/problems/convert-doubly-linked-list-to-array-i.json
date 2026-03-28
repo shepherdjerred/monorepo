@@ -12,11 +12,7 @@
   "dislikes": 6,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Remove Linked List Elements\", \"titleSlug\": \"remove-linked-list-elements\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4,3,2,1]",
-    "[2,2,2,2,2]",
-    "[3,2,3,2,3,2]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4,3,2,1]", "[2,2,2,2,2]", "[3,2,3,2,3,2]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

@@ -15,10 +15,7 @@
   "dislikes": 34,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Jump Game II\", \"titleSlug\": \"jump-game-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Stone Game\", \"titleSlug\": \"stone-game\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,3,6,1,9,2]\n5",
-    "[2,4,6,8]\n3"
-  ],
+  "exampleTestcaseList": ["[2,3,6,1,9,2]\n5", "[2,4,6,8]\n3"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

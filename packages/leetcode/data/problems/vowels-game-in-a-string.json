@@ -16,10 +16,7 @@
   "dislikes": 116,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"leetcoder\"",
-    "\"bbcd\""
-  ],
+  "exampleTestcaseList": ["\"leetcoder\"", "\"bbcd\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

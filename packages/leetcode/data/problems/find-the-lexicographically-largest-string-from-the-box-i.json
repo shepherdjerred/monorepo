@@ -14,10 +14,7 @@
   "dislikes": 128,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Last Substring in Lexicographical Order\", \"titleSlug\": \"last-substring-in-lexicographical-order\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Construct the Lexicographically Largest Valid Sequence\", \"titleSlug\": \"construct-the-lexicographically-largest-valid-sequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"dbca\"\n2",
-    "\"gggg\"\n4"
-  ],
+  "exampleTestcaseList": ["\"dbca\"\n2", "\"gggg\"\n4"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -15,10 +15,7 @@
   "dislikes": 49,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Product of Array Except Self\", \"titleSlug\": \"product-of-array-except-self\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[1,2],[3,4]]",
-    "[[12345],[2],[1]]"
-  ],
+  "exampleTestcaseList": ["[[1,2],[3,4]]", "[[12345],[2],[1]]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

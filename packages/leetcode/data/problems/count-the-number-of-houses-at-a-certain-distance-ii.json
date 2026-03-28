@@ -17,11 +17,7 @@
   "dislikes": 27,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Walls and Gates\", \"titleSlug\": \"walls-and-gates\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "3\n1\n3",
-    "5\n2\n4",
-    "4\n1\n1"
-  ],
+  "exampleTestcaseList": ["3\n1\n3", "5\n2\n4", "4\n1\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

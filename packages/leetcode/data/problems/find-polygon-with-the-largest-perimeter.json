@@ -16,11 +16,7 @@
   "dislikes": 71,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"3Sum Smaller\", \"titleSlug\": \"3sum-smaller\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Valid Triangle Number\", \"titleSlug\": \"valid-triangle-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[5,5,5]",
-    "[1,12,1,2,5,50,3]",
-    "[5,5,50]"
-  ],
+  "exampleTestcaseList": ["[5,5,5]", "[1,12,1,2,5,50,3]", "[5,5,50]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"airtel\", \"name\": \"Airtel\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

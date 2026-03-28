@@ -17,11 +17,7 @@
   "dislikes": 1,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Make the Prefix Sum Non-negative\", \"titleSlug\": \"make-the-prefix-sum-non-negative\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,-5,3,-1,-2]",
-    "[-1,-2,-3]",
-    "[3,-2,3,-2,1,-1]"
-  ],
+  "exampleTestcaseList": ["[2,-5,3,-1,-2]", "[-1,-2,-3]", "[3,-2,3,-2,1,-1]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

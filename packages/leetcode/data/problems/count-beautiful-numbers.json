@@ -5,19 +5,14 @@
   "titleSlug": "count-beautiful-numbers",
   "difficulty": "Hard",
   "content": "<p data-end=\"387\" data-start=\"189\">You are given two positive integers, <code><font face=\"monospace\">l</font></code> and <code><font face=\"monospace\">r</font></code>. A positive integer is called <strong data-end=\"276\" data-start=\"263\">beautiful</strong> if the product of its digits is divisible by the sum of its digits.</p>\n\n<p data-end=\"529\" data-start=\"448\">Return the count of <strong>beautiful</strong> numbers between <code>l</code> and <code>r</code>, inclusive.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">l = 10, r = 20</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">2</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The beautiful numbers in the range are 10 and 20.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">l = 1, r = 15</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">10</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The beautiful numbers in the range are 1, 2, 3, 4, 5, 6, 7, 8, 9, and 10.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= l &lt;= r &lt; 10<sup>9</sup></code></li>\n</ul>\n",
-  "hints": [
-    "Use digit dynamic programming."
-  ],
+  "hints": ["Use digit dynamic programming."],
   "metaData": "{\n  \"name\": \"beautifulNumbers\",\n  \"params\": [\n    {\n      \"name\": \"l\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"r\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"5.4K\", \"totalSubmission\": \"23K\", \"totalAcceptedRaw\": 5370, \"totalSubmissionRaw\": 23004, \"acRate\": \"23.3%\"}",
   "likes": 52,
   "dislikes": 3,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "10\n20",
-    "1\n15"
-  ],
+  "exampleTestcaseList": ["10\n20", "1\n15"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

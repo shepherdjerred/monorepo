@@ -16,10 +16,7 @@
   "dislikes": 277,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[\"c\"]\n[0]",
-    "[\"d\"]\n[1]"
-  ],
+  "exampleTestcaseList": ["[\"c\"]\n[0]", "[\"d\"]\n[1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"zs-associates\", \"name\": \"ZS Associates\"}, {\"timesEncountered\": 2, \"slug\": \"fourkites\", \"name\": \"fourkites\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

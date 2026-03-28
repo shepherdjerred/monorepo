@@ -17,10 +17,7 @@
   "dislikes": 176,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Ways to Distribute Candies\", \"titleSlug\": \"count-ways-to-distribute-candies\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "5\n2",
-    "3\n3"
-  ],
+  "exampleTestcaseList": ["5\n2", "3\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"rubrik\", \"name\": \"Rubrik\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

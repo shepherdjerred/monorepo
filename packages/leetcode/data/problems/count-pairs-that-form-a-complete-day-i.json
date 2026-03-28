@@ -14,10 +14,7 @@
   "dislikes": 12,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Check If Array Pairs Are Divisible by k\", \"titleSlug\": \"check-if-array-pairs-are-divisible-by-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[12,12,30,24,24]",
-    "[72,48,24,3]"
-  ],
+  "exampleTestcaseList": ["[12,12,30,24,24]", "[72,48,24,3]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {
