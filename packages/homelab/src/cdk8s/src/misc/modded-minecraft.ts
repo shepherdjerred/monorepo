@@ -1,5 +1,6 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
+import { Namespace } from "cdk8s-plus-31";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
@@ -9,7 +10,7 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
 // 1Password item path for CurseForge API key (shared across all modded servers)
 // The item must have a field named "CF_API_KEY" containing the CurseForge API key
 // Obtain from https://console.curseforge.com/
-const CURSEFORGE_1P_ITEM_PATH = "vaults/v64ocnykdqju4ui6j6pua56xw4/items/curseforge-api-key";
+const CURSEFORGE_1P_ITEM_PATH = "vaults/v64ocnykdqju4ui6j6pua56xw4/items/evbgkoazs6dquzlrl5fv7h2gtm";
 
 export interface ModdedMinecraftServerConfig {
   name: string;
@@ -26,6 +27,13 @@ export interface ModdedMinecraftServerConfig {
 export function createModdedMinecraftApp(chart: Chart, config: ModdedMinecraftServerConfig) {
   const namespace = `minecraft-${config.name}`;
   const secretName = `${namespace}-curseforge-api-key`;
+
+  // Create namespace explicitly so the OnePasswordItem can be applied before ArgoCD syncs
+  new Namespace(chart, `${namespace}-namespace`, {
+    metadata: {
+      name: namespace,
+    },
+  });
 
   // CurseForge API key secret (1Password operator creates a K8s Secret per namespace)
   new OnePasswordItem(chart, `${namespace}-curseforge-1p`, {

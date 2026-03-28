@@ -231,6 +231,110 @@ resource "cloudflare_record" "sjer_red_cname_status" {
   proxied = true
 }
 
+# ── CNAMEs (Minecraft modded servers → ddns for mc-router) ────────────────────
+
+resource "cloudflare_record" "sjer_red_cname_allthemons" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "allthemons"
+  type    = "CNAME"
+  content = "ddns.sjer.red"
+  proxied = false
+}
+
+resource "cloudflare_record" "sjer_red_cname_stoneblock4" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "stoneblock4"
+  type    = "CNAME"
+  content = "ddns.sjer.red"
+  proxied = false
+}
+
+resource "cloudflare_record" "sjer_red_cname_bettermc" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "bettermc"
+  type    = "CNAME"
+  content = "ddns.sjer.red"
+  proxied = false
+}
+
+resource "cloudflare_record" "sjer_red_cname_allofcreate" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "allofcreate"
+  type    = "CNAME"
+  content = "ddns.sjer.red"
+  proxied = false
+}
+
+resource "cloudflare_record" "sjer_red_cname_ftbskies2" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "ftbskies2"
+  type    = "CNAME"
+  content = "ddns.sjer.red"
+  proxied = false
+}
+
+# SRV records for Minecraft modded servers (port 30000 = mc-router NodePort)
+
+resource "cloudflare_record" "sjer_red_srv_minecraft_allthemons" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "_minecraft._tcp.allthemons"
+  type    = "SRV"
+  data {
+    priority = 0
+    weight   = 5
+    port     = 30000
+    target   = "allthemons.sjer.red"
+  }
+}
+
+resource "cloudflare_record" "sjer_red_srv_minecraft_stoneblock4" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "_minecraft._tcp.stoneblock4"
+  type    = "SRV"
+  data {
+    priority = 0
+    weight   = 5
+    port     = 30000
+    target   = "stoneblock4.sjer.red"
+  }
+}
+
+resource "cloudflare_record" "sjer_red_srv_minecraft_bettermc" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "_minecraft._tcp.bettermc"
+  type    = "SRV"
+  data {
+    priority = 0
+    weight   = 5
+    port     = 30000
+    target   = "bettermc.sjer.red"
+  }
+}
+
+resource "cloudflare_record" "sjer_red_srv_minecraft_allofcreate" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "_minecraft._tcp.allofcreate"
+  type    = "SRV"
+  data {
+    priority = 0
+    weight   = 5
+    port     = 30000
+    target   = "allofcreate.sjer.red"
+  }
+}
+
+resource "cloudflare_record" "sjer_red_srv_minecraft_ftbskies2" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "_minecraft._tcp.ftbskies2"
+  type    = "SRV"
+  data {
+    priority = 0
+    weight   = 5
+    port     = 30000
+    target   = "ftbskies2.sjer.red"
+  }
+}
+
 # FastMail DKIM
 resource "cloudflare_record" "sjer_red_dkim_fm1" {
   zone_id = cloudflare_zone.sjer_red.id
