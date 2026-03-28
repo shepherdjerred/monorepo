@@ -16,8 +16,8 @@ steps:
                 image: "ghcr.io/shepherdjerred/ci-base:403"
                 resources:
                   requests:
-                    cpu: "1"
-                    memory: "2Gi"
+                    cpu: "250m"
+                    memory: "512Mi"
                 envFrom:
                   - secretRef:
                       name: buildkite-ci-secrets

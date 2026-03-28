@@ -139,25 +139,28 @@ export class Monorepo {
       container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
     }
 
-    // Per-package lockfile — frozen install
-    container = container.withExec(["bun", "install", "--frozen-lockfile"]);
-
-    // Build deps that publish types/exports via dist/
+    // Install and build deps first so dist/ exists before target's install resolves file: refs
     for (const dep of BUILD_TIME_DEPS) {
       if (depNames.includes(dep)) {
         container = container
           .withWorkdir(`/workspace/packages/${dep}`)
+          .withExec(["bun", "install", "--frozen-lockfile"])
           .withExec(["bun", "run", "build"]);
       }
     }
 
-    return container.withWorkdir(`/workspace/packages/${pkg}`);
+    // Per-package lockfile — frozen install (after deps are built so file: refs find dist/)
+    container = container
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withExec(["bun", "install", "--frozen-lockfile"]);
+
+    return container;
   }
 
   /**
    * Rust container with cargo caches and system deps (clang, openssl).
    */
-  rustBase(source: Directory): Container {
+  rustBase(pkgDir: Directory): Container {
     return dag
       .container()
       .from(RUST_IMAGE)
@@ -180,7 +183,7 @@ export class Monorepo {
       .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
       .withMountedCache("/workspace/target", dag.cacheVolume(CARGO_TARGET))
       .withWorkdir("/workspace")
-      .withDirectory("/workspace", source.directory("packages/clauderon"), {
+      .withDirectory("/workspace", pkgDir, {
         exclude: ["target", "node_modules", ".git"],
       });
   }
@@ -188,18 +191,14 @@ export class Monorepo {
   /**
    * Go container with module caches mounted.
    */
-  goBase(source: Directory): Container {
+  goBase(pkgDir: Directory): Container {
     return dag
       .container()
       .from(GO_IMAGE)
       .withMountedCache("/go/pkg/mod", dag.cacheVolume(GO_MOD))
       .withMountedCache("/root/.cache/go-build", dag.cacheVolume(GO_BUILD))
       .withWorkdir("/workspace")
-      .withDirectory(
-        "/workspace",
-        source.directory("packages/terraform-provider-asuswrt"),
-        { exclude: [".git"] },
-      );
+      .withDirectory("/workspace", pkgDir, { exclude: [".git"] });
   }
 
   // ---------------------------------------------------------------------------
@@ -567,8 +566,8 @@ export class Monorepo {
 
   /** Run cargo fmt --check */
   @func()
-  async rustFmt(source: Directory): Promise<string> {
-    return this.rustBase(source)
+  async rustFmt(pkgDir: Directory): Promise<string> {
+    return this.rustBase(pkgDir)
       .withExec(["rustup", "component", "add", "rustfmt"])
       .withExec(["cargo", "fmt", "--check"])
       .stdout();
@@ -576,8 +575,8 @@ export class Monorepo {
 
   /** Run cargo clippy */
   @func()
-  async rustClippy(source: Directory): Promise<string> {
-    return this.rustBase(source)
+  async rustClippy(pkgDir: Directory): Promise<string> {
+    return this.rustBase(pkgDir)
       .withExec(["rustup", "component", "add", "clippy"])
       .withExec([
         "cargo",
@@ -593,8 +592,8 @@ export class Monorepo {
 
   /** Run cargo test */
   @func()
-  async rustTest(source: Directory): Promise<string> {
-    return this.rustBase(source)
+  async rustTest(pkgDir: Directory): Promise<string> {
+    return this.rustBase(pkgDir)
       .withExec(["cargo", "test", "--all-features"])
       .stdout();
   }
@@ -602,10 +601,10 @@ export class Monorepo {
   /** Build the Rust project */
   @func()
   rustBuild(
-    source: Directory,
+    pkgDir: Directory,
     target: string = "x86_64-unknown-linux-gnu",
   ): Container {
-    return this.rustBase(source)
+    return this.rustBase(pkgDir)
       .withExec(["rustup", "target", "add", target])
       .withExec(["cargo", "build", "--release", "--target", target]);
   }
@@ -616,20 +615,20 @@ export class Monorepo {
 
   /** Run go build */
   @func()
-  async goBuild(source: Directory): Promise<string> {
-    return this.goBase(source).withExec(["go", "build", "./..."]).stdout();
+  async goBuild(pkgDir: Directory): Promise<string> {
+    return this.goBase(pkgDir).withExec(["go", "build", "./..."]).stdout();
   }
 
   /** Run go test */
   @func()
-  async goTest(source: Directory): Promise<string> {
-    return this.goBase(source).withExec(["go", "test", "./...", "-v"]).stdout();
+  async goTest(pkgDir: Directory): Promise<string> {
+    return this.goBase(pkgDir).withExec(["go", "test", "./...", "-v"]).stdout();
   }
 
   /** Run golangci-lint (v2) */
   @func()
-  async goLint(source: Directory): Promise<string> {
-    return this.goBase(source)
+  async goLint(pkgDir: Directory): Promise<string> {
+    return this.goBase(pkgDir)
       .withExec([
         "go",
         "install",
@@ -735,20 +734,22 @@ export class Monorepo {
       container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
     }
 
-    container = container.withExec(["bun", "install", "--frozen-lockfile"]);
-
-    // Build deps that publish types/exports via dist/
+    // Install and build deps first so dist/ exists before target's install resolves file: refs
     for (const dep of BUILD_TIME_DEPS) {
       if (depNames.includes(dep)) {
         container = container
           .withWorkdir(`/workspace/packages/${dep}`)
+          .withExec(["bun", "install", "--frozen-lockfile"])
           .withExec(["bun", "run", "build"]);
       }
     }
 
+    container = container
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withExec(["bun", "install", "--frozen-lockfile"]);
+
     return (
       container
-        .withWorkdir(`/workspace/packages/${pkg}`)
         // Build the site first — playwright tests run against astro preview which needs dist/
         .withExec(["bunx", "astro", "build"])
         .withExec(["bun", "run", "test"])
@@ -806,19 +807,21 @@ export class Monorepo {
       container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
     }
 
-    container = container.withExec(["bun", "install", "--frozen-lockfile"]);
-
-    // Build deps that publish types/exports via dist/
+    // Install and build deps first so dist/ exists before target's install resolves file: refs
     for (const dep of BUILD_TIME_DEPS) {
       if (depNames.includes(dep)) {
         container = container
           .withWorkdir(`/workspace/packages/${dep}`)
+          .withExec(["bun", "install", "--frozen-lockfile"])
           .withExec(["bun", "run", "build"]);
       }
     }
 
-    return container
+    container = container
       .withWorkdir(`/workspace/packages/${pkg}`)
+      .withExec(["bun", "install", "--frozen-lockfile"]);
+
+    return container
       .withExec(["bunx", "astro", "build"])
       .withExec(["bunx", "playwright", "test", "--update-snapshots"])
       .directory(`/workspace/packages/${pkg}/test`);
@@ -839,7 +842,6 @@ export class Monorepo {
       .withDirectory("/workspace", source, {
         exclude: SOURCE_EXCLUDES,
       })
-      .withExec(["bun", "install", "--frozen-lockfile"])
       .withExec(["bunx", "prettier", "--check", "."])
       .stdout();
   }
@@ -1161,14 +1163,14 @@ export class Monorepo {
 
   /** Build the Maven project (castle-casters) with `mvn package -DskipTests` */
   @func()
-  async mavenBuild(source: Directory): Promise<string> {
-    return mavenBuildHelper(source).stdout();
+  async mavenBuild(pkgDir: Directory): Promise<string> {
+    return mavenBuildHelper(pkgDir).stdout();
   }
 
   /** Test the Maven project (castle-casters) with `mvn test` */
   @func()
-  async mavenTest(source: Directory): Promise<string> {
-    return mavenTestHelper(source).stdout();
+  async mavenTest(pkgDir: Directory): Promise<string> {
+    return mavenTestHelper(pkgDir).stdout();
   }
 
   // ---------------------------------------------------------------------------
@@ -1177,8 +1179,8 @@ export class Monorepo {
 
   /** Build the LaTeX resume with xelatex */
   @func()
-  async latexBuild(source: Directory): Promise<string> {
-    return latexBuildHelper(source).stdout();
+  async latexBuild(pkgDir: Directory): Promise<string> {
+    return latexBuildHelper(pkgDir).stdout();
   }
 
   // ---------------------------------------------------------------------------
@@ -1313,8 +1315,8 @@ export class Monorepo {
 
   /** Build clauderon for multiple targets and collect binaries into one Directory */
   @func()
-  clauderonCollectBinaries(source: Directory): Directory {
-    return clauderonCollectBinariesHelper(source, [
+  clauderonCollectBinaries(pkgDir: Directory): Directory {
+    return clauderonCollectBinariesHelper(pkgDir, [
       {
         target: "x86_64-unknown-linux-gnu",
         filename: "clauderon-linux-x86_64",
@@ -1384,7 +1386,7 @@ export class Monorepo {
 
   /** Run cargo deny check on the Rust project */
   @func()
-  async cargoDeny(source: Directory): Promise<string> {
-    return cargoDenyHelper(source).stdout();
+  async cargoDeny(pkgDir: Directory): Promise<string> {
+    return cargoDenyHelper(pkgDir).stdout();
   }
 }

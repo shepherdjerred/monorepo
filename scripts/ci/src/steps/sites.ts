@@ -10,8 +10,8 @@ import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
 function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
-  const cpu = site.needsPlaywright || site.buildCmd ? "1" : "500m";
-  const memory = site.needsPlaywright || site.buildCmd ? "2Gi" : "512Mi";
+  const cpu = "250m";
+  const memory = "512Mi";
 
   const pkgPath = site.buildDir.replace("packages/", "");
   const depList = (site.workspaceDeps ?? "").split(",").filter(Boolean);

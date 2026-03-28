@@ -31,8 +31,8 @@ const SOURCE_EXCLUDES = [
 ];
 
 /**
- * Create a bun container with deps installed, workdir at /workspace.
- * Mirrors the pattern used by prettier() in index.ts.
+ * Create a bun container with source mounted, workdir at /workspace.
+ * Quality scripts use bun builtins and bunx — no npm install needed.
  */
 function bunContainer(source: Directory): Container {
   return dag
@@ -40,11 +40,6 @@ function bunContainer(source: Directory): Container {
     .from(BUN_IMAGE)
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
     .withWorkdir("/workspace")
-    .withDirectory("/workspace", source, {
-      include: ["package.json", "bun.lock", "patches/**", "**/package.json"],
-      exclude: ["**/node_modules/**"],
-    })
-    .withExec(["bun", "install", "--frozen-lockfile"])
     .withDirectory("/workspace", source, {
       exclude: SOURCE_EXCLUDES,
     });
@@ -79,8 +74,16 @@ export function gitleaksCheckHelper(source: Directory): Container {
 
 /** Run the suppression check script and return its output. */
 export function suppressionCheckHelper(source: Directory): Container {
-  return bunContainer(source).withExec([
-    "bun",
-    "scripts/check-suppressions.ts",
-  ]);
+  return bunContainer(source)
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "git",
+    ])
+    .withDirectory("/workspace/.git", source.directory(".git"))
+    .withExec(["bun", "scripts/check-suppressions.ts"]);
 }

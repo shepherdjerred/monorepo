@@ -9,12 +9,12 @@ import { dag, Container, Directory } from "@dagger.io/dagger";
 const TEXLIVE_IMAGE = "texlive/texlive:TL2024-historic";
 
 /** Build a LaTeX resume (packages/resume) with xelatex. */
-export function latexBuildHelper(source: Directory): Container {
+export function latexBuildHelper(pkgDir: Directory): Container {
   return dag
     .container()
     .from(TEXLIVE_IMAGE)
     .withWorkdir("/workspace")
-    .withDirectory("/workspace", source.directory("packages/resume"), {
+    .withDirectory("/workspace", pkgDir, {
       exclude: [".git"],
     })
     .withExec(["xelatex", "resume.tex"]);

@@ -23,7 +23,7 @@ function cdk8sSynthStep(dependsOn: string[]): BuildkiteStep {
     timeout_in_minutes: 15,
     retry: RETRY,
     env: DAGGER_ENV,
-    plugins: [k8sPlugin({ cpu: "2", memory: "4Gi" })],
+    plugins: [k8sPlugin({ cpu: "250m", memory: "512Mi" })],
   };
 }
 
@@ -39,7 +39,7 @@ function helmPushStep(): BuildkiteStep {
     timeout_in_minutes: 10,
     retry: RETRY,
     env: DAGGER_ENV,
-    plugins: [k8sPlugin({ cpu: "500m", memory: "1Gi" })],
+    plugins: [k8sPlugin({ cpu: "250m", memory: "512Mi" })],
   };
 }
 

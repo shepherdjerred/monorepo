@@ -35,11 +35,11 @@ export function clauderonReleaseGroup(): BuildkiteGroup {
     key: t.key,
     if: MAIN_ONLY,
     depends_on: "release",
-    command: `dagger call rust-build --source . --target ${t.target}`,
+    command: `dagger call rust-build --pkg-dir ./packages/clauderon --target ${t.target}`,
     timeout_in_minutes: 20,
     retry: RETRY,
     env: DAGGER_ENV,
-    plugins: [k8sPlugin({ cpu: "2", memory: "4Gi", secrets: [] })],
+    plugins: [k8sPlugin({ cpu: "250m", memory: "512Mi", secrets: [] })],
   }));
 
   const uploadStep: BuildkiteStep = {
@@ -48,11 +48,11 @@ export function clauderonReleaseGroup(): BuildkiteGroup {
     if: MAIN_ONLY,
     depends_on: TARGETS.map((t) => t.key),
     command:
-      'dagger call clauderon-upload --binaries $(dagger call clauderon-collect-binaries --source .) --version "$(buildkite-agent meta-data get clauderon_version || echo dev)" --gh-token env:GITHUB_TOKEN',
+      'dagger call clauderon-upload --binaries $(dagger call clauderon-collect-binaries --pkg-dir ./packages/clauderon) --version "$(buildkite-agent meta-data get clauderon_version || echo dev)" --gh-token env:GITHUB_TOKEN',
     timeout_in_minutes: 10,
     retry: RETRY,
     env: DAGGER_ENV,
-    plugins: [k8sPlugin({ cpu: "500m", memory: "512Mi" })],
+    plugins: [k8sPlugin({ cpu: "250m", memory: "512Mi" })],
   };
 
   return {

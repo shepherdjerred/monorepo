@@ -22,7 +22,7 @@ export function cooklangReleaseGroup(): BuildkiteGroup {
         timeout_in_minutes: 10,
         retry: RETRY,
         env: DAGGER_ENV,
-        plugins: [k8sPlugin({ cpu: "500m", memory: "1Gi" })],
+        plugins: [k8sPlugin({ cpu: "250m", memory: "512Mi" })],
       },
       {
         label: ":cook: Push cooklang to repo",
@@ -34,7 +34,7 @@ export function cooklangReleaseGroup(): BuildkiteGroup {
         timeout_in_minutes: 10,
         retry: RETRY,
         env: DAGGER_ENV,
-        plugins: [k8sPlugin({ cpu: "500m", memory: "512Mi" })],
+        plugins: [k8sPlugin({ cpu: "250m", memory: "512Mi" })],
       },
       {
         label: ":cook: Create cooklang release",
@@ -46,7 +46,7 @@ export function cooklangReleaseGroup(): BuildkiteGroup {
         timeout_in_minutes: 10,
         retry: RETRY,
         env: DAGGER_ENV,
-        plugins: [k8sPlugin({ cpu: "500m", memory: "512Mi" })],
+        plugins: [k8sPlugin({ cpu: "250m", memory: "512Mi" })],
       },
     ],
   };

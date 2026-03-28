@@ -41,11 +41,11 @@ export function createKueueConfig(chart: Chart) {
               resources: [
                 {
                   name: "cpu",
-                  nominalQuota: "16",
+                  nominalQuota: "5",
                 },
                 {
                   name: "memory",
-                  nominalQuota: "64Gi",
+                  nominalQuota: "10Gi",
                 },
               ],
             },

@@ -8,25 +8,29 @@ import { dag, Container, Directory } from "@dagger.io/dagger";
 // renovate: datasource=docker depName=maven
 const MAVEN_IMAGE = "maven:3.9.9-eclipse-temurin-21";
 
+const MAVEN_CACHE = "maven-local-repo";
+
 /** Build a Maven project (castle-casters) with `mvn package -DskipTests`. */
-export function mavenBuildHelper(source: Directory): Container {
+export function mavenBuildHelper(pkgDir: Directory): Container {
   return dag
     .container()
     .from(MAVEN_IMAGE)
+    .withMountedCache("/root/.m2/repository", dag.cacheVolume(MAVEN_CACHE))
     .withWorkdir("/workspace")
-    .withDirectory("/workspace", source.directory("packages/castle-casters"), {
+    .withDirectory("/workspace", pkgDir, {
       exclude: [".git", "target"],
     })
     .withExec(["mvn", "package", "-DskipTests"]);
 }
 
 /** Test a Maven project (castle-casters) with `mvn test`. */
-export function mavenTestHelper(source: Directory): Container {
+export function mavenTestHelper(pkgDir: Directory): Container {
   return dag
     .container()
     .from(MAVEN_IMAGE)
+    .withMountedCache("/root/.m2/repository", dag.cacheVolume(MAVEN_CACHE))
     .withWorkdir("/workspace")
-    .withDirectory("/workspace", source.directory("packages/castle-casters"), {
+    .withDirectory("/workspace", pkgDir, {
       exclude: [".git", "target"],
     })
     .withExec(["mvn", "test"]);

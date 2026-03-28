@@ -416,7 +416,7 @@ interface ClauderonTarget {
 
 /** Build clauderon for multiple targets and collect binaries into one Directory. */
 export function clauderonCollectBinariesHelper(
-  source: Directory,
+  pkgDir: Directory,
   targets: ClauderonTarget[],
 ): Directory {
   // renovate: datasource=docker depName=rust
@@ -447,7 +447,7 @@ export function clauderonCollectBinariesHelper(
       .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
       .withMountedCache("/workspace/target", dag.cacheVolume("cargo-target"))
       .withWorkdir("/workspace")
-      .withDirectory("/workspace", source.directory("packages/clauderon"), {
+      .withDirectory("/workspace", pkgDir, {
         exclude: ["target", "node_modules", ".git"],
       })
       .withExec(["rustup", "target", "add", target])
@@ -599,7 +599,7 @@ Be direct and concise. If the PR is trivial (pure merge/rebase with minimal chan
 // ---------------------------------------------------------------------------
 
 /** Run cargo deny check on the Rust project. */
-export function cargoDenyHelper(source: Directory): Container {
+export function cargoDenyHelper(pkgDir: Directory): Container {
   // renovate: datasource=docker depName=rust
   const RUST_IMAGE = "rust:1.89.0-bookworm";
   return dag
@@ -607,7 +607,7 @@ export function cargoDenyHelper(source: Directory): Container {
     .from(RUST_IMAGE)
     .withExec(["cargo", "install", "cargo-deny"])
     .withWorkdir("/workspace")
-    .withDirectory("/workspace", source.directory("packages/clauderon"), {
+    .withDirectory("/workspace", pkgDir, {
       exclude: ["target", "node_modules", ".git"],
     })
     .withMountedCache(
