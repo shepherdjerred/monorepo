@@ -244,7 +244,7 @@ export class TaskNotesClient {
       response = await this.fetch(url, {
         method,
         headers,
-        body: body ? JSON.stringify(body) : undefined,
+        ...(body ? { body: JSON.stringify(body) } : {}),
         signal: controller.signal,
       });
     } catch (error) {

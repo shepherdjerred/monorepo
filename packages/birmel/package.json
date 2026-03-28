@@ -14,6 +14,7 @@
     "start": "bunx prisma db push --skip-generate && bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
     "build": "true",
+    "generate": "bunx prisma generate",
     "test": "bunx --env-file=.env.test prisma generate && bun --env-file=.env.test test",
     "typecheck": "prisma generate && tsc --noEmit",
     "lint": "prisma generate && eslint ."

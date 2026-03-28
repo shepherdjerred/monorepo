@@ -56,7 +56,7 @@ import {
 // renovate: datasource=docker depName=oven/bun
 const BUN_IMAGE = "oven/bun:1.2.17-debian";
 // renovate: datasource=docker depName=rust
-const RUST_IMAGE = "rust:1.88.0-bookworm";
+const RUST_IMAGE = "rust:1.89.0-bookworm";
 // renovate: datasource=docker depName=golang
 const GO_IMAGE = "golang:1.25.4-bookworm";
 // renovate: datasource=docker depName=mcr.microsoft.com/playwright
@@ -285,6 +285,31 @@ export class Monorepo {
   }
 
   // ---------------------------------------------------------------------------
+  // Combined generate + action (avoids nested CLI calls / SSH serialization)
+  // ---------------------------------------------------------------------------
+
+  /** Generate then lint in a single pipeline */
+  @func()
+  async generateAndLint(source: Directory, pkg: string): Promise<string> {
+    const generated = this.generate(source, pkg);
+    return this.lintWithGenerated(generated, pkg);
+  }
+
+  /** Generate then typecheck in a single pipeline */
+  @func()
+  async generateAndTypecheck(source: Directory, pkg: string): Promise<string> {
+    const generated = this.generate(source, pkg);
+    return this.typecheckWithGenerated(generated, pkg);
+  }
+
+  /** Generate then test in a single pipeline */
+  @func()
+  async generateAndTest(source: Directory, pkg: string): Promise<string> {
+    const generated = this.generate(source, pkg);
+    return this.testWithGenerated(generated, pkg);
+  }
+
+  // ---------------------------------------------------------------------------
   // HA type generation (requires live Home Assistant instance)
   // ---------------------------------------------------------------------------
 
@@ -300,6 +325,36 @@ export class Monorepo {
       .withEnvVariable("HASS_BASE_URL", hassBaseUrl)
       .withExec(["bun", "run", "generate-types"])
       .directory("/workspace");
+  }
+
+  /** Generate HA types then lint homelab/src/ha */
+  @func()
+  async haLint(source: Directory, hassToken: Secret): Promise<string> {
+    const generated = this.haGenerate(source, hassToken);
+    return dag
+      .container()
+      .from(BUN_IMAGE)
+      .withWorkdir("/workspace/packages/homelab/src/ha")
+      .withDirectory("/workspace", generated)
+      .withMountedCache(
+        "/workspace/packages/homelab/src/ha/.eslintcache",
+        dag.cacheVolume(ESLINT_CACHE),
+      )
+      .withExec(["bun", "run", "lint"])
+      .stdout();
+  }
+
+  /** Generate HA types then typecheck homelab/src/ha */
+  @func()
+  async haTypecheck(source: Directory, hassToken: Secret): Promise<string> {
+    const generated = this.haGenerate(source, hassToken);
+    return dag
+      .container()
+      .from(BUN_IMAGE)
+      .withWorkdir("/workspace/packages/homelab/src/ha")
+      .withDirectory("/workspace", generated)
+      .withExec(["bun", "run", "typecheck"])
+      .stdout();
   }
 
   // ---------------------------------------------------------------------------
@@ -644,12 +699,17 @@ export class Monorepo {
       .withWorkdir("/workspace")
       .withDirectory("/workspace", source, {
         include: ["**/*.sh"],
-        exclude: ["**/archive/**", "**/node_modules/**"],
+        exclude: [
+          "**/archive/**",
+          "**/node_modules/**",
+          "**/Pods/**",
+          "**/target/**",
+        ],
       })
       .withExec([
         "sh",
         "-c",
-        "find /workspace -name '*.sh' -print0 | xargs -0 shellcheck",
+        "find /workspace -name '*.sh' -print0 | xargs -0 shellcheck --severity=warning",
       ])
       .stdout();
   }

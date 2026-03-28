@@ -6,9 +6,11 @@ import {
   KubeService,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { BUILDCACHE_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
 // ZFS properties that OpenEBS CSI doesn't support as storage class parameters.
 // Applied via a one-shot Job that runs `zfs set` on the Dagger engine's dataset.
@@ -97,6 +99,18 @@ zfs get sync,logbias,atime "$DATASET"`,
     },
   });
 
+  // Docker Hub credentials for authenticated pulls (avoids rate limits).
+  // 1Password Connect syncs the item into a K8s Secret with `username` and `credential` keys.
+  new OnePasswordItem(chart, "docker-hub-credentials", {
+    spec: {
+      itemPath: vaultItemPath("47tnfq54mh2za3lhiqw2d4ffx4"),
+    },
+    metadata: {
+      name: "docker-hub-credentials",
+      namespace: "dagger",
+    },
+  });
+
   // ClusterIP Service so CI pods can reach the engine via TCP.
   // The Helm chart does not create a Service; we manage one ourselves.
   new KubeService(chart, "dagger-engine-service", {
@@ -140,6 +154,15 @@ zfs get sync,logbias,atime "$DATASET"`,
             engine: {
               kind: "StatefulSet",
               port: 8080,
+              resources: {
+                requests: {
+                  cpu: "2",
+                  memory: "4Gi",
+                },
+                limits: {
+                  memory: "8Gi",
+                },
+              },
               configJson: JSON.stringify({
                 gc: {
                   maxUsedSpace: "600GB",
@@ -147,6 +170,39 @@ zfs get sync,logbias,atime "$DATASET"`,
                   minFreeSpace: "20%",
                 },
               }),
+              volumes: [
+                {
+                  name: "docker-config",
+                  emptyDir: {},
+                },
+                {
+                  name: "docker-hub-secret",
+                  secret: {
+                    secretName: "docker-hub-credentials",
+                  },
+                },
+              ],
+              volumeMounts: [
+                {
+                  name: "docker-config",
+                  mountPath: "/root/.docker",
+                  readOnly: true,
+                },
+              ],
+              initContainers: [
+                {
+                  name: "docker-config-init",
+                  image: `docker.io/alpine:${versions["library/alpine"]}`,
+                  command: ["/bin/sh", "-c"],
+                  args: [
+                    `USER=$(cat /secret/username) && CRED=$(cat /secret/credential) && AUTH=$(echo -n "$USER:$CRED" | base64) && printf '{"auths":{"https://index.docker.io/v1/":{"auth":"%s"}}}' "$AUTH" > /docker-config/config.json`,
+                  ],
+                  volumeMounts: [
+                    { name: "docker-hub-secret", mountPath: "/secret", readOnly: true },
+                    { name: "docker-config", mountPath: "/docker-config" },
+                  ],
+                },
+              ],
               statefulSet: {
                 persistentVolumeClaim: {
                   enabled: true,

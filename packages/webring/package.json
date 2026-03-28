@@ -22,8 +22,8 @@
     "lint": "eslint src --cache",
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "vitest --disable-console-intercept",
-    "test:update": "vitest --disable-console-intercept --update",
+    "test": "bun test src/",
+    "test:update": "bun test src/ --update-snapshots",
     "typedoc": "typedoc src/index.ts",
     "typecheck": "tsc --noEmit"
   },

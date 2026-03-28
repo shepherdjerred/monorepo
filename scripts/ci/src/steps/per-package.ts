@@ -30,12 +30,11 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
   const steps: BuildkiteStep[] = [];
 
   if (PRISMA_PACKAGES.has(pkg)) {
-    // Prisma: generate → lint/typecheck/test using generated workspace
+    // Prisma: combined generate+action in a single dagger pipeline (avoids nested CLI calls)
     steps.push(
-      daggerCallStep(`:database: Generate`, `generate-${sk}`, `dagger call generate --source . --pkg ${pkg}`, resources),
-      daggerCallStep(`:eslint: Lint`, `lint-${sk}`, `dagger call lint-with-generated --generated \$(dagger call generate --source . --pkg ${pkg}) --pkg ${pkg}`, resources, `generate-${sk}`),
-      daggerCallStep(`:typescript: Typecheck`, `typecheck-${sk}`, `dagger call typecheck-with-generated --generated \$(dagger call generate --source . --pkg ${pkg}) --pkg ${pkg}`, resources, `generate-${sk}`),
-      daggerCallStep(`:test_tube: Test`, `test-${sk}`, `dagger call test-with-generated --generated \$(dagger call generate --source . --pkg ${pkg}) --pkg ${pkg}`, resources, `generate-${sk}`),
+      daggerCallStep(`:eslint: Lint`, `lint-${sk}`, `dagger call generate-and-lint --source . --pkg ${pkg}`, resources),
+      daggerCallStep(`:typescript: Typecheck`, `typecheck-${sk}`, `dagger call generate-and-typecheck --source . --pkg ${pkg}`, resources),
+      daggerCallStep(`:test_tube: Test`, `test-${sk}`, `dagger call generate-and-test --source . --pkg ${pkg}`, resources),
     );
   } else {
     steps.push(
@@ -55,6 +54,14 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
     }
   }
 
+  // homelab: add HA lint/typecheck steps that generate types with HASS_TOKEN
+  if (pkg === "homelab") {
+    steps.push(
+      daggerCallStep(`:house: HA Lint`, `ha-lint-${sk}`, `dagger call ha-lint --source . --hass-token env:HASS_TOKEN`, resources),
+      daggerCallStep(`:house: HA Typecheck`, `ha-typecheck-${sk}`, `dagger call ha-typecheck --source . --hass-token env:HASS_TOKEN`, resources),
+    );
+  }
+
   if (ASTRO_PACKAGES.has(pkg)) {
     steps.push(
       daggerCallStep(`:rocket: Astro Check`, `astro-check-${sk}`, `dagger call astro-check --source . --pkg ${pkg}`, resources),
@@ -63,7 +70,7 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
   }
 
   return {
-    group: `:dagger: ${pkg}`,
+    group: `:dagger_knife: ${pkg}`,
     key: `pkg-${sk}`,
     steps,
   };
@@ -72,7 +79,7 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
 function rustPackageGroup(sk: string): BuildkiteGroup {
   const resources = PACKAGE_RESOURCES["clauderon"] ?? DEFAULT_RESOURCES;
   return {
-    group: `:dagger: clauderon`,
+    group: `:dagger_knife: clauderon`,
     key: `pkg-${sk}`,
     steps: [
       daggerCallStep(`:art: Fmt`, `fmt-${sk}`, `dagger call rust-fmt --source .`, resources),
@@ -85,7 +92,7 @@ function rustPackageGroup(sk: string): BuildkiteGroup {
 
 function goPackageGroup(sk: string): BuildkiteGroup {
   return {
-    group: `:dagger: terraform-provider-asuswrt`,
+    group: `:dagger_knife: terraform-provider-asuswrt`,
     key: `pkg-${sk}`,
     steps: [
       daggerCallStep(`:building_construction: Build`, `build-${sk}`, `dagger call go-build --source .`, DEFAULT_RESOURCES),
@@ -97,7 +104,7 @@ function goPackageGroup(sk: string): BuildkiteGroup {
 
 function javaPackageGroup(sk: string): BuildkiteGroup {
   return {
-    group: `:dagger: castle-casters`,
+    group: `:dagger_knife: castle-casters`,
     key: `pkg-${sk}`,
     steps: [
       daggerCallStep(`:building_construction: Maven Build`, `maven-build-${sk}`, `dagger call maven-build --source .`, PACKAGE_RESOURCES["castle-casters"] ?? DEFAULT_RESOURCES),
@@ -108,7 +115,7 @@ function javaPackageGroup(sk: string): BuildkiteGroup {
 
 function latexPackageGroup(sk: string): BuildkiteGroup {
   return {
-    group: `:dagger: resume`,
+    group: `:dagger_knife: resume`,
     key: `pkg-${sk}`,
     steps: [
       daggerCallStep(`:page_facing_up: LaTeX Build`, `latex-build-${sk}`, `dagger call latex-build --source .`, DEFAULT_RESOURCES),

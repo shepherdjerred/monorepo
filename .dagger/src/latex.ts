@@ -6,7 +6,7 @@
 import { dag, Container, Directory } from "@dagger.io/dagger";
 
 // renovate: datasource=docker depName=texlive/texlive
-const TEXLIVE_IMAGE = "texlive/texlive:TL2024-historic-full";
+const TEXLIVE_IMAGE = "texlive/texlive:TL2024-historic";
 
 /** Build a LaTeX resume (packages/resume) with xelatex. */
 export function latexBuildHelper(source: Directory): Container {

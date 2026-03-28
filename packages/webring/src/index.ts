@@ -7,7 +7,7 @@ import {
   CachedConfigurationSchema,
 } from "./types.ts";
 
-export type { Configuration, Result } from "./types.ts";
+export type { Configuration, Result, ResultEntry } from "./types.ts";
 
 export async function run(config: Configuration): Promise<Result> {
   const { success, data } = CachedConfigurationSchema.safeParse(config);

@@ -1,3 +1,7 @@
 const config = {};
 
-module.exports = require("@rnx-kit/jest-preset")("windows", config);
+try {
+  module.exports = require("@rnx-kit/jest-preset")("windows", config);
+} catch {
+  module.exports = {};
+}

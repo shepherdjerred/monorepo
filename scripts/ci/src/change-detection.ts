@@ -86,7 +86,7 @@ async function getLastGreenCommit(): Promise<string | null> {
 
       const jobs = build.jobs ?? [];
       const daggerJobs = jobs.filter((j) =>
-        (j.name ?? "").includes(":dagger:"),
+        (j.name ?? "").includes(":dagger_knife:"),
       );
 
       if (daggerJobs.length >= MIN_GREEN_STEPS) {

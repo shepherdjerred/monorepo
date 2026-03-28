@@ -257,7 +257,6 @@ export const SKIP_PACKAGES: Set<string> = new Set([
 export const PRISMA_PACKAGES: Set<string> = new Set([
   "birmel",
   "scout-for-lol",
-  "tasknotes-server",
 ]);
 
 /** Packages that are Astro sites. */

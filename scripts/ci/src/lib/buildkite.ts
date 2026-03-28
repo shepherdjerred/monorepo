@@ -21,6 +21,7 @@ export const RETRY = {
 export const DAGGER_ENV: Record<string, string> = {
   DAGGER_NO_NAG: "1",
   DAGGER_NO_UPDATE_CHECK: "1",
+  DAGGER_PROGRESS: "dots",
 };
 
 /** Create a basic Buildkite step using dagger call. */

@@ -357,7 +357,7 @@ export function clauderonCollectBinariesHelper(
   targets: ClauderonTarget[],
 ): Directory {
   // renovate: datasource=docker depName=rust
-  const RUST_IMAGE = "rust:1.88.0-bookworm";
+  const RUST_IMAGE = "rust:1.89.0-bookworm";
 
   let output = dag.directory();
 
@@ -517,7 +517,7 @@ Be direct and concise. If the PR is trivial (pure merge/rebase with minimal chan
 /** Run cargo deny check on the Rust project. */
 export function cargoDenyHelper(source: Directory): Container {
   // renovate: datasource=docker depName=rust
-  const RUST_IMAGE = "rust:1.88.0-bookworm";
+  const RUST_IMAGE = "rust:1.89.0-bookworm";
   return dag
     .container()
     .from(RUST_IMAGE)

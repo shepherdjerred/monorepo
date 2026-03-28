@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "bun:test";
 import type { Configuration } from "./types.ts";
 import { run } from "./index.ts";
 import { tmpdir } from "node:os";
@@ -29,7 +29,6 @@ function createSources(count: number): Configuration["sources"] {
 
 test(
   "it should fetch an RSS feed without caching",
-  { timeout: 30_000 },
   async () => {
     const config: Configuration = {
       sources: createSources(19),
@@ -45,7 +44,7 @@ test(
   },
 );
 
-test("it should fetch several RSS feeds", { timeout: 30_000 }, async () => {
+test("it should fetch several RSS feeds", async () => {
   const config: Configuration = {
     sources: createSources(19),
     number: 3,
@@ -61,7 +60,6 @@ test("it should fetch several RSS feeds", { timeout: 30_000 }, async () => {
 
 test(
   "it should fetch an RSS feed with caching",
-  { timeout: 30_000 },
   async () => {
     const config: Configuration = {
       sources: createSources(19),
