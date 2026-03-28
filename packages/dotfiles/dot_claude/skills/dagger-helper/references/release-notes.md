@@ -1,4 +1,4 @@
-# Dagger Release Notes (0.15, 0.16, 0.19)
+# Dagger Release Notes (0.15, 0.16, 0.19, 0.20)
 
 ## Dagger 0.15 (Dec 2024)
 
@@ -203,3 +203,27 @@ The TUI shows agent activity in a sidebar (toggle with `Ctrl+S`).
   - `branches` — list branches
   - `latestVersion` — get latest semver tag
   - `commonAncestor(ref1, ref2)` — find merge base between refs
+
+## Dagger 0.20 (2025)
+
+### Function Caching (v0.19.4+, expanded in 0.20)
+
+Functions are cached by default with a 7-day TTL. Cache keys are derived from function inputs. Module source changes invalidate ALL function caches.
+
+```typescript
+@func()                           // default: cached 7 days
+@func({ cache: "never" })         // always runs — use for deploy, publish, sync
+@func({ cache: "session" })       // cached per session only — use for orchestration
+@func({ cache: "10m" })           // cached for 10 minutes
+```
+
+**Important:** Any change to module source code (`.dagger/src/`) invalidates all function caches, even if the function itself didn't change. This means frequent source edits during development will not benefit from function caching.
+
+### Error Handling Changes
+
+- `ExecError.toString()` no longer includes stdout/stderr (changed in v0.15.0, reinforced in 0.20). Access `.stdout` and `.stderr` properties directly.
+- `ExecError` properties: `.cmd`, `.exitCode`, `.stdout`, `.stderr`
+
+### Breaking Changes
+
+- Function caching is on by default — deploy/publish functions that previously always ran now need explicit `cache: "never"` annotation to avoid stale cached results

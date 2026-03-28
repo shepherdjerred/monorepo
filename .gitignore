@@ -1,3 +1,6 @@
+*.lance
+*-wal
+*-shm
 .build
 .swiftpm
 **/__pycache__

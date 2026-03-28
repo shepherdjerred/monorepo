@@ -6,7 +6,12 @@
   "scripts": {
     "scrape:list": "bun run src/scrape-list.ts",
     "scrape:details": "bun run src/scrape-details.ts",
-    "build:db": "bun run src/build-db.ts"
+    "build:db": "bun run src/build-db.ts",
+    "build:search": "bun run src/build-search-index.ts",
+    "search": "bun run src/search.ts"
+  },
+  "dependencies": {
+    "@lancedb/lancedb": "^0.27.1"
   },
   "devDependencies": {
     "@types/bun": "^1.3.11"

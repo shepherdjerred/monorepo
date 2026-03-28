@@ -13,10 +13,37 @@ import {
   func,
 } from "@dagger.io/dagger";
 
-const BUN_IMAGE = "oven/bun:debian";
-const RUST_IMAGE = "rust:1.88-bookworm";
-const GO_IMAGE = "golang:1.25-bookworm";
+// renovate: datasource=docker depName=oven/bun
+const BUN_IMAGE = "oven/bun:1.2.17-debian";
+// renovate: datasource=docker depName=rust
+const RUST_IMAGE = "rust:1.88.0-bookworm";
+// renovate: datasource=docker depName=golang
+const GO_IMAGE = "golang:1.25.4-bookworm";
 const PLAYWRIGHT_IMAGE = "mcr.microsoft.com/playwright:v1.58.2-noble";
+// renovate: datasource=docker depName=ghcr.io/realm/swiftlint
+const SWIFTLINT_IMAGE = "ghcr.io/realm/swiftlint:0.58.2";
+
+// Pinned Bun version for containers that install Bun manually (e.g. Playwright)
+// renovate: datasource=npm depName=bun
+const BUN_VERSION = "1.2.17";
+
+/** Directories excluded when mounting source into containers. */
+const SOURCE_EXCLUDES = [
+  "**/node_modules",
+  "**/.eslintcache",
+  "**/dist",
+  "**/target",
+  ".git",
+  "**/.vscode",
+  "**/.idea",
+  "**/coverage",
+  "**/build",
+  "**/.next",
+  "**/.tsbuildinfo",
+  "**/__pycache__",
+  "**/.DS_Store",
+  "**/archive",
+];
 
 // Stable cache volume names — never include version numbers
 const BUN_CACHE = "bun-install-cache";
@@ -57,14 +84,14 @@ export class Monorepo {
           dag.cacheVolume(BUN_CACHE),
         )
         .withWorkdir("/workspace")
+        // Copy dependency manifests first for better layer caching
+        .withFile("/workspace/package.json", source.file("package.json"))
+        .withFile("/workspace/bun.lock", source.file("bun.lock"))
+        .withDirectory("/workspace/patches", source.directory("patches"))
+        .withExec(["bun", "install", "--frozen-lockfile"])
+        // Now mount the full source (excludes node_modules so install is preserved)
         .withDirectory("/workspace", source, {
-          exclude: [
-            "**/node_modules",
-            "**/.eslintcache",
-            "**/dist",
-            "**/target",
-            ".git",
-          ],
+          exclude: SOURCE_EXCLUDES,
         })
         .withExec(["bun", "install", "--frozen-lockfile"])
         // Build workspace deps that publish types/exports via dist/
@@ -101,10 +128,14 @@ export class Monorepo {
         "/usr/local/cargo/registry",
         dag.cacheVolume(CARGO_REGISTRY),
       )
+      .withMountedCache(
+        "/usr/local/cargo/git",
+        dag.cacheVolume("cargo-git"),
+      )
       .withMountedCache("/workspace/target", dag.cacheVolume(CARGO_TARGET))
       .withWorkdir("/workspace")
       .withDirectory("/workspace", source.directory("packages/clauderon"), {
-        exclude: ["target", "node_modules"],
+        exclude: ["target", "node_modules", ".git"],
       });
   }
 
@@ -121,6 +152,7 @@ export class Monorepo {
       .withDirectory(
         "/workspace",
         source.directory("packages/terraform-provider-asuswrt"),
+        { exclude: [".git"] },
       );
   }
 
@@ -318,7 +350,7 @@ export class Monorepo {
   }
 
   /** Push a built image to a registry */
-  @func()
+  @func({ cache: "never" })
   async pushImage(
     source: Directory,
     pkg: string,
@@ -434,7 +466,7 @@ export class Monorepo {
   async swiftLint(source: Directory, pkg: string): Promise<string> {
     return dag
       .container()
-      .from("ghcr.io/realm/swiftlint:latest")
+      .from(SWIFTLINT_IMAGE)
       .withWorkdir("/workspace")
       .withDirectory("/workspace", source.directory(`packages/${pkg}`), {
         exclude: [".build/**", "**/.build/**"],
@@ -454,7 +486,7 @@ export class Monorepo {
       dag
         .container()
         .from(PLAYWRIGHT_IMAGE)
-        // Install bun on the Playwright image (needs unzip)
+        // Install pinned bun on the Playwright image (needs unzip)
         .withExec(["apt-get", "update", "-qq"])
         .withExec([
           "apt-get",
@@ -464,7 +496,11 @@ export class Monorepo {
           "--no-install-recommends",
           "unzip",
         ])
-        .withExec(["bash", "-c", "curl -fsSL https://bun.sh/install | bash"])
+        .withExec([
+          "bash",
+          "-c",
+          `curl -fsSL https://bun.sh/install | bash -s -- bun-v${BUN_VERSION}`,
+        ])
         .withEnvVariable(
           "PATH",
           "/root/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
@@ -476,13 +512,7 @@ export class Monorepo {
         )
         .withWorkdir("/workspace")
         .withDirectory("/workspace", source, {
-          exclude: [
-            "**/node_modules",
-            "**/.eslintcache",
-            "**/dist",
-            "**/target",
-            ".git",
-          ],
+          exclude: SOURCE_EXCLUDES,
         })
         .withExec(["bun", "install", "--frozen-lockfile"])
         // Build workspace deps needed by sjer.red
@@ -515,7 +545,11 @@ export class Monorepo {
         "--no-install-recommends",
         "unzip",
       ])
-      .withExec(["bash", "-c", "curl -fsSL https://bun.sh/install | bash"])
+      .withExec([
+        "bash",
+        "-c",
+        `curl -fsSL https://bun.sh/install | bash -s -- bun-v${BUN_VERSION}`,
+      ])
       .withEnvVariable(
         "PATH",
         "/root/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
@@ -524,13 +558,7 @@ export class Monorepo {
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir("/workspace")
       .withDirectory("/workspace", source, {
-        exclude: [
-          "**/node_modules",
-          "**/.eslintcache",
-          "**/dist",
-          "**/target",
-          ".git",
-        ],
+        exclude: SOURCE_EXCLUDES,
       })
       .withExec(["bun", "install", "--frozen-lockfile"])
       .withWorkdir("/workspace/packages/eslint-config")
@@ -558,7 +586,7 @@ export class Monorepo {
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir("/workspace")
       .withDirectory("/workspace", source, {
-        exclude: ["**/node_modules", "**/dist", "**/target"],
+        exclude: SOURCE_EXCLUDES,
       })
       .withExec(["bun", "install", "--frozen-lockfile"])
       .withExec(["bunx", "prettier", "--check", "."])
@@ -589,7 +617,7 @@ export class Monorepo {
   // ---------------------------------------------------------------------------
 
   /** Run lint/typecheck/test for all TS packages in parallel. Returns results summary. */
-  @func()
+  @func({ cache: "session" })
   async ciAll(
     source: Directory,
     hassToken: Secret | null = null,
@@ -619,107 +647,100 @@ export class Monorepo {
 
     const base = this.bunBase(source, "webring"); // any pkg, just to get the base
 
-    const results: string[] = [];
+    interface CheckResult {
+      label: string;
+      status: "PASS" | "FAIL";
+      error?: string;
+    }
+
+    const allChecks: Promise<CheckResult>[] = [];
+
+    // Helper to run a check and capture the full error on failure
+    const check = (
+      label: string,
+      container: Container,
+    ): Promise<CheckResult> =>
+      container
+        .stdout()
+        .then((): CheckResult => ({ label, status: "PASS" }))
+        .catch(
+          (e: Error): CheckResult => ({
+            label,
+            status: "FAIL",
+            error: e.message,
+          }),
+        );
 
     // Run all TS packages in parallel
-    const tsResults = await Promise.allSettled(
-      tsPackages.flatMap((pkg) => {
-        const container = base.withWorkdir(`/workspace/packages/${pkg}`);
-        return [
-          container
-            .withExec(["bun", "run", "lint"])
-            .sync()
-            .then(() => `${pkg}: lint=PASS`)
-            .catch(
-              (e: Error) => `${pkg}: lint=FAIL (${e.message.slice(0, 80)})`,
-            ),
-          container
-            .withExec(["bun", "run", "typecheck"])
-            .sync()
-            .then(() => `${pkg}: typecheck=PASS`)
-            .catch(
-              (e: Error) =>
-                `${pkg}: typecheck=FAIL (${e.message.slice(0, 80)})`,
-            ),
-          container
-            .withExec(["bun", "run", "test"])
-            .sync()
-            .then(() => `${pkg}: test=PASS`)
-            .catch(
-              (e: Error) => `${pkg}: test=FAIL (${e.message.slice(0, 80)})`,
-            ),
-        ];
-      }),
-    );
-
-    for (const r of tsResults) {
-      results.push(r.status === "fulfilled" ? r.value : `UNKNOWN: ${r.reason}`);
+    for (const pkg of tsPackages) {
+      const container = base.withWorkdir(`/workspace/packages/${pkg}`);
+      allChecks.push(
+        check(`${pkg}: lint`, container.withExec(["bun", "run", "lint"])),
+      );
+      allChecks.push(
+        check(
+          `${pkg}: typecheck`,
+          container.withExec(["bun", "run", "typecheck"]),
+        ),
+      );
+      allChecks.push(
+        check(`${pkg}: test`, container.withExec(["bun", "run", "test"])),
+      );
     }
 
     // Rust checks
-    const rustBase = this.rustBase(source);
-    const rustResults = await Promise.allSettled([
-      rustBase
-        .withExec(["rustup", "component", "add", "rustfmt"])
-        .withExec(["cargo", "fmt", "--check"])
-        .sync()
-        .then(() => "clauderon: fmt=PASS")
-        .catch((e: Error) => `clauderon: fmt=FAIL (${e.message.slice(0, 80)})`),
-      rustBase
-        .withExec(["rustup", "component", "add", "clippy"])
-        .withExec([
-          "cargo",
-          "clippy",
-          "--all-targets",
-          "--all-features",
-          "--",
-          "-D",
-          "warnings",
-        ])
-        .sync()
-        .then(() => "clauderon: clippy=PASS")
-        .catch(
-          (e: Error) => `clauderon: clippy=FAIL (${e.message.slice(0, 80)})`,
-        ),
-      rustBase
-        .withExec(["cargo", "test", "--all-features"])
-        .sync()
-        .then(() => "clauderon: test=PASS")
-        .catch(
-          (e: Error) => `clauderon: test=FAIL (${e.message.slice(0, 80)})`,
-        ),
-    ]);
-    for (const r of rustResults) {
-      results.push(r.status === "fulfilled" ? r.value : `UNKNOWN: ${r.reason}`);
-    }
+    const rustB = this.rustBase(source);
+    allChecks.push(
+      check(
+        "clauderon: fmt",
+        rustB
+          .withExec(["rustup", "component", "add", "rustfmt"])
+          .withExec(["cargo", "fmt", "--check"]),
+      ),
+    );
+    allChecks.push(
+      check(
+        "clauderon: clippy",
+        rustB
+          .withExec(["rustup", "component", "add", "clippy"])
+          .withExec([
+            "cargo",
+            "clippy",
+            "--all-targets",
+            "--all-features",
+            "--",
+            "-D",
+            "warnings",
+          ]),
+      ),
+    );
+    allChecks.push(
+      check(
+        "clauderon: test",
+        rustB.withExec(["cargo", "test", "--all-features"]),
+      ),
+    );
 
     // Go checks
     const goB = this.goBase(source);
-    const goResults = await Promise.allSettled([
-      goB
-        .withExec(["go", "build", "./..."])
-        .sync()
-        .then(() => "go: build=PASS")
-        .catch((e: Error) => `go: build=FAIL (${e.message.slice(0, 80)})`),
-      goB
-        .withExec(["go", "test", "./...", "-v"])
-        .sync()
-        .then(() => "go: test=PASS")
-        .catch((e: Error) => `go: test=FAIL (${e.message.slice(0, 80)})`),
-      goB
-        .withExec([
-          "go",
-          "install",
-          "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest",
-        ])
-        .withExec(["golangci-lint", "run", "./..."])
-        .sync()
-        .then(() => "go: lint=PASS")
-        .catch((e: Error) => `go: lint=FAIL (${e.message.slice(0, 80)})`),
-    ]);
-    for (const r of goResults) {
-      results.push(r.status === "fulfilled" ? r.value : `UNKNOWN: ${r.reason}`);
-    }
+    allChecks.push(
+      check("go: build", goB.withExec(["go", "build", "./..."])),
+    );
+    allChecks.push(
+      check("go: test", goB.withExec(["go", "test", "./...", "-v"])),
+    );
+    allChecks.push(
+      check(
+        "go: lint",
+        goB
+          .withExec([
+            "go",
+            "install",
+            "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest",
+          ])
+          .withExec(["golangci-lint", "run", "./..."]),
+      ),
+    );
 
     // scout-for-lol: generate then lint/typecheck/test
     const scoutGenerated = this.bunBase(source, "scout-for-lol")
@@ -730,33 +751,24 @@ export class Monorepo {
       .from(BUN_IMAGE)
       .withDirectory("/workspace", scoutGenerated)
       .withWorkdir("/workspace/packages/scout-for-lol");
-    const scoutResults = await Promise.allSettled([
-      scoutContainer
-        .withExec(["bun", "run", "lint"])
-        .sync()
-        .then(() => "scout-for-lol: lint=PASS")
-        .catch(
-          (e: Error) => `scout-for-lol: lint=FAIL (${e.message.slice(0, 80)})`,
-        ),
-      scoutContainer
-        .withExec(["bun", "run", "typecheck"])
-        .sync()
-        .then(() => "scout-for-lol: typecheck=PASS")
-        .catch(
-          (e: Error) =>
-            `scout-for-lol: typecheck=FAIL (${e.message.slice(0, 80)})`,
-        ),
-      scoutContainer
-        .withExec(["bun", "run", "test"])
-        .sync()
-        .then(() => "scout-for-lol: test=PASS")
-        .catch(
-          (e: Error) => `scout-for-lol: test=FAIL (${e.message.slice(0, 80)})`,
-        ),
-    ]);
-    for (const r of scoutResults) {
-      results.push(r.status === "fulfilled" ? r.value : `UNKNOWN: ${r.reason}`);
-    }
+    allChecks.push(
+      check(
+        "scout-for-lol: lint",
+        scoutContainer.withExec(["bun", "run", "lint"]),
+      ),
+    );
+    allChecks.push(
+      check(
+        "scout-for-lol: typecheck",
+        scoutContainer.withExec(["bun", "run", "typecheck"]),
+      ),
+    );
+    allChecks.push(
+      check(
+        "scout-for-lol: test",
+        scoutContainer.withExec(["bun", "run", "test"]),
+      ),
+    );
 
     // homelab/ha: generate types then lint/typecheck (requires HASS_TOKEN)
     if (hassToken != null) {
@@ -770,32 +782,50 @@ export class Monorepo {
         .from(BUN_IMAGE)
         .withDirectory("/workspace", haGenerated)
         .withWorkdir("/workspace/packages/homelab/src/ha");
-      const haResults = await Promise.allSettled([
-        haContainer
-          .withExec(["bun", "run", "lint"])
-          .sync()
-          .then(() => "homelab/ha: lint=PASS")
-          .catch(
-            (e: Error) => `homelab/ha: lint=FAIL (${e.message.slice(0, 80)})`,
-          ),
-        haContainer
-          .withExec(["bun", "run", "typecheck"])
-          .sync()
-          .then(() => "homelab/ha: typecheck=PASS")
-          .catch(
-            (e: Error) =>
-              `homelab/ha: typecheck=FAIL (${e.message.slice(0, 80)})`,
-          ),
-      ]);
-      for (const r of haResults) {
-        results.push(
-          r.status === "fulfilled" ? r.value : `UNKNOWN: ${r.reason}`,
-        );
-      }
-    } else {
-      results.push("homelab/ha: SKIPPED (no hassToken)");
+      allChecks.push(
+        check(
+          "homelab/ha: lint",
+          haContainer.withExec(["bun", "run", "lint"]),
+        ),
+      );
+      allChecks.push(
+        check(
+          "homelab/ha: typecheck",
+          haContainer.withExec(["bun", "run", "typecheck"]),
+        ),
+      );
     }
 
-    return results.join("\n");
+    // Wait for all checks to complete
+    const results = await Promise.all(allChecks);
+
+    // Build summary
+    const lines: string[] = [];
+    const failures: CheckResult[] = [];
+    for (const r of results) {
+      if (r.status === "FAIL") {
+        lines.push(`FAIL  ${r.label}`);
+        failures.push(r);
+      } else {
+        lines.push(`PASS  ${r.label}`);
+      }
+    }
+
+    if (hassToken == null) {
+      lines.push("SKIP  homelab/ha (no hassToken)");
+    }
+
+    const summary = lines.join("\n");
+
+    if (failures.length > 0) {
+      const details = failures
+        .map((f) => `--- ${f.label} ---\n${f.error}`)
+        .join("\n\n");
+      throw new Error(
+        `${failures.length} check(s) failed:\n\n${summary}\n\n${details}`,
+      );
+    }
+
+    return summary;
   }
 }

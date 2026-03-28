@@ -15,7 +15,6 @@ This agent helps develop Dagger CI/CD pipelines using the **TypeScript SDK** wit
 
 - `dagger.json` - Module configuration (engine version, SDK source)
 - `.dagger/src/index.ts` - Main pipeline functions
-- `packages/dagger-utils/` - Shared container builders and utilities
 
 ## CLI Commands
 
@@ -358,112 +357,6 @@ deploy(
 ): Promise<string>
 ```
 
-## dagger-utils Package Reference
-
-Import shared utilities from `@shepherdjerred/dagger-utils`:
-
-### Container Builders
-
-```typescript
-import {
-  getBunContainer,
-  getBunNodeContainer,
-  getNodeContainer,
-} from "@shepherdjerred/dagger-utils";
-
-const container = getBunContainer(source);
-const container = getBunNodeContainer(source); // Bun + Node.js
-```
-
-### Parallel Execution Utilities
-
-```typescript
-import {
-  runParallel,
-  runNamedParallel,
-  collectResults,
-} from "@shepherdjerred/dagger-utils";
-
-const results = await runNamedParallel([
-  {
-    name: "typecheck",
-    operation: container.withExec(["bun", "run", "typecheck"]).sync(),
-  },
-  {
-    name: "test",
-    operation: container.withExec(["bun", "run", "test"]).sync(),
-  },
-]);
-
-const stepResults = collectResults(results);
-```
-
-### Publishing
-
-```typescript
-import { publishToGhcr, publishToNpm } from "@shepherdjerred/dagger-utils";
-
-// Publish to GitHub Container Registry
-await publishToGhcr({
-  container,
-  imageRef: "ghcr.io/org/app:1.0.0", // Full ref with tag
-  username,
-  password,
-});
-
-// Publish to NPM
-await publishToNpm({
-  container,
-  token: npmToken,
-  packageDir: "/workspace/packages/my-lib",
-  access: "public",
-});
-```
-
-### Release-Please Integration
-
-```typescript
-import { releasePr, githubRelease } from "@shepherdjerred/dagger-utils";
-
-// Create or update release PR based on conventional commits
-const prResult = await releasePr({
-  ghToken: githubToken,
-  repoUrl: "owner/repo",
-  releaseType: "node",
-});
-
-// Create GitHub release after PR is merged
-const releaseResult = await githubRelease({
-  ghToken: githubToken,
-  repoUrl: "owner/repo",
-});
-```
-
-### Homelab Deployment
-
-```typescript
-import { updateHomelabVersion } from "@shepherdjerred/dagger-utils";
-
-await updateHomelabVersion({
-  ghToken,
-  appName: "birmel",
-  version: "1.2.3",
-});
-```
-
-### Version Pinning
-
-Versions are centralized in `packages/dagger-utils/src/versions.ts` with Renovate annotations:
-
-```typescript
-const defaultVersions = {
-  alpine: "3.23.0@sha256:...",
-  "oven/bun": "1.3.4@sha256:...",
-  node: "24.11.1",
-  // Renovate auto-updates these
-};
-```
-
 ## Container API Quick Reference
 
 ```typescript
@@ -491,6 +384,150 @@ dag
   .terminal() // Interactive debug
   .combinedOutput() // Get interleaved stdout+stderr (0.19)
   .exportImage("name"); // Export to local container runtime (0.19)
+```
+
+## Error Handling Best Practices
+
+### `.stdout()` vs `.sync()`
+
+- **Use `.stdout()` as the terminal call** — triggers execution AND returns the output string, useful for debugging
+- **Use `.sync()` only for pass/fail side effects** — returns the Container object, discards stdout/stderr
+- `.stdout()` is always safe and gives better debugging; prefer it over `.sync()`
+
+### `ExecError` Handling
+
+Catch `ExecError` explicitly — it has `.cmd`, `.exitCode`, `.stdout`, `.stderr` properties:
+
+```typescript
+import { ExecError } from "@dagger.io/dagger";
+
+try {
+  await container.withExec(["bun", "run", "lint"]).stdout();
+} catch (e: unknown) {
+  if (e instanceof ExecError) {
+    console.error(`Command: ${e.cmd}`);
+    console.error(`Exit code: ${e.exitCode}`);
+    console.error(`Stderr: ${e.stderr}`);  // Access as property, not toString()
+    console.error(`Stdout: ${e.stdout}`);
+  }
+  throw e;
+}
+```
+
+**Since v0.15.0**, `ExecError.toString()` no longer includes stdout/stderr — you must access them as properties directly.
+
+### Error Rules
+
+- **Never truncate error messages** — full stderr is essential for debugging (no `.slice()`, no character limits)
+- **`Promise.allSettled`**: check results and throw on failures. Do not swallow errors with `.catch()` into strings.
+
+```typescript
+// WRONG: swallows errors, CI always exits 0
+const results = await Promise.allSettled(
+  tasks.map(t => t.sync().catch((e: Error) => `FAIL: ${e.message.slice(0, 80)}`))
+);
+
+// RIGHT: failures propagate
+const results = await Promise.allSettled(tasks.map(t => t.stdout()));
+const failures = results.filter((r): r is PromiseRejectedResult => r.status === "rejected");
+if (failures.length > 0) {
+  throw new Error(failures.map(f => f.reason).join("\n"));
+}
+```
+
+## Caching Patterns
+
+### Layer Ordering: Deps Before Source
+
+Copy dependency files and install BEFORE mounting source code. Otherwise, any source change invalidates the install layer:
+
+```typescript
+const SOURCE_EXCLUDES = [
+  "node_modules", ".eslintcache", "dist", "target", ".git",
+  ".vscode", ".idea", "coverage", "build", ".next",
+  ".tsbuildinfo", "__pycache__", ".DS_Store", "archive",
+];
+
+function bunBase(source: Directory, pkg: string): Container {
+  return dag.container()
+    .from(BUN_IMAGE)
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
+    .withWorkdir("/workspace")
+    // 1. Deps layer (cached unless lockfile changes)
+    .withFile("/workspace/package.json", source.file("package.json"))
+    .withFile("/workspace/bun.lock", source.file("bun.lock"))
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    // 2. Source layer (only invalidated by actual source changes)
+    .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
+    .withWorkdir(`/workspace/packages/${pkg}`);
+}
+```
+
+### `SOURCE_EXCLUDES` Constant
+
+Use a shared `SOURCE_EXCLUDES` constant for ALL `withDirectory` calls. Include: `node_modules`, `.eslintcache`, `dist`, `target`, `.git`, `.vscode`, `.idea`, `coverage`, `build`, `.next`, `.tsbuildinfo`, `__pycache__`, `.DS_Store`, `archive`.
+
+Missing `.git` in excludes is a common mistake — `.git` changes every commit and invalidates everything.
+
+### Function Caching (v0.19.4+)
+
+Default TTL is 7 days. Module source changes invalidate ALL function caches.
+
+```typescript
+@func()                           // default: cached 7 days
+@func({ cache: "never" })         // always runs (deploy, publish, sync)
+@func({ cache: "session" })       // cached per session only
+@func({ cache: "10m" })           // cached for 10 minutes
+```
+
+Recommendations:
+- `lint`, `typecheck`, `test`, `buildImage`: default (7-day) — inputs determine cache key
+- `pushImage`, `deploySite`, `argoCdSync`, `tofuApply`, `helmPackage`: `cache: "never"` — side effects must always execute
+- `ciAll` (orchestration): `cache: "session"` — run once per session
+
+### Cache Volume Names
+
+Cache volume names must be **stable** — never encode versions in the name. Version-keyed names (e.g., `bun-cache-1.2.3`) cause a cold cache on every version bump.
+
+## CI Environment Variables
+
+```bash
+export DAGGER_PROGRESS=plain    # no TUI in CI
+export DAGGER_NO_NAG=1          # suppress upgrade nags
+export DAGGER_NO_UPDATE_CHECK=1 # suppress update checks
+# Optional: DAGGER_LOG_STDERR=/tmp/dagger.log  # tee logs for artifact upload
+```
+
+## Debugging Workflow
+
+| Tool | Purpose |
+| ---- | ------- |
+| `dagger call -i <func>` | Interactive mode — drops into shell on failure |
+| `.terminal()` | Insert explicit breakpoint mid-pipeline |
+| `--debug` | Max verbosity — all internal engine spans |
+| `-v` / `-vv` / `-vvv` | Increasing verbosity tiers |
+| `--progress=plain` | No TUI — suitable for CI logs |
+
+## Anti-Patterns
+
+1. **Floating image tags** (`oven/bun:debian`, `swiftlint:latest`) — non-reproducible. Pin with specific version and Renovate comments for auto-update.
+2. **Source before deps in layer ordering** — defeats caching. Install runs on every source change. Always copy lockfile and install BEFORE mounting source.
+3. **Error swallowing with `.catch()` to string** — CI exits 0 on failure. Let errors propagate or explicitly check `Promise.allSettled` results.
+4. **Version-keyed cache volume names** — cold cache on every version bump. Use stable names like `"bun-cache"`, not `"bun-cache-1.2.3"`.
+5. **Missing `.git` in excludes** — `.git` changes every commit, invalidates all downstream layers.
+6. **`curl | bash` without version pinning** — gets latest, breaks reproducibility. Always pin the version in the URL or use a versioned installer.
+
+## Module Organization
+
+- **`@object()` class MUST stay in `index.ts`** — TypeScript SDK constraint. The decorated class cannot be split across files.
+- **CAN import helper functions from other files** — keep `index.ts` thin with `@func()` wrappers that delegate to helpers.
+
+```
+.dagger/src/
+  index.ts       # @object() class with all @func() methods (thin wrappers)
+  ci.ts          # bunBase(), ciAll() implementation
+  release.ts     # helm, tofu, npm, site deploy helpers
+  quality.ts     # prettier, shellcheck, compliance helpers
 ```
 
 ## Examples
@@ -550,7 +587,7 @@ async birmelPublish(
 
 ## Reference Files
 
-- **`references/release-notes.md`** - Features from Dagger 0.15, 0.16, and 0.19: container import/export, Changeset API, Build-an-Agent, engine config, metrics, TypeScript SDK improvements
+- **`references/release-notes.md`** - Features from Dagger 0.15, 0.16, 0.19, and 0.20: container import/export, Changeset API, Build-an-Agent, engine config, metrics, function caching, TypeScript SDK improvements
 
 ## When to Ask for Help
 
